@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesión 27 - Herramientas y Tendencias de Seguridad</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .slide {
+            display: none;
+            animation: slideIn 0.5s ease-in-out;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.6); }
+        }
+        
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100vw); }
+        }
+        
+        @keyframes hack {
+            0%, 100% { color: #10b981; }
+            50% { color: #ef4444; }
+        }
+        
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        .bounce-animation {
+            animation: bounce 2s infinite;
+        }
+        
+        .rotate-animation {
+            animation: rotate 4s linear infinite;
+        }
+        
+        .glow-animation {
+            animation: glow 2s infinite;
+        }
+        
+        .hack-animation {
+            animation: hack 1s infinite;
+        }
+        
+        .slide-bg-1 {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+        }
+        
+        .slide-bg-2 {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+        }
+        
+        .slide-bg-3 {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+        
+        .slide-bg-4 {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+        }
+        
+        .slide-bg-5 {
+            background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+        }
+        
+        .tool-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .pipeline-stage {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .pipeline-stage:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+        
+        .pipeline-stage.active {
+            background-color: #3b82f6 !important;
+            color: white !important;
+        }
+        
+        .trend-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .trend-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .debate-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .debate-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .responsibility-meter {
+            position: relative;
+            width: 100%;
+            height: 20px;
+            background: #e5e7eb;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .responsibility-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+        
+        .qa-fill { background: linear-gradient(90deg, #3b82f6, #1d4ed8); }
+        .dev-fill { background: linear-gradient(90deg, #10b981, #059669); }
+        .shared-fill { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        
+        .terminal {
+            background: #1f2937;
+            color: #10b981;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+          <a class="qs-btn" href="checklist.html">Checklist</a>
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <!-- Navigation -->
+    <div class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50 px-6 py-4">
+        <div class="flex justify-between items-center max-w-6xl mx-auto">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xl font-bold text-gray-800">Sesión 27 - Herramientas y Tendencias de Seguridad</h1>
+                <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
+                    Diapositiva <span id="currentSlide">1</span> de 5
+                </span>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="previousSlide()" id="prevBtn" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
+                    ← Anterior
+                </button>
+                <button onclick="nextSlide()" id="nextBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    Siguiente →
+                </button>
+            </div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+            <div id="progressBar" class="bg-red-600 h-2 rounded-full transition-all duration-300" style="width: 20%"></div>
+        </div>
+    </div>
+
+    <!-- Slides Container -->
+    <div class="pt-24 pb-8 px-6">
+        <div class="max-w-6xl mx-auto">
+            
+            <!-- Slide 1: Título -->
+            <div class="slide active" id="slide1">
+                <div class="slide-bg-1 rounded-3xl p-12 text-center text-white min-h-[600px] flex flex-col justify-center items-center">
+                    <!-- Security Arsenal Animation -->
+                    <div class="flex items-center justify-center mb-8">
+                        <div class="text-6xl mr-6 float-animation">🛡️</div>
+                        <div class="text-6xl mx-4 pulse-animation">⚔️</div>
+                        <div class="text-6xl mx-4 bounce-animation">🔍</div>
+                        <div class="text-6xl mx-4 rotate-animation">⚙️</div>
+                        <div class="text-6xl ml-6 glow-animation">🔒</div>
+                    </div>
+                    
+                    <h1 class="text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
+                        <span class="text-red-400">Toolkit del</span><br>
+                        <span class="text-blue-400 pulse-animation">Tester de</span><br>
+                        <span class="text-green-400 hack-animation">Seguridad</span>
+                    </h1>
+                    
+                    <!-- Security Tools Counter -->
+                    <div class="grid grid-cols-4 gap-6 max-w-4xl">
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4 tool-card">
+                            <div class="text-3xl mb-2">🕷️</div>
+                            <div class="text-sm opacity-80">Web Scanners</div>
+                            <div class="text-2xl font-bold text-red-400">50+</div>
+                        </div>
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4 tool-card">
+                            <div class="text-3xl mb-2">🎯</div>
+                            <div class="text-sm opacity-80">Exploit Tools</div>
+                            <div class="text-2xl font-bold text-blue-400">200+</div>
+                        </div>
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4 tool-card">
+                            <div class="text-3xl mb-2">🔬</div>
+                            <div class="text-sm opacity-80">Analysis Tools</div>
+                            <div class="text-2xl font-bold text-green-400">100+</div>
+                        </div>
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4 tool-card">
+                            <div class="text-3xl mb-2">🛡️</div>
+                            <div class="text-sm opacity-80">Defense Tools</div>
+                            <div class="text-2xl font-bold text-yellow-400">75+</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 bg-white bg-opacity-20 rounded-2xl p-6 max-w-3xl">
+                        <p class="text-xl font-medium text-red-300 mb-2">
+                            "El arsenal completo para la guerra cibernética"
+                        </p>
+                        <p class="text-lg opacity-90">
+                            Herramientas profesionales para detectar, explotar y defender
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2: Herramientas clave -->
+            <div class="slide" id="slide2">
+                <div class="slide-bg-2 rounded-3xl p-12 min-h-[600px]">
+                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                        🔧 Herramientas Clave del Arsenal
+                    </h2>
+                    
+                    <!-- Main Tools Grid -->
+                    <div class="grid md:grid-cols-2 gap-8 mb-8">
+                        <!-- Web Application Testing -->
+                        <div class="tool-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="showToolDemo('web')">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 pulse-animation">🕷️</div>
+                                <h3 class="text-2xl font-bold text-red-600 mb-4">Pruebas de Penetración Web</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-red-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-red-800 mb-2 flex items-center">
+                                        <span class="mr-2">⚡</span> OWASP ZAP
+                                    </h4>
+                                    <ul class="text-sm text-red-600 space-y-1">
+                                        <li>• Scanner automático de vulnerabilidades</li>
+                                        <li>• Proxy interceptor de tráfico HTTP/HTTPS</li>
+                                        <li>• Fuzzing y ataques automatizados</li>
+                                        <li>• Integración con CI/CD pipelines</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2 flex items-center">
+                                        <span class="mr-2">🎯</span> Burp Suite
+                                    </h4>
+                                    <ul class="text-sm text-gray-600 space-y-1">
+                                        <li>• Herramienta profesional de pentesting</li>
+                                        <li>• Scanner avanzado de vulnerabilidades</li>
+                                        <li>• Intruder para ataques personalizados</li>
+                                        <li>• Extensiones y plugins especializados</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 text-center">
+                                <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    Demo Interactivo
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Vulnerability Assessment -->
+                        <div class="tool-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="showToolDemo('vuln')">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 bounce-animation">🔍</div>
+                                <h3 class="text-2xl font-bold text-blue-600 mb-4">Análisis de Vulnerabilidades</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-blue-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-blue-800 mb-2 flex items-center">
+                                        <span class="mr-2">🛡️</span> Nessus
+                                    </h4>
+                                    <ul class="text-sm text-blue-600 space-y-1">
+                                        <li>• Scanner de vulnerabilidades líder</li>
+                                        <li>• Base de datos de 100,000+ plugins</li>
+                                        <li>• Compliance y auditorías automáticas</li>
+                                        <li>• Reportes ejecutivos detallados</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Capacidades Avanzadas:</h4>
+                                    <div class="text-sm text-gray-600 space-y-2">
+                                        <div class="flex justify-between">
+                                            <span>Velocidad de escaneo:</span>
+                                            <span class="font-semibold text-blue-600">1000+ hosts/hora</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Precisión:</span>
+                                            <span class="font-semibold text-green-600">99.5%</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span>Falsos positivos:</span>
+                                            <span class="font-semibold text-red-600">&lt;0.5%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 text-center">
+                                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    Simular Escaneo
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Advanced Tools -->
+                    <div class="grid md:grid-cols-2 gap-8 mb-8">
+                        <!-- Exploitation Framework -->
+                        <div class="tool-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="showToolDemo('exploit')">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 rotate-animation">⚔️</div>
+                                <h3 class="text-2xl font-bold text-purple-600 mb-4">Simulación de Ataques</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-purple-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-purple-800 mb-2 flex items-center">
+                                        <span class="mr-2">💥</span> Metasploit Framework
+                                    </h4>
+                                    <ul class="text-sm text-purple-600 space-y-1">
+                                        <li>• 2000+ exploits verificados</li>
+                                        <li>• Payloads y encoders avanzados</li>
+                                        <li>• Post-exploitation modules</li>
+                                        <li>• Evasión de antivirus y firewalls</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="terminal">
+                                    <div class="text-green-400">msf6 > use exploit/multi/handler</div>
+                                    <div class="text-green-400">msf6 exploit(multi/handler) > set payload windows/meterpreter/reverse_tcp</div>
+                                    <div class="text-green-400">msf6 exploit(multi/handler) > exploit</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 text-center">
+                                <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    Laboratorio Virtual
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Complete Testing Environment -->
+                        <div class="tool-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="showToolDemo('kali')">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 glow-animation">🐉</div>
+                                <h3 class="text-2xl font-bold text-green-600 mb-4">Entorno Completo</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-green-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-green-800 mb-2 flex items-center">
+                                        <span class="mr-2">🐧</span> Kali Linux
+                                    </h4>
+                                    <ul class="text-sm text-green-600 space-y-1">
+                                        <li>• 600+ herramientas preinstaladas</li>
+                                        <li>• Distribución especializada en pentesting</li>
+                                        <li>• Actualizaciones constantes de exploits</li>
+                                        <li>• Soporte para hardware especializado</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Categorías de Herramientas:</h4>
+                                    <div class="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                                        <div>• Information Gathering</div>
+                                        <div>• Vulnerability Analysis</div>
+                                        <div>• Web Applications</div>
+                                        <div>• Database Assessment</div>
+                                        <div>• Password Attacks</div>
+                                        <div>• Wireless Attacks</div>
+                                        <div>• Reverse Engineering</div>
+                                        <div>• Exploitation Tools</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 text-center">
+                                <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    Explorar Arsenal
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reference -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                        <div class="text-center">
+                            <span class="bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-medium">
+                                Fuente: Mahfuz - Security Testing Frameworks
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3: DevSecOps Integration -->
+            <div class="slide" id="slide3">
+                <div class="slide-bg-3 rounded-3xl p-12 min-h-[600px]">
+                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                        ⚙️ Integración en el Ciclo de Vida (DevSecOps)
+                    </h2>
+                    
+                    <!-- DevSecOps Pipeline -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                            🔄 Pipeline DevSecOps Interactivo
+                        </h3>
+                        
+                        <div class="flex flex-wrap justify-center items-center gap-4 mb-8">
+                            <div class="pipeline-stage bg-blue-100 text-blue-800 px-6 py-4 rounded-lg" onclick="showPipelineStage('plan')">
+                                <div class="text-2xl mb-2">📋</div>
+                                <div class="font-semibold">Plan</div>
+                                <div class="text-sm">Threat Modeling</div>
+                            </div>
+                            <div class="text-2xl text-gray-400">→</div>
+                            <div class="pipeline-stage bg-green-100 text-green-800 px-6 py-4 rounded-lg" onclick="showPipelineStage('code')">
+                                <div class="text-2xl mb-2">💻</div>
+                                <div class="font-semibold">Code</div>
+                                <div class="text-sm">SAST Scanning</div>
+                            </div>
+                            <div class="text-2xl text-gray-400">→</div>
+                            <div class="pipeline-stage bg-yellow-100 text-yellow-800 px-6 py-4 rounded-lg" onclick="showPipelineStage('build')">
+                                <div class="text-2xl mb-2">🔨</div>
+                                <div class="font-semibold">Build</div>
+                                <div class="text-sm">Dependency Check</div>
+                            </div>
+                            <div class="text-2xl text-gray-400">→</div>
+                            <div class="pipeline-stage bg-purple-100 text-purple-800 px-6 py-4 rounded-lg" onclick="showPipelineStage('test')">
+                                <div class="text-2xl mb-2">🧪</div>
+                                <div class="font-semibold">Test</div>
+                                <div class="text-sm">DAST & IAST</div>
+                            </div>
+                            <div class="text-2xl text-gray-400">→</div>
+                            <div class="pipeline-stage bg-red-100 text-red-800 px-6 py-4 rounded-lg" onclick="showPipelineStage('deploy')">
+                                <div class="text-2xl mb-2">🚀</div>
+                                <div class="font-semibold">Deploy</div>
+                                <div class="text-sm">Runtime Protection</div>
+                            </div>
+                            <div class="text-2xl text-gray-400">→</div>
+                            <div class="pipeline-stage bg-indigo-100 text-indigo-800 px-6 py-4 rounded-lg" onclick="showPipelineStage('monitor')">
+                                <div class="text-2xl mb-2">📊</div>
+                                <div class="font-semibold">Monitor</div>
+                                <div class="text-sm">SIEM & SOC</div>
+                            </div>
+                        </div>
+                        
+                        <div id="pipelineDetails" class="bg-gray-50 rounded-lg p-6 min-h-[200px]">
+                            <div class="text-center text-gray-500">
+                                <div class="text-4xl mb-4">🔍</div>
+                                <p>Haz clic en cualquier etapa del pipeline para ver los detalles de seguridad</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Key Concepts -->
+                    <div class="grid md:grid-cols-2 gap-8 mb-8">
+                        <!-- Shift-Left Security -->
+                        <div class="bg-white bg-opacity-90 rounded-2xl p-8">
+                            <h3 class="text-2xl font-bold text-green-600 mb-6 text-center flex items-center justify-center">
+                                <span class="mr-3">⬅️</span> Shift-Left Security
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-green-800 mb-2">Concepto Clave:</h4>
+                                    <p class="text-sm text-green-600">
+                                        Integrar seguridad desde las fases más tempranas del desarrollo, 
+                                        no como una actividad posterior.
+                                    </p>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <div class="bg-white rounded-lg p-4 border border-green-200">
+                                        <h5 class="font-semibold text-green-700 mb-2">Beneficios:</h5>
+                                        <ul class="text-sm text-green-600 space-y-1">
+                                            <li>• Detección temprana de vulnerabilidades</li>
+                                            <li>• Menor costo de corrección</li>
+                                            <li>• Mejor cultura de seguridad</li>
+                                            <li>• Reducción de riesgos en producción</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="bg-white rounded-lg p-4 border border-green-200">
+                                        <h5 class="font-semibold text-green-700 mb-2">Costo de Corrección:</h5>
+                                        <div class="text-sm text-green-600 space-y-2">
+                                            <div class="flex justify-between">
+                                                <span>Desarrollo:</span>
+                                                <span class="font-semibold">$1</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span>Testing:</span>
+                                                <span class="font-semibold">$10</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span>Producción:</span>
+                                                <span class="font-semibold text-red-600">$100</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Automation in CI/CD -->
+                        <div class="bg-white bg-opacity-90 rounded-2xl p-8">
+                            <h3 class="text-2xl font-bold text-blue-600 mb-6 text-center flex items-center justify-center">
+                                <span class="mr-3">🤖</span> Automatización CI/CD
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-blue-800 mb-2">Escaneos Automáticos:</h4>
+                                    <p class="text-sm text-blue-600">
+                                        Integración de herramientas de seguridad en pipelines 
+                                        para análisis continuo sin intervención manual.
+                                    </p>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                                        <h5 class="font-semibold text-blue-700 mb-2">Herramientas Integradas:</h5>
+                                        <div class="grid grid-cols-2 gap-2 text-sm text-blue-600">
+                                            <div>• SonarQube (SAST)</div>
+                                            <div>• OWASP ZAP (DAST)</div>
+                                            <div>• Snyk (Dependencies)</div>
+                                            <div>• Checkmarx (Code Analysis)</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="bg-white rounded-lg p-4 border border-blue-200">
+                                        <h5 class="font-semibold text-blue-700 mb-2">Métricas de Automatización:</h5>
+                                        <div class="space-y-2">
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: 85%"></div>
+                                            </div>
+                                            <div class="text-xs text-blue-500 text-center">85% de escaneos automatizados</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 4: Tendencias actuales -->
+            <div class="slide" id="slide4">
+                <div class="slide-bg-4 rounded-3xl p-12 min-h-[600px]">
+                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                        🚀 Tendencias Actuales en Security Testing
+                    </h2>
+                    
+                    <!-- Main Trends -->
+                    <div class="grid md:grid-cols-3 gap-8 mb-8">
+                        <!-- Mobile Security -->
+                        <div class="trend-card bg-white bg-opacity-90 rounded-2xl p-8">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 pulse-animation">📱</div>
+                                <h3 class="text-2xl font-bold text-purple-600 mb-4">Seguridad Móvil</h3>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="bg-purple-50 rounded-lg p-3">
+                                    <h4 class="font-semibold text-purple-800 text-sm mb-1">Desafíos Únicos:</h4>
+                                    <ul class="text-xs text-purple-600 space-y-1">
+                                        <li>• Diversidad de plataformas (iOS/Android)</li>
+                                        <li>• Almacenamiento local inseguro</li>
+                                        <li>• Comunicaciones no cifradas</li>
+                                        <li>• Ingeniería social móvil</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <h4 class="font-semibold text-gray-800 text-sm mb-1">Herramientas Especializadas:</h4>
+                                    <div class="text-xs text-gray-600 space-y-1">
+                                        <div>• MobSF (Mobile Security Framework)</div>
+                                        <div>• QARK (Quick Android Review Kit)</div>
+                                        <div>• Frida (Dynamic Analysis)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Zero Trust Security -->
+                        <div class="trend-card bg-white bg-opacity-90 rounded-2xl p-8">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 bounce-animation">🛡️</div>
+                                <h3 class="text-2xl font-bold text-blue-600 mb-4">Zero Trust Security</h3>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="bg-blue-50 rounded-lg p-3">
+                                    <h4 class="font-semibold text-blue-800 text-sm mb-1">Principios Clave:</h4>
+                                    <ul class="text-xs text-blue-600 space-y-1">
+                                        <li>• "Never trust, always verify"</li>
+                                        <li>• Verificación continua de identidad</li>
+                                        <li>• Acceso mínimo privilegiado</li>
+                                        <li>• Microsegmentación de red</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <h4 class="font-semibold text-gray-800 text-sm mb-1">Impacto en Testing:</h4>
+                                    <div class="text-xs text-gray-600 space-y-1">
+                                        <div>• Pruebas de autenticación continua</div>
+                                        <div>• Validación de políticas de acceso</div>
+                                        <div>• Testing de microsegmentación</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AI for Security -->
+                        <div class="trend-card bg-white bg-opacity-90 rounded-2xl p-8">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 rotate-animation">🤖</div>
+                                <h3 class="text-2xl font-bold text-green-600 mb-4">IA para Seguridad</h3>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="bg-green-50 rounded-lg p-3">
+                                    <h4 class="font-semibold text-green-800 text-sm mb-1">Aplicaciones de IA:</h4>
+                                    <ul class="text-xs text-green-600 space-y-1">
+                                        <li>• Detección de anomalías en tiempo real</li>
+                                        <li>• Análisis predictivo de amenazas</li>
+                                        <li>• Automatización de respuesta</li>
+                                        <li>• Reducción de falsos positivos</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-gray-50 rounded-lg p-3">
+                                    <h4 class="font-semibold text-gray-800 text-sm mb-1">Herramientas con IA:</h4>
+                                    <div class="text-xs text-gray-600 space-y-1">
+                                        <div>• Darktrace (Network AI)</div>
+                                        <div>• Cylance (Endpoint AI)</div>
+                                        <div>• Vectra (Attack Detection)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Future Predictions -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">
+                            🔮 Predicciones para los Próximos 5 Años
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-3 gap-4 text-center">
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <div class="text-2xl mb-2">🤖</div>
+                                <div class="font-semibold text-blue-800">80% Automatización</div>
+                                <div class="text-xs text-blue-600">Testing automatizado con IA</div>
+                            </div>
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <div class="text-2xl mb-2">⚡</div>
+                                <div class="font-semibold text-green-800">Real-time Testing</div>
+                                <div class="text-xs text-green-600">Análisis continuo en producción</div>
+                            </div>
+                            <div class="bg-purple-50 rounded-lg p-4">
+                                <div class="text-2xl mb-2">🌐</div>
+                                <div class="font-semibold text-purple-800">Quantum-Ready</div>
+                                <div class="text-xs text-purple-600">Criptografía post-cuántica</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 5: Debate guiado -->
+            <div class="slide" id="slide5">
+                <div class="slide-bg-5 rounded-3xl p-12 min-h-[600px]">
+                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                        💬 Debate Guiado (15 min)
+                    </h2>
+                    
+                    <!-- Main Question -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
+                        <div class="text-center mb-6">
+                            <div class="text-6xl mb-4 pulse-animation">❓</div>
+                            <h3 class="text-3xl font-bold text-orange-800">Pregunta Central del Debate</h3>
+                        </div>
+                        
+                        <div class="bg-orange-50 rounded-2xl p-8 text-center">
+                            <h4 class="text-2xl font-bold text-gray-800 mb-4">
+                                "¿Creen que la seguridad debe ser responsabilidad exclusiva del equipo de QA, 
+                                del equipo de desarrollo o de ambos?"
+                            </h4>
+                            <p class="text-lg text-gray-600">
+                                Analicemos roles, responsabilidades y la evolución hacia DevSecOps
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Responsibility Simulator -->
+                    <div class="grid md:grid-cols-3 gap-8 mb-8">
+                        <!-- QA Team Perspective -->
+                        <div class="debate-card bg-blue-50 border-2 border-blue-200 rounded-2xl p-6" onclick="showPerspective('qa')">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 bounce-animation">🧪</div>
+                                <h3 class="text-2xl font-bold text-blue-600">Equipo QA</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-white rounded-lg p-4">
+                                    <h4 class="font-semibold text-blue-800 mb-2">Argumentos A Favor:</h4>
+                                    <ul class="text-sm text-blue-600 space-y-1">
+                                        <li>• Especialización en testing y validación</li>
+                                        <li>• Perspectiva independiente y objetiva</li>
+                                        <li>• Experiencia en herramientas de seguridad</li>
+                                        <li>• Enfoque sistemático en vulnerabilidades</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="responsibility-meter">
+                                    <div class="responsibility-fill qa-fill" style="width: 80%"></div>
+                                </div>
+                                <div class="text-center text-sm text-blue-600">80% Responsabilidad QA</div>
+                            </div>
+                        </div>
+
+                        <!-- Development Team Perspective -->
+                        <div class="debate-card bg-green-50 border-2 border-green-200 rounded-2xl p-6" onclick="showPerspective('dev')">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 rotate-animation">💻</div>
+                                <h3 class="text-2xl font-bold text-green-600">Equipo Desarrollo</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-white rounded-lg p-4">
+                                    <h4 class="font-semibold text-green-800 mb-2">Argumentos A Favor:</h4>
+                                    <ul class="text-sm text-green-600 space-y-1">
+                                        <li>• Conocimiento profundo del código</li>
+                                        <li>• Capacidad de implementar fixes inmediatos</li>
+                                        <li>• Comprensión de arquitectura y diseño</li>
+                                        <li>• Responsabilidad end-to-end del producto</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="responsibility-meter">
+                                    <div class="responsibility-fill dev-fill" style="width: 75%"></div>
+                                </div>
+                                <div class="text-center text-sm text-green-600">75% Responsabilidad Dev</div>
+                            </div>
+                        </div>
+
+                        <!-- Shared Responsibility Perspective -->
+                        <div class="debate-card bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-6" onclick="showPerspective('shared')">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 pulse-animation">🤝</div>
+                                <h3 class="text-2xl font-bold text-yellow-600">Responsabilidad Compartida</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-white rounded-lg p-4">
+                                    <h4 class="font-semibold text-yellow-800 mb-2">Argumentos A Favor:</h4>
+                                    <ul class="text-sm text-yellow-600 space-y-1">
+                                        <li>• Colaboración mejora la calidad</li>
+                                        <li>• Shift-left security más efectivo</li>
+                                        <li>• Cultura de seguridad organizacional</li>
+                                        <li>• DevSecOps como mejor práctica</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="responsibility-meter">
+                                    <div class="responsibility-fill shared-fill" style="width: 90%"></div>
+                                </div>
+                                <div class="text-center text-sm text-yellow-600">90% Efectividad Compartida</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Debate Timer and Voting -->
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Debate Timer -->
+                        <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">
+                                ⏱️ Moderador de Debate
+                            </h3>
+                            
+                            <div class="text-center mb-6">
+                                <div id="debateTimer" class="text-4xl font-bold text-orange-600 mb-2">15:00</div>
+                                <button onclick="startDebateTimer()" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg transition-colors">
+                                    Iniciar Debate
+                                </button>
+                            </div>
+                            
+                            <div class="bg-gray-50 rounded-lg p-3">
+                                <h4 class="font-semibold text-gray-800 text-sm mb-2">📋 Estructura Sugerida:</h4>
+                                <div class="text-xs text-gray-600 space-y-1">
+                                    <div>• Presentación de posiciones (5 min)</div>
+                                    <div>• Debate abierto (8 min)</div>
+                                    <div>• Síntesis y conclusiones (2 min)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Voting System -->
+                        <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                            <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">
+                                🗳️ Votación Final
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 gap-3 mb-4">
+                                <button onclick="vote('qa')" class="bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-3 rounded-lg transition-colors">
+                                    🧪 Solo QA
+                                </button>
+                                <button onclick="vote('dev')" class="bg-green-100 hover:bg-green-200 text-green-800 px-4 py-3 rounded-lg transition-colors">
+                                    💻 Solo Dev
+                                </button>
+                                <button onclick="vote('shared')" class="bg-yellow-100 hover:bg-yellow-200 text-yellow-800 px-4 py-3 rounded-lg transition-colors">
+                                    🤝 Compartida
+                                </button>
+                            </div>
+                            
+                            <div id="voteResults" class="hidden">
+                                <h4 class="font-semibold text-gray-800 mb-2 text-center">Resultados:</h4>
+                                <div class="space-y-2">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">Solo QA:</span>
+                                        <div class="flex items-center">
+                                            <div class="progress-bar w-20 mr-2">
+                                                <div id="qaVotes" class="progress-fill bg-blue-500" style="width: 0%"></div>
+                                            </div>
+                                            <span id="qaPercent" class="text-sm font-semibold">0%</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">Solo Dev:</span>
+                                        <div class="flex items-center">
+                                            <div class="progress-bar w-20 mr-2">
+                                                <div id="devVotes" class="progress-fill bg-green-500" style="width: 0%"></div>
+                                            </div>
+                                            <span id="devPercent" class="text-sm font-semibold">0%</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm">Compartida:</span>
+                                        <div class="flex items-center">
+                                            <div class="progress-bar w-20 mr-2">
+                                                <div id="sharedVotes" class="progress-fill bg-yellow-500" style="width: 0%"></div>
+                                            </div>
+                                            <span id="sharedPercent" class="text-sm font-semibold">0%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const totalSlides = 5;
+        let debateTimerInterval = null;
+        let debateTimeLeft = 900; // 15 minutes in seconds
+        let votes = { qa: 0, dev: 0, shared: 0 };
+        let totalVotes = 0;
+
+        function showSlide(index) {
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            document.getElementById(`slide${index + 1}`).classList.add('active');
+            
+            document.getElementById('currentSlide').textContent = index + 1;
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
+            
+            const progress = ((index + 1) / totalSlides) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            if (index === 0) {
+                document.getElementById('prevBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('prevBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            if (index === totalSlides - 1) {
+                document.getElementById('nextBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('nextBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlides - 1) {
+                currentSlideIndex++;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function showToolDemo(tool) {
+            alert(`Demo de ${tool} - Esta funcionalidad se expandiría con contenido detallado sobre la herramienta seleccionada.`);
+        }
+
+        function showPipelineStage(stage) {
+            // Remove active class from all stages
+            document.querySelectorAll('.pipeline-stage').forEach(s => s.classList.remove('active'));
+            
+            // Add active class to clicked stage
+            event.target.closest('.pipeline-stage').classList.add('active');
+            
+            const stageDetails = {
+                plan: {
+                    title: '📋 Fase de Planificación',
+                    content: `
+                        <h4 class="font-bold text-blue-800 mb-3">Threat Modeling y Análisis de Riesgos</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li>• Identificación de assets críticos</li>
+                            <li>• Análisis de vectores de ataque</li>
+                            <li>• Definición de controles de seguridad</li>
+                            <li>• Establecimiento de criterios de aceptación</li>
+                        </ul>
+                    `
+                },
+                code: {
+                    title: '💻 Fase de Desarrollo',
+                    content: `
+                        <h4 class="font-bold text-green-800 mb-3">Static Application Security Testing (SAST)</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li>• Análisis de código fuente en tiempo real</li>
+                            <li>• Detección de vulnerabilidades comunes (OWASP Top 10)</li>
+                            <li>• Integración con IDEs para feedback inmediato</li>
+                            <li>• Code review automatizado con reglas de seguridad</li>
+                        </ul>
+                    `
+                },
+                build: {
+                    title: '🔨 Fase de Construcción',
+                    content: `
+                        <h4 class="font-bold text-yellow-800 mb-3">Dependency Check y Container Security</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li>• Escaneo de dependencias vulnerables</li>
+                            <li>• Análisis de imágenes de contenedores</li>
+                            <li>• Verificación de firmas digitales</li>
+                            <li>• Compliance con políticas organizacionales</li>
+                        </ul>
+                    `
+                },
+                test: {
+                    title: '🧪 Fase de Testing',
+                    content: `
+                        <h4 class="font-bold text-purple-800 mb-3">Dynamic & Interactive Security Testing</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li>• DAST: Pruebas de aplicación en ejecución</li>
+                            <li>• IAST: Análisis interactivo en tiempo real</li>
+                            <li>• Penetration testing automatizado</li>
+                            <li>• Fuzzing y testing de APIs</li>
+                        </ul>
+                    `
+                },
+                deploy: {
+                    title: '🚀 Fase de Despliegue',
+                    content: `
+                        <h4 class="font-bold text-red-800 mb-3">Runtime Application Self-Protection (RASP)</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li>• Protección en tiempo de ejecución</li>
+                            <li>• Configuración segura de infraestructura</li>
+                            <li>• Secrets management automatizado</li>
+                            <li>• Deployment con zero-downtime security</li>
+                        </ul>
+                    `
+                },
+                monitor: {
+                    title: '📊 Fase de Monitoreo',
+                    content: `
+                        <h4 class="font-bold text-indigo-800 mb-3">Security Information & Event Management</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li>• Monitoreo continuo de amenazas</li>
+                            <li>• Análisis de logs y eventos de seguridad</li>
+                            <li>• Alertas automáticas y respuesta a incidentes</li>
+                            <li>• Métricas y dashboards de seguridad</li>
+                        </ul>
+                    `
+                }
+            };
+            
+            const details = stageDetails[stage];
+            document.getElementById('pipelineDetails').innerHTML = `
+                <div class="text-left">
+                    <h3 class="text-xl font-bold mb-4">${details.title}</h3>
+                    ${details.content}
+                </div>
+            `;
+        }
+
+        function showPerspective(perspective) {
+            alert(`Perspectiva de ${perspective} - Aquí se expandirían los argumentos detallados y casos de estudio específicos.`);
+        }
+
+        function startDebateTimer() {
+            if (debateTimerInterval) {
+                clearInterval(debateTimerInterval);
+            }
+            
+            debateTimeLeft = 900; // Reset to 15 minutes
+            
+            debateTimerInterval = setInterval(() => {
+                debateTimeLeft--;
+                
+                const minutes = Math.floor(debateTimeLeft / 60);
+                const seconds = debateTimeLeft % 60;
+                
+                document.getElementById('debateTimer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (debateTimeLeft <= 0) {
+                    clearInterval(debateTimerInterval);
+                    alert('¡Tiempo del debate terminado!');
+                }
+            }, 1000);
+        }
+
+        function vote(option) {
+            votes[option]++;
+            totalVotes++;
+            
+            // Calculate percentages
+            const qaPercent = Math.round((votes.qa / totalVotes) * 100);
+            const devPercent = Math.round((votes.dev / totalVotes) * 100);
+            const sharedPercent = Math.round((votes.shared / totalVotes) * 100);
+            
+            // Update UI
+            document.getElementById('qaVotes').style.width = qaPercent + '%';
+            document.getElementById('devVotes').style.width = devPercent + '%';
+            document.getElementById('sharedVotes').style.width = sharedPercent + '%';
+            
+            document.getElementById('qaPercent').textContent = qaPercent + '%';
+            document.getElementById('devPercent').textContent = devPercent + '%';
+            document.getElementById('sharedPercent').textContent = sharedPercent + '%';
+            
+            document.getElementById('voteResults').classList.remove('hidden');
+        }
+
+        // Initialize
+        showSlide(0);
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') previousSlide();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a86c1e4751cdb0',t:'MTc1NzEwMzU3NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

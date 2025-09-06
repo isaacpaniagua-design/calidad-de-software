@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesión 24 - Análisis de Causas y Mejora Continua</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .slide {
+            display: none;
+            animation: slideIn 0.5s ease-in-out;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        @keyframes grow {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        .bounce-animation {
+            animation: bounce 2s infinite;
+        }
+        
+        .shake-animation {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        .grow-animation {
+            animation: grow 0.5s ease-out;
+        }
+        
+        .slide-bg-1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide-bg-1::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            animation: float 30s linear infinite;
+        }
+        
+        .slide-bg-2 {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide-bg-3 {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide-bg-4 {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide-bg-5 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .technique-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .technique-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .benefit-card {
+            transition: all 0.3s ease;
+        }
+        
+        .benefit-card:hover {
+            transform: scale(1.02);
+        }
+        
+        .ishikawa-branch {
+            stroke: #374151;
+            stroke-width: 2;
+            fill: none;
+        }
+        
+        .ishikawa-text {
+            font-size: 12px;
+            fill: #374151;
+            font-weight: 600;
+        }
+        
+        .pareto-bar {
+            transition: all 0.3s ease;
+        }
+        
+        .pareto-bar:hover {
+            opacity: 0.8;
+        }
+        
+        .why-step {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .why-step:hover {
+            transform: scale(1.02);
+        }
+        
+        .why-step.completed {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        
+        .timer-display {
+            font-family: 'Courier New', monospace;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+        
+        .workshop-card {
+            transition: all 0.3s ease;
+        }
+        
+        .workshop-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .progress-ring {
+            transition: stroke-dasharray 0.3s ease;
+        }
+        
+        .case-study-timeline {
+            position: relative;
+        }
+        
+        .case-study-timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e5e7eb;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 50px;
+            margin-bottom: 20px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #ef4444;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #ef4444;
+        }
+        
+        .root-cause-tree {
+            font-family: monospace;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+          <a class="qs-btn" href="checklist.html">Checklist</a>
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <!-- Navigation -->
+    <div class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50 px-6 py-4">
+        <div class="flex justify-between items-center max-w-6xl mx-auto">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xl font-bold text-gray-800">Sesión 24 - Análisis de Causas y Mejora Continua</h1>
+                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                    Diapositiva <span id="currentSlide">1</span> de 5
+                </span>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="previousSlide()" id="prevBtn" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
+                    ← Anterior
+                </button>
+                <button onclick="nextSlide()" id="nextBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    Siguiente →
+                </button>
+            </div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+            <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 20%"></div>
+        </div>
+    </div>
+
+    <!-- Slides Container -->
+    <div class="pt-24 pb-8 px-6">
+        <div class="max-w-6xl mx-auto">
+            
+            <!-- Slide 1: Título -->
+            <div class="slide active" id="slide1">
+                <div class="slide-bg-1 rounded-3xl p-12 text-center text-white min-h-[600px] flex flex-col justify-center items-center relative z-10">
+                    <div class="flex items-center justify-center mb-8 relative">
+                        <div class="float-animation text-6xl mr-6">🐛</div>
+                        <div class="text-6xl mx-4">→</div>
+                        <div class="pulse-animation text-6xl mx-4">🔍</div>
+                        <div class="text-6xl mx-4">→</div>
+                        <div class="bounce-animation text-6xl ml-6">🌱</div>
+                    </div>
+                    <h1 class="text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
+                        <span class="text-yellow-300">Más Allá del Bug:</span><br>
+                        <span class="pulse-animation">Atacando la Raíz</span><br>
+                        <span class="text-green-300">del Problema</span>
+                    </h1>
+                    <p class="text-xl opacity-90 max-w-3xl mb-8">
+                        Análisis de causa raíz y mejora continua para prevenir defectos recurrentes
+                    </p>
+                    <div class="flex items-center space-x-4 text-lg">
+                        <span class="bg-white bg-opacity-20 px-4 py-2 rounded-full">🔍 RCA</span>
+                        <span class="bg-white bg-opacity-20 px-4 py-2 rounded-full">📊 Análisis</span>
+                        <span class="bg-white bg-opacity-20 px-4 py-2 rounded-full">🚀 Mejora</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2: Análisis de causa raíz (RCA) -->
+            <div class="slide" id="slide2">
+                <div class="slide-bg-2 rounded-3xl p-12 min-h-[600px] relative z-10">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center drop-shadow-lg">
+                        🔍 Análisis de Causa Raíz (RCA)
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-3 gap-8 mb-8">
+                        <!-- 5 Whys -->
+                        <div class="technique-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="demonstrate5Whys()">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4">❓</div>
+                                <h3 class="text-2xl font-bold text-gray-800">5 Whys</h3>
+                                <p class="text-gray-600 mt-2">Preguntar 5 veces "¿por qué?"</p>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="bg-blue-50 rounded-lg p-3">
+                                    <p class="text-sm font-semibold text-blue-800">Ventajas:</p>
+                                    <ul class="text-xs text-blue-600 mt-1 space-y-1">
+                                        <li>• Simple y rápido</li>
+                                        <li>• No requiere herramientas</li>
+                                        <li>• Fomenta pensamiento crítico</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-yellow-50 rounded-lg p-3">
+                                    <p class="text-sm font-semibold text-yellow-800">Cuándo usar:</p>
+                                    <p class="text-xs text-yellow-600 mt-1">Problemas con causa lineal clara</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors">
+                                    Ver Demo
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Ishikawa -->
+                        <div class="technique-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="showIshikawa()">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4">🐟</div>
+                                <h3 class="text-2xl font-bold text-gray-800">Ishikawa</h3>
+                                <p class="text-gray-600 mt-2">Diagrama causa-efecto</p>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="bg-green-50 rounded-lg p-3">
+                                    <p class="text-sm font-semibold text-green-800">Ventajas:</p>
+                                    <ul class="text-xs text-green-600 mt-1 space-y-1">
+                                        <li>• Análisis sistemático</li>
+                                        <li>• Trabajo en equipo</li>
+                                        <li>• Visualización clara</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-yellow-50 rounded-lg p-3">
+                                    <p class="text-sm font-semibold text-yellow-800">Cuándo usar:</p>
+                                    <p class="text-xs text-yellow-600 mt-1">Problemas complejos multifactoriales</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <button class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 transition-colors">
+                                    Ver Diagrama
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Pareto -->
+                        <div class="technique-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="showPareto()">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4">📊</div>
+                                <h3 class="text-2xl font-bold text-gray-800">Pareto</h3>
+                                <p class="text-gray-600 mt-2">Análisis 80/20</p>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="bg-purple-50 rounded-lg p-3">
+                                    <p class="text-sm font-semibold text-purple-800">Ventajas:</p>
+                                    <ul class="text-xs text-purple-600 mt-1 space-y-1">
+                                        <li>• Priorización clara</li>
+                                        <li>• Basado en datos</li>
+                                        <li>• Enfoque en lo crítico</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-yellow-50 rounded-lg p-3">
+                                    <p class="text-sm font-semibold text-yellow-800">Cuándo usar:</p>
+                                    <p class="text-xs text-yellow-600 mt-1">Múltiples problemas a priorizar</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <button class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700 transition-colors">
+                                    Ver Gráfico
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Demo Area -->
+                    <div id="demoArea" class="bg-white bg-opacity-90 rounded-2xl p-8 min-h-[200px]">
+                        <div class="text-center text-gray-500">
+                            <div class="text-4xl mb-4">🎯</div>
+                            <h3 class="text-xl font-semibold mb-2">Área de Demostración</h3>
+                            <p>Haz clic en cualquier técnica para ver una demostración interactiva</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3: Beneficios del RCA -->
+            <div class="slide" id="slide3">
+                <div class="slide-bg-3 rounded-3xl p-12 min-h-[600px] relative z-10">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center drop-shadow-lg">
+                        🎯 Beneficios del RCA
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-3 gap-8 mb-8">
+                        <!-- Prevenir defectos -->
+                        <div class="benefit-card bg-gradient-to-br from-red-500 to-red-700 rounded-2xl p-8 text-white">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 bounce-animation">🛡️</div>
+                                <h3 class="text-2xl font-bold">Prevenir Defectos Recurrentes</h3>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                                    <h4 class="font-semibold mb-2">Antes del RCA:</h4>
+                                    <ul class="text-sm space-y-1 opacity-90">
+                                        <li>• Mismo bug aparece múltiples veces</li>
+                                        <li>• Soluciones temporales</li>
+                                        <li>• Frustración del equipo</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-white bg-opacity-30 rounded-lg p-4">
+                                    <h4 class="font-semibold mb-2">Después del RCA:</h4>
+                                    <ul class="text-sm space-y-1 opacity-90">
+                                        <li>• ✅ Soluciones definitivas</li>
+                                        <li>• ✅ Prevención sistemática</li>
+                                        <li>• ✅ Confianza en el producto</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="mt-6 text-center">
+                                <div class="bg-white bg-opacity-20 rounded-full px-4 py-2 text-sm font-semibold">
+                                    Reducción: 60-80% defectos recurrentes
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mejorar procesos -->
+                        <div class="benefit-card bg-gradient-to-br from-blue-500 to-blue-700 rounded-2xl p-8 text-white">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 pulse-animation">⚙️</div>
+                                <h3 class="text-2xl font-bold">Mejorar Procesos</h3>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                                    <h4 class="font-semibold mb-2">Desarrollo:</h4>
+                                    <ul class="text-sm space-y-1 opacity-90">
+                                        <li>• Mejores prácticas de código</li>
+                                        <li>• Code reviews más efectivos</li>
+                                        <li>• Estándares de calidad</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-white bg-opacity-30 rounded-lg p-4">
+                                    <h4 class="font-semibold mb-2">QA:</h4>
+                                    <ul class="text-sm space-y-1 opacity-90">
+                                        <li>• Casos de prueba más robustos</li>
+                                        <li>• Automatización estratégica</li>
+                                        <li>• Testing más temprano</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="mt-6 text-center">
+                                <div class="bg-white bg-opacity-20 rounded-full px-4 py-2 text-sm font-semibold">
+                                    Mejora: 40-50% eficiencia procesos
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reducir costos -->
+                        <div class="benefit-card bg-gradient-to-br from-green-500 to-green-700 rounded-2xl p-8 text-white">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 float-animation">💰</div>
+                                <h3 class="text-2xl font-bold">Reducir Costos</h3>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                                    <h4 class="font-semibold mb-2">Costos Evitados:</h4>
+                                    <ul class="text-sm space-y-1 opacity-90">
+                                        <li>• Menos tiempo debugging</li>
+                                        <li>• Menor soporte técnico</li>
+                                        <li>• Menos hotfixes urgentes</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-white bg-opacity-30 rounded-lg p-4">
+                                    <h4 class="font-semibold mb-2">ROI del RCA:</h4>
+                                    <div class="text-center">
+                                        <div class="text-2xl font-bold mb-1">3:1</div>
+                                        <p class="text-xs opacity-90">Por cada $1 invertido en RCA, se ahorran $3 en mantenimiento</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-6 text-center">
+                                <div class="bg-white bg-opacity-20 rounded-full px-4 py-2 text-sm font-semibold">
+                                    Ahorro: 30-40% costos mantenimiento
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Success Metrics -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center">
+                            <span class="mr-3">📈</span> Métricas de Éxito del RCA
+                        </h3>
+                        <div class="grid md:grid-cols-4 gap-6">
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-blue-600 mb-2">85%</div>
+                                <p class="text-sm text-gray-600">Reducción en defectos recurrentes</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-green-600 mb-2">60%</div>
+                                <p class="text-sm text-gray-600">Menos tiempo en debugging</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-purple-600 mb-2">45%</div>
+                                <p class="text-sm text-gray-600">Mejora en satisfacción del cliente</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-3xl font-bold text-orange-600 mb-2">70%</div>
+                                <p class="text-sm text-gray-600">Reducción en escalaciones</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 4: Caso real NASA -->
+            <div class="slide" id="slide4">
+                <div class="slide-bg-4 rounded-3xl p-12 min-h-[600px] relative z-10">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center drop-shadow-lg">
+                        🚀 Caso Real - NASA Mars Climate Orbiter (1999)
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-8 mb-8">
+                        <!-- Case Study Details -->
+                        <div class="bg-white bg-opacity-90 rounded-2xl p-8">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4">🛰️</div>
+                                <h3 class="text-2xl font-bold text-red-600">El Desastre</h3>
+                            </div>
+                            
+                            <div class="case-study-timeline">
+                                <div class="timeline-item">
+                                    <div class="bg-red-50 rounded-lg p-4">
+                                        <h4 class="font-bold text-red-800 mb-2">El Error</h4>
+                                        <p class="text-sm text-red-600">Confusión entre libras-fuerza y Newtons en los cálculos de navegación</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="timeline-item">
+                                    <div class="bg-orange-50 rounded-lg p-4">
+                                        <h4 class="font-bold text-orange-800 mb-2">El Costo</h4>
+                                        <p class="text-sm text-orange-600">Pérdida total de $327 millones USD</p>
+                                        <p class="text-xs text-orange-500 mt-1">9 años de trabajo perdidos</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="timeline-item">
+                                    <div class="bg-blue-50 rounded-lg p-4">
+                                        <h4 class="font-bold text-blue-800 mb-2">La Consecuencia</h4>
+                                        <p class="text-sm text-blue-600">Orbiter se perdió al entrar en la atmósfera marciana</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-6 bg-gray-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-800 mb-2">Datos del Proyecto:</h4>
+                                <div class="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <span class="text-gray-600">Duración:</span>
+                                        <span class="font-semibold ml-2">1998-1999</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">Equipo:</span>
+                                        <span class="font-semibold ml-2">NASA + Lockheed</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">Misión:</span>
+                                        <span class="font-semibold ml-2">Estudio clima Marte</span>
+                                    </div>
+                                    <div>
+                                        <span class="text-gray-600">Resultado:</span>
+                                        <span class="font-semibold ml-2 text-red-600">Pérdida total</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- RCA Analysis -->
+                        <div class="bg-white bg-opacity-90 rounded-2xl p-8">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4">🔍</div>
+                                <h3 class="text-2xl font-bold text-blue-600">Análisis RCA</h3>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-red-800 mb-2">Causa Inmediata</h4>
+                                    <p class="text-sm text-red-600">Software de navegación usó unidades imperiales (libras-fuerza) mientras el sistema esperaba métricas (Newtons)</p>
+                                </div>
+
+                                <div class="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-orange-800 mb-2">Causas Contribuyentes</h4>
+                                    <ul class="text-sm text-orange-600 space-y-1">
+                                        <li>• Falta de estándares comunes entre equipos</li>
+                                        <li>• Comunicación deficiente NASA-Lockheed</li>
+                                        <li>• Ausencia de pruebas de integración</li>
+                                        <li>• No validación de unidades en interfaces</li>
+                                    </ul>
+                                </div>
+
+                                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-blue-800 mb-2">Causas Raíz</h4>
+                                    <ul class="text-sm text-blue-600 space-y-1">
+                                        <li>• Proceso de gestión de configuración inadecuado</li>
+                                        <li>• Falta de revisiones cruzadas de código crítico</li>
+                                        <li>• Presión de cronograma que omitió validaciones</li>
+                                        <li>• Cultura organizacional de "confianza ciega"</li>
+                                    </ul>
+                                </div>
+
+                                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-green-800 mb-2">Acciones Correctivas</h4>
+                                    <ul class="text-sm text-green-600 space-y-1">
+                                        <li>• ✅ Estándares obligatorios de unidades (SI)</li>
+                                        <li>• ✅ Pruebas de integración mandatorias</li>
+                                        <li>• ✅ Revisiones independientes de código crítico</li>
+                                        <li>• ✅ Validación automática de interfaces</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lessons Learned -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center">
+                            <span class="mr-3">💡</span> Lecciones Aprendidas
+                        </h3>
+                        <div class="grid md:grid-cols-3 gap-6">
+                            <div class="text-center">
+                                <div class="text-4xl mb-3">📏</div>
+                                <h4 class="font-bold text-gray-800 mb-2">Estándares</h4>
+                                <p class="text-sm text-gray-600">Los estándares comunes no son opcionales en proyectos críticos</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-4xl mb-3">🧪</div>
+                                <h4 class="font-bold text-gray-800 mb-2">Testing</h4>
+                                <p class="text-sm text-gray-600">Las pruebas de integración deben cubrir todos los componentes críticos</p>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-4xl mb-3">🤝</div>
+                                <h4 class="font-bold text-gray-800 mb-2">Comunicación</h4>
+                                <p class="text-sm text-gray-600">La comunicación clara entre equipos puede prevenir desastres costosos</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 5: Taller RCA -->
+            <div class="slide" id="slide5">
+                <div class="slide-bg-5 rounded-3xl p-12 min-h-[600px] relative z-10">
+                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                        🎯 Actividad - Taller RCA (20 min)
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-8 mb-8">
+                        <!-- Workshop Instructions -->
+                        <div class="bg-white bg-opacity-90 rounded-2xl p-8">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                                <span class="mr-3">📋</span> Instrucciones
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div class="workshop-card bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-blue-800 mb-2">Paso 1: Formar Equipos</h4>
+                                    <p class="text-sm text-blue-600">Grupos de 3-4 personas. Cada equipo analizará el mismo caso.</p>
+                                </div>
+
+                                <div class="workshop-card bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-green-800 mb-2">Paso 2: Caso de Estudio</h4>
+                                    <p class="text-sm text-green-600">Analizar el fallo de login usando la técnica de 5 Whys.</p>
+                                </div>
+
+                                <div class="workshop-card bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-orange-800 mb-2">Paso 3: Aplicar 5 Whys</h4>
+                                    <p class="text-sm text-orange-600">Encontrar la causa raíz siguiendo la metodología paso a paso.</p>
+                                </div>
+
+                                <div class="workshop-card bg-purple-50 border-l-4 border-purple-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-purple-800 mb-2">Paso 4: Compartir</h4>
+                                    <p class="text-sm text-purple-600">Presentar hallazgos en 2 minutos por equipo.</p>
+                                </div>
+                            </div>
+
+                            <!-- Timer -->
+                            <div class="mt-8 text-center">
+                                <div class="bg-gray-800 text-white rounded-2xl p-6">
+                                    <h4 class="text-lg font-bold mb-4">⏱️ Cronómetro del Taller</h4>
+                                    <div class="timer-display text-green-400" id="timer">20:00</div>
+                                    <div class="flex justify-center space-x-4 mt-4">
+                                        <button onclick="startTimer()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                            ▶️ Iniciar
+                                        </button>
+                                        <button onclick="pauseTimer()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                            ⏸️ Pausar
+                                        </button>
+                                        <button onclick="resetTimer()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                            🔄 Reiniciar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Interactive 5 Whys Tool -->
+                        <div class="bg-white bg-opacity-90 rounded-2xl p-8">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                                <span class="mr-3">🔍</span> Herramienta 5 Whys
+                            </h3>
+
+                            <!-- Case Study -->
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                                <h4 class="font-bold text-red-800 mb-2">🚨 Caso: Fallo de Login</h4>
+                                <p class="text-sm text-red-600 mb-2">
+                                    <strong>Problema:</strong> Los usuarios no pueden hacer login en la aplicación web desde ayer por la tarde.
+                                </p>
+                                <p class="text-xs text-red-500">
+                                    <strong>Impacto:</strong> 500+ usuarios afectados, pérdida estimada $10,000/hora
+                                </p>
+                            </div>
+
+                            <!-- 5 Whys Interactive -->
+                            <div class="space-y-4" id="whysContainer">
+                                <div class="why-step bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4" onclick="fillWhy(1)">
+                                    <div class="flex items-center">
+                                        <span class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">1</span>
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-gray-800">¿Por qué los usuarios no pueden hacer login?</p>
+                                            <p class="text-sm text-gray-500 mt-1" id="why1">Haz clic para revelar...</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="why-step bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 opacity-50" onclick="fillWhy(2)" id="whyStep2">
+                                    <div class="flex items-center">
+                                        <span class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">2</span>
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-gray-800">¿Por qué el servidor de autenticación está caído?</p>
+                                            <p class="text-sm text-gray-500 mt-1" id="why2">Completa el paso anterior...</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="why-step bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 opacity-50" onclick="fillWhy(3)" id="whyStep3">
+                                    <div class="flex items-center">
+                                        <span class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">3</span>
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-gray-800">¿Por qué se quedó sin memoria?</p>
+                                            <p class="text-sm text-gray-500 mt-1" id="why3">Completa el paso anterior...</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="why-step bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 opacity-50" onclick="fillWhy(4)" id="whyStep4">
+                                    <div class="flex items-center">
+                                        <span class="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">4</span>
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-gray-800">¿Por qué hay un memory leak?</p>
+                                            <p class="text-sm text-gray-500 mt-1" id="why4">Completa el paso anterior...</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="why-step bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 opacity-50" onclick="fillWhy(5)" id="whyStep5">
+                                    <div class="flex items-center">
+                                        <span class="bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">5</span>
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-gray-800">¿Por qué no se detectó en testing?</p>
+                                            <p class="text-sm text-gray-500 mt-1" id="why5">Completa el paso anterior...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Root Cause & Actions -->
+                            <div id="rootCauseSection" class="mt-6 hidden">
+                                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                                    <h4 class="font-bold text-green-800 mb-2">🎯 Causa Raíz Identificada</h4>
+                                    <p class="text-sm text-green-600 mb-3">
+                                        Falta de pruebas de carga en el ambiente de testing que hubieran detectado el memory leak antes del despliegue.
+                                    </p>
+                                    <h5 class="font-semibold text-green-800 mb-2">Acciones Correctivas:</h5>
+                                    <ul class="text-xs text-green-600 space-y-1">
+                                        <li>• Implementar pruebas de carga automáticas en CI/CD</li>
+                                        <li>• Configurar monitoreo de memoria en producción</li>
+                                        <li>• Revisar código para identificar otros memory leaks</li>
+                                        <li>• Capacitar al equipo en mejores prácticas de gestión de memoria</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Team Results -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center">
+                            <span class="mr-3">🏆</span> Resultados de Equipos
+                        </h3>
+                        <div id="teamResults" class="grid md:grid-cols-3 gap-6">
+                            <div class="text-center text-gray-500">
+                                <div class="text-4xl mb-2">⏳</div>
+                                <p>Esperando resultados de los equipos...</p>
+                            </div>
+                        </div>
+                        <div class="text-center mt-6">
+                            <button onclick="addTeamResult()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
+                                ➕ Agregar Resultado de Equipo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const totalSlides = 5;
+        let timerInterval;
+        let timeLeft = 1200; // 20 minutes in seconds
+        let timerRunning = false;
+        let whyStep = 0;
+        let teamCount = 0;
+
+        const whyAnswers = [
+            "El servidor de autenticación está caído",
+            "Se quedó sin memoria (OutOfMemoryError)",
+            "Hay un memory leak en el código de sesiones",
+            "No se liberan correctamente las conexiones de base de datos",
+            "Las pruebas de carga no detectaron este problema en testing"
+        ];
+
+        function showSlide(index) {
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            document.getElementById(`slide${index + 1}`).classList.add('active');
+            
+            document.getElementById('currentSlide').textContent = index + 1;
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
+            
+            const progress = ((index + 1) / totalSlides) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            if (index === 0) {
+                document.getElementById('prevBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('prevBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            if (index === totalSlides - 1) {
+                document.getElementById('nextBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('nextBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlides - 1) {
+                currentSlideIndex++;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function demonstrate5Whys() {
+            const demoArea = document.getElementById('demoArea');
+            demoArea.innerHTML = `
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-blue-600 mb-4">🔍 Técnica de 5 Whys</h3>
+                    <div class="bg-blue-50 rounded-lg p-6 max-w-2xl mx-auto">
+                        <div class="root-cause-tree text-left">
+                            <div class="mb-4">
+                                <strong>Problema:</strong> Sistema lento
+                            </div>
+                            <div class="ml-4 space-y-2">
+                                <div>1️⃣ ¿Por qué? → Base de datos responde lento</div>
+                                <div class="ml-4">2️⃣ ¿Por qué? → Muchas consultas simultáneas</div>
+                                <div class="ml-8">3️⃣ ¿Por qué? → No hay índices optimizados</div>
+                                <div class="ml-12">4️⃣ ¿Por qué? → No se revisó el plan de consultas</div>
+                                <div class="ml-16">5️⃣ ¿Por qué? → <strong class="text-red-600">Falta proceso de revisión de performance</strong></div>
+                            </div>
+                        </div>
+                        <div class="mt-4 p-3 bg-green-100 rounded text-green-800 text-sm">
+                            <strong>Causa Raíz:</strong> Ausencia de proceso de revisión de performance en el desarrollo
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showIshikawa() {
+            const demoArea = document.getElementById('demoArea');
+            demoArea.innerHTML = `
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-green-600 mb-4">🐟 Diagrama de Ishikawa</h3>
+                    <div class="bg-green-50 rounded-lg p-6">
+                        <svg width="100%" height="350" viewBox="0 0 900 350">
+                            <!-- Main spine -->
+                            <line x1="50" y1="175" x2="750" y2="175" class="ishikawa-branch" stroke-width="3"/>
+                            <polygon points="750,175 730,165 730,185" fill="#374151"/>
+                            
+                            <!-- TOP BRANCHES -->
+                            <!-- People branch (top) -->
+                            <line x1="150" y1="175" x2="120" y2="120" class="ishikawa-branch"/>
+                            <line x1="120" y1="120" x2="80" y2="120" class="ishikawa-branch"/>
+                            <text x="75" y="115" class="ishikawa-text" text-anchor="middle" font-weight="bold">PERSONAS</text>
+                            <line x1="110" y1="130" x2="90" y2="140" class="ishikawa-branch" stroke-width="1"/>
+                            <text x="85" y="145" class="ishikawa-text" font-size="10">Falta capacitación</text>
+                            <line x1="105" y1="135" x2="85" y2="150" class="ishikawa-branch" stroke-width="1"/>
+                            <text x="80" y="155" class="ishikawa-text" font-size="10">Experiencia limitada</text>
+                            
+                            <!-- Process branch (top) -->
+                            <line x1="300" y1="175" x2="270" y2="120" class="ishikawa-branch"/>
+                            <line x1="270" y1="120" x2="200" y2="120" class="ishikawa-branch"/>
+                            <text x="235" y="115" class="ishikawa-text" text-anchor="middle" font-weight="bold">PROCESO</text>
+                            <line x1="260" y1="130" x2="240" y2="140" class="ishikawa-branch" stroke-width="1"/>
+                            <text x="235" y="145" class="ishikawa-text" font-size="10">Sin code review</text>
+                            <line x1="255" y1="135" x2="235" y2="150" class="ishikawa-branch" stroke-width="1"/>
+                            <text x="230" y="155" class="ishikawa-text" font-size="10">Testing manual</text>
+                            
+                            <!-- Technology branch (top) -->
+                            <line x1="450" y1="175" x2="420" y2="120" class="ishikawa-branch"/>
+                            <line x1="420" y1="120" x2="350" y2="120" class="ishikawa-branch"/>
+                            <text x="385" y="115" class="ishikawa-text" text-anchor="middle" font-weight="bold">TECNOLOGÍA</text>
+                            <line x1="410" y1="130" x2="390" y2="140" class="ishikawa-branch" stroke-width="1"/>
+                            <text x="385" y="145" class="ishikawa-text" font-size="10">Herramientas obsoletas</text>
+                            <line x1="405" y1="135" x2="385" y2="150" class="ishikawa-branch" stroke-width="1"/>
+                            <text x="380" y="155" class="ishikawa-text" font-size="10">Falta automatización</text>
+                            
+                            <!-- BOTTOM BRANCHES -->
+                            <!-- Environment branch (bottom) -->
+                            <line x1="200" y1="175" x2="170" y2="230" class="ishikawa-branch"/>
+                            <line x1="170" y1="230" x2="100" y2="230" class="ishikawa-branch"/>
+                            <text x="135" y="245" class="ishikawa-text" text-anchor="middle" font-weight="bold">AMBIENTE</text>
+                            <line x1="160" y1="220" x2="140" y2="210" class="ishikawa-branch" stroke-width="1"/>
+                            <text x="135" y="205" class="ishikawa-text" font-size="10">Testing insuficiente</text>
+                            <line x1="155" y1="215" x2="135" y2="200" class="ishikawa-branch" stroke-width="1"/>
+                            <text x="130" y="195" class="ishikawa-text" font-size="10">Datos de prueba</text>
+                            
+                            <!-- Time branch (bottom) -->
+                            <line x1="350" y1="175" x2="320" y2="230" class="ishikawa-branch"/>
+                            <line x1="320" y1="230" x2="250" y2="230" class="ishikawa-branch"/>
+                            <text x="285" y="245" class="ishikawa-text" text-anchor="middle" font-weight="bold">TIEMPO</text>
+                            <line x1="310" y1="220" x2="290" y2="210" class="ishikawa-branch" stroke-width="1"/>
+                            <text x="285" y="205" class="ishikawa-text" font-size="10">Presión de entrega</text>
+                            <line x1="305" y1="215" x2="285" y2="200" class="ishikawa-branch" stroke-width="1"/>
+                            <text x="280" y="195" class="ishikawa-text" font-size="10">Deadlines irreales</text>
+                            
+                            <!-- Communication branch (bottom) -->
+                            <line x1="500" y1="175" x2="470" y2="230" class="ishikawa-branch"/>
+                            <line x1="470" y1="230" x2="380" y2="230" class="ishikawa-branch"/>
+                            <text x="425" y="245" class="ishikawa-text" text-anchor="middle" font-weight="bold">COMUNICACIÓN</text>
+                            <line x1="460" y1="220" x2="440" y2="210" class="ishikawa-branch" stroke-width="1"/>
+                            <text x="435" y="205" class="ishikawa-text" font-size="10">Requisitos poco claros</text>
+                            <line x1="455" y1="215" x2="435" y2="200" class="ishikawa-branch" stroke-width="1"/>
+                            <text x="430" y="195" class="ishikawa-text" font-size="10">Falta documentación</text>
+                            
+                            <!-- Problem box -->
+                            <rect x="760" y="155" width="120" height="40" fill="#ef4444" rx="8" stroke="#dc2626" stroke-width="2"/>
+                            <text x="820" y="175" class="ishikawa-text" fill="white" text-anchor="middle" font-weight="bold" font-size="14">BUG EN</text>
+                            <text x="820" y="190" class="ishikawa-text" fill="white" text-anchor="middle" font-weight="bold" font-size="14">PRODUCCIÓN</text>
+                        </svg>
+                        <div class="mt-4 text-sm text-green-700 bg-white rounded-lg p-3">
+                            <p class="font-semibold mb-2">💡 Cómo leer el diagrama:</p>
+                            <p>Cada rama principal representa una categoría de causas potenciales. Las sub-ramas muestran causas específicas dentro de cada categoría.</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showPareto() {
+            const demoArea = document.getElementById('demoArea');
+            demoArea.innerHTML = `
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-purple-600 mb-4">📊 Análisis de Pareto</h3>
+                    <div class="bg-purple-50 rounded-lg p-6">
+                        <svg width="100%" height="300" viewBox="0 0 600 300">
+                            <!-- Bars -->
+                            <rect x="50" y="50" width="60" height="200" fill="#8b5cf6" class="pareto-bar"/>
+                            <rect x="120" y="100" width="60" height="150" fill="#a78bfa" class="pareto-bar"/>
+                            <rect x="190" y="150" width="60" height="100" fill="#c4b5fd" class="pareto-bar"/>
+                            <rect x="260" y="200" width="60" height="50" fill="#ddd6fe" class="pareto-bar"/>
+                            <rect x="330" y="220" width="60" height="30" fill="#ede9fe" class="pareto-bar"/>
+                            
+                            <!-- Line chart -->
+                            <polyline points="80,50 150,100 220,150 290,180 360,200" 
+                                     stroke="#ef4444" stroke-width="3" fill="none"/>
+                            
+                            <!-- Labels -->
+                            <text x="80" y="270" class="ishikawa-text" text-anchor="middle">Login</text>
+                            <text x="150" y="270" class="ishikawa-text" text-anchor="middle">DB</text>
+                            <text x="220" y="270" class="ishikawa-text" text-anchor="middle">UI</text>
+                            <text x="290" y="270" class="ishikawa-text" text-anchor="middle">API</text>
+                            <text x="360" y="270" class="ishikawa-text" text-anchor="middle">Otros</text>
+                            
+                            <!-- Percentages -->
+                            <text x="80" y="40" class="ishikawa-text" text-anchor="middle" fill="#8b5cf6">45%</text>
+                            <text x="150" y="90" class="ishikawa-text" text-anchor="middle" fill="#a78bfa">25%</text>
+                            <text x="220" y="140" class="ishikawa-text" text-anchor="middle" fill="#c4b5fd">15%</text>
+                            <text x="290" y="190" class="ishikawa-text" text-anchor="middle" fill="#ddd6fe">10%</text>
+                            <text x="360" y="210" class="ishikawa-text" text-anchor="middle" fill="#ede9fe">5%</text>
+                            
+                            <!-- 80% line -->
+                            <line x1="40" y1="120" x2="400" y2="120" stroke="#ef4444" stroke-dasharray="5,5"/>
+                            <text x="410" y="125" class="ishikawa-text" fill="#ef4444">80%</text>
+                        </svg>
+                        <p class="text-sm text-purple-600 mt-4">
+                            El 70% de los bugs provienen de Login y DB (regla 80/20)
+                        </p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function fillWhy(step) {
+            if (step <= whyStep + 1) {
+                whyStep = step;
+                document.getElementById(`why${step}`).textContent = whyAnswers[step - 1];
+                document.querySelector(`#whysContainer .why-step:nth-child(${step})`).classList.add('completed');
+                
+                if (step < 5) {
+                    document.getElementById(`whyStep${step + 1}`).classList.remove('opacity-50');
+                    document.getElementById(`whyStep${step + 1}`).style.pointerEvents = 'auto';
+                }
+                
+                if (step === 5) {
+                    document.getElementById('rootCauseSection').classList.remove('hidden');
+                    document.getElementById('rootCauseSection').classList.add('grow-animation');
+                }
+            }
+        }
+
+        function startTimer() {
+            if (!timerRunning) {
+                timerRunning = true;
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    updateTimerDisplay();
+                    
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval);
+                        timerRunning = false;
+                        alert('¡Tiempo terminado! Es hora de compartir los resultados.');
+                    }
+                }, 1000);
+            }
+        }
+
+        function pauseTimer() {
+            if (timerRunning) {
+                clearInterval(timerInterval);
+                timerRunning = false;
+            }
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            timeLeft = 1200;
+            updateTimerDisplay();
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Change color based on time left
+            const timerElement = document.getElementById('timer');
+            if (timeLeft <= 300) { // 5 minutes
+                timerElement.className = 'timer-display text-red-400';
+            } else if (timeLeft <= 600) { // 10 minutes
+                timerElement.className = 'timer-display text-yellow-400';
+            } else {
+                timerElement.className = 'timer-display text-green-400';
+            }
+        }
+
+        function addTeamResult() {
+            teamCount++;
+            const teamName = prompt(`Nombre del Equipo ${teamCount}:`) || `Equipo ${teamCount}`;
+            const rootCause = prompt('Causa raíz identificada:') || 'Falta de proceso de testing';
+            
+            const teamResults = document.getElementById('teamResults');
+            if (teamResults.children.length === 1 && teamResults.children[0].textContent.includes('Esperando')) {
+                teamResults.innerHTML = '';
+            }
+            
+            const resultHtml = `
+                <div class="bg-white border border-gray-200 rounded-lg p-4 grow-animation">
+                    <div class="flex items-center mb-3">
+                        <div class="text-2xl mr-3">🏆</div>
+                        <h4 class="font-bold text-gray-800">${teamName}</h4>
+                    </div>
+                    <div class="bg-blue-50 rounded p-3">
+                        <p class="text-sm text-blue-800 font-semibold mb-1">Causa Raíz:</p>
+                        <p class="text-xs text-blue-600">${rootCause}</p>
+                    </div>
+                    <div class="mt-3 text-center">
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-semibold">
+                            ✅ Completado
+                        </span>
+                    </div>
+                </div>
+            `;
+            
+            teamResults.insertAdjacentHTML('beforeend', resultHtml);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                previousSlide();
+            }
+        });
+
+        // Initialize
+        showSlide(0);
+        updateTimerDisplay();
+
+        // Add click effects to interactive elements
+        document.querySelectorAll('.technique-card, .benefit-card, .workshop-card').forEach(element => {
+            element.addEventListener('click', () => {
+                element.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    element.style.transform = '';
+                }, 150);
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a869e20698cdb0',t:'MTc1NzEwMzQ4My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

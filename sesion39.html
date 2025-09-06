@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>De Brechas a Plan de Acción</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        .slide-card {
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        }
+        
+        .slide-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .priority-matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 1rem;
+            height: 400px;
+        }
+        
+        .matrix-quadrant {
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .matrix-quadrant:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .matrix-quadrant.high-impact-low-effort {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            border-color: #16a34a;
+        }
+        
+        .matrix-quadrant.high-impact-high-effort {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-color: #d97706;
+        }
+        
+        .matrix-quadrant.low-impact-low-effort {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            border-color: #2563eb;
+        }
+        
+        .matrix-quadrant.low-impact-high-effort {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            border-color: #dc2626;
+        }
+        
+        .gap-item {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin: 0.5rem 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            cursor: grab;
+            transition: all 0.3s ease;
+        }
+        
+        .gap-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .gap-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+        
+        .phase-card {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border-left: 4px solid #0ea5e9;
+            transition: all 0.3s ease;
+        }
+        
+        .phase-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .rca-tool {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .rca-tool:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .rca-tool.selected {
+            border: 2px solid #3b82f6;
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        }
+        
+        .problem-scenario {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border-left: 4px solid #ef4444;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .problem-scenario:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .problem-scenario.selected {
+            border-left-color: #16a34a;
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        }
+        
+        .timeline-step {
+            position: relative;
+            padding-left: 2rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .timeline-step::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            width: 1rem;
+            height: 1rem;
+            background: #3b82f6;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #3b82f6;
+        }
+        
+        .timeline-step::after {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 1.5rem;
+            width: 2px;
+            height: calc(100% + 0.5rem);
+            background: #e5e7eb;
+        }
+        
+        .timeline-step:last-child::after {
+            display: none;
+        }
+        
+        .action-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .action-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        .ishikawa-branch {
+            stroke: #374151;
+            stroke-width: 2;
+            fill: none;
+        }
+        
+        .ishikawa-category {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .ishikawa-category:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-100 min-h-screen">
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+          <a class="qs-btn" href="checklist.html">Checklist</a>
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <!-- Header -->
+    <div class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-6 py-6">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">🎯 De Brechas a Plan de Acción</h1>
+                <p class="text-xl text-gray-600 italic">"Convertir hallazgos en mejoras"</p>
+                <div class="mt-4 flex justify-center space-x-4 flex-wrap gap-2">
+                    <button onclick="showSlide('title')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        📋 Introducción
+                    </button>
+                    <button onclick="showSlide('prioritization')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        📊 Priorización
+                    </button>
+                    <button onclick="showSlide('project-phases')" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        🚀 Fases del Proyecto
+                    </button>
+                    <button onclick="showSlide('workshop')" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        🛠️ Taller RCA + Gap
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 1: Title/Introduction -->
+    <div id="title-slide" class="max-w-7xl mx-auto px-6 py-8">
+        <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
+            <div class="text-center mb-8">
+                <h2 class="text-4xl font-bold text-blue-800 mb-4">🎯 Convertir Hallazgos en Mejoras</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    El proceso de transformar brechas identificadas en acciones concretas y medibles 
+                    que generen valor real para la organización.
+                </p>
+            </div>
+            
+            <!-- Key Concepts -->
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                <div class="slide-card rounded-xl p-6 shadow-lg text-center">
+                    <div class="bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl text-white">🔍</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-blue-800 mb-2">Identificación</h3>
+                    <p class="text-gray-600">Detectar brechas entre el estado actual y el deseado</p>
+                </div>
+                
+                <div class="slide-card rounded-xl p-6 shadow-lg text-center">
+                    <div class="bg-green-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl text-white">📊</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-green-800 mb-2">Priorización</h3>
+                    <p class="text-gray-600">Evaluar impacto, esfuerzo y valor de negocio</p>
+                </div>
+                
+                <div class="slide-card rounded-xl p-6 shadow-lg text-center">
+                    <div class="bg-purple-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl text-white">🚀</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-purple-800 mb-2">Ejecución</h3>
+                    <p class="text-gray-600">Implementar acciones con cronograma y métricas</p>
+                </div>
+            </div>
+            
+            <!-- Process Flow -->
+            <div class="bg-gray-50 rounded-xl p-6">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">🔄 Proceso de Transformación</h3>
+                <div class="flex flex-wrap justify-center items-center space-x-4">
+                    <div class="bg-red-100 rounded-lg p-4 text-center min-w-[150px] mb-4">
+                        <div class="text-2xl mb-2">🚨</div>
+                        <div class="font-semibold text-red-800">Problema</div>
+                        <div class="text-sm text-gray-600">Identificado</div>
+                    </div>
+                    
+                    <div class="text-2xl text-gray-400">→</div>
+                    
+                    <div class="bg-yellow-100 rounded-lg p-4 text-center min-w-[150px] mb-4">
+                        <div class="text-2xl mb-2">🔍</div>
+                        <div class="font-semibold text-yellow-800">Análisis RCA</div>
+                        <div class="text-sm text-gray-600">Causa Raíz</div>
+                    </div>
+                    
+                    <div class="text-2xl text-gray-400">→</div>
+                    
+                    <div class="bg-blue-100 rounded-lg p-4 text-center min-w-[150px] mb-4">
+                        <div class="text-2xl mb-2">📊</div>
+                        <div class="font-semibold text-blue-800">Gap Analysis</div>
+                        <div class="text-sm text-gray-600">Brecha</div>
+                    </div>
+                    
+                    <div class="text-2xl text-gray-400">→</div>
+                    
+                    <div class="bg-green-100 rounded-lg p-4 text-center min-w-[150px] mb-4">
+                        <div class="text-2xl mb-2">🎯</div>
+                        <div class="font-semibold text-green-800">Plan de Acción</div>
+                        <div class="text-sm text-gray-600">Mejora</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Success Factors -->
+            <div class="mt-8 bg-blue-50 rounded-xl p-6">
+                <h3 class="text-xl font-semibold text-blue-800 mb-4">🌟 Factores Clave de Éxito</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-blue-800 mb-3">✅ Elementos Esenciales:</h4>
+                        <ul class="text-sm text-blue-700 space-y-2">
+                            <li>• <strong>Datos objetivos:</strong> Métricas y evidencia cuantificable</li>
+                            <li>• <strong>Stakeholder buy-in:</strong> Apoyo de la dirección</li>
+                            <li>• <strong>Recursos asignados:</strong> Tiempo, presupuesto, personas</li>
+                            <li>• <strong>Cronograma realista:</strong> Plazos alcanzables</li>
+                            <li>• <strong>Métricas de seguimiento:</strong> KPIs para medir progreso</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-red-800 mb-3">⚠️ Riesgos Comunes:</h4>
+                        <ul class="text-sm text-red-700 space-y-2">
+                            <li>• <strong>Análisis superficial:</strong> No llegar a la causa raíz</li>
+                            <li>• <strong>Falta de priorización:</strong> Intentar resolver todo a la vez</li>
+                            <li>• <strong>Resistencia al cambio:</strong> No gestionar el aspecto humano</li>
+                            <li>• <strong>Falta de seguimiento:</strong> No medir resultados</li>
+                            <li>• <strong>Soluciones parciales:</strong> Parches en lugar de mejoras</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 2: Prioritization -->
+    <div id="prioritization-slide" class="max-w-7xl mx-auto px-6 py-8 hidden">
+        <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-green-800 mb-6 text-center">📊 Priorización de Brechas</h2>
+            
+            <!-- Criteria Section -->
+            <div class="bg-green-50 rounded-xl p-6 mb-8">
+                <h3 class="text-2xl font-bold text-green-800 mb-4">📋 Criterios de Priorización</h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <div class="flex items-center mb-3">
+                            <div class="bg-red-100 rounded-full w-10 h-10 flex items-center justify-center mr-3">
+                                <span class="text-red-600 font-bold">🚨</span>
+                            </div>
+                            <h4 class="font-semibold text-gray-800">Severidad</h4>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3">¿Qué tan crítico es el problema?</p>
+                        <ul class="text-xs text-gray-600 space-y-1">
+                            <li>• Impacto en usuarios finales</li>
+                            <li>• Riesgo de seguridad</li>
+                            <li>• Pérdida de funcionalidad</li>
+                            <li>• Compliance y regulaciones</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <div class="flex items-center mb-3">
+                            <div class="bg-blue-100 rounded-full w-10 h-10 flex items-center justify-center mr-3">
+                                <span class="text-blue-600 font-bold">💼</span>
+                            </div>
+                            <h4 class="font-semibold text-gray-800">Impacto en Negocio</h4>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3">¿Cuál es el valor para la organización?</p>
+                        <ul class="text-xs text-gray-600 space-y-1">
+                            <li>• ROI esperado</li>
+                            <li>• Ahorro de costos</li>
+                            <li>• Mejora de eficiencia</li>
+                            <li>• Ventaja competitiva</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-4 shadow-sm">
+                        <div class="flex items-center mb-3">
+                            <div class="bg-green-100 rounded-full w-10 h-10 flex items-center justify-center mr-3">
+                                <span class="text-green-600 font-bold">⚡</span>
+                            </div>
+                            <h4 class="font-semibold text-gray-800">Facilidad de Solución</h4>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-3">¿Qué tan fácil es implementar?</p>
+                        <ul class="text-xs text-gray-600 space-y-1">
+                            <li>• Recursos necesarios</li>
+                            <li>• Complejidad técnica</li>
+                            <li>• Tiempo de implementación</li>
+                            <li>• Dependencias externas</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Interactive Priority Matrix -->
+            <div class="bg-gray-50 rounded-xl p-6 mb-8">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">🎯 Matriz de Priorización Interactiva</h3>
+                <p class="text-gray-600 mb-6">Arrastra las brechas a los cuadrantes según su impacto y esfuerzo requerido</p>
+                
+                <div class="grid lg:grid-cols-3 gap-6">
+                    <!-- Gap Items to Drag -->
+                    <div class="lg:col-span-1">
+                        <h4 class="font-semibold text-gray-800 mb-4">📋 Brechas Identificadas</h4>
+                        <div id="gap-items" class="space-y-2">
+                            <div class="gap-item" draggable="true" data-gap="testing-automation">
+                                <div class="font-semibold text-sm">🤖 Automatización de Pruebas</div>
+                                <div class="text-xs text-gray-600">Falta de pruebas automatizadas</div>
+                            </div>
+                            
+                            <div class="gap-item" draggable="true" data-gap="code-review">
+                                <div class="font-semibold text-sm">👥 Proceso de Code Review</div>
+                                <div class="text-xs text-gray-600">No hay revisión sistemática</div>
+                            </div>
+                            
+                            <div class="gap-item" draggable="true" data-gap="ci-cd">
+                                <div class="font-semibold text-sm">🚀 Pipeline CI/CD</div>
+                                <div class="text-xs text-gray-600">Despliegues manuales</div>
+                            </div>
+                            
+                            <div class="gap-item" draggable="true" data-gap="documentation">
+                                <div class="font-semibold text-sm">📚 Documentación</div>
+                                <div class="text-xs text-gray-600">Documentación desactualizada</div>
+                            </div>
+                            
+                            <div class="gap-item" draggable="true" data-gap="monitoring">
+                                <div class="font-semibold text-sm">📊 Monitoreo</div>
+                                <div class="text-xs text-gray-600">Falta de métricas en tiempo real</div>
+                            </div>
+                            
+                            <div class="gap-item" draggable="true" data-gap="security">
+                                <div class="font-semibold text-sm">🔒 Seguridad</div>
+                                <div class="text-xs text-gray-600">Vulnerabilidades sin resolver</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Priority Matrix -->
+                    <div class="lg:col-span-2">
+                        <div class="relative">
+                            <!-- Axis Labels -->
+                            <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 text-sm font-semibold text-gray-700">
+                                Alto Impacto
+                            </div>
+                            <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-sm font-semibold text-gray-700">
+                                Bajo Impacto
+                            </div>
+                            <div class="absolute -left-16 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm font-semibold text-gray-700">
+                                Bajo Esfuerzo
+                            </div>
+                            <div class="absolute -right-16 top-1/2 transform -translate-y-1/2 rotate-90 text-sm font-semibold text-gray-700">
+                                Alto Esfuerzo
+                            </div>
+                            
+                            <!-- Matrix -->
+                            <div class="priority-matrix">
+                                <div class="matrix-quadrant high-impact-low-effort" data-quadrant="quick-wins">
+                                    <div class="text-center">
+                                        <div class="text-2xl mb-2">🎯</div>
+                                        <div class="font-bold text-green-800">Quick Wins</div>
+                                        <div class="text-sm text-green-700">Alto Impacto, Bajo Esfuerzo</div>
+                                        <div class="text-xs text-green-600 mt-2">Prioridad: ALTA</div>
+                                    </div>
+                                    <div class="dropped-items mt-4 min-h-[100px]"></div>
+                                </div>
+                                
+                                <div class="matrix-quadrant high-impact-high-effort" data-quadrant="major-projects">
+                                    <div class="text-center">
+                                        <div class="text-2xl mb-2">🏗️</div>
+                                        <div class="font-bold text-yellow-800">Proyectos Mayores</div>
+                                        <div class="text-sm text-yellow-700">Alto Impacto, Alto Esfuerzo</div>
+                                        <div class="text-xs text-yellow-600 mt-2">Prioridad: MEDIA</div>
+                                    </div>
+                                    <div class="dropped-items mt-4 min-h-[100px]"></div>
+                                </div>
+                                
+                                <div class="matrix-quadrant low-impact-low-effort" data-quadrant="fill-ins">
+                                    <div class="text-center">
+                                        <div class="text-2xl mb-2">🔧</div>
+                                        <div class="font-bold text-blue-800">Fill-ins</div>
+                                        <div class="text-sm text-blue-700">Bajo Impacto, Bajo Esfuerzo</div>
+                                        <div class="text-xs text-blue-600 mt-2">Prioridad: BAJA</div>
+                                    </div>
+                                    <div class="dropped-items mt-4 min-h-[100px]"></div>
+                                </div>
+                                
+                                <div class="matrix-quadrant low-impact-high-effort" data-quadrant="thankless-tasks">
+                                    <div class="text-center">
+                                        <div class="text-2xl mb-2">❌</div>
+                                        <div class="font-bold text-red-800">Evitar</div>
+                                        <div class="text-sm text-red-700">Bajo Impacto, Alto Esfuerzo</div>
+                                        <div class="text-xs text-red-600 mt-2">Prioridad: MUY BAJA</div>
+                                    </div>
+                                    <div class="dropped-items mt-4 min-h-[100px]"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="mt-6 flex justify-center space-x-4">
+                    <button onclick="resetMatrix()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors">
+                        🔄 Reiniciar
+                    </button>
+                    <button onclick="generatePriorityReport()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors">
+                        📊 Generar Reporte
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Scoring System -->
+            <div class="bg-blue-50 rounded-xl p-6">
+                <h3 class="text-xl font-semibold text-blue-800 mb-4">🔢 Sistema de Puntuación</h3>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-lg p-4">
+                        <h4 class="font-semibold text-blue-800 mb-3">Severidad (1-5)</h4>
+                        <ul class="text-sm text-gray-700 space-y-1">
+                            <li><strong>5:</strong> Crítico - Sistema no funciona</li>
+                            <li><strong>4:</strong> Alto - Funcionalidad principal afectada</li>
+                            <li><strong>3:</strong> Medio - Impacto moderado</li>
+                            <li><strong>2:</strong> Bajo - Problema menor</li>
+                            <li><strong>1:</strong> Cosmético - Mejora estética</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-4">
+                        <h4 class="font-semibold text-blue-800 mb-3">Impacto Negocio (1-5)</h4>
+                        <ul class="text-sm text-gray-700 space-y-1">
+                            <li><strong>5:</strong> ROI > 300%</li>
+                            <li><strong>4:</strong> ROI 200-300%</li>
+                            <li><strong>3:</strong> ROI 100-200%</li>
+                            <li><strong>2:</strong> ROI 50-100%</li>
+                            <li><strong>1:</strong> ROI < 50%</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-4">
+                        <h4 class="font-semibold text-blue-800 mb-3">Facilidad (1-5)</h4>
+                        <ul class="text-sm text-gray-700 space-y-1">
+                            <li><strong>5:</strong> < 1 semana</li>
+                            <li><strong>4:</strong> 1-4 semanas</li>
+                            <li><strong>3:</strong> 1-3 meses</li>
+                            <li><strong>2:</strong> 3-6 meses</li>
+                            <li><strong>1:</strong> > 6 meses</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="mt-4 bg-white rounded-lg p-4">
+                    <h4 class="font-semibold text-blue-800 mb-2">📊 Fórmula de Priorización:</h4>
+                    <div class="text-center bg-blue-100 rounded-lg p-3">
+                        <code class="text-lg font-mono">
+                            Prioridad = (Severidad × 0.4) + (Impacto Negocio × 0.4) + (Facilidad × 0.2)
+                        </code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: Project Phases -->
+    <div id="project-phases-slide" class="max-w-7xl mx-auto px-6 py-8 hidden">
+        <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-purple-800 mb-6 text-center">🚀 Conexión con el Proyecto Final</h2>
+            
+            <!-- Project Overview -->
+            <div class="bg-purple-50 rounded-xl p-6 mb-8 border-l-4 border-purple-500">
+                <h3 class="text-2xl font-bold text-purple-800 mb-4">📋 Estructura del Proyecto Final</h3>
+                <p class="text-gray-700 mb-4">
+                    El proyecto final integra todos los conceptos aprendidos en un proceso estructurado 
+                    de mejora continua de la calidad del software.
+                </p>
+                <div class="bg-white rounded-lg p-4">
+                    <h4 class="font-semibold text-purple-800 mb-2">🎯 Objetivos del Proyecto:</h4>
+                    <ul class="text-sm text-gray-700 space-y-1">
+                        <li>• Aplicar metodologías de QA en un contexto real</li>
+                        <li>• Desarrollar habilidades de análisis y diagnóstico</li>
+                        <li>• Crear planes de acción concretos y medibles</li>
+                        <li>• Presentar resultados de manera profesional</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Three Phases -->
+            <div class="space-y-6 mb-8">
+                <!-- Phase 1 -->
+                <div class="phase-card rounded-xl p-6">
+                    <div class="flex items-start space-x-4">
+                        <div class="bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center flex-shrink-0">
+                            <span class="text-2xl text-white">1️⃣</span>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-blue-800 mb-3">Fase 1: Diagnóstico y Selección del Modelo</h3>
+                            <p class="text-gray-700 mb-4">
+                                Evaluación del estado actual de los procesos de QA y selección del modelo 
+                                de madurez más apropiado para la organización.
+                            </p>
+                            
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div class="bg-white rounded-lg p-4">
+                                    <h4 class="font-semibold text-blue-800 mb-2">📊 Actividades Clave:</h4>
+                                    <ul class="text-sm text-gray-700 space-y-1">
+                                        <li>• Evaluación inicial de procesos</li>
+                                        <li>• Análisis de contexto organizacional</li>
+                                        <li>• Selección de modelo (CMMI, TMMi, etc.)</li>
+                                        <li>• Definición de alcance del proyecto</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-white rounded-lg p-4">
+                                    <h4 class="font-semibold text-blue-800 mb-2">📋 Entregables:</h4>
+                                    <ul class="text-sm text-gray-700 space-y-1">
+                                        <li>• Reporte de diagnóstico inicial</li>
+                                        <li>• Justificación del modelo seleccionado</li>
+                                        <li>• Plan de trabajo detallado</li>
+                                        <li>• Matriz de stakeholders</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 bg-blue-100 rounded-lg p-3">
+                                <div class="flex items-center">
+                                    <span class="text-blue-600 mr-2">⏱️</span>
+                                    <strong class="text-blue-800">Duración:</strong>
+                                    <span class="text-blue-700 ml-2">2-3 semanas</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Phase 2 -->
+                <div class="phase-card rounded-xl p-6">
+                    <div class="flex items-start space-x-4">
+                        <div class="bg-green-600 rounded-full w-16 h-16 flex items-center justify-center flex-shrink-0">
+                            <span class="text-2xl text-white">2️⃣</span>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-green-800 mb-3">Fase 2: Gap Analysis (Identificación de Brechas)</h3>
+                            <p class="text-gray-700 mb-4">
+                                Análisis detallado de las diferencias entre el estado actual y el nivel 
+                                de madurez objetivo, identificando áreas de mejora específicas.
+                            </p>
+                            
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div class="bg-white rounded-lg p-4">
+                                    <h4 class="font-semibold text-green-800 mb-2">🔍 Actividades Clave:</h4>
+                                    <ul class="text-sm text-gray-700 space-y-1">
+                                        <li>• Evaluación contra el modelo seleccionado</li>
+                                        <li>• Identificación de brechas por área</li>
+                                        <li>• Análisis de causa raíz (RCA)</li>
+                                        <li>• Priorización de brechas</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-white rounded-lg p-4">
+                                    <h4 class="font-semibold text-green-800 mb-2">📋 Entregables:</h4>
+                                    <ul class="text-sm text-gray-700 space-y-1">
+                                        <li>• Matriz de evaluación completa</li>
+                                        <li>• Reporte de brechas identificadas</li>
+                                        <li>• Análisis RCA por brecha crítica</li>
+                                        <li>• Matriz de priorización</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 bg-green-100 rounded-lg p-3">
+                                <div class="flex items-center">
+                                    <span class="text-green-600 mr-2">⏱️</span>
+                                    <strong class="text-green-800">Duración:</strong>
+                                    <span class="text-green-700 ml-2">3-4 semanas</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Phase 3 -->
+                <div class="phase-card rounded-xl p-6">
+                    <div class="flex items-start space-x-4">
+                        <div class="bg-orange-600 rounded-full w-16 h-16 flex items-center justify-center flex-shrink-0">
+                            <span class="text-2xl text-white">3️⃣</span>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-orange-800 mb-3">Fase 3: Roadmap (Acciones y Calendario)</h3>
+                            <p class="text-gray-700 mb-4">
+                                Desarrollo de un plan de acción detallado con cronograma, recursos, 
+                                métricas y estrategia de implementación.
+                            </p>
+                            
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div class="bg-white rounded-lg p-4">
+                                    <h4 class="font-semibold text-orange-800 mb-2">🎯 Actividades Clave:</h4>
+                                    <ul class="text-sm text-gray-700 space-y-1">
+                                        <li>• Definición de acciones correctivas</li>
+                                        <li>• Cronograma de implementación</li>
+                                        <li>• Asignación de recursos</li>
+                                        <li>• Definición de métricas de éxito</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-white rounded-lg p-4">
+                                    <h4 class="font-semibold text-orange-800 mb-2">📋 Entregables:</h4>
+                                    <ul class="text-sm text-gray-700 space-y-1">
+                                        <li>• Roadmap de mejora detallado</li>
+                                        <li>• Plan de implementación</li>
+                                        <li>• Dashboard de métricas</li>
+                                        <li>• Presentación ejecutiva</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 bg-orange-100 rounded-lg p-3">
+                                <div class="flex items-center">
+                                    <span class="text-orange-600 mr-2">⏱️</span>
+                                    <strong class="text-orange-800">Duración:</strong>
+                                    <span class="text-orange-700 ml-2">2-3 semanas</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Project Timeline -->
+            <div class="bg-gray-50 rounded-xl p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-6">📅 Cronograma del Proyecto</h3>
+                
+                <div class="space-y-4">
+                    <div class="timeline-step">
+                        <div class="action-card">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-blue-800">Semanas 1-3: Diagnóstico</h4>
+                                <span class="text-sm text-gray-500 bg-blue-100 px-2 py-1 rounded">Fase 1</span>
+                            </div>
+                            <p class="text-sm text-gray-700">Evaluación inicial y selección del modelo de madurez</p>
+                            <div class="mt-2 flex space-x-2">
+                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Diagnóstico</span>
+                                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Selección</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-step">
+                        <div class="action-card">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-green-800">Semanas 4-7: Gap Analysis</h4>
+                                <span class="text-sm text-gray-500 bg-green-100 px-2 py-1 rounded">Fase 2</span>
+                            </div>
+                            <p class="text-sm text-gray-700">Identificación y análisis de brechas, RCA y priorización</p>
+                            <div class="mt-2 flex space-x-2">
+                                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Evaluación</span>
+                                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">RCA</span>
+                                <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">Priorización</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-step">
+                        <div class="action-card">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-orange-800">Semanas 8-10: Roadmap</h4>
+                                <span class="text-sm text-gray-500 bg-orange-100 px-2 py-1 rounded">Fase 3</span>
+                            </div>
+                            <p class="text-sm text-gray-700">Plan de acción, cronograma y presentación final</p>
+                            <div class="mt-2 flex space-x-2">
+                                <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Planificación</span>
+                                <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Métricas</span>
+                                <span class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Presentación</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Workshop -->
+    <div id="workshop-slide" class="max-w-7xl mx-auto px-6 py-8 hidden">
+        <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-orange-800 mb-6 text-center">🛠️ Taller RCA + Gap Analysis</h2>
+            
+            <!-- Workshop Instructions -->
+            <div class="bg-orange-50 rounded-xl p-6 mb-8 border-l-4 border-orange-500">
+                <h3 class="text-2xl font-bold text-orange-800 mb-4">📋 Instrucciones del Taller (20 minutos)</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-orange-800 mb-2">🎯 Objetivos</h4>
+                        <ul class="text-sm text-gray-700 space-y-1">
+                            <li>• Aplicar técnicas de RCA en problemas reales</li>
+                            <li>• Conectar causas raíz con brechas de proceso</li>
+                            <li>• Proponer acciones de mejora concretas</li>
+                            <li>• Practicar priorización de soluciones</li>
+                        </ul>
+                        
+                        <h4 class="font-semibold text-orange-800 mb-2 mt-4">⏰ Distribución del Tiempo</h4>
+                        <ul class="text-sm text-gray-700 space-y-1">
+                            <li>• 5 min: Selección de problema y técnica</li>
+                            <li>• 10 min: Análisis RCA y identificación de brecha</li>
+                            <li>• 5 min: Propuesta de acción de mejora</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-orange-800 mb-2">📝 Entregables</h4>
+                        <ul class="text-sm text-gray-700 space-y-1">
+                            <li>• Análisis RCA completo (Ishikawa o 5 Whys)</li>
+                            <li>• Brecha identificada y categorizada</li>
+                            <li>• Acción de mejora con prioridad</li>
+                            <li>• Presentación de 2 minutos por equipo</li>
+                        </ul>
+                        
+                        <h4 class="font-semibold text-orange-800 mb-2 mt-4">👥 Organización</h4>
+                        <ul class="text-sm text-gray-700 space-y-1">
+                            <li>• Equipos de 3-4 personas</li>
+                            <li>• Un problema por equipo</li>
+                            <li>• Rotación de roles (facilitador, escriba, etc.)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Problem Selection -->
+            <div class="bg-gray-50 rounded-xl p-6 mb-8">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">🚨 Selección de Problemas Reales</h3>
+                <p class="text-gray-600 mb-6">Cada equipo selecciona un problema de software real para analizar</p>
+                
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="problem-scenario rounded-lg p-4" onclick="selectProblem('deployment-failures')">
+                        <h4 class="font-semibold text-red-800 mb-2">🚀 Fallos en Despliegue</h4>
+                        <p class="text-sm text-gray-600 mb-3">
+                            El 30% de los despliegues a producción fallan, requiriendo rollback 
+                            y causando downtime de 2-4 horas.
+                        </p>
+                        <div class="text-xs text-gray-500">
+                            <strong>Impacto:</strong> Alto | <strong>Frecuencia:</strong> Semanal
+                        </div>
+                    </div>
+                    
+                    <div class="problem-scenario rounded-lg p-4" onclick="selectProblem('performance-degradation')">
+                        <h4 class="font-semibold text-red-800 mb-2">🐌 Degradación de Performance</h4>
+                        <p class="text-sm text-gray-600 mb-3">
+                            La aplicación se vuelve progresivamente más lenta después de cada 
+                            release, afectando la experiencia del usuario.
+                        </p>
+                        <div class="text-xs text-gray-500">
+                            <strong>Impacto:</strong> Medio | <strong>Frecuencia:</strong> Cada release
+                        </div>
+                    </div>
+                    
+                    <div class="problem-scenario rounded-lg p-4" onclick="selectProblem('security-vulnerabilities')">
+                        <h4 class="font-semibold text-red-800 mb-2">🔒 Vulnerabilidades de Seguridad</h4>
+                        <p class="text-sm text-gray-600 mb-3">
+                            Se descubren vulnerabilidades críticas en producción que no fueron 
+                            detectadas durante el desarrollo.
+                        </p>
+                        <div class="text-xs text-gray-500">
+                            <strong>Impacto:</strong> Crítico | <strong>Frecuencia:</strong> Mensual
+                        </div>
+                    </div>
+                    
+                    <div class="problem-scenario rounded-lg p-4" onclick="selectProblem('data-inconsistency')">
+                        <h4 class="font-semibold text-red-800 mb-2">💾 Inconsistencia de Datos</h4>
+                        <p class="text-sm text-gray-600 mb-3">
+                            Los reportes muestran datos inconsistentes entre diferentes módulos 
+                            del sistema, generando desconfianza.
+                        </p>
+                        <div class="text-xs text-gray-500">
+                            <strong>Impacto:</strong> Alto | <strong>Frecuencia:</strong> Diaria
+                        </div>
+                    </div>
+                    
+                    <div class="problem-scenario rounded-lg p-4" onclick="selectProblem('testing-gaps')">
+                        <h4 class="font-semibold text-red-800 mb-2">🧪 Brechas en Testing</h4>
+                        <p class="text-sm text-gray-600 mb-3">
+                            Los bugs encontrados en producción no fueron detectados durante 
+                            las fases de testing, indicando cobertura insuficiente.
+                        </p>
+                        <div class="text-xs text-gray-500">
+                            <strong>Impacto:</strong> Alto | <strong>Frecuencia:</strong> Constante
+                        </div>
+                    </div>
+                    
+                    <div class="problem-scenario rounded-lg p-4" onclick="selectProblem('integration-issues')">
+                        <h4 class="font-semibold text-red-800 mb-2">🔗 Problemas de Integración</h4>
+                        <p class="text-sm text-gray-600 mb-3">
+                            Las integraciones con sistemas externos fallan frecuentemente, 
+                            causando interrupciones en procesos críticos.
+                        </p>
+                        <div class="text-xs text-gray-500">
+                            <strong>Impacto:</strong> Alto | <strong>Frecuencia:</strong> Semanal
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- RCA Tool Selection -->
+            <div class="bg-blue-50 rounded-xl p-6 mb-8">
+                <h3 class="text-xl font-semibold text-blue-800 mb-4">🔍 Selección de Técnica RCA</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="rca-tool" onclick="selectRCATool('ishikawa')">
+                        <div class="text-center">
+                            <div class="bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">🐟</span>
+                            </div>
+                            <h4 class="text-xl font-bold text-blue-800 mb-2">Diagrama de Ishikawa</h4>
+                            <p class="text-sm text-gray-600 mb-4">
+                                Ideal para problemas complejos con múltiples causas potenciales. 
+                                Categoriza causas en 6M: Método, Máquina, Material, Mano de obra, Medición, Medio ambiente.
+                            </p>
+                            <div class="text-xs text-blue-600">
+                                <strong>Mejor para:</strong> Problemas sistémicos, análisis exhaustivo
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="rca-tool" onclick="selectRCATool('5whys')">
+                        <div class="text-center">
+                            <div class="bg-yellow-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                                <span class="text-2xl text-white">❓</span>
+                            </div>
+                            <h4 class="text-xl font-bold text-yellow-800 mb-2">5 Whys</h4>
+                            <p class="text-sm text-gray-600 mb-4">
+                                Técnica simple y directa que profundiza en la causa raíz preguntando 
+                                "¿Por qué?" sucesivamente hasta llegar al origen del problema.
+                            </p>
+                            <div class="text-xs text-yellow-600">
+                                <strong>Mejor para:</strong> Problemas específicos, análisis rápido
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Analysis Workspace -->
+            <div id="analysis-workspace" class="bg-white rounded-xl p-6 shadow-lg mb-8 hidden">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">📝 Espacio de Análisis</h3>
+                
+                <div id="selected-problem" class="bg-red-50 rounded-lg p-4 mb-6">
+                    <!-- Problem details will be inserted here -->
+                </div>
+                
+                <div id="rca-analysis" class="mb-6">
+                    <!-- RCA tool will be inserted here -->
+                </div>
+                
+                <!-- Gap Analysis Section -->
+                <div class="bg-yellow-50 rounded-lg p-6 mb-6">
+                    <h4 class="text-lg font-semibold text-yellow-800 mb-4">🔍 Identificación de Brecha</h4>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Área de Proceso Afectada</label>
+                            <select id="processArea" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                <option value="">Seleccionar área...</option>
+                                <option value="requirements">Gestión de Requisitos</option>
+                                <option value="design">Diseño y Arquitectura</option>
+                                <option value="development">Desarrollo</option>
+                                <option value="testing">Testing y QA</option>
+                                <option value="deployment">Despliegue</option>
+                                <option value="monitoring">Monitoreo y Mantenimiento</option>
+                                <option value="configuration">Gestión de Configuración</option>
+                                <option value="project-management">Gestión de Proyecto</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Brecha</label>
+                            <select id="gapType" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                <option value="">Seleccionar tipo...</option>
+                                <option value="process">Proceso Inexistente</option>
+                                <option value="incomplete">Proceso Incompleto</option>
+                                <option value="outdated">Proceso Desactualizado</option>
+                                <option value="tools">Herramientas Inadecuadas</option>
+                                <option value="skills">Falta de Habilidades</option>
+                                <option value="documentation">Documentación Deficiente</option>
+                                <option value="automation">Falta de Automatización</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Descripción de la Brecha</label>
+                        <textarea id="gapDescription" class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="3" placeholder="Describe específicamente qué está faltando o qué no funciona correctamente..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Action Plan Section -->
+                <div class="bg-green-50 rounded-lg p-6">
+                    <h4 class="text-lg font-semibold text-green-800 mb-4">🎯 Propuesta de Acción de Mejora</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Acción Propuesta</label>
+                            <textarea id="proposedAction" class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="3" placeholder="Describe la acción específica para cerrar la brecha..."></textarea>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Prioridad</label>
+                                <select id="actionPriority" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="critical">🔴 Crítica</option>
+                                    <option value="high">🟠 Alta</option>
+                                    <option value="medium">🟡 Media</option>
+                                    <option value="low">🟢 Baja</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Esfuerzo Estimado</label>
+                                <select id="effortEstimate" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="low">🟢 Bajo (< 1 mes)</option>
+                                    <option value="medium">🟡 Medio (1-3 meses)</option>
+                                    <option value="high">🟠 Alto (3-6 meses)</option>
+                                    <option value="very-high">🔴 Muy Alto (> 6 meses)</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Impacto Esperado</label>
+                                <select id="expectedImpact" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                    <option value="">Seleccionar...</option>
+                                    <option value="high">🟢 Alto</option>
+                                    <option value="medium">🟡 Medio</option>
+                                    <option value="low">🟠 Bajo</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Métricas de Éxito</label>
+                            <textarea id="successMetrics" class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="¿Cómo medirás el éxito de esta acción? (KPIs, métricas específicas)"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="mt-6 flex justify-center space-x-4">
+                    <button onclick="generateWorkshopReport()" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg transition-colors">
+                        📄 Generar Reporte
+                    </button>
+                    <button onclick="resetWorkshop()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors">
+                        🔄 Reiniciar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Presentation Guidelines -->
+            <div class="bg-blue-50 rounded-xl p-6">
+                <h3 class="text-xl font-semibold text-blue-800 mb-4">🎤 Guía para la Presentación (2 minutos por equipo)</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-blue-800 mb-3">📋 Estructura Sugerida</h4>
+                        <ol class="text-sm text-gray-700 space-y-1">
+                            <li><strong>1.</strong> Problema seleccionado (20 seg)</li>
+                            <li><strong>2.</strong> Técnica RCA utilizada (20 seg)</li>
+                            <li><strong>3.</strong> Causa raíz identificada (30 seg)</li>
+                            <li><strong>4.</strong> Brecha del proceso (20 seg)</li>
+                            <li><strong>5.</strong> Acción de mejora propuesta (30 seg)</li>
+                        </ol>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-blue-800 mb-3">💡 Tips para el Éxito</h4>
+                        <ul class="text-sm text-gray-700 space-y-1">
+                            <li>• Sé específico y concreto</li>
+                            <li>• Conecta claramente causa → brecha → acción</li>
+                            <li>• Menciona métricas de éxito</li>
+                            <li>• Justifica la priorización</li>
+                            <li>• Mantén el tiempo asignado</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Modal -->
+    <div id="resultsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-gray-800">📄 Reporte Generado</h2>
+                        <button onclick="closeModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                            ✕ Cerrar
+                        </button>
+                    </div>
+                </div>
+                <div id="modalContent" class="p-6">
+                    <!-- Content will be generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlide = 'title';
+        let selectedProblem = null;
+        let selectedRCATool = null;
+        let draggedItem = null;
+
+        // Slide navigation
+        function showSlide(slide) {
+            document.querySelectorAll('[id$="-slide"]').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            document.getElementById(slide + '-slide').classList.remove('hidden');
+            currentSlide = slide;
+        }
+
+        // Drag and Drop for Priority Matrix
+        function initializeDragAndDrop() {
+            const gapItems = document.querySelectorAll('.gap-item');
+            const quadrants = document.querySelectorAll('.matrix-quadrant');
+
+            gapItems.forEach(item => {
+                item.addEventListener('dragstart', (e) => {
+                    draggedItem = e.target;
+                    e.target.classList.add('dragging');
+                });
+
+                item.addEventListener('dragend', (e) => {
+                    e.target.classList.remove('dragging');
+                    draggedItem = null;
+                });
+            });
+
+            quadrants.forEach(quadrant => {
+                quadrant.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                });
+
+                quadrant.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    if (draggedItem) {
+                        const droppedItems = quadrant.querySelector('.dropped-items');
+                        droppedItems.appendChild(draggedItem.cloneNode(true));
+                        draggedItem.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        function resetMatrix() {
+            // Clear all dropped items
+            document.querySelectorAll('.dropped-items').forEach(container => {
+                container.innerHTML = '';
+            });
+            
+            // Show all original items
+            document.querySelectorAll('.gap-item').forEach(item => {
+                item.style.display = 'block';
+            });
+        }
+
+        function generatePriorityReport() {
+            const quadrants = {
+                'quick-wins': { name: 'Quick Wins', priority: 'ALTA', items: [] },
+                'major-projects': { name: 'Proyectos Mayores', priority: 'MEDIA', items: [] },
+                'fill-ins': { name: 'Fill-ins', priority: 'BAJA', items: [] },
+                'thankless-tasks': { name: 'Evitar', priority: 'MUY BAJA', items: [] }
+            };
+
+            // Collect items from each quadrant
+            document.querySelectorAll('.matrix-quadrant').forEach(quadrant => {
+                const quadrantType = quadrant.dataset.quadrant;
+                const items = quadrant.querySelectorAll('.dropped-items .gap-item');
+                
+                items.forEach(item => {
+                    const title = item.querySelector('.font-semibold').textContent;
+                    const description = item.querySelector('.text-xs').textContent;
+                    quadrants[quadrantType].items.push({ title, description });
+                });
+            });
+
+            let content = `
+                <div class="space-y-6">
+                    <div class="bg-green-50 rounded-lg p-6 border-l-4 border-green-500">
+                        <h3 class="text-2xl font-bold text-green-800 mb-2">📊 Reporte de Priorización de Brechas</h3>
+                        <p class="text-gray-700">Análisis basado en la matriz Impacto vs Esfuerzo</p>
+                        <div class="text-sm text-gray-600 mt-2">
+                            <strong>Fecha:</strong> ${new Date().toLocaleDateString()}<br>
+                            <strong>Metodología:</strong> Matriz de Priorización (Impacto vs Esfuerzo)
+                        </div>
+                    </div>
+            `;
+
+            Object.entries(quadrants).forEach(([key, quadrant]) => {
+                if (quadrant.items.length > 0) {
+                    const colors = {
+                        'quick-wins': 'green',
+                        'major-projects': 'yellow',
+                        'fill-ins': 'blue',
+                        'thankless-tasks': 'red'
+                    };
+                    const color = colors[key];
+                    
+                    content += `
+                        <div class="bg-${color}-50 rounded-lg p-4">
+                            <h4 class="text-lg font-semibold text-${color}-800 mb-3">
+                                ${quadrant.name} - Prioridad: ${quadrant.priority}
+                            </h4>
+                            <div class="space-y-2">
+                    `;
+                    
+                    quadrant.items.forEach(item => {
+                        content += `
+                            <div class="bg-white rounded-lg p-3 shadow-sm">
+                                <div class="font-semibold text-gray-800">${item.title}</div>
+                                <div class="text-sm text-gray-600">${item.description}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    content += `</div></div>`;
+                }
+            });
+
+            content += `
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-3">📋 Recomendaciones de Implementación</h4>
+                        <ol class="text-sm text-gray-700 space-y-2">
+                            <li><strong>1. Quick Wins:</strong> Implementar inmediatamente (próximas 2-4 semanas)</li>
+                            <li><strong>2. Proyectos Mayores:</strong> Planificar para el próximo trimestre</li>
+                            <li><strong>3. Fill-ins:</strong> Implementar cuando haya capacidad disponible</li>
+                            <li><strong>4. Evitar:</strong> Reconsiderar o posponer indefinidamente</li>
+                        </ol>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modalContent').innerHTML = content;
+            document.getElementById('resultsModal').classList.remove('hidden');
+        }
+
+        // Workshop functions
+        function selectProblem(problemId) {
+            // Remove selection from all problems
+            document.querySelectorAll('.problem-scenario').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Add selection to clicked problem
+            event.currentTarget.classList.add('selected');
+            selectedProblem = problemId;
+            
+            const problems = {
+                'deployment-failures': {
+                    title: '🚀 Fallos en Despliegue',
+                    description: 'El 30% de los despliegues a producción fallan, requiriendo rollback y causando downtime de 2-4 horas.',
+                    context: 'Equipo de 8 desarrolladores, despliegues semanales, aplicación web crítica para el negocio.',
+                    symptoms: 'Rollbacks frecuentes, downtime no planificado, estrés del equipo, pérdida de confianza del cliente.'
+                },
+                'performance-degradation': {
+                    title: '🐌 Degradación de Performance',
+                    description: 'La aplicación se vuelve progresivamente más lenta después de cada release.',
+                    context: 'Aplicación con 50,000 usuarios activos, base de datos de 2TB, arquitectura monolítica.',
+                    symptoms: 'Tiempos de respuesta crecientes, quejas de usuarios, abandono de sesiones, sobrecarga del servidor.'
+                },
+                'security-vulnerabilities': {
+                    title: '🔒 Vulnerabilidades de Seguridad',
+                    description: 'Se descubren vulnerabilidades críticas en producción que no fueron detectadas durante el desarrollo.',
+                    context: 'Aplicación financiera, datos sensibles, auditorías regulares, compliance estricto.',
+                    symptoms: 'Vulnerabilidades en producción, fallos en auditorías, riesgo de breach, multas regulatorias.'
+                },
+                'data-inconsistency': {
+                    title: '💾 Inconsistencia de Datos',
+                    description: 'Los reportes muestran datos inconsistentes entre diferentes módulos del sistema.',
+                    context: 'Sistema ERP con múltiples módulos, integraciones complejas, reportes críticos para el negocio.',
+                    symptoms: 'Reportes contradictorios, decisiones erróneas, pérdida de confianza, reconciliaciones manuales.'
+                },
+                'testing-gaps': {
+                    title: '🧪 Brechas en Testing',
+                    description: 'Los bugs encontrados en producción no fueron detectados durante las fases de testing.',
+                    context: 'Equipo QA de 3 personas, testing manual, releases cada 2 semanas, aplicación compleja.',
+                    symptoms: 'Bugs en producción, hotfixes frecuentes, insatisfacción del usuario, sobrecarga del soporte.'
+                },
+                'integration-issues': {
+                    title: '🔗 Problemas de Integración',
+                    description: 'Las integraciones con sistemas externos fallan frecuentemente, causando interrupciones.',
+                    context: 'Integraciones con 5 sistemas externos, APIs de terceros, procesos críticos automatizados.',
+                    symptoms: 'Fallos de integración, procesos interrumpidos, trabajo manual adicional, SLA incumplidos.'
+                }
+            };
+            
+            const problem = problems[problemId];
+            document.getElementById('selected-problem').innerHTML = `
+                <h4 class="text-lg font-bold text-red-800 mb-2">${problem.title}</h4>
+                <p class="text-gray-700 mb-3">${problem.description}</p>
+                <div class="grid md:grid-cols-2 gap-4 text-sm">
+                    <div><strong>Contexto:</strong> ${problem.context}</div>
+                    <div><strong>Síntomas:</strong> ${problem.symptoms}</div>
+                </div>
+            `;
+            
+            checkWorkshopReadiness();
+        }
+
+        function selectRCATool(tool) {
+            // Remove selection from all tools
+            document.querySelectorAll('.rca-tool').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Add selection to clicked tool
+            event.currentTarget.classList.add('selected');
+            selectedRCATool = tool;
+            
+            checkWorkshopReadiness();
+        }
+
+        function checkWorkshopReadiness() {
+            if (selectedProblem && selectedRCATool) {
+                document.getElementById('analysis-workspace').classList.remove('hidden');
+                setupRCAAnalysis();
+            }
+        }
+
+        function setupRCAAnalysis() {
+            const rcaContainer = document.getElementById('rca-analysis');
+            
+            if (selectedRCATool === 'ishikawa') {
+                rcaContainer.innerHTML = `
+                    <div class="bg-blue-50 rounded-lg p-6">
+                        <h4 class="text-lg font-semibold text-blue-800 mb-4">🐟 Análisis con Diagrama de Ishikawa</h4>
+                        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Método (Procesos)</label>
+                                <textarea class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="¿Qué procesos fallan?"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Máquina (Tecnología)</label>
+                                <textarea class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="¿Qué herramientas/sistemas fallan?"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Material (Información)</label>
+                                <textarea class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="¿Qué información falta?"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Mano de Obra (Personas)</label>
+                                <textarea class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="¿Qué habilidades faltan?"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Medición (Métricas)</label>
+                                <textarea class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="¿Qué métricas faltan?"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Medio Ambiente (Contexto)</label>
+                                <textarea class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="¿Qué condiciones influyen?"></textarea>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Causa Raíz Principal</label>
+                            <textarea id="rootCause" class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="Basado en el análisis, ¿cuál es la causa raíz principal?"></textarea>
+                        </div>
+                    </div>
+                `;
+            } else if (selectedRCATool === '5whys') {
+                rcaContainer.innerHTML = `
+                    <div class="bg-yellow-50 rounded-lg p-6">
+                        <h4 class="text-lg font-semibold text-yellow-800 mb-4">❓ Análisis con 5 Whys</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">¿Por qué 1?</label>
+                                <textarea class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="¿Por qué ocurre el problema?"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">¿Por qué 2?</label>
+                                <textarea class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="¿Por qué ocurre esa causa?"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">¿Por qué 3?</label>
+                                <textarea class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="¿Por qué ocurre esa causa?"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">¿Por qué 4?</label>
+                                <textarea class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="¿Por qué ocurre esa causa?"></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">¿Por qué 5?</label>
+                                <textarea class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="¿Por qué ocurre esa causa?"></textarea>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Causa Raíz Identificada</label>
+                            <textarea id="rootCause" class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="2" placeholder="La causa raíz del problema es..."></textarea>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function generateWorkshopReport() {
+            if (!selectedProblem || !selectedRCATool) {
+                alert('Por favor completa el análisis primero');
+                return;
+            }
+            
+            const problems = {
+                'deployment-failures': '🚀 Fallos en Despliegue',
+                'performance-degradation': '🐌 Degradación de Performance',
+                'security-vulnerabilities': '🔒 Vulnerabilidades de Seguridad',
+                'data-inconsistency': '💾 Inconsistencia de Datos',
+                'testing-gaps': '🧪 Brechas en Testing',
+                'integration-issues': '🔗 Problemas de Integración'
+            };
+            
+            const tools = {
+                'ishikawa': '🐟 Diagrama de Ishikawa',
+                '5whys': '❓ 5 Whys'
+            };
+            
+            const rootCause = document.getElementById('rootCause')?.value || 'No especificado';
+            const processArea = document.getElementById('processArea').value;
+            const gapType = document.getElementById('gapType').value;
+            const gapDescription = document.getElementById('gapDescription').value;
+            const proposedAction = document.getElementById('proposedAction').value;
+            const actionPriority = document.getElementById('actionPriority').value;
+            const effortEstimate = document.getElementById('effortEstimate').value;
+            const expectedImpact = document.getElementById('expectedImpact').value;
+            const successMetrics = document.getElementById('successMetrics').value;
+            
+            const content = `
+                <div class="space-y-6">
+                    <div class="bg-orange-50 rounded-lg p-6 border-l-4 border-orange-500">
+                        <h3 class="text-2xl font-bold text-orange-800 mb-2">🛠️ Reporte de Taller RCA + Gap Analysis</h3>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm">
+                            <div><strong>Problema Analizado:</strong> ${problems[selectedProblem]}</div>
+                            <div><strong>Técnica RCA:</strong> ${tools[selectedRCATool]}</div>
+                            <div><strong>Fecha:</strong> ${new Date().toLocaleDateString()}</div>
+                            <div><strong>Duración:</strong> 20 minutos</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-red-50 rounded-lg p-6">
+                        <h4 class="text-lg font-semibold text-red-800 mb-3">🚨 Problema Identificado</h4>
+                        <div class="bg-white rounded-lg p-4">
+                            <p class="text-gray-700">${document.getElementById('selected-problem').querySelector('p').textContent}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-yellow-50 rounded-lg p-6">
+                        <h4 class="text-lg font-semibold text-yellow-800 mb-3">🔍 Análisis de Causa Raíz</h4>
+                        <div class="bg-white rounded-lg p-4">
+                            <div class="mb-3">
+                                <strong>Técnica utilizada:</strong> ${tools[selectedRCATool]}
+                            </div>
+                            <div>
+                                <strong>Causa raíz identificada:</strong>
+                                <p class="mt-2 text-gray-700">${rootCause}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${processArea && gapType ? `
+                    <div class="bg-blue-50 rounded-lg p-6">
+                        <h4 class="text-lg font-semibold text-blue-800 mb-3">📊 Brecha Identificada</h4>
+                        <div class="bg-white rounded-lg p-4">
+                            <div class="grid md:grid-cols-2 gap-4 mb-3">
+                                <div><strong>Área de Proceso:</strong> ${processArea}</div>
+                                <div><strong>Tipo de Brecha:</strong> ${gapType}</div>
+                            </div>
+                            ${gapDescription ? `
+                            <div>
+                                <strong>Descripción:</strong>
+                                <p class="mt-2 text-gray-700">${gapDescription}</p>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    ${proposedAction ? `
+                    <div class="bg-green-50 rounded-lg p-6">
+                        <h4 class="text-lg font-semibold text-green-800 mb-3">🎯 Plan de Acción</h4>
+                        <div class="bg-white rounded-lg p-4">
+                            <div class="mb-4">
+                                <strong>Acción Propuesta:</strong>
+                                <p class="mt-2 text-gray-700">${proposedAction}</p>
+                            </div>
+                            
+                            <div class="grid md:grid-cols-3 gap-4 mb-4">
+                                ${actionPriority ? `<div><strong>Prioridad:</strong> ${actionPriority}</div>` : ''}
+                                ${effortEstimate ? `<div><strong>Esfuerzo:</strong> ${effortEstimate}</div>` : ''}
+                                ${expectedImpact ? `<div><strong>Impacto:</strong> ${expectedImpact}</div>` : ''}
+                            </div>
+                            
+                            ${successMetrics ? `
+                            <div>
+                                <strong>Métricas de Éxito:</strong>
+                                <p class="mt-2 text-gray-700">${successMetrics}</p>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-3">📋 Próximos Pasos</h4>
+                        <ol class="text-sm text-gray-700 space-y-1">
+                            <li>1. Validar la causa raíz con datos adicionales</li>
+                            <li>2. Obtener aprobación para la acción propuesta</li>
+                            <li>3. Asignar recursos y responsables</li>
+                            <li>4. Establecer cronograma de implementación</li>
+                            <li>5. Definir métricas de seguimiento</li>
+                            <li>6. Programar revisiones de progreso</li>
+                        </ol>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('modalContent').innerHTML = content;
+            document.getElementById('resultsModal').classList.remove('hidden');
+        }
+
+        function resetWorkshop() {
+            if (confirm('¿Estás seguro de que quieres reiniciar el taller?')) {
+                selectedProblem = null;
+                selectedRCATool = null;
+                
+                // Reset problem selection
+                document.querySelectorAll('.problem-scenario').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                
+                // Reset tool selection
+                document.querySelectorAll('.rca-tool').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                
+                // Hide workspace
+                document.getElementById('analysis-workspace').classList.add('hidden');
+                
+                // Clear form fields
+                document.querySelectorAll('#analysis-workspace input, #analysis-workspace textarea, #analysis-workspace select').forEach(field => {
+                    field.value = '';
+                });
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('resultsModal').classList.add('hidden');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            showSlide('title');
+            initializeDragAndDrop();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a876afa048cdb0',t:'MTc1NzEwNDAwNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

@@ -1,0 +1,93 @@
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+          <a class="qs-btn" href="checklist.html">Checklist</a>
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+<!DOCTYPE html>
+<input id="g-max" type="number" placeholder="máximo" style="width:110px"/>
+<button id="g-save">Guardar</button>
+</div>
+<div id="g-admin-msg" class="muted" style="margin:6px 0 10px"></div>
+<div id="g-stats" class="muted"></div>
+</div>
+</div>
+
+
+<script>
+function table(headers, rows){
+const th = '<thead><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead>';
+const tb = '<tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+escapeHtml(String(c))+'</td>').join('')+'</tr>').join('')+'</tbody>';
+return '<table>'+th+tb+'</table>';
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
+
+
+// alumno
+google.script.run.withSuccessHandler(rows=>{
+document.getElementById('g-table').innerHTML = rows.length ? table(['fecha','actividad','título','sesión','puntaje','máximo'], rows) : '<i>Sin calificaciones</i>';
+}).getMyGrades();
+
+
+// docente
+google.script.run.withSuccessHandler(ctx=>{
+if (ctx && ctx.isTeacher){
+document.getElementById('teacher').style.display='';
+google.script.run.withSuccessHandler(stat=>{
+document.getElementById('g-stats').textContent = `Promedio del grupo: ${stat.classAverage}% · Actividades: ${stat.totalActivities} · Pendientes: ${stat.pendingGrades} · En riesgo: ${stat.failingStudents}`;
+}).getGradeStats();
+}
+}).getContext();
+
+
+document.getElementById('g-save').onclick = function(){
+const email = document.getElementById('g-email').value.trim();
+const act = document.getElementById('g-act').value.trim();
+const title = document.getElementById('g-title').value.trim();
+const ses = document.getElementById('g-sesion').value.trim();
+const score = Number(document.getElementById('g-score').value);
+const max = Number(document.getElementById('g-max').value||100);
+this.disabled = true;
+google.script.run.withSuccessHandler(msg=>{
+document.getElementById('g-admin-msg').textContent = msg;
+this.disabled = false;
+}).withFailureHandler(err=>{
+document.getElementById('g-admin-msg').textContent = 'Error: '+(err && err.message || err);
+this.disabled = false;
+}).upsertGrade(email, act, title, score, max, ses, '');
+};
+</script>
+</body>
+</html>

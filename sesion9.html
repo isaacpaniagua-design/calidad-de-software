@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesión 9 - Cuatro Ojos Ven Más que Dos: Revisiones Técnicas Formales</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .slide-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            position: relative;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide {
+            display: none;
+            flex: 1;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .slide h2 {
+            color: #2d3748;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .slide h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #718096;
+            text-align: center;
+            font-style: italic;
+            margin-bottom: 2rem;
+        }
+
+        .quote-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .quote-box h4 {
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .quote-box p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+
+        .definition-box {
+            background: #e6fffa;
+            padding: 2rem;
+            border-radius: 15px;
+            border-left: 5px solid #38b2ac;
+            margin: 2rem 0;
+        }
+
+        .definition-box h4 {
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            font-size: 1.4rem;
+        }
+
+        .definition-box ul {
+            color: #4a5568;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .definition-box li {
+            margin-bottom: 1rem;
+            padding-left: 0.5rem;
+        }
+
+        .definition-box strong {
+            color: #2d3748;
+        }
+
+        .types-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .type-card {
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .walkthrough-card {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        .inspection-card {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+        }
+
+        .type-card h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            font-size: 1.4rem;
+        }
+
+        .type-card h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .type-card ul {
+            margin-left: 1rem;
+            line-height: 1.6;
+        }
+
+        .type-card li {
+            margin-bottom: 0.8rem;
+        }
+
+        .roles-container {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .roles-container h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .role-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .role-card h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .role-card p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
+        }
+
+        .process-container {
+            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .process-container h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .process-steps {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .process-step {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.2rem;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .step-number {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .step-content h5 {
+            color: white;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .step-content p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.4;
+            font-size: 0.95rem;
+        }
+
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .benefit-card {
+            background: #f0fff4;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #48bb78;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.1);
+        }
+
+        .benefit-card h5 {
+            color: #2f855a;
+            margin-bottom: 0.8rem;
+            font-size: 1.2rem;
+        }
+
+        .benefit-card p {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .activity-container {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .activity-container h4 {
+            color: white;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .activity-setup {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .activity-setup h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .activity-roles {
+            display: grid;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .activity-role {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1rem;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+        }
+
+        .activity-role h6 {
+            color: white;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .activity-role p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .discussion-box {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .discussion-box h5 {
+            color: white;
+            margin-bottom: 0.8rem;
+            font-size: 1.2rem;
+        }
+
+        .discussion-box p {
+            color: white;
+            font-weight: 500;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .slide-counter {
+            color: #718096;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .source-note {
+            background: #fff5f5;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #f56565;
+            margin-top: 1.5rem;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .highlight-box {
+            background: #fffaf0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px dashed #ed8936;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .highlight-box p {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .stats-box {
+            background: #fff5f5;
+            padding: 2rem;
+            border-radius: 15px;
+            border-left: 5px solid #f56565;
+            margin: 2rem 0;
+            text-align: center;
+        }
+
+        .stats-box h4 {
+            color: #c53030;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+
+        .stats-box p {
+            color: #4a5568;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 768px) {
+            .slide-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            
+            .slide h1 {
+                font-size: 2rem;
+            }
+            
+            .slide h2 {
+                font-size: 1.5rem;
+            }
+            
+            .types-container, .roles-grid, .benefits-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+          <a class="qs-btn" href="checklist.html">Checklist</a>
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <div class="slide-container">
+        <!-- Slide 1: Título -->
+        <div class="slide active">
+            <h1>👀 Cuatro Ojos Ven Más que Dos</h1>
+            <div class="subtitle">Revisiones Técnicas Formales</div>
+            
+            <div class="quote-box">
+                <h4>🔍 "Defectos detectados temprano = costos reducidos"</h4>
+                <p>La colaboración y revisión entre pares es la clave para software de calidad superior</p>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🎯 <strong>Objetivo:</strong> Dominar las técnicas de revisión para detectar defectos antes de las pruebas</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: ¿Qué son las Revisiones Técnicas? -->
+        <div class="slide">
+            <h2>🔍 ¿Qué son las Revisiones Técnicas?</h2>
+            
+            <div class="definition-box">
+                <h4>📋 Definición Completa:</h4>
+                <ul>
+                    <li><strong>Actividades formales e informales</strong> para evaluar artefactos de software</li>
+                    <li><strong>Artefactos incluyen:</strong> requisitos, diseño, código, casos de prueba, documentación</li>
+                    <li><strong>Objetivo principal:</strong> encontrar defectos, NO corregirlos en la reunión</li>
+                    <li><strong>Enfoque colaborativo:</strong> múltiples perspectivas mejoran la detección</li>
+                </ul>
+            </div>
+            
+            <div class="stats-box">
+                <h4>📊 Impacto Comprobado</h4>
+                <p><strong>Beneficio clave:</strong> Reduce costos de retrabajo hasta en un <strong>80%</strong> y mejora significativamente la calidad del producto final</p>
+            </div>
+            
+            <div class="highlight-box">
+                <p>💡 <strong>Principio:</strong> Es más barato encontrar errores revisando que probando</p>
+            </div>
+            
+            <div class="source-note">
+                📚 <strong>Fuente:</strong> Pressman, Capítulo 15
+            </div>
+        </div>
+
+        <!-- Slide 3: Tipos de Revisiones -->
+        <div class="slide">
+            <h2>📝 Tipos de Revisiones</h2>
+            
+            <div class="types-container">
+                <div class="type-card walkthrough-card">
+                    <h4>🚶 Walkthroughs (Recorridos)</h4>
+                    
+                    <h5>Características:</h5>
+                    <ul>
+                        <li>Informales y flexibles</li>
+                        <li>Liderados por el autor</li>
+                        <li>Enfoque educativo</li>
+                        <li>Ambiente relajado</li>
+                    </ul>
+                    
+                    <h5>Propósito:</h5>
+                    <ul>
+                        <li>Aprendizaje del equipo</li>
+                        <li>Retroalimentación rápida</li>
+                        <li>Transferencia de conocimiento</li>
+                    </ul>
+                </div>
+                
+                <div class="type-card inspection-card">
+                    <h4>🔍 Inspecciones</h4>
+                    
+                    <h5>Características:</h5>
+                    <ul>
+                        <li>Formales y estructuradas</li>
+                        <li>Dirigidas por moderador</li>
+                        <li>Proceso riguroso</li>
+                        <li>Documentación obligatoria</li>
+                    </ul>
+                    
+                    <h5>Herramientas:</h5>
+                    <ul>
+                        <li>Listas de verificación</li>
+                        <li>Reportes documentados</li>
+                        <li>Métricas de defectos</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="highlight-box">
+                <p>⚖️ <strong>Elección:</strong> Walkthroughs para aprendizaje, Inspecciones para calidad crítica</p>
+            </div>
+            
+            <div class="source-note">
+                📚 <strong>Fuente:</strong> QA Lovers, Capítulo 2
+            </div>
+        </div>
+
+        <!-- Slide 4: Roles en una Inspección -->
+        <div class="slide">
+            <h2>👥 Roles en una Inspección</h2>
+            
+            <div class="roles-container">
+                <h4>🎭 Equipo de Inspección</h4>
+                
+                <div class="roles-grid">
+                    <div class="role-card">
+                        <h5>🎯 Moderador</h5>
+                        <p>Guía la reunión, asegura que se siga el proceso establecido, mantiene el enfoque en encontrar defectos (no solucionarlos)</p>
+                    </div>
+                    
+                    <div class="role-card">
+                        <h5>✍️ Autor</h5>
+                        <p>Presenta el producto revisado, explica decisiones de diseño, responde preguntas técnicas sin defenderse</p>
+                    </div>
+                    
+                    <div class="role-card">
+                        <h5>🔍 Revisores</h5>
+                        <p>Analizan el artefacto desde diferentes perspectivas, detectan defectos, hacen preguntas constructivas</p>
+                    </div>
+                    
+                    <div class="role-card">
+                        <h5>📝 Secretario</h5>
+                        <p>Documenta todos los hallazgos, acuerdos y acciones de seguimiento de manera clara y organizada</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🤝 <strong>Clave del Éxito:</strong> Separar roles evita conflictos y mejora la efectividad</p>
+            </div>
+        </div>
+
+        <!-- Slide 5: Proceso de una Inspección (según Fagan) -->
+        <div class="slide">
+            <h2>⚙️ Proceso de Inspección (Fagan)</h2>
+            
+            <div class="process-container">
+                <h4>🔄 Metodología Fagan - 5 Fases</h4>
+                
+                <div class="process-steps">
+                    <div class="process-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h5>📋 Planeación</h5>
+                            <p>Seleccionar artefacto a revisar, asignar roles, definir criterios de entrada y salida</p>
+                        </div>
+                    </div>
+                    
+                    <div class="process-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h5>📖 Preparación Individual</h5>
+                            <p>Cada revisor estudia el documento independientemente, usando listas de verificación</p>
+                        </div>
+                    </div>
+                    
+                    <div class="process-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h5>🤝 Reunión de Inspección</h5>
+                            <p>Se presentan y listan todos los defectos encontrados, sin intentar solucionarlos</p>
+                        </div>
+                    </div>
+                    
+                    <div class="process-step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h5>🔧 Corrección</h5>
+                            <p>El autor corrige los defectos identificados según las prioridades establecidas</p>
+                        </div>
+                    </div>
+                    
+                    <div class="process-step">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h5>✅ Seguimiento</h5>
+                            <p>Verificación de que todos los cambios se aplicaron correctamente y completamente</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="highlight-box">
+                <p>⏱️ <strong>Eficiencia:</strong> Proceso estructurado que maximiza la detección de defectos</p>
+            </div>
+        </div>
+
+        <!-- Slide 6: Beneficios de las Revisiones -->
+        <div class="slide">
+            <h2>🎯 Beneficios de las Revisiones</h2>
+            
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <h5>🎯 Alta Efectividad</h5>
+                    <p>Detectan hasta <strong>65% de defectos</strong> antes de la fase de pruebas, reduciendo significativamente el costo de corrección</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <h5>🧠 Aprendizaje Colectivo</h5>
+                    <p>Fomentan la <strong>transferencia de conocimiento</strong> entre miembros del equipo y mejoran las habilidades técnicas</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <h5>📚 Mejor Documentación</h5>
+                    <p>Mejoran la <strong>calidad y consistencia</strong> de la documentación, facilitando el mantenimiento futuro</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <h5>😊 Confianza del Cliente</h5>
+                    <p>Aumentan la <strong>confianza del cliente</strong> al demostrar un proceso riguroso de control de calidad</p>
+                </div>
+            </div>
+            
+            <div class="stats-box">
+                <h4>📈 ROI Comprobado</h4>
+                <p>Las organizaciones que implementan revisiones sistemáticas reportan <strong>reducción del 40-60%</strong> en defectos de producción y <strong>30% menos tiempo</strong> en debugging</p>
+            </div>
+            
+            <div class="highlight-box">
+                <p>💰 <strong>Costo-Beneficio:</strong> $1 invertido en revisiones ahorra $10 en correcciones posteriores</p>
+            </div>
+        </div>
+
+        <!-- Slide 7: Actividad - Mini Walkthrough -->
+        <div class="slide">
+            <h2>🎮 Actividad: Mini Walkthrough</h2>
+            <div class="subtitle">Práctica Hands-On (20 min)</div>
+            
+            <div class="activity-container">
+                <h4>📋 Dinámica de Revisión en Vivo</h4>
+                
+                <div class="activity-setup">
+                    <h5>🎯 Setup de la Actividad</h5>
+                    <p>El docente entrega un <strong>fragmento de código o documento de requisitos</strong> con defectos intencionales para que los equipos practiquen el proceso de revisión</p>
+                </div>
+                
+                <div class="activity-roles">
+                    <div class="activity-role">
+                        <h6>✍️ Autor (1 persona)</h6>
+                        <p>Explica el artefacto línea por línea, presenta las decisiones de diseño y responde preguntas</p>
+                    </div>
+                    
+                    <div class="activity-role">
+                        <h6>🔍 Revisor (1 persona)</h6>
+                        <p>Busca activamente defectos, inconsistencias, problemas de lógica o violaciones de estándares</p>
+                    </div>
+                    
+                    <div class="activity-role">
+                        <h6>📝 Secretario (1 persona)</h6>
+                        <p>Anota todos los hallazgos, clasifica los defectos por severidad y documenta acuerdos</p>
+                    </div>
+                </div>
+                
+                <div class="discussion-box">
+                    <h5>💬 Discusión Plenaria</h5>
+                    <p><strong>¿Qué defectos encontraron? ¿Fue útil la revisión? ¿Qué aprendieron del proceso?</strong></p>
+                </div>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🎓 <strong>Objetivo:</strong> Experimentar los beneficios de la revisión colaborativa en tiempo real</p>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <div class="slide-counter">
+                Diapositiva <span id="currentSlide">1</span> de <span id="totalSlides">7</span>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="previousSlide()" id="prevBtn" disabled>← Anterior</button>
+                <button class="nav-btn" onclick="nextSlide()" id="nextBtn">Siguiente →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 1;
+        const totalSlidesCount = 7;
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlidesCount) {
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
+                currentSlideIndex++;
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
+                updateNavigation();
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlideIndex > 1) {
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
+                currentSlideIndex--;
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
+                updateNavigation();
+            }
+        }
+
+        function updateNavigation() {
+            document.getElementById('currentSlide').textContent = currentSlideIndex;
+            document.getElementById('totalSlides').textContent = totalSlidesCount;
+            
+            document.getElementById('prevBtn').disabled = currentSlideIndex === 1;
+            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlidesCount;
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowRight' || event.key === ' ') {
+                nextSlide();
+            } else if (event.key === 'ArrowLeft') {
+                previousSlide();
+            }
+        });
+
+        // Initialize
+        updateNavigation();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a85fd4b537cdb0',t:'MTc1NzEwMzA3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

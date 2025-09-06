@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesión 15 - Comparación y Estrategia Combinada</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .slide-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            position: relative;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide {
+            display: none;
+            flex: 1;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .slide h2 {
+            color: #2d3748;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .slide h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #718096;
+            text-align: center;
+            font-style: italic;
+            margin-bottom: 2rem;
+        }
+
+        .quote-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .quote-box h4 {
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .quote-box p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+
+        .definition-box {
+            background: #e6fffa;
+            padding: 2rem;
+            border-radius: 15px;
+            border-left: 5px solid #38b2ac;
+            margin: 2rem 0;
+        }
+
+        .definition-box h4 {
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            font-size: 1.4rem;
+        }
+
+        .definition-box ul {
+            color: #4a5568;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .definition-box li {
+            margin-bottom: 1rem;
+            padding-left: 0.5rem;
+        }
+
+        .definition-box strong {
+            color: #2d3748;
+        }
+
+        .types-container {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .types-container h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .types-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .type-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .type-card h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .type-card p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .comparison-container {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .comparison-container h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .comparison-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .comparison-card h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        .comparison-card .scenario {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .comparison-card .scenario h6 {
+            color: white;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .comparison-card .scenario p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.4;
+            font-size: 0.9rem;
+        }
+
+        .activity-container {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .activity-container h4 {
+            color: white;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .app-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .app-card h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .app-card p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
+            font-size: 0.9rem;
+        }
+
+        .task-instructions {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .task-instructions h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .task-instructions p {
+            color: white;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .examples-container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            backdrop-filter: blur(5px);
+        }
+
+        .examples-container h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .example-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(3px);
+        }
+
+        .example-item h6 {
+            color: white;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .example-item p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.4;
+            font-size: 0.9rem;
+        }
+
+        .key-points {
+            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .key-points h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .key-points ul {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+            font-size: 1.1rem;
+            margin-left: 1rem;
+        }
+
+        .key-points li {
+            margin-bottom: 1rem;
+        }
+
+        .key-points strong {
+            color: white;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .slide-counter {
+            color: #718096;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .source-note {
+            background: #fff5f5;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #f56565;
+            margin-top: 1.5rem;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .highlight-box {
+            background: #fffaf0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px dashed #ed8936;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .highlight-box p {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .slide-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            
+            .slide h1 {
+                font-size: 2rem;
+            }
+            
+            .slide h2 {
+                font-size: 1.5rem;
+            }
+            
+            .types-grid, .comparison-grid, .apps-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+          <a class="qs-btn" href="checklist.html">Checklist</a>
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <div class="slide-container">
+        <!-- Slide 1: Título -->
+        <div class="slide active">
+            <h1>⚖️ Pruebas Funcionales vs. No Funcionales</h1>
+            <div class="subtitle">Comparación y Estrategia Combinada</div>
+            
+            <div class="quote-box">
+                <h4>🎯 "Dos caras de la misma moneda"</h4>
+                <p>Funcionales validan el QUÉ, No Funcionales validan el CÓMO</p>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🎯 <strong>Objetivo:</strong> Integrar ambos tipos de pruebas en una estrategia de calidad efectiva</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: Comparación -->
+        <div class="slide">
+            <h2>⚖️ Comparación</h2>
+            
+            <div class="comparison-container">
+                <h4>🔍 Diferencias Fundamentales</h4>
+                
+                <div class="comparison-grid">
+                    <div class="comparison-card">
+                        <h5>✅ Funcionales</h5>
+                        <div class="scenario">
+                            <h6>🎯 Qué Validan</h6>
+                            <p><strong>QUÉ hace el software</strong><br>
+                            Comportamientos específicos<br>
+                            Requisitos del negocio<br>
+                            Casos de uso definidos</p>
+                        </div>
+                        <div class="scenario">
+                            <h6>📊 Características</h6>
+                            <p>Resultado binario: Pasa/Falla<br>
+                            Basadas en especificaciones<br>
+                            Independientes del contexto<br>
+                            Enfoque: Caja negra</p>
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-card">
+                        <h5>⚡ No Funcionales</h5>
+                        <div class="scenario">
+                            <h6>🎯 Qué Validan</h6>
+                            <p><strong>CÓMO lo hace el software</strong><br>
+                            Atributos de calidad<br>
+                            Experiencia del usuario<br>
+                            Comportamiento bajo condiciones</p>
+                        </div>
+                        <div class="scenario">
+                            <h6>📊 Características</h6>
+                            <p>Resultado medible: Métricas<br>
+                            Basadas en expectativas<br>
+                            Dependientes del contexto<br>
+                            Enfoque: Condiciones reales</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="key-points">
+                <h4>🤝 Complementariedad</h4>
+                <ul>
+                    <li><strong>Ambas son necesarias</strong> para garantizar calidad total del software</li>
+                    <li><strong>Funcionales sin No Funcionales:</strong> Software que funciona pero no satisface</li>
+                    <li><strong>No Funcionales sin Funcionales:</strong> Experiencia rápida de algo que no sirve</li>
+                    <li><strong>Juntas:</strong> Producto exitoso que funciona bien y se siente bien</li>
+                </ul>
+            </div>
+            
+            <div class="quote-box">
+                <h4>💡 Analogía</h4>
+                <p>"Un auto que enciende (funcional) pero es lento, ruidoso e incómodo (no funcional) no es un buen auto"</p>
+            </div>
+        </div>
+
+        <!-- Slide 3: Estrategia Combinada -->
+        <div class="slide">
+            <h2>🎯 Estrategia Combinada</h2>
+            
+            <div class="phases-container">
+                <h4>📋 Enfoque Estructurado</h4>
+                
+                <div class="phases-list">
+                    <div class="phase-item">
+                        <div class="phase-number">1</div>
+                        <div class="phase-content">
+                            <h5>✅ Iniciar con Pruebas Funcionales Básicas</h5>
+                            <p><strong>Objetivo:</strong> Asegurar que el software hace lo que debe hacer<br>
+                            <strong>Enfoque:</strong> Smoke testing y casos de uso críticos<br>
+                            <strong>Criterio:</strong> Sin funcionalidad básica, no hay producto</p>
+                        </div>
+                    </div>
+                    
+                    <div class="phase-item">
+                        <div class="phase-number">2</div>
+                        <div class="phase-content">
+                            <h5>⚡ Continuar con No Funcionales Críticas</h5>
+                            <p><strong>Prioridad:</strong> Rendimiento y seguridad primero<br>
+                            <strong>Razón:</strong> Impactan directamente la experiencia y confianza<br>
+                            <strong>Enfoque:</strong> Pruebas de carga y vulnerabilidades básicas</p>
+                        </div>
+                    </div>
+                    
+                    <div class="phase-item">
+                        <div class="phase-number">3</div>
+                        <div class="phase-content">
+                            <h5>📊 Integrar Resultados en Métricas de Calidad</h5>
+                            <p><strong>Objetivo:</strong> Vista holística de la calidad del producto<br>
+                            <strong>Métricas:</strong> Cobertura funcional + SLAs no funcionales<br>
+                            <strong>Decisión:</strong> Criterios claros para release</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="key-points">
+                <h4>🎯 Principios de la Estrategia</h4>
+                <ul>
+                    <li><strong>Iterativo:</strong> Alternar entre funcionales y no funcionales en cada ciclo</li>
+                    <li><strong>Basado en riesgo:</strong> Priorizar según impacto en el negocio</li>
+                    <li><strong>Medible:</strong> Definir criterios cuantitativos de éxito</li>
+                    <li><strong>Continuo:</strong> Integrar en pipeline de CI/CD</li>
+                </ul>
+            </div>
+            
+            <div class="definition-box">
+                <h4>💡 Ejemplo de Integración</h4>
+                <ul>
+                    <li><strong>Sprint 1:</strong> Login funciona + Login en < 2 segundos</li>
+                    <li><strong>Sprint 2:</strong> Registro funciona + Soporta 100 usuarios concurrentes</li>
+                    <li><strong>Sprint 3:</strong> Dashboard funciona + Carga en < 3 segundos</li>
+                    <li><strong>Release:</strong> 95% cobertura funcional + SLAs no funcionales cumplidos</li>
+                </ul>
+            </div>
+            
+            <div class="source-note">
+                📚 <strong>Fuente:</strong> Mahfuz, Capítulo 4
+            </div>
+        </div>
+
+        <!-- Slide 4: Caso Estudio - Caída de Amazon -->
+        <div class="slide">
+            <h2>💥 Caso Estudio: Caída de Amazon (2013)</h2>
+            
+            <div class="comparison-container">
+                <h4>📉 El Incidente</h4>
+                
+                <div class="comparison-grid">
+                    <div class="comparison-card">
+                        <h5>🚨 El Problema</h5>
+                        <div class="scenario">
+                            <h6>💸 Impacto Económico</h6>
+                            <p><strong>Duración:</strong> 40 minutos de caída total<br>
+                            <strong>Pérdidas:</strong> $5.7 millones USD<br>
+                            <strong>Alcance:</strong> Sitio web principal inaccesible<br>
+                            <strong>Momento:</strong> Temporada alta de compras</p>
+                        </div>
+                        <div class="scenario">
+                            <h6>⚡ Síntomas</h6>
+                            <p>Páginas no cargan<br>
+                            Timeouts en transacciones<br>
+                            Errores 503 (Service Unavailable)<br>
+                            Imposibilidad de completar compras</p>
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-card">
+                        <h5>🔍 La Causa Raíz</h5>
+                        <div class="scenario">
+                            <h6>🏗️ Fallo de Escalabilidad</h6>
+                            <p><strong>Problema técnico:</strong> Sobrecarga del sistema de balanceadores<br>
+                            <strong>Causa subyacente:</strong> Insuficientes pruebas de carga<br>
+                            <strong>Factor crítico:</strong> Falta de pruebas de resiliencia<br>
+                            <strong>Contexto:</strong> Tráfico inesperado por promociones</p>
+                        </div>
+                        <div class="scenario">
+                            <h6>🚫 Lo que Faltó</h6>
+                            <p>Pruebas de estrés realistas<br>
+                            Simulación de picos de tráfico<br>
+                            Validación de failover automático<br>
+                            Monitoreo proactivo de capacidad</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="key-points">
+                <h4>📚 Lecciones Aprendidas</h4>
+                <ul>
+                    <li><strong>Pruebas funcionales perfectas no garantizan éxito:</strong> Todo funcionaba... hasta que no</li>
+                    <li><strong>Ignorar pruebas no funcionales puede ser fatal:</strong> $5.7M en 40 minutos</li>
+                    <li><strong>La escalabilidad no es opcional:</strong> El éxito puede convertirse en fracaso</li>
+                    <li><strong>Las pruebas de resiliencia son críticas:</strong> ¿Qué pasa cuando algo falla?</li>
+                </ul>
+            </div>
+            
+            <div class="quote-box">
+                <h4>💡 Reflexión Clave</h4>
+                <p>"Amazon tenía el mejor e-commerce funcional del mundo, pero 40 minutos sin pruebas no funcionales adecuadas costaron millones"</p>
+            </div>
+            
+            <div class="definition-box">
+                <h4>🔧 Cambios Post-Incidente</h4>
+                <ul>
+                    <li><strong>Chaos Engineering:</strong> Introducción de fallas controladas en producción</li>
+                    <li><strong>Pruebas de carga continuas:</strong> Simulación constante de escenarios extremos</li>
+                    <li><strong>Arquitectura resiliente:</strong> Diseño para fallar graciosamente</li>
+                    <li><strong>Monitoreo predictivo:</strong> Alertas antes de que ocurran problemas</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Slide 5: Actividad - Debate Guiado -->
+        <div class="slide">
+            <h2>🗣️ Actividad: Debate Guiado</h2>
+            <div class="subtitle">Priorización con Recursos Limitados (15 min)</div>
+            
+            <div class="activity-container">
+                <h4>❓ Pregunta Central</h4>
+                
+                <div class="task-instructions">
+                    <h5>🤔 Dilema de Recursos</h5>
+                    <p><strong>"Si tuvieras recursos limitados (tiempo, presupuesto, personal), ¿priorizarías pruebas funcionales o no funcionales?"</strong><br><br>
+                    <strong>Justifica tu decisión con argumentos sólidos</strong></p>
+                </div>
+                
+                <div class="comparison-grid">
+                    <div class="comparison-card">
+                        <h5>✅ Equipo Pro-Funcionales</h5>
+                        <div class="scenario">
+                            <h6>🎯 Argumentos Posibles</h6>
+                            <p><strong>Fundamento:</strong> Sin funcionalidad básica, no hay producto<br>
+                            <strong>Riesgo:</strong> Software que no hace lo prometido<br>
+                            <strong>Impacto:</strong> Pérdida total de credibilidad<br>
+                            <strong>Ejemplo:</strong> App de banco que no transfiere dinero</p>
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-card">
+                        <h5>⚡ Equipo Pro-No Funcionales</h5>
+                        <div class="scenario">
+                            <h6>🎯 Argumentos Posibles</h6>
+                            <p><strong>Fundamento:</strong> La experiencia determina el éxito<br>
+                            <strong>Riesgo:</strong> Software lento/inseguro no se adopta<br>
+                            <strong>Impacto:</strong> Pérdida de usuarios y mercado<br>
+                            <strong>Ejemplo:</strong> App que funciona pero es muy lenta</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="examples-container">
+                    <h5>🎯 Factores a Considerar</h5>
+                    
+                    <div class="example-item">
+                        <h6>📊 Contexto del Proyecto</h6>
+                        <p><strong>Tipo de aplicación:</strong> ¿Crítica para la vida? ¿Entretenimiento?<br>
+                        <strong>Fase del proyecto:</strong> ¿MVP? ¿Producto maduro?<br>
+                        <strong>Competencia:</strong> ¿Mercado saturado? ¿Innovación disruptiva?</p>
+                    </div>
+                    
+                    <div class="example-item">
+                        <h6>👥 Audiencia Objetivo</h6>
+                        <p><strong>Tolerancia:</strong> ¿Usuarios técnicos? ¿Consumidores generales?<br>
+                        <strong>Expectativas:</strong> ¿Funcionalidad básica? ¿Experiencia premium?<br>
+                        <strong>Alternativas:</strong> ¿Pueden cambiar fácilmente de producto?</p>
+                    </div>
+                    
+                    <div class="example-item">
+                        <h6>💰 Impacto del Negocio</h6>
+                        <p><strong>Costo de fallas funcionales:</strong> ¿Pérdida de datos? ¿Transacciones?<br>
+                        <strong>Costo de fallas no funcionales:</strong> ¿Abandono? ¿Reputación?<br>
+                        <strong>ROI:</strong> ¿Qué tipo de pruebas genera más valor?</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="key-points">
+                <h4>🎯 Estructura del Debate</h4>
+                <ul>
+                    <li><strong>5 min:</strong> Cada equipo prepara argumentos</li>
+                    <li><strong>3 min:</strong> Equipo Pro-Funcionales presenta</li>
+                    <li><strong>3 min:</strong> Equipo Pro-No Funcionales presenta</li>
+                    <li><strong>4 min:</strong> Debate abierto y conclusiones</li>
+                </ul>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🎯 <strong>Objetivo:</strong> No hay respuesta correcta única - depende del contexto y las prioridades del negocio</p>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <div class="slide-counter">
+                Diapositiva <span id="currentSlide">1</span> de <span id="totalSlides">5</span>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="previousSlide()" id="prevBtn" disabled>← Anterior</button>
+                <button class="nav-btn" onclick="nextSlide()" id="nextBtn">Siguiente →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 1;
+        const totalSlidesCount = 5;
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlidesCount) {
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
+                currentSlideIndex++;
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
+                updateNavigation();
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlideIndex > 1) {
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
+                currentSlideIndex--;
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
+                updateNavigation();
+            }
+        }
+
+        function updateNavigation() {
+            document.getElementById('currentSlide').textContent = currentSlideIndex;
+            document.getElementById('totalSlides').textContent = totalSlidesCount;
+            
+            document.getElementById('prevBtn').disabled = currentSlideIndex === 1;
+            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlidesCount;
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowRight' || event.key === ' ') {
+                nextSlide();
+            } else if (event.key === 'ArrowLeft') {
+                previousSlide();
+            }
+        });
+
+        // Initialize
+        updateNavigation();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a863947585cdb0',t:'MTc1NzEwMzIyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

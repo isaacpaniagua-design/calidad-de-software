@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesión 13 - Pruebas Funcionales</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .slide-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            position: relative;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide {
+            display: none;
+            flex: 1;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .slide h2 {
+            color: #2d3748;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .slide h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #718096;
+            text-align: center;
+            font-style: italic;
+            margin-bottom: 2rem;
+        }
+
+        .quote-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .quote-box h4 {
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .quote-box p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+
+        .definition-box {
+            background: #e6fffa;
+            padding: 2rem;
+            border-radius: 15px;
+            border-left: 5px solid #38b2ac;
+            margin: 2rem 0;
+        }
+
+        .definition-box h4 {
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            font-size: 1.4rem;
+        }
+
+        .definition-box ul {
+            color: #4a5568;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .definition-box li {
+            margin-bottom: 1rem;
+            padding-left: 0.5rem;
+        }
+
+        .definition-box strong {
+            color: #2d3748;
+        }
+
+        .types-container {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .types-container h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .types-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .type-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .type-card h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .type-card p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .phases-container {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .phases-container h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .phases-list {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .phase-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.2rem;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .phase-number {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .phase-content h5 {
+            color: white;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .phase-content p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.4;
+            font-size: 0.95rem;
+        }
+
+        .activity-container {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .activity-container h4 {
+            color: white;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .context-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .context-box h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .context-box p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        .requirements-list {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            backdrop-filter: blur(5px);
+        }
+
+        .requirements-list h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .requirements-list ul {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.6;
+            margin-left: 1rem;
+        }
+
+        .requirements-list li {
+            margin-bottom: 0.8rem;
+        }
+
+        .task-instructions {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .task-instructions h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .task-instructions p {
+            color: white;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .example-box {
+            background: #fff5f5;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #f56565;
+            margin: 2rem 0;
+        }
+
+        .example-box h5 {
+            color: #c53030;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .example-box p {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .test-case-template {
+            background: #f0fff4;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #48bb78;
+            margin: 1.5rem 0;
+        }
+
+        .test-case-template h6 {
+            color: #2f855a;
+            margin-bottom: 0.8rem;
+            font-size: 1rem;
+        }
+
+        .test-case-template p {
+            color: #4a5568;
+            line-height: 1.5;
+            font-size: 0.9rem;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .slide-counter {
+            color: #718096;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .source-note {
+            background: #fff5f5;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #f56565;
+            margin-top: 1.5rem;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .highlight-box {
+            background: #fffaf0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px dashed #ed8936;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .highlight-box p {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .key-points {
+            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .key-points h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .key-points ul {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+            font-size: 1.1rem;
+            margin-left: 1rem;
+        }
+
+        .key-points li {
+            margin-bottom: 1rem;
+        }
+
+        .key-points strong {
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .slide-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            
+            .slide h1 {
+                font-size: 2rem;
+            }
+            
+            .slide h2 {
+                font-size: 1.5rem;
+            }
+            
+            .types-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+          <a class="qs-btn" href="checklist.html">Checklist</a>
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <div class="slide-container">
+        <!-- Slide 1: Título -->
+        <div class="slide active">
+            <h1>✅ Pruebas Funcionales</h1>
+            <div class="subtitle">¿Hace lo que debe hacer?</div>
+            
+            <div class="quote-box">
+                <h4>🎯 "Validando el comportamiento esperado"</h4>
+                <p>Verificamos que el software cumple con los requisitos funcionales definidos</p>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🎯 <strong>Objetivo:</strong> Dominar las técnicas de pruebas funcionales y su aplicación práctica</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: Definición -->
+        <div class="slide">
+            <h2>📋 Definición</h2>
+            
+            <div class="definition-box">
+                <h4>🔍 ¿Qué son las Pruebas Funcionales?</h4>
+                <ul>
+                    <li><strong>Evalúan si el software cumple</strong> con los requisitos funcionales definidos</li>
+                    <li><strong>Se basan en la caja negra</strong> - enfoque en entradas y salidas</li>
+                    <li><strong>No importa cómo funciona internamente</strong> - solo que funcione correctamente</li>
+                    <li><strong>Perspectiva del usuario final</strong> - comportamiento observable</li>
+                </ul>
+            </div>
+            
+            <div class="key-points">
+                <h4>🎯 Características Clave</h4>
+                <ul>
+                    <li><strong>Basadas en especificaciones:</strong> Cada caso de prueba deriva de un requisito específico</li>
+                    <li><strong>Independientes de la implementación:</strong> No cambian aunque se modifique el código interno</li>
+                    <li><strong>Orientadas al negocio:</strong> Validan que el software resuelve problemas reales</li>
+                    <li><strong>Medibles y verificables:</strong> Resultados claros de éxito o fallo</li>
+                </ul>
+            </div>
+            
+            <div class="example-box">
+                <h5>💡 Ejemplo Práctico</h5>
+                <p><strong>Requisito:</strong> "El sistema debe permitir login con usuario y contraseña válidos"<br>
+                <strong>Prueba Funcional:</strong> Ingresar credenciales correctas → Verificar acceso concedido<br>
+                <strong>No importa:</strong> Si usa base de datos, LDAP, o archivos para validar</p>
+            </div>
+            
+            <div class="source-note">
+                📚 <strong>Fuente:</strong> Sommerville, Capítulo 8
+            </div>
+        </div>
+
+        <!-- Slide 3: Tipos de Pruebas Funcionales -->
+        <div class="slide">
+            <h2>🔧 Tipos de Pruebas Funcionales</h2>
+            
+            <div class="types-container">
+                <h4>📊 Clasificación Principal</h4>
+                
+                <div class="types-grid">
+                    <div class="type-card">
+                        <h5>💨 Smoke Testing</h5>
+                        <p><strong>Propósito:</strong> Validación básica de build<br>
+                        <strong>Alcance:</strong> Funcionalidades críticas mínimas<br>
+                        <strong>Cuándo:</strong> Después de cada despliegue<br>
+                        <strong>Objetivo:</strong> ¿El sistema "enciende"?</p>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h5>🔄 Pruebas de Regresión</h5>
+                        <p><strong>Propósito:</strong> Comprobar que cambios no rompen lo existente<br>
+                        <strong>Alcance:</strong> Funcionalidades previamente probadas<br>
+                        <strong>Cuándo:</strong> Después de modificaciones<br>
+                        <strong>Objetivo:</strong> Mantener calidad existente</p>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h5>🔗 Integración Funcional</h5>
+                        <p><strong>Propósito:</strong> Interacción entre módulos desde perspectiva del usuario<br>
+                        <strong>Alcance:</strong> Flujos end-to-end<br>
+                        <strong>Cuándo:</strong> Después de integrar componentes<br>
+                        <strong>Objetivo:</strong> Workflows completos funcionan</p>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h5>✅ Pruebas de Aceptación</h5>
+                        <p><strong>Propósito:</strong> Validación del cliente<br>
+                        <strong>Alcance:</strong> Requisitos de negocio completos<br>
+                        <strong>Cuándo:</strong> Antes de entrega final<br>
+                        <strong>Objetivo:</strong> ¿Satisface necesidades reales?</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="example-box">
+                <h5>🏦 Ejemplo: Sistema Bancario</h5>
+                <p><strong>Smoke:</strong> ¿Se puede hacer login?<br>
+                <strong>Regresión:</strong> Después de actualizar, ¿las transferencias siguen funcionando?<br>
+                <strong>Integración:</strong> ¿El flujo completo de transferencia (login → seleccionar cuenta → transferir → confirmar) funciona?<br>
+                <strong>Aceptación:</strong> ¿El cliente puede realizar todas sus operaciones bancarias necesarias?</p>
+            </div>
+            
+            <div class="source-note">
+                📚 <strong>Fuente:</strong> Mahfuz, Capítulo 3
+            </div>
+        </div>
+
+        <!-- Slide 4: Fases para realizarlas -->
+        <div class="slide">
+            <h2>📋 Fases para Realizarlas</h2>
+            
+            <div class="phases-container">
+                <h4>🔄 Proceso Estructurado</h4>
+                
+                <div class="phases-list">
+                    <div class="phase-item">
+                        <div class="phase-number">1</div>
+                        <div class="phase-content">
+                            <h5>🎯 Identificación de Requisitos</h5>
+                            <p>Analizar especificaciones funcionales y extraer casos de uso específicos a validar</p>
+                        </div>
+                    </div>
+                    
+                    <div class="phase-item">
+                        <div class="phase-number">2</div>
+                        <div class="phase-content">
+                            <h5>📝 Diseño de Casos de Prueba</h5>
+                            <p>Crear escenarios detallados con entradas, pasos y resultados esperados específicos</p>
+                        </div>
+                    </div>
+                    
+                    <div class="phase-item">
+                        <div class="phase-number">3</div>
+                        <div class="phase-content">
+                            <h5>🗃️ Preparación de Datos de Prueba</h5>
+                            <p>Configurar datos de entrada realistas y ambientes de prueba apropiados</p>
+                        </div>
+                    </div>
+                    
+                    <div class="phase-item">
+                        <div class="phase-number">4</div>
+                        <div class="phase-content">
+                            <h5>▶️ Ejecución y Registro de Resultados</h5>
+                            <p>Ejecutar casos sistemáticamente y documentar resultados obtenidos vs esperados</p>
+                        </div>
+                    </div>
+                    
+                    <div class="phase-item">
+                        <div class="phase-number">5</div>
+                        <div class="phase-content">
+                            <h5>🔍 Análisis de Desviaciones</h5>
+                            <p>Investigar discrepancias, clasificar defectos y determinar acciones correctivas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="definition-box">
+                <h4>💡 Mejores Prácticas</h4>
+                <ul>
+                    <li><strong>Trazabilidad:</strong> Cada caso de prueba debe mapear a un requisito específico</li>
+                    <li><strong>Datos realistas:</strong> Usar datos que reflejen el uso real del sistema</li>
+                    <li><strong>Documentación clara:</strong> Pasos reproducibles por cualquier tester</li>
+                    <li><strong>Criterios de aceptación:</strong> Definir claramente qué constituye éxito o fallo</li>
+                </ul>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🎯 <strong>Clave:</strong> La sistematización garantiza cobertura completa y resultados confiables</p>
+            </div>
+        </div>
+
+        <!-- Slide 5: Actividad - Caso práctico -->
+        <div class="slide">
+            <h2>🎮 Actividad: Caso Práctico</h2>
+            <div class="subtitle">Sistema de Login Bancario (20 min)</div>
+            
+            <div class="activity-container">
+                <h4>🏦 Contexto del Ejercicio</h4>
+                
+                <div class="context-box">
+                    <h5>📱 Sistema de Login - App Bancaria</h5>
+                    <p>Estás probando el módulo de autenticación de una aplicación bancaria móvil. El sistema debe ser seguro, confiable y fácil de usar para clientes de diferentes perfiles técnicos.</p>
+                </div>
+                
+                <div class="requirements-list">
+                    <h5>📋 Requisitos Funcionales</h5>
+                    <ul>
+                        <li><strong>Login exitoso:</strong> Usuario y contraseña válidos → Acceso a dashboard</li>
+                        <li><strong>Credenciales inválidas:</strong> Mostrar mensaje de error específico</li>
+                        <li><strong>Bloqueo de seguridad:</strong> Después de 3 intentos fallidos → Bloquear cuenta por 15 minutos</li>
+                        <li><strong>Campos obligatorios:</strong> No permitir login con campos vacíos</li>
+                        <li><strong>Sesión activa:</strong> Recordar usuario logueado por 30 minutos de inactividad</li>
+                    </ul>
+                </div>
+                
+                <div class="task-instructions">
+                    <h5>📝 Tarea por Equipos</h5>
+                    <p><strong>Diseñar 3 casos de prueba funcional completos</strong><br>
+                    Cada caso debe incluir: Entradas → Pasos → Salidas esperadas</p>
+                </div>
+                
+                <div class="test-case-template">
+                    <h6>📋 Plantilla de Caso de Prueba</h6>
+                    <p><strong>ID:</strong> TC_LOGIN_01<br>
+                    <strong>Descripción:</strong> [Qué se está probando]<br>
+                    <strong>Precondiciones:</strong> [Estado inicial requerido]<br>
+                    <strong>Datos de entrada:</strong> [Usuario, contraseña, etc.]<br>
+                    <strong>Pasos:</strong> [Acciones específicas a realizar]<br>
+                    <strong>Resultado esperado:</strong> [Qué debe ocurrir]<br>
+                    <strong>Criterio de éxito:</strong> [Cómo verificar que pasó]</p>
+                </div>
+                
+                <div class="example-box">
+                    <h5>💡 Ejemplo de Caso</h5>
+                    <p><strong>TC_LOGIN_01 - Login Exitoso</strong><br>
+                    <strong>Entrada:</strong> usuario: "juan.perez", contraseña: "MiClave123!"<br>
+                    <strong>Pasos:</strong> 1) Abrir app 2) Ingresar credenciales 3) Tocar "Ingresar"<br>
+                    <strong>Resultado esperado:</strong> Redirección a dashboard principal con mensaje "Bienvenido Juan"</p>
+                </div>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🎯 <strong>Enfoque:</strong> Piensen como usuarios reales - ¿qué escenarios son más críticos?</p>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <div class="slide-counter">
+                Diapositiva <span id="currentSlide">1</span> de <span id="totalSlides">5</span>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="previousSlide()" id="prevBtn" disabled>← Anterior</button>
+                <button class="nav-btn" onclick="nextSlide()" id="nextBtn">Siguiente →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 1;
+        const totalSlidesCount = 5;
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlidesCount) {
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
+                currentSlideIndex++;
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
+                updateNavigation();
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlideIndex > 1) {
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
+                currentSlideIndex--;
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
+                updateNavigation();
+            }
+        }
+
+        function updateNavigation() {
+            document.getElementById('currentSlide').textContent = currentSlideIndex;
+            document.getElementById('totalSlides').textContent = totalSlidesCount;
+            
+            document.getElementById('prevBtn').disabled = currentSlideIndex === 1;
+            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlidesCount;
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowRight' || event.key === ' ') {
+                nextSlide();
+            } else if (event.key === 'ArrowLeft') {
+                previousSlide();
+            }
+        });
+
+        // Initialize
+        updateNavigation();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a86257f7aacdb0',t:'MTc1NzEwMzE3NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

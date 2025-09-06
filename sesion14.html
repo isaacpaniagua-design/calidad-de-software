@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesión 14 - Pruebas No Funcionales</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .slide-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            position: relative;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide {
+            display: none;
+            flex: 1;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .slide h2 {
+            color: #2d3748;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .slide h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #718096;
+            text-align: center;
+            font-style: italic;
+            margin-bottom: 2rem;
+        }
+
+        .quote-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .quote-box h4 {
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .quote-box p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+
+        .definition-box {
+            background: #e6fffa;
+            padding: 2rem;
+            border-radius: 15px;
+            border-left: 5px solid #38b2ac;
+            margin: 2rem 0;
+        }
+
+        .definition-box h4 {
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            font-size: 1.4rem;
+        }
+
+        .definition-box ul {
+            color: #4a5568;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .definition-box li {
+            margin-bottom: 1rem;
+            padding-left: 0.5rem;
+        }
+
+        .definition-box strong {
+            color: #2d3748;
+        }
+
+        .types-container {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .types-container h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .types-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .type-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .type-card h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .type-card p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .comparison-container {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .comparison-container h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 1.5rem;
+        }
+
+        .comparison-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .comparison-card h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        .comparison-card .scenario {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .comparison-card .scenario h6 {
+            color: white;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .comparison-card .scenario p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.4;
+            font-size: 0.9rem;
+        }
+
+        .activity-container {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .activity-container h4 {
+            color: white;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .app-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .app-card h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .app-card p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
+            font-size: 0.9rem;
+        }
+
+        .task-instructions {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .task-instructions h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .task-instructions p {
+            color: white;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+
+        .examples-container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            backdrop-filter: blur(5px);
+        }
+
+        .examples-container h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .example-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(3px);
+        }
+
+        .example-item h6 {
+            color: white;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .example-item p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.4;
+            font-size: 0.9rem;
+        }
+
+        .key-points {
+            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .key-points h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .key-points ul {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+            font-size: 1.1rem;
+            margin-left: 1rem;
+        }
+
+        .key-points li {
+            margin-bottom: 1rem;
+        }
+
+        .key-points strong {
+            color: white;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .slide-counter {
+            color: #718096;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .source-note {
+            background: #fff5f5;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #f56565;
+            margin-top: 1.5rem;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .highlight-box {
+            background: #fffaf0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px dashed #ed8936;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .highlight-box p {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .slide-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            
+            .slide h1 {
+                font-size: 2rem;
+            }
+            
+            .slide h2 {
+                font-size: 1.5rem;
+            }
+            
+            .types-grid, .comparison-grid, .apps-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+          <a class="qs-btn" href="checklist.html">Checklist</a>
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <div class="slide-container">
+        <!-- Slide 1: Título -->
+        <div class="slide active">
+            <h1>⚡ Pruebas No Funcionales</h1>
+            <div class="subtitle">Más allá del "qué"</div>
+            
+            <div class="quote-box">
+                <h4>🎯 "El cómo importa tanto como el qué"</h4>
+                <p>Evaluamos la calidad de la experiencia, no solo la funcionalidad</p>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🎯 <strong>Objetivo:</strong> Comprender y aplicar pruebas de atributos de calidad del software</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: Definición -->
+        <div class="slide">
+            <h2>📋 Definición</h2>
+            
+            <div class="definition-box">
+                <h4>🔍 ¿Qué son las Pruebas No Funcionales?</h4>
+                <ul>
+                    <li><strong>Evalúan atributos de calidad:</strong> rendimiento, seguridad, usabilidad, confiabilidad</li>
+                    <li><strong>Responden al "cómo"</strong> se comporta el software en condiciones reales</li>
+                    <li><strong>Miden características cualitativas</strong> - no solo si funciona, sino qué tan bien</li>
+                    <li><strong>Críticas para la experiencia del usuario</strong> - determinan satisfacción y adopción</li>
+                </ul>
+            </div>
+            
+            <div class="key-points">
+                <h4>🎯 Diferencias Clave</h4>
+                <ul>
+                    <li><strong>Funcionales:</strong> "¿El login funciona?" → Sí/No</li>
+                    <li><strong>No Funcionales:</strong> "¿El login es rápido, seguro y fácil?" → Medible</li>
+                    <li><strong>Funcionales:</strong> Basadas en requisitos específicos</li>
+                    <li><strong>No Funcionales:</strong> Basadas en expectativas de calidad</li>
+                </ul>
+            </div>
+            
+            <div class="quote-box">
+                <h4>💡 Perspectiva Real</h4>
+                <p>"Un software que funciona pero es lento, inseguro o difícil de usar, fracasará en el mercado"</p>
+            </div>
+            
+            <div class="source-note">
+                📚 <strong>Fuente:</strong> Pressman, Capítulo 17
+            </div>
+        </div>
+
+        <!-- Slide 3: Tipos de Pruebas No Funcionales -->
+        <div class="slide">
+            <h2>🔧 Tipos de Pruebas No Funcionales</h2>
+            
+            <div class="types-container">
+                <h4>📊 Clasificación Principal</h4>
+                
+                <div class="types-grid">
+                    <div class="type-card">
+                        <h5>⚡ Rendimiento</h5>
+                        <p><strong>Qué mide:</strong> Tiempos de respuesta, throughput<br>
+                        <strong>Ejemplo:</strong> "La página debe cargar en < 3 segundos"<br>
+                        <strong>Herramientas:</strong> JMeter, LoadRunner</p>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h5>👥 Carga</h5>
+                        <p><strong>Qué mide:</strong> Comportamiento con usuarios concurrentes<br>
+                        <strong>Ejemplo:</strong> "Soportar 1000 usuarios simultáneos"<br>
+                        <strong>Objetivo:</strong> Validar capacidad esperada</p>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h5>💥 Estrés</h5>
+                        <p><strong>Qué mide:</strong> Límite de capacidad antes de fallar<br>
+                        <strong>Ejemplo:</strong> "¿Cuántos usuarios antes del colapso?"<br>
+                        <strong>Objetivo:</strong> Encontrar punto de quiebre</p>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h5>👤 Usabilidad</h5>
+                        <p><strong>Qué mide:</strong> Facilidad de uso y aprendizaje<br>
+                        <strong>Ejemplo:</strong> "Usuario nuevo completa tarea en < 5 min"<br>
+                        <strong>Métodos:</strong> Observación, encuestas</p>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h5>🔒 Seguridad</h5>
+                        <p><strong>Qué mide:</strong> Resistencia ante ataques<br>
+                        <strong>Ejemplo:</strong> "Prevenir inyección SQL"<br>
+                        <strong>Técnicas:</strong> Penetration testing, análisis de vulnerabilidades</p>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h5>📱 Compatibilidad</h5>
+                        <p><strong>Qué mide:</strong> Funcionamiento en distintos dispositivos/navegadores<br>
+                        <strong>Ejemplo:</strong> "Funcionar en Chrome, Firefox, Safari"<br>
+                        <strong>Alcance:</strong> Cross-platform, cross-browser</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🎯 <strong>Clave:</strong> Cada tipo responde a una expectativa específica de calidad del usuario</p>
+            </div>
+        </div>
+
+        <!-- Slide 4: Ejemplo - App de Streaming -->
+        <div class="slide">
+            <h2>📺 Ejemplo: App de Streaming</h2>
+            
+            <div class="comparison-container">
+                <h4>🎯 Funcional vs No Funcional</h4>
+                
+                <div class="comparison-grid">
+                    <div class="comparison-card">
+                        <h5>✅ Funcional</h5>
+                        <div class="scenario">
+                            <h6>🎬 Caso de Prueba</h6>
+                            <p><strong>Acción:</strong> Presionar botón "Play" en un video<br>
+                            <strong>Resultado esperado:</strong> El video se reproduce<br>
+                            <strong>Criterio:</strong> Sí/No - funciona o no funciona</p>
+                        </div>
+                    </div>
+                    
+                    <div class="comparison-card">
+                        <h5>⚡ No Funcional</h5>
+                        <div class="scenario">
+                            <h6>🎬 Caso de Prueba</h6>
+                            <p><strong>Requisito:</strong> Iniciar video en < 2 segundos para 1 millón de usuarios simultáneos<br>
+                            <strong>Medición:</strong> Tiempo de respuesta bajo carga<br>
+                            <strong>Criterio:</strong> Medible - cumple o no el estándar</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="types-container">
+                <h4>🎯 Otros Ejemplos No Funcionales</h4>
+                
+                <div class="types-grid">
+                    <div class="type-card">
+                        <h5>📊 Rendimiento</h5>
+                        <p>"El catálogo de películas debe cargar en menos de 1.5 segundos en conexión 4G"</p>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h5>👥 Carga</h5>
+                        <p>"Soportar 500,000 usuarios viendo contenido simultáneamente sin degradación"</p>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h5>👤 Usabilidad</h5>
+                        <p>"Un usuario nuevo debe poder encontrar y reproducir contenido en menos de 30 segundos"</p>
+                    </div>
+                    
+                    <div class="type-card">
+                        <h5>🔒 Seguridad</h5>
+                        <p>"Prevenir descarga no autorizada de contenido premium y proteger datos de pago"</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="quote-box">
+                <h4>💡 Reflexión</h4>
+                <p>Netflix no sería exitoso solo porque "reproduce videos" - su éxito está en la calidad de la experiencia</p>
+            </div>
+        </div>
+
+        <!-- Slide 5: Actividad - Brainstorming -->
+        <div class="slide">
+            <h2>🧠 Actividad: Brainstorming</h2>
+            <div class="subtitle">Diseño de Pruebas No Funcionales (15 min)</div>
+            
+            <div class="activity-container">
+                <h4>📱 Aplicaciones para Analizar</h4>
+                
+                <div class="apps-grid">
+                    <div class="app-card">
+                        <h5>🚗 Uber</h5>
+                        <p><strong>Contexto:</strong> App de transporte urbano<br>
+                        <strong>Usuarios críticos:</strong> Pasajeros y conductores<br>
+                        <strong>Momento crítico:</strong> Solicitar viaje en hora pico</p>
+                    </div>
+                    
+                    <div class="app-card">
+                        <h5>🎵 Spotify</h5>
+                        <p><strong>Contexto:</strong> Streaming de música<br>
+                        <strong>Usuarios críticos:</strong> Millones simultáneos<br>
+                        <strong>Momento crítico:</strong> Reproducir música sin interrupciones</p>
+                    </div>
+                    
+                    <div class="app-card">
+                        <h5>💬 WhatsApp</h5>
+                        <p><strong>Contexto:</strong> Mensajería instantánea<br>
+                        <strong>Usuarios críticos:</strong> 2 mil millones activos<br>
+                        <strong>Momento crítico:</strong> Enviar mensaje importante</p>
+                    </div>
+                </div>
+                
+                <div class="task-instructions">
+                    <h5>📝 Tarea por Equipos</h5>
+                    <p><strong>1. Elegir una aplicación</strong><br>
+                    <strong>2. Diseñar 2 pruebas no funcionales específicas</strong><br>
+                    <strong>3. Incluir: tipo de prueba, métrica, criterio de éxito</strong></p>
+                </div>
+                
+                <div class="examples-container">
+                    <h5>💡 Ejemplos de Referencia</h5>
+                    
+                    <div class="example-item">
+                        <h6>🚗 Uber - Rendimiento</h6>
+                        <p><strong>Prueba:</strong> "Tiempo de respuesta al solicitar viaje"<br>
+                        <strong>Métrica:</strong> < 3 segundos desde tap hasta confirmación<br>
+                        <strong>Condición:</strong> En hora pico con 10,000 solicitudes/minuto</p>
+                    </div>
+                    
+                    <div class="example-item">
+                        <h6>🎵 Spotify - Usabilidad</h6>
+                        <p><strong>Prueba:</strong> "Facilidad para descubrir música nueva"<br>
+                        <strong>Métrica:</strong> Usuario encuentra canción que le gusta en < 2 minutos<br>
+                        <strong>Método:</strong> Observación de 20 usuarios nuevos</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🎯 <strong>Enfoque:</strong> Piensen en momentos críticos donde la calidad marca la diferencia</p>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <div class="slide-counter">
+                Diapositiva <span id="currentSlide">1</span> de <span id="totalSlides">5</span>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="previousSlide()" id="prevBtn" disabled>← Anterior</button>
+                <button class="nav-btn" onclick="nextSlide()" id="nextBtn">Siguiente →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 1;
+        const totalSlidesCount = 5;
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlidesCount) {
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
+                currentSlideIndex++;
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
+                updateNavigation();
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlideIndex > 1) {
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
+                currentSlideIndex--;
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
+                updateNavigation();
+            }
+        }
+
+        function updateNavigation() {
+            document.getElementById('currentSlide').textContent = currentSlideIndex;
+            document.getElementById('totalSlides').textContent = totalSlidesCount;
+            
+            document.getElementById('prevBtn').disabled = currentSlideIndex === 1;
+            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlidesCount;
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowRight' || event.key === ' ') {
+                nextSlide();
+            } else if (event.key === 'ArrowLeft') {
+                previousSlide();
+            }
+        });
+
+        // Initialize
+        updateNavigation();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a862f65643cdb0',t:'MTc1NzEwMzE5OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

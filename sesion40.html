@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗺️ Sesión 40: ¿Qué es un Roadmap?</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        .slide {
+            min-height: 100vh;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            padding-top: 6rem;
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 0.5s ease;
+        }
+        
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .roadmap-timeline {
+            position: relative;
+            padding: 2rem 0;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .timeline-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(to bottom, #3b82f6, #8b5cf6, #06b6d4);
+            transform: translateX(-50%);
+        }
+        
+        .timeline-item {
+            position: relative;
+            margin: 3rem 0;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+            width: 45%;
+        }
+        
+        .timeline-item:nth-child(odd) {
+            margin-left: 0;
+            text-align: right;
+            padding-right: 2rem;
+        }
+        
+        .timeline-item:nth-child(even) {
+            margin-left: 55%;
+            text-align: left;
+            padding-left: 2rem;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            top: 1.5rem;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border: 4px solid #3b82f6;
+            border-radius: 50%;
+            z-index: 10;
+        }
+        
+        .timeline-item:nth-child(odd) .timeline-dot {
+            right: -12px;
+        }
+        
+        .timeline-item:nth-child(even) .timeline-dot {
+            left: -12px;
+        }
+        
+        .phase-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #3b82f6;
+            transition: all 0.3s ease;
+        }
+        
+        .phase-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .benefit-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            text-align: center;
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+        
+        .benefit-card.animate {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        .discussion-bubble {
+            background: #fef3c7;
+            border: 2px solid #f59e0b;
+            border-radius: 2rem;
+            padding: 2rem;
+            margin: 1rem;
+            position: relative;
+            animation: bounce 2s infinite;
+        }
+        
+        .discussion-bubble::before {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 15px solid #f59e0b;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {
+                transform: translateY(0);
+            }
+            40% {
+                transform: translateY(-10px);
+            }
+            60% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        .interactive-roadmap {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .roadmap-phase {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-top: 4px solid;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .roadmap-phase:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .phase-immediate { border-top-color: #ef4444; }
+        .phase-short { border-top-color: #f59e0b; }
+        .phase-medium { border-top-color: #10b981; }
+        .phase-long { border-top-color: #3b82f6; }
+        
+        .timer {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ef4444;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        .discussion-responses {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .response-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #ef4444;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s ease;
+        }
+        
+        .response-card.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+          <a class="qs-btn" href="checklist.html">Checklist</a>
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-lg z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-xl font-bold text-gray-800">🗺️ Sesión 40: Roadmap</h1>
+                    <span class="text-sm text-gray-600" id="slide-counter">1 / 4</span>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="previousSlide()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        ← Anterior
+                    </button>
+                    <button onclick="nextSlide()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        Siguiente →
+                    </button>
+                </div>
+            </div>
+        </div>
+          <a class="qs-btn" href="status.html">Status</a>
+</nav>
+
+    <!-- Slide 1: Título -->
+    <div class="slide active" id="slide-1">
+        <div class="text-center max-w-4xl mx-auto">
+            <div class="mb-8">
+                <div class="text-8xl mb-6">🗺️</div>
+                <h1 class="text-6xl font-bold text-gray-800 mb-4">Roadmap</h1>
+                <h2 class="text-3xl text-blue-600 font-semibold mb-8">De las brechas a la acción organizada</h2>
+            </div>
+            
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl">
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="text-center">
+                        <div class="text-4xl mb-3">📊</div>
+                        <h3 class="font-semibold text-gray-800">Gap Analysis</h3>
+                        <p class="text-sm text-gray-600">Identificamos brechas</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl mb-3">➡️</div>
+                        <h3 class="font-semibold text-blue-600">Roadmap</h3>
+                        <p class="text-sm text-gray-600">Planificamos acciones</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-4xl mb-3">🎯</div>
+                        <h3 class="font-semibold text-gray-800">Ejecución</h3>
+                        <p class="text-sm text-gray-600">Implementamos mejoras</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8">
+                <p class="text-lg text-gray-700 italic">
+                    "Un roadmap transforma el diagnóstico en un plan de acción estructurado y temporal"
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 2: Definición -->
+    <div class="slide" id="slide-2">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-bold text-gray-800 mb-4">📋 Definición</h1>
+                <div class="w-24 h-1 bg-blue-600 mx-auto mb-8"></div>
+            </div>
+            
+            <div class="bg-white rounded-2xl p-8 shadow-xl mb-8">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-blue-600 mb-4">
+                        Un mapa estratégico y temporal para cerrar las brechas detectadas en el diagnóstico
+                    </h2>
+                </div>
+                
+                <div class="grid md:grid-cols-4 gap-6 mb-8">
+                    <div class="text-center p-6 bg-red-50 rounded-xl">
+                        <div class="text-4xl mb-3">❓</div>
+                        <h3 class="text-xl font-bold text-red-600 mb-2">QUÉ</h3>
+                        <p class="text-sm text-gray-700">Acciones específicas a realizar</p>
+                    </div>
+                    <div class="text-center p-6 bg-blue-50 rounded-xl">
+                        <div class="text-4xl mb-3">👥</div>
+                        <h3 class="text-xl font-bold text-blue-600 mb-2">QUIÉN</h3>
+                        <p class="text-sm text-gray-700">Responsables y equipos</p>
+                    </div>
+                    <div class="text-center p-6 bg-green-50 rounded-xl">
+                        <div class="text-4xl mb-3">📅</div>
+                        <h3 class="text-xl font-bold text-green-600 mb-2">CUÁNDO</h3>
+                        <p class="text-sm text-gray-700">Cronograma y plazos</p>
+                    </div>
+                    <div class="text-center p-6 bg-purple-50 rounded-xl">
+                        <div class="text-4xl mb-3">⚙️</div>
+                        <h3 class="text-xl font-bold text-purple-600 mb-2">CÓMO</h3>
+                        <p class="text-sm text-gray-700">Metodología y recursos</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Interactive Roadmap Example -->
+            <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8">
+                <h3 class="text-2xl font-bold text-center text-gray-800 mb-6">🗺️ Ejemplo de Roadmap</h3>
+                
+                <div class="roadmap-timeline">
+                    <div class="timeline-line"></div>
+                    
+                    <div class="timeline-item" style="animation-delay: 0.2s">
+                        <div class="timeline-dot"></div>
+                        <div class="phase-card">
+                            <h4 class="font-bold text-red-600 mb-2">🚨 Fase 1: Inmediato (1-2 meses)</h4>
+                            <p class="text-sm text-gray-700">Implementar gestión de requisitos básica</p>
+                            <div class="text-xs text-gray-500 mt-2">Responsable: Líder de Proyecto</div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item" style="animation-delay: 0.4s">
+                        <div class="timeline-dot"></div>
+                        <div class="phase-card">
+                            <h4 class="font-bold text-yellow-600 mb-2">⚠️ Fase 2: Corto Plazo (3-6 meses)</h4>
+                            <p class="text-sm text-gray-700">Establecer proceso de planificación formal</p>
+                            <div class="text-xs text-gray-500 mt-2">Responsable: Equipo de Desarrollo</div>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item" style="animation-delay: 0.6s">
+                        <div class="timeline-dot"></div>
+                        <div class="phase-card">
+                            <h4 class="font-bold text-green-600 mb-2">✅ Fase 3: Mediano Plazo (6-12 meses)</h4>
+                            <p class="text-sm text-gray-700">Implementar métricas y mejora continua</p>
+                            <div class="text-xs text-gray-500 mt-2">Responsable: Equipo QA</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-8">
+                <p class="text-lg text-gray-600 italic">
+                    <strong>Fuente:</strong> CMMI v1.3, MoProSoft
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: Beneficios -->
+    <div class="slide" id="slide-3">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-bold text-gray-800 mb-4">✨ Beneficios</h1>
+                <div class="w-24 h-1 bg-purple-600 mx-auto mb-8"></div>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+                <div class="benefit-card">
+                    <div class="text-5xl mb-4">🎯</div>
+                    <h3 class="text-2xl font-bold mb-4">Aterriza el plan de mejora</h3>
+                    <p class="text-lg">Convierte objetivos abstractos en fases alcanzables y medibles</p>
+                    <div class="mt-4 text-sm opacity-90">
+                        • Metas específicas<br>
+                        • Plazos realistas<br>
+                        • Recursos definidos
+                    </div>
+                </div>
+                
+                <div class="benefit-card" style="animation-delay: 0.2s">
+                    <div class="text-5xl mb-4">👁️</div>
+                    <h3 class="text-2xl font-bold mb-4">Genera visibilidad</h3>
+                    <p class="text-lg">Proporciona transparencia para dirección y equipos de trabajo</p>
+                    <div class="mt-4 text-sm opacity-90">
+                        • Progreso visible<br>
+                        • Comunicación clara<br>
+                        • Alineación organizacional
+                    </div>
+                </div>
+                
+                <div class="benefit-card" style="animation-delay: 0.4s">
+                    <div class="text-5xl mb-4">🤝</div>
+                    <h3 class="text-2xl font-bold mb-4">Reduce resistencia</h3>
+                    <p class="text-lg">Facilita la adopción gradual y reduce el miedo al cambio</p>
+                    <div class="mt-4 text-sm opacity-90">
+                        • Cambios graduales<br>
+                        • Participación activa<br>
+                        • Confianza del equipo
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Interactive Benefits Demo -->
+            <div class="bg-white rounded-2xl p-8 shadow-xl">
+                <h3 class="text-2xl font-bold text-center text-gray-800 mb-6">📊 Impacto del Roadmap</h3>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="text-center">
+                        <h4 class="text-xl font-semibold text-red-600 mb-4">❌ Sin Roadmap</h4>
+                        <div class="space-y-3">
+                            <div class="bg-red-50 p-3 rounded-lg text-left">
+                                <div class="font-medium text-red-800">Proyectos sin dirección</div>
+                                <div class="text-sm text-red-600">Esfuerzos dispersos y duplicados</div>
+                            </div>
+                            <div class="bg-red-50 p-3 rounded-lg text-left">
+                                <div class="font-medium text-red-800">Resistencia al cambio</div>
+                                <div class="text-sm text-red-600">Equipos confundidos y desmotivados</div>
+                            </div>
+                            <div class="bg-red-50 p-3 rounded-lg text-left">
+                                <div class="font-medium text-red-800">Falta de seguimiento</div>
+                                <div class="text-sm text-red-600">No se mide el progreso</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <h4 class="text-xl font-semibold text-green-600 mb-4">✅ Con Roadmap</h4>
+                        <div class="space-y-3">
+                            <div class="bg-green-50 p-3 rounded-lg text-left">
+                                <div class="font-medium text-green-800">Dirección clara</div>
+                                <div class="text-sm text-green-600">Todos saben qué hacer y cuándo</div>
+                            </div>
+                            <div class="bg-green-50 p-3 rounded-lg text-left">
+                                <div class="font-medium text-green-800">Adopción gradual</div>
+                                <div class="text-sm text-green-600">Cambios manejables y aceptados</div>
+                            </div>
+                            <div class="bg-green-50 p-3 rounded-lg text-left">
+                                <div class="font-medium text-green-800">Progreso medible</div>
+                                <div class="text-sm text-green-600">Hitos claros y celebrables</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-8 text-center">
+                    <button onclick="animateBenefits()" class="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg transition-colors">
+                        🎬 Ver Animación de Beneficios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Actividad - Discusión -->
+    <div class="slide" id="slide-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-8">
+                <h1 class="text-5xl font-bold text-gray-800 mb-4">💬 Actividad - Discusión</h1>
+                <div class="w-24 h-1 bg-orange-600 mx-auto mb-8"></div>
+                <div class="timer" id="discussion-timer">10:00</div>
+            </div>
+            
+            <div class="discussion-bubble">
+                <div class="text-center">
+                    <div class="text-4xl mb-4">🤔</div>
+                    <h2 class="text-2xl font-bold text-orange-800 mb-4">Pregunta para Discusión</h2>
+                    <p class="text-xl text-orange-700 font-semibold">
+                        ¿Qué pasa si una empresa hace Gap Analysis pero nunca ejecuta un Roadmap?
+                    </p>
+                </div>
+            </div>
+            
+            <div class="text-center mb-8">
+                <button onclick="startDiscussion()" id="start-discussion-btn" class="bg-orange-600 hover:bg-orange-700 text-white px-8 py-4 rounded-lg text-lg transition-colors">
+                    🚀 Iniciar Discusión (10 minutos)
+                </button>
+                <button onclick="showResponses()" id="show-responses-btn" class="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-lg text-lg transition-colors hidden">
+                    💡 Ver Respuestas Esperadas
+                </button>
+            </div>
+            
+            <!-- Discussion Guidelines -->
+            <div class="bg-blue-50 rounded-2xl p-6 mb-8">
+                <h3 class="text-xl font-bold text-blue-800 mb-4">📋 Guía para la Discusión</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-blue-700 mb-2">🎯 Puntos a considerar:</h4>
+                        <ul class="text-sm text-blue-600 space-y-1">
+                            <li>• Desperdicio de recursos invertidos</li>
+                            <li>• Pérdida de momentum del equipo</li>
+                            <li>• Falta de seguimiento y control</li>
+                            <li>• Problemas identificados sin solución</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-blue-700 mb-2">💭 Preguntas guía:</h4>
+                        <ul class="text-sm text-blue-600 space-y-1">
+                            <li>• ¿Cómo se siente el equipo?</li>
+                            <li>• ¿Qué pasa con la inversión?</li>
+                            <li>• ¿Se repiten los mismos problemas?</li>
+                            <li>• ¿Hay credibilidad en futuros análisis?</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Expected Responses (Hidden initially) -->
+            <div id="expected-responses" class="hidden">
+                <h3 class="text-2xl font-bold text-center text-gray-800 mb-6">💡 Respuestas Esperadas</h3>
+                <div class="discussion-responses">
+                    <div class="response-card">
+                        <div class="text-3xl mb-3">💸</div>
+                        <h4 class="font-bold text-red-600 mb-2">Desperdicio de Inversión</h4>
+                        <p class="text-sm text-gray-700">El tiempo y recursos invertidos en el análisis se pierden completamente sin generar valor.</p>
+                    </div>
+                    
+                    <div class="response-card">
+                        <div class="text-3xl mb-3">😞</div>
+                        <h4 class="font-bold text-orange-600 mb-2">Desmotivación del Equipo</h4>
+                        <p class="text-sm text-gray-700">Los equipos pierden confianza en los procesos de mejora y se vuelven escépticos.</p>
+                    </div>
+                    
+                    <div class="response-card">
+                        <div class="text-3xl mb-3">🔄</div>
+                        <h4 class="font-bold text-yellow-600 mb-2">Problemas Recurrentes</h4>
+                        <p class="text-sm text-gray-700">Los mismos problemas identificados continúan afectando la organización.</p>
+                    </div>
+                    
+                    <div class="response-card">
+                        <div class="text-3xl mb-3">📉</div>
+                        <h4 class="font-bold text-purple-600 mb-2">Pérdida de Credibilidad</h4>
+                        <p class="text-sm text-gray-700">Futuros esfuerzos de mejora enfrentan resistencia y escepticismo.</p>
+                    </div>
+                    
+                    <div class="response-card">
+                        <div class="text-3xl mb-3">⏰</div>
+                        <h4 class="font-bold text-blue-600 mb-2">Pérdida de Momentum</h4>
+                        <p class="text-sm text-gray-700">El impulso inicial para el cambio se desvanece con el tiempo.</p>
+                    </div>
+                    
+                    <div class="response-card">
+                        <div class="text-3xl mb-3">🎯</div>
+                        <h4 class="font-bold text-green-600 mb-2">Falta de Dirección</h4>
+                        <p class="text-sm text-gray-700">Sin roadmap, no hay claridad sobre los próximos pasos a seguir.</p>
+                    </div>
+                </div>
+                
+                <div class="mt-8 bg-red-50 rounded-xl p-6 text-center">
+                    <h4 class="text-xl font-bold text-red-800 mb-3">🚨 Conclusión Clave</h4>
+                    <p class="text-lg text-red-700">
+                        Un Gap Analysis sin Roadmap es como tener un diagnóstico médico sin tratamiento: 
+                        <strong>conoces el problema pero no haces nada para solucionarlo.</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="fixed bottom-0 left-0 right-0 h-2 bg-gray-200">
+        <div class="h-full bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-300" id="progress-bar" style="width: 25%"></div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 4;
+        let discussionTimer = null;
+        let timeLeft = 600; // 10 minutes in seconds
+
+        function updateSlideCounter() {
+            document.getElementById('slide-counter').textContent = `${currentSlide} / ${totalSlides}`;
+            document.getElementById('progress-bar').style.width = `${(currentSlide / totalSlides) * 100}%`;
+        }
+
+        function showSlide(slideNumber) {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            // Show current slide with animation
+            const currentSlideElement = document.getElementById(`slide-${slideNumber}`);
+            currentSlideElement.classList.add('active');
+            
+            // Trigger animations after slide is shown
+            setTimeout(() => {
+                // Animate benefits cards on slide 3
+                if (slideNumber === 3) {
+                    document.querySelectorAll('.benefit-card').forEach((card, index) => {
+                        card.classList.remove('animate');
+                        setTimeout(() => {
+                            card.classList.add('animate');
+                        }, index * 200);
+                    });
+                }
+                
+                // Animate timeline items on slide 2
+                if (slideNumber === 2) {
+                    document.querySelectorAll('.timeline-item').forEach((item, index) => {
+                        item.style.animationDelay = `${index * 0.2}s`;
+                    });
+                }
+            }, 100);
+            
+            updateSlideCounter();
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        function animateBenefits() {
+            const cards = document.querySelectorAll('.benefit-card');
+            cards.forEach(card => card.classList.remove('animate'));
+            
+            setTimeout(() => {
+                cards.forEach((card, index) => {
+                    setTimeout(() => {
+                        card.classList.add('animate');
+                    }, index * 300);
+                });
+            }, 100);
+        }
+
+        function startDiscussion() {
+            const startBtn = document.getElementById('start-discussion-btn');
+            const showBtn = document.getElementById('show-responses-btn');
+            
+            startBtn.classList.add('hidden');
+            timeLeft = 600; // Reset to 10 minutes
+            
+            discussionTimer = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('discussion-timer').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(discussionTimer);
+                    document.getElementById('discussion-timer').textContent = '¡Tiempo!';
+                    document.getElementById('discussion-timer').style.color = '#ef4444';
+                    showBtn.classList.remove('hidden');
+                }
+            }, 1000);
+        }
+
+        function showResponses() {
+            const responsesSection = document.getElementById('expected-responses');
+            responsesSection.classList.remove('hidden');
+            
+            // Animate response cards
+            const responseCards = document.querySelectorAll('.response-card');
+            responseCards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('show');
+                }, index * 150);
+            });
+            
+            // Scroll to responses
+            responsesSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                previousSlide();
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            showSlide(1);
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a87962713acdb0',t:'MTc1NzEwNDExOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

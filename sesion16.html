@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesión 16 - Conceptos Fundamentales de Pruebas Móviles</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .slide-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            position: relative;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide {
+            display: none;
+            flex: 1;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .slide h2 {
+            color: #2d3748;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .slide h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #718096;
+            text-align: center;
+            font-style: italic;
+            margin-bottom: 2rem;
+        }
+
+        .quote-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .quote-box h4 {
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .quote-box p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+
+        .challenges-container {
+            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .challenges-container h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .challenges-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .challenge-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .challenge-card h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .challenge-card p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .challenge-card .stat {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .challenge-card .stat strong {
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .areas-container {
+            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .areas-container h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .areas-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .area-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .area-card h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .area-card .test-case {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .area-card .test-case h6 {
+            color: white;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .area-card .test-case p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.4;
+            font-size: 0.9rem;
+        }
+
+        .activity-container {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .activity-container h4 {
+            color: white;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .brainstorm-question {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            margin: 1.5rem 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .brainstorm-question h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .brainstorm-question p {
+            color: white;
+            font-weight: 500;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .categories-container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            backdrop-filter: blur(5px);
+        }
+
+        .categories-container h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .category-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            backdrop-filter: blur(3px);
+        }
+
+        .category-item h6 {
+            color: white;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .category-item p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.4;
+            font-size: 0.9rem;
+        }
+
+        .examples-container {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            backdrop-filter: blur(5px);
+        }
+
+        .examples-container h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .example-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(3px);
+        }
+
+        .example-item h6 {
+            color: white;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .example-item p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.4;
+            font-size: 0.9rem;
+        }
+
+        .key-points {
+            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .key-points h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .key-points ul {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+            font-size: 1.1rem;
+            margin-left: 1rem;
+        }
+
+        .key-points li {
+            margin-bottom: 1rem;
+        }
+
+        .key-points strong {
+            color: white;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .slide-counter {
+            color: #718096;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .source-note {
+            background: #fff5f5;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #f56565;
+            margin-top: 1.5rem;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .highlight-box {
+            background: #fffaf0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px dashed #ed8936;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .highlight-box p {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .mobile-icon {
+            font-size: 3rem;
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .slide-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            
+            .slide h1 {
+                font-size: 2rem;
+            }
+            
+            .slide h2 {
+                font-size: 1.5rem;
+            }
+            
+            .challenges-grid, .areas-grid, .categories-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+          <a class="qs-btn" href="checklist.html">Checklist</a>
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <div class="slide-container">
+        <!-- Slide 1: Título -->
+        <div class="slide active">
+            <h1>📱 Pruebas en Móviles</h1>
+            <div class="subtitle">Software en tu bolsillo</div>
+            
+            <div class="mobile-icon">📱💻🔧</div>
+            
+            <div class="quote-box">
+                <h4>🎯 "El mundo en la palma de tu mano"</h4>
+                <p>Más de 6.8 mil millones de smartphones activos requieren software que funcione perfectamente en cualquier lugar, momento y condición</p>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🎯 <strong>Objetivo:</strong> Comprender los desafíos únicos del testing en dispositivos móviles</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: Desafíos del Testing Móvil -->
+        <div class="slide">
+            <h2>🚧 Desafíos del Testing Móvil</h2>
+            
+            <div class="challenges-container">
+                <h4>📊 Complejidad del Ecosistema Móvil</h4>
+                
+                <div class="challenges-grid">
+                    <div class="challenge-card">
+                        <h5>📱 Fragmentación de Dispositivos</h5>
+                        <p>Cada fabricante crea múltiples modelos con especificaciones diferentes: pantallas, procesadores, memoria, cámaras</p>
+                        <div class="stat">
+                            <strong>24,000+ modelos Android diferentes</strong><br>
+                            Solo Samsung tiene 300+ modelos activos
+                        </div>
+                    </div>
+                    
+                    <div class="challenge-card">
+                        <h5>🤖 Diversidad de Sistemas Operativos</h5>
+                        <p>Múltiples OS con versiones diferentes y actualizaciones desiguales entre dispositivos</p>
+                        <div class="stat">
+                            <strong>iOS:</strong> 15+ versiones activas<br>
+                            <strong>Android:</strong> 10+ versiones principales<br>
+                            <strong>HarmonyOS:</strong> Crecimiento en Asia
+                        </div>
+                    </div>
+                    
+                    <div class="challenge-card">
+                        <h5>📡 Diferentes Redes</h5>
+                        <p>Variabilidad en velocidad, latencia y estabilidad de conexión que afecta el comportamiento de la app</p>
+                        <div class="stat">
+                            <strong>Wi-Fi:</strong> 10-1000 Mbps<br>
+                            <strong>4G:</strong> 5-100 Mbps<br>
+                            <strong>5G:</strong> 100-10,000 Mbps<br>
+                            <strong>Offline:</strong> Sin conexión
+                        </div>
+                    </div>
+                    
+                    <div class="challenge-card">
+                        <h5>⚡ Restricciones de Hardware</h5>
+                        <p>Limitaciones físicas que no existen en desktop: batería, memoria, sensores, espacio de almacenamiento</p>
+                        <div class="stat">
+                            <strong>RAM:</strong> 1GB - 18GB<br>
+                            <strong>Batería:</strong> 1000-6000 mAh<br>
+                            <strong>Sensores:</strong> GPS, acelerómetro, giroscopio
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="key-points">
+                <h4>💡 Implicaciones para Testing</h4>
+                <ul>
+                    <li><strong>Imposible probar en todos los dispositivos:</strong> Necesidad de estrategia de cobertura</li>
+                    <li><strong>Comportamiento inconsistente:</strong> Lo que funciona en un dispositivo puede fallar en otro</li>
+                    <li><strong>Condiciones variables:</strong> Red, batería y memoria cambian constantemente</li>
+                    <li><strong>Experiencia contextual:</strong> Uso en movimiento, con interrupciones, en diferentes ambientes</li>
+                </ul>
+            </div>
+            
+            <div class="source-note">
+                📚 <strong>Fuente:</strong> Pressman, Capítulo 20
+            </div>
+        </div>
+
+        <!-- Slide 3: Áreas Críticas a Evaluar -->
+        <div class="slide">
+            <h2>🎯 Áreas Críticas a Evaluar</h2>
+            
+            <div class="areas-container">
+                <h4>🔍 Focos Principales del Testing Móvil</h4>
+                
+                <div class="areas-grid">
+                    <div class="area-card">
+                        <h5>📦 Instalación y Actualización</h5>
+                        <div class="test-case">
+                            <h6>🧪 Casos de Prueba</h6>
+                            <p><strong>Instalación:</strong> Desde app store, APK, diferentes versiones de OS<br>
+                            <strong>Actualización:</strong> Preservar datos, migración de configuraciones<br>
+                            <strong>Desinstalación:</strong> Limpieza completa de archivos</p>
+                        </div>
+                    </div>
+                    
+                    <div class="area-card">
+                        <h5>🔋 Consumo de Batería</h5>
+                        <div class="test-case">
+                            <h6>🧪 Casos de Prueba</h6>
+                            <p><strong>Uso normal:</strong> Consumo durante operaciones típicas<br>
+                            <strong>Background:</strong> Drenaje cuando app está inactiva<br>
+                            <strong>Batería baja:</strong> Comportamiento con < 20% batería</p>
+                        </div>
+                    </div>
+                    
+                    <div class="area-card">
+                        <h5>📞 Interrupciones</h5>
+                        <div class="test-case">
+                            <h6>🧪 Casos de Prueba</h6>
+                            <p><strong>Llamadas:</strong> Pausar/reanudar durante llamada entrante<br>
+                            <strong>Notificaciones:</strong> SMS, push notifications, alarmas<br>
+                            <strong>Multitarea:</strong> Cambio entre apps, split screen</p>
+                        </div>
+                    </div>
+                    
+                    <div class="area-card">
+                        <h5>📱 Experiencia en Pantallas Pequeñas</h5>
+                        <div class="test-case">
+                            <h6>🧪 Casos de Prueba</h6>
+                            <p><strong>Usabilidad:</strong> Botones tocables, texto legible<br>
+                            <strong>Orientación:</strong> Portrait/landscape, rotación<br>
+                            <strong>Gestos:</strong> Swipe, pinch, long press, multi-touch</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="key-points">
+                <h4>🎯 Consideraciones Adicionales</h4>
+                <ul>
+                    <li><strong>Rendimiento:</strong> Tiempo de carga, fluidez de animaciones, memoria utilizada</li>
+                    <li><strong>Conectividad:</strong> Cambios de red, modo offline, sincronización</li>
+                    <li><strong>Seguridad:</strong> Permisos, almacenamiento local, comunicación encriptada</li>
+                    <li><strong>Accesibilidad:</strong> Soporte para usuarios con discapacidades</li>
+                </ul>
+            </div>
+            
+            <div class="quote-box">
+                <h4>💡 Principio Clave</h4>
+                <p>"El móvil no es una computadora pequeña - es un dispositivo completamente diferente con sus propios desafíos únicos"</p>
+            </div>
+        </div>
+
+        <!-- Slide 4: Actividad - Lluvia de Ideas -->
+        <div class="slide">
+            <h2>🧠 Actividad: Lluvia de Ideas</h2>
+            <div class="subtitle">Problemas Reales de Apps Móviles (10 min)</div>
+            
+            <div class="activity-container">
+                <h4>❓ Pregunta Central</h4>
+                
+                <div class="brainstorm-question">
+                    <h5>📱 Experiencias Personales</h5>
+                    <p><strong>"¿Qué problemas de apps móviles han vivido ustedes como usuarios?"</strong><br><br>
+                    Piensen en situaciones frustrantes, errores molestos, o comportamientos inesperados</p>
+                </div>
+                
+                <div class="categories-container">
+                    <h5>📋 Categorías para Organizar Ideas</h5>
+                    
+                    <div class="categories-grid">
+                        <div class="category-item">
+                            <h6>⚡ Rendimiento</h6>
+                            <p>Apps lentas, que se cuelgan, consumen mucha batería, ocupan mucho espacio</p>
+                        </div>
+                        
+                        <div class="category-item">
+                            <h6>🔗 Conectividad</h6>
+                            <p>Problemas con WiFi/datos, no funciona offline, sincronización fallida</p>
+                        </div>
+                        
+                        <div class="category-item">
+                            <h6>🎨 Interfaz/UX</h6>
+                            <p>Botones muy pequeños, texto ilegible, navegación confusa, gestos que no responden</p>
+                        </div>
+                        
+                        <div class="category-item">
+                            <h6>🔄 Interrupciones</h6>
+                            <p>Pierde progreso con llamadas, notificaciones molestas, problemas al cambiar de app</p>
+                        </div>
+                        
+                        <div class="category-item">
+                            <h6>📦 Instalación/Actualización</h6>
+                            <p>No se instala, actualización falla, pierde datos al actualizar</p>
+                        </div>
+                        
+                        <div class="category-item">
+                            <h6>🔒 Permisos/Seguridad</h6>
+                            <p>Pide permisos innecesarios, problemas de privacidad, acceso no autorizado</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="examples-container">
+                    <h5>💡 Ejemplos para Inspirar</h5>
+                    
+                    <div class="example-item">
+                        <h6>📱 WhatsApp</h6>
+                        <p><strong>Problema común:</strong> "Los mensajes no llegan cuando hay poca señal"<br>
+                        <strong>Área de testing:</strong> Conectividad y manejo de red intermitente</p>
+                    </div>
+                    
+                    <div class="example-item">
+                        <h6>🎵 Spotify</h6>
+                        <p><strong>Problema común:</strong> "Se pausa la música cuando llega una notificación"<br>
+                        <strong>Área de testing:</strong> Manejo de interrupciones y multitarea</p>
+                    </div>
+                    
+                    <div class="example-item">
+                        <h6>📷 Instagram</h6>
+                        <p><strong>Problema común:</strong> "La app se cierra cuando tomo muchas fotos"<br>
+                        <strong>Área de testing:</strong> Gestión de memoria y rendimiento</p>
+                    </div>
+                    
+                    <div class="example-item">
+                        <h6>🛒 Apps de Compras</h6>
+                        <p><strong>Problema común:</strong> "Pierdo el carrito cuando recibo una llamada"<br>
+                        <strong>Área de testing:</strong> Persistencia de datos durante interrupciones</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="key-points">
+                <h4>🎯 Metodología de la Actividad</h4>
+                <ul>
+                    <li><strong>3 min:</strong> Reflexión individual - cada uno piensa en sus experiencias</li>
+                    <li><strong>5 min:</strong> Compartir en grupos - organizar por categorías</li>
+                    <li><strong>2 min:</strong> Presentación grupal - los problemas más comunes</li>
+                </ul>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🎯 <strong>Objetivo:</strong> Conectar experiencias personales con áreas críticas de testing móvil</p>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <div class="slide-counter">
+                Diapositiva <span id="currentSlide">1</span> de <span id="totalSlides">4</span>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="previousSlide()" id="prevBtn" disabled>← Anterior</button>
+                <button class="nav-btn" onclick="nextSlide()" id="nextBtn">Siguiente →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 1;
+        const totalSlidesCount = 4;
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlidesCount) {
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
+                currentSlideIndex++;
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
+                updateNavigation();
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlideIndex > 1) {
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
+                currentSlideIndex--;
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
+                updateNavigation();
+            }
+        }
+
+        function updateNavigation() {
+            document.getElementById('currentSlide').textContent = currentSlideIndex;
+            document.getElementById('totalSlides').textContent = totalSlidesCount;
+            
+            document.getElementById('prevBtn').disabled = currentSlideIndex === 1;
+            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlidesCount;
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowRight' || event.key === ' ') {
+                nextSlide();
+            } else if (event.key === 'ArrowLeft') {
+                previousSlide();
+            }
+        });
+
+        // Initialize
+        updateNavigation();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a86426b303cdb0',t:'MTc1NzEwMzI0OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

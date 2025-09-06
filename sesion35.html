@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Defectos: Del Bug al Cierre</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        .defect-card {
+            transition: all 0.3s ease;
+            border-left: 4px solid transparent;
+        }
+        
+        .defect-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .severity-critical { border-left-color: #dc2626; }
+        .severity-major { border-left-color: #ea580c; }
+        .severity-minor { border-left-color: #ca8a04; }
+        .severity-cosmetic { border-left-color: #16a34a; }
+        
+        .priority-urgent { background: linear-gradient(135deg, #fef2f2, #fee2e2); }
+        .priority-high { background: linear-gradient(135deg, #fff7ed, #fed7aa); }
+        .priority-medium { background: linear-gradient(135deg, #fffbeb, #fef3c7); }
+        .priority-low { background: linear-gradient(135deg, #f0fdf4, #dcfce7); }
+        
+        .status-new { background-color: #dbeafe; color: #1e40af; }
+        .status-assigned { background-color: #fef3c7; color: #92400e; }
+        .status-in-progress { background-color: #e0e7ff; color: #3730a3; }
+        .status-resolved { background-color: #dcfce7; color: #166534; }
+        .status-verified { background-color: #f3e8ff; color: #7c2d12; }
+        .status-closed { background-color: #f1f5f9; color: #475569; }
+        
+        .lifecycle-step {
+            transition: all 0.3s ease;
+        }
+        
+        .lifecycle-step.active {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .lifecycle-step.completed {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        .tool-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+          <a class="qs-btn" href="checklist.html">Checklist</a>
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <!-- Header -->
+    <div class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-6 py-6">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">🐛 Gestión de Defectos</h1>
+                <p class="text-xl text-gray-600 italic">"Un bug no es un enemigo, es una oportunidad de mejora"</p>
+                <div class="mt-4 flex justify-center space-x-4">
+                    <button onclick="showSection('lifecycle')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        📊 Ciclo de Vida
+                    </button>
+                    <button onclick="showSection('classification')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        🏷️ Clasificación
+                    </button>
+                    <button onclick="showSection('tools')" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        🛠️ Herramientas
+                    </button>
+                    <button onclick="showSection('activity')" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        🎯 Actividad Práctica
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lifecycle Section -->
+    <div id="lifecycle-section" class="max-w-7xl mx-auto px-6 py-8">
+        <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">📊 Ciclo de Vida de un Defecto</h2>
+            
+            <!-- Lifecycle Steps -->
+            <div class="grid md:grid-cols-7 gap-4 mb-8">
+                <div class="lifecycle-step bg-gray-100 rounded-lg p-4 text-center" data-step="1">
+                    <div class="text-2xl mb-2">🔍</div>
+                    <h3 class="font-semibold text-sm">Detección</h3>
+                </div>
+                <div class="lifecycle-step bg-gray-100 rounded-lg p-4 text-center" data-step="2">
+                    <div class="text-2xl mb-2">📝</div>
+                    <h3 class="font-semibold text-sm">Registro</h3>
+                </div>
+                <div class="lifecycle-step bg-gray-100 rounded-lg p-4 text-center" data-step="3">
+                    <div class="text-2xl mb-2">🏷️</div>
+                    <h3 class="font-semibold text-sm">Clasificación</h3>
+                </div>
+                <div class="lifecycle-step bg-gray-100 rounded-lg p-4 text-center" data-step="4">
+                    <div class="text-2xl mb-2">👤</div>
+                    <h3 class="font-semibold text-sm">Asignación</h3>
+                </div>
+                <div class="lifecycle-step bg-gray-100 rounded-lg p-4 text-center" data-step="5">
+                    <div class="text-2xl mb-2">🔧</div>
+                    <h3 class="font-semibold text-sm">Resolución</h3>
+                </div>
+                <div class="lifecycle-step bg-gray-100 rounded-lg p-4 text-center" data-step="6">
+                    <div class="text-2xl mb-2">✅</div>
+                    <h3 class="font-semibold text-sm">Verificación</h3>
+                </div>
+                <div class="lifecycle-step bg-gray-100 rounded-lg p-4 text-center" data-step="7">
+                    <div class="text-2xl mb-2">🔒</div>
+                    <h3 class="font-semibold text-sm">Cierre</h3>
+                </div>
+            </div>
+            
+            <!-- Interactive Demo -->
+            <div class="bg-gray-50 rounded-xl p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">🎮 Demo Interactivo</h3>
+                <div class="flex justify-center space-x-4 mb-6">
+                    <button onclick="simulateLifecycle()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
+                        ▶️ Simular Ciclo Completo
+                    </button>
+                    <button onclick="resetLifecycle()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors">
+                        🔄 Reiniciar
+                    </button>
+                </div>
+                
+                <div id="lifecycle-details" class="bg-white rounded-lg p-4 min-h-[100px] border-2 border-dashed border-gray-300">
+                    <p class="text-gray-500 text-center">Haz clic en "Simular Ciclo Completo" para ver cada etapa en acción</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Classification Section -->
+    <div id="classification-section" class="max-w-7xl mx-auto px-6 py-8 hidden">
+        <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-green-800 mb-6 text-center">🏷️ Clasificación de Defectos</h2>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Severidad -->
+                <div class="bg-gray-50 rounded-xl p-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="bg-red-100 rounded-full p-2 mr-3">⚠️</span>
+                        Severidad
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="severity-critical defect-card bg-white rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-semibold text-red-700">🔴 Crítica</h4>
+                                    <p class="text-sm text-gray-600">Sistema no funciona, pérdida de datos</p>
+                                </div>
+                                <div class="text-2xl">💥</div>
+                            </div>
+                        </div>
+                        
+                        <div class="severity-major defect-card bg-white rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-semibold text-orange-700">🟠 Mayor</h4>
+                                    <p class="text-sm text-gray-600">Funcionalidad principal afectada</p>
+                                </div>
+                                <div class="text-2xl">⚡</div>
+                            </div>
+                        </div>
+                        
+                        <div class="severity-minor defect-card bg-white rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-semibold text-yellow-700">🟡 Menor</h4>
+                                    <p class="text-sm text-gray-600">Funcionalidad secundaria afectada</p>
+                                </div>
+                                <div class="text-2xl">⚠️</div>
+                            </div>
+                        </div>
+                        
+                        <div class="severity-cosmetic defect-card bg-white rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-semibold text-green-700">🟢 Cosmética</h4>
+                                    <p class="text-sm text-gray-600">Problemas de interfaz o estética</p>
+                                </div>
+                                <div class="text-2xl">🎨</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Prioridad -->
+                <div class="bg-gray-50 rounded-xl p-6">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                        <span class="bg-blue-100 rounded-full p-2 mr-3">📈</span>
+                        Prioridad
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="priority-urgent defect-card rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-semibold text-red-700">🚨 Urgente</h4>
+                                    <p class="text-sm text-gray-600">Resolver inmediatamente</p>
+                                </div>
+                                <div class="text-2xl">🔥</div>
+                            </div>
+                        </div>
+                        
+                        <div class="priority-high defect-card rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-semibold text-orange-700">⬆️ Alta</h4>
+                                    <p class="text-sm text-gray-600">Resolver en el sprint actual</p>
+                                </div>
+                                <div class="text-2xl">⚡</div>
+                            </div>
+                        </div>
+                        
+                        <div class="priority-medium defect-card rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-semibold text-yellow-700">➡️ Media</h4>
+                                    <p class="text-sm text-gray-600">Resolver en próximo sprint</p>
+                                </div>
+                                <div class="text-2xl">📅</div>
+                            </div>
+                        </div>
+                        
+                        <div class="priority-low defect-card rounded-lg p-4 shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-semibold text-green-700">⬇️ Baja</h4>
+                                    <p class="text-sm text-gray-600">Resolver cuando sea posible</p>
+                                </div>
+                                <div class="text-2xl">🕐</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Classification Matrix -->
+            <div class="mt-8 bg-gray-50 rounded-xl p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">📊 Matriz de Clasificación</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse bg-white rounded-lg overflow-hidden shadow-sm">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th class="border border-gray-300 px-4 py-2 text-left">Severidad</th>
+                                <th class="border border-gray-300 px-4 py-2 text-center">Urgente</th>
+                                <th class="border border-gray-300 px-4 py-2 text-center">Alta</th>
+                                <th class="border border-gray-300 px-4 py-2 text-center">Media</th>
+                                <th class="border border-gray-300 px-4 py-2 text-center">Baja</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="border border-gray-300 px-4 py-2 font-semibold bg-red-50">Crítica</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center bg-red-100">🔥 P0</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center bg-red-100">🔥 P0</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center bg-orange-100">⚡ P1</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center bg-yellow-100">📅 P2</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-300 px-4 py-2 font-semibold bg-orange-50">Mayor</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center bg-red-100">🔥 P0</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center bg-orange-100">⚡ P1</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center bg-yellow-100">📅 P2</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center bg-green-100">🕐 P3</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-300 px-4 py-2 font-semibold bg-yellow-50">Menor</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center bg-orange-100">⚡ P1</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center bg-yellow-100">📅 P2</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center bg-green-100">🕐 P3</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center bg-green-100">🕐 P3</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-gray-300 px-4 py-2 font-semibold bg-green-50">Cosmética</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center bg-yellow-100">📅 P2</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center bg-green-100">🕐 P3</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center bg-green-100">🕐 P3</td>
+                                <td class="border border-gray-300 px-4 py-2 text-center bg-green-100">🕐 P3</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tools Section -->
+    <div id="tools-section" class="max-w-7xl mx-auto px-6 py-8 hidden">
+        <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-purple-800 mb-6 text-center">🛠️ Herramientas de Gestión de Defectos</h2>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Jira -->
+                <div class="tool-card bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 shadow-lg">
+                    <div class="text-center">
+                        <div class="bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl text-white">🔷</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-blue-800 mb-2">Jira</h3>
+                        <p class="text-sm text-gray-600 mb-4">Herramienta líder de Atlassian para gestión ágil de proyectos</p>
+                        <div class="space-y-2 text-xs">
+                            <div class="bg-white rounded-full px-3 py-1">✅ Workflows personalizables</div>
+                            <div class="bg-white rounded-full px-3 py-1">📊 Reportes avanzados</div>
+                            <div class="bg-white rounded-full px-3 py-1">🔗 Integración con CI/CD</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bugzilla -->
+                <div class="tool-card bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 shadow-lg">
+                    <div class="text-center">
+                        <div class="bg-red-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl text-white">🐛</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-red-800 mb-2">Bugzilla</h3>
+                        <p class="text-sm text-gray-600 mb-4">Sistema open source de Mozilla para tracking de bugs</p>
+                        <div class="space-y-2 text-xs">
+                            <div class="bg-white rounded-full px-3 py-1">🆓 Gratuito y open source</div>
+                            <div class="bg-white rounded-full px-3 py-1">🔍 Búsqueda avanzada</div>
+                            <div class="bg-white rounded-full px-3 py-1">📧 Notificaciones por email</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Redmine -->
+                <div class="tool-card bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 shadow-lg">
+                    <div class="text-center">
+                        <div class="bg-green-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl text-white">📋</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-green-800 mb-2">Redmine</h3>
+                        <p class="text-sm text-gray-600 mb-4">Gestión de proyectos web con tracking de issues</p>
+                        <div class="space-y-2 text-xs">
+                            <div class="bg-white rounded-full px-3 py-1">🌐 Basado en web</div>
+                            <div class="bg-white rounded-full px-3 py-1">📈 Gráficos Gantt</div>
+                            <div class="bg-white rounded-full px-3 py-1">🔌 Sistema de plugins</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Azure DevOps -->
+                <div class="tool-card bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 shadow-lg">
+                    <div class="text-center">
+                        <div class="bg-purple-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl text-white">☁️</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-purple-800 mb-2">Azure DevOps</h3>
+                        <p class="text-sm text-gray-600 mb-4">Suite completa de Microsoft para DevOps</p>
+                        <div class="space-y-2 text-xs">
+                            <div class="bg-white rounded-full px-3 py-1">🔄 CI/CD integrado</div>
+                            <div class="bg-white rounded-full px-3 py-1">📊 Analytics avanzado</div>
+                            <div class="bg-white rounded-full px-3 py-1">☁️ Cloud y on-premise</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Features Comparison -->
+            <div class="bg-gray-50 rounded-xl p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">📊 Características Clave</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg p-4">
+                        <h4 class="font-semibold text-blue-800 mb-3 flex items-center">
+                            <span class="mr-2">🔗</span>
+                            Trazabilidad
+                        </h4>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li>• Vinculación con requisitos</li>
+                            <li>• Historial de cambios completo</li>
+                            <li>• Relación entre defectos</li>
+                            <li>• Seguimiento de resolución</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-4">
+                        <h4 class="font-semibold text-green-800 mb-3 flex items-center">
+                            <span class="mr-2">📈</span>
+                            Reportes
+                        </h4>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li>• Métricas de calidad</li>
+                            <li>• Tendencias de defectos</li>
+                            <li>• Tiempo de resolución</li>
+                            <li>• Dashboards ejecutivos</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Section -->
+    <div id="activity-section" class="max-w-7xl mx-auto px-6 py-8 hidden">
+        <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-orange-800 mb-6 text-center">🎯 Actividad Práctica</h2>
+            
+            <!-- Case Study -->
+            <div class="bg-red-50 rounded-xl p-6 mb-8 border-l-4 border-red-500">
+                <h3 class="text-2xl font-bold text-red-800 mb-4 flex items-center">
+                    <span class="mr-3">💳</span>
+                    Caso de Estudio: Bug en Sistema de Pagos
+                </h3>
+                <div class="bg-white rounded-lg p-4 mb-4">
+                    <p class="text-gray-700 leading-relaxed">
+                        <strong>Situación:</strong> Se ha detectado un bug en el sistema de pagos de una tienda online. 
+                        Cuando un usuario realiza una compra, el sistema está duplicando los cargos a la tarjeta de crédito. 
+                        El usuario ve un solo cargo en la confirmación, pero en su estado de cuenta aparecen dos cargos idénticos.
+                    </p>
+                </div>
+                
+                <div class="bg-yellow-100 rounded-lg p-4">
+                    <p class="text-yellow-800">
+                        <strong>⏰ Tiempo:</strong> 15 minutos para completar el análisis en equipos
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Interactive Form -->
+            <div class="bg-gray-50 rounded-xl p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">📝 Registro de Defecto</h3>
+                
+                <form id="defectForm" class="space-y-6">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- Basic Info -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">ID del Defecto</label>
+                                <input type="text" id="defectId" class="w-full border border-gray-300 rounded-lg px-3 py-2" value="BUG-PAY-001" readonly>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Título del Defecto *</label>
+                                <input type="text" id="defectTitle" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500" placeholder="Describe brevemente el problema">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Módulo Afectado</label>
+                                <select id="affectedModule" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500">
+                                    <option value="">Seleccionar módulo</option>
+                                    <option value="payments">Sistema de Pagos</option>
+                                    <option value="cart">Carrito de Compras</option>
+                                    <option value="user">Gestión de Usuarios</option>
+                                    <option value="inventory">Inventario</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Classification -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Severidad *</label>
+                                <select id="severity" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500" onchange="updateClassification()">
+                                    <option value="">Seleccionar severidad</option>
+                                    <option value="critical">🔴 Crítica - Sistema no funciona</option>
+                                    <option value="major">🟠 Mayor - Funcionalidad principal afectada</option>
+                                    <option value="minor">🟡 Menor - Funcionalidad secundaria</option>
+                                    <option value="cosmetic">🟢 Cosmética - Problemas de interfaz</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Prioridad *</label>
+                                <select id="priority" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500" onchange="updateClassification()">
+                                    <option value="">Seleccionar prioridad</option>
+                                    <option value="urgent">🚨 Urgente - Resolver inmediatamente</option>
+                                    <option value="high">⬆️ Alta - Resolver en sprint actual</option>
+                                    <option value="medium">➡️ Media - Resolver en próximo sprint</option>
+                                    <option value="low">⬇️ Baja - Resolver cuando sea posible</option>
+                                </select>
+                            </div>
+                            
+                            <div id="classificationResult" class="bg-white rounded-lg p-4 border-2 border-dashed border-gray-300">
+                                <p class="text-gray-500 text-center">Selecciona severidad y prioridad para ver la clasificación</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Descripción Detallada *</label>
+                        <textarea id="description" rows="4" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500" placeholder="Describe el problema, pasos para reproducir, resultado esperado vs actual..."></textarea>
+                    </div>
+                    
+                    <!-- Steps to Reproduce -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Pasos para Reproducir</label>
+                        <div id="stepsContainer" class="space-y-2">
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-gray-200 rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold">1</span>
+                                <input type="text" class="flex-1 border border-gray-300 rounded-lg px-3 py-2" placeholder="Primer paso...">
+                                <button type="button" onclick="removeStep(this)" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">✕</button>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addStep()" class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm">
+                            ➕ Agregar Paso
+                        </button>
+                    </div>
+                    
+                    <!-- Environment -->
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Navegador</label>
+                            <select id="browser" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                <option value="">Seleccionar</option>
+                                <option value="chrome">Chrome</option>
+                                <option value="firefox">Firefox</option>
+                                <option value="safari">Safari</option>
+                                <option value="edge">Edge</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Sistema Operativo</label>
+                            <select id="os" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                <option value="">Seleccionar</option>
+                                <option value="windows">Windows</option>
+                                <option value="macos">macOS</option>
+                                <option value="linux">Linux</option>
+                                <option value="android">Android</option>
+                                <option value="ios">iOS</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Reportado por</label>
+                            <input type="text" id="reporter" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Tu nombre">
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="flex justify-center space-x-4 pt-6">
+                        <button type="button" onclick="validateDefect()" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg transition-colors">
+                            ✅ Validar Defecto
+                        </button>
+                        <button type="button" onclick="generateReport()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors">
+                            📄 Generar Reporte
+                        </button>
+                        <button type="button" onclick="clearForm()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors">
+                            🗑️ Limpiar
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Team Discussion -->
+            <div class="mt-8 bg-blue-50 rounded-xl p-6">
+                <h3 class="text-xl font-semibold text-blue-800 mb-4">👥 Discusión en Equipo</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">🤔 Preguntas para Discutir:</h4>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li>• ¿Por qué consideran esta severidad?</li>
+                            <li>• ¿Qué impacto tiene en el negocio?</li>
+                            <li>• ¿Cómo afecta la experiencia del usuario?</li>
+                            <li>• ¿Qué información adicional necesitarían?</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-2">💡 Consideraciones:</h4>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li>• Impacto financiero directo</li>
+                            <li>• Confianza del cliente</li>
+                            <li>• Posibles problemas legales</li>
+                            <li>• Frecuencia de ocurrencia</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Modal -->
+    <div id="resultsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-gray-800">📄 Reporte de Defecto</h2>
+                        <button onclick="closeModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                            ✕ Cerrar
+                        </button>
+                    </div>
+                </div>
+                <div id="modalContent" class="p-6">
+                    <!-- Content will be generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSection = 'lifecycle';
+        let stepCounter = 1;
+
+        // Section navigation
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('[id$="-section"]').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            // Show selected section
+            document.getElementById(section + '-section').classList.remove('hidden');
+            currentSection = section;
+        }
+
+        // Lifecycle simulation
+        function simulateLifecycle() {
+            const steps = [
+                {
+                    step: 1,
+                    title: "🔍 Detección",
+                    description: "El tester encuentra que el sistema de pagos está duplicando cargos durante las pruebas de regresión.",
+                    details: "• Detectado durante pruebas automatizadas\n• Afecta al 15% de las transacciones\n• Reproducible en ambiente de testing"
+                },
+                {
+                    step: 2,
+                    title: "📝 Registro",
+                    description: "Se crea el ticket BUG-PAY-001 en el sistema de gestión de defectos.",
+                    details: "• ID: BUG-PAY-001\n• Título: Duplicación de cargos en pagos\n• Reportado por: QA Team\n• Fecha: " + new Date().toLocaleDateString()
+                },
+                {
+                    step: 3,
+                    title: "🏷️ Clasificación",
+                    description: "El defecto se clasifica como Severidad CRÍTICA y Prioridad URGENTE.",
+                    details: "• Severidad: Crítica (pérdida financiera)\n• Prioridad: Urgente (impacto en producción)\n• Clasificación final: P0"
+                },
+                {
+                    step: 4,
+                    title: "👤 Asignación",
+                    description: "El defecto se asigna al equipo de desarrollo de pagos.",
+                    details: "• Asignado a: Dev Team - Payments\n• Lead Developer: María González\n• Estimación: 4 horas\n• Sprint: Actual"
+                },
+                {
+                    step: 5,
+                    title: "🔧 Resolución",
+                    description: "El desarrollador identifica y corrige el problema en el código de procesamiento de pagos.",
+                    details: "• Causa raíz: Doble llamada al API de pagos\n• Solución: Implementar idempotencia\n• Código revisado y aprobado\n• Desplegado en ambiente de testing"
+                },
+                {
+                    step: 6,
+                    title: "✅ Verificación",
+                    description: "El tester verifica que la corrección funciona correctamente y no introduce nuevos problemas.",
+                    details: "• Casos de prueba ejecutados: 25/25 ✅\n• Pruebas de regresión: Pasadas\n• No se detectan efectos secundarios\n• Listo para producción"
+                },
+                {
+                    step: 7,
+                    title: "🔒 Cierre",
+                    description: "El defecto se marca como cerrado después de la verificación exitosa en producción.",
+                    details: "• Estado: Cerrado\n• Verificado en producción\n• Tiempo total de resolución: 6 horas\n• Lecciones aprendidas documentadas"
+                }
+            ];
+
+            let currentStep = 0;
+            
+            function showStep() {
+                if (currentStep < steps.length) {
+                    const step = steps[currentStep];
+                    
+                    // Update lifecycle visual
+                    document.querySelectorAll('.lifecycle-step').forEach((el, index) => {
+                        el.classList.remove('active', 'completed');
+                        if (index < currentStep) {
+                            el.classList.add('completed');
+                        } else if (index === currentStep) {
+                            el.classList.add('active');
+                        }
+                    });
+                    
+                    // Update details
+                    document.getElementById('lifecycle-details').innerHTML = `
+                        <div class="text-center">
+                            <h4 class="text-xl font-bold text-gray-800 mb-2">${step.title}</h4>
+                            <p class="text-gray-600 mb-4">${step.description}</p>
+                            <div class="bg-gray-50 rounded-lg p-4 text-left">
+                                <pre class="text-sm text-gray-700 whitespace-pre-line">${step.details}</pre>
+                            </div>
+                        </div>
+                    `;
+                    
+                    currentStep++;
+                    
+                    if (currentStep < steps.length) {
+                        setTimeout(showStep, 3000);
+                    } else {
+                        setTimeout(() => {
+                            document.getElementById('lifecycle-details').innerHTML += `
+                                <div class="mt-4 text-center">
+                                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                                        🎉 ¡Ciclo de vida completado exitosamente!
+                                    </div>
+                                </div>
+                            `;
+                        }, 1000);
+                    }
+                }
+            }
+            
+            showStep();
+        }
+
+        function resetLifecycle() {
+            document.querySelectorAll('.lifecycle-step').forEach(el => {
+                el.classList.remove('active', 'completed');
+            });
+            
+            document.getElementById('lifecycle-details').innerHTML = `
+                <p class="text-gray-500 text-center">Haz clic en "Simular Ciclo Completo" para ver cada etapa en acción</p>
+            `;
+        }
+
+        // Classification functions
+        function updateClassification() {
+            const severity = document.getElementById('severity').value;
+            const priority = document.getElementById('priority').value;
+            const resultDiv = document.getElementById('classificationResult');
+            
+            if (severity && priority) {
+                let classification = '';
+                let bgColor = '';
+                let textColor = '';
+                
+                // Determine classification based on matrix
+                if ((severity === 'critical' && (priority === 'urgent' || priority === 'high')) ||
+                    (severity === 'major' && priority === 'urgent')) {
+                    classification = 'P0 - Crítico';
+                    bgColor = 'bg-red-100';
+                    textColor = 'text-red-800';
+                } else if ((severity === 'critical' && priority === 'medium') ||
+                          (severity === 'major' && priority === 'high') ||
+                          (severity === 'minor' && priority === 'urgent')) {
+                    classification = 'P1 - Alto';
+                    bgColor = 'bg-orange-100';
+                    textColor = 'text-orange-800';
+                } else if ((severity === 'critical' && priority === 'low') ||
+                          (severity === 'major' && priority === 'medium') ||
+                          (severity === 'minor' && priority === 'high') ||
+                          (severity === 'cosmetic' && priority === 'urgent')) {
+                    classification = 'P2 - Medio';
+                    bgColor = 'bg-yellow-100';
+                    textColor = 'text-yellow-800';
+                } else {
+                    classification = 'P3 - Bajo';
+                    bgColor = 'bg-green-100';
+                    textColor = 'text-green-800';
+                }
+                
+                resultDiv.innerHTML = `
+                    <div class="${bgColor} ${textColor} rounded-lg p-3 text-center">
+                        <div class="text-lg font-bold">🎯 Clasificación: ${classification}</div>
+                        <div class="text-sm mt-1">Severidad: ${severity} | Prioridad: ${priority}</div>
+                    </div>
+                `;
+            }
+        }
+
+        // Steps management
+        function addStep() {
+            stepCounter++;
+            const container = document.getElementById('stepsContainer');
+            const div = document.createElement('div');
+            div.className = 'flex items-center space-x-2';
+            div.innerHTML = `
+                <span class="bg-gray-200 rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold">${stepCounter}</span>
+                <input type="text" class="flex-1 border border-gray-300 rounded-lg px-3 py-2" placeholder="Paso ${stepCounter}...">
+                <button type="button" onclick="removeStep(this)" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">✕</button>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeStep(button) {
+            button.parentElement.remove();
+            updateStepNumbers();
+        }
+
+        function updateStepNumbers() {
+            const steps = document.querySelectorAll('#stepsContainer > div');
+            steps.forEach((step, index) => {
+                const numberSpan = step.querySelector('span');
+                const input = step.querySelector('input');
+                numberSpan.textContent = index + 1;
+                input.placeholder = `Paso ${index + 1}...`;
+            });
+            stepCounter = steps.length;
+        }
+
+        // Form validation and reporting
+        function validateDefect() {
+            const form = document.getElementById('defectForm');
+            const requiredFields = ['defectTitle', 'severity', 'priority', 'description'];
+            let isValid = true;
+            let missingFields = [];
+
+            requiredFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (!field.value.trim()) {
+                    isValid = false;
+                    missingFields.push(field.previousElementSibling.textContent.replace(' *', ''));
+                    field.classList.add('border-red-500');
+                } else {
+                    field.classList.remove('border-red-500');
+                }
+            });
+
+            if (isValid) {
+                alert('✅ ¡Defecto válido! Todos los campos requeridos están completos.');
+            } else {
+                alert('❌ Faltan campos requeridos:\n• ' + missingFields.join('\n• '));
+            }
+        }
+
+        function generateReport() {
+            const form = document.getElementById('defectForm');
+            const formData = new FormData(form);
+            
+            // Collect steps
+            const steps = [];
+            document.querySelectorAll('#stepsContainer input').forEach((input, index) => {
+                if (input.value.trim()) {
+                    steps.push(`${index + 1}. ${input.value.trim()}`);
+                }
+            });
+            
+            const severity = document.getElementById('severity');
+            const priority = document.getElementById('priority');
+            const severityText = severity.options[severity.selectedIndex]?.text || 'No especificada';
+            const priorityText = priority.options[priority.selectedIndex]?.text || 'No especificada';
+            
+            const content = `
+                <div class="space-y-6">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="font-bold text-lg text-gray-800 mb-2">📋 Información Básica</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div><strong>ID:</strong> ${document.getElementById('defectId').value}</div>
+                            <div><strong>Fecha:</strong> ${new Date().toLocaleDateString()}</div>
+                            <div><strong>Módulo:</strong> ${document.getElementById('affectedModule').value || 'No especificado'}</div>
+                            <div><strong>Reportado por:</strong> ${document.getElementById('reporter').value || 'No especificado'}</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-red-50 rounded-lg p-4">
+                        <h3 class="font-bold text-lg text-red-800 mb-2">🏷️ Clasificación</h3>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div><strong>Severidad:</strong> ${severityText}</div>
+                            <div><strong>Prioridad:</strong> ${priorityText}</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-bold text-lg text-gray-800 mb-2">📝 Título</h3>
+                        <p class="bg-gray-50 rounded-lg p-3">${document.getElementById('defectTitle').value || 'No especificado'}</p>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-bold text-lg text-gray-800 mb-2">📄 Descripción</h3>
+                        <p class="bg-gray-50 rounded-lg p-3 whitespace-pre-wrap">${document.getElementById('description').value || 'No especificada'}</p>
+                    </div>
+                    
+                    ${steps.length > 0 ? `
+                    <div>
+                        <h3 class="font-bold text-lg text-gray-800 mb-2">🔄 Pasos para Reproducir</h3>
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            ${steps.map(step => `<div class="mb-1">${step}</div>`).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <h3 class="font-bold text-lg text-blue-800 mb-2">🖥️ Entorno</h3>
+                        <div class="grid grid-cols-3 gap-4 text-sm">
+                            <div><strong>Navegador:</strong> ${document.getElementById('browser').value || 'No especificado'}</div>
+                            <div><strong>SO:</strong> ${document.getElementById('os').value || 'No especificado'}</div>
+                            <div><strong>Estado:</strong> Nuevo</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('modalContent').innerHTML = content;
+            document.getElementById('resultsModal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('resultsModal').classList.add('hidden');
+        }
+
+        function clearForm() {
+            if (confirm('¿Estás seguro de que quieres limpiar el formulario?')) {
+                document.getElementById('defectForm').reset();
+                document.getElementById('classificationResult').innerHTML = `
+                    <p class="text-gray-500 text-center">Selecciona severidad y prioridad para ver la clasificación</p>
+                `;
+                
+                // Reset steps
+                document.getElementById('stepsContainer').innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <span class="bg-gray-200 rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold">1</span>
+                        <input type="text" class="flex-1 border border-gray-300 rounded-lg px-3 py-2" placeholder="Primer paso...">
+                        <button type="button" onclick="removeStep(this)" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">✕</button>
+                    </div>
+                `;
+                stepCounter = 1;
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            showSection('lifecycle');
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a6ff3ca5f9144b',t:'MTc1NzA4ODYyOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

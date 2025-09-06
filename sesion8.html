@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesión 8 - El Plan Maestro: Software Quality Assurance Plan (SQAP)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .slide-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 3rem;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            position: relative;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .slide {
+            display: none;
+            flex: 1;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .slide.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide h1 {
+            color: #2d3748;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .slide h2 {
+            color: #2d3748;
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .slide h3 {
+            color: #4a5568;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #718096;
+            text-align: center;
+            font-style: italic;
+            margin-bottom: 2rem;
+        }
+
+        .quote-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .quote-box h4 {
+            color: white;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .quote-box p {
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+
+        .definition-box {
+            background: #e6fffa;
+            padding: 2rem;
+            border-radius: 15px;
+            border-left: 5px solid #38b2ac;
+            margin: 2rem 0;
+        }
+
+        .definition-box h4 {
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+            font-size: 1.4rem;
+        }
+
+        .definition-box ul {
+            color: #4a5568;
+            line-height: 1.8;
+            font-size: 1.1rem;
+        }
+
+        .definition-box li {
+            margin-bottom: 1rem;
+            padding-left: 0.5rem;
+        }
+
+        .definition-box strong {
+            color: #2d3748;
+        }
+
+        .importance-grid {
+            display: grid;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .importance-card {
+            background: #f0fff4;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #48bb78;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.1);
+        }
+
+        .importance-card h5 {
+            color: #2f855a;
+            margin-bottom: 0.8rem;
+            font-size: 1.2rem;
+        }
+
+        .importance-card p {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .structure-container {
+            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .structure-container h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .structure-grid {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .structure-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.2rem;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border-left: 4px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .structure-item h5 {
+            color: white;
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+        }
+
+        .structure-item p {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .example-container {
+            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .example-container h4 {
+            color: white;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .example-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .example-card {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.2rem;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .example-card h5 {
+            color: white;
+            margin-bottom: 0.8rem;
+            font-size: 1.1rem;
+        }
+
+        .example-card p, .example-card ul {
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        .example-card ul {
+            margin-left: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .benefits-grid {
+            display: grid;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .benefit-card {
+            background: #fff5f5;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #f56565;
+            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.1);
+        }
+
+        .benefit-card h5 {
+            color: #c53030;
+            margin-bottom: 0.8rem;
+            font-size: 1.2rem;
+        }
+
+        .benefit-card p {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .activity-container {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin: 2rem 0;
+        }
+
+        .activity-container h4 {
+            color: white;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 1.4rem;
+        }
+
+        .activity-context {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .activity-context h5 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .activity-tasks {
+            display: grid;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .task-item {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 1rem;
+            border-radius: 8px;
+            backdrop-filter: blur(5px);
+        }
+
+        .task-item h6 {
+            color: white;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .task-item p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .deliverable-box {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            margin-top: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .deliverable-box h5 {
+            color: white;
+            margin-bottom: 0.8rem;
+            font-size: 1.2rem;
+        }
+
+        .deliverable-box p {
+            color: white;
+            font-weight: 500;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .slide-counter {
+            color: #718096;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .nav-btn {
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .nav-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .source-note {
+            background: #fff5f5;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #f56565;
+            margin-top: 1.5rem;
+            font-style: italic;
+            color: #4a5568;
+        }
+
+        .highlight-box {
+            background: #fffaf0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px dashed #ed8936;
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .highlight-box p {
+            color: #2d3748;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        @media (max-width: 768px) {
+            .slide-container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+            
+            .slide h1 {
+                font-size: 2rem;
+            }
+            
+            .slide h2 {
+                font-size: 1.5rem;
+            }
+            
+            .example-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .nav-buttons {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+          <a class="qs-btn" href="checklist.html">Checklist</a>
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <div class="slide-container">
+        <!-- Slide 1: Título -->
+        <div class="slide active">
+            <h1>📋 El Plan Maestro: SQAP</h1>
+            <div class="subtitle">Software Quality Assurance Plan</div>
+            
+            <div class="quote-box">
+                <h4>🎯 "La calidad no ocurre por accidente, se planifica"</h4>
+                <p>Un roadmap estratégico para garantizar la excelencia del software desde el día uno</p>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🎯 <strong>Objetivo:</strong> Dominar la creación y gestión de planes de aseguramiento de calidad</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: ¿Qué es un SQAP? -->
+        <div class="slide">
+            <h2>🔍 ¿Qué es un SQAP?</h2>
+            
+            <div class="definition-box">
+                <h4>📋 Documento Formal que Define:</h4>
+                <ul>
+                    <li><strong>Objetivos de calidad</strong> del proyecto específico</li>
+                    <li><strong>Estándares y procesos</strong> que se seguirán durante el desarrollo</li>
+                    <li><strong>Roles y responsabilidades</strong> del equipo de calidad</li>
+                    <li><strong>Criterios de aceptación</strong> y métricas de éxito</li>
+                </ul>
+            </div>
+            
+            <div class="quote-box">
+                <h4>🛡️ Enfoque Principal</h4>
+                <p>Asegurar que el software cumpla con <strong>requisitos y normas desde el inicio</strong>, no como una actividad posterior</p>
+            </div>
+            
+            <div class="highlight-box">
+                <p>💡 <strong>Clave:</strong> Es la brújula que guía todas las actividades de calidad</p>
+            </div>
+            
+            <div class="source-note">
+                📚 <strong>Fuentes:</strong> IEEE 730, Pressman
+            </div>
+        </div>
+
+        <!-- Slide 3: ¿Por qué es importante? -->
+        <div class="slide">
+            <h2>⚡ ¿Por qué es Importante?</h2>
+            
+            <div class="importance-grid">
+                <div class="importance-card">
+                    <h5>🤝 Proporciona Confianza</h5>
+                    <p>Genera <strong>confianza en clientes y directivos</strong> al demostrar un enfoque sistemático y profesional hacia la calidad</p>
+                </div>
+                
+                <div class="importance-card">
+                    <h5>🗺️ Establece un Mapa de Ruta</h5>
+                    <p>Crea una <strong>guía clara para prevenir defectos</strong> antes de que ocurran, reduciendo costos y tiempo de corrección</p>
+                </div>
+                
+                <div class="importance-card">
+                    <h5>📊 Sirve como Guía de Auditoría</h5>
+                    <p>Facilita la <strong>trazabilidad y auditoría</strong> de procesos, cumpliendo con estándares internacionales y regulaciones</p>
+                </div>
+            </div>
+            
+            <div class="quote-box">
+                <h4>🎯 Impacto Real</h4>
+                <p>Los proyectos con SQAP bien definido tienen <strong>40% menos defectos</strong> y se entregan <strong>25% más rápido</strong></p>
+            </div>
+            
+            <div class="source-note">
+                📚 <strong>Fuente:</strong> Mahfuz, Capítulo 2
+            </div>
+        </div>
+
+        <!-- Slide 4: Estructura del Plan (según IEEE 730) -->
+        <div class="slide">
+            <h2>🏗️ Estructura del Plan (IEEE 730)</h2>
+            
+            <div class="structure-container">
+                <h4>📋 Componentes Esenciales del SQAP</h4>
+                
+                <div class="structure-grid">
+                    <div class="structure-item">
+                        <h5>🎯 Propósito y Alcance</h5>
+                        <p>Define qué cubre el plan y qué queda fuera del alcance</p>
+                    </div>
+                    
+                    <div class="structure-item">
+                        <h5>📚 Documentos de Referencia</h5>
+                        <p>Normas, políticas, manuales y estándares aplicables</p>
+                    </div>
+                    
+                    <div class="structure-item">
+                        <h5>👥 Gestión</h5>
+                        <p>Roles, responsabilidades y recursos asignados</p>
+                    </div>
+                    
+                    <div class="structure-item">
+                        <h5>⚙️ Tareas de SQA</h5>
+                        <p>Revisiones, auditorías, reportes de defectos y seguimiento</p>
+                    </div>
+                    
+                    <div class="structure-item">
+                        <h5>🛠️ Herramientas y Métodos</h5>
+                        <p>Frameworks, métricas y herramientas de prueba específicas</p>
+                    </div>
+                    
+                    <div class="structure-item">
+                        <h5>✅ Criterios de Aceptación</h5>
+                        <p>Cuándo considerar una fase como "aprobada" y lista</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="source-note">
+                📚 <strong>Fuente:</strong> QA Lovers
+            </div>
+        </div>
+
+        <!-- Slide 5: Ejemplo Real - App Bancaria -->
+        <div class="slide">
+            <h2>🏦 Ejemplo Real: App Bancaria</h2>
+            
+            <div class="example-container">
+                <h4>💳 SQAP para Aplicación Bancaria Móvil</h4>
+                
+                <div class="example-grid">
+                    <div class="example-card">
+                        <h5>🎯 Propósito</h5>
+                        <p>Asegurar <strong>seguridad y usabilidad</strong> en operaciones financieras críticas</p>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h5>📋 Estándares</h5>
+                        <ul>
+                            <li>ISO/IEC 25010 (Calidad)</li>
+                            <li>OWASP (Seguridad)</li>
+                            <li>PCI DSS (Pagos)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h5>⚙️ Tareas Clave</h5>
+                        <ul>
+                            <li>Pruebas de penetración</li>
+                            <li>Revisiones de código</li>
+                            <li>Auditorías externas</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h5>🛠️ Herramientas</h5>
+                        <ul>
+                            <li>SonarQube (Calidad código)</li>
+                            <li>Appium (Testing móvil)</li>
+                            <li>JMeter (Performance)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🔒 <strong>Resultado:</strong> App con 99.9% uptime y cero brechas de seguridad reportadas</p>
+            </div>
+        </div>
+
+        <!-- Slide 6: Beneficios de un buen SQAP -->
+        <div class="slide">
+            <h2>🎯 Beneficios de un Buen SQAP</h2>
+            
+            <div class="benefits-grid">
+                <div class="benefit-card">
+                    <h5>🛡️ Reduce Riesgos Críticos</h5>
+                    <p>Previene fallos críticos como caídas en sistemas financieros, pérdida de datos o brechas de seguridad</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <h5>💬 Mejora la Comunicación</h5>
+                    <p>Establece un lenguaje común entre equipos de desarrollo, testing, y stakeholders del negocio</p>
+                </div>
+                
+                <div class="benefit-card">
+                    <h5>😊 Aumenta Confianza del Cliente</h5>
+                    <p>Demuestra profesionalismo y compromiso con la calidad, facilitando la obtención de certificaciones</p>
+                </div>
+            </div>
+            
+            <div class="quote-box">
+                <h4>📈 Impacto Medible</h4>
+                <p>Organizaciones con SQAP robusto reportan <strong>60% menos incidentes en producción</strong> y <strong>35% mayor satisfacción del cliente</strong></p>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🏆 <strong>ROI:</strong> Cada dólar invertido en SQAP ahorra $5-10 en costos de corrección</p>
+            </div>
+        </div>
+
+        <!-- Slide 7: Actividad en Equipos -->
+        <div class="slide">
+            <h2>🎮 Actividad en Equipos</h2>
+            <div class="subtitle">Diseñando un Mini-SQAP (20 min)</div>
+            
+            <div class="activity-container">
+                <h4>📱 Proyecto: App Móvil de Pagos Electrónicos</h4>
+                
+                <div class="activity-context">
+                    <h5>🎯 Contexto del Proyecto</h5>
+                    <p>Desarrollar una aplicación móvil para pagos peer-to-peer, similar a Venmo o Bizum, que maneje transacciones de hasta $10,000 USD</p>
+                </div>
+                
+                <div class="activity-tasks">
+                    <div class="task-item">
+                        <h6>1️⃣ Propósito del Plan</h6>
+                        <p>Define el objetivo principal de calidad para esta app de pagos</p>
+                    </div>
+                    
+                    <div class="task-item">
+                        <h6>2️⃣ Dos Tareas Clave de SQA</h6>
+                        <p>Identifica las actividades más críticas para asegurar la calidad</p>
+                    </div>
+                    
+                    <div class="task-item">
+                        <h6>3️⃣ Herramienta o Estándar</h6>
+                        <p>Selecciona una herramienta técnica o estándar de calidad específico</p>
+                    </div>
+                </div>
+                
+                <div class="deliverable-box">
+                    <h5>📋 Entregable</h5>
+                    <p><strong>Esquema visual en Miro o Canva</strong> con los 3 puntos clave por equipo</p>
+                </div>
+            </div>
+            
+            <div class="highlight-box">
+                <p>🎯 <strong>Objetivo:</strong> Aplicar conceptos de SQAP a un caso real y práctico</p>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <div class="slide-counter">
+                Diapositiva <span id="currentSlide">1</span> de <span id="totalSlides">7</span>
+            </div>
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="previousSlide()" id="prevBtn" disabled>← Anterior</button>
+                <button class="nav-btn" onclick="nextSlide()" id="nextBtn">Siguiente →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 1;
+        const totalSlidesCount = 7;
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlidesCount) {
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
+                currentSlideIndex++;
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
+                updateNavigation();
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlideIndex > 1) {
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
+                currentSlideIndex--;
+                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
+                updateNavigation();
+            }
+        }
+
+        function updateNavigation() {
+            document.getElementById('currentSlide').textContent = currentSlideIndex;
+            document.getElementById('totalSlides').textContent = totalSlidesCount;
+            
+            document.getElementById('prevBtn').disabled = currentSlideIndex === 1;
+            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlidesCount;
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'ArrowRight' || event.key === ' ') {
+                nextSlide();
+            } else if (event.key === 'ArrowLeft') {
+                previousSlide();
+            }
+        });
+
+        // Initialize
+        updateNavigation();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a85f042083cdb0',t:'MTc1NzEwMzAzOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

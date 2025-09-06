@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗺️ Sesión 41: Componentes de un Roadmap</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        .slide {
+            min-height: 100vh;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            padding-top: 6rem;
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 0.5s ease;
+        }
+        
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .component-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-left: 6px solid;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideInUp 0.6s ease forwards;
+        }
+        
+        .component-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .component-card:nth-child(1) { border-left-color: #ef4444; animation-delay: 0.1s; }
+        .component-card:nth-child(2) { border-left-color: #f59e0b; animation-delay: 0.2s; }
+        .component-card:nth-child(3) { border-left-color: #10b981; animation-delay: 0.3s; }
+        .component-card:nth-child(4) { border-left-color: #3b82f6; animation-delay: 0.4s; }
+        .component-card:nth-child(5) { border-left-color: #8b5cf6; animation-delay: 0.5s; }
+        
+        .gantt-chart {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            overflow-x: auto;
+        }
+        
+        .gantt-timeline {
+            display: grid;
+            grid-template-columns: 200px repeat(12, 1fr);
+            gap: 1px;
+            min-width: 800px;
+        }
+        
+        .gantt-header {
+            background: #f3f4f6;
+            padding: 0.75rem;
+            font-weight: 600;
+            text-center;
+            border-radius: 0.5rem;
+        }
+        
+        .gantt-row {
+            display: contents;
+        }
+        
+        .gantt-label {
+            background: #f9fafb;
+            padding: 1rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            border-radius: 0.5rem;
+        }
+        
+        .gantt-cell {
+            background: #f9fafb;
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            position: relative;
+        }
+        
+        .gantt-bar {
+            height: 24px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+            padding: 0 4px;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .gantt-bar::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.2);
+            animation: progress 2s ease-in-out infinite;
+        }
+        
+        .phase-diagnostico { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .phase-diseno { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .phase-piloto { background: linear-gradient(135deg, #10b981, #059669); }
+        .phase-despliegue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .phase-evaluacion { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        
+        .milestone {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            background: #ef4444;
+            border: 2px solid white;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .workshop-form {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin: 1rem 0;
+        }
+        
+        .workshop-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .workshop-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .timer {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ef4444;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        
+        .roadmap-preview {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-top: 2rem;
+            min-height: 200px;
+        }
+        
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes progress {
+            0% { width: 0%; }
+            50% { width: 100%; }
+            100% { width: 0%; }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+          <a class="qs-btn" href="checklist.html">Checklist</a>
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-lg z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-xl font-bold text-gray-800">🗺️ Sesión 41: Componentes del Roadmap</h1>
+                    <span class="text-sm text-gray-600" id="slide-counter">1 / 4</span>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="previousSlide()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        ← Anterior
+                    </button>
+                    <button onclick="nextSlide()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        Siguiente →
+                    </button>
+                </div>
+            </div>
+        </div>
+          <a class="qs-btn" href="status.html">Status</a>
+</nav>
+
+    <!-- Slide 1: Título -->
+    <div class="slide active" id="slide-1">
+        <div class="text-center max-w-4xl mx-auto">
+            <div class="mb-8">
+                <div class="text-8xl mb-6">🧩</div>
+                <h1 class="text-6xl font-bold text-gray-800 mb-4">Componentes de un Roadmap</h1>
+                <h2 class="text-3xl text-blue-600 font-semibold mb-8">Los elementos clave</h2>
+            </div>
+            
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl">
+                <div class="grid md:grid-cols-5 gap-4">
+                    <div class="text-center pulse-animation">
+                        <div class="text-3xl mb-2">📋</div>
+                        <h3 class="font-semibold text-red-600 text-sm">Fases</h3>
+                    </div>
+                    <div class="text-center pulse-animation" style="animation-delay: 0.2s">
+                        <div class="text-3xl mb-2">🎯</div>
+                        <h3 class="font-semibold text-orange-600 text-sm">Hitos</h3>
+                    </div>
+                    <div class="text-center pulse-animation" style="animation-delay: 0.4s">
+                        <div class="text-3xl mb-2">👥</div>
+                        <h3 class="font-semibold text-green-600 text-sm">Responsables</h3>
+                    </div>
+                    <div class="text-center pulse-animation" style="animation-delay: 0.6s">
+                        <div class="text-3xl mb-2">📅</div>
+                        <h3 class="font-semibold text-blue-600 text-sm">Fechas</h3>
+                    </div>
+                    <div class="text-center pulse-animation" style="animation-delay: 0.8s">
+                        <div class="text-3xl mb-2">📦</div>
+                        <h3 class="font-semibold text-purple-600 text-sm">Entregables</h3>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8">
+                <p class="text-lg text-gray-700 italic">
+                    "Cada componente del roadmap tiene un propósito específico en la planificación estratégica"
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 2: Componentes principales -->
+    <div class="slide" id="slide-2">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-bold text-gray-800 mb-4">🧩 Componentes Principales</h1>
+                <div class="w-24 h-1 bg-blue-600 mx-auto mb-8"></div>
+            </div>
+            
+            <div class="grid md:grid-cols-1 gap-6">
+                <div class="component-card">
+                    <div class="flex items-start space-x-4">
+                        <div class="text-4xl">📋</div>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-red-600 mb-3">Fases</h3>
+                            <p class="text-gray-700 mb-4">Etapas secuenciales del proceso de mejora</p>
+                            <div class="grid md:grid-cols-5 gap-3">
+                                <div class="bg-red-50 p-3 rounded-lg text-center">
+                                    <div class="font-semibold text-red-800">Diagnóstico</div>
+                                    <div class="text-xs text-red-600">Análisis inicial</div>
+                                </div>
+                                <div class="bg-orange-50 p-3 rounded-lg text-center">
+                                    <div class="font-semibold text-orange-800">Diseño</div>
+                                    <div class="text-xs text-orange-600">Planificación</div>
+                                </div>
+                                <div class="bg-green-50 p-3 rounded-lg text-center">
+                                    <div class="font-semibold text-green-800">Piloto</div>
+                                    <div class="text-xs text-green-600">Prueba controlada</div>
+                                </div>
+                                <div class="bg-blue-50 p-3 rounded-lg text-center">
+                                    <div class="font-semibold text-blue-800">Despliegue</div>
+                                    <div class="text-xs text-blue-600">Implementación</div>
+                                </div>
+                                <div class="bg-purple-50 p-3 rounded-lg text-center">
+                                    <div class="font-semibold text-purple-800">Evaluación</div>
+                                    <div class="text-xs text-purple-600">Medición</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="component-card">
+                    <div class="flex items-start space-x-4">
+                        <div class="text-4xl">🎯</div>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-orange-600 mb-3">Hitos Clave</h3>
+                            <p class="text-gray-700 mb-4">Actividades medibles y verificables</p>
+                            <div class="grid md:grid-cols-3 gap-3">
+                                <div class="bg-orange-50 p-3 rounded-lg">
+                                    <div class="font-semibold text-orange-800">✅ Completar análisis</div>
+                                    <div class="text-xs text-orange-600">Entregable verificable</div>
+                                </div>
+                                <div class="bg-orange-50 p-3 rounded-lg">
+                                    <div class="font-semibold text-orange-800">🚀 Lanzar piloto</div>
+                                    <div class="text-xs text-orange-600">Inicio de pruebas</div>
+                                </div>
+                                <div class="bg-orange-50 p-3 rounded-lg">
+                                    <div class="font-semibold text-orange-800">📊 Evaluar resultados</div>
+                                    <div class="text-xs text-orange-600">Métricas definidas</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="component-card">
+                    <div class="flex items-start space-x-4">
+                        <div class="text-4xl">👥</div>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-green-600 mb-3">Responsables</h3>
+                            <p class="text-gray-700 mb-4">Quién hace qué en cada fase</p>
+                            <div class="grid md:grid-cols-4 gap-3">
+                                <div class="bg-green-50 p-3 rounded-lg text-center">
+                                    <div class="font-semibold text-green-800">Líder de Proyecto</div>
+                                    <div class="text-xs text-green-600">Coordinación general</div>
+                                </div>
+                                <div class="bg-green-50 p-3 rounded-lg text-center">
+                                    <div class="font-semibold text-green-800">Equipo Técnico</div>
+                                    <div class="text-xs text-green-600">Implementación</div>
+                                </div>
+                                <div class="bg-green-50 p-3 rounded-lg text-center">
+                                    <div class="font-semibold text-green-800">Stakeholders</div>
+                                    <div class="text-xs text-green-600">Validación</div>
+                                </div>
+                                <div class="bg-green-50 p-3 rounded-lg text-center">
+                                    <div class="font-semibold text-green-800">Equipo QA</div>
+                                    <div class="text-xs text-green-600">Verificación</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="component-card">
+                        <div class="flex items-start space-x-4">
+                            <div class="text-4xl">📅</div>
+                            <div class="flex-1">
+                                <h3 class="text-2xl font-bold text-blue-600 mb-3">Fechas</h3>
+                                <p class="text-gray-700 mb-4">Inicio y fin de cada actividad</p>
+                                <div class="space-y-2">
+                                    <div class="bg-blue-50 p-2 rounded text-sm">
+                                        <span class="font-semibold text-blue-800">Inicio:</span> 
+                                        <span class="text-blue-600">Cuándo comenzar</span>
+                                    </div>
+                                    <div class="bg-blue-50 p-2 rounded text-sm">
+                                        <span class="font-semibold text-blue-800">Fin:</span> 
+                                        <span class="text-blue-600">Fecha límite</span>
+                                    </div>
+                                    <div class="bg-blue-50 p-2 rounded text-sm">
+                                        <span class="font-semibold text-blue-800">Duración:</span> 
+                                        <span class="text-blue-600">Tiempo estimado</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="component-card">
+                        <div class="flex items-start space-x-4">
+                            <div class="text-4xl">📦</div>
+                            <div class="flex-1">
+                                <h3 class="text-2xl font-bold text-purple-600 mb-3">Entregables</h3>
+                                <p class="text-gray-700 mb-4">Artefactos generados</p>
+                                <div class="space-y-2">
+                                    <div class="bg-purple-50 p-2 rounded text-sm">
+                                        <span class="font-semibold text-purple-800">📋</span> 
+                                        <span class="text-purple-600">Documentos</span>
+                                    </div>
+                                    <div class="bg-purple-50 p-2 rounded text-sm">
+                                        <span class="font-semibold text-purple-800">⚙️</span> 
+                                        <span class="text-purple-600">Procesos</span>
+                                    </div>
+                                    <div class="bg-purple-50 p-2 rounded text-sm">
+                                        <span class="font-semibold text-purple-800">📊</span> 
+                                        <span class="text-purple-600">Reportes</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: Ejemplo visual -->
+    <div class="slide" id="slide-3">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-8">
+                <h1 class="text-5xl font-bold text-gray-800 mb-4">📊 Ejemplo Visual</h1>
+                <div class="w-24 h-1 bg-green-600 mx-auto mb-8"></div>
+                <p class="text-xl text-gray-600">Gráfico tipo Gantt simplificado con fases en meses</p>
+            </div>
+            
+            <div class="gantt-chart">
+                <h3 class="text-2xl font-bold text-center text-gray-800 mb-6">🗓️ Cronograma de Implementación - Roadmap 2025</h3>
+                
+                <div class="gantt-timeline">
+                    <!-- Header -->
+                    <div class="gantt-header">Fase</div>
+                    <div class="gantt-header">Ene</div>
+                    <div class="gantt-header">Feb</div>
+                    <div class="gantt-header">Mar</div>
+                    <div class="gantt-header">Abr</div>
+                    <div class="gantt-header">May</div>
+                    <div class="gantt-header">Jun</div>
+                    <div class="gantt-header">Jul</div>
+                    <div class="gantt-header">Ago</div>
+                    <div class="gantt-header">Sep</div>
+                    <div class="gantt-header">Oct</div>
+                    <div class="gantt-header">Nov</div>
+                    <div class="gantt-header">Dic</div>
+                    
+                    <!-- Diagnóstico -->
+                    <div class="gantt-row">
+                        <div class="gantt-label">
+                            <div>
+                                <div class="font-bold text-red-600">📋 Diagnóstico</div>
+                                <div class="text-xs text-gray-500">Líder de Proyecto</div>
+                            </div>
+                        </div>
+                        <div class="gantt-cell">
+                            <div class="gantt-bar phase-diagnostico">Análisis</div>
+                        </div>
+                        <div class="gantt-cell">
+                            <div class="gantt-bar phase-diagnostico">Gaps</div>
+                        </div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                    </div>
+                    
+                    <!-- Diseño -->
+                    <div class="gantt-row">
+                        <div class="gantt-label">
+                            <div>
+                                <div class="font-bold text-orange-600">🎨 Diseño</div>
+                                <div class="text-xs text-gray-500">Arquitecto de Procesos</div>
+                            </div>
+                        </div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell">
+                            <div class="gantt-bar phase-diseno">Plan</div>
+                        </div>
+                        <div class="gantt-cell">
+                            <div class="gantt-bar phase-diseno">Diseño</div>
+                        </div>
+                        <div class="gantt-cell">
+                            <div class="gantt-bar phase-diseno">Valid</div>
+                        </div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                    </div>
+                    
+                    <!-- Piloto -->
+                    <div class="gantt-row">
+                        <div class="gantt-label">
+                            <div>
+                                <div class="font-bold text-green-600">🧪 Piloto</div>
+                                <div class="text-xs text-gray-500">Equipo de Desarrollo</div>
+                            </div>
+                        </div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell">
+                            <div class="gantt-bar phase-piloto">Prep</div>
+                        </div>
+                        <div class="gantt-cell">
+                            <div class="gantt-bar phase-piloto">Ejec</div>
+                        </div>
+                        <div class="gantt-cell">
+                            <div class="gantt-bar phase-piloto">Eval</div>
+                        </div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                    </div>
+                    
+                    <!-- Despliegue -->
+                    <div class="gantt-row">
+                        <div class="gantt-label">
+                            <div>
+                                <div class="font-bold text-blue-600">🚀 Despliegue</div>
+                                <div class="text-xs text-gray-500">Todos los Equipos</div>
+                            </div>
+                        </div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell">
+                            <div class="gantt-bar phase-despliegue">Capac</div>
+                        </div>
+                        <div class="gantt-cell">
+                            <div class="gantt-bar phase-despliegue">Impl</div>
+                        </div>
+                        <div class="gantt-cell">
+                            <div class="gantt-bar phase-despliegue">Roll</div>
+                        </div>
+                        <div class="gantt-cell">
+                            <div class="gantt-bar phase-despliegue">Estab</div>
+                        </div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                    </div>
+                    
+                    <!-- Evaluación -->
+                    <div class="gantt-row">
+                        <div class="gantt-label">
+                            <div>
+                                <div class="font-bold text-purple-600">📊 Evaluación</div>
+                                <div class="text-xs text-gray-500">Equipo QA</div>
+                            </div>
+                        </div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell"></div>
+                        <div class="gantt-cell">
+                            <div class="gantt-bar phase-evaluacion">Med</div>
+                        </div>
+                        <div class="gantt-cell">
+                            <div class="gantt-bar phase-evaluacion">Anál</div>
+                        </div>
+                        <div class="gantt-cell">
+                            <div class="gantt-bar phase-evaluacion">Rep</div>
+                        </div>
+                        <div class="gantt-cell">
+                            <div class="gantt-bar phase-evaluacion">Mej</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hitos importantes -->
+                <div class="mt-8 grid md:grid-cols-4 gap-4">
+                    <div class="bg-red-50 p-4 rounded-lg text-center">
+                        <div class="text-2xl mb-2">🎯</div>
+                        <div class="font-bold text-red-600">Hito 1</div>
+                        <div class="text-sm text-red-500">Gap Analysis Completo</div>
+                        <div class="text-xs text-gray-500">Febrero 2025</div>
+                    </div>
+                    <div class="bg-orange-50 p-4 rounded-lg text-center">
+                        <div class="text-2xl mb-2">🎯</div>
+                        <div class="font-bold text-orange-600">Hito 2</div>
+                        <div class="text-sm text-orange-500">Diseño Aprobado</div>
+                        <div class="text-xs text-gray-500">Abril 2025</div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg text-center">
+                        <div class="text-2xl mb-2">🎯</div>
+                        <div class="font-bold text-green-600">Hito 3</div>
+                        <div class="text-sm text-green-500">Piloto Exitoso</div>
+                        <div class="text-xs text-gray-500">Junio 2025</div>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg text-center">
+                        <div class="text-2xl mb-2">🎯</div>
+                        <div class="font-bold text-blue-600">Hito 4</div>
+                        <div class="text-sm text-blue-500">Despliegue Completo</div>
+                        <div class="text-xs text-gray-500">Septiembre 2025</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Actividad - Taller rápido -->
+    <div class="slide" id="slide-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-8">
+                <h1 class="text-5xl font-bold text-gray-800 mb-4">🛠️ Taller Rápido</h1>
+                <div class="w-24 h-1 bg-orange-600 mx-auto mb-8"></div>
+                <div class="timer" id="workshop-timer">20:00</div>
+                <p class="text-xl text-gray-600">Cada equipo elige 2 brechas de su análisis previo</p>
+            </div>
+            
+            <div class="text-center mb-8">
+                <button onclick="startWorkshop()" id="start-workshop-btn" class="bg-orange-600 hover:bg-orange-700 text-white px-8 py-4 rounded-lg text-lg transition-colors">
+                    🚀 Iniciar Taller (20 minutos)
+                </button>
+            </div>
+            
+            <!-- Workshop Instructions -->
+            <div class="bg-blue-50 rounded-2xl p-6 mb-8">
+                <h3 class="text-2xl font-bold text-blue-800 mb-4">📋 Instrucciones del Taller</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-blue-700 mb-3">🎯 Objetivo:</h4>
+                        <p class="text-blue-600 mb-4">Crear un mini-roadmap con los componentes esenciales</p>
+                        
+                        <h4 class="font-semibold text-blue-700 mb-3">📝 Pasos a seguir:</h4>
+                        <ol class="text-sm text-blue-600 space-y-1">
+                            <li>1. Seleccionar 2 brechas prioritarias</li>
+                            <li>2. Definir fases para cada brecha</li>
+                            <li>3. Asignar responsables</li>
+                            <li>4. Establecer cronograma</li>
+                            <li>5. Identificar entregables clave</li>
+                        </ol>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-blue-700 mb-3">⏰ Distribución del tiempo:</h4>
+                        <div class="space-y-2">
+                            <div class="bg-white p-2 rounded text-sm">
+                                <span class="font-semibold text-blue-800">5 min:</span> 
+                                <span class="text-blue-600">Selección de brechas</span>
+                            </div>
+                            <div class="bg-white p-2 rounded text-sm">
+                                <span class="font-semibold text-blue-800">10 min:</span> 
+                                <span class="text-blue-600">Diseño del roadmap</span>
+                            </div>
+                            <div class="bg-white p-2 rounded text-sm">
+                                <span class="font-semibold text-blue-800">5 min:</span> 
+                                <span class="text-blue-600">Revisión y ajustes</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Workshop Form -->
+            <div class="workshop-form">
+                <h3 class="text-2xl font-bold text-gray-800 mb-6">📝 Plantilla de Mini-Roadmap</h3>
+                
+                <div class="grid md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">🎯 Brecha 1:</label>
+                        <input type="text" class="workshop-input" placeholder="Ej: Gestión de requisitos deficiente" id="brecha1">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">🎯 Brecha 2:</label>
+                        <input type="text" class="workshop-input" placeholder="Ej: Falta de métricas de calidad" id="brecha2">
+                    </div>
+                </div>
+                
+                <!-- Roadmap for Brecha 1 -->
+                <div class="bg-red-50 rounded-xl p-6 mb-6">
+                    <h4 class="text-xl font-bold text-red-600 mb-4">📋 Roadmap para Brecha 1</h4>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">📋 Fases:</label>
+                            <textarea class="workshop-input h-20" placeholder="Ej: 1. Análisis actual&#10;2. Diseño proceso&#10;3. Implementación" id="fases1"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">👥 Responsables:</label>
+                            <textarea class="workshop-input h-20" placeholder="Ej: Líder de Proyecto&#10;Analista de Procesos&#10;Equipo de Desarrollo" id="responsables1"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">📅 Cronograma:</label>
+                            <textarea class="workshop-input h-20" placeholder="Ej: Mes 1-2&#10;Mes 3-4&#10;Mes 5-6" id="cronograma1"></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">📦 Entregables:</label>
+                        <input type="text" class="workshop-input" placeholder="Ej: Documento de requisitos, Proceso definido, Sistema implementado" id="entregables1">
+                    </div>
+                </div>
+                
+                <!-- Roadmap for Brecha 2 -->
+                <div class="bg-blue-50 rounded-xl p-6 mb-6">
+                    <h4 class="text-xl font-bold text-blue-600 mb-4">📊 Roadmap para Brecha 2</h4>
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">📋 Fases:</label>
+                            <textarea class="workshop-input h-20" placeholder="Ej: 1. Definir métricas&#10;2. Implementar medición&#10;3. Análisis y mejora" id="fases2"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">👥 Responsables:</label>
+                            <textarea class="workshop-input h-20" placeholder="Ej: Equipo QA&#10;Analista de Datos&#10;Gerente de Calidad" id="responsables2"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">📅 Cronograma:</label>
+                            <textarea class="workshop-input h-20" placeholder="Ej: Mes 2-3&#10;Mes 4-5&#10;Mes 6-12" id="cronograma2"></textarea>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">📦 Entregables:</label>
+                        <input type="text" class="workshop-input" placeholder="Ej: Catálogo de métricas, Dashboard de calidad, Reportes mensuales" id="entregables2">
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <button onclick="generateRoadmapPreview()" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg transition-colors">
+                        🎨 Generar Vista Previa del Roadmap
+                    </button>
+                </div>
+                
+                <!-- Roadmap Preview -->
+                <div id="roadmap-preview" class="roadmap-preview hidden">
+                    <h4 class="text-xl font-bold text-gray-800 mb-4 text-center">🗺️ Vista Previa del Mini-Roadmap</h4>
+                    <div id="preview-content"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="fixed bottom-0 left-0 right-0 h-2 bg-gray-200">
+        <div class="h-full bg-gradient-to-r from-blue-600 to-purple-600 transition-all duration-300" id="progress-bar" style="width: 25%"></div>
+    </div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 4;
+        let workshopTimer = null;
+        let timeLeft = 1200; // 20 minutes in seconds
+
+        function updateSlideCounter() {
+            document.getElementById('slide-counter').textContent = `${currentSlide} / ${totalSlides}`;
+            document.getElementById('progress-bar').style.width = `${(currentSlide / totalSlides) * 100}%`;
+        }
+
+        function showSlide(slideNumber) {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            // Show current slide with animation
+            const currentSlideElement = document.getElementById(`slide-${slideNumber}`);
+            currentSlideElement.classList.add('active');
+            
+            updateSlideCounter();
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        function startWorkshop() {
+            const startBtn = document.getElementById('start-workshop-btn');
+            startBtn.classList.add('hidden');
+            timeLeft = 1200; // Reset to 20 minutes
+            
+            workshopTimer = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('workshop-timer').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(workshopTimer);
+                    document.getElementById('workshop-timer').textContent = '¡Tiempo!';
+                    document.getElementById('workshop-timer').style.color = '#ef4444';
+                    
+                    // Show completion message
+                    alert('🎉 ¡Tiempo terminado! Compartan sus mini-roadmaps con el grupo.');
+                }
+            }, 1000);
+        }
+
+        function generateRoadmapPreview() {
+            const brecha1 = document.getElementById('brecha1').value;
+            const brecha2 = document.getElementById('brecha2').value;
+            const fases1 = document.getElementById('fases1').value;
+            const fases2 = document.getElementById('fases2').value;
+            const responsables1 = document.getElementById('responsables1').value;
+            const responsables2 = document.getElementById('responsables2').value;
+            const cronograma1 = document.getElementById('cronograma1').value;
+            const cronograma2 = document.getElementById('cronograma2').value;
+            const entregables1 = document.getElementById('entregables1').value;
+            const entregables2 = document.getElementById('entregables2').value;
+            
+            const previewContent = `
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="bg-white rounded-lg p-4 border-l-4 border-red-500">
+                        <h5 class="font-bold text-red-600 mb-3">🎯 ${brecha1 || 'Brecha 1'}</h5>
+                        <div class="space-y-2 text-sm">
+                            <div><strong>📋 Fases:</strong> ${fases1 || 'No definidas'}</div>
+                            <div><strong>👥 Responsables:</strong> ${responsables1 || 'No asignados'}</div>
+                            <div><strong>📅 Cronograma:</strong> ${cronograma1 || 'No definido'}</div>
+                            <div><strong>📦 Entregables:</strong> ${entregables1 || 'No especificados'}</div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg p-4 border-l-4 border-blue-500">
+                        <h5 class="font-bold text-blue-600 mb-3">🎯 ${brecha2 || 'Brecha 2'}</h5>
+                        <div class="space-y-2 text-sm">
+                            <div><strong>📋 Fases:</strong> ${fases2 || 'No definidas'}</div>
+                            <div><strong>👥 Responsables:</strong> ${responsables2 || 'No asignados'}</div>
+                            <div><strong>📅 Cronograma:</strong> ${cronograma2 || 'No definido'}</div>
+                            <div><strong>📦 Entregables:</strong> ${entregables2 || 'No especificados'}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-6 text-center">
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <h6 class="font-bold text-green-600 mb-2">✅ Mini-Roadmap Generado</h6>
+                        <p class="text-sm text-green-700">¡Excelente trabajo! Su roadmap incluye todos los componentes esenciales.</p>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('preview-content').innerHTML = previewContent;
+            document.getElementById('roadmap-preview').classList.remove('hidden');
+            
+            // Scroll to preview
+            document.getElementById('roadmap-preview').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                previousSlide();
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            showSlide(1);
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a879e5100bcdb0',t:'MTc1NzEwNDEzOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

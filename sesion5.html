@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Métricas de Calidad del Producto - Sesión 5</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .slide {
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        .slide-1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .slide-2 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+            z-index: 1;
+        }
+        
+        .content-wrapper {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .highlight-card {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .highlight-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+        }
+        
+        .icon-container {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.3);
+        }
+        
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .floating-element {
+            position: absolute;
+            animation: float 6s ease-in-out infinite;
+            opacity: 0.1;
+        }
+        
+        .floating-element:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+        .floating-element:nth-child(2) { top: 20%; right: 15%; animation-delay: 2s; }
+        .floating-element:nth-child(3) { bottom: 20%; left: 20%; animation-delay: 4s; }
+        .floating-element:nth-child(4) { bottom: 30%; right: 10%; animation-delay: 1s; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        
+        .fade-in {
+            animation: fadeInUp 1s ease-out forwards;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        
+        .fade-in-delay-1 { animation-delay: 0.2s; }
+        .fade-in-delay-2 { animation-delay: 0.4s; }
+        .fade-in-delay-3 { animation-delay: 0.6s; }
+        .fade-in-delay-4 { animation-delay: 0.8s; }
+        .fade-in-delay-5 { animation-delay: 1.0s; }
+        .fade-in-delay-6 { animation-delay: 1.2s; }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .navigation {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .nav-btn:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 1);
+        }
+        
+        .slide-indicator {
+            background: rgba(255, 255, 255, 0.3);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .slide-indicator.active {
+            background: rgba(255, 255, 255, 0.9);
+            transform: scale(1.2);
+        }
+        
+        .discussion-box {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 16px;
+            padding: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .discussion-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+            animation: shimmer 4s infinite;
+        }
+        
+        .xray-container {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            border-radius: 20px;
+            padding: 24px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #00d4ff;
+        }
+        
+        .xray-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
+            animation: pulse 3s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+        
+        .analogy-box {
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            border-radius: 16px;
+            padding: 20px;
+            color: #333;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .analogy-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+            animation: shimmer 4s infinite;
+        }
+        
+        .metric-section {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            padding: 24px;
+            margin: 16px 0;
+            border-left: 6px solid;
+            transition: all 0.3s ease;
+        }
+        
+        .metric-section:hover {
+            transform: translateX(5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+        
+        .metric-loc { border-left-color: #3b82f6; }
+        .metric-fp { border-left-color: #10b981; }
+        .metric-complexity { border-left-color: #f59e0b; }
+        
+        .metric-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+        
+        .advantage-item {
+            background: rgba(16, 185, 129, 0.1);
+            border-left: 3px solid #10b981;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+        }
+        
+        .disadvantage-item {
+            background: rgba(239, 68, 68, 0.1);
+            border-left: 3px solid #ef4444;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 8px;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            border-radius: 12px;
+            padding: 16px;
+            color: white;
+            margin: 16px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .warning-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+        
+        .code-example {
+            background: #1a1a2e;
+            color: #00d4ff;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 8px 0;
+            border: 1px solid #00d4ff;
+        }
+        
+        .complexity-gauge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        
+        .gauge-bar {
+            height: 8px;
+            border-radius: 4px;
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .gauge-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 2s ease;
+        }
+        
+        .gauge-low { background: #10b981; }
+        .gauge-medium { background: #f59e0b; }
+        .gauge-high { background: #ef4444; }
+    </style>
+</head>
+<body>
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+          <a class="qs-btn" href="checklist.html">Checklist</a>
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <!-- Slide 1: Título -->
+    <div class="slide slide-1 active flex items-center justify-center p-6">
+        <div class="floating-elements">
+            <div class="floating-element text-6xl">🔬</div>
+            <div class="floating-element text-5xl">📊</div>
+            <div class="floating-element text-4xl">⚙️</div>
+            <div class="floating-element text-5xl">🏭</div>
+        </div>
+        
+        <div class="content-wrapper max-w-6xl w-full">
+            <div class="glass-card p-8 mb-8 fade-in">
+                <div class="flex items-center justify-center mb-8">
+                    <div class="icon-container">
+                        <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                
+                <h1 class="text-5xl font-bold text-center text-gray-800 mb-6 leading-tight">
+                    Radiografía del Software
+                </h1>
+                
+                <h2 class="text-3xl font-semibold text-center gradient-text mb-8">
+                    Métricas de Calidad del Producto
+                </h2>
+                
+                <p class="text-xl text-center text-gray-600 mb-8 max-w-4xl mx-auto">
+                    Cuantificando las características del software que entregamos
+                </p>
+                
+                <div class="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-600 mx-auto rounded-full mb-8"></div>
+            </div>
+            
+            <div class="xray-container mb-8 fade-in fade-in-delay-1">
+                <div class="relative z-10">
+                    <div class="flex items-center mb-6">
+                        <div class="text-4xl mr-4">🔬</div>
+                        <h3 class="text-2xl font-bold">Sesión 5: Del Proceso al Producto</h3>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                            <h4 class="font-semibold mb-3 flex items-center">
+                                <span class="text-2xl mr-2">🏭</span>
+                                Sesión Pasada: "La Fábrica"
+                            </h4>
+                            <p class="text-sm opacity-90">
+                                Medimos cómo trabajamos: velocidad del equipo, tiempo de desarrollo, 
+                                eficiencia del proceso, metodologías ágiles.
+                            </p>
+                        </div>
+                        
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                            <h4 class="font-semibold mb-3 flex items-center">
+                                <span class="text-2xl mr-2">🚗</span>
+                                Hoy: "El Coche"
+                            </h4>
+                            <p class="text-sm opacity-90">
+                                Medimos lo que entregamos: calidad del código, complejidad, 
+                                tamaño, funcionalidad del producto final.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 text-center">
+                        <p class="text-lg font-medium">
+                            El producto tangible que llega al usuario final
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="analogy-box mb-8 fade-in fade-in-delay-2">
+                <div class="relative z-10">
+                    <div class="flex items-center mb-4">
+                        <div class="text-3xl mr-3">💡</div>
+                        <h4 class="font-semibold text-xl">Analogía Médica</h4>
+                    </div>
+                    <p class="text-lg mb-4">
+                        Así como un médico usa rayos X para ver el interior del cuerpo humano, 
+                        nosotros usamos métricas para "radiografiar" nuestro software y detectar 
+                        problemas internos antes de que se conviertan en síntomas visibles.
+                    </p>
+                    <div class="flex items-center justify-center space-x-8 mt-6">
+                        <div class="text-center">
+                            <div class="text-4xl mb-2">🩻</div>
+                            <div class="text-sm font-semibold">Rayos X</div>
+                            <div class="text-xs">Detecta fracturas</div>
+                        </div>
+                        <div class="text-2xl">→</div>
+                        <div class="text-center">
+                            <div class="text-4xl mb-2">📊</div>
+                            <div class="text-sm font-semibold">Métricas</div>
+                            <div class="text-xs">Detecta problemas</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="feature-card p-6 fade-in fade-in-delay-3">
+                <div class="flex items-center">
+                    <div class="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg p-3 mr-4">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">Fuente Principal</h3>
+                        <p class="text-gray-600">"Ingeniería del software: un enfoque práctico" - Roger S. Pressman</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 2: Métricas de Tamaño y Complejidad -->
+    <div class="slide slide-2 flex items-center justify-center p-6">
+        <div class="floating-elements">
+            <div class="floating-element text-6xl">📏</div>
+            <div class="floating-element text-5xl">🔢</div>
+            <div class="floating-element text-4xl">🌀</div>
+            <div class="floating-element text-5xl">⚖️</div>
+        </div>
+        
+        <div class="content-wrapper max-w-7xl w-full">
+            <div class="glass-card p-8 mb-8 fade-in">
+                <div class="flex items-center justify-center mb-6">
+                    <div class="bg-gradient-to-r from-pink-500 to-red-500 rounded-full p-4">
+                        <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h1 class="text-4xl font-bold text-center text-gray-800 mb-4">
+                    ¿Qué Tan Grande y Enredado es Nuestro Código?
+                </h1>
+                <h2 class="text-2xl font-semibold text-center text-gray-600 mb-6">
+                    Métricas de Tamaño y Complejidad
+                </h2>
+            </div>
+            
+            <!-- LOC Section -->
+            <div class="metric-section metric-loc fade-in fade-in-delay-1">
+                <div class="metric-header">TAMAÑO: Líneas de Código (LOC)</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-3">
+                    La métrica más simple y antigua
+                </h3>
+                <p class="text-gray-700 mb-4">
+                    Cuenta el número de líneas en el código fuente (excluyendo comentarios y líneas en blanco).
+                </p>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="advantage-item">
+                        <div class="flex items-center mb-2">
+                            <span class="text-green-600 text-xl mr-2">✅</span>
+                            <span class="font-semibold">Ventaja</span>
+                        </div>
+                        <p class="text-sm">Fácil de calcular y automatizar</p>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <div class="disadvantage-item">
+                            <div class="flex items-center mb-1">
+                                <span class="text-red-600 text-lg mr-2">❌</span>
+                                <span class="font-semibold text-sm">Dependiente del Lenguaje</span>
+                            </div>
+                            <p class="text-xs">100 líneas de C = 20 líneas de Python</p>
+                        </div>
+                        
+                        <div class="disadvantage-item">
+                            <div class="flex items-center mb-1">
+                                <span class="text-red-600 text-lg mr-2">❌</span>
+                                <span class="font-semibold text-sm">No Mide Funcionalidad</span>
+                            </div>
+                            <p class="text-xs">500 líneas vs 50 líneas para la misma función</p>
+                        </div>
+                        
+                        <div class="disadvantage-item">
+                            <div class="flex items-center mb-1">
+                                <span class="text-red-600 text-lg mr-2">❌</span>
+                                <span class="font-semibold text-sm">Penaliza Buenas Prácticas</span>
+                            </div>
+                            <p class="text-xs">Código conciso obtiene valores LOC más bajos</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Function Points Section -->
+            <div class="metric-section metric-fp fade-in fade-in-delay-2">
+                <div class="metric-header">TAMAÑO: Puntos de Función (FP)</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-3">
+                    Mide funcionalidad desde la perspectiva del usuario
+                </h3>
+                <p class="text-gray-700 mb-4">
+                    Independiente de la tecnología utilizada. Permite comparar proyectos en diferentes lenguajes.
+                </p>
+                
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="font-semibold mb-2 text-gray-800">¿Cómo funciona?</h4>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex items-center">
+                                <span class="text-blue-600 mr-2">📝</span>
+                                <span>Entradas del usuario (formularios, clics)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-green-600 mr-2">📊</span>
+                                <span>Salidas al usuario (reportes, pantallas)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-purple-600 mr-2">🔍</span>
+                                <span>Consultas del usuario</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-orange-600 mr-2">🗃️</span>
+                                <span>Archivos o tablas de BD utilizados</span>
+                            </div>
+                            <div class="flex items-center">
+                                <span class="text-red-600 mr-2">🔗</span>
+                                <span>Interfaces con sistemas externos</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="advantage-item">
+                        <div class="flex items-center mb-2">
+                            <span class="text-green-600 text-xl mr-2">⭐</span>
+                            <span class="font-semibold">Ventaja Principal</span>
+                        </div>
+                        <p class="text-sm">
+                            Permite comparar la "cantidad de funcionalidad" de un proyecto en Java 
+                            contra uno en C#, algo que LOC no puede hacer.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Complexity Section -->
+            <div class="metric-section metric-complexity fade-in fade-in-delay-3">
+                <div class="metric-header">COMPLEJIDAD: Complejidad Ciclomática (McCabe)</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-3">
+                    ¿Qué tan "enredada" está la lógica?
+                </h3>
+                <p class="text-gray-700 mb-4">
+                    Mide la cantidad de caminos lógicos independientes en un fragmento de código.
+                </p>
+                
+                <div class="warning-box">
+                    <div class="relative z-10">
+                        <div class="flex items-center mb-2">
+                            <span class="text-2xl mr-2">⚠️</span>
+                            <span class="font-bold">Regla de Oro</span>
+                        </div>
+                        <p class="font-semibold">
+                            Un valor V(G) > 10 es una señal de alerta
+                        </p>
+                        <p class="text-sm mt-2">
+                            El código es probablemente difícil de entender, probar y mantener. 
+                            Candidato ideal para refactorización.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="complexity-gauge">
+                    <span class="text-sm font-semibold w-16">V(G) ≤ 5</span>
+                    <div class="gauge-bar bg-gray-200">
+                        <div class="gauge-fill gauge-low" style="width: 30%"></div>
+                    </div>
+                    <span class="text-sm text-green-600">Bajo</span>
+                </div>
+                
+                <div class="complexity-gauge">
+                    <span class="text-sm font-semibold w-16">V(G) 6-10</span>
+                    <div class="gauge-bar bg-gray-200">
+                        <div class="gauge-fill gauge-medium" style="width: 60%"></div>
+                    </div>
+                    <span class="text-sm text-yellow-600">Medio</span>
+                </div>
+                
+                <div class="complexity-gauge">
+                    <span class="text-sm font-semibold w-16">V(G) > 10</span>
+                    <div class="gauge-bar bg-gray-200">
+                        <div class="gauge-fill gauge-high" style="width: 90%"></div>
+                    </div>
+                    <span class="text-sm text-red-600">Alto</span>
+                </div>
+            </div>
+            
+            <div class="discussion-box fade-in fade-in-delay-4">
+                <div class="relative z-10">
+                    <div class="flex items-center mb-4">
+                        <div class="text-3xl mr-3">🤔</div>
+                        <h4 class="font-semibold text-xl">Punto de Discusión</h4>
+                    </div>
+                    <p class="text-lg mb-4">
+                        Si un gerente les ofrece un <span class="font-bold">bono por cada 1,000 líneas de código</span> 
+                        que escriban al mes, ¿qué tipo de código creen que empezarían a producir?
+                    </p>
+                    <p class="text-base opacity-90">
+                        ¿Por qué esta es una mala idea?
+                    </p>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-xs">Código inflado</span>
+                        <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-xs">Funciones innecesarias</span>
+                        <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-xs">Comentarios excesivos</span>
+                        <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-xs">Lógica redundante</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="navigation">
+        <button class="nav-btn" onclick="previousSlide()">
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+        </button>
+        
+        <div class="flex items-center gap-2">
+            <div class="slide-indicator active" data-slide="0"></div>
+            <div class="slide-indicator" data-slide="1"></div>
+        </div>
+        
+        <button class="nav-btn" onclick="nextSlide()">
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+        </button>
+    </div>
+
+    <script>
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.slide');
+        const indicators = document.querySelectorAll('.slide-indicator');
+        
+        function showSlide(index) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            indicators.forEach(indicator => indicator.classList.remove('active'));
+            
+            slides[index].classList.add('active');
+            indicators[index].classList.add('active');
+            
+            // Restart animations
+            const fadeElements = slides[index].querySelectorAll('.fade-in');
+            fadeElements.forEach(el => {
+                el.style.animation = 'none';
+                el.offsetHeight; // Trigger reflow
+                el.style.animation = null;
+            });
+            
+            // Animate complexity gauges
+            if (index === 1) {
+                setTimeout(() => {
+                    const gaugeFills = document.querySelectorAll('.gauge-fill');
+                    gaugeFills.forEach(fill => {
+                        const width = fill.style.width;
+                        fill.style.width = '0%';
+                        setTimeout(() => {
+                            fill.style.width = width;
+                        }, 100);
+                    });
+                }, 800);
+            }
+        }
+        
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % slides.length;
+            showSlide(currentSlide);
+        }
+        
+        function previousSlide() {
+            currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+            showSlide(currentSlide);
+        }
+        
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') previousSlide();
+        });
+        
+        // Indicator clicks
+        indicators.forEach((indicator, index) => {
+            indicator.addEventListener('click', () => {
+                currentSlide = index;
+                showSlide(currentSlide);
+            });
+        });
+        
+        // Metric section interactions
+        document.querySelectorAll('.metric-section').forEach(section => {
+            section.addEventListener('click', function() {
+                this.style.transform = 'translateX(10px)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 200);
+            });
+        });
+        
+        // Initialize gauge animations on load
+        window.addEventListener('load', function() {
+            if (currentSlide === 1) {
+                setTimeout(() => {
+                    const gaugeFills = document.querySelectorAll('.gauge-fill');
+                    gaugeFills.forEach(fill => {
+                        const width = fill.style.width;
+                        fill.style.width = '0%';
+                        setTimeout(() => {
+                            fill.style.width = width;
+                        }, 100);
+                    });
+                }, 1000);
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a719ff93a42cde',t:'MTc1NzA4OTcyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

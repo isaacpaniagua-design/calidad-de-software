@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesión 18 - Herramientas y Tendencias</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .slide {
+            display: none;
+            animation: slideIn 0.5s ease-in-out;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .tool-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .metric-item {
+            transition: all 0.3s ease;
+        }
+        
+        .metric-item:hover {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .trend-card {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .trend-card:hover {
+            transform: scale(1.02);
+        }
+        
+        .debate-timer {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #e53e3e;
+        }
+        
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+          <a class="qs-btn" href="checklist.html">Checklist</a>
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <!-- Navigation -->
+    <div class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50 px-6 py-4">
+        <div class="flex justify-between items-center max-w-6xl mx-auto">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xl font-bold text-gray-800">Sesión 18 - Herramientas y Tendencias</h1>
+                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                    Diapositiva <span id="currentSlide">1</span> de 5
+                </span>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="previousSlide()" id="prevBtn" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
+                    ← Anterior
+                </button>
+                <button onclick="nextSlide()" id="nextBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    Siguiente →
+                </button>
+            </div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+            <div id="progressBar" class="progress-bar bg-blue-600 h-2 rounded-full" style="width: 20%"></div>
+        </div>
+    </div>
+
+    <!-- Slides Container -->
+    <div class="pt-24 pb-8 px-6">
+        <div class="max-w-6xl mx-auto">
+            
+            <!-- Slide 1: Título -->
+            <div class="slide active" id="slide1">
+                <div class="gradient-bg rounded-3xl p-12 text-center text-white min-h-[600px] flex flex-col justify-center items-center">
+                    <div class="pulse-animation">
+                        <div class="text-8xl mb-8">📱</div>
+                    </div>
+                    <h1 class="text-6xl font-bold mb-6 leading-tight">
+                        Toolkit para<br>
+                        <span class="text-yellow-300">Pruebas Móviles</span>
+                    </h1>
+                    <p class="text-xl opacity-90 max-w-2xl">
+                        Herramientas esenciales y tendencias actuales en testing móvil
+                    </p>
+                    <div class="mt-8 flex items-center space-x-4 text-lg">
+                        <span class="bg-white bg-opacity-20 px-4 py-2 rounded-full">Sesión 18</span>
+                        <span class="bg-white bg-opacity-20 px-4 py-2 rounded-full">Testing Móvil</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2: Herramientas clave -->
+            <div class="slide" id="slide2">
+                <div class="bg-white rounded-3xl p-12 min-h-[600px]">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">
+                        🛠️ Herramientas Clave
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-3 gap-8">
+                        <!-- Appium -->
+                        <div class="tool-card bg-gradient-to-br from-green-400 to-green-600 rounded-2xl p-8 text-white">
+                            <div class="text-4xl mb-4">🤖</div>
+                            <h3 class="text-2xl font-bold mb-4">Appium</h3>
+                            <p class="text-lg opacity-90 mb-4">Framework open source multiplataforma</p>
+                            <div class="bg-white bg-opacity-20 rounded-lg p-3">
+                                <p class="text-sm">✓ iOS y Android</p>
+                                <p class="text-sm">✓ Múltiples lenguajes</p>
+                                <p class="text-sm">✓ Apps nativas e híbridas</p>
+                            </div>
+                        </div>
+
+                        <!-- Espresso & XCUITest -->
+                        <div class="tool-card bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl p-8 text-white">
+                            <div class="text-4xl mb-4">⚡</div>
+                            <h3 class="text-2xl font-bold mb-4">Automatización Nativa</h3>
+                            <p class="text-lg opacity-90 mb-4">Espresso (Android) y XCUITest (iOS)</p>
+                            <div class="bg-white bg-opacity-20 rounded-lg p-3">
+                                <p class="text-sm">✓ Rendimiento óptimo</p>
+                                <p class="text-sm">✓ Integración profunda</p>
+                                <p class="text-sm">✓ APIs nativas</p>
+                            </div>
+                        </div>
+
+                        <!-- Cloud Testing -->
+                        <div class="tool-card bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl p-8 text-white">
+                            <div class="text-4xl mb-4">☁️</div>
+                            <h3 class="text-2xl font-bold mb-4">Testing en la Nube</h3>
+                            <p class="text-lg opacity-90 mb-4">BrowserStack / Sauce Labs</p>
+                            <div class="bg-white bg-opacity-20 rounded-lg p-3">
+                                <p class="text-sm">✓ Miles de dispositivos</p>
+                                <p class="text-sm">✓ Sin hardware físico</p>
+                                <p class="text-sm">✓ Escalabilidad</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 text-center">
+                        <p class="text-gray-600 italic">Fuente: Sommerville, Cap. 24</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3: Métricas específicas -->
+            <div class="slide" id="slide3">
+                <div class="bg-white rounded-3xl p-12 min-h-[600px]">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">
+                        📊 Métricas Específicas en Móviles
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="metric-item bg-red-50 border-l-4 border-red-500 rounded-lg p-6">
+                            <div class="flex items-center mb-3">
+                                <span class="text-3xl mr-3">💥</span>
+                                <h3 class="text-xl font-bold text-gray-800">Crash Rate</h3>
+                            </div>
+                            <p class="text-gray-600 mb-2">Porcentaje de sesiones con fallo</p>
+                            <div class="bg-red-100 rounded-lg p-3">
+                                <p class="text-sm text-red-800">Meta: < 1% de las sesiones</p>
+                            </div>
+                        </div>
+
+                        <div class="metric-item bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6">
+                            <div class="flex items-center mb-3">
+                                <span class="text-3xl mr-3">⚡</span>
+                                <h3 class="text-xl font-bold text-gray-800">Time to First Interaction</h3>
+                            </div>
+                            <p class="text-gray-600 mb-2">TTFI - Tiempo hasta primera interacción</p>
+                            <div class="bg-blue-100 rounded-lg p-3">
+                                <p class="text-sm text-blue-800">Meta: < 3 segundos</p>
+                            </div>
+                        </div>
+
+                        <div class="metric-item bg-green-50 border-l-4 border-green-500 rounded-lg p-6">
+                            <div class="flex items-center mb-3">
+                                <span class="text-3xl mr-3">🔋</span>
+                                <h3 class="text-xl font-bold text-gray-800">Consumo de Batería</h3>
+                            </div>
+                            <p class="text-gray-600 mb-2">Porcentaje por hora de uso</p>
+                            <div class="bg-green-100 rounded-lg p-3">
+                                <p class="text-sm text-green-800">Meta: < 5% por hora</p>
+                            </div>
+                        </div>
+
+                        <div class="metric-item bg-purple-50 border-l-4 border-purple-500 rounded-lg p-6">
+                            <div class="flex items-center mb-3">
+                                <span class="text-3xl mr-3">📡</span>
+                                <h3 class="text-xl font-bold text-gray-800">Latencia de Red</h3>
+                            </div>
+                            <p class="text-gray-600 mb-2">Tiempo de respuesta promedio</p>
+                            <div class="bg-purple-100 rounded-lg p-3">
+                                <p class="text-sm text-purple-800">Meta: < 200ms</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 bg-gray-100 rounded-xl p-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">💡 Tip Importante</h4>
+                        <p class="text-gray-600">Estas métricas deben monitorearse continuamente en producción, no solo durante las pruebas.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 4: Tendencias actuales -->
+            <div class="slide" id="slide4">
+                <div class="bg-white rounded-3xl p-12 min-h-[600px]">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">
+                        🚀 Tendencias Actuales
+                    </h2>
+                    
+                    <div class="space-y-6">
+                        <div class="trend-card rounded-2xl p-8 text-white">
+                            <div class="flex items-center mb-4">
+                                <span class="text-4xl mr-4">📱</span>
+                                <h3 class="text-2xl font-bold">Testing de Apps Híbridas y PWA</h3>
+                            </div>
+                            <p class="text-lg opacity-90 mb-4">Progressive Web Apps y aplicaciones híbridas requieren estrategias específicas</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">React Native</span>
+                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">Flutter</span>
+                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">PWA</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-orange-400 to-pink-400 rounded-2xl p-8 text-white">
+                            <div class="flex items-center mb-4">
+                                <span class="text-4xl mr-4">🔄</span>
+                                <h3 class="text-2xl font-bold">Integración de Testing en CI/CD</h3>
+                            </div>
+                            <p class="text-lg opacity-90 mb-4">Automatización completa del pipeline de testing móvil</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">Jenkins</span>
+                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">GitHub Actions</span>
+                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">Azure DevOps</span>
+                            </div>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-teal-400 to-blue-500 rounded-2xl p-8 text-white">
+                            <div class="flex items-center mb-4">
+                                <span class="text-4xl mr-4">⌚</span>
+                                <h3 class="text-2xl font-bold">Pruebas en IoT y Wearables</h3>
+                            </div>
+                            <p class="text-lg opacity-90 mb-4">Expansión hacia dispositivos conectados y wearables</p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">Apple Watch</span>
+                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">Wear OS</span>
+                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">IoT Devices</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 5: Actividad - Debate -->
+            <div class="slide" id="slide5">
+                <div class="bg-white rounded-3xl p-12 min-h-[600px]">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">
+                        💬 Actividad - Debate Guiado
+                    </h2>
+                    
+                    <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl p-8 text-white mb-8">
+                        <div class="text-center mb-6">
+                            <div class="text-6xl mb-4">🤔</div>
+                            <h3 class="text-2xl font-bold mb-4">Pregunta para Debate</h3>
+                        </div>
+                        <div class="bg-white bg-opacity-20 rounded-xl p-6">
+                            <p class="text-xl text-center leading-relaxed">
+                                "¿Son suficientes los emuladores para asegurar calidad móvil o siempre se deben usar dispositivos reales?"
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-8 mb-8">
+                        <div class="bg-green-50 border-2 border-green-200 rounded-xl p-6">
+                            <h4 class="text-xl font-bold text-green-800 mb-4 flex items-center">
+                                <span class="mr-2">✅</span> Pro Emuladores
+                            </h4>
+                            <ul class="space-y-2 text-green-700">
+                                <li>• Costo-efectivos</li>
+                                <li>• Fácil configuración</li>
+                                <li>• Múltiples configuraciones</li>
+                                <li>• Integración CI/CD</li>
+                            </ul>
+                        </div>
+
+                        <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+                            <h4 class="text-xl font-bold text-blue-800 mb-4 flex items-center">
+                                <span class="mr-2">📱</span> Pro Dispositivos Reales
+                            </h4>
+                            <ul class="space-y-2 text-blue-700">
+                                <li>• Rendimiento real</li>
+                                <li>• Sensores físicos</li>
+                                <li>• Condiciones reales de red</li>
+                                <li>• Experiencia de usuario real</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <div class="bg-gray-100 rounded-xl p-6 inline-block">
+                            <p class="text-gray-600 mb-2">Tiempo de debate:</p>
+                            <div class="debate-timer" id="timer">15:00</div>
+                            <button onclick="startTimer()" id="timerBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg mt-4 transition-colors">
+                                Iniciar Timer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const totalSlides = 5;
+        let timerInterval;
+        let timeLeft = 15 * 60; // 15 minutes in seconds
+
+        function showSlide(index) {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            // Show current slide
+            document.getElementById(`slide${index + 1}`).classList.add('active');
+            
+            // Update navigation
+            document.getElementById('currentSlide').textContent = index + 1;
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
+            
+            // Update progress bar
+            const progress = ((index + 1) / totalSlides) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            // Update button states
+            if (index === 0) {
+                document.getElementById('prevBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('prevBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            if (index === totalSlides - 1) {
+                document.getElementById('nextBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('nextBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlides - 1) {
+                currentSlideIndex++;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function startTimer() {
+            const timerBtn = document.getElementById('timerBtn');
+            const timerDisplay = document.getElementById('timer');
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerBtn.textContent = 'Iniciar Timer';
+                timerBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+                timerBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                timeLeft = 15 * 60;
+                timerDisplay.textContent = '15:00';
+                return;
+            }
+            
+            timerBtn.textContent = 'Detener Timer';
+            timerBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            timerBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                
+                timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    timerBtn.textContent = 'Tiempo Terminado!';
+                    timerBtn.classList.add('bg-gray-600');
+                    timerDisplay.textContent = '00:00';
+                    timerDisplay.classList.add('text-red-600');
+                    
+                    // Reset after 3 seconds
+                    setTimeout(() => {
+                        timeLeft = 15 * 60;
+                        timerDisplay.textContent = '15:00';
+                        timerDisplay.classList.remove('text-red-600');
+                        timerBtn.textContent = 'Iniciar Timer';
+                        timerBtn.classList.remove('bg-gray-600', 'bg-red-600', 'hover:bg-red-700');
+                        timerBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    }, 3000);
+                }
+            }, 1000);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                previousSlide();
+            }
+        });
+
+        // Initialize
+        showSlide(0);
+
+        // Add click animations to tool cards
+        document.querySelectorAll('.tool-card').forEach(card => {
+            card.addEventListener('click', () => {
+                card.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    card.style.transform = '';
+                }, 150);
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a70bd1717d6719',t:'MTc1NzA4OTE0NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

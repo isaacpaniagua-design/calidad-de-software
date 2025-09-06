@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesión 20 - Estrategia y Niveles de Automatización</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .slide {
+            display: none;
+            animation: slideIn 0.5s ease-in-out;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .slide-bg-1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide-bg-1::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: float 20s linear infinite;
+        }
+        
+        .slide-bg-2 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide-bg-2::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .slide-bg-3 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide-bg-3::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04' fill-rule='evenodd'%3E%3Cpath d='m0 40l40-40h-40v40zm40 0v-40h-40l40 40z'/%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .slide-bg-4 {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide-bg-4::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .slide-bg-5 {
+            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide-bg-5::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M50 50c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10zM10 10c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10zm60 60c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+        
+        .pyramid-level {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .pyramid-level:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+        
+        .pyramid-base {
+            width: 100%;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .pyramid-middle {
+            width: 70%;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        
+        .pyramid-top {
+            width: 40%;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .criteria-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .criteria-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .example-card {
+            transition: all 0.3s ease;
+        }
+        
+        .example-card:hover {
+            transform: scale(1.02);
+        }
+        
+        .debate-timer {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #e53e3e;
+        }
+        
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+        
+        .team-input {
+            transition: all 0.3s ease;
+        }
+        
+        .team-input:focus {
+            transform: scale(1.02);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+          <a class="qs-btn" href="checklist.html">Checklist</a>
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <!-- Navigation -->
+    <div class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50 px-6 py-4">
+        <div class="flex justify-between items-center max-w-6xl mx-auto">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xl font-bold text-gray-800">Sesión 20 - Estrategia y Niveles de Automatización</h1>
+                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                    Diapositiva <span id="currentSlide">1</span> de 5
+                </span>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="previousSlide()" id="prevBtn" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
+                    ← Anterior
+                </button>
+                <button onclick="nextSlide()" id="nextBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    Siguiente →
+                </button>
+            </div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+            <div id="progressBar" class="progress-bar bg-blue-600 h-2 rounded-full" style="width: 20%"></div>
+        </div>
+    </div>
+
+    <!-- Slides Container -->
+    <div class="pt-24 pb-8 px-6">
+        <div class="max-w-6xl mx-auto">
+            
+            <!-- Slide 1: Título -->
+            <div class="slide active" id="slide1">
+                <div class="slide-bg-1 rounded-3xl p-12 text-center text-white min-h-[600px] flex flex-col justify-center items-center relative z-10">
+                    <div class="flex items-center justify-center mb-8">
+                        <div class="float-animation text-6xl mr-4">🎯</div>
+                        <div class="float-animation text-6xl" style="animation-delay: -1.5s;">📊</div>
+                    </div>
+                    <h1 class="text-6xl font-bold mb-6 leading-tight">
+                        <span class="pulse-animation">Dónde y Cómo</span><br>
+                        <span class="text-yellow-300">Automatizar</span>
+                    </h1>
+                    <p class="text-xl opacity-90 max-w-3xl mb-8">
+                        Estrategias inteligentes para maximizar el ROI de la automatización
+                    </p>
+                    <div class="flex items-center space-x-4 text-lg">
+                        <span class="bg-white bg-opacity-20 px-4 py-2 rounded-full">Sesión 20</span>
+                        <span class="bg-white bg-opacity-20 px-4 py-2 rounded-full">Estrategia</span>
+                        <span class="bg-white bg-opacity-20 px-4 py-2 rounded-full">Niveles</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2: Pirámide de Pruebas -->
+            <div class="slide" id="slide2">
+                <div class="slide-bg-2 rounded-3xl p-12 min-h-[600px] relative z-10">
+                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                        🔺 Pirámide de Pruebas (Martin Fowler)
+                    </h2>
+                    
+                    <div class="flex flex-col items-center space-y-4 mb-8">
+                        <!-- Cima: UI Tests -->
+                        <div class="pyramid-level pyramid-top rounded-t-2xl p-6 text-white text-center">
+                            <div class="text-2xl mb-2">🖥️</div>
+                            <h3 class="text-xl font-bold mb-2">Pruebas de UI</h3>
+                            <p class="text-sm opacity-90">Menor cantidad, más costosas</p>
+                            <div class="mt-2 text-xs opacity-75">
+                                Lentas • Frágiles • Costosas de mantener
+                            </div>
+                        </div>
+                        
+                        <!-- Medio: Integration Tests -->
+                        <div class="pyramid-level pyramid-middle rounded-lg p-6 text-white text-center">
+                            <div class="text-3xl mb-2">🔗</div>
+                            <h3 class="text-xl font-bold mb-2">Pruebas de Integración</h3>
+                            <p class="text-sm opacity-90">Algunas automatizadas</p>
+                            <div class="mt-2 text-xs opacity-75">
+                                APIs • Servicios • Bases de datos
+                            </div>
+                        </div>
+                        
+                        <!-- Base: Unit Tests -->
+                        <div class="pyramid-level pyramid-base rounded-b-2xl p-8 text-white text-center">
+                            <div class="text-4xl mb-3">⚡</div>
+                            <h3 class="text-2xl font-bold mb-3">Pruebas Unitarias</h3>
+                            <p class="text-lg opacity-90 mb-2">Altamente automatizadas</p>
+                            <div class="mt-3 text-sm opacity-75">
+                                Rápidas • Confiables • Fáciles de mantener • Gran cobertura
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white bg-opacity-90 rounded-xl p-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                            <span class="mr-2">💡</span> Principio Clave
+                        </h4>
+                        <p class="text-gray-700">
+                            <strong>Más pruebas en la base, menos en la cima.</strong> 
+                            Las pruebas unitarias son baratas y rápidas, mientras que las pruebas de UI son costosas y lentas.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3: Criterios para seleccionar -->
+            <div class="slide" id="slide3">
+                <div class="slide-bg-3 rounded-3xl p-12 min-h-[600px] relative z-10">
+                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                        ✅ Criterios para Seleccionar Qué Automatizar
+                    </h2>
+                    
+                    <div class="space-y-6">
+                        <div class="criteria-card bg-gradient-to-r from-green-400 to-green-600 rounded-2xl p-8 text-white">
+                            <div class="flex items-center mb-4">
+                                <span class="text-4xl mr-4">🔄</span>
+                                <h3 class="text-2xl font-bold">Alta Frecuencia de Ejecución</h3>
+                            </div>
+                            <p class="text-lg opacity-90 mb-4">
+                                Pruebas que se ejecutan repetidamente en cada build o release
+                            </p>
+                            <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                                <p class="text-sm"><strong>Ejemplos:</strong> Smoke tests, regression tests, pruebas de sanidad</p>
+                            </div>
+                        </div>
+
+                        <div class="criteria-card bg-gradient-to-r from-red-400 to-red-600 rounded-2xl p-8 text-white">
+                            <div class="flex items-center mb-4">
+                                <span class="text-4xl mr-4">🏢</span>
+                                <h3 class="text-2xl font-bold">Casos Críticos para el Negocio</h3>
+                            </div>
+                            <p class="text-lg opacity-90 mb-4">
+                                Funcionalidades que generan ingresos o son esenciales para la operación
+                            </p>
+                            <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                                <p class="text-sm"><strong>Ejemplos:</strong> Proceso de pago, login, funciones core del producto</p>
+                            </div>
+                        </div>
+
+                        <div class="criteria-card bg-gradient-to-r from-blue-400 to-blue-600 rounded-2xl p-8 text-white">
+                            <div class="flex items-center mb-4">
+                                <span class="text-4xl mr-4">🎯</span>
+                                <h3 class="text-2xl font-bold">Escenarios Repetitivos y Predecibles</h3>
+                            </div>
+                            <p class="text-lg opacity-90 mb-4">
+                                Casos de prueba con pasos bien definidos y resultados esperados claros
+                            </p>
+                            <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                                <p class="text-sm"><strong>Ejemplos:</strong> Formularios, validaciones, flujos de datos</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 text-center">
+                        <div class="bg-white bg-opacity-20 rounded-lg px-4 py-2 inline-block">
+                            <p class="text-white font-medium italic">Fuente: Tian, Cap. 7</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 4: Ejemplo real E-commerce -->
+            <div class="slide" id="slide4">
+                <div class="slide-bg-4 rounded-3xl p-12 min-h-[600px] relative z-10">
+                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                        🛒 Ejemplo Real - E-commerce
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Automatizar -->
+                        <div class="example-card bg-gradient-to-br from-green-50 to-green-100 border-2 border-green-200 rounded-2xl p-8">
+                            <div class="text-center mb-6">
+                                <div class="text-5xl mb-3">🤖</div>
+                                <h3 class="text-2xl font-bold text-green-800">AUTOMATIZAR</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-white rounded-lg p-4 border-l-4 border-green-500">
+                                    <div class="flex items-center mb-2">
+                                        <span class="text-2xl mr-3">🔐</span>
+                                        <h4 class="font-bold text-gray-800">Login</h4>
+                                    </div>
+                                    <p class="text-gray-600 text-sm">Proceso crítico, repetitivo, bien definido</p>
+                                </div>
+                                
+                                <div class="bg-white rounded-lg p-4 border-l-4 border-green-500">
+                                    <div class="flex items-center mb-2">
+                                        <span class="text-2xl mr-3">🛍️</span>
+                                        <h4 class="font-bold text-gray-800">Carrito de Compras</h4>
+                                    </div>
+                                    <p class="text-gray-600 text-sm">Funcionalidad core, múltiples escenarios</p>
+                                </div>
+                                
+                                <div class="bg-white rounded-lg p-4 border-l-4 border-green-500">
+                                    <div class="flex items-center mb-2">
+                                        <span class="text-2xl mr-3">💳</span>
+                                        <h4 class="font-bold text-gray-800">Checkout</h4>
+                                    </div>
+                                    <p class="text-gray-600 text-sm">Genera ingresos, crítico para negocio</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 bg-green-200 rounded-lg p-3">
+                                <p class="text-green-800 text-sm font-medium">
+                                    ✅ ROI Alto: Ejecutar en cada deploy
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Manual -->
+                        <div class="example-card bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-200 rounded-2xl p-8">
+                            <div class="text-center mb-6">
+                                <div class="text-5xl mb-3">👤</div>
+                                <h3 class="text-2xl font-bold text-orange-800">MANUAL</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-white rounded-lg p-4 border-l-4 border-orange-500">
+                                    <div class="flex items-center mb-2">
+                                        <span class="text-2xl mr-3">🎨</span>
+                                        <h4 class="font-bold text-gray-800">Pruebas de UX</h4>
+                                    </div>
+                                    <p class="text-gray-600 text-sm">Requiere criterio humano y creatividad</p>
+                                </div>
+                                
+                                <div class="bg-white rounded-lg p-4 border-l-4 border-orange-500">
+                                    <div class="flex items-center mb-2">
+                                        <span class="text-2xl mr-3">🔍</span>
+                                        <h4 class="font-bold text-gray-800">Pruebas Exploratorias</h4>
+                                    </div>
+                                    <p class="text-gray-600 text-sm">Descubrir bugs inesperados</p>
+                                </div>
+                                
+                                <div class="bg-white rounded-lg p-4 border-l-4 border-orange-500">
+                                    <div class="flex items-center mb-2">
+                                        <span class="text-2xl mr-3">📱</span>
+                                        <h4 class="font-bold text-gray-800">Usabilidad Móvil</h4>
+                                    </div>
+                                    <p class="text-gray-600 text-sm">Experiencia táctil y visual</p>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 bg-orange-200 rounded-lg p-3">
+                                <p class="text-orange-800 text-sm font-medium">
+                                    👁️ Valor Humano: Intuición y empatía
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 bg-white bg-opacity-90 rounded-xl p-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">🎯 Estrategia Híbrida</h4>
+                        <p class="text-gray-700">
+                            La combinación de automatización para casos repetitivos y testing manual para aspectos creativos 
+                            maximiza la cobertura y eficiencia del proceso de QA.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 5: Actividad en equipos -->
+            <div class="slide" id="slide5">
+                <div class="slide-bg-5 rounded-3xl p-12 min-h-[600px] relative z-10">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center drop-shadow-lg">
+                        👥 Actividad en Equipos
+                    </h2>
+                    
+                    <div class="bg-gradient-to-br from-purple-400 to-indigo-500 rounded-2xl p-8 text-white mb-8">
+                        <div class="text-center mb-6">
+                            <div class="text-6xl mb-4">🍕</div>
+                            <h3 class="text-2xl font-bold mb-4">Caso: App de Pedidos de Comida</h3>
+                        </div>
+                        <div class="bg-white bg-opacity-20 rounded-xl p-6">
+                            <p class="text-lg text-center leading-relaxed mb-4">
+                                <strong>Tarea:</strong> Cada equipo debe seleccionar 3 pruebas para automatizar y justificar su elección
+                            </p>
+                            <div class="text-center">
+                                <span class="bg-white bg-opacity-30 px-4 py-2 rounded-full text-sm">
+                                    Consideren: frecuencia, criticidad, predictibilidad
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-8 mb-8">
+                        <!-- Funcionalidades disponibles -->
+                        <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+                            <h4 class="text-xl font-bold text-blue-800 mb-4 flex items-center">
+                                <span class="mr-2">📋</span> Funcionalidades Disponibles
+                            </h4>
+                            <div class="space-y-2 text-blue-700">
+                                <div class="flex items-center">
+                                    <span class="mr-2">🔐</span>
+                                    <span>Registro/Login de usuarios</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="mr-2">🍔</span>
+                                    <span>Búsqueda de restaurantes</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="mr-2">🛒</span>
+                                    <span>Agregar items al carrito</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="mr-2">💳</span>
+                                    <span>Proceso de pago</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="mr-2">📍</span>
+                                    <span>Tracking de pedido</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="mr-2">⭐</span>
+                                    <span>Sistema de calificaciones</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="mr-2">🎨</span>
+                                    <span>Personalización de perfil</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="mr-2">📱</span>
+                                    <span>Notificaciones push</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Formulario de respuesta -->
+                        <div class="bg-green-50 border-2 border-green-200 rounded-xl p-6">
+                            <h4 class="text-xl font-bold text-green-800 mb-4 flex items-center">
+                                <span class="mr-2">✍️</span> Respuestas del Equipo
+                            </h4>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Prueba 1 a automatizar:</label>
+                                    <input type="text" class="team-input w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ej: Login de usuarios">
+                                    <textarea class="team-input w-full mt-2 p-2 border border-gray-300 rounded-lg text-sm" rows="2" placeholder="Justificación..."></textarea>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Prueba 2 a automatizar:</label>
+                                    <input type="text" class="team-input w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ej: Proceso de pago">
+                                    <textarea class="team-input w-full mt-2 p-2 border border-gray-300 rounded-lg text-sm" rows="2" placeholder="Justificación..."></textarea>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Prueba 3 a automatizar:</label>
+                                    <input type="text" class="team-input w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ej: Agregar al carrito">
+                                    <textarea class="team-input w-full mt-2 p-2 border border-gray-300 rounded-lg text-sm" rows="2" placeholder="Justificación..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <div class="bg-gray-100 rounded-xl p-6 inline-block">
+                            <p class="text-gray-600 mb-2">Tiempo de actividad:</p>
+                            <div class="debate-timer" id="timer">15:00</div>
+                            <button onclick="startTimer()" id="timerBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg mt-4 transition-colors">
+                                Iniciar Timer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const totalSlides = 5;
+        let timerInterval;
+        let timeLeft = 15 * 60; // 15 minutes in seconds
+
+        function showSlide(index) {
+            // Hide all slides
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            // Show current slide
+            document.getElementById(`slide${index + 1}`).classList.add('active');
+            
+            // Update navigation
+            document.getElementById('currentSlide').textContent = index + 1;
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
+            
+            // Update progress bar
+            const progress = ((index + 1) / totalSlides) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            // Update button states
+            if (index === 0) {
+                document.getElementById('prevBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('prevBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            if (index === totalSlides - 1) {
+                document.getElementById('nextBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('nextBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlides - 1) {
+                currentSlideIndex++;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function startTimer() {
+            const timerBtn = document.getElementById('timerBtn');
+            const timerDisplay = document.getElementById('timer');
+            
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerBtn.textContent = 'Iniciar Timer';
+                timerBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+                timerBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                timeLeft = 15 * 60;
+                timerDisplay.textContent = '15:00';
+                return;
+            }
+            
+            timerBtn.textContent = 'Detener Timer';
+            timerBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            timerBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                
+                timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerInterval = null;
+                    timerBtn.textContent = 'Tiempo Terminado!';
+                    timerBtn.classList.add('bg-gray-600');
+                    timerDisplay.textContent = '00:00';
+                    timerDisplay.classList.add('text-red-600');
+                    
+                    // Reset after 3 seconds
+                    setTimeout(() => {
+                        timeLeft = 15 * 60;
+                        timerDisplay.textContent = '15:00';
+                        timerDisplay.classList.remove('text-red-600');
+                        timerBtn.textContent = 'Iniciar Timer';
+                        timerBtn.classList.remove('bg-gray-600', 'bg-red-600', 'hover:bg-red-700');
+                        timerBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    }, 3000);
+                }
+            }, 1000);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                previousSlide();
+            }
+        });
+
+        // Initialize
+        showSlide(0);
+
+        // Add click animations to interactive elements
+        document.querySelectorAll('.pyramid-level, .criteria-card, .example-card').forEach(element => {
+            element.addEventListener('click', () => {
+                element.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    element.style.transform = '';
+                }, 150);
+            });
+        });
+
+        // Add pyramid level details on hover
+        document.querySelectorAll('.pyramid-level').forEach(level => {
+            level.addEventListener('mouseenter', () => {
+                level.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
+            });
+            
+            level.addEventListener('mouseleave', () => {
+                level.style.boxShadow = '';
+            });
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a86786e523cdb0',t:'MTc1NzEwMzM4Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
