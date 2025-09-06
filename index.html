@@ -399,61 +399,39 @@
         .session-btn:nth-child(9) { animation-delay: 0.5s; }
         .session-btn:nth-child(10) { animation-delay: 0.55s; }
     </style>
+
 <style>
-/* QS sessions hover fix */
-.sessions-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
-.session-btn{display:block;border:1px solid #e5e7eb;border-radius:12px;padding:10px;text-decoration:none;color:inherit;background:#fff}
-.session-btn.completed{background:#ecfdf5;border-color:#10b981}
-.session-btn.current{background:#fff7ed;border-color:#f59e0b}
+@supports not (position: sticky) {
+  .qs-nav{ position: fixed; top: 0; left: 0; right: 0; }
+  body{ padding-top: 58px; }
+}
 </style>
+
 <style>
 /* QS sessions styles (fixed) */
 .sessions-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
 .session-btn{
-  display:block;
-  border:1px solid #e5e7eb;
-  border-radius:12px;
-  padding:10px;
-  text-decoration:none;
-  color:#111827;
-  background:#ffffff;
-  cursor:pointer;
-  position:relative;
+  display:block;border:1px solid #e5e7eb;border-radius:12px;padding:10px;
+  text-decoration:none;color:#111827;background:#ffffff;cursor:pointer;
   transition:transform .15s ease, box-shadow .15s ease, background-color .15s ease, border-color .15s ease;
-  pointer-events:auto !important;
 }
-.sessions-grid a.session-btn:hover,
-.session-btn:hover{
-  transform:translateY(-2px);
-  box-shadow:0 8px 18px rgba(0,0,0,.10);
-  background:#f9fafb !important;
-  border-color:#d1d5db !important;
-  text-decoration:none !important;
-  color:#111827 !important;
+.sessions-grid a.session-btn:hover,.session-btn:hover{
+  transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.10);
+  background:#f9fafb !important;border-color:#d1d5db !important;color:#111827 !important;
 }
-/* Legibility for states */
 .session-btn.completed{
-  background:linear-gradient(135deg,#10b981,#059669) !important;
-  border-color:#059669 !important;
-  color:#ffffff !important;
-  text-shadow:0 1px 2px rgba(0,0,0,.35);
+  background:linear-gradient(135deg,#10b981,#059669) !important;border-color:#059669 !important;
+  color:#ffffff !important;text-shadow:0 1px 2px rgba(0,0,0,.35);
 }
 .session-btn.completed:hover{
-  background:linear-gradient(135deg,#34d399,#10b981) !important;
-  border-color:#047857 !important;
+  background:linear-gradient(135deg,#34d399,#10b981) !important;border-color:#047857 !important;
 }
 .session-btn.current{
-  background:linear-gradient(135deg,#f59e0b,#d97706) !important;
-  border-color:#d97706 !important;
-  color:#ffffff !important;
-  text-shadow:0 1px 2px rgba(0,0,0,.35);
+  background:linear-gradient(135deg,#f59e0b,#d97706) !important;border-color:#d97706 !important;
+  color:#ffffff !important;text-shadow:0 1px 2px rgba(0,0,0,.35);
 }
 .session-btn.current:hover{
-  background:linear-gradient(135deg,#fbbf24,#f59e0b) !important;
-  border-color:#b45309 !important;
-}
-@media (prefers-reduced-motion: reduce){
-  .session-btn{transition:none}
+  background:linear-gradient(135deg,#fbbf24,#f59e0b) !important;border-color:#b45309 !important;
 }
 </style>
 </head>
@@ -501,14 +479,10 @@
 
     
 
-
-
-
 <script>
 document.addEventListener('DOMContentLoaded', async function() {
   const grid = document.getElementById('sessionsGrid');
   if (!grid) return;
-  // Clear any pre-rendered items to avoid duplicates
   grid.innerHTML = '';
   try {
     const res = await fetch('checklist.json', {cache:'no-store'});
@@ -539,6 +513,33 @@ document.addEventListener('DOMContentLoaded', async function() {
   }
 });
 </script>
+
+
+<style>
+  .qs-footer{
+    position:fixed;left:0;right:0;bottom:0;
+    background:rgba(255,255,255,.95);
+    border-top:1px solid #e5e7eb;
+    backdrop-filter:saturate(140%) blur(6px);
+    z-index:900;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial;
+  }
+  .qs-footer .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:10px;justify-content:space-between;align-items:center}
+  .qs-footer .links{display:flex;gap:10px;flex-wrap:wrap}
+  .qs-footer a{color:#1f2937;text-decoration:none;border:1px solid #e5e7eb;border-radius:999px;padding:6px 10px;background:#fff}
+  body{ padding-bottom:64px; }
+</style>
+<footer class="qs-footer">
+  <div class="wrap">
+    <div>© 2025 · Plataforma QS</div>
+    <div class="links">
+      <a href="index.html">Inicio</a>
+      <a href="checklist.html">Checklist</a>
+      <a href="status.html">Status</a>
+      <a href="materiales.html">Materiales</a>
+    </div>
+  </div>
+</footer>
 
 </body>
 </html>
