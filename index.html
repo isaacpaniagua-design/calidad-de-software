@@ -399,6 +399,13 @@
         .session-btn:nth-child(9) { animation-delay: 0.5s; }
         .session-btn:nth-child(10) { animation-delay: 0.55s; }
     </style>
+<style>
+/* QS sessions styles */
+.sessions-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:10px}
+.session-btn{display:block;border:1px solid #e5e7eb;border-radius:12px;padding:10px;text-decoration:none;color:inherit;background:#fff}
+.session-btn.completed{background:#ecfdf5;border-color:#10b981}
+.session-btn.current{background:#fff7ed;border-color:#f59e0b}
+</style>
 </head>
 <body>
     <!-- Navegación -->
@@ -415,7 +422,7 @@
                 <a class="qs-btn" href="paneldocente.html">Panel</a>
                 <a class="qs-btn" href="roadmap.html">Roadmap</a>
                 <a class="qs-btn" href="checklist.html">Checklist</a>
-                            <a class="qs-btn" href="status.html">Status</a>
+                  <a class="qs-btn" href="status.html">Status</a>
 </nav>
         </div>
     </div>
@@ -464,9 +471,104 @@
             });
         }
 
-        // Generar sesiones con checklist.json
+        // Generar sesiones con enlaces reales
+        document.addEventListener('DOMContentLoaded', function() {
+            const sessionsGrid = document.getElementById('sessionsGrid');
+            
+            // Lista de sesiones con sus enlaces reales
+            const sessions = [
+                { name: 'Sesion1', href: 'sesion1.html' },
+                { name: 'Sesion2', href: 'sesion2.html' },
+                { name: 'Sesion3', href: 'sesion3.html' },
+                { name: 'Sesion4', href: 'sesion4.html' },
+                { name: 'Sesion5', href: 'sesion5.html' },
+                { name: 'Sesion6', href: 'sesion6.html' },
+                { name: 'Sesion7', href: 'sesion7.html' },
+                { name: 'Sesion8', href: 'sesion8.html' },
+                { name: 'Sesion9', href: 'sesion9.html' },
+                { name: 'Sesion10', href: 'sesion10.html' },
+                { name: 'Sesion11', href: 'sesion11.html' },
+                { name: 'Sesion12', href: 'sesion12.html' },
+                { name: 'Sesion13', href: 'sesion13.html' },
+                { name: 'Sesion14', href: 'sesion14.html' },
+                { name: 'Sesion15', href: 'sesion15.html' },
+                { name: 'Sesion16', href: 'sesion16.html' },
+                { name: 'Sesion17', href: 'sesion17.html' },
+                { name: 'Sesion18', href: 'sesion18.html' },
+                { name: 'Sesion19', href: 'sesion19.html' },
+                { name: 'Sesion20', href: 'sesion20.html' },
+                { name: 'Sesion21', href: 'sesion21.html' },
+                { name: 'Sesion22', href: 'sesion22.html' },
+                { name: 'Sesion23', href: 'sesion23.html' },
+                { name: 'Sesion24', href: 'sesion24.html' },
+                { name: 'Sesion25', href: 'sesion25.html' },
+                { name: 'Sesion26', href: 'sesion26.html' },
+                { name: 'Sesion27', href: 'sesion27.html' },
+                { name: 'Sesion28', href: 'sesion28.html' },
+                { name: 'Sesion29', href: 'sesion29.html' },
+                { name: 'Sesion30', href: 'sesion30.html' },
+                { name: 'Sesion31', href: 'sesion31.html' },
+                { name: 'Sesion32', href: 'sesion32.html' },
+                { name: 'Sesion33', href: 'sesion33.html' },
+                { name: 'Sesion34', href: 'sesion34.html' },
+                { name: 'Sesion35', href: 'sesion35.html' },
+                { name: 'Sesion36', href: 'sesion36.html' },
+                { name: 'Sesion37', href: 'sesion37.html' },
+                { name: 'Sesion38', href: 'sesion38.html' },
+                { name: 'Sesion39', href: 'sesion39.html' },
+                { name: 'Sesion40', href: 'sesion40.html' },
+                { name: 'Sesion41', href: 'sesion41.html' },
+                { name: 'Sesion42', href: 'sesion42.html' },
+                { name: 'Sesion43', href: 'sesion43.html' },
+                { name: 'Sesion44', href: 'sesion44.html' },
+                { name: 'Sesion45', href: 'sesion45.html' }
+            ];
+
+            const currentSession = 4; // Sesión actual
+            const completedSessions = [1, 2, 3]; // Solo sesiones 1-3 completadas
+
+            sessions.forEach((session, index) => {
+                const sessionBtn = document.createElement('a');
+                sessionBtn.href = session.href;
+                sessionBtn.className = 'session-btn';
+                sessionBtn.textContent = session.name;
+                
+                const sessionNumber = index + 1;
+                
+                // Marcar sesiones completadas
+                if (completedSessions.includes(sessionNumber)) {
+                    sessionBtn.classList.add('completed');
+                }
+                
+                // Marcar sesión actual
+                if (sessionNumber === currentSession) {
+                    sessionBtn.classList.add('current');
+                }
+                
+                // Agregar evento click
+                sessionBtn.addEventListener('click', function(e) {
+                    console.log(`Navegando a ${session.name}`);
+                });
+                
+                sessionsGrid.appendChild(sessionBtn);
+            });
+
+            // Efecto de parallax suave en scroll
+            window.addEventListener('scroll', function() {
+                const scrolled = window.pageYOffset;
+                const cards = document.querySelectorAll('.card');
+                cards.forEach((card, index) => {
+                    const speed = 0.05 * (index + 1);
+                    card.style.transform = `translateY(${scrolled * speed}px)`;
+                });
+            });
+        });
+    </script>
+
+<script>
 document.addEventListener('DOMContentLoaded', async function() {
-  const sessionsGrid = document.getElementById('sessionsGrid');
+  const grid = document.getElementById('sessionsGrid');
+  if (!grid) return;
   try {
     const res = await fetch('checklist.json');
     const data = await res.json();
@@ -480,41 +582,22 @@ document.addEventListener('DOMContentLoaded', async function() {
       const a = document.createElement('a');
       a.href = 'sesion'+i+'.html';
       a.className = 'session-btn';
-      a.textContent = 'Sesion'+i;
+      a.textContent = 'Sesión ' + i;
       if (estados[i] === 'REAL') a.classList.add('completed');
       if (i === current && estados[i] !== 'REAL') a.classList.add('current');
-      a.addEventListener('click', ()=>console.log('Navegando a Sesion'+i));
-      sessionsGrid.appendChild(a);
+      grid.appendChild(a);
     }
   } catch(e) {
-    console.error('checklist.json error, fallback estático', e);
     for (let i=1;i<=45;i++){
       const a = document.createElement('a');
       a.href = 'sesion'+i+'.html';
       a.className = 'session-btn';
-      a.textContent = 'Sesion'+i;
-      sessionsGrid.appendChild(a);
+      a.textContent = 'Sesión ' + i;
+      grid.appendChild(a);
     }
   }
-  window.addEventListener('scroll', function() {
-    const scrolled = window.pageYOffset;
-    const cards = document.querySelectorAll('.card');
-    cards.forEach((card, index) => {
-      const speed = 0.05 * (index + 1);
-      card.style.transform = `translateY(${scrolled * speed}px)`;
-    });
-  });
 });
+</script>
 
-            window.addEventListener('scroll', function() {
-                const scrolled = window.pageYOffset;
-                const cards = document.querySelectorAll('.card');
-                cards.forEach((card, index) => {
-                    const speed = 0.05 * (index + 1);
-                    card.style.transform = `translateY(${scrolled * speed}px)`;
-                });
-            });
-        });
-    </script>
 </body>
 </html>
