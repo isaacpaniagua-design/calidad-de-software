@@ -3,504 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sesión 9 - Cuatro Ojos Ven Más que Dos: Revisiones Técnicas Formales</title>
+    <title>Sesión 9: Modelos y Estándares de Calidad (Introducción a ISO)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
+            font-family: 'Inter', sans-serif;
         }
-
-        .slide-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 3rem;
-            max-width: 900px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-            position: relative;
-            min-height: 600px;
-            display: flex;
-            flex-direction: column;
+        
+        .slide-transition {
+            transition: all 0.5s ease-in-out;
         }
-
-        .slide {
-            display: none;
-            flex: 1;
-            animation: fadeIn 0.5s ease-in-out;
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
         }
-
-        .slide.active {
-            display: flex;
-            flex-direction: column;
+        
+        .card-hover {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
+        }
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        .slide h1 {
-            color: #2d3748;
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
         }
-
-        .slide h2 {
-            color: #2d3748;
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
-
-        .slide h3 {
-            color: #4a5568;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
+        
+        .navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
         }
-
-        .subtitle {
-            font-size: 1.3rem;
-            color: #718096;
-            text-align: center;
-            font-style: italic;
-            margin-bottom: 2rem;
-        }
-
-        .quote-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        
+        .nav-button {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
             color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            text-align: center;
-            margin: 2rem 0;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
         }
-
-        .quote-box h4 {
-            color: white;
-            font-size: 1.8rem;
+        
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(30, 64, 175, 0.4);
+        }
+        
+        .nav-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .slide-counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #374151;
+            z-index: 1000;
+        }
+        
+        .principle-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
             margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
-        .quote-box p {
-            font-size: 1.2rem;
-            line-height: 1.6;
+        
+        .principle-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
-
-        .definition-box {
-            background: #e6fffa;
-            padding: 2rem;
-            border-radius: 15px;
-            border-left: 5px solid #38b2ac;
-            margin: 2rem 0;
-        }
-
-        .definition-box h4 {
-            color: #2d3748;
-            margin-bottom: 1.5rem;
-            font-size: 1.4rem;
-        }
-
-        .definition-box ul {
-            color: #4a5568;
-            line-height: 1.8;
-            font-size: 1.1rem;
-        }
-
-        .definition-box li {
-            margin-bottom: 1rem;
-            padding-left: 0.5rem;
-        }
-
-        .definition-box strong {
-            color: #2d3748;
-        }
-
-        .types-container {
+        
+        .pdca-cycle {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 2rem;
             margin: 2rem 0;
         }
-
-        .type-card {
+        
+        @media (max-width: 768px) {
+            .pdca-cycle {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .pdca-step {
+            background: white;
+            border-radius: 1.5rem;
             padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+            border-left: 6px solid;
         }
-
-        .walkthrough-card {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            color: white;
+        
+        .pdca-step:hover {
+            transform: translateY(-5px);
         }
-
-        .inspection-card {
-            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
-            color: white;
-        }
-
-        .type-card h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            font-size: 1.4rem;
-        }
-
-        .type-card h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .type-card ul {
-            margin-left: 1rem;
-            line-height: 1.6;
-        }
-
-        .type-card li {
-            margin-bottom: 0.8rem;
-        }
-
-        .roles-container {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .roles-container h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .roles-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .role-card {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .role-card h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .role-card p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.5;
-        }
-
-        .process-container {
-            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .process-container h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .process-steps {
-            display: grid;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .process-step {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.2rem;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .step-number {
-            background: rgba(255, 255, 255, 0.3);
-            color: white;
-            width: 40px;
-            height: 40px;
+        
+        .iso-logo {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0 auto 2rem;
+            color: white;
+            font-size: 2rem;
             font-weight: bold;
-            font-size: 1.2rem;
         }
-
-        .step-content h5 {
-            color: white;
-            margin-bottom: 0.5rem;
-            font-size: 1.1rem;
-        }
-
-        .step-content p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.4;
-            font-size: 0.95rem;
-        }
-
-        .benefits-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-
-        .benefit-card {
-            background: #f0fff4;
+        
+        .process-area-card {
+            background: white;
+            border-radius: 1rem;
             padding: 1.5rem;
-            border-radius: 12px;
-            border-left: 4px solid #48bb78;
-            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.1);
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
-        .benefit-card h5 {
-            color: #2f855a;
-            margin-bottom: 0.8rem;
-            font-size: 1.2rem;
+        
+        .process-area-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
-
-        .benefit-card p {
-            color: #4a5568;
-            line-height: 1.6;
-        }
-
-        .activity-container {
-            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+        
+        .lab-card {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
             color: white;
+            border-radius: 1.5rem;
             padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
+            margin: 1rem 0;
         }
-
-        .activity-container h4 {
-            color: white;
-            margin-bottom: 1rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .activity-setup {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin: 1.5rem 0;
-            backdrop-filter: blur(10px);
-        }
-
-        .activity-setup h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .activity-roles {
-            display: grid;
-            gap: 1rem;
-            margin: 1.5rem 0;
-        }
-
-        .activity-role {
-            background: rgba(255, 255, 255, 0.15);
+        
+        .checklist-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
             padding: 1rem;
-            border-radius: 8px;
+            margin: 0.5rem 0;
             backdrop-filter: blur(5px);
         }
-
-        .activity-role h6 {
-            color: white;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .activity-role p {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-
-        .discussion-box {
-            background: rgba(255, 255, 255, 0.3);
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: center;
-            margin-top: 1.5rem;
-            backdrop-filter: blur(10px);
-        }
-
-        .discussion-box h5 {
-            color: white;
-            margin-bottom: 0.8rem;
-            font-size: 1.2rem;
-        }
-
-        .discussion-box p {
-            color: white;
-            font-weight: 500;
-        }
-
-        .navigation {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 2px solid #e2e8f0;
-        }
-
-        .slide-counter {
-            color: #718096;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .nav-btn {
-            padding: 0.8rem 1.5rem;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .nav-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .nav-btn:disabled {
-            background: #cbd5e0;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .source-note {
-            background: #fff5f5;
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid #f56565;
-            margin-top: 1.5rem;
-            font-style: italic;
-            color: #4a5568;
-        }
-
-        .highlight-box {
-            background: #fffaf0;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border: 2px dashed #ed8936;
-            text-align: center;
-            margin: 2rem 0;
-        }
-
-        .highlight-box p {
-            color: #2d3748;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .stats-box {
-            background: #fff5f5;
-            padding: 2rem;
-            border-radius: 15px;
-            border-left: 5px solid #f56565;
-            margin: 2rem 0;
-            text-align: center;
-        }
-
-        .stats-box h4 {
-            color: #c53030;
-            margin-bottom: 1rem;
-            font-size: 1.4rem;
-        }
-
-        .stats-box p {
-            color: #4a5568;
-            font-size: 1.1rem;
-            line-height: 1.6;
-        }
-
-        @media (max-width: 768px) {
-            .slide-container {
-                padding: 2rem;
-                margin: 1rem;
-            }
-            
-            .slide h1 {
-                font-size: 2rem;
-            }
-            
-            .slide h2 {
-                font-size: 1.5rem;
-            }
-            
-            .types-container, .roles-grid, .benefits-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            
-            .nav-buttons {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-        }
     </style>
-</head>
-<body>
 
 <style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+/* Fondo como index */
+body{
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height:1.6;
+  color:#333;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height:100vh;
+  padding-top:80px; /* nav fijo */
+}
+
+/* NAV Plataforma QS (fijo) */
+.qs-nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:saturate(140%) blur(20px);
+       background:rgba(255,255,255,.95);border-bottom:1px solid rgba(255,255,255,.2);
+       box-shadow:0 8px 32px rgba(0,0,0,.10)}
+.qs-nav .wrap{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;gap:20px;align-items:center;justify-content:space-between}
+.qs-brand{display:flex;gap:15px;align-items:center;color:#1f2937;font-weight:800;font-size:1.3rem;text-decoration:none;position:relative;padding:8px 16px;border-radius:20px}
+.qs-brand::before{content:"🎓";font-size:1.6rem}
+.qs-tabs{display:flex;gap:12px;flex-wrap:wrap;background:rgba(255,255,255,.3);padding:8px;border-radius:30px;backdrop-filter:blur(10px)}
+.qs-btn{border:0;padding:12px 20px;border-radius:25px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;font-weight:600;font-size:.9rem;
+       transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(10px);border:2px solid transparent;position:relative;overflow:hidden}
+.qs-btn::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);transition:all .4s ease;z-index:-1}
+.qs-btn:hover{color:#fff;transform:translateY(-3px);box-shadow:0 8px 25px rgba(102,126,234,.4);border-color:rgba(102,126,234,.3)}
+.qs-btn:hover::before{left:0}
+.qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none;box-shadow:0 6px 20px rgba(102,126,234,.5);transform:translateY(-2px)}
+.qs-btn[aria-current="page"]::before{left:0}
+
+/* Footer como index */
+.footer{
+  margin-top:60px;
+  padding:30px 20px;
+  text-align:center;
+  background:rgba(255, 255, 255, 0.1);
+  backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255, 255, 255, 0.2);
+}
+.footer-content{
+  max-width:1200px;
+  margin:0 auto;
+  color:rgba(255,255,255,0.8);
+  font-size:0.95rem;
+  transition:all 0.3s ease;
+  cursor:default;
+}
+.footer-content:hover{ color:#fff; transform:translateY(-2px); }
+
+/* Slide counter más pequeño */
+.slide-counter{
+  font-size:12px !important;
+  padding:6px 10px !important;
+  border-radius:14px !important;
+  opacity:0.9;
+}
 </style>
+
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- NAV Plataforma QS -->
 <div class="qs-nav">
   <div class="wrap">
     <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
@@ -511,342 +256,1056 @@
       <a class="qs-btn" href="Foro.html">Foro</a>
       <a class="qs-btn" href="paneldocente.html">Panel</a>
       <a class="qs-btn" href="roadmap.html">Roadmap</a>
-          <a class="qs-btn" href="checklist.html">Checklist</a>
-\1
+      <a class="qs-btn" href="checklist.html">Checklist</a>
+      <a class="qs-btn" href="status.html">Status</a>
+    </nav>
   </div>
 </div>
-<script>
-(function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
-  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
-  });
-})();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
-</script>
 
+    <!-- Slide Counter -->
+    <div class="slide-counter">
+        <span id="current-slide">1</span> / <span id="total-slides">6</span>
+    </div>
 
-    <div class="slide-container">
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8 pb-32">
         <!-- Slide 1: Título -->
-        <div class="slide active">
-            <h1>👀 Cuatro Ojos Ven Más que Dos</h1>
-            <div class="subtitle">Revisiones Técnicas Formales</div>
-            
-            <div class="quote-box">
-                <h4>🔍 "Defectos detectados temprano = costos reducidos"</h4>
-                <p>La colaboración y revisión entre pares es la clave para software de calidad superior</p>
-            </div>
-            
-            <div class="highlight-box">
-                <p>🎯 <strong>Objetivo:</strong> Dominar las técnicas de revisión para detectar defectos antes de las pruebas</p>
-            </div>
-        </div>
-
-        <!-- Slide 2: ¿Qué son las Revisiones Técnicas? -->
-        <div class="slide">
-            <h2>🔍 ¿Qué son las Revisiones Técnicas?</h2>
-            
-            <div class="definition-box">
-                <h4>📋 Definición Completa:</h4>
-                <ul>
-                    <li><strong>Actividades formales e informales</strong> para evaluar artefactos de software</li>
-                    <li><strong>Artefactos incluyen:</strong> requisitos, diseño, código, casos de prueba, documentación</li>
-                    <li><strong>Objetivo principal:</strong> encontrar defectos, NO corregirlos en la reunión</li>
-                    <li><strong>Enfoque colaborativo:</strong> múltiples perspectivas mejoran la detección</li>
-                </ul>
-            </div>
-            
-            <div class="stats-box">
-                <h4>📊 Impacto Comprobado</h4>
-                <p><strong>Beneficio clave:</strong> Reduce costos de retrabajo hasta en un <strong>80%</strong> y mejora significativamente la calidad del producto final</p>
-            </div>
-            
-            <div class="highlight-box">
-                <p>💡 <strong>Principio:</strong> Es más barato encontrar errores revisando que probando</p>
-            </div>
-            
-            <div class="source-note">
-                📚 <strong>Fuente:</strong> Pressman, Capítulo 15
-            </div>
-        </div>
-
-        <!-- Slide 3: Tipos de Revisiones -->
-        <div class="slide">
-            <h2>📝 Tipos de Revisiones</h2>
-            
-            <div class="types-container">
-                <div class="type-card walkthrough-card">
-                    <h4>🚶 Walkthroughs (Recorridos)</h4>
+        <div id="slide1" class="slide-transition fade-in">
+            <div class="gradient-bg rounded-2xl p-12 text-white text-center mb-8 card-hover">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-6xl mb-6">🌍</div>
+                    <h1 class="text-5xl font-bold mb-6 pulse-animation">El Lenguaje Universal de la Calidad</h1>
+                    <h2 class="text-3xl font-semibold mb-8 opacity-90">Introducción a ISO</h2>
+                    <p class="text-xl mb-8 opacity-80">Más allá de CMMI, un enfoque global para la gestión</p>
                     
-                    <h5>Características:</h5>
-                    <ul>
-                        <li>Informales y flexibles</li>
-                        <li>Liderados por el autor</li>
-                        <li>Enfoque educativo</li>
-                        <li>Ambiente relajado</li>
-                    </ul>
-                    
-                    <h5>Propósito:</h5>
-                    <ul>
-                        <li>Aprendizaje del equipo</li>
-                        <li>Retroalimentación rápida</li>
-                        <li>Transferencia de conocimiento</li>
-                    </ul>
-                </div>
-                
-                <div class="type-card inspection-card">
-                    <h4>🔍 Inspecciones</h4>
-                    
-                    <h5>Características:</h5>
-                    <ul>
-                        <li>Formales y estructuradas</li>
-                        <li>Dirigidas por moderador</li>
-                        <li>Proceso riguroso</li>
-                        <li>Documentación obligatoria</li>
-                    </ul>
-                    
-                    <h5>Herramientas:</h5>
-                    <ul>
-                        <li>Listas de verificación</li>
-                        <li>Reportes documentados</li>
-                        <li>Métricas de defectos</li>
-                    </ul>
-                </div>
-            </div>
-            
-            <div class="highlight-box">
-                <p>⚖️ <strong>Elección:</strong> Walkthroughs para aprendizaje, Inspecciones para calidad crítica</p>
-            </div>
-            
-            <div class="source-note">
-                📚 <strong>Fuente:</strong> QA Lovers, Capítulo 2
-            </div>
-        </div>
-
-        <!-- Slide 4: Roles en una Inspección -->
-        <div class="slide">
-            <h2>👥 Roles en una Inspección</h2>
-            
-            <div class="roles-container">
-                <h4>🎭 Equipo de Inspección</h4>
-                
-                <div class="roles-grid">
-                    <div class="role-card">
-                        <h5>🎯 Moderador</h5>
-                        <p>Guía la reunión, asegura que se siga el proceso establecido, mantiene el enfoque en encontrar defectos (no solucionarlos)</p>
-                    </div>
-                    
-                    <div class="role-card">
-                        <h5>✍️ Autor</h5>
-                        <p>Presenta el producto revisado, explica decisiones de diseño, responde preguntas técnicas sin defenderse</p>
-                    </div>
-                    
-                    <div class="role-card">
-                        <h5>🔍 Revisores</h5>
-                        <p>Analizan el artefacto desde diferentes perspectivas, detectan defectos, hacen preguntas constructivas</p>
-                    </div>
-                    
-                    <div class="role-card">
-                        <h5>📝 Secretario</h5>
-                        <p>Documenta todos los hallazgos, acuerdos y acciones de seguimiento de manera clara y organizada</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="highlight-box">
-                <p>🤝 <strong>Clave del Éxito:</strong> Separar roles evita conflictos y mejora la efectividad</p>
-            </div>
-        </div>
-
-        <!-- Slide 5: Proceso de una Inspección (según Fagan) -->
-        <div class="slide">
-            <h2>⚙️ Proceso de Inspección (Fagan)</h2>
-            
-            <div class="process-container">
-                <h4>🔄 Metodología Fagan - 5 Fases</h4>
-                
-                <div class="process-steps">
-                    <div class="process-step">
-                        <div class="step-number">1</div>
-                        <div class="step-content">
-                            <h5>📋 Planeación</h5>
-                            <p>Seleccionar artefacto a revisar, asignar roles, definir criterios de entrada y salida</p>
+                    <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 mt-12">
+                        <div class="flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <h3 class="text-xl font-semibold">Fuentes Principales</h3>
                         </div>
-                    </div>
-                    
-                    <div class="process-step">
-                        <div class="step-number">2</div>
-                        <div class="step-content">
-                            <h5>📖 Preparación Individual</h5>
-                            <p>Cada revisor estudia el documento independientemente, usando listas de verificación</p>
-                        </div>
-                    </div>
-                    
-                    <div class="process-step">
-                        <div class="step-number">3</div>
-                        <div class="step-content">
-                            <h5>🤝 Reunión de Inspección</h5>
-                            <p>Se presentan y listan todos los defectos encontrados, sin intentar solucionarlos</p>
-                        </div>
-                    </div>
-                    
-                    <div class="process-step">
-                        <div class="step-number">4</div>
-                        <div class="step-content">
-                            <h5>🔧 Corrección</h5>
-                            <p>El autor corrige los defectos identificados según las prioridades establecidas</p>
-                        </div>
-                    </div>
-                    
-                    <div class="process-step">
-                        <div class="step-number">5</div>
-                        <div class="step-content">
-                            <h5>✅ Seguimiento</h5>
-                            <p>Verificación de que todos los cambios se aplicaron correctamente y completamente</p>
+                        <div class="text-lg opacity-90 space-y-2">
+                            <p>Cantú Delgado - Desarrollo de una cultura de calidad</p>
+                            <p>ISO/IEC 25010</p>
+                            <p>Pressman - Ingeniería de Software</p>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="highlight-box">
-                <p>⏱️ <strong>Eficiencia:</strong> Proceso estructurado que maximiza la detección de defectos</p>
+            <!-- Notas para el docente -->
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
+                <div class="flex items-start">
+                    <svg class="w-6 h-6 text-blue-400 mr-3 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <h4 class="text-lg font-semibold text-blue-800 mb-2">Notas para el docente:</h4>
+                        <p class="text-blue-700 leading-relaxed">
+                            "Hemos visto CMMI, que se enfoca específicamente en procesos de desarrollo de software. Ahora vamos a explorar ISO, que tiene un enfoque más amplio de gestión organizacional y es reconocido mundialmente en todas las industrias."
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Slide 6: Beneficios de las Revisiones -->
-        <div class="slide">
-            <h2>🎯 Beneficios de las Revisiones</h2>
-            
-            <div class="benefits-grid">
-                <div class="benefit-card">
-                    <h5>🎯 Alta Efectividad</h5>
-                    <p>Detectan hasta <strong>65% de defectos</strong> antes de la fase de pruebas, reduciendo significativamente el costo de corrección</p>
+        <!-- Slide 2: ¿Qué es ISO y Por Qué Debería Importarnos? -->
+        <div id="slide2" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="iso-logo">ISO</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">¿Qué es ISO y Por Qué Debería Importarnos?</h2>
+                    <h3 class="text-2xl font-semibold text-blue-600">El Estándar de los Estándares 🌍</h3>
                 </div>
                 
-                <div class="benefit-card">
-                    <h5>🧠 Aprendizaje Colectivo</h5>
-                    <p>Fomentan la <strong>transferencia de conocimiento</strong> entre miembros del equipo y mejoran las habilidades técnicas</p>
+                <!-- ¿Qué es ISO? -->
+                <div class="principle-card" style="border-left-color: #3b82f6;" class="mb-8">
+                    <div class="flex items-start mb-6">
+                        <div class="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-blue-800 mb-4">¿Qué es ISO?</h4>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-blue-50 rounded-lg p-4">
+                                    <p class="text-blue-700 text-lg leading-relaxed">
+                                        Es la <strong>Organización Internacional de Estandarización</strong> (International Organization for Standardization).
+                                    </p>
+                                </div>
+                                
+                                <div class="bg-blue-100 rounded-lg p-4">
+                                    <p class="text-blue-800 text-lg leading-relaxed">
+                                        Su misión es desarrollar y publicar estándares internacionales para casi todas las industrias, desde la fabricación de un tornillo hasta la gestión de la seguridad de la información.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="benefit-card">
-                    <h5>📚 Mejor Documentación</h5>
-                    <p>Mejoran la <strong>calidad y consistencia</strong> de la documentación, facilitando el mantenimiento futuro</p>
+                <!-- ¿Por qué es importante? -->
+                <div class="mb-8">
+                    <h3 class="text-3xl font-bold text-gray-800 mb-6 text-center">¿Por qué es importante para nosotros?</h3>
+                    
+                    <div class="space-y-6">
+                        <!-- Confianza del Cliente -->
+                        <div class="principle-card" style="border-left-color: #10b981;">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-green-800 mb-2">Confianza del Cliente</h4>
+                                    <p class="text-green-700 text-lg">Una certificación ISO es un sello de confianza reconocido mundialmente. Le dice a tus clientes: <em>"Operamos con un estándar de calidad globalmente aceptado"</em>.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Lenguaje Común -->
+                        <div class="principle-card" style="border-left-color: #f59e0b;">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-amber-800 mb-2">Lenguaje Común</h4>
+                                    <p class="text-amber-700 text-lg">Permite que empresas de diferentes países y culturas trabajen juntas bajo un mismo marco de referencia de calidad.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Enfoque en el Proceso -->
+                        <div class="principle-card" style="border-left-color: #8b5cf6;">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-purple-800 mb-2">Enfoque en el Proceso</h4>
+                                    <p class="text-purple-700 text-lg">Al igual que CMMI, se centra en mejorar los procesos para mejorar los resultados, pero desde una perspectiva de gestión empresarial más amplia.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="benefit-card">
-                    <h5>😊 Confianza del Cliente</h5>
-                    <p>Aumentan la <strong>confianza del cliente</strong> al demostrar un proceso riguroso de control de calidad</p>
+                <!-- Diferencia Clave -->
+                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">🏢 Diferencia Clave</h3>
+                            <p class="text-lg leading-relaxed opacity-95">
+                                <strong>ISO no se enfoca solo en software</strong>, sino en la calidad de la organización completa.
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="stats-box">
-                <h4>📈 ROI Comprobado</h4>
-                <p>Las organizaciones que implementan revisiones sistemáticas reportan <strong>reducción del 40-60%</strong> en defectos de producción y <strong>30% menos tiempo</strong> en debugging</p>
-            </div>
-            
-            <div class="highlight-box">
-                <p>💰 <strong>Costo-Beneficio:</strong> $1 invertido en revisiones ahorra $10 en correcciones posteriores</p>
             </div>
         </div>
 
-        <!-- Slide 7: Actividad - Mini Walkthrough -->
-        <div class="slide">
-            <h2>🎮 Actividad: Mini Walkthrough</h2>
-            <div class="subtitle">Práctica Hands-On (20 min)</div>
-            
-            <div class="activity-container">
-                <h4>📋 Dinámica de Revisión en Vivo</h4>
-                
-                <div class="activity-setup">
-                    <h5>🎯 Setup de la Actividad</h5>
-                    <p>El docente entrega un <strong>fragmento de código o documento de requisitos</strong> con defectos intencionales para que los equipos practiquen el proceso de revisión</p>
+        <!-- Slide 3: ISO 9001: La Piedra Angular -->
+        <div id="slide3" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🧬</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">ISO 9001: La Piedra Angular de la Gestión de Calidad</h2>
+                    <h3 class="text-2xl font-semibold text-blue-600">El ADN de una Organización de Calidad</h3>
                 </div>
                 
-                <div class="activity-roles">
-                    <div class="activity-role">
-                        <h6>✍️ Autor (1 persona)</h6>
-                        <p>Explica el artefacto línea por línea, presenta las decisiones de diseño y responde preguntas</p>
+                <!-- Introducción a ISO 9001 -->
+                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-8 text-white mb-8">
+                    <div class="flex items-start">
+                        <svg class="w-12 h-12 mr-6 mt-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <p class="text-lg leading-relaxed opacity-95 mb-4">
+                                <strong>ISO 9001</strong> es la norma más famosa de la familia ISO. No es un estándar de producto, sino un estándar de <strong>Sistema de Gestión de la Calidad (SGC)</strong>.
+                            </p>
+                            <p class="text-lg leading-relaxed opacity-95">
+                                Define los criterios para que una organización demuestre su capacidad para proporcionar consistentemente productos y servicios que satisfagan los requisitos del cliente y los reglamentarios.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Los 7 Principios Fundamentales -->
+                <div class="mb-8">
+                    <h3 class="text-3xl font-bold text-gray-800 mb-6 text-center">Sus 7 Principios Fundamentales:</h3>
+                    
+                    <div class="space-y-4">
+                        <!-- Principio 1 -->
+                        <div class="principle-card" style="border-left-color: #ef4444;">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">1</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-red-800 mb-2">Enfoque al Cliente</h4>
+                                    <p class="text-red-700">El objetivo principal es cumplir y exceder las expectativas del cliente.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Principio 2 -->
+                        <div class="principle-card" style="border-left-color: #f59e0b;">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">2</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-amber-800 mb-2">Liderazgo</h4>
+                                    <p class="text-amber-700">La alta dirección debe estar comprometida y liderar con el ejemplo.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Principio 3 -->
+                        <div class="principle-card" style="border-left-color: #10b981;">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">3</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-green-800 mb-2">Compromiso de las Personas</h4>
+                                    <p class="text-green-700">El personal, en todos los niveles, es la esencia de la organización.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Principio 4 -->
+                        <div class="principle-card" style="border-left-color: #3b82f6;">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">4</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-blue-800 mb-2">Enfoque a Procesos</h4>
+                                    <p class="text-blue-700">Los resultados se alcanzan más eficientemente cuando las actividades se gestionan como procesos interrelacionados.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Principio 5 -->
+                        <div class="principle-card" style="border-left-color: #8b5cf6;">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">5</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-purple-800 mb-2">Mejora</h4>
+                                    <p class="text-purple-700">La mejora continua debe ser un objetivo permanente de la organización.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Principio 6 -->
+                        <div class="principle-card" style="border-left-color: #06b6d4;">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-cyan-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">6</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-cyan-800 mb-2">Toma de Decisiones Basada en la Evidencia</h4>
+                                    <p class="text-cyan-700">Las decisiones se basan en el análisis de datos e información.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Principio 7 -->
+                        <div class="principle-card" style="border-left-color: #ec4899;">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-pink-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">7</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-pink-800 mb-2">Gestión de las Relaciones</h4>
+                                    <p class="text-pink-700">Gestionar las relaciones con las partes interesadas (proveedores, socios) es clave para el éxito sostenido.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: El Motor de ISO 9001: El Ciclo PHVA (PDCA) -->
+        <div id="slide4" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🔄</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">El Motor de ISO 9001: El Ciclo PHVA (PDCA)</h2>
+                    <h3 class="text-2xl font-semibold text-blue-600">Planificar - Hacer - Verificar - Actuar</h3>
+                    <p class="text-lg text-gray-600 mt-4">El estándar ISO 9001 está estructurado en torno al ciclo de mejora continua conocido como PDCA (por sus siglas en inglés) o PHVA en español.</p>
+                </div>
+                
+                <!-- Ciclo PHVA Visual -->
+                <div class="pdca-cycle mb-8">
+                    <!-- Planificar -->
+                    <div class="pdca-step" style="border-left-color: #3b82f6;">
+                        <div class="flex items-center mb-4">
+                            <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mr-4">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-blue-800">Planificar (Plan)</h3>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <h4 class="font-bold text-blue-800 mb-2">¿Qué es?</h4>
+                                <p class="text-blue-700">Establecer los objetivos del sistema y sus procesos. Definir los recursos necesarios para conseguir los resultados de acuerdo con los requisitos del cliente y las políticas de la organización.</p>
+                            </div>
+                            
+                            <div class="bg-blue-100 rounded-lg p-4">
+                                <h4 class="font-bold text-blue-800 mb-2">Ejemplo en Software:</h4>
+                                <p class="text-blue-700">Planificar el sprint, definir las historias de usuario y estimar el esfuerzo.</p>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="activity-role">
-                        <h6>🔍 Revisor (1 persona)</h6>
-                        <p>Busca activamente defectos, inconsistencias, problemas de lógica o violaciones de estándares</p>
+                    <!-- Hacer -->
+                    <div class="pdca-step" style="border-left-color: #10b981;">
+                        <div class="flex items-center mb-4">
+                            <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mr-4">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-green-800">Hacer (Do)</h3>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <h4 class="font-bold text-green-800 mb-2">¿Qué es?</h4>
+                                <p class="text-green-700">Implementar lo que se ha planificado.</p>
+                            </div>
+                            
+                            <div class="bg-green-100 rounded-lg p-4">
+                                <h4 class="font-bold text-green-800 mb-2">Ejemplo en Software:</h4>
+                                <p class="text-green-700">Desarrollar el código, realizar las pruebas unitarias.</p>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="activity-role">
-                        <h6>📝 Secretario (1 persona)</h6>
-                        <p>Anota todos los hallazgos, clasifica los defectos por severidad y documenta acuerdos</p>
+                    <!-- Verificar -->
+                    <div class="pdca-step" style="border-left-color: #f59e0b;">
+                        <div class="flex items-center mb-4">
+                            <div class="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center mr-4">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-amber-800">Verificar (Check)</h3>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-amber-50 rounded-lg p-4">
+                                <h4 class="font-bold text-amber-800 mb-2">¿Qué es?</h4>
+                                <p class="text-amber-700">Realizar el seguimiento y la medición de los procesos y los productos resultantes contra las políticas, los objetivos y los requisitos, e informar sobre los resultados.</p>
+                            </div>
+                            
+                            <div class="bg-amber-100 rounded-lg p-4">
+                                <h4 class="font-bold text-amber-800 mb-2">Ejemplo en Software:</h4>
+                                <p class="text-amber-700">Realizar las pruebas de QA, medir la velocidad del equipo, revisar los defectos encontrados.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Actuar -->
+                    <div class="pdca-step" style="border-left-color: #8b5cf6;">
+                        <div class="flex items-center mb-4">
+                            <div class="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mr-4">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-purple-800">Actuar (Act)</h3>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-purple-50 rounded-lg p-4">
+                                <h4 class="font-bold text-purple-800 mb-2">¿Qué es?</h4>
+                                <p class="text-purple-700">Tomar acciones para mejorar el desempeño cuando sea necesario. Aprender de los resultados para mejorar el ciclo siguiente.</p>
+                            </div>
+                            
+                            <div class="bg-purple-100 rounded-lg p-4">
+                                <h4 class="font-bold text-purple-800 mb-2">Ejemplo en Software:</h4>
+                                <p class="text-purple-700">Realizar una retrospectiva para analizar qué salió bien y qué mal, y definir acciones de mejora para el próximo sprint.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                
-                <div class="discussion-box">
-                    <h5>💬 Discusión Plenaria</h5>
-                    <p><strong>¿Qué defectos encontraron? ¿Fue útil la revisión? ¿Qué aprendieron del proceso?</strong></p>
-                </div>
-            </div>
-            
-            <div class="highlight-box">
-                <p>🎓 <strong>Objetivo:</strong> Experimentar los beneficios de la revisión colaborativa en tiempo real</p>
             </div>
         </div>
 
-        <!-- Navigation -->
-        <div class="navigation">
-            <div class="slide-counter">
-                Diapositiva <span id="currentSlide">1</span> de <span id="totalSlides">7</span>
-            </div>
-            <div class="nav-buttons">
-                <button class="nav-btn" onclick="previousSlide()" id="prevBtn" disabled>← Anterior</button>
-                <button class="nav-btn" onclick="nextSlide()" id="nextBtn">Siguiente →</button>
+        <!-- Slide 5: Áreas de Proceso Clave de Nivel 3 (Parte 2) -->
+        <div id="slide5" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🔍</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Áreas de Proceso Clave de Nivel 3 (Parte 2)</h2>
+                    <h3 class="text-2xl font-semibold text-green-600">Asegurando la Calidad y la Mejora Continua</h3>
+                </div>
+                
+                <!-- Verificación y Validación -->
+                <div class="space-y-8 mb-8">
+                    <!-- Verificación (VER) -->
+                    <div class="process-area-card" style="border-left-color: #3b82f6;">
+                        <div class="flex items-start mb-6">
+                            <div class="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-blue-800 mb-4">Verificación (VER)</h4>
+                                
+                                <div class="bg-blue-50 rounded-lg p-4 mb-4">
+                                    <h5 class="font-bold text-blue-800 mb-2 text-xl">Pregunta clave: "¿Estamos construyendo el producto correctamente?"</h5>
+                                </div>
+                                
+                                <div class="bg-blue-100 rounded-lg p-4">
+                                    <h5 class="font-bold text-blue-800 mb-2">Actividades:</h5>
+                                    <p class="text-blue-700 leading-relaxed">
+                                        Se asegura de que los productos de trabajo (código, documentos de diseño) cumplen con los requisitos especificados para ellos. Un ejemplo clave son las <strong>revisiones por pares (peer reviews)</strong>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Validación (VAL) -->
+                    <div class="process-area-card" style="border-left-color: #10b981;">
+                        <div class="flex items-start mb-6">
+                            <div class="w-16 h-16 bg-green-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-green-800 mb-4">Validación (VAL)</h4>
+                                
+                                <div class="bg-green-50 rounded-lg p-4 mb-4">
+                                    <h5 class="font-bold text-green-800 mb-2 text-xl">Pregunta clave: "¿Estamos construyendo el producto correcto?"</h5>
+                                </div>
+                                
+                                <div class="bg-green-100 rounded-lg p-4">
+                                    <h5 class="font-bold text-green-800 mb-2">Actividades:</h5>
+                                    <p class="text-green-700 leading-relaxed">
+                                        Se asegura de que el producto final, ya integrado, cumple con el uso para el que fue concebido y satisface las necesidades del cliente. Aquí es donde se realizan las <strong>pruebas de aceptación del usuario (UAT)</strong>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Enfoque y Definición del Proceso Organizacional -->
+                <div class="process-area-card" style="border-left-color: #8b5cf6;">
+                    <div class="flex items-start mb-6">
+                        <div class="w-16 h-16 bg-purple-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-purple-800 mb-4">Enfoque y Definición del Proceso Organizacional (OPF y OPD)</h4>
+                            
+                            <div class="bg-purple-50 rounded-lg p-4">
+                                <p class="text-purple-700 leading-relaxed text-lg">
+                                    Son las áreas que se encargan de <strong>crear y mantener el conjunto de procesos estándar</strong> de la organización, así como de <strong>planificar y ejecutar las mejoras</strong> a dichos procesos.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Resumen Visual -->
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 text-white mt-8">
+                    <h3 class="text-2xl font-bold mb-6 text-center">🎯 Resumen: Las Dos Caras de la Calidad</h3>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-white/20 rounded-lg p-6">
+                            <h4 class="text-xl font-bold mb-3 flex items-center">
+                                <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                                Verificación
+                            </h4>
+                            <p class="opacity-90">"¿Lo estamos haciendo bien según las especificaciones?"</p>
+                        </div>
+                        
+                        <div class="bg-white/20 rounded-lg p-6">
+                            <h4 class="text-xl font-bold mb-3 flex items-center">
+                                <svg class="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Validación
+                            </h4>
+                            <p class="opacity-90">"¿Estamos haciendo lo que el cliente realmente necesita?"</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <!-- Slide 5: CMMI vs. ISO 9001: ¿Primos o Rivales? -->
+        <div id="slide5" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🤝</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">CMMI vs. ISO 9001: ¿Primos o Rivales?</h2>
+                    <h3 class="text-2xl font-semibold text-blue-600">Dos Caminos Hacia un Mismo Fin: La Calidad</h3>
+                    <p class="text-lg text-gray-600 mt-4">Es un error pensar que son competidores. Son complementarios y se enfocan en diferentes aspectos.</p>
+                </div>
+                
+                <!-- Tabla Comparativa -->
+                <div class="mb-8">
+                    <div class="overflow-x-auto">
+                        <table class="w-full bg-white rounded-xl shadow-lg overflow-hidden">
+                            <thead class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-lg font-bold">Característica</th>
+                                    <th class="px-6 py-4 text-left text-lg font-bold">ISO 9001</th>
+                                    <th class="px-6 py-4 text-left text-lg font-bold">CMMI</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <!-- Enfoque -->
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 font-bold text-gray-800 bg-blue-50">Enfoque</td>
+                                    <td class="px-6 py-4 text-gray-700">Gestión de la Calidad en toda la organización.</td>
+                                    <td class="px-6 py-4 text-gray-700">Mejora de los procesos de desarrollo y mantenimiento de software.</td>
+                                </tr>
+                                
+                                <!-- Alcance -->
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 font-bold text-gray-800 bg-green-50">Alcance</td>
+                                    <td class="px-6 py-4 text-gray-700">Genérico. Aplicable a cualquier industria (hospitales, fábricas, empresas de software).</td>
+                                    <td class="px-6 py-4 text-gray-700">Específico. Diseñado por y para la industria de software y sistemas.</td>
+                                </tr>
+                                
+                                <!-- Naturaleza -->
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 font-bold text-gray-800 bg-amber-50">Naturaleza</td>
+                                    <td class="px-6 py-4 text-gray-700">Qué se debe hacer (establecer un SGC).</td>
+                                    <td class="px-6 py-4 text-gray-700">Qué se debe hacer, con un cómo más detallado a través de prácticas específicas.</td>
+                                </tr>
+                                
+                                <!-- Estructura -->
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 font-bold text-gray-800 bg-purple-50">Estructura</td>
+                                    <td class="px-6 py-4 text-gray-700">Un solo nivel: Certificado o No Certificado.</td>
+                                    <td class="px-6 py-4 text-gray-700">Niveles de Madurez (1 al 5) que muestran un camino de mejora incremental.</td>
+                                </tr>
+                                
+                                <!-- Objetivo Final -->
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 font-bold text-gray-800 bg-red-50">Objetivo Final</td>
+                                    <td class="px-6 py-4 text-gray-700">Satisfacción del cliente y cumplimiento de requisitos a través de un SGC.</td>
+                                    <td class="px-6 py-4 text-gray-700">Madurez y capacidad del proceso para producir software de calidad de forma predecible.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Analogía -->
+                <div class="bg-gradient-to-r from-orange-400 to-red-500 rounded-2xl p-8 text-white">
+                    <div class="flex items-start">
+                        <div class="text-4xl mr-6 flex-shrink-0">🍰</div>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">Analogía del Restaurante</h3>
+                            <div class="space-y-4 text-lg leading-relaxed opacity-95">
+                                <p>
+                                    <strong>ISO 9001</strong> se asegura de que la <em>cocina del restaurante</em> (la organización) esté limpia, tenga procesos y sea segura.
+                                </p>
+                                <p>
+                                    <strong>CMMI</strong> se asegura de que la <em>receta para hacer el pastel</em> (el proceso de software) sea excelente y repetible.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Mirando el Producto: ISO/IEC 25010 (SQuaRE) -->
+        <div id="slide6" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🎯</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Mirando el Producto: ISO/IEC 25010 (SQuaRE)</h2>
+                    <h3 class="text-2xl font-semibold text-green-600">El Siguiente Nivel: Definiendo la Calidad del Software en Sí</h3>
+                </div>
+                
+                <!-- Introducción -->
+                <div class="bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl p-8 text-white mb-8">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <p class="text-lg leading-relaxed opacity-95 mb-4">
+                                Mientras que <strong>ISO 9001</strong> se enfoca en el proceso de gestión, la familia de normas <strong>ISO/IEC 25010</strong>, también conocida como <strong>SQuaRE</strong> (Software Quality Requirements and Evaluation), se centra en definir y evaluar la calidad del producto de software.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ¿Qué hace? -->
+                <div class="process-area-card mb-8" style="border-left-color: #3b82f6;">
+                    <div class="flex items-start">
+                        <div class="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-blue-800 mb-4">¿Qué hace?</h4>
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <p class="text-blue-700 text-lg leading-relaxed">
+                                    Define un <strong>modelo de calidad con 8 características</strong> que debe tener un software de calidad.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Las 8 Características Principales -->
+                <div class="mb-8">
+                    <h3 class="text-3xl font-bold text-gray-800 mb-6 text-center">Las 8 Características Principales:</h3>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- Adecuación Funcional -->
+                        <div class="principle-card" style="border-left-color: #ef4444;">
+                            <div class="flex items-center mb-3">
+                                <div class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mr-4">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <h4 class="text-xl font-bold text-red-800">Adecuación Funcional</h4>
+                            </div>
+                        </div>
+                        
+                        <!-- Eficiencia de Desempeño -->
+                        <div class="principle-card" style="border-left-color: #f59e0b;">
+                            <div class="flex items-center mb-3">
+                                <div class="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center mr-4">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <h4 class="text-xl font-bold text-amber-800">Eficiencia de Desempeño</h4>
+                            </div>
+                        </div>
+                        
+                        <!-- Compatibilidad -->
+                        <div class="principle-card" style="border-left-color: #10b981;">
+                            <div class="flex items-center mb-3">
+                                <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-4">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <h4 class="text-xl font-bold text-green-800">Compatibilidad</h4>
+                            </div>
+                        </div>
+                        
+                        <!-- Usabilidad -->
+                        <div class="principle-card" style="border-left-color: #3b82f6;">
+                            <div class="flex items-center mb-3">
+                                <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-4">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <h4 class="text-xl font-bold text-blue-800">Usabilidad</h4>
+                            </div>
+                        </div>
+                        
+                        <!-- Fiabilidad -->
+                        <div class="principle-card" style="border-left-color: #8b5cf6;">
+                            <div class="flex items-center mb-3">
+                                <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mr-4">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <h4 class="text-xl font-bold text-purple-800">Fiabilidad</h4>
+                            </div>
+                        </div>
+                        
+                        <!-- Seguridad -->
+                        <div class="principle-card" style="border-left-color: #06b6d4;">
+                            <div class="flex items-center mb-3">
+                                <div class="w-12 h-12 bg-cyan-500 rounded-full flex items-center justify-center mr-4">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <h4 class="text-xl font-bold text-cyan-800">Seguridad</h4>
+                            </div>
+                        </div>
+                        
+                        <!-- Mantenibilidad -->
+                        <div class="principle-card" style="border-left-color: #ec4899;">
+                            <div class="flex items-center mb-3">
+                                <div class="w-12 h-12 bg-pink-500 rounded-full flex items-center justify-center mr-4">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <h4 class="text-xl font-bold text-pink-800">Mantenibilidad</h4>
+                            </div>
+                        </div>
+                        
+                        <!-- Portabilidad -->
+                        <div class="principle-card" style="border-left-color: #84cc16;">
+                            <div class="flex items-center mb-3">
+                                <div class="w-12 h-12 bg-lime-500 rounded-full flex items-center justify-center mr-4">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <h4 class="text-xl font-bold text-lime-800">Portabilidad</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conclusión -->
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">🎓 Próximos Pasos</h3>
+                            <p class="text-lg leading-relaxed opacity-95">
+                                Este estándar nos da el <strong>vocabulario y el marco</strong> para hablar de la calidad del software de manera precisa. Lo exploraremos en detalle en la próxima sesión.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Laboratorio 1 - "Análisis de Brechas (Gap Analysis)" -->
+        <div id="slide7" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🔬</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Laboratorio 1 - "Análisis de Brechas (Gap Analysis)"</h2>
+                    <h3 class="text-2xl font-semibold text-purple-600">Diagnóstico Inicial: ¿Dónde Estamos y a Dónde Vamos?</h3>
+                </div>
+                
+                <!-- Objetivo -->
+                <div class="lab-card mb-8">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">🎯 Objetivo</h3>
+                            <p class="text-lg leading-relaxed opacity-95">
+                                Realizar un diagnóstico simplificado para entender qué tan cerca (o lejos) está un proceso actual de cumplir con las mejores prácticas de <strong>CMMI Nivel 2</strong>. Este es el primer paso en cualquier iniciativa de mejora.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Instrucciones -->
+                <div class="mb-8">
+                    <h3 class="text-3xl font-bold text-gray-800 mb-6 text-center">📋 Instrucciones</h3>
+                    
+                    <div class="space-y-6">
+                        <!-- Paso 1 -->
+                        <div class="checklist-item bg-blue-50 border-l-4 border-blue-500 rounded-r-xl p-6">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">1</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-blue-800 mb-2">Formar equipos</h4>
+                                    <p class="text-blue-700">Organícense en grupos de 4-5 personas para trabajar colaborativamente.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Paso 2 -->
+                        <div class="checklist-item bg-green-50 border-l-4 border-green-500 rounded-r-xl p-6">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">2</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-green-800 mb-2">Recibir el checklist</h4>
+                                    <p class="text-green-700">Se les entregará un checklist basado en las prácticas clave de las Áreas de Proceso de CMMI Nivel 2 (Gestión de Requisitos, Planificación, etc.).</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Paso 3 -->
+                        <div class="checklist-item bg-amber-50 border-l-4 border-amber-500 rounded-r-xl p-6">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">3</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-amber-800 mb-2">Estudiar el caso</h4>
+                                    <p class="text-amber-700">Se les presentará un caso de estudio que describe cómo una empresa ficticia gestiona sus proyectos de software.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Paso 4 -->
+                        <div class="checklist-item bg-purple-50 border-l-4 border-purple-500 rounded-r-xl p-6">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">4</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-purple-800 mb-2">Evaluar y marcar</h4>
+                                    <p class="text-purple-700">Como equipo, lean el caso y marquen en el checklist qué prácticas se cumplen, cuáles se cumplen parcialmente y cuáles no se cumplen en absoluto.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Paso 5 -->
+                        <div class="checklist-item bg-red-50 border-l-4 border-red-500 rounded-r-xl p-6">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">5</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-red-800 mb-2">Preparar conclusiones</h4>
+                                    <p class="text-red-700">Preparen una breve conclusión (1 diapositiva) que resuma las principales "brechas" o debilidades encontradas.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Herramienta Principal -->
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">🛠️ Herramienta Principal</h3>
+                            <p class="text-lg leading-relaxed opacity-95">
+                                El <strong>checklist</strong> y su <strong>capacidad de análisis</strong>. Aprenderán a identificar brechas sistemáticamente y a priorizar áreas de mejora.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+                    <h3 class="text-2xl font-semibold text-purple-600">Diagnóstico Inicial: ¿Dónde Estamos y a Dónde Vamos?</h3>
+                </div>
+                
+                <!-- Objetivo -->
+                <div class="lab-card mb-8">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">🎯 Objetivo</h3>
+                            <p class="text-lg leading-relaxed opacity-95">
+                                Realizar un diagnóstico simplificado para entender qué tan cerca (o lejos) está un proceso actual de cumplir con las mejores prácticas de <strong>CMMI Nivel 2</strong>. Este es el primer paso en cualquier iniciativa de mejora.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Instrucciones -->
+                <div class="mb-8">
+                    <h3 class="text-3xl font-bold text-gray-800 mb-6 text-center">📋 Instrucciones</h3>
+                    
+                    <div class="space-y-6">
+                        <!-- Paso 1 -->
+                        <div class="checklist-item bg-blue-50 border-l-4 border-blue-500 rounded-r-xl p-6">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">1</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-blue-800 mb-2">Formar equipos</h4>
+                                    <p class="text-blue-700">Organícense en grupos de 4-5 personas para trabajar colaborativamente.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Paso 2 -->
+                        <div class="checklist-item bg-green-50 border-l-4 border-green-500 rounded-r-xl p-6">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">2</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-green-800 mb-2">Recibir el checklist</h4>
+                                    <p class="text-green-700">Se les entregará un checklist basado en las prácticas clave de las Áreas de Proceso de CMMI Nivel 2 (Gestión de Requisitos, Planificación, etc.).</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Paso 3 -->
+                        <div class="checklist-item bg-amber-50 border-l-4 border-amber-500 rounded-r-xl p-6">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">3</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-amber-800 mb-2">Estudiar el caso</h4>
+                                    <p class="text-amber-700">Se les presentará un caso de estudio que describe cómo una empresa ficticia gestiona sus proyectos de software.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Paso 4 -->
+                        <div class="checklist-item bg-purple-50 border-l-4 border-purple-500 rounded-r-xl p-6">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">4</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-purple-800 mb-2">Evaluar y marcar</h4>
+                                    <p class="text-purple-700">Como equipo, lean el caso y marquen en el checklist qué prácticas se cumplen, cuáles se cumplen parcialmente y cuáles no se cumplen en absoluto.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Paso 5 -->
+                        <div class="checklist-item bg-red-50 border-l-4 border-red-500 rounded-r-xl p-6">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <span class="text-white font-bold">5</span>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-red-800 mb-2">Preparar conclusiones</h4>
+                                    <p class="text-red-700">Preparen una breve conclusión (1 diapositiva) que resuma las principales "brechas" o debilidades encontradas.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Herramienta Principal -->
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">🛠️ Herramienta Principal</h3>
+                            <p class="text-lg leading-relaxed opacity-95">
+                                El <strong>checklist</strong> y su <strong>capacidad de análisis</strong>. Aprenderán a identificar brechas sistemáticamente y a priorizar áreas de mejora.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Navigation -->
+    <div class="navigation">
+        <button class="nav-button" onclick="previousSlide()">⬅️ Anterior</button>
+        <button class="nav-button" onclick="resetAll()">🔄 Reiniciar</button>
+        <button class="nav-button" onclick="nextSlide()">Siguiente ➡️</button>
     </div>
 
     <script>
-        let currentSlideIndex = 1;
-        const totalSlidesCount = 7;
-
-        function nextSlide() {
-            if (currentSlideIndex < totalSlidesCount) {
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
-                currentSlideIndex++;
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
-                updateNavigation();
-            }
+        let currentSlide = 1;
+        const totalSlides = 7;
+        
+        function updateSlideCounter() {
+            document.getElementById('current-slide').textContent = currentSlide;
+            document.getElementById('total-slides').textContent = totalSlides;
         }
-
-        function previousSlide() {
-            if (currentSlideIndex > 1) {
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
-                currentSlideIndex--;
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
-                updateNavigation();
+        
+        function showSlide(slideNumber) {
+            // Hide all slides
+            for (let i = 1; i <= totalSlides; i++) {
+                document.getElementById('slide' + i).classList.add('hidden');
             }
-        }
-
-        function updateNavigation() {
-            document.getElementById('currentSlide').textContent = currentSlideIndex;
-            document.getElementById('totalSlides').textContent = totalSlidesCount;
             
-            document.getElementById('prevBtn').disabled = currentSlideIndex === 1;
-            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlidesCount;
+            // Show selected slide
+            document.getElementById('slide' + slideNumber).classList.remove('hidden');
+            
+            currentSlide = slideNumber;
+            updateSlideCounter();
+            updateNavigationButtons();
+            
+            // Auto-scroll to top when changing slides
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         }
-
+        
+        function updateNavigationButtons() {
+            const prevButton = document.querySelector('.navigation button:first-child');
+            const nextButton = document.querySelector('.navigation button:last-child');
+            
+            prevButton.disabled = currentSlide === 1;
+            nextButton.disabled = currentSlide === totalSlides;
+        }
+        
+        function previousSlide() {
+            if (currentSlide > 1) {
+                showSlide(currentSlide - 1);
+            }
+        }
+        
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                showSlide(currentSlide + 1);
+            }
+        }
+        
+        function resetAll() {
+            showSlide(1);
+        }
+        
         // Keyboard navigation
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'ArrowRight' || event.key === ' ') {
-                nextSlide();
-            } else if (event.key === 'ArrowLeft') {
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
                 previousSlide();
+            } else if (e.key === 'ArrowRight') {
+                nextSlide();
+            } else if (e.key === 'Home') {
+                resetAll();
             }
         });
-
+        
         // Initialize
-        updateNavigation();
+        showSlide(1);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a85fd4b537cdb0',t:'MTc1NzEwMzA3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+<!-- Pie de página -->
+<footer class="footer">
+  <div class="footer-content">© 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua</div>
+</footer>
+
+</body>
 </html>
