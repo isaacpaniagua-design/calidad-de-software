@@ -3,379 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Métricas de Calidad del Producto - Sesión 5</title>
+    <title>Sesión 5: Tipos de Métricas (Producto)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
         body {
             font-family: 'Inter', sans-serif;
         }
         
-        .slide {
-            min-height: 100vh;
-            position: relative;
-            overflow: hidden;
-            display: none;
+        .slide-transition {
+            transition: all 0.5s ease-in-out;
         }
         
-        .slide.active {
-            display: block;
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
         }
         
-        .slide-1 {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .card-hover {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
-        .slide-2 {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        
-        .slide::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
-            z-index: 1;
-        }
-        
-        .content-wrapper {
-            position: relative;
-            z-index: 2;
-        }
-        
-        .glass-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .highlight-card {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-            border-radius: 20px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .highlight-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
-            animation: shimmer 3s infinite;
-        }
-        
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-        
-        .feature-card {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(15px);
-            border-radius: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-        
-        .feature-card:hover {
+        .card-hover:hover {
             transform: translateY(-5px);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
-        }
-        
-        .icon-container {
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
-            border-radius: 50%;
-            width: 80px;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 25px rgba(79, 172, 254, 0.3);
-        }
-        
-        .floating-elements {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-        
-        .floating-element {
-            position: absolute;
-            animation: float 6s ease-in-out infinite;
-            opacity: 0.1;
-        }
-        
-        .floating-element:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
-        .floating-element:nth-child(2) { top: 20%; right: 15%; animation-delay: 2s; }
-        .floating-element:nth-child(3) { bottom: 20%; left: 20%; animation-delay: 4s; }
-        .floating-element:nth-child(4) { bottom: 30%; right: 10%; animation-delay: 1s; }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(5deg); }
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
         
         .fade-in {
-            animation: fadeInUp 1s ease-out forwards;
-            opacity: 0;
-            transform: translateY(30px);
+            animation: fadeIn 0.8s ease-in;
         }
         
-        .fade-in-delay-1 { animation-delay: 0.2s; }
-        .fade-in-delay-2 { animation-delay: 0.4s; }
-        .fade-in-delay-3 { animation-delay: 0.6s; }
-        .fade-in-delay-4 { animation-delay: 0.8s; }
-        .fade-in-delay-5 { animation-delay: 1.0s; }
-        .fade-in-delay-6 { animation-delay: 1.2s; }
-        
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
-        .gradient-text {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
         
         .navigation {
             position: fixed;
-            bottom: 30px;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 1000;
             display: flex;
-            gap: 12px;
-        }
-        
-        .nav-btn {
-            background: rgba(255, 255, 255, 0.9);
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+        
+        .nav-button {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
             border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            padding: 12px 20px;
+            border-radius: 25px;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-        
-        .nav-btn:hover {
-            transform: scale(1.1);
-            background: rgba(255, 255, 255, 1);
-        }
-        
-        .slide-indicator {
-            background: rgba(255, 255, 255, 0.3);
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            transition: all 0.3s ease;
-        }
-        
-        .slide-indicator.active {
-            background: rgba(255, 255, 255, 0.9);
-            transform: scale(1.2);
-        }
-        
-        .discussion-box {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 16px;
-            padding: 20px;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .discussion-box::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
-            animation: shimmer 4s infinite;
-        }
-        
-        .xray-container {
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
-            border-radius: 20px;
-            padding: 24px;
-            color: white;
-            position: relative;
-            overflow: hidden;
-            border: 2px solid #00d4ff;
-        }
-        
-        .xray-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
-            animation: pulse 3s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
-        }
-        
-        .analogy-box {
-            background: linear-gradient(135deg, #ff9a9e, #fecfef);
-            border-radius: 16px;
-            padding: 20px;
-            color: #333;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .analogy-box::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
-            animation: shimmer 4s infinite;
-        }
-        
-        .metric-section {
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 16px;
-            padding: 24px;
-            margin: 16px 0;
-            border-left: 6px solid;
-            transition: all 0.3s ease;
-        }
-        
-        .metric-section:hover {
-            transform: translateX(5px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-        }
-        
-        .metric-loc { border-left-color: #3b82f6; }
-        .metric-fp { border-left-color: #10b981; }
-        .metric-complexity { border-left-color: #f59e0b; }
-        
-        .metric-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
             font-weight: 600;
-            display: inline-block;
-            margin-bottom: 12px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
         }
         
-        .advantage-item {
-            background: rgba(16, 185, 129, 0.1);
-            border-left: 3px solid #10b981;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 8px;
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
         }
         
-        .disadvantage-item {
-            background: rgba(239, 68, 68, 0.1);
-            border-left: 3px solid #ef4444;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 8px;
+        .nav-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+        }
+        
+        .metric-card.size {
+            border-left-color: #3b82f6;
+        }
+        
+        .metric-card.complexity {
+            border-left-color: #ef4444;
         }
         
         .warning-box {
             background: linear-gradient(135deg, #fbbf24, #f59e0b);
-            border-radius: 12px;
-            padding: 16px;
             color: white;
-            margin: 16px 0;
-            position: relative;
-            overflow: hidden;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
         }
         
-        .warning-box::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%);
-            animation: shimmer 3s infinite;
+        .advantage-box {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin: 0.5rem 0;
         }
         
         .code-example {
-            background: #1a1a2e;
-            color: #00d4ff;
-            border-radius: 8px;
-            padding: 12px;
+            background: #1f2937;
+            color: #f9fafb;
+            border-radius: 0.5rem;
+            padding: 1rem;
             font-family: 'Courier New', monospace;
-            font-size: 14px;
-            margin: 8px 0;
-            border: 1px solid #00d4ff;
+            margin: 1rem 0;
+            overflow-x: auto;
         }
         
-        .complexity-gauge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin: 12px 0;
+        .complexity-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            font-size: 0.875rem;
         }
         
-        .gauge-bar {
-            height: 8px;
-            border-radius: 4px;
-            flex: 1;
-            position: relative;
-            overflow: hidden;
+        .complexity-low {
+            background: #dcfce7;
+            color: #166534;
         }
         
-        .gauge-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 2s ease;
+        .complexity-medium {
+            background: #fef3c7;
+            color: #92400e;
         }
         
-        .gauge-low { background: #10b981; }
-        .gauge-medium { background: #f59e0b; }
-        .gauge-high { background: #ef4444; }
+        .complexity-high {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .slide-counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #374151;
+            z-index: 1000;
+        }
     </style>
-</head>
-<body>
 
 <style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+.qs-nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:saturate(140%) blur(20px);
+       background:rgba(255,255,255,.95);border-bottom:1px solid rgba(255,255,255,.2);
+       box-shadow:0 8px 32px rgba(0,0,0,.10)}
+.qs-nav .wrap{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;gap:20px;align-items:center;justify-content:space-between}
+.qs-brand{display:flex;gap:15px;align-items:center;color:#1f2937;font-weight:800;font-size:1.3rem;text-decoration:none;position:relative;padding:8px 16px;border-radius:20px}
+.qs-brand::before{content:"🎓";font-size:1.6rem}
+.qs-tabs{display:flex;gap:12px;flex-wrap:wrap;background:rgba(255,255,255,.3);padding:8px;border-radius:30px;backdrop-filter:blur(10px)}
+.qs-btn{border:0;padding:12px 20px;border-radius:25px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;font-weight:600;font-size:.9rem;
+       transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(10px);border:2px solid transparent;position:relative;overflow:hidden}
+.qs-btn::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);transition:all .4s ease;z-index:-1}
+.qs-btn:hover{color:#fff;transform:translateY(-3px);box-shadow:0 8px 25px rgba(102,126,234,.4);border-color:rgba(102,126,234,.3)}
+.qs-btn:hover::before{left:0}
+.qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none;box-shadow:0 6px 20px rgba(102,126,234,.5);transform:translateY(-2px)}
+.qs-btn[aria-current="page"]::before{left:0}
+.footer{margin-top:60px;padding:30px 20px;text-align:center;background:rgba(255,255,255,0.1);
+        backdrop-filter:blur(10px);border-top:1px solid rgba(255,255,255,0.2)}
+.footer-content{max-width:1200px;margin:0 auto;color:rgba(255,255,255,0.8);font-size:0.95rem;transition:all 0.3s ease;cursor:default}
+.footer-content:hover{color:#fff;transform:translateY(-2px)}
+
+body{padding-top:80px}
 </style>
+
+
+<style>
+body{
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height:1.6;
+  color:#333;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height:100vh;
+  padding-top:80px; /* por nav fijo */
+}
+</style>
+
+
+<style>
+.footer{
+  margin-top:60px;
+  padding:30px 20px;
+  text-align:center;
+  background:rgba(255, 255, 255, 0.1);
+  backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255, 255, 255, 0.2);
+}
+.footer-content{
+  max-width:1200px;
+  margin:0 auto;
+  color:rgba(255,255,255,0.8);
+  font-size:0.95rem;
+  transition:all 0.3s ease;
+  cursor:default;
+}
+.footer-content:hover{
+  color:#fff;
+  transform:translateY(-2px);
+}
+
+</style>
+
+
+<style>
+.footer{
+  margin-top:60px;
+  padding:30px 20px;
+  text-align:center;
+  background:rgba(255, 255, 255, 0.1);
+  backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255, 255, 255, 0.2);
+}
+.footer-content{
+  max-width:1200px;
+  margin:0 auto;
+  color:rgba(255,255,255,0.8);
+  font-size:0.95rem;
+  transition:all 0.3s ease;
+  cursor:default;
+}
+.footer-content:hover{
+  color:#fff;
+  transform:translateY(-2px);
+}
+</style>
+
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- NAV Plataforma QS -->
 <div class="qs-nav">
   <div class="wrap">
     <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
@@ -386,443 +265,746 @@
       <a class="qs-btn" href="Foro.html">Foro</a>
       <a class="qs-btn" href="paneldocente.html">Panel</a>
       <a class="qs-btn" href="roadmap.html">Roadmap</a>
-          <a class="qs-btn" href="checklist.html">Checklist</a>
-\1
+      <a class="qs-btn" href="checklist.html">Checklist</a>
+      <a class="qs-btn" href="status.html">Status</a>
+    </nav>
   </div>
 </div>
-<script>
-(function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
-  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
-  });
-})();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
-</script>
 
-
-    <!-- Slide 1: Título -->
-    <div class="slide slide-1 active flex items-center justify-center p-6">
-        <div class="floating-elements">
-            <div class="floating-element text-6xl">🔬</div>
-            <div class="floating-element text-5xl">📊</div>
-            <div class="floating-element text-4xl">⚙️</div>
-            <div class="floating-element text-5xl">🏭</div>
-        </div>
-        
-        <div class="content-wrapper max-w-6xl w-full">
-            <div class="glass-card p-8 mb-8 fade-in">
-                <div class="flex items-center justify-center mb-8">
-                    <div class="icon-container">
-                        <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                    </div>
-                </div>
-                
-                <h1 class="text-5xl font-bold text-center text-gray-800 mb-6 leading-tight">
-                    Radiografía del Software
-                </h1>
-                
-                <h2 class="text-3xl font-semibold text-center gradient-text mb-8">
-                    Métricas de Calidad del Producto
-                </h2>
-                
-                <p class="text-xl text-center text-gray-600 mb-8 max-w-4xl mx-auto">
-                    Cuantificando las características del software que entregamos
-                </p>
-                
-                <div class="w-32 h-1 bg-gradient-to-r from-blue-500 to-purple-600 mx-auto rounded-full mb-8"></div>
-            </div>
-            
-            <div class="xray-container mb-8 fade-in fade-in-delay-1">
-                <div class="relative z-10">
-                    <div class="flex items-center mb-6">
-                        <div class="text-4xl mr-4">🔬</div>
-                        <h3 class="text-2xl font-bold">Sesión 5: Del Proceso al Producto</h3>
-                    </div>
-                    
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <div class="bg-white bg-opacity-10 rounded-lg p-4">
-                            <h4 class="font-semibold mb-3 flex items-center">
-                                <span class="text-2xl mr-2">🏭</span>
-                                Sesión Pasada: "La Fábrica"
-                            </h4>
-                            <p class="text-sm opacity-90">
-                                Medimos cómo trabajamos: velocidad del equipo, tiempo de desarrollo, 
-                                eficiencia del proceso, metodologías ágiles.
-                            </p>
-                        </div>
-                        
-                        <div class="bg-white bg-opacity-10 rounded-lg p-4">
-                            <h4 class="font-semibold mb-3 flex items-center">
-                                <span class="text-2xl mr-2">🚗</span>
-                                Hoy: "El Coche"
-                            </h4>
-                            <p class="text-sm opacity-90">
-                                Medimos lo que entregamos: calidad del código, complejidad, 
-                                tamaño, funcionalidad del producto final.
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6 text-center">
-                        <p class="text-lg font-medium">
-                            El producto tangible que llega al usuario final
-                        </p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="analogy-box mb-8 fade-in fade-in-delay-2">
-                <div class="relative z-10">
-                    <div class="flex items-center mb-4">
-                        <div class="text-3xl mr-3">💡</div>
-                        <h4 class="font-semibold text-xl">Analogía Médica</h4>
-                    </div>
-                    <p class="text-lg mb-4">
-                        Así como un médico usa rayos X para ver el interior del cuerpo humano, 
-                        nosotros usamos métricas para "radiografiar" nuestro software y detectar 
-                        problemas internos antes de que se conviertan en síntomas visibles.
-                    </p>
-                    <div class="flex items-center justify-center space-x-8 mt-6">
-                        <div class="text-center">
-                            <div class="text-4xl mb-2">🩻</div>
-                            <div class="text-sm font-semibold">Rayos X</div>
-                            <div class="text-xs">Detecta fracturas</div>
-                        </div>
-                        <div class="text-2xl">→</div>
-                        <div class="text-center">
-                            <div class="text-4xl mb-2">📊</div>
-                            <div class="text-sm font-semibold">Métricas</div>
-                            <div class="text-xs">Detecta problemas</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="feature-card p-6 fade-in fade-in-delay-3">
-                <div class="flex items-center">
-                    <div class="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg p-3 mr-4">
-                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z"></path>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="text-xl font-bold text-gray-800">Fuente Principal</h3>
-                        <p class="text-gray-600">"Ingeniería del software: un enfoque práctico" - Roger S. Pressman</p>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Slide Counter -->
+    <div class="slide-counter">
+        <span id="current-slide">1</span> / <span id="total-slides">2</span>
     </div>
 
-    <!-- Slide 2: Métricas de Tamaño y Complejidad -->
-    <div class="slide slide-2 flex items-center justify-center p-6">
-        <div class="floating-elements">
-            <div class="floating-element text-6xl">📏</div>
-            <div class="floating-element text-5xl">🔢</div>
-            <div class="floating-element text-4xl">🌀</div>
-            <div class="floating-element text-5xl">⚖️</div>
-        </div>
-        
-        <div class="content-wrapper max-w-7xl w-full">
-            <div class="glass-card p-8 mb-8 fade-in">
-                <div class="flex items-center justify-center mb-6">
-                    <div class="bg-gradient-to-r from-pink-500 to-red-500 rounded-full p-4">
-                        <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
-                        </svg>
-                    </div>
-                </div>
-                <h1 class="text-4xl font-bold text-center text-gray-800 mb-4">
-                    ¿Qué Tan Grande y Enredado es Nuestro Código?
-                </h1>
-                <h2 class="text-2xl font-semibold text-center text-gray-600 mb-6">
-                    Métricas de Tamaño y Complejidad
-                </h2>
-            </div>
-            
-            <!-- LOC Section -->
-            <div class="metric-section metric-loc fade-in fade-in-delay-1">
-                <div class="metric-header">TAMAÑO: Líneas de Código (LOC)</div>
-                <h3 class="text-xl font-bold text-gray-800 mb-3">
-                    La métrica más simple y antigua
-                </h3>
-                <p class="text-gray-700 mb-4">
-                    Cuenta el número de líneas en el código fuente (excluyendo comentarios y líneas en blanco).
-                </p>
-                
-                <div class="grid md:grid-cols-2 gap-4">
-                    <div class="advantage-item">
-                        <div class="flex items-center mb-2">
-                            <span class="text-green-600 text-xl mr-2">✅</span>
-                            <span class="font-semibold">Ventaja</span>
-                        </div>
-                        <p class="text-sm">Fácil de calcular y automatizar</p>
-                    </div>
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8 pb-32">
+        <!-- Slide 1: Título -->
+        <div id="slide1" class="slide-transition fade-in">
+            <div class="gradient-bg rounded-2xl p-12 text-white text-center mb-8 card-hover">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-6xl mb-6">📊</div>
+                    <h1 class="text-5xl font-bold mb-6 pulse-animation">Radiografía del Software</h1>
+                    <h2 class="text-3xl font-semibold mb-8 opacity-90">Métricas de Calidad del Producto</h2>
+                    <p class="text-xl mb-8 opacity-80">Cuantificando las características del software que entregamos</p>
                     
-                    <div class="space-y-2">
-                        <div class="disadvantage-item">
-                            <div class="flex items-center mb-1">
-                                <span class="text-red-600 text-lg mr-2">❌</span>
-                                <span class="font-semibold text-sm">Dependiente del Lenguaje</span>
-                            </div>
-                            <p class="text-xs">100 líneas de C = 20 líneas de Python</p>
+                    <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 mt-12">
+                        <div class="flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <h3 class="text-xl font-semibold">Fuente Principal</h3>
                         </div>
-                        
-                        <div class="disadvantage-item">
-                            <div class="flex items-center mb-1">
-                                <span class="text-red-600 text-lg mr-2">❌</span>
-                                <span class="font-semibold text-sm">No Mide Funcionalidad</span>
-                            </div>
-                            <p class="text-xs">500 líneas vs 50 líneas para la misma función</p>
-                        </div>
-                        
-                        <div class="disadvantage-item">
-                            <div class="flex items-center mb-1">
-                                <span class="text-red-600 text-lg mr-2">❌</span>
-                                <span class="font-semibold text-sm">Penaliza Buenas Prácticas</span>
-                            </div>
-                            <p class="text-xs">Código conciso obtiene valores LOC más bajos</p>
-                        </div>
+                        <p class="text-lg opacity-90">"Ingeniería del software: un enfoque práctico" - Roger S. Pressman</p>
                     </div>
                 </div>
             </div>
             
-            <!-- Function Points Section -->
-            <div class="metric-section metric-fp fade-in fade-in-delay-2">
-                <div class="metric-header">TAMAÑO: Puntos de Función (FP)</div>
-                <h3 class="text-xl font-bold text-gray-800 mb-3">
-                    Mide funcionalidad desde la perspectiva del usuario
-                </h3>
-                <p class="text-gray-700 mb-4">
-                    Independiente de la tecnología utilizada. Permite comparar proyectos en diferentes lenguajes.
-                </p>
-                
-                <div class="grid md:grid-cols-2 gap-4">
+            <!-- Notas para el docente -->
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
+                <div class="flex items-start">
+                    <svg class="w-6 h-6 text-blue-400 mr-3 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
                     <div>
-                        <h4 class="font-semibold mb-2 text-gray-800">¿Cómo funciona?</h4>
-                        <div class="space-y-2 text-sm">
-                            <div class="flex items-center">
-                                <span class="text-blue-600 mr-2">📝</span>
-                                <span>Entradas del usuario (formularios, clics)</span>
-                            </div>
-                            <div class="flex items-center">
-                                <span class="text-green-600 mr-2">📊</span>
-                                <span>Salidas al usuario (reportes, pantallas)</span>
-                            </div>
-                            <div class="flex items-center">
-                                <span class="text-purple-600 mr-2">🔍</span>
-                                <span>Consultas del usuario</span>
-                            </div>
-                            <div class="flex items-center">
-                                <span class="text-orange-600 mr-2">🗃️</span>
-                                <span>Archivos o tablas de BD utilizados</span>
-                            </div>
-                            <div class="flex items-center">
-                                <span class="text-red-600 mr-2">🔗</span>
-                                <span>Interfaces con sistemas externos</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="advantage-item">
-                        <div class="flex items-center mb-2">
-                            <span class="text-green-600 text-xl mr-2">⭐</span>
-                            <span class="font-semibold">Ventaja Principal</span>
-                        </div>
-                        <p class="text-sm">
-                            Permite comparar la "cantidad de funcionalidad" de un proyecto en Java 
-                            contra uno en C#, algo que LOC no puede hacer.
+                        <h4 class="text-lg font-semibold text-blue-800 mb-2">Notas para el docente:</h4>
+                        <p class="text-blue-700 leading-relaxed">
+                            Inicia la sesión recordando la diferencia entre métricas de producto y de proceso. "La sesión pasada vimos cómo medir 'la fábrica'. Hoy vamos a aprender a medir 'el coche' que sale de esa fábrica. Nos enfocaremos en el producto tangible que llega al usuario."
                         </p>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Complexity Section -->
-            <div class="metric-section metric-complexity fade-in fade-in-delay-3">
-                <div class="metric-header">COMPLEJIDAD: Complejidad Ciclomática (McCabe)</div>
-                <h3 class="text-xl font-bold text-gray-800 mb-3">
-                    ¿Qué tan "enredada" está la lógica?
-                </h3>
-                <p class="text-gray-700 mb-4">
-                    Mide la cantidad de caminos lógicos independientes en un fragmento de código.
-                </p>
-                
-                <div class="warning-box">
-                    <div class="relative z-10">
-                        <div class="flex items-center mb-2">
-                            <span class="text-2xl mr-2">⚠️</span>
-                            <span class="font-bold">Regla de Oro</span>
-                        </div>
-                        <p class="font-semibold">
-                            Un valor V(G) > 10 es una señal de alerta
-                        </p>
-                        <p class="text-sm mt-2">
-                            El código es probablemente difícil de entender, probar y mantener. 
-                            Candidato ideal para refactorización.
-                        </p>
-                    </div>
-                </div>
-                
-                <div class="complexity-gauge">
-                    <span class="text-sm font-semibold w-16">V(G) ≤ 5</span>
-                    <div class="gauge-bar bg-gray-200">
-                        <div class="gauge-fill gauge-low" style="width: 30%"></div>
-                    </div>
-                    <span class="text-sm text-green-600">Bajo</span>
-                </div>
-                
-                <div class="complexity-gauge">
-                    <span class="text-sm font-semibold w-16">V(G) 6-10</span>
-                    <div class="gauge-bar bg-gray-200">
-                        <div class="gauge-fill gauge-medium" style="width: 60%"></div>
-                    </div>
-                    <span class="text-sm text-yellow-600">Medio</span>
-                </div>
-                
-                <div class="complexity-gauge">
-                    <span class="text-sm font-semibold w-16">V(G) > 10</span>
-                    <div class="gauge-bar bg-gray-200">
-                        <div class="gauge-fill gauge-high" style="width: 90%"></div>
-                    </div>
-                    <span class="text-sm text-red-600">Alto</span>
-                </div>
-            </div>
-            
-            <div class="discussion-box fade-in fade-in-delay-4">
-                <div class="relative z-10">
-                    <div class="flex items-center mb-4">
-                        <div class="text-3xl mr-3">🤔</div>
-                        <h4 class="font-semibold text-xl">Punto de Discusión</h4>
-                    </div>
-                    <p class="text-lg mb-4">
-                        Si un gerente les ofrece un <span class="font-bold">bono por cada 1,000 líneas de código</span> 
-                        que escriban al mes, ¿qué tipo de código creen que empezarían a producir?
-                    </p>
-                    <p class="text-base opacity-90">
-                        ¿Por qué esta es una mala idea?
-                    </p>
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-xs">Código inflado</span>
-                        <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-xs">Funciones innecesarias</span>
-                        <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-xs">Comentarios excesivos</span>
-                        <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-xs">Lógica redundante</span>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+
+        <!-- Slide 2: Métricas de Tamaño y Complejidad -->
+        <div id="slide2" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">📏</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Métricas de Tamaño y Complejidad</h2>
+                    <h3 class="text-2xl font-semibold text-blue-600">¿Qué Tan Grande y Enredado es Nuestro Código?</h3>
+                </div>
+                
+                <!-- Métricas de Tamaño -->
+                <div class="mb-12">
+                    <h3 class="text-3xl font-bold text-gray-800 mb-8 text-center">📐 Métricas de Tamaño</h3>
+                    
+                    <!-- LOC - Lines of Code -->
+                    <div class="metric-card size">
+                        <div class="flex items-start mb-6">
+                            <div class="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-blue-800 mb-3">Líneas de Código (LOC - Lines of Code)</h4>
+                                <div class="bg-blue-50 rounded-lg p-4 mb-4">
+                                    <p class="text-blue-700 text-lg leading-relaxed">
+                                        <strong>Definición:</strong> La métrica más simple y antigua. Cuenta el número de líneas en el código fuente (excluyendo comentarios y líneas en blanco).
+                                    </p>
+                                </div>
+                                
+                                <div class="advantage-box mb-4">
+                                    <h5 class="font-semibold mb-2">✅ Ventaja:</h5>
+                                    <p>Fácil de calcular y automatizar.</p>
+                                </div>
+                                
+                                <div class="warning-box">
+                                    <h5 class="font-bold text-xl mb-4">⚠️ Desventajas y Peligros (muy importantes):</h5>
+                                    <div class="space-y-4">
+                                        <div class="bg-white/20 rounded-lg p-4">
+                                            <h6 class="font-semibold mb-2">🌍 Dependiente del Lenguaje:</h6>
+                                            <p>100 líneas de C pueden hacer lo mismo que 20 líneas de Python. No es comparable entre tecnologías.</p>
+                                        </div>
+                                        <div class="bg-white/20 rounded-lg p-4">
+                                            <h6 class="font-semibold mb-2">🎯 No Mide Funcionalidad:</h6>
+                                            <p>Un desarrollador puede escribir 500 líneas para una función simple, mientras que otro lo resuelve en 50. ¿Quién es más productivo?</p>
+                                        </div>
+                                        <div class="bg-white/20 rounded-lg p-4">
+                                            <h6 class="font-semibold mb-2">📉 Penaliza la Buena Práctica:</h6>
+                                            <p>El código conciso y eficiente es castigado con un valor de LOC más bajo.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Function Points -->
+                    <div class="metric-card size">
+                        <div class="flex items-start mb-6">
+                            <div class="w-16 h-16 bg-green-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                                    <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-green-800 mb-3">Puntos de Función (FP - Function Points)</h4>
+                                <div class="bg-green-50 rounded-lg p-4 mb-4">
+                                    <p class="text-green-700 text-lg leading-relaxed">
+                                        <strong>Definición:</strong> Una métrica que mide la funcionalidad del software desde la perspectiva del usuario, independientemente de la tecnología utilizada.
+                                    </p>
+                                </div>
+                                
+                                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                                    <h5 class="font-semibold text-gray-800 mb-3">¿Cómo funciona (conceptual)?</h5>
+                                    <p class="text-gray-700 mb-3">Se cuentan y ponderan elementos como:</p>
+                                    <div class="grid md:grid-cols-2 gap-3">
+                                        <div class="flex items-center">
+                                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                            <span>Entradas del usuario (formularios, clics)</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                            <span>Salidas al usuario (reportes, pantallas, mensajes)</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                            <span>Consultas del usuario</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                            <span>Archivos o tablas de la base de datos utilizados</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <span class="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                            <span>Interfaces con sistemas externos</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="advantage-box">
+                                    <h5 class="font-semibold mb-2">✅ Ventaja Principal:</h5>
+                                    <p>Permite comparar la "cantidad de funcionalidad" de un proyecto en Java contra uno en C#, algo que LOC no puede hacer.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Métricas de Complejidad -->
+                <div class="mb-8">
+                    <h3 class="text-3xl font-bold text-gray-800 mb-8 text-center">🧩 Métricas de Complejidad</h3>
+                    
+                    <!-- Complejidad Ciclomática -->
+                    <div class="metric-card complexity">
+                        <div class="flex items-start mb-6">
+                            <div class="w-16 h-16 bg-red-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-red-800 mb-3">Complejidad Ciclomática (de McCabe)</h4>
+                                <div class="bg-red-50 rounded-lg p-4 mb-4">
+                                    <p class="text-red-700 text-lg leading-relaxed">
+                                        <strong>Definición:</strong> Mide la cantidad de caminos lógicos independientes en un fragmento de código. En términos simples, nos dice qué tan "enredada" está la lógica de una función.
+                                    </p>
+                                </div>
+                                
+                                <div class="bg-gradient-to-r from-red-500 to-orange-500 text-white rounded-lg p-6 mb-4">
+                                    <h5 class="font-bold text-xl mb-3">🎯 Regla de Oro:</h5>
+                                    <p class="text-lg leading-relaxed">
+                                        Un valor <strong>V(G) > 10</strong> es una señal de alerta. El código es probablemente difícil de entender, probar y mantener. Es un candidato ideal para ser refactorizado (dividido en funciones más pequeñas y simples).
+                                    </p>
+                                </div>
+                                
+                                <!-- Indicadores de complejidad -->
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h5 class="font-semibold text-gray-800 mb-3">Interpretación de valores:</h5>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center justify-between">
+                                            <span>V(G) = 1-10</span>
+                                            <span class="complexity-indicator complexity-low">Baja complejidad ✅</span>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <span>V(G) = 11-20</span>
+                                            <span class="complexity-indicator complexity-medium">Complejidad moderada ⚠️</span>
+                                        </div>
+                                        <div class="flex items-center justify-between">
+                                            <span>V(G) > 20</span>
+                                            <span class="complexity-indicator complexity-high">Alta complejidad ❌</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Punto de Discusión -->
+                <div class="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-8 text-white">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">💭 Punto de Discusión</h3>
+                            <p class="text-lg leading-relaxed opacity-95">
+                                "Si un gerente les ofrece un bono por cada 1,000 líneas de código que escriban al mes, ¿qué tipo de código creen que empezarían a producir? ¿Por qué esta es una mala idea?"
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Métricas de Fiabilidad y Calidad -->
+        <div id="slide3" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🛡️</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Métricas de Fiabilidad y Calidad</h2>
+                    <h3 class="text-2xl font-semibold text-blue-600">¿Podemos Confiar en Nuestro Software?</h3>
+                </div>
+                
+                <!-- Métricas de Fiabilidad -->
+                <div class="mb-12">
+                    <h3 class="text-3xl font-bold text-gray-800 mb-8 text-center">⚡ Métricas de Fiabilidad</h3>
+                    
+                    <!-- MTBF -->
+                    <div class="metric-card" style="border-left-color: #8b5cf6;">
+                        <div class="flex items-start mb-6">
+                            <div class="w-16 h-16 bg-purple-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-purple-800 mb-3">MTBF (Mean Time Between Failures)</h4>
+                                <h5 class="text-lg font-semibold text-purple-700 mb-3">Tiempo Promedio Entre Fallos</h5>
+                                
+                                <div class="bg-purple-50 rounded-lg p-4 mb-4">
+                                    <p class="text-purple-700 text-lg leading-relaxed">
+                                        <strong>Definición:</strong> Es la métrica principal para medir la fiabilidad de un sistema. Se calcula como la suma del tiempo que funciona correctamente (MTTF) y el tiempo que tarda en ser reparado (MTTR).
+                                    </p>
+                                </div>
+                                
+                                <!-- Fórmula -->
+                                <div class="bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg p-6 mb-4">
+                                    <h5 class="font-bold text-xl mb-3">📐 Fórmula:</h5>
+                                    <div class="text-center">
+                                        <p class="text-2xl font-bold">MTBF = MTTF + MTTR</p>
+                                        <div class="text-sm mt-2 opacity-90">
+                                            <p>MTTF = Mean Time To Failure (Tiempo promedio hasta el fallo)</p>
+                                            <p>MTTR = Mean Time To Repair (Tiempo promedio de reparación)</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-4">
+                                    <div class="bg-green-50 rounded-lg p-4">
+                                        <h5 class="font-semibold text-green-800 mb-2">🎯 Importancia:</h5>
+                                        <p class="text-green-700">Es crítica para sistemas donde un fallo tiene consecuencias graves: software de aviación, sistemas bancarios, equipos médicos, etc. Un MTBF alto es sinónimo de un sistema robusto y disponible.</p>
+                                    </div>
+                                    
+                                    <div class="bg-blue-50 rounded-lg p-4">
+                                        <h5 class="font-semibold text-blue-800 mb-2">💡 Ejemplo:</h5>
+                                        <p class="text-blue-700">Un sistema con un MTBF de <strong>24 horas</strong> es mucho menos fiable que uno con un MTBF de <strong>6 meses</strong>.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Métricas de Calidad del Código -->
+                <div class="mb-8">
+                    <h3 class="text-3xl font-bold text-gray-800 mb-8 text-center">🔍 Métricas de Calidad del Código</h3>
+                    
+                    <!-- Densidad de Defectos -->
+                    <div class="metric-card" style="border-left-color: #f59e0b;">
+                        <div class="flex items-start mb-6">
+                            <div class="w-16 h-16 bg-amber-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-amber-800 mb-3">Densidad de Defectos (Defect Density)</h4>
+                                
+                                <div class="bg-amber-50 rounded-lg p-4 mb-4">
+                                    <p class="text-amber-700 text-lg leading-relaxed">
+                                        <strong>Definición:</strong> Es una de las métricas de calidad más universales y poderosas. Relaciona el número de defectos encontrados con el tamaño del software.
+                                    </p>
+                                </div>
+                                
+                                <!-- Fórmula -->
+                                <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg p-6 mb-4">
+                                    <h5 class="font-bold text-xl mb-3">📐 Fórmula:</h5>
+                                    <div class="text-center">
+                                        <p class="text-xl font-bold mb-2">Densidad de Defectos = (Número Total de Defectos) / (Unidad de Tamaño)</p>
+                                        <div class="text-sm opacity-90">
+                                            <p><strong>Unidad de Tamaño:</strong> Puede ser KLOC (miles de líneas de código) o Puntos de Función</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-4">
+                                    <div class="bg-blue-50 rounded-lg p-4">
+                                        <h5 class="font-semibold text-blue-800 mb-2">🎯 Interpretación:</h5>
+                                        <p class="text-blue-700">Nos da una medida normalizada de la calidad. No es lo mismo encontrar 10 defectos en 100 líneas de código que 10 defectos en 10,000 líneas.</p>
+                                    </div>
+                                    
+                                    <div class="bg-red-50 rounded-lg p-4">
+                                        <h5 class="font-semibold text-red-800 mb-2">⚠️ Ejemplo Crítico:</h5>
+                                        <div class="space-y-2">
+                                            <p class="text-red-700">• <strong>Módulo A:</strong> 0.5 defectos/KLOC</p>
+                                            <p class="text-red-700">• <strong>Módulo B:</strong> 15.2 defectos/KLOC</p>
+                                            <div class="bg-red-100 rounded-lg p-3 mt-3">
+                                                <p class="text-red-800 font-semibold">🚨 Decisión: El módulo B necesita atención inmediata; es un foco rojo de problemas técnicos.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Punto de Discusión -->
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">🤔 Punto de Discusión</h3>
+                            <p class="text-lg leading-relaxed opacity-95">
+                                "¿Qué es peor: un sistema con un MTTR (tiempo de reparación) muy bajo pero que falla frecuentemente, o un sistema que casi nunca falla pero cuando lo hace, el MTTR es muy alto (tarda días en repararse)? ¿Depende del tipo de sistema?"
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Taller de Complejidad Ciclomática -->
+        <div id="slide4" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🎯</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Taller de Complejidad Ciclomática</h2>
+                    <h3 class="text-2xl font-semibold text-green-600">¡A Dibujar Grafos y Medir la Complejidad!</h3>
+                    <div class="bg-green-50 rounded-lg p-4 mt-6">
+                        <p class="text-green-700 text-lg font-semibold">⏱️ Duración: 25-30 minutos</p>
+                        <p class="text-green-600 mt-2">Objetivo: Aplicar la fórmula de McCabe a un fragmento de código real para entender cómo funciona la métrica.</p>
+                    </div>
+                </div>
+                
+                <!-- Paso 1: El Código -->
+                <div class="mb-12">
+                    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl p-6 mb-6">
+                        <h3 class="text-2xl font-bold mb-3">📝 Paso 1: El Código a Analizar</h3>
+                        <p class="text-lg opacity-90">"Analicemos esta función Java que determina la categoría de un cliente."</p>
+                    </div>
+                    
+                    <div class="bg-gray-900 rounded-xl p-6 overflow-x-auto">
+                        <div class="text-gray-300 text-sm mb-4">// Código de Ejemplo para el Taller</div>
+                        <pre class="text-green-400 font-mono text-sm leading-relaxed"><code>public String clasificarCliente(int edad, boolean esMiembro) {
+    String categoria = "";                                  <span class="text-yellow-400">// Bloque 1</span>
+    if (edad < 18) {                                        <span class="text-yellow-400">// Nodo Predicado P1</span>
+        categoria = "Menor";                                <span class="text-yellow-400">// Bloque 2</span>
+    } else if (edad >= 18 && edad < 65) {                   <span class="text-yellow-400">// Nodo Predicado P2</span>
+        if (esMiembro) {                                    <span class="text-yellow-400">// Nodo Predicado P3</span>
+            categoria = "Miembro Adulto";                   <span class="text-yellow-400">// Bloque 3</span>
+        } else {
+            categoria = "Adulto";                           <span class="text-yellow-400">// Bloque 4</span>
+        }
+    } else {
+        categoria = "Adulto Mayor";                         <span class="text-yellow-400">// Bloque 5</span>
+    }
+    return categoria;                                       <span class="text-yellow-400">// Bloque 6</span>
+}</code></pre>
+                    </div>
+                </div>
+                
+                <!-- Paso 2: Dibujar el Grafo -->
+                <div class="mb-12">
+                    <div class="bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-xl p-6 mb-6">
+                        <h3 class="text-2xl font-bold mb-3">🎨 Paso 2: Dibujar el Grafo de Flujo de Control</h3>
+                        <p class="text-lg opacity-90">"Un grafo de flujo muestra las decisiones y los caminos que puede tomar el código. Los círculos son los bloques de código y las flechas son las transiciones."</p>
+                    </div>
+                    
+                    <!-- Grafo Visual -->
+                    <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-8">
+                        <h4 class="text-xl font-bold text-center mb-8 text-gray-800">Grafo de Flujo de Control</h4>
+                        
+                        <!-- SVG del Grafo -->
+                        <div class="flex justify-center">
+                            <svg width="600" height="500" viewBox="0 0 600 500" class="border-2 border-gray-200 rounded-lg bg-white">
+                                <!-- Nodos -->
+                                <!-- Bloque 1 (Inicio) -->
+                                <circle cx="300" cy="50" r="25" fill="#3b82f6" stroke="#1e40af" stroke-width="2"/>
+                                <text x="300" y="55" text-anchor="middle" fill="white" font-weight="bold" font-size="12">B1</text>
+                                
+                                <!-- P1 -->
+                                <polygon points="300,100 330,130 300,160 270,130" fill="#ef4444" stroke="#dc2626" stroke-width="2"/>
+                                <text x="300" y="135" text-anchor="middle" fill="white" font-weight="bold" font-size="10">P1</text>
+                                
+                                <!-- Bloque 2 -->
+                                <circle cx="200" cy="220" r="25" fill="#10b981" stroke="#059669" stroke-width="2"/>
+                                <text x="200" y="225" text-anchor="middle" fill="white" font-weight="bold" font-size="12">B2</text>
+                                
+                                <!-- P2 -->
+                                <polygon points="400,190 430,220 400,250 370,220" fill="#ef4444" stroke="#dc2626" stroke-width="2"/>
+                                <text x="400" y="225" text-anchor="middle" fill="white" font-weight="bold" font-size="10">P2</text>
+                                
+                                <!-- P3 -->
+                                <polygon points="400,300 430,330 400,360 370,330" fill="#ef4444" stroke="#dc2626" stroke-width="2"/>
+                                <text x="400" y="335" text-anchor="middle" fill="white" font-weight="bold" font-size="10">P3</text>
+                                
+                                <!-- Bloque 3 -->
+                                <circle cx="320" cy="400" r="25" fill="#10b981" stroke="#059669" stroke-width="2"/>
+                                <text x="320" y="405" text-anchor="middle" fill="white" font-weight="bold" font-size="12">B3</text>
+                                
+                                <!-- Bloque 4 -->
+                                <circle cx="480" cy="400" r="25" fill="#10b981" stroke="#059669" stroke-width="2"/>
+                                <text x="480" y="405" text-anchor="middle" fill="white" font-weight="bold" font-size="12">B4</text>
+                                
+                                <!-- Bloque 5 -->
+                                <circle cx="520" cy="280" r="25" fill="#10b981" stroke="#059669" stroke-width="2"/>
+                                <text x="520" y="285" text-anchor="middle" fill="white" font-weight="bold" font-size="12">B5</text>
+                                
+                                <!-- Bloque 6 (Fin) -->
+                                <circle cx="400" cy="460" r="25" fill="#8b5cf6" stroke="#7c3aed" stroke-width="2"/>
+                                <text x="400" y="465" text-anchor="middle" fill="white" font-weight="bold" font-size="12">B6</text>
+                                
+                                <!-- Flechas -->
+                                <!-- B1 -> P1 -->
+                                <line x1="300" y1="75" x2="300" y2="100" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+                                
+                                <!-- P1 -> B2 (Verdadero) -->
+                                <line x1="280" y1="140" x2="220" y2="200" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+                                <text x="240" y="165" fill="#059669" font-weight="bold" font-size="11">V</text>
+                                
+                                <!-- P1 -> P2 (Falso) -->
+                                <line x1="320" y1="140" x2="380" y2="200" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+                                <text x="360" y="165" fill="#dc2626" font-weight="bold" font-size="11">F</text>
+                                
+                                <!-- P2 -> P3 (Verdadero) -->
+                                <line x1="400" y1="250" x2="400" y2="300" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+                                <text x="410" y="275" fill="#059669" font-weight="bold" font-size="11">V</text>
+                                
+                                <!-- P2 -> B5 (Falso) -->
+                                <line x1="430" y1="220" x2="495" y2="260" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+                                <text x="470" y="235" fill="#dc2626" font-weight="bold" font-size="11">F</text>
+                                
+                                <!-- P3 -> B3 (Verdadero) -->
+                                <line x1="380" y1="350" x2="340" y2="380" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+                                <text x="350" y="360" fill="#059669" font-weight="bold" font-size="11">V</text>
+                                
+                                <!-- P3 -> B4 (Falso) -->
+                                <line x1="420" y1="350" x2="460" y2="380" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+                                <text x="450" y="360" fill="#dc2626" font-weight="bold" font-size="11">F</text>
+                                
+                                <!-- B2 -> B6 -->
+                                <line x1="220" y1="240" x2="380" y2="440" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+                                
+                                <!-- B3 -> B6 -->
+                                <line x1="340" y1="420" x2="380" y2="440" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+                                
+                                <!-- B4 -> B6 -->
+                                <line x1="460" y1="420" x2="420" y2="440" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+                                
+                                <!-- B5 -> B6 -->
+                                <line x1="500" y1="300" x2="420" y2="440" stroke="#374151" stroke-width="2" marker-end="url(#arrowhead)"/>
+                                
+                                <!-- Definir marcador de flecha -->
+                                <defs>
+                                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                                        <polygon points="0 0, 10 3.5, 0 7" fill="#374151"/>
+                                    </marker>
+                                </defs>
+                            </svg>
+                        </div>
+                        
+                        <!-- Leyenda -->
+                        <div class="mt-6 grid md:grid-cols-3 gap-4 text-sm">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 bg-blue-500 rounded-full mr-2"></div>
+                                <span>Bloques de código</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 bg-red-500 transform rotate-45 mr-2"></div>
+                                <span>Nodos predicado (decisiones)</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 bg-purple-500 rounded-full mr-2"></div>
+                                <span>Nodo final</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Paso 3: Calcular V(G) -->
+                <div class="mb-12">
+                    <div class="bg-gradient-to-r from-green-500 to-teal-600 text-white rounded-xl p-6 mb-6">
+                        <h3 class="text-2xl font-bold mb-3">🧮 Paso 3: Calcular V(G)</h3>
+                        <p class="text-lg opacity-90">"Vamos a calcular la complejidad ciclomática usando tres métodos diferentes."</p>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <!-- Método 1 -->
+                        <div class="bg-green-50 border-2 border-green-200 rounded-xl p-6">
+                            <h4 class="text-xl font-bold text-green-800 mb-4">Método 1: Nodos Predicado</h4>
+                            <p class="text-green-700 mb-4 text-sm">(más fácil)</p>
+                            <div class="space-y-3">
+                                <p class="text-green-700">"Contemos el número de 'preguntas' (if, while, for, etc.) en el código y sumémosle 1."</p>
+                                <div class="bg-white rounded-lg p-4">
+                                    <p class="font-semibold">Nodos Predicado (P) = 3</p>
+                                    <p class="text-sm text-gray-600">(hay 3 if)</p>
+                                    <div class="mt-3 p-3 bg-green-100 rounded-lg">
+                                        <p class="font-bold text-green-800">V(G) = P + 1 = 3 + 1 = 4</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Método 2 -->
+                        <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+                            <h4 class="text-xl font-bold text-blue-800 mb-4">Método 2: Regiones del Grafo</h4>
+                            <div class="space-y-3">
+                                <p class="text-blue-700">"Contemos las áreas cerradas en nuestro dibujo, más el área exterior."</p>
+                                <div class="bg-white rounded-lg p-4">
+                                    <p class="font-semibold">Regiones = 4</p>
+                                    <p class="text-sm text-gray-600">(Se identifican 4 regiones en el grafo dibujado)</p>
+                                    <div class="mt-3 p-3 bg-blue-100 rounded-lg">
+                                        <p class="font-bold text-blue-800">V(G) = 4</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Método 3 -->
+                        <div class="bg-purple-50 border-2 border-purple-200 rounded-xl p-6">
+                            <h4 class="text-xl font-bold text-purple-800 mb-4">Método 3: Fórmula de Euler</h4>
+                            <p class="text-purple-700 mb-4 text-sm">(E - N + 2)</p>
+                            <div class="space-y-3">
+                                <p class="text-purple-700">"Contemos las flechas (Aristas, E) y los círculos (Nodos, N)."</p>
+                                <div class="bg-white rounded-lg p-4">
+                                    <p class="font-semibold">Aristas (E) = 10</p>
+                                    <p class="font-semibold">Nodos (N) = 8</p>
+                                    <p class="text-sm text-gray-600">(Bloques + Predicados + Fin)</p>
+                                    <div class="mt-3 p-3 bg-purple-100 rounded-lg">
+                                        <p class="font-bold text-purple-800">V(G) = 10 - 8 + 2 = 4</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Paso 4: Conclusión -->
+                <div class="mb-8">
+                    <div class="bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl p-6 mb-6">
+                        <h3 class="text-2xl font-bold mb-3">🎉 Paso 4: La Conclusión</h3>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-green-50 to-blue-50 rounded-xl p-8">
+                        <div class="text-center mb-6">
+                            <div class="text-4xl font-bold text-green-600 mb-4">V(G) = 4</div>
+                        </div>
+                        
+                        <div class="space-y-6">
+                            <div class="bg-white rounded-lg p-6 shadow-sm">
+                                <h4 class="text-xl font-bold text-gray-800 mb-3">📊 Interpretación:</h4>
+                                <p class="text-gray-700 text-lg leading-relaxed">
+                                    "El resultado es V(G) = 4. Esto significa que necesitamos <strong>al menos 4 casos de prueba</strong> para cubrir todos los caminos lógicos básicos de esta función."
+                                </p>
+                            </div>
+                            
+                            <div class="bg-green-100 rounded-lg p-6">
+                                <h4 class="text-xl font-bold text-green-800 mb-3">✅ Evaluación:</h4>
+                                <p class="text-green-700 text-lg leading-relaxed">
+                                    "Como 4 es menor que 10, esta función tiene una <strong>complejidad aceptable</strong> y es mantenible."
+                                </p>
+                            </div>
+                            
+                            <div class="bg-blue-100 rounded-lg p-6">
+                                <h4 class="text-xl font-bold text-blue-800 mb-3">🧪 Casos de Prueba Sugeridos:</h4>
+                                <div class="grid md:grid-cols-2 gap-4 text-sm">
+                                    <div class="bg-white rounded-lg p-3">
+                                        <strong>Caso 1:</strong> edad = 15, esMiembro = false → "Menor"
+                                    </div>
+                                    <div class="bg-white rounded-lg p-3">
+                                        <strong>Caso 2:</strong> edad = 30, esMiembro = true → "Miembro Adulto"
+                                    </div>
+                                    <div class="bg-white rounded-lg p-3">
+                                        <strong>Caso 3:</strong> edad = 25, esMiembro = false → "Adulto"
+                                    </div>
+                                    <div class="bg-white rounded-lg p-3">
+                                        <strong>Caso 4:</strong> edad = 70, esMiembro = false → "Adulto Mayor"
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Actividad para estudiantes -->
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">👥 Actividad Grupal (10 minutos)</h3>
+                            <p class="text-lg leading-relaxed opacity-95 mb-4">
+                                "En grupos de 3-4 personas, tomen el código de la función y modifíquenlo para que tenga una complejidad ciclomática de V(G) = 6. ¿Qué decisiones adicionales agregarían?"
+                            </p>
+                            <div class="bg-white/20 rounded-lg p-4">
+                                <p class="font-semibold">💡 Pista:</p>
+                                <p class="opacity-90">Piensen en validaciones adicionales: ¿edad negativa? ¿límites de edad diferentes? ¿más categorías de membresía?</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 
     <!-- Navigation -->
     <div class="navigation">
-        <button class="nav-btn" onclick="previousSlide()">
-            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-            </svg>
-        </button>
-        
-        <div class="flex items-center gap-2">
-            <div class="slide-indicator active" data-slide="0"></div>
-            <div class="slide-indicator" data-slide="1"></div>
-        </div>
-        
-        <button class="nav-btn" onclick="nextSlide()">
-            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-            </svg>
-        </button>
+        <button class="nav-button" onclick="previousSlide()">⬅️ Anterior</button>
+        <button class="nav-button" onclick="resetAll()">🔄 Reiniciar</button>
+        <button class="nav-button" onclick="nextSlide()">Siguiente ➡️</button>
     </div>
 
     <script>
-        let currentSlide = 0;
-        const slides = document.querySelectorAll('.slide');
-        const indicators = document.querySelectorAll('.slide-indicator');
+        let currentSlide = 1;
+        const totalSlides = 4;
         
-        function showSlide(index) {
-            slides.forEach(slide => slide.classList.remove('active'));
-            indicators.forEach(indicator => indicator.classList.remove('active'));
+        function updateSlideCounter() {
+            document.getElementById('current-slide').textContent = currentSlide;
+            document.getElementById('total-slides').textContent = totalSlides;
+        }
+        
+        function showSlide(slideNumber) {
+            // Hide all slides
+            for (let i = 1; i <= totalSlides; i++) {
+                document.getElementById('slide' + i).classList.add('hidden');
+            }
             
-            slides[index].classList.add('active');
-            indicators[index].classList.add('active');
+            // Show selected slide
+            document.getElementById('slide' + slideNumber).classList.remove('hidden');
             
-            // Restart animations
-            const fadeElements = slides[index].querySelectorAll('.fade-in');
-            fadeElements.forEach(el => {
-                el.style.animation = 'none';
-                el.offsetHeight; // Trigger reflow
-                el.style.animation = null;
-            });
+            currentSlide = slideNumber;
+            updateSlideCounter();
+            updateNavigationButtons();
+        }
+        
+        function updateNavigationButtons() {
+            const prevButton = document.querySelector('.navigation button:first-child');
+            const nextButton = document.querySelector('.navigation button:last-child');
             
-            // Animate complexity gauges
-            if (index === 1) {
-                setTimeout(() => {
-                    const gaugeFills = document.querySelectorAll('.gauge-fill');
-                    gaugeFills.forEach(fill => {
-                        const width = fill.style.width;
-                        fill.style.width = '0%';
-                        setTimeout(() => {
-                            fill.style.width = width;
-                        }, 100);
-                    });
-                }, 800);
+            prevButton.disabled = currentSlide === 1;
+            nextButton.disabled = currentSlide === totalSlides;
+        }
+        
+        function previousSlide() {
+            if (currentSlide > 1) {
+                showSlide(currentSlide - 1);
             }
         }
         
         function nextSlide() {
-            currentSlide = (currentSlide + 1) % slides.length;
-            showSlide(currentSlide);
+            if (currentSlide < totalSlides) {
+                showSlide(currentSlide + 1);
+            }
         }
         
-        function previousSlide() {
-            currentSlide = (currentSlide - 1 + slides.length) % slides.length;
-            showSlide(currentSlide);
+        function resetAll() {
+            showSlide(1);
         }
         
         // Keyboard navigation
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'ArrowRight') nextSlide();
-            if (e.key === 'ArrowLeft') previousSlide();
-        });
-        
-        // Indicator clicks
-        indicators.forEach((indicator, index) => {
-            indicator.addEventListener('click', () => {
-                currentSlide = index;
-                showSlide(currentSlide);
-            });
-        });
-        
-        // Metric section interactions
-        document.querySelectorAll('.metric-section').forEach(section => {
-            section.addEventListener('click', function() {
-                this.style.transform = 'translateX(10px)';
-                setTimeout(() => {
-                    this.style.transform = '';
-                }, 200);
-            });
-        });
-        
-        // Initialize gauge animations on load
-        window.addEventListener('load', function() {
-            if (currentSlide === 1) {
-                setTimeout(() => {
-                    const gaugeFills = document.querySelectorAll('.gauge-fill');
-                    gaugeFills.forEach(fill => {
-                        const width = fill.style.width;
-                        fill.style.width = '0%';
-                        setTimeout(() => {
-                            fill.style.width = width;
-                        }, 100);
-                    });
-                }, 1000);
+            if (e.key === 'ArrowLeft') {
+                previousSlide();
+            } else if (e.key === 'ArrowRight') {
+                nextSlide();
+            } else if (e.key === 'Home') {
+                resetAll();
             }
         });
+        
+        // Initialize
+        showSlide(1);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a719ff93a42cde',t:'MTc1NzA4OTcyNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97b1e3a5f1a52a88',t:'MTc1NzIwMjg0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+<!-- Pie de página -->
+<footer class="footer">
+    P24 Plataforma QS - Calidad de Software | Isaac Paniagua</div>
+</footer>
+
+
+<script>
+(function(){
+  if (window.__qsScrollWrap) return;
+  window.__qsScrollWrap = true;
+  function toTop(){
+    try { window.scrollTo({top: 0, behavior: 'smooth'}); }
+    catch(e){ window.scrollTo(0,0); }
+  }
+  function wrapShowSlide(){
+    if (typeof window.showSlide === 'function' && !window.__qsShowWrapped){
+      var _orig = window.showSlide;
+      window.showSlide = function(n){
+        _orig(n);
+        toTop();
+      };
+      window.__qsShowWrapped = true;
+    }
+  }
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', function(){ wrapShowSlide(); setTimeout(wrapShowSlide, 150); });
+  } else {
+    wrapShowSlide(); setTimeout(wrapShowSlide, 150);
+  }
+})();
+</script>
+
+</body>
 </html>
