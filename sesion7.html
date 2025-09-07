@@ -3,462 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sesión 7 - SQA vs QC: Dos Caras de la Misma Moneda</title>
+    <title>Sesión 7: Modelos y Estándares de Calidad (Introducción a CMMI)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
+            font-family: 'Inter', sans-serif;
         }
-
-        .slide-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 3rem;
-            max-width: 900px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-            position: relative;
-            min-height: 600px;
-            display: flex;
-            flex-direction: column;
+        
+        .slide-transition {
+            transition: all 0.5s ease-in-out;
         }
-
-        .slide {
-            display: none;
-            flex: 1;
-            animation: fadeIn 0.5s ease-in-out;
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
         }
-
-        .slide.active {
-            display: flex;
-            flex-direction: column;
+        
+        .card-hover {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
+        }
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        .slide h1 {
-            color: #2d3748;
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
         }
-
-        .slide h2 {
-            color: #2d3748;
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
-
-        .slide h3 {
-            color: #4a5568;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .subtitle {
-            font-size: 1.3rem;
-            color: #718096;
-            text-align: center;
-            font-style: italic;
-            margin-bottom: 2rem;
-        }
-
-        .quote-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            text-align: center;
-            margin: 2rem 0;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        }
-
-        .quote-box h4 {
-            color: white;
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-        }
-
-        .quote-box p {
-            font-size: 1.2rem;
-            line-height: 1.6;
-        }
-
-        .vs-container {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 2rem;
-            margin: 2rem 0;
-            align-items: center;
-        }
-
-        .sqa-card {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
-        }
-
-        .qc-card {
-            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 8px 25px rgba(237, 137, 54, 0.3);
-        }
-
-        .vs-divider {
-            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
-            color: white;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            font-weight: bold;
-            box-shadow: 0 8px 25px rgba(159, 122, 234, 0.3);
-        }
-
-        .definition-card h4 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.4rem;
-        }
-
-        .definition-card p {
-            margin-bottom: 0.8rem;
-            line-height: 1.5;
-        }
-
-        .definition-card ul {
-            text-align: left;
-            margin-left: 1rem;
-        }
-
-        .definition-card li {
-            margin-bottom: 0.5rem;
-            line-height: 1.4;
-        }
-
-        .comparison-box {
-            background: #e6fffa;
-            padding: 2rem;
-            border-radius: 15px;
-            border-left: 5px solid #38b2ac;
-            margin: 2rem 0;
-        }
-
-        .comparison-box h4 {
-            color: #2d3748;
-            margin-bottom: 1.5rem;
-            font-size: 1.4rem;
-            text-align: center;
-        }
-
-        .comparison-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-        }
-
-        .comparison-item {
-            background: #f0fff4;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border-left: 4px solid #48bb78;
-        }
-
-        .comparison-item.qc-item {
-            background: #fffaf0;
-            border-left-color: #ed8936;
-        }
-
-        .comparison-item h5 {
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .comparison-item.sqa-item h5 {
-            color: #2f855a;
-        }
-
-        .comparison-item.qc-item h5 {
-            color: #c05621;
-        }
-
-        .analogy-box {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-            text-align: center;
-        }
-
-        .analogy-box h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            font-size: 1.5rem;
-        }
-
-        .car-analogy {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-top: 2rem;
-        }
-
-        .analogy-card {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .analogy-card h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .analogy-card ul {
-            text-align: left;
-            margin-left: 1rem;
-        }
-
-        .analogy-card li {
-            margin-bottom: 0.5rem;
-            line-height: 1.4;
-        }
-
-        .benefits-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-
-        .benefit-card {
-            background: #f0fff4;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border-left: 4px solid #48bb78;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.1);
-        }
-
-        .benefit-card h5 {
-            color: #2f855a;
-            margin-bottom: 0.8rem;
-            font-size: 1.1rem;
-        }
-
-        .benefit-card p {
-            color: #4a5568;
-            line-height: 1.5;
-            font-size: 0.95rem;
-        }
-
-        .activity-container {
-            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .activity-container h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .activity-examples {
-            display: grid;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        .activity-item {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1rem;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-
-        .activity-item:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateX(5px);
-        }
-
-        .activity-text {
-            font-weight: 500;
-        }
-
-        .activity-answer {
-            background: rgba(255, 255, 255, 0.3);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .activity-item.revealed .activity-answer {
-            opacity: 1;
-        }
-
+        
         .navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 2px solid #e2e8f0;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
         }
-
-        .slide-counter {
-            color: #718096;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .nav-btn {
-            padding: 0.8rem 1.5rem;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+        
+        .nav-button {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
             color: white;
             border: none;
-            border-radius: 10px;
+            padding: 12px 20px;
+            border-radius: 25px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 14px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
         }
-
-        .nav-btn:hover {
+        
+        .nav-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
         }
-
-        .nav-btn:disabled {
-            background: #cbd5e0;
+        
+        .nav-button:disabled {
+            background: #9ca3af;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
-
-        .source-note {
-            background: #fff5f5;
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid #f56565;
-            margin-top: 1.5rem;
-            font-style: italic;
-            color: #4a5568;
-        }
-
-        .highlight-box {
-            background: #fffaf0;
+        
+        .metric-card {
+            background: white;
+            border-radius: 1rem;
             padding: 1.5rem;
-            border-radius: 12px;
-            border: 2px dashed #ed8936;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+        }
+        
+        .metric-card.process {
+            border-left-color: #10b981;
+        }
+        
+        .metric-card.project {
+            border-left-color: #f59e0b;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        
+        .advantage-box {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin: 0.5rem 0;
+        }
+        
+        .formula-box {
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            color: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
             text-align: center;
-            margin: 2rem 0;
         }
-
-        .highlight-box p {
-            color: #2d3748;
+        
+        .slide-counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 10px 15px;
+            border-radius: 20px;
             font-weight: 600;
-            font-size: 1.1rem;
+            color: #374151;
+            z-index: 1000;
         }
-
-        @media (max-width: 768px) {
-            .slide-container {
-                padding: 2rem;
-                margin: 1rem;
-            }
-            
-            .slide h1 {
-                font-size: 2rem;
-            }
-            
-            .slide h2 {
-                font-size: 1.5rem;
-            }
-            
-            .vs-container {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            
-            .vs-divider {
-                width: 60px;
-                height: 60px;
-                font-size: 1.5rem;
-                justify-self: center;
-            }
-            
-            .comparison-grid, .car-analogy, .benefits-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            
-            .nav-buttons {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
+        
+        .assignment-card {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin: 1rem 0;
+        }
+        
+        .deliverable-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            backdrop-filter: blur(5px);
         }
     </style>
-</head>
-<body>
 
 <style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+/* Fondo como index */
+body{
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height:1.6;
+  color:#333;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height:100vh;
+  padding-top:80px; /* nav fijo */
+}
+
+/* NAV Plataforma QS (fijo) */
+.qs-nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:saturate(140%) blur(20px);
+       background:rgba(255,255,255,.95);border-bottom:1px solid rgba(255,255,255,.2);
+       box-shadow:0 8px 32px rgba(0,0,0,.10)}
+.qs-nav .wrap{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;gap:20px;align-items:center;justify-content:space-between}
+.qs-brand{display:flex;gap:15px;align-items:center;color:#1f2937;font-weight:800;font-size:1.3rem;text-decoration:none;position:relative;padding:8px 16px;border-radius:20px}
+.qs-brand::before{content:"🎓";font-size:1.6rem}
+.qs-tabs{display:flex;gap:12px;flex-wrap:wrap;background:rgba(255,255,255,.3);padding:8px;border-radius:30px;backdrop-filter:blur(10px)}
+.qs-btn{border:0;padding:12px 20px;border-radius:25px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;font-weight:600;font-size:.9rem;
+       transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(10px);border:2px solid transparent;position:relative;overflow:hidden}
+.qs-btn::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);transition:all .4s ease;z-index:-1}
+.qs-btn:hover{color:#fff;transform:translateY(-3px);box-shadow:0 8px 25px rgba(102,126,234,.4);border-color:rgba(102,126,234,.3)}
+.qs-btn:hover::before{left:0}
+.qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none;box-shadow:0 6px 20px rgba(102,126,234,.5);transform:translateY(-2px)}
+.qs-btn[aria-current="page"]::before{left:0}
+
+/* Footer como index */
+.footer{
+  margin-top:60px;
+  padding:30px 20px;
+  text-align:center;
+  background:rgba(255, 255, 255, 0.1);
+  backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255, 255, 255, 0.2);
+}
+.footer-content{
+  max-width:1200px;
+  margin:0 auto;
+  color:rgba(255,255,255,0.8);
+  font-size:0.95rem;
+  transition:all 0.3s ease;
+  cursor:default;
+}
+.footer-content:hover{ color:#fff; transform:translateY(-2px); }
+
+/* Slide counter más pequeño */
+.slide-counter{
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:14px;
+  opacity:0.9;
+}
 </style>
+
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- NAV Plataforma QS -->
 <div class="qs-nav">
   <div class="wrap">
     <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
@@ -469,297 +228,746 @@
       <a class="qs-btn" href="Foro.html">Foro</a>
       <a class="qs-btn" href="paneldocente.html">Panel</a>
       <a class="qs-btn" href="roadmap.html">Roadmap</a>
-          <a class="qs-btn" href="checklist.html">Checklist</a>
-\1
+      <a class="qs-btn" href="checklist.html">Checklist</a>
+      <a class="qs-btn" href="status.html">Status</a>
+    </nav>
   </div>
 </div>
-<script>
-(function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
-  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
-  });
-})();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
-</script>
 
+    <!-- Slide Counter -->
+    <div class="slide-counter">
+        <span id="current-slide">1</span> / <span id="total-slides">4</span>
+    </div>
 
-    <div class="slide-container">
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8 pb-32">
         <!-- Slide 1: Título -->
-        <div class="slide active">
-            <h1>⚖️ SQA vs. QC</h1>
-            <div class="subtitle">Prevención vs. Detección</div>
-            
-            <div class="quote-box">
-                <h4>🛡️ "Calidad en el proceso y en el producto"</h4>
-                <p>Dos enfoques complementarios para garantizar la excelencia del software</p>
+        <div id="slide1" class="slide-transition fade-in">
+            <div class="gradient-bg rounded-2xl p-12 text-white text-center mb-8 card-hover">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-6xl mb-6">🏗️</div>
+                    <h1 class="text-5xl font-bold mb-6 pulse-animation">Construyendo sobre Roca</h1>
+                    <h2 class="text-3xl font-semibold mb-8 opacity-90">Modelos y Estándares de Calidad</h2>
+                    <p class="text-xl mb-8 opacity-80">El camino probado hacia la madurez: CMMI</p>
+                    
+                    <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 mt-12">
+                        <div class="flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <h3 class="text-xl font-semibold">Fuentes Principales</h3>
+                        </div>
+                        <div class="text-lg opacity-90 space-y-2">
+                            <p>CMMI for Development v1.3</p>
+                            <p>Pressman - Ingeniería de Software</p>
+                            <p>Sommerville - Ingeniería de Software</p>
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <div class="highlight-box">
-                <p>🎯 <strong>Objetivo:</strong> Entender las diferencias y la sinergia entre SQA y QC</p>
+            <!-- Notas para el docente -->
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
+                <div class="flex items-start">
+                    <svg class="w-6 h-6 text-blue-400 mr-3 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <h4 class="text-lg font-semibold text-blue-800 mb-2">Notas para el docente:</h4>
+                        <p class="text-blue-700 leading-relaxed">
+                            "Hemos aprendido a medir la calidad. Ahora vamos a ver cómo las organizaciones exitosas estructuran sus procesos para lograr calidad de manera consistente. CMMI es el modelo más reconocido mundialmente para esto."
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Slide 2: Definiciones Clave -->
-        <div class="slide">
-            <h2>🔍 Definiciones Clave</h2>
-            
-            <div class="vs-container">
-                <div class="sqa-card definition-card">
-                    <h4>🛡️ SQA (Software Quality Assurance)</h4>
-                    <p><strong>Enfoque:</strong> Procesos</p>
-                    <p><strong>Objetivo:</strong> Prevenir defectos antes de que ocurran</p>
-                    <p><strong>Ejemplos:</strong></p>
-                    <ul>
-                        <li>Definir estándares de codificación</li>
-                        <li>Auditorías de procesos</li>
-                        <li>Capacitación del equipo</li>
-                        <li>Revisión de metodologías</li>
-                    </ul>
+        <!-- Slide 2: ¿Por Qué Necesitamos Modelos? -->
+        <div id="slide2" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🗺️</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">¿Por Qué Necesitamos Modelos?</h2>
+                    <h3 class="text-2xl font-semibold text-blue-600">El Dilema: ¿Explorar a Ciegas o Seguir un Mapa?</h3>
                 </div>
                 
-                <div class="vs-divider">VS</div>
-                
-                <div class="qc-card definition-card">
-                    <h4>🔍 QC (Quality Control)</h4>
-                    <p><strong>Enfoque:</strong> Producto</p>
-                    <p><strong>Objetivo:</strong> Detectar defectos en entregables</p>
-                    <p><strong>Ejemplos:</strong></p>
-                    <ul>
-                        <li>Pruebas unitarias</li>
-                        <li>Revisiones de código</li>
-                        <li>Testing de integración</li>
-                        <li>Inspecciones finales</li>
-                    </ul>
+                <!-- Analogía del Edificio -->
+                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-8 text-white mb-8">
+                    <div class="flex items-start">
+                        <svg class="w-12 h-12 mr-6 mt-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">🏗️ Imagina que tienes que construir un gran edificio...</h3>
+                            <p class="text-lg leading-relaxed opacity-95 mb-4">
+                                ¿Empezarías a poner ladrillos al azar? ¡Claro que no! Necesitarías planos, un método de trabajo, roles definidos...
+                            </p>
+                            <p class="text-lg leading-relaxed opacity-95">
+                                <strong>En el software, ocurre lo mismo.</strong> Sin una guía, los proyectos a menudo caen en el caos.
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="source-note">
-                📚 <strong>Fuentes:</strong> Pressman, Capítulo 16; Mahfuz, Capítulo 1
+                
+                <!-- Comparación: Sin Modelo vs Con Modelo -->
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <!-- Explorar a Ciegas -->
+                    <div class="bg-red-50 border-2 border-red-200 rounded-xl p-6">
+                        <div class="text-center mb-6">
+                            <div class="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <h4 class="text-2xl font-bold text-red-800 mb-3">Explorar a Ciegas</h4>
+                            <p class="text-red-600 font-semibold">(Sin Modelo)</p>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-white rounded-lg p-4 border-l-4 border-red-400">
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-red-500 mr-3 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <p class="text-red-700">Cada proyecto es un "invento" nuevo.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-4 border-l-4 border-red-400">
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-red-500 mr-3 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <p class="text-red-700">El éxito depende de "héroes" individuales.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-4 border-l-4 border-red-400">
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-red-500 mr-3 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <p class="text-red-700">Los errores se repiten una y otra vez.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-4 border-l-4 border-red-400">
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-red-500 mr-3 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <p class="text-red-700">No hay forma de predecir costos o fechas de entrega.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Seguir un Mapa -->
+                    <div class="bg-green-50 border-2 border-green-200 rounded-xl p-6">
+                        <div class="text-center mb-6">
+                            <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <h4 class="text-2xl font-bold text-green-800 mb-3">Seguir un Mapa</h4>
+                            <p class="text-green-600 font-semibold">(Con un Modelo)</p>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-white rounded-lg p-4 border-l-4 border-green-400">
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <p class="text-green-700">Se aplican las mejores prácticas de la industria.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-4 border-l-4 border-green-400">
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <p class="text-green-700">El éxito se vuelve un resultado del proceso, no de la suerte.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-4 border-l-4 border-green-400">
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <p class="text-green-700">Se aprende de los errores de forma sistemática.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-4 border-l-4 border-green-400">
+                                <div class="flex items-start">
+                                    <svg class="w-5 h-5 text-green-500 mr-3 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <p class="text-green-700">Los resultados son más predecibles y consistentes.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conclusión -->
+                <div class="bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">💡 Conclusión</h3>
+                            <p class="text-lg leading-relaxed opacity-95">
+                                Un modelo de calidad es nuestro <strong>mapa probado</strong> para construir software de manera exitosa y repetible.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Slide 3: Diferencia Fundamental -->
-        <div class="slide">
-            <h2>⚡ Diferencia Fundamental</h2>
-            
-            <div class="comparison-box">
-                <h4>🔄 Enfoque Temporal y Metodológico</h4>
-                <div class="comparison-grid">
-                    <div class="comparison-item sqa-item">
-                        <h5>🛡️ SQA: Proactivo</h5>
-                        <p><strong>Cuándo:</strong> Antes y durante el desarrollo</p>
-                        <p><strong>Cómo:</strong> Estableciendo procesos, estándares y metodologías</p>
-                        <p><strong>Meta:</strong> Evitar que los errores ocurran</p>
-                    </div>
-                    
-                    <div class="comparison-item qc-item">
-                        <h5>🔍 QC: Reactivo</h5>
-                        <p><strong>Cuándo:</strong> Al final o después del desarrollo</p>
-                        <p><strong>Cómo:</strong> Probando, inspeccionando y validando</p>
-                        <p><strong>Meta:</strong> Encontrar errores existentes</p>
+        <!-- Slide 3: Introducción a CMMI -->
+        <div id="slide3" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🧭</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Introducción a CMMI</h2>
+                    <h3 class="text-2xl font-semibold text-blue-600">CMMI: El GPS para la Mejora de Procesos</h3>
+                </div>
+                
+                <!-- Logo y Credenciales -->
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 text-white mb-8">
+                    <div class="flex items-center justify-center mb-6">
+                        <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mr-6">
+                            <svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="text-center">
+                            <h3 class="text-2xl font-bold mb-2">Software Engineering Institute (SEI)</h3>
+                            <p class="text-lg opacity-90">Universidad Carnegie Mellon</p>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="quote-box">
-                <h4>🔗 Relación Simbiótica</h4>
-                <p><strong>SQA reduce la cantidad de errores que QC debe encontrar</strong></p>
-                <p style="font-size: 1rem; margin-top: 1rem; opacity: 0.9;">
-                    Un buen SQA hace que QC sea más eficiente y efectivo
-                </p>
-            </div>
-            
-            <div class="source-note">
-                📚 <strong>Fuente:</strong> QA Lovers, Capítulo 2
+                
+                <!-- ¿Qué es CMMI? -->
+                <div class="metric-card" style="border-left-color: #3b82f6;" class="mb-8">
+                    <div class="flex items-start mb-6">
+                        <div class="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-blue-800 mb-4">¿Qué es CMMI?</h4>
+                            
+                            <div class="bg-blue-50 rounded-lg p-4 mb-4">
+                                <p class="text-blue-700 text-lg leading-relaxed">
+                                    Significa <strong>Capability Maturity Model Integration</strong> (Modelo Integrado de Madurez y Capacidad).
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ¿Quién lo creó? -->
+                <div class="metric-card" style="border-left-color: #10b981;" class="mb-8">
+                    <div class="flex items-start mb-6">
+                        <div class="w-16 h-16 bg-green-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-green-800 mb-4">¿Quién lo creó?</h4>
+                            
+                            <div class="bg-green-50 rounded-lg p-4 mb-4">
+                                <p class="text-green-700 text-lg leading-relaxed">
+                                    Fue desarrollado por el <strong>Software Engineering Institute (SEI)</strong> de la Universidad Carnegie Mellon, un referente mundial en ingeniería de software.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ¿Cuál es su propósito? -->
+                <div class="metric-card" style="border-left-color: #f59e0b;" class="mb-8">
+                    <div class="flex items-start mb-6">
+                        <div class="w-16 h-16 bg-amber-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-amber-800 mb-4">¿Cuál es su propósito fundamental?</h4>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-amber-50 rounded-lg p-4">
+                                    <p class="text-amber-700 text-lg leading-relaxed">
+                                        <strong>No es una metodología rígida</strong> que te dice cómo trabajar, sino un <strong>marco de referencia</strong> que describe qué características tienen las organizaciones exitosas.
+                                    </p>
+                                </div>
+                                
+                                <div class="bg-amber-100 rounded-lg p-4">
+                                    <p class="text-amber-800 text-lg leading-relaxed">
+                                        Su objetivo es proporcionar a las organizaciones una <strong>guía clara para la mejora continua</strong> de sus procesos de desarrollo.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Resumen -->
+                <div class="bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">📋 En Resumen</h3>
+                            <p class="text-lg leading-relaxed opacity-95">
+                                CMMI te ayuda a <strong>evaluar tus procesos actuales</strong> e identificar los pasos a seguir para ser mejor.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Slide 4: Analogía - Construir un Coche -->
-        <div class="slide">
-            <h2>🚗 Analogía: Construir un Coche</h2>
-            
-            <div class="analogy-box">
-                <h4>🏭 Fábrica Automotriz: SQA vs QC</h4>
+        <!-- Slide 4: La Escalera de la Madurez -->
+        <div id="slide4" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🚀</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">La Escalera de la Madurez</h2>
+                    <h3 class="text-2xl font-semibold text-purple-600">Subiendo Nivel por Nivel hacia la Excelencia</h3>
+                    <p class="text-lg text-gray-600 mt-4">CMMI organiza la madurez en 5 niveles. Cada nivel es una base para el siguiente, creando una cultura de calidad incremental.</p>
+                </div>
                 
-                <div class="car-analogy">
-                    <div class="analogy-card">
-                        <h5>🛡️ SQA en la Fábrica</h5>
-                        <ul>
-                            <li>Diseñar planos detallados</li>
-                            <li>Definir materiales de calidad</li>
-                            <li>Capacitar a los ensambladores</li>
-                            <li>Verificar procedimientos</li>
-                            <li>Establecer estándares de seguridad</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="analogy-card">
-                        <h5>🔍 QC en la Fábrica</h5>
-                        <ul>
-                            <li>Probar frenos y motor</li>
-                            <li>Revisar calidad de pintura</li>
-                            <li>Hacer test de manejo</li>
-                            <li>Inspección final antes de entrega</li>
-                            <li>Verificar cumplimiento de normas</li>
-                        </ul>
+                <!-- Escalera Visual -->
+                <div class="mb-12">
+                    <div class="relative">
+                        <!-- Nivel 5 -->
+                        <div class="bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl p-6 mb-4 transform hover:scale-105 transition-transform">
+                            <div class="flex items-center">
+                                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mr-6 flex-shrink-0">
+                                    <span class="text-2xl font-bold text-white">5</span>
+                                </div>
+                                <div class="flex-1 text-white">
+                                    <h4 class="text-2xl font-bold mb-2">Nivel 5: Optimizado</h4>
+                                    <p class="text-lg mb-2 opacity-90"><strong>Proceso:</strong> La organización se enfoca en la mejora continua a través de la innovación y la optimización de sus procesos.</p>
+                                    <div class="bg-white/20 rounded-lg p-3">
+                                        <p class="font-semibold">💡 Lema: "Siempre buscando una mejor manera"</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Nivel 4 -->
+                        <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-6 mb-4 transform hover:scale-105 transition-transform">
+                            <div class="flex items-center">
+                                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mr-6 flex-shrink-0">
+                                    <span class="text-2xl font-bold text-white">4</span>
+                                </div>
+                                <div class="flex-1 text-white">
+                                    <h4 class="text-2xl font-bold mb-2">Nivel 4: Cuantitativamente Gestionado</h4>
+                                    <p class="text-lg mb-2 opacity-90"><strong>Proceso:</strong> La organización y los proyectos establecen objetivos cuantitativos de calidad y rendimiento, y usan datos estadísticos para gestionar el proceso.</p>
+                                    <div class="bg-white/20 rounded-lg p-3">
+                                        <p class="font-semibold">📊 Lema: "Gestionamos con datos, no con opiniones"</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Nivel 3 -->
+                        <div class="bg-gradient-to-r from-green-500 to-teal-600 rounded-xl p-6 mb-4 transform hover:scale-105 transition-transform">
+                            <div class="flex items-center">
+                                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mr-6 flex-shrink-0">
+                                    <span class="text-2xl font-bold text-white">3</span>
+                                </div>
+                                <div class="flex-1 text-white">
+                                    <h4 class="text-2xl font-bold mb-2">Nivel 3: Definido</h4>
+                                    <p class="text-lg mb-2 opacity-90"><strong>Proceso:</strong> La organización define un conjunto de procesos estándar que todos los proyectos adaptan y utilizan.</p>
+                                    <div class="bg-white/20 rounded-lg p-3">
+                                        <p class="font-semibold">🏢 Lema: "Así es como hacemos las cosas aquí"</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Nivel 2 -->
+                        <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl p-6 mb-4 transform hover:scale-105 transition-transform">
+                            <div class="flex items-center">
+                                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mr-6 flex-shrink-0">
+                                    <span class="text-2xl font-bold text-white">2</span>
+                                </div>
+                                <div class="flex-1 text-white">
+                                    <h4 class="text-2xl font-bold mb-2">Nivel 2: Gestionado</h4>
+                                    <p class="text-lg mb-2 opacity-90"><strong>Proceso:</strong> Se planifican y gestionan los proyectos. Se siguen procesos documentados a nivel de proyecto.</p>
+                                    <div class="bg-white/20 rounded-lg p-3">
+                                        <p class="font-semibold">📋 Lema: "Tenemos un plan y lo seguimos"</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Nivel 1 -->
+                        <div class="bg-gradient-to-r from-red-500 to-pink-600 rounded-xl p-6 mb-4 transform hover:scale-105 transition-transform">
+                            <div class="flex items-center">
+                                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mr-6 flex-shrink-0">
+                                    <span class="text-2xl font-bold text-white">1</span>
+                                </div>
+                                <div class="flex-1 text-white">
+                                    <h4 class="text-2xl font-bold mb-2">Nivel 1: Inicial</h4>
+                                    <p class="text-lg mb-2 opacity-90"><strong>Proceso:</strong> Caótico, impredecible. El éxito depende del esfuerzo heroico individual.</p>
+                                    <div class="bg-white/20 rounded-lg p-3">
+                                        <p class="font-semibold">🔥 Lema: "¡Apagando incendios!"</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="highlight-box">
-                <p>💡 <strong>Mensaje Clave:</strong> Sin un buen SQA, QC se vuelve costoso e insuficiente</p>
+                
+                <!-- Punto de Reflexión -->
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">🤔 Punto de Reflexión</h3>
+                            <p class="text-lg leading-relaxed opacity-95 mb-4">
+                                "Piensen en las organizaciones donde han trabajado o estudiado. ¿En qué nivel de CMMI las ubicarían? ¿Qué evidencias los llevan a esa conclusión?"
+                            </p>
+                            <div class="bg-white/20 rounded-lg p-4">
+                                <p class="font-semibold">💡 Pista para la discusión:</p>
+                                <p class="opacity-90">¿Los proyectos se entregan a tiempo? ¿Hay procesos documentados? ¿Se mide la calidad? ¿Se aprende de los errores?</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Slide 5: Beneficios de SQA + QC -->
-        <div class="slide">
-            <h2>🎯 Beneficios de SQA + QC</h2>
-            
-            <div class="quote-box">
-                <h4>🤝 Sinergia Perfecta</h4>
-                <p>La combinación de ambos enfoques maximiza la calidad del software</p>
-            </div>
-            
-            <div class="benefits-grid">
-                <div class="benefit-card">
-                    <h5>⚡ Menos Retrabajo</h5>
-                    <p>SQA previene errores, reduciendo la necesidad de correcciones posteriores y acelerando el desarrollo</p>
+        <!-- Slide 5: Enfocándonos en Nivel 2: "Gestionado" -->
+        <div id="slide5" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">📊</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Enfocándonos en Nivel 2: "Gestionado"</h2>
+                    <h3 class="text-2xl font-semibold text-amber-600">El Primer Gran Salto: De Caótico a Controlado</h3>
+                    <p class="text-lg text-gray-600 mt-4">Alcanzar el Nivel 2 es fundamental. Significa que una organización deja de improvisar y empieza a gestionar activamente sus proyectos. El foco está en establecer una disciplina de gestión básica.</p>
                 </div>
                 
-                <div class="benefit-card">
-                    <h5>💰 Reducción de Costos</h5>
-                    <p>Detectar defectos temprano es 10x más barato que corregirlos en producción</p>
+                <!-- Imagen conceptual -->
+                <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-2xl p-8 text-white mb-8">
+                    <div class="flex items-center justify-center mb-6">
+                        <div class="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mr-8">
+                            <svg class="w-12 h-12 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="text-center">
+                            <h3 class="text-2xl font-bold mb-2">Gestor de Proyecto con Gantt y Listas de Verificación</h3>
+                            <p class="text-lg opacity-90">Visualizando el control y la planificación sistemática</p>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="benefit-card">
-                    <h5>😊 Mayor Confianza del Cliente</h5>
-                    <p>Productos más estables y confiables generan mayor satisfacción y lealtad</p>
+                <!-- Áreas de Proceso Clave -->
+                <div class="mb-8">
+                    <h3 class="text-3xl font-bold text-gray-800 mb-6 text-center">Áreas de Proceso (PAs) Clave en Nivel 2:</h3>
+                    
+                    <div class="space-y-6">
+                        <!-- REQM -->
+                        <div class="bg-blue-50 border-l-4 border-blue-500 rounded-r-xl p-6">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-blue-800 mb-2">Gestión de Requisitos (REQM)</h4>
+                                    <p class="text-blue-700 text-lg">Asegurar que entendemos y gestionamos lo que el cliente quiere.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- PP -->
+                        <div class="bg-green-50 border-l-4 border-green-500 rounded-r-xl p-6">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-green-800 mb-2">Planificación del Proyecto (PP)</h4>
+                                    <p class="text-green-700 text-lg">Estimar el trabajo, crear un plan y obtener el compromiso de los involucrados.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- PMC -->
+                        <div class="bg-purple-50 border-l-4 border-purple-500 rounded-r-xl p-6">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-purple-800 mb-2">Seguimiento y Control del Proyecto (PMC)</h4>
+                                    <p class="text-purple-700 text-lg">Medir el avance real contra el plan y tomar acciones correctivas cuando sea necesario.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- PPQA -->
+                        <div class="bg-red-50 border-l-4 border-red-500 rounded-r-xl p-6">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-red-800 mb-2">Aseguramiento de la Calidad de Procesos y Productos (PPQA)</h4>
+                                    <p class="text-red-700 text-lg">Revisar que las actividades y los productos de trabajo cumplan con los procesos y estándares definidos.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- SCM -->
+                        <div class="bg-indigo-50 border-l-4 border-indigo-500 rounded-r-xl p-6">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-indigo-800 mb-2">Gestión de la Configuración del Software (SCM)</h4>
+                                    <p class="text-indigo-700 text-lg">Controlar las versiones de nuestro código y documentos.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="benefit-card">
-                    <h5>📋 Cumplimiento de Estándares</h5>
-                    <p>Facilita la obtención de certificaciones ISO, CMMI y otros estándares de calidad</p>
-                </div>
-            </div>
-            
-            <div class="highlight-box">
-                <p>📈 <strong>Resultado:</strong> Software de mayor calidad, entregado a tiempo y dentro del presupuesto</p>
             </div>
         </div>
 
-        <!-- Slide 6: Actividad - Clasificación en Vivo -->
-        <div class="slide">
-            <h2>🎮 Actividad: Clasificación en Vivo</h2>
-            
-            <div class="activity-container">
-                <h4>🎯 Dinámica Interactiva</h4>
-                <p style="text-align: center; margin-bottom: 1rem;">
-                    Clasifica cada actividad como <strong>SQA</strong> o <strong>QC</strong>
-                </p>
-                <p style="text-align: center; font-size: 0.9rem; opacity: 0.9;">
-                    Haz clic en cada elemento para revelar la respuesta
-                </p>
+        <!-- Slide 6: ¿Qué Significa Ser Nivel 2 en la Práctica? -->
+        <div id="slide6" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">⚙️</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">¿Qué Significa Ser Nivel 2 en la Práctica?</h2>
+                    <h3 class="text-2xl font-semibold text-blue-600">Del Papel a la Realidad: El Día a Día en Nivel 2</h3>
+                    <p class="text-lg text-gray-600 mt-4">Ser Nivel 2 no es solo tener documentos, es un cambio en la forma de trabajar.</p>
+                </div>
                 
-                <div class="activity-examples">
-                    <div class="activity-item" onclick="revealAnswer(this)">
-                        <span class="activity-text">"Definir estándar de codificación"</span>
-                        <span class="activity-answer">SQA</span>
+                <!-- Comparaciones Prácticas -->
+                <div class="space-y-8">
+                    <!-- Sabemos qué nos pidieron -->
+                    <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-8 text-white">
+                        <h3 class="text-2xl font-bold mb-6 flex items-center">
+                            <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
+                            </svg>
+                            "Sabemos qué nos pidieron"
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-red-500/30 rounded-lg p-4">
+                                <h4 class="font-bold text-lg mb-2 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                    En lugar de:
+                                </h4>
+                                <p class="opacity-90">Empezar a programar con una idea vaga.</p>
+                            </div>
+                            
+                            <div class="bg-green-500/30 rounded-lg p-4">
+                                <h4 class="font-bold text-lg mb-2 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Ahora:
+                                </h4>
+                                <p class="opacity-90">Tenemos una lista de requisitos acordada con el cliente. Si hay un cambio, se gestiona formalmente.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white/20 rounded-lg p-4 mt-4">
+                            <p class="font-semibold text-center">(Área de Proceso: Gestión de Requisitos)</p>
+                        </div>
                     </div>
                     
-                    <div class="activity-item" onclick="revealAnswer(this)">
-                        <span class="activity-text">"Ejecutar pruebas unitarias"</span>
-                        <span class="activity-answer">QC</span>
+                    <!-- Tenemos un plan realista -->
+                    <div class="bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl p-8 text-white">
+                        <h3 class="text-2xl font-bold mb-6 flex items-center">
+                            <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                            </svg>
+                            "Tenemos un plan realista y lo seguimos"
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-red-500/30 rounded-lg p-4">
+                                <h4 class="font-bold text-lg mb-2 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                    En lugar de:
+                                </h4>
+                                <p class="opacity-90">"Estará listo cuando esté listo".</p>
+                            </div>
+                            
+                            <div class="bg-green-500/30 rounded-lg p-4">
+                                <h4 class="font-bold text-lg mb-2 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Ahora:
+                                </h4>
+                                <p class="opacity-90">Tenemos un cronograma, un presupuesto y sabemos quién hace qué. Monitoreamos el avance y si nos desviamos, lo sabemos y actuamos.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white/20 rounded-lg p-4 mt-4">
+                            <p class="font-semibold text-center">(Áreas de Proceso: Planificación del Proyecto / Seguimiento y Control)</p>
+                        </div>
                     </div>
                     
-                    <div class="activity-item" onclick="revealAnswer(this)">
-                        <span class="activity-text">"Auditoría de procesos de desarrollo"</span>
-                        <span class="activity-answer">SQA</span>
-                    </div>
-                    
-                    <div class="activity-item" onclick="revealAnswer(this)">
-                        <span class="activity-text">"Inspección del entregable final"</span>
-                        <span class="activity-answer">QC</span>
-                    </div>
-                    
-                    <div class="activity-item" onclick="revealAnswer(this)">
-                        <span class="activity-text">"Capacitación en metodologías ágiles"</span>
-                        <span class="activity-answer">SQA</span>
-                    </div>
-                    
-                    <div class="activity-item" onclick="revealAnswer(this)">
-                        <span class="activity-text">"Revisión de código por pares"</span>
-                        <span class="activity-answer">QC</span>
+                    <!-- Revisamos nuestro trabajo -->
+                    <div class="bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl p-8 text-white">
+                        <h3 class="text-2xl font-bold mb-6 flex items-center">
+                            <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            "Revisamos nuestro trabajo"
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-red-500/30 rounded-lg p-4">
+                                <h4 class="font-bold text-lg mb-2 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                    En lugar de:
+                                </h4>
+                                <p class="opacity-90">Confiar en que "seguro está bien".</p>
+                            </div>
+                            
+                            <div class="bg-green-500/30 rounded-lg p-4">
+                                <h4 class="font-bold text-lg mb-2 flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Ahora:
+                                </h4>
+                                <p class="opacity-90">Hay revisiones de calidad programadas para asegurar que seguimos los procedimientos y que los entregables cumplen los estándares.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white/20 rounded-lg p-4 mt-4">
+                            <p class="font-semibold text-center">(Área de Proceso: Aseguramiento de la Calidad)</p>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="highlight-box">
-                <p>🎓 <strong>Aprendizaje:</strong> La clave está en el momento y el enfoque de cada actividad</p>
-            </div>
         </div>
+    </main>
 
-        <!-- Navigation -->
-        <div class="navigation">
-            <div class="slide-counter">
-                Diapositiva <span id="currentSlide">1</span> de <span id="totalSlides">6</span>
-            </div>
-            <div class="nav-buttons">
-                <button class="nav-btn" onclick="previousSlide()" id="prevBtn" disabled>← Anterior</button>
-                <button class="nav-btn" onclick="nextSlide()" id="nextBtn">Siguiente →</button>
-            </div>
-        </div>
+    <!-- Navigation -->
+    <div class="navigation">
+        <button class="nav-button" onclick="previousSlide()">⬅️ Anterior</button>
+        <button class="nav-button" onclick="resetAll()">🔄 Reiniciar</button>
+        <button class="nav-button" onclick="nextSlide()">Siguiente ➡️</button>
     </div>
 
     <script>
-        let currentSlideIndex = 1;
-        const totalSlidesCount = 6;
-
-        function nextSlide() {
-            if (currentSlideIndex < totalSlidesCount) {
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
-                currentSlideIndex++;
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
-                updateNavigation();
-            }
+        let currentSlide = 1;
+        const totalSlides = 6;
+        
+        function updateSlideCounter() {
+            document.getElementById('current-slide').textContent = currentSlide;
+            document.getElementById('total-slides').textContent = totalSlides;
         }
-
-        function previousSlide() {
-            if (currentSlideIndex > 1) {
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
-                currentSlideIndex--;
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
-                updateNavigation();
+        
+        function showSlide(slideNumber) {
+            // Hide all slides
+            for (let i = 1; i <= totalSlides; i++) {
+                document.getElementById('slide' + i).classList.add('hidden');
             }
-        }
-
-        function updateNavigation() {
-            document.getElementById('currentSlide').textContent = currentSlideIndex;
-            document.getElementById('totalSlides').textContent = totalSlidesCount;
             
-            document.getElementById('prevBtn').disabled = currentSlideIndex === 1;
-            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlidesCount;
+            // Show selected slide
+            document.getElementById('slide' + slideNumber).classList.remove('hidden');
+            
+            currentSlide = slideNumber;
+            updateSlideCounter();
+            updateNavigationButtons();
+            
+            // Auto-scroll to top when changing slides
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         }
-
-        function revealAnswer(element) {
-            element.classList.add('revealed');
+        
+        function updateNavigationButtons() {
+            const prevButton = document.querySelector('.navigation button:first-child');
+            const nextButton = document.querySelector('.navigation button:last-child');
+            
+            prevButton.disabled = currentSlide === 1;
+            nextButton.disabled = currentSlide === totalSlides;
         }
-
+        
+        function previousSlide() {
+            if (currentSlide > 1) {
+                showSlide(currentSlide - 1);
+            }
+        }
+        
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                showSlide(currentSlide + 1);
+            }
+        }
+        
+        function resetAll() {
+            showSlide(1);
+        }
+        
         // Keyboard navigation
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'ArrowRight' || event.key === ' ') {
-                nextSlide();
-            } else if (event.key === 'ArrowLeft') {
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
                 previousSlide();
+            } else if (e.key === 'ArrowRight') {
+                nextSlide();
+            } else if (e.key === 'Home') {
+                resetAll();
             }
         });
-
+        
         // Initialize
-        updateNavigation();
+        showSlide(1);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a85dcb904fcdb0',t:'MTc1NzEwMjk4OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+<!-- Pie de página -->
+<footer class="footer">
+  <div class="footer-content">© 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua</div>
+</footer>
+
+</body>
 </html>
