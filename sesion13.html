@@ -3,489 +3,343 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sesión 13 - Pruebas Funcionales</title>
+    <title>Sesión 13: Auditorías y Revisiones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', sans-serif;
+            background: #764ba2;
+        }
+        
+        .slide-transition {
+            transition: all 0.5s ease-in-out;
+        }
+        
+        .gradient-bg {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
         }
-
-        .slide-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 3rem;
-            max-width: 900px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-            position: relative;
-            min-height: 600px;
-            display: flex;
-            flex-direction: column;
+        
+        .card-hover {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
-        .slide {
-            display: none;
-            flex: 1;
-            animation: fadeIn 0.5s ease-in-out;
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
-
-        .slide.active {
-            display: flex;
-            flex-direction: column;
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
         }
-
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        .slide h1 {
-            color: #2d3748;
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
         }
-
-        .slide h2 {
-            color: #2d3748;
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
-
-        .slide h3 {
-            color: #4a5568;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .subtitle {
-            font-size: 1.3rem;
-            color: #718096;
-            text-align: center;
-            font-style: italic;
-            margin-bottom: 2rem;
-        }
-
-        .quote-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            text-align: center;
-            margin: 2rem 0;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        }
-
-        .quote-box h4 {
-            color: white;
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-        }
-
-        .quote-box p {
-            font-size: 1.2rem;
-            line-height: 1.6;
-        }
-
-        .definition-box {
-            background: #e6fffa;
-            padding: 2rem;
-            border-radius: 15px;
-            border-left: 5px solid #38b2ac;
-            margin: 2rem 0;
-        }
-
-        .definition-box h4 {
-            color: #2d3748;
-            margin-bottom: 1.5rem;
-            font-size: 1.4rem;
-        }
-
-        .definition-box ul {
-            color: #4a5568;
-            line-height: 1.8;
-            font-size: 1.1rem;
-        }
-
-        .definition-box li {
-            margin-bottom: 1rem;
-            padding-left: 0.5rem;
-        }
-
-        .definition-box strong {
-            color: #2d3748;
-        }
-
-        .types-container {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .types-container h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .types-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .type-card {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .type-card h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .type-card p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.5;
-            font-size: 0.95rem;
-        }
-
-        .phases-container {
-            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .phases-container h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .phases-list {
-            display: grid;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .phase-item {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.2rem;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .phase-number {
-            background: rgba(255, 255, 255, 0.3);
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .phase-content h5 {
-            color: white;
-            margin-bottom: 0.5rem;
-            font-size: 1.1rem;
-        }
-
-        .phase-content p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.4;
-            font-size: 0.95rem;
-        }
-
-        .activity-container {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .activity-container h4 {
-            color: white;
-            margin-bottom: 1rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .context-box {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin: 1.5rem 0;
-            backdrop-filter: blur(10px);
-        }
-
-        .context-box h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .context-box p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.6;
-            font-size: 1rem;
-        }
-
-        .requirements-list {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin: 1.5rem 0;
-            backdrop-filter: blur(5px);
-        }
-
-        .requirements-list h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .requirements-list ul {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.6;
-            margin-left: 1rem;
-        }
-
-        .requirements-list li {
-            margin-bottom: 0.8rem;
-        }
-
-        .task-instructions {
-            background: rgba(255, 255, 255, 0.3);
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: center;
-            margin-top: 1.5rem;
-            backdrop-filter: blur(10px);
-        }
-
-        .task-instructions h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .task-instructions p {
-            color: white;
-            font-weight: 500;
-            line-height: 1.5;
-        }
-
-        .example-box {
-            background: #fff5f5;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border-left: 4px solid #f56565;
-            margin: 2rem 0;
-        }
-
-        .example-box h5 {
-            color: #c53030;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .example-box p {
-            color: #4a5568;
-            line-height: 1.6;
-        }
-
-        .test-case-template {
-            background: #f0fff4;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border-left: 4px solid #48bb78;
-            margin: 1.5rem 0;
-        }
-
-        .test-case-template h6 {
-            color: #2f855a;
-            margin-bottom: 0.8rem;
-            font-size: 1rem;
-        }
-
-        .test-case-template p {
-            color: #4a5568;
-            line-height: 1.5;
-            font-size: 0.9rem;
-        }
-
+        
         .navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 2px solid #e2e8f0;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
         }
-
-        .slide-counter {
-            color: #718096;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .nav-btn {
-            padding: 0.8rem 1.5rem;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+        
+        .nav-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-            border-radius: 10px;
+            padding: 12px 20px;
+            border-radius: 25px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 14px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
         }
-
-        .nav-btn:hover {
+        
+        .nav-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
         }
-
-        .nav-btn:disabled {
-            background: #cbd5e0;
+        
+        .nav-button:disabled {
+            background: #9ca3af;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
-
-        .source-note {
-            background: #fff5f5;
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid #f56565;
-            margin-top: 1.5rem;
-            font-style: italic;
-            color: #4a5568;
-        }
-
-        .highlight-box {
-            background: #fffaf0;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border: 2px dashed #ed8936;
-            text-align: center;
-            margin: 2rem 0;
-        }
-
-        .highlight-box p {
-            color: #2d3748;
+        
+        .slide-counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 10px 15px;
+            border-radius: 20px;
             font-weight: 600;
-            font-size: 1.1rem;
+            color: #374151;
+            z-index: 1000;
         }
-
-        .key-points {
-            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
-            color: white;
+        
+        .section-card {
+            background: white;
+            border-radius: 1.5rem;
             padding: 2rem;
-            border-radius: 15px;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 6px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .section-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .question-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .question-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .sqa-logo {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .ieee-badge {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            display: inline-block;
+            margin: 0.5rem 0;
+        }
+        
+        .anatomy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
             margin: 2rem 0;
         }
-
-        .key-points h4 {
-            color: white;
+        
+        .anatomy-item {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .anatomy-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .highlight-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .comparison-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-top: 6px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .comparison-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .role-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
             margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
-        .key-points ul {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.8;
-            font-size: 1.1rem;
-            margin-left: 1rem;
+        
+        .role-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
-
-        .key-points li {
+        
+        .assignment-step {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
             margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
-        .key-points strong {
-            color: white;
+        
+        .assignment-step:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
         }
-
+        
         @media (max-width: 768px) {
-            .slide-container {
-                padding: 2rem;
-                margin: 1rem;
-            }
-            
-            .slide h1 {
-                font-size: 2rem;
-            }
-            
-            .slide h2 {
-                font-size: 1.5rem;
-            }
-            
-            .types-grid {
+            .comparison-grid {
                 grid-template-columns: 1fr;
                 gap: 1rem;
             }
-            
-            .nav-buttons {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
         }
     </style>
-</head>
-<body>
 
 <style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+/* Fondo como index */
+body{
+  font-family:'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height:1.6;
+  color:#333;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  min-height:100vh;
+  padding-top:80px; /* nav fijo */
+}
+
+/* NAV Plataforma QS (fijo) */
+.qs-nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:saturate(140%) blur(20px);
+       background:rgba(255,255,255,.95);border-bottom:1px solid rgba(255,255,255,.2);
+       box-shadow:0 8px 32px rgba(0,0,0,.10)}
+.qs-nav .wrap{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;gap:20px;align-items:center;justify-content:space-between}
+.qs-brand{display:flex;gap:15px;align-items:center;color:#1f2937;font-weight:800;font-size:1.3rem;text-decoration:none;position:relative;padding:8px 16px;border-radius:20px}
+.qs-brand::before{content:"🎓";font-size:1.6rem}
+.qs-tabs{display:flex;gap:12px;flex-wrap:wrap;background:rgba(255,255,255,.3);padding:8px;border-radius:30px;backdrop-filter:blur(10px)}
+.qs-btn{border:0;padding:12px 20px;border-radius:25px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;font-weight:600;font-size:.9rem;
+       transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(10px);border:2px solid transparent;position:relative;overflow:hidden}
+.qs-btn::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);transition:all .4s ease;z-index:-1}
+.qs-btn:hover{color:#fff;transform:translateY(-3px);box-shadow:0 8px 25px rgba(102,126,234,.4);border-color:rgba(102,126,234,.3)}
+.qs-btn:hover::before{left:0}
+.qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none;box-shadow:0 6px 20px rgba(102,126,234,.5);transform:translateY(-2px)}
+.qs-btn[aria-current="page"]::before{left:0}
+
+/* Footer como index */
+.footer{
+  margin-top:60px;
+  padding:30px 20px;
+  text-align:center;
+  background:rgba(255, 255, 255, 0.1);
+  backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255, 255, 255, 0.2);
+}
+.footer-content{
+  max-width:1200px;
+  margin:0 auto;
+  color:rgba(255,255,255,0.8);
+  font-size:0.95rem;
+  transition:all 0.3s ease;
+  cursor:default;
+}
+.footer-content:hover{ color:#fff; transform:translateY(-2px); }
+
+/* Slide counter más pequeño */
+.slide-counter{
+  font-size:12px !important;
+  padding:6px 10px !important;
+  border-radius:14px !important;
+  opacity:0.9;
+}
 </style>
+
+
+<style>
+#slideIndicator, .slide-indicator, .slide-counter{
+  font-size:10px !important;
+  line-height:1 !important;
+  padding:2px 6px !important;
+  min-width:28px !important;
+  border-radius:12px !important;
+  opacity:.75 !important;
+}
+</style>
+
+
+<style>
+.qs-nav .wrap{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:nowrap;
+}
+.qs-brand{ flex:0 0 auto; }
+.qs-tabs{
+  display:flex;
+  flex:1 1 auto;
+  justify-content:flex-end;
+  gap:12px;
+  flex-wrap:nowrap;        /* una sola fila */
+  overflow-x:auto;         /* scroll si no cabe */
+  white-space:nowrap;
+  scrollbar-width:thin;
+  -webkit-overflow-scrolling:touch;
+}
+.qs-tabs .qs-btn{ flex:0 0 auto; }
+</style>
+
+</head>
+<body class="min-h-screen">
+
+<!-- NAV Plataforma QS -->
 <div class="qs-nav">
   <div class="wrap">
     <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
@@ -496,305 +350,747 @@
       <a class="qs-btn" href="Foro.html">Foro</a>
       <a class="qs-btn" href="paneldocente.html">Panel</a>
       <a class="qs-btn" href="roadmap.html">Roadmap</a>
-          <a class="qs-btn" href="checklist.html">Checklist</a>
-\1
+      <a class="qs-btn" href="checklist.html">Checklist</a>
+      <a class="qs-btn" href="status.html">Status</a>
+    </nav>
   </div>
 </div>
-<script>
-(function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
-  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
-  });
-})();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
-</script>
 
+    <!-- Slide Counter -->
+    <div class="slide-counter">
+        <span id="current-slide">1</span> / <span id="total-slides">6</span>
+    </div>
 
-    <div class="slide-container">
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8 pb-32">
         <!-- Slide 1: Título -->
-        <div class="slide active">
-            <h1>✅ Pruebas Funcionales</h1>
-            <div class="subtitle">¿Hace lo que debe hacer?</div>
-            
-            <div class="quote-box">
-                <h4>🎯 "Validando el comportamiento esperado"</h4>
-                <p>Verificamos que el software cumple con los requisitos funcionales definidos</p>
-            </div>
-            
-            <div class="highlight-box">
-                <p>🎯 <strong>Objetivo:</strong> Dominar las técnicas de pruebas funcionales y su aplicación práctica</p>
-            </div>
-        </div>
-
-        <!-- Slide 2: Definición -->
-        <div class="slide">
-            <h2>📋 Definición</h2>
-            
-            <div class="definition-box">
-                <h4>🔍 ¿Qué son las Pruebas Funcionales?</h4>
-                <ul>
-                    <li><strong>Evalúan si el software cumple</strong> con los requisitos funcionales definidos</li>
-                    <li><strong>Se basan en la caja negra</strong> - enfoque en entradas y salidas</li>
-                    <li><strong>No importa cómo funciona internamente</strong> - solo que funcione correctamente</li>
-                    <li><strong>Perspectiva del usuario final</strong> - comportamiento observable</li>
-                </ul>
-            </div>
-            
-            <div class="key-points">
-                <h4>🎯 Características Clave</h4>
-                <ul>
-                    <li><strong>Basadas en especificaciones:</strong> Cada caso de prueba deriva de un requisito específico</li>
-                    <li><strong>Independientes de la implementación:</strong> No cambian aunque se modifique el código interno</li>
-                    <li><strong>Orientadas al negocio:</strong> Validan que el software resuelve problemas reales</li>
-                    <li><strong>Medibles y verificables:</strong> Resultados claros de éxito o fallo</li>
-                </ul>
-            </div>
-            
-            <div class="example-box">
-                <h5>💡 Ejemplo Práctico</h5>
-                <p><strong>Requisito:</strong> "El sistema debe permitir login con usuario y contraseña válidos"<br>
-                <strong>Prueba Funcional:</strong> Ingresar credenciales correctas → Verificar acceso concedido<br>
-                <strong>No importa:</strong> Si usa base de datos, LDAP, o archivos para validar</p>
-            </div>
-            
-            <div class="source-note">
-                📚 <strong>Fuente:</strong> Sommerville, Capítulo 8
-            </div>
-        </div>
-
-        <!-- Slide 3: Tipos de Pruebas Funcionales -->
-        <div class="slide">
-            <h2>🔧 Tipos de Pruebas Funcionales</h2>
-            
-            <div class="types-container">
-                <h4>📊 Clasificación Principal</h4>
-                
-                <div class="types-grid">
-                    <div class="type-card">
-                        <h5>💨 Smoke Testing</h5>
-                        <p><strong>Propósito:</strong> Validación básica de build<br>
-                        <strong>Alcance:</strong> Funcionalidades críticas mínimas<br>
-                        <strong>Cuándo:</strong> Después de cada despliegue<br>
-                        <strong>Objetivo:</strong> ¿El sistema "enciende"?</p>
-                    </div>
+        <div id="slide1" class="slide-transition fade-in">
+            <div class="gradient-bg rounded-2xl p-12 text-white text-center mb-8 card-hover">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-6xl mb-6">🔍</div>
+                    <h1 class="text-5xl font-bold mb-6 pulse-animation">Inspeccionando el Motor: Auditorías y Revisiones Técnicas</h1>
+                    <h2 class="text-3xl font-semibold mb-8 opacity-90">Encontrando problemas antes de que ellos te encuentren a ti</h2>
                     
-                    <div class="type-card">
-                        <h5>🔄 Pruebas de Regresión</h5>
-                        <p><strong>Propósito:</strong> Comprobar que cambios no rompen lo existente<br>
-                        <strong>Alcance:</strong> Funcionalidades previamente probadas<br>
-                        <strong>Cuándo:</strong> Después de modificaciones<br>
-                        <strong>Objetivo:</strong> Mantener calidad existente</p>
-                    </div>
-                    
-                    <div class="type-card">
-                        <h5>🔗 Integración Funcional</h5>
-                        <p><strong>Propósito:</strong> Interacción entre módulos desde perspectiva del usuario<br>
-                        <strong>Alcance:</strong> Flujos end-to-end<br>
-                        <strong>Cuándo:</strong> Después de integrar componentes<br>
-                        <strong>Objetivo:</strong> Workflows completos funcionan</p>
-                    </div>
-                    
-                    <div class="type-card">
-                        <h5>✅ Pruebas de Aceptación</h5>
-                        <p><strong>Propósito:</strong> Validación del cliente<br>
-                        <strong>Alcance:</strong> Requisitos de negocio completos<br>
-                        <strong>Cuándo:</strong> Antes de entrega final<br>
-                        <strong>Objetivo:</strong> ¿Satisface necesidades reales?</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="example-box">
-                <h5>🏦 Ejemplo: Sistema Bancario</h5>
-                <p><strong>Smoke:</strong> ¿Se puede hacer login?<br>
-                <strong>Regresión:</strong> Después de actualizar, ¿las transferencias siguen funcionando?<br>
-                <strong>Integración:</strong> ¿El flujo completo de transferencia (login → seleccionar cuenta → transferir → confirmar) funciona?<br>
-                <strong>Aceptación:</strong> ¿El cliente puede realizar todas sus operaciones bancarias necesarias?</p>
-            </div>
-            
-            <div class="source-note">
-                📚 <strong>Fuente:</strong> Mahfuz, Capítulo 3
-            </div>
-        </div>
-
-        <!-- Slide 4: Fases para realizarlas -->
-        <div class="slide">
-            <h2>📋 Fases para Realizarlas</h2>
-            
-            <div class="phases-container">
-                <h4>🔄 Proceso Estructurado</h4>
-                
-                <div class="phases-list">
-                    <div class="phase-item">
-                        <div class="phase-number">1</div>
-                        <div class="phase-content">
-                            <h5>🎯 Identificación de Requisitos</h5>
-                            <p>Analizar especificaciones funcionales y extraer casos de uso específicos a validar</p>
+                    <div class="highlight-box">
+                        <div class="flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <h3 class="text-xl font-semibold">Fuentes</h3>
                         </div>
-                    </div>
-                    
-                    <div class="phase-item">
-                        <div class="phase-number">2</div>
-                        <div class="phase-content">
-                            <h5>📝 Diseño de Casos de Prueba</h5>
-                            <p>Crear escenarios detallados con entradas, pasos y resultados esperados específicos</p>
-                        </div>
-                    </div>
-                    
-                    <div class="phase-item">
-                        <div class="phase-number">3</div>
-                        <div class="phase-content">
-                            <h5>🗃️ Preparación de Datos de Prueba</h5>
-                            <p>Configurar datos de entrada realistas y ambientes de prueba apropiados</p>
-                        </div>
-                    </div>
-                    
-                    <div class="phase-item">
-                        <div class="phase-number">4</div>
-                        <div class="phase-content">
-                            <h5>▶️ Ejecución y Registro de Resultados</h5>
-                            <p>Ejecutar casos sistemáticamente y documentar resultados obtenidos vs esperados</p>
-                        </div>
-                    </div>
-                    
-                    <div class="phase-item">
-                        <div class="phase-number">5</div>
-                        <div class="phase-content">
-                            <h5>🔍 Análisis de Desviaciones</h5>
-                            <p>Investigar discrepancias, clasificar defectos y determinar acciones correctivas</p>
+                        <div class="text-lg opacity-90 space-y-2">
+                            <p>• Pressman - Ingeniería de Software</p>
+                            <p>• Sommerville - Ingeniería de Software</p>
+                            <p>• "Software Quality Assurance" by Abu Sayed Mahfuz</p>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="definition-box">
-                <h4>💡 Mejores Prácticas</h4>
-                <ul>
-                    <li><strong>Trazabilidad:</strong> Cada caso de prueba debe mapear a un requisito específico</li>
-                    <li><strong>Datos realistas:</strong> Usar datos que reflejen el uso real del sistema</li>
-                    <li><strong>Documentación clara:</strong> Pasos reproducibles por cualquier tester</li>
-                    <li><strong>Criterios de aceptación:</strong> Definir claramente qué constituye éxito o fallo</li>
-                </ul>
-            </div>
-            
-            <div class="highlight-box">
-                <p>🎯 <strong>Clave:</strong> La sistematización garantiza cobertura completa y resultados confiables</p>
+            <!-- Notas para el docente -->
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
+                <div class="flex items-start">
+                    <svg class="w-6 h-6 text-blue-400 mr-3 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <h4 class="text-lg font-semibold text-blue-800 mb-2">Notas para el docente:</h4>
+                        <p class="text-blue-700 leading-relaxed">
+                            "Hoy vamos a explorar las herramientas más poderosas para encontrar errores temprano: las revisiones técnicas y las auditorías. Son como los rayos X del desarrollo de software."
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Slide 5: Actividad - Caso práctico -->
-        <div class="slide">
-            <h2>🎮 Actividad: Caso Práctico</h2>
-            <div class="subtitle">Sistema de Login Bancario (20 min)</div>
-            
-            <div class="activity-container">
-                <h4>🏦 Contexto del Ejercicio</h4>
-                
-                <div class="context-box">
-                    <h5>📱 Sistema de Login - App Bancaria</h5>
-                    <p>Estás probando el módulo de autenticación de una aplicación bancaria móvil. El sistema debe ser seguro, confiable y fácil de usar para clientes de diferentes perfiles técnicos.</p>
+        <!-- Slide 2: El Costo Exponencial de un Error -->
+        <div id="slide2" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">⏰</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">El Costo Exponencial de un Error</h2>
+                    <h3 class="text-2xl font-semibold text-red-600">El Principio de la Detección Temprana</h3>
+                    <p class="text-lg text-gray-600 mt-4">En la construcción de software, hay una regla de oro: <strong>cuanto más tarde se encuentra un error, más caro es corregirlo</strong>.</p>
                 </div>
                 
-                <div class="requirements-list">
-                    <h5>📋 Requisitos Funcionales</h5>
-                    <ul>
-                        <li><strong>Login exitoso:</strong> Usuario y contraseña válidos → Acceso a dashboard</li>
-                        <li><strong>Credenciales inválidas:</strong> Mostrar mensaje de error específico</li>
-                        <li><strong>Bloqueo de seguridad:</strong> Después de 3 intentos fallidos → Bloquear cuenta por 15 minutos</li>
-                        <li><strong>Campos obligatorios:</strong> No permitir login con campos vacíos</li>
-                        <li><strong>Sesión activa:</strong> Recordar usuario logueado por 30 minutos de inactividad</li>
-                    </ul>
+                <!-- Analogía del Arquitecto -->
+                <div class="section-card mb-8" style="border-left-color: #3b82f6;">
+                    <div class="flex items-start">
+                        <div class="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <div class="text-2xl">🏗️</div>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-blue-800 mb-4">Analogía del Arquitecto</h4>
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <p class="text-blue-700 text-lg leading-relaxed">
+                                    Imagina que eres un arquitecto construyendo una casa. Cada fase del proyecto tiene un costo diferente para corregir errores:
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="task-instructions">
-                    <h5>📝 Tarea por Equipos</h5>
-                    <p><strong>Diseñar 3 casos de prueba funcional completos</strong><br>
-                    Cada caso debe incluir: Entradas → Pasos → Salidas esperadas</p>
+                <!-- Fases y costos -->
+                <div class="space-y-6 mb-8">
+                    <h3 class="text-3xl font-bold text-gray-800 text-center mb-6">El Costo de Corregir Errores por Fase</h3>
+                    
+                    <!-- Requisitos -->
+                    <div class="question-card" style="border-left-color: #10b981;">
+                        <div class="flex items-start">
+                            <div class="w-16 h-16 bg-green-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <span class="text-white font-bold text-lg">$1</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-green-800 mb-2">Fase de Requisitos</h4>
+                                <div class="bg-green-50 rounded-lg p-3">
+                                    <p class="text-green-700">Corregir un error aquí es como <strong>borrar una línea en un plano</strong>. Simple, rápido, barato.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Diseño -->
+                    <div class="question-card" style="border-left-color: #3b82f6;">
+                        <div class="flex items-start">
+                            <div class="w-16 h-16 bg-blue-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <span class="text-white font-bold text-lg">$5</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-blue-800 mb-2">Fase de Diseño</h4>
+                                <div class="bg-blue-50 rounded-lg p-3">
+                                    <p class="text-blue-700">Es como <strong>reimprimir los planos</strong>. Requiere más trabajo, pero aún es manejable.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Codificación -->
+                    <div class="question-card" style="border-left-color: #f59e0b;">
+                        <div class="flex items-start">
+                            <div class="w-16 h-16 bg-amber-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <span class="text-white font-bold text-lg">$10</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-amber-800 mb-2">Fase de Codificación</h4>
+                                <div class="bg-amber-50 rounded-lg p-3">
+                                    <p class="text-amber-700">Es como pedirle al programador que <strong>rehaga una función completa</strong>. Tiempo y esfuerzo considerables.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pruebas -->
+                    <div class="question-card" style="border-left-color: #ef4444;">
+                        <div class="flex items-start">
+                            <div class="w-16 h-16 bg-red-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <span class="text-white font-bold text-lg">$50</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-red-800 mb-2">Fase de Pruebas</h4>
+                                <div class="bg-red-50 rounded-lg p-3">
+                                    <p class="text-red-700">Es como pedirle a <strong>todo el equipo que re-integre y re-pruebe</strong> un componente. Afecta a múltiples personas.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Producción -->
+                    <div class="question-card" style="border-left-color: #7c2d12;">
+                        <div class="flex items-start">
+                            <div class="w-16 h-16 bg-red-800 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <span class="text-white font-bold text-sm">$200+</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-red-900 mb-2">Después del Lanzamiento (Producción)</h4>
+                                <div class="bg-red-100 rounded-lg p-3">
+                                    <p class="text-red-800">Es como <strong>demoler un muro ya construido, con el cliente viviendo en la casa</strong>. Costoso, disruptivo, y daña la reputación.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="test-case-template">
-                    <h6>📋 Plantilla de Caso de Prueba</h6>
-                    <p><strong>ID:</strong> TC_LOGIN_01<br>
-                    <strong>Descripción:</strong> [Qué se está probando]<br>
-                    <strong>Precondiciones:</strong> [Estado inicial requerido]<br>
-                    <strong>Datos de entrada:</strong> [Usuario, contraseña, etc.]<br>
-                    <strong>Pasos:</strong> [Acciones específicas a realizar]<br>
-                    <strong>Resultado esperado:</strong> [Qué debe ocurrir]<br>
-                    <strong>Criterio de éxito:</strong> [Cómo verificar que pasó]</p>
+                <!-- Conclusión -->
+                <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="text-4xl mr-4">🎯</div>
+                        <h3 class="text-2xl font-bold">La Lección Clave</h3>
+                    </div>
+                    <p class="text-xl text-center leading-relaxed opacity-95">
+                        Las <strong>revisiones y auditorías</strong> son nuestra herramienta más poderosa para encontrar errores en las fases más tempranas y baratas.
+                    </p>
                 </div>
-                
-                <div class="example-box">
-                    <h5>💡 Ejemplo de Caso</h5>
-                    <p><strong>TC_LOGIN_01 - Login Exitoso</strong><br>
-                    <strong>Entrada:</strong> usuario: "juan.perez", contraseña: "MiClave123!"<br>
-                    <strong>Pasos:</strong> 1) Abrir app 2) Ingresar credenciales 3) Tocar "Ingresar"<br>
-                    <strong>Resultado esperado:</strong> Redirección a dashboard principal con mensaje "Bienvenido Juan"</p>
-                </div>
-            </div>
-            
-            <div class="highlight-box">
-                <p>🎯 <strong>Enfoque:</strong> Piensen como usuarios reales - ¿qué escenarios son más críticos?</p>
             </div>
         </div>
 
-        <!-- Navigation -->
-        <div class="navigation">
-            <div class="slide-counter">
-                Diapositiva <span id="currentSlide">1</span> de <span id="totalSlides">5</span>
-            </div>
-            <div class="nav-buttons">
-                <button class="nav-btn" onclick="previousSlide()" id="prevBtn" disabled>← Anterior</button>
-                <button class="nav-btn" onclick="nextSlide()" id="nextBtn">Siguiente →</button>
+        <!-- Slide 3: El Espectro de las Revisiones Técnicas -->
+        <div id="slide3" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🔍</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">El Espectro de las Revisiones Técnicas</h2>
+                    <h3 class="text-2xl font-semibold text-purple-600">No Todas las Revisiones son Iguales</h3>
+                    <p class="text-lg text-gray-600 mt-4">Las revisiones son actividades donde los miembros del equipo examinan un producto de trabajo (código, diseño, requisitos) para encontrar defectos. Se pueden clasificar por su <strong>nivel de formalidad</strong>.</p>
+                </div>
+                
+                <!-- Tipos de revisiones -->
+                <div class="space-y-8 mb-8">
+                    
+                    <!-- Informales -->
+                    <div class="section-card" style="border-left-color: #10b981;">
+                        <div class="flex items-start">
+                            <div class="w-16 h-16 bg-green-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <div class="text-2xl">💬</div>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-green-800 mb-4">Informales</h4>
+                                
+                                <div class="bg-green-50 rounded-lg p-4 mb-4">
+                                    <h5 class="font-bold text-green-800 mb-2">Ejemplos:</h5>
+                                    <p class="text-green-700">Revisión de escritorio, Programación en Parejas (Pair Programming).</p>
+                                </div>
+                                
+                                <div class="bg-green-100 rounded-lg p-4 mb-4">
+                                    <h5 class="font-bold text-green-800 mb-2">Características:</h5>
+                                    <p class="text-green-700">Muy ágiles, sin preparación previa. Un desarrollador le pide a otro: <em>"Oye, ¿puedes echarle un vistazo a esto?"</em></p>
+                                </div>
+                                
+                                <div class="bg-green-50 rounded-lg p-4">
+                                    <h5 class="font-bold text-green-800 mb-2">Ideal para:</h5>
+                                    <p class="text-green-700">Aclarar dudas rápidas, validación de lógica simple.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Semi-Formales -->
+                    <div class="section-card" style="border-left-color: #f59e0b;">
+                        <div class="flex items-start">
+                            <div class="w-16 h-16 bg-amber-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <div class="text-2xl">🚶‍♂️</div>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-amber-800 mb-4">Semi-Formales (Walkthroughs / Recorridos)</h4>
+                                
+                                <div class="bg-amber-50 rounded-lg p-4 mb-4">
+                                    <h5 class="font-bold text-amber-800 mb-2">Características:</h5>
+                                    <p class="text-amber-700">El autor del producto de trabajo presenta su solución a un pequeño grupo de colegas. El foco está en la <strong>enseñanza y la obtención de feedback</strong>. Es más una sesión de trabajo colaborativa.</p>
+                                </div>
+                                
+                                <div class="bg-amber-100 rounded-lg p-4">
+                                    <h5 class="font-bold text-amber-800 mb-2">Ideal para:</h5>
+                                    <p class="text-amber-700">Discutir diferentes enfoques de diseño, asegurar que todos entiendan una solución compleja.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Formales -->
+                    <div class="section-card" style="border-left-color: #ef4444;">
+                        <div class="flex items-start">
+                            <div class="w-16 h-16 bg-red-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <div class="text-2xl">🔬</div>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-red-800 mb-4">Formales (Inspecciones)</h4>
+                                
+                                <div class="bg-red-50 rounded-lg p-4 mb-4">
+                                    <h5 class="font-bold text-red-800 mb-2">Características:</h5>
+                                    <p class="text-red-700">Es el tipo de revisión <strong>más riguroso</strong>. Un equipo entrenado con roles definidos (Moderador, Registrador, Lector, Autor, Inspector) sigue un proceso de 6 pasos usando checklists para encontrar defectos de forma sistemática.</p>
+                                </div>
+                                
+                                <div class="bg-red-100 rounded-lg p-4 mb-4">
+                                    <h5 class="font-bold text-red-800 mb-2">Proceso de 6 Pasos:</h5>
+                                    <div class="grid grid-cols-2 gap-2 text-sm text-red-700">
+                                        <div>1. Planificación</div>
+                                        <div>2. Visión General</div>
+                                        <div>3. Preparación</div>
+                                        <div>4. Reunión de Inspección</div>
+                                        <div>5. Retrabajo</div>
+                                        <div>6. Seguimiento</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-red-50 rounded-lg p-4">
+                                    <h5 class="font-bold text-red-800 mb-2">Ideal para:</h5>
+                                    <p class="text-red-700">Sistemas críticos, componentes complejos, asegurar el cumplimiento de estándares.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conclusión -->
+                <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="text-4xl mr-4">⚖️</div>
+                        <h3 class="text-2xl font-bold">La Regla de Oro</h3>
+                    </div>
+                    <p class="text-xl text-center leading-relaxed opacity-95">
+                        <strong>Mayor formalidad = Mayor efectividad para encontrar defectos</strong>, pero también mayor costo y tiempo. La clave está en elegir el nivel adecuado según la criticidad del componente.
+                    </p>
+                </div>
             </div>
         </div>
+
+        <!-- Slide 4: Auditorías de SQA: Revisando el Proceso, no el Producto -->
+        <div id="slide4" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🔧</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Auditorías de SQA: Revisando el Proceso, no el Producto</h2>
+                    <h3 class="text-2xl font-semibold text-blue-600">La Diferencia Clave: ¿"Qué" vs. "Cómo"?</h3>
+                </div>
+                
+                <!-- Imagen conceptual -->
+                <div class="bg-gradient-to-r from-blue-100 to-green-100 rounded-2xl p-6 mb-8">
+                    <div class="flex items-center justify-center space-x-8">
+                        <div class="text-center">
+                            <div class="text-6xl mb-2">🔧</div>
+                            <p class="text-sm text-gray-600">Mecánico revisando el motor</p>
+                            <p class="font-bold text-blue-600">(Revisión)</p>
+                        </div>
+                        <div class="text-4xl text-gray-400">VS</div>
+                        <div class="text-center">
+                            <div class="text-6xl mb-2">🏭</div>
+                            <p class="text-sm text-gray-600">Gerente auditando la línea de ensamblaje</p>
+                            <p class="font-bold text-green-600">(Auditoría)</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <p class="text-lg text-gray-600 text-center mb-8">
+                    Mientras que las revisiones se centran en el <strong>producto</strong> (el código, el diseño), las auditorías de SQA se centran en el <strong>proceso</strong>.
+                </p>
+                
+                <!-- Comparación -->
+                <div class="comparison-grid">
+                    <!-- Revisión Técnica -->
+                    <div class="comparison-card" style="border-top-color: #3b82f6;">
+                        <div class="text-center mb-6">
+                            <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zM3 15a1 1 0 011-1h1a1 1 0 011 1v1a1 1 0 01-1 1H4a1 1 0 01-1-1v-1z" clip-rule="evenodd"/>
+                                    <path d="M16 5a1 1 0 011 1v3a1 1 0 01-2 0V7h-3a1 1 0 010-2h3a1 1 0 011-1zM12 9a1 1 0 100 2h3a1 1 0 100-2h-3z"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-blue-800">Una Revisión Técnica responde:</h3>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <h4 class="font-bold text-blue-800 mb-2">Pregunta 1:</h4>
+                                <p class="text-blue-700">"¿Este código tiene errores?"</p>
+                            </div>
+                            
+                            <div class="bg-blue-100 rounded-lg p-4">
+                                <h4 class="font-bold text-blue-800 mb-2">Pregunta 2:</h4>
+                                <p class="text-blue-700">"¿Este documento de diseño cumple los requisitos?"</p>
+                            </div>
+                            
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <h4 class="font-bold text-blue-800 mb-2">Enfoque:</h4>
+                                <p class="text-blue-700 text-sm">El foco es <strong>encontrar defectos en el entregable</strong>.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Auditoría de SQA -->
+                    <div class="comparison-card" style="border-top-color: #10b981;">
+                        <div class="text-center mb-6">
+                            <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-green-800">Una Auditoría de SQA responde:</h3>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <h4 class="font-bold text-green-800 mb-2">Pregunta 1:</h4>
+                                <p class="text-green-700">"¿El equipo siguió el proceso de revisión de código que se definió en el Plan de SQA?"</p>
+                            </div>
+                            
+                            <div class="bg-green-100 rounded-lg p-4">
+                                <h4 class="font-bold text-green-800 mb-2">Pregunta 2:</h4>
+                                <p class="text-green-700">"¿Se están utilizando las plantillas y checklists aprobados?"</p>
+                            </div>
+                            
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <h4 class="font-bold text-green-800 mb-2">Pregunta 3:</h4>
+                                <p class="text-green-700">"¿Los resultados de las pruebas se están registrando en la herramienta correcta?"</p>
+                            </div>
+                            
+                            <div class="bg-green-100 rounded-lg p-4">
+                                <h4 class="font-bold text-green-800 mb-2">Enfoque:</h4>
+                                <p class="text-green-700 text-sm">El foco es <strong>verificar el cumplimiento del proceso acordado</strong>.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conclusión -->
+                <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl p-8 text-white mt-8">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="text-4xl mr-4">🎯</div>
+                        <h3 class="text-2xl font-bold">El Valor de las Auditorías</h3>
+                    </div>
+                    <p class="text-xl text-center leading-relaxed opacity-95">
+                        Las auditorías aseguran que no solo hacemos un buen trabajo <strong>una vez</strong>, sino que tenemos un sistema que nos permite hacer un buen trabajo <strong>consistentemente</strong>.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: El Proceso de una Auditoría (Simplificado) -->
+        <div id="slide5" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🔄</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">El Proceso de una Auditoría (Simplificado)</h2>
+                    <h3 class="text-2xl font-semibold text-green-600">Un Ciclo para la Mejora Continua</h3>
+                    <p class="text-lg text-gray-600 mt-4">Una auditoría <strong>no es una cacería de brujas</strong>. Es una actividad planificada y constructiva que sigue un ciclo claro:</p>
+                </div>
+                
+                <!-- Proceso de auditoría -->
+                <div class="space-y-8 mb-8">
+                    
+                    <!-- Planificación -->
+                    <div class="section-card" style="border-left-color: #3b82f6;">
+                        <div class="flex items-start">
+                            <div class="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-blue-800 mb-4">1. Planificación</h4>
+                                
+                                <div class="bg-blue-50 rounded-lg p-4 mb-4">
+                                    <p class="text-blue-700 text-lg leading-relaxed">
+                                        El equipo de SQA o un auditor independiente <strong>selecciona qué proceso se auditará</strong> (ej. Gestión de Configuración).
+                                    </p>
+                                </div>
+                                
+                                <div class="bg-blue-100 rounded-lg p-4">
+                                    <p class="text-blue-700 text-lg leading-relaxed">
+                                        Se define el alcance, la fecha y se notifica al equipo que será auditado, solicitando la <strong>evidencia necesaria</strong> (documentos, acceso a herramientas).
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Ejecución -->
+                    <div class="section-card" style="border-left-color: #10b981;">
+                        <div class="flex items-start">
+                            <div class="w-16 h-16 bg-green-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-green-800 mb-4">2. Ejecución</h4>
+                                
+                                <div class="bg-green-50 rounded-lg p-4">
+                                    <p class="text-green-700 text-lg leading-relaxed">
+                                        El auditor se reúne con el equipo, <strong>entrevista a sus miembros</strong> y revisa la evidencia objetiva para compararla contra lo que dice el proceso documentado.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Reporte -->
+                    <div class="section-card" style="border-left-color: #f59e0b;">
+                        <div class="flex items-start">
+                            <div class="w-16 h-16 bg-amber-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-amber-800 mb-4">3. Reporte</h4>
+                                
+                                <div class="bg-amber-50 rounded-lg p-4 mb-4">
+                                    <p class="text-amber-700 text-lg leading-relaxed mb-4">
+                                        El auditor documenta sus hallazgos en un informe. Un <strong>"hallazgo"</strong> puede ser:
+                                    </p>
+                                    
+                                    <div class="space-y-3">
+                                        <div class="bg-green-100 rounded-lg p-3">
+                                            <h5 class="font-bold text-green-800 mb-1">✅ Conformidad:</h5>
+                                            <p class="text-green-700 text-sm">El equipo cumple con el proceso.</p>
+                                        </div>
+                                        
+                                        <div class="bg-red-100 rounded-lg p-3">
+                                            <h5 class="font-bold text-red-800 mb-1">❌ No Conformidad:</h5>
+                                            <p class="text-red-700 text-sm">Hay una desviación clara entre lo que se hace y lo que el proceso dicta.</p>
+                                        </div>
+                                        
+                                        <div class="bg-blue-100 rounded-lg p-3">
+                                            <h5 class="font-bold text-blue-800 mb-1">👁️ Observación:</h5>
+                                            <p class="text-blue-700 text-sm">No es un incumplimiento, pero se identifica una oportunidad de mejora.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Seguimiento -->
+                    <div class="section-card" style="border-left-color: #8b5cf6;">
+                        <div class="flex items-start">
+                            <div class="w-16 h-16 bg-purple-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-purple-800 mb-4">4. Seguimiento (Follow-up)</h4>
+                                
+                                <div class="bg-purple-50 rounded-lg p-4 mb-4">
+                                    <p class="text-purple-700 text-lg leading-relaxed">
+                                        El equipo auditado crea un <strong>plan de acción</strong> para corregir las "No Conformidades".
+                                    </p>
+                                </div>
+                                
+                                <div class="bg-purple-100 rounded-lg p-4">
+                                    <p class="text-purple-700 text-lg leading-relaxed">
+                                        El auditor es responsable de dar seguimiento para verificar que las acciones se implementaron y fueron <strong>efectivas</strong>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conclusión -->
+                <div class="bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="text-4xl mr-4">🔄</div>
+                        <h3 class="text-2xl font-bold">Ciclo de Mejora Continua</h3>
+                    </div>
+                    <p class="text-xl text-center leading-relaxed opacity-95">
+                        Cada auditoría no es un fin en sí mismo, sino parte de un <strong>ciclo de mejora continua</strong> que fortalece los procesos de la organización.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Presentación de Asignaciones (2, 3 y 4) -->
+        <div id="slide6" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🎤</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Presentación de Asignaciones (2, 3 y 4)</h2>
+                    <h3 class="text-2xl font-semibold text-blue-600">Puesta en Común: Compartiendo el Conocimiento</h3>
+                </div>
+                
+                <!-- Objetivo -->
+                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-8 text-white mb-8">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">🎯 Objetivo</h3>
+                            <p class="text-lg leading-relaxed opacity-95">
+                                Consolidar el aprendizaje práctico de las últimas semanas a través de la <strong>presentación y retroalimentación</strong> de las asignaciones.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dinámica de la Sesión -->
+                <div class="section-card mb-8" style="border-left-color: #10b981;">
+                    <div class="flex items-start">
+                        <div class="w-16 h-16 bg-green-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-green-800 mb-4">Dinámica de la Sesión</h4>
+                            
+                            <div class="bg-green-50 rounded-lg p-4 mb-4">
+                                <p class="text-green-700 text-lg leading-relaxed">
+                                    Cada equipo tendrá un tiempo asignado (ej. <strong>7 minutos</strong>) para presentar los resultados de una de las siguientes asignaciones:
+                                </p>
+                            </div>
+                            
+                            <div class="space-y-3 mb-4">
+                                <div class="bg-green-100 rounded-lg p-3">
+                                    <h5 class="font-bold text-green-800 mb-1">📊 Asignación 2:</h5>
+                                    <p class="text-green-700 text-sm">Métricas en el Mundo Real.</p>
+                                </div>
+                                
+                                <div class="bg-green-50 rounded-lg p-3">
+                                    <h5 class="font-bold text-green-800 mb-1">⭐ Asignación 3:</h5>
+                                    <p class="text-green-700 text-sm">Calificando la Calidad de una App (SQuaRE).</p>
+                                </div>
+                                
+                                <div class="bg-green-100 rounded-lg p-3">
+                                    <h5 class="font-bold text-green-800 mb-1">📋 Asignación 4:</h5>
+                                    <p class="text-green-700 text-sm">Borrador del Plan de SQA.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <p class="text-green-700 text-lg leading-relaxed">
+                                    El docente indicará qué asignación le corresponde presentar a cada equipo.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Formato de Presentación -->
+                <div class="section-card mb-8" style="border-left-color: #f59e0b;">
+                    <div class="flex items-start">
+                        <div class="w-16 h-16 bg-amber-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-amber-800 mb-4">Formato de Presentación</h4>
+                            
+                            <div class="bg-amber-50 rounded-lg p-4 mb-4">
+                                <p class="text-amber-700 text-lg leading-relaxed">
+                                    Después de cada presentación, habrá <strong>3 minutos</strong> para preguntas, comentarios y retroalimentación constructiva por parte del resto de la clase y el docente.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Criterios de Evaluación -->
+                <div class="section-card mb-8" style="border-left-color: #ef4444;">
+                    <div class="flex items-start">
+                        <div class="w-16 h-16 bg-red-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-red-800 mb-4">¿Qué se evaluará?</h4>
+                            
+                            <div class="space-y-3">
+                                <div class="bg-red-50 rounded-lg p-4">
+                                    <h5 class="font-bold text-red-800 mb-2">🎯 La claridad en la presentación</h5>
+                                    <p class="text-red-700 text-sm">¿El equipo logra comunicar sus ideas de forma clara y organizada?</p>
+                                </div>
+                                
+                                <div class="bg-red-100 rounded-lg p-4">
+                                    <h5 class="font-bold text-red-800 mb-2">📚 La correcta aplicación de los conceptos teóricos al caso práctico</h5>
+                                    <p class="text-red-700 text-sm">¿Se evidencia comprensión de los conceptos de calidad de software?</p>
+                                </div>
+                                
+                                <div class="bg-red-50 rounded-lg p-4">
+                                    <h5 class="font-bold text-red-800 mb-2">💭 La capacidad para justificar las decisiones tomadas</h5>
+                                    <p class="text-red-700 text-sm">¿El equipo puede explicar el "por qué" detrás de sus elecciones?</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conclusión -->
+                <div class="bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="text-4xl mr-4">🤝</div>
+                        <h3 class="text-2xl font-bold">Aprendizaje Colaborativo</h3>
+                    </div>
+                    <p class="text-xl text-center leading-relaxed opacity-95">
+                        Esta sesión es una oportunidad para <strong>aprender unos de otros</strong> y ver cómo diferentes equipos abordan los mismos desafíos de calidad.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Navigation -->
+    <div class="navigation">
+        <button class="nav-button" onclick="previousSlide()">⬅️ Anterior</button>
+        <button class="nav-button" onclick="resetAll()">🔄 Reiniciar</button>
+        <button class="nav-button" onclick="nextSlide()">Siguiente ➡️</button>
     </div>
 
     <script>
-        let currentSlideIndex = 1;
-        const totalSlidesCount = 5;
-
-        function nextSlide() {
-            if (currentSlideIndex < totalSlidesCount) {
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
-                currentSlideIndex++;
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
-                updateNavigation();
-            }
+        let currentSlide = 1;
+        const totalSlides = 6;
+        
+        function updateSlideCounter() {
+            document.getElementById('current-slide').textContent = currentSlide;
+            document.getElementById('total-slides').textContent = totalSlides;
         }
-
-        function previousSlide() {
-            if (currentSlideIndex > 1) {
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
-                currentSlideIndex--;
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
-                updateNavigation();
+        
+        function showSlide(slideNumber) {
+            // Hide all slides
+            for (let i = 1; i <= totalSlides; i++) {
+                document.getElementById('slide' + i).classList.add('hidden');
             }
-        }
-
-        function updateNavigation() {
-            document.getElementById('currentSlide').textContent = currentSlideIndex;
-            document.getElementById('totalSlides').textContent = totalSlidesCount;
             
-            document.getElementById('prevBtn').disabled = currentSlideIndex === 1;
-            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlidesCount;
+            // Show selected slide
+            document.getElementById('slide' + slideNumber).classList.remove('hidden');
+            
+            currentSlide = slideNumber;
+            updateSlideCounter();
+            updateNavigationButtons();
+            
+            // Auto-scroll to top when changing slides
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         }
-
+        
+        function updateNavigationButtons() {
+            const prevButton = document.querySelector('.navigation button:first-child');
+            const nextButton = document.querySelector('.navigation button:last-child');
+            
+            prevButton.disabled = currentSlide === 1;
+            nextButton.disabled = currentSlide === totalSlides;
+        }
+        
+        function previousSlide() {
+            if (currentSlide > 1) {
+                showSlide(currentSlide - 1);
+            }
+        }
+        
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                showSlide(currentSlide + 1);
+            }
+        }
+        
+        function resetAll() {
+            showSlide(1);
+        }
+        
         // Keyboard navigation
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'ArrowRight' || event.key === ' ') {
-                nextSlide();
-            } else if (event.key === 'ArrowLeft') {
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
                 previousSlide();
+            } else if (e.key === 'ArrowRight') {
+                nextSlide();
+            } else if (e.key === 'Home') {
+                resetAll();
             }
         });
-
+        
         // Initialize
-        updateNavigation();
+        showSlide(1);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a86257f7aacdb0',t:'MTc1NzEwMzE3NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+<!-- Pie de página -->
+<footer class="footer">
+  <div class="footer-content">© 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua</div>
+</footer>
+
+</body>
 </html>
