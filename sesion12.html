@@ -1,549 +1,342 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sesión 12 - Tipos de Prueba: Caja Negra vs. Caja Blanca</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sesión 12: Pruebas de Seguridad</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-
-        .slide-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 3rem;
-            max-width: 900px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-            position: relative;
-            min-height: 600px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .slide {
-            display: none;
-            flex: 1;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        .slide.active {
-            display: flex;
-            flex-direction: column;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .slide h1 {
-            color: #2d3748;
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .slide h2 {
-            color: #2d3748;
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-
-        .slide h3 {
-            color: #4a5568;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .subtitle {
-            font-size: 1.3rem;
-            color: #718096;
-            text-align: center;
-            font-style: italic;
-            margin-bottom: 2rem;
-        }
-
-        .quote-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            text-align: center;
-            margin: 2rem 0;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        }
-
-        .quote-box h4 {
-            color: white;
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-        }
-
-        .quote-box p {
-            font-size: 1.2rem;
-            line-height: 1.6;
-        }
-
-        .definition-box {
-            background: #e6fffa;
-            padding: 2rem;
-            border-radius: 15px;
-            border-left: 5px solid #38b2ac;
-            margin: 2rem 0;
-        }
-
-        .definition-box h4 {
-            color: #2d3748;
-            margin-bottom: 1.5rem;
-            font-size: 1.4rem;
-        }
-
-        .definition-box ul {
-            color: #4a5568;
-            line-height: 1.8;
-            font-size: 1.1rem;
-        }
-
-        .definition-box li {
-            margin-bottom: 1rem;
-            padding-left: 0.5rem;
-        }
-
-        .definition-box strong {
-            color: #2d3748;
-        }
-
-        .types-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin: 2rem 0;
-        }
-
-        .type-card {
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        }
-
-        .blackbox-card {
-            background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
-            color: white;
-        }
-
-        .whitebox-card {
-            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
-            color: #2d3748;
-            border: 2px solid #e2e8f0;
-        }
-
-        .type-card h4 {
-            margin-bottom: 1.5rem;
-            font-size: 1.4rem;
-        }
-
-        .blackbox-card h4 {
-            color: white;
-        }
-
-        .whitebox-card h4 {
-            color: #2d3748;
-        }
-
-        .type-card h5 {
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .blackbox-card h5 {
-            color: white;
-        }
-
-        .whitebox-card h5 {
-            color: #4a5568;
-        }
-
-        .type-card ul {
-            margin-left: 1rem;
-            line-height: 1.6;
-        }
-
-        .type-card li {
-            margin-bottom: 0.8rem;
-        }
-
-        .blackbox-card li {
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .whitebox-card li {
-            color: #4a5568;
-        }
-
-        .examples-container {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .examples-container h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .examples-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .example-card {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .example-card h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .example-card p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.5;
-        }
-
-        .techniques-container {
-            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .techniques-container h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .techniques-grid {
-            display: grid;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .technique-item {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.2rem;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .technique-icon {
-            background: rgba(255, 255, 255, 0.3);
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-        }
-
-        .technique-content h5 {
-            color: white;
-            margin-bottom: 0.5rem;
-            font-size: 1.1rem;
-        }
-
-        .technique-content p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.4;
-            font-size: 0.95rem;
-        }
-
-        .comparison-container {
-            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .comparison-container h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .comparison-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-top: 1.5rem;
-        }
-
-        .comparison-card {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            text-align: center;
-        }
-
-        .comparison-card h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.3rem;
-        }
-
-        .comparison-card p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.6;
-            font-size: 1.1rem;
-            font-weight: 500;
-        }
-
-        .activity-container {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .activity-container h4 {
-            color: white;
-            margin-bottom: 1rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .code-box {
-            background: #1a202c;
-            color: #e2e8f0;
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin: 1.5rem 0;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9rem;
-            line-height: 1.6;
-            overflow-x: auto;
-        }
-
-        .code-box .keyword {
-            color: #63b3ed;
-        }
-
-        .code-box .function {
-            color: #68d391;
-        }
-
-        .code-box .comment {
-            color: #a0aec0;
-            font-style: italic;
-        }
-
-        .tasks-container {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin: 1.5rem 0;
-            backdrop-filter: blur(10px);
-        }
-
-        .tasks-container h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .task-list {
-            display: grid;
-            gap: 1rem;
-        }
-
-        .task-item {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 1rem;
-            border-radius: 8px;
-            backdrop-filter: blur(5px);
-        }
-
-        .task-item h6 {
-            color: white;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .task-item p {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-
-        .discussion-box {
-            background: rgba(255, 255, 255, 0.3);
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: center;
-            margin-top: 1.5rem;
-            backdrop-filter: blur(10px);
-        }
-
-        .discussion-box h5 {
-            color: white;
-            margin-bottom: 0.8rem;
-            font-size: 1.2rem;
-        }
-
-        .discussion-box p {
-            color: white;
-            font-weight: 500;
-        }
-
-        .navigation {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 2px solid #e2e8f0;
-        }
-
-        .slide-counter {
-            color: #718096;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .nav-btn {
-            padding: 0.8rem 1.5rem;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .nav-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .nav-btn:disabled {
-            background: #cbd5e0;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .source-note {
-            background: #fff5f5;
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid #f56565;
-            margin-top: 1.5rem;
-            font-style: italic;
-            color: #4a5568;
-        }
-
-        .highlight-box {
-            background: #fffaf0;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border: 2px dashed #ed8936;
-            text-align: center;
-            margin: 2rem 0;
-        }
-
-        .highlight-box p {
-            color: #2d3748;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        @media (max-width: 768px) {
-            .slide-container {
-                padding: 2rem;
-                margin: 1rem;
-            }
-            
-            .slide h1 {
-                font-size: 2rem;
-            }
-            
-            .slide h2 {
-                font-size: 1.5rem;
-            }
-            
-            .types-container, .examples-grid, .comparison-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            
-            .nav-buttons {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-        }
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: #764ba2;
+      }
+
+      .slide-transition {
+        transition: all 0.5s ease-in-out;
+      }
+
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .card-hover {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      }
+
+      .fade-in {
+        animation: fadeIn 0.8s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .pulse-animation {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      .navigation {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 15px 20px;
+        border-radius: 50px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+      }
+
+      .nav-button {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+      }
+
+      .nav-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
+      }
+
+      .nav-button:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .slide-counter {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 10px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        color: #374151;
+        z-index: 1000;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .highlight-box {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .security-icon {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, #dc2626, #991b1b);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        color: white;
+        font-size: 3rem;
+        box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);
+      }
+
+      .shift-left-container {
+        background: white;
+        border-radius: 2rem;
+        padding: 3rem;
+        margin: 2rem 0;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .timeline-item {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin: 1rem 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-left: 6px solid;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+      }
+
+      .timeline-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .old-way {
+        border-left-color: #ef4444;
+      }
+      .new-way {
+        border-left-color: #10b981;
+      }
+
+      .owasp-container {
+        background: white;
+        border-radius: 2rem;
+        padding: 3rem;
+        margin: 2rem 0;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .vulnerability-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin: 1.5rem 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 3px solid;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+      }
+
+      .vulnerability-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      .injection-card {
+        border-color: #dc2626;
+        background: linear-gradient(135deg, #fef2f2, #fee2e2);
+      }
+
+      .auth-card {
+        border-color: #f59e0b;
+        background: linear-gradient(135deg, #fffbeb, #fef3c7);
+      }
+
+      .data-card {
+        border-color: #7c3aed;
+        background: linear-gradient(135deg, #faf5ff, #e9d5ff);
+      }
+
+      .code-example {
+        background: #1f2937;
+        color: #f9fafb;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        font-family: "Courier New", monospace;
+        font-size: 0.9rem;
+        margin: 1rem 0;
+        border-left: 4px solid #ef4444;
+      }
+
+      .owasp-logo {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #1f2937, #374151);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        color: white;
+        font-weight: bold;
+        font-size: 1.2rem;
+      }
+
+      .fortress-animation {
+        animation: fortressGlow 3s ease-in-out infinite;
+      }
+
+      @keyframes fortressGlow {
+        0%,
+        100% {
+          box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);
+        }
+        50% {
+          box-shadow: 0 8px 35px rgba(220, 38, 38, 0.5);
+        }
+      }
+
+      .house-analogy {
+        background: linear-gradient(135deg, #059669, #047857);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin: 2rem 0;
+        color: white;
+      }
+
+      .benefit-highlight {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      @media (max-width: 768px) {
+        .grid-responsive {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+
+        .shift-left-container,
+        .owasp-container {
+          padding: 2rem 1rem;
+        }
+      }
     </style>
-</head>
-<body>
-
+  
 <style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+/* Fondo como index */
+body{
+  font-family:'Inter','Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height:1.6;
+  color:#333;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  min-height:100vh;
+  padding-top:80px; /* nav fijo */
+}
+
+/* NAV Plataforma QS (fijo, una sola fila con scroll si no cabe) */
+.qs-nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:saturate(140%) blur(20px);
+       background:rgba(255,255,255,.95);border-bottom:1px solid rgba(255,255,255,.2);
+       box-shadow:0 8px 32px rgba(0,0,0,.10)}
+.qs-nav .wrap{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:nowrap}
+.qs-brand{display:flex;gap:15px;align-items:center;color:#1f2937;font-weight:800;font-size:1.3rem;text-decoration:none;position:relative;padding:8px 16px;border-radius:20px;flex:0 0 auto}
+.qs-brand::before{content:"🎓";font-size:1.6rem}
+.qs-tabs{display:flex;gap:12px;background:rgba(255,255,255,.3);padding:8px;border-radius:30px;backdrop-filter:blur(10px);
+         flex:1 1 auto;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.qs-btn{border:0;padding:12px 20px;border-radius:25px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;font-weight:600;font-size:.9rem;
+       transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(10px);border:2px solid transparent;position:relative;overflow:hidden;flex:0 0 auto}
+.qs-btn::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);transition:all .4s ease;z-index:-1}
+.qs-btn:hover{color:#fff;transform:translateY(-3px);box-shadow:0 8px 25px rgba(102,126,234,.4);border-color:rgba(102,126,234,.3)}
+.qs-btn:hover::before{left:0}
+.qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none;box-shadow:0 6px 20px rgba(102,126,234,.5);transform:translateY(-2px)}
+.qs-btn[aria-current="page"]::before{left:0}
+
+/* Footer como index */
+.footer{
+  margin-top:60px;
+  padding:30px 20px;
+  text-align:center;
+  background:rgba(255, 255, 255, 0.1);
+  backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255, 255, 255, 0.2);
+}
+.footer-content{
+  max-width:1200px;
+  margin:0 auto;
+  color:rgba(255,255,255,0.8);
+  font-size:0.95rem;
+  transition:all 0.3s ease;
+  cursor:default;
+}
+.footer-content:hover{ color:#fff; transform:translateY(-2px); }
+
+/* Slide counter reducido */
+.slide-counter, #slideIndicator, .slide-indicator{
+  font-size:10px !important;
+  line-height:1 !important;
+  padding:4px 8px !important;
+  min-width:28px !important;
+  border-radius:12px !important;
+  opacity:.85 !important;
+}
 </style>
+
+</head>
+  <body class="min-h-screen">
+
+<!-- NAV Plataforma QS -->
 <div class="qs-nav">
   <div class="wrap">
     <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
@@ -554,377 +347,996 @@
       <a class="qs-btn" href="Foro.html">Foro</a>
       <a class="qs-btn" href="paneldocente.html">Panel</a>
       <a class="qs-btn" href="roadmap.html">Roadmap</a>
-          <a class="qs-btn" href="checklist.html">Checklist</a>
-\1
+      <a class="qs-btn" href="checklist.html">Checklist</a>
+      <a class="qs-btn" href="status.html">Status</a>
+    </nav>
   </div>
 </div>
-<script>
-(function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
-  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
-  });
-})();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
-</script>
 
+    <!-- Slide Counter -->
+    <div class="slide-counter">
+      <span id="current-slide">1</span> / <span id="total-slides">3</span>
+    </div>
 
-    <div class="slide-container">
-        <!-- Slide 1: Título -->
-        <div class="slide active">
-            <h1>🔍 Tipos de Prueba</h1>
-            <div class="subtitle">Mirando dentro o fuera del software</div>
-            
-            <div class="quote-box">
-                <h4>🎯 "Dos perspectivas, un objetivo común"</h4>
-                <p>Caja Negra vs. Caja Blanca: enfoques complementarios para garantizar calidad</p>
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8 pb-32">
+      <!-- Slide 1: Título -->
+      <div id="slide1" class="slide-transition fade-in">
+        <div
+          class="gradient-bg rounded-2xl p-12 text-white text-center mb-8 card-hover"
+        >
+          <div class="max-w-4xl mx-auto">
+            <div class="security-icon fortress-animation">🏰</div>
+            <h1 class="text-5xl font-bold mb-6 pulse-animation">
+              Defendiendo la Fortaleza: Pruebas de Seguridad
+            </h1>
+            <h2 class="text-3xl font-semibold mb-8 opacity-90">
+              No es suficiente que el software funcione, debe funcionar de forma
+              segura
+            </h2>
+
+            <div class="highlight-box">
+              <div class="flex items-center justify-center mb-4">
+                <svg
+                  class="w-8 h-8 mr-3"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <h3 class="text-xl font-semibold">Filosofía de la Seguridad</h3>
+              </div>
+              <div class="text-lg opacity-90">
+                <p>"La seguridad no es un producto, es un proceso continuo"</p>
+              </div>
             </div>
-            
-            <div class="types-container">
-                <div class="type-card blackbox-card">
-                    <h4>⬛ Caja Negra</h4>
-                    <p style="color: rgba(255, 255, 255, 0.9); text-align: center; font-size: 1.1rem;">
-                        <strong>"¿Qué hace?"</strong><br>
-                        Enfoque externo basado en requisitos
+          </div>
+        </div>
+
+        <!-- Fuente -->
+        <div
+          class="bg-white bg-opacity-95 border-l-4 border-blue-500 p-6 rounded-r-lg shadow-lg"
+        >
+          <div class="flex items-start">
+            <svg
+              class="w-6 h-6 text-blue-500 mr-3 mt-1"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <h4 class="text-lg font-semibold text-blue-800 mb-2">
+                Fuente base:
+              </h4>
+              <p class="text-blue-700 leading-relaxed">
+                <strong
+                  >"Software Quality Assurance: Integrating Testing, Security,
+                  and Audit"</strong
+                >
+                - Abu Sayed Mahfuz
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2: La Seguridad es un Atributo de Calidad -->
+      <div id="slide2" class="slide-transition hidden">
+        <div
+          class="bg-white bg-opacity-95 rounded-2xl shadow-xl p-8 mb-8 card-hover"
+        >
+          <div class="text-center mb-8">
+            <div class="text-6xl mb-4">🛡️</div>
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">
+              La Seguridad es un Atributo de Calidad
+            </h2>
+            <h3 class="text-2xl text-red-600 font-semibold">
+              El Principio "Shift-Left Security"
+            </h3>
+          </div>
+
+          <!-- Introducción del Problema -->
+          <div
+            class="bg-gradient-to-r from-red-500 to-red-600 rounded-2xl p-8 text-white mb-8"
+          >
+            <div class="flex items-center justify-center mb-6">
+              <div class="text-4xl mr-4">⚠️</div>
+              <h3 class="text-2xl font-bold">El Problema Tradicional</h3>
+            </div>
+            <p class="text-xl text-center leading-relaxed opacity-95">
+              Durante años, la seguridad se consideraba una tarea para el
+              <strong>final del ciclo de desarrollo</strong>:
+              <em>"Primero hacemos que funcione, luego lo hacemos seguro"</em>.
+              Esta mentalidad es <strong>costosa y peligrosa</strong>.
+            </p>
+          </div>
+
+          <!-- Shift-Left Container -->
+          <div class="shift-left-container">
+            <div class="text-center mb-8">
+              <div class="text-4xl mb-4">⬅️</div>
+              <h3 class="text-3xl font-bold text-gray-800 mb-4">
+                El Enfoque Moderno: "Shift-Left Security"
+              </h3>
+              <p class="text-lg text-gray-600">
+                (Seguridad Desplazada a la Izquierda)
+              </p>
+            </div>
+
+            <!-- Concepto Principal -->
+            <div
+              class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-8 text-white mb-8"
+            >
+              <div class="flex items-center justify-center mb-6">
+                <div class="text-4xl mr-4">💡</div>
+                <h4 class="text-2xl font-bold">Concepto Fundamental</h4>
+              </div>
+              <p class="text-xl text-center leading-relaxed">
+                La seguridad
+                <strong>no es una capa que se añade al final</strong>, sino un
+                <strong>atributo de calidad fundamental</strong> que debe ser
+                diseñado, construido y verificado
+                <strong>desde el inicio</strong> del ciclo de vida del software.
+              </p>
+            </div>
+
+            <!-- Comparación Antes vs Ahora -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div class="timeline-item old-way">
+                <div class="flex items-center mb-4">
+                  <div
+                    class="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mr-4"
+                  >
+                    <span class="text-white font-bold">❌</span>
+                  </div>
+                  <h4 class="text-xl font-bold text-red-800">
+                    Enfoque Tradicional
+                  </h4>
+                </div>
+                <div class="space-y-3">
+                  <p class="text-red-700">
+                    🔧 <strong>Desarrollo:</strong> "Hagamos que funcione"
+                  </p>
+                  <p class="text-red-700">
+                    🧪 <strong>Testing:</strong> "Probemos las funciones"
+                  </p>
+                  <p class="text-red-700">
+                    🔒 <strong>Seguridad:</strong> "Ahora hagámoslo seguro"
+                  </p>
+                  <p class="text-red-700">
+                    💸 <strong>Resultado:</strong> Costoso y riesgoso
+                  </p>
+                </div>
+              </div>
+
+              <div class="timeline-item new-way">
+                <div class="flex items-center mb-4">
+                  <div
+                    class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-4"
+                  >
+                    <span class="text-white font-bold">✅</span>
+                  </div>
+                  <h4 class="text-xl font-bold text-green-800">
+                    Shift-Left Security
+                  </h4>
+                </div>
+                <div class="space-y-3">
+                  <p class="text-green-700">
+                    🎯 <strong>Diseño:</strong> "Diseñemos con seguridad"
+                  </p>
+                  <p class="text-green-700">
+                    🔧 <strong>Desarrollo:</strong> "Codifiquemos de forma
+                    segura"
+                  </p>
+                  <p class="text-green-700">
+                    🧪 <strong>Testing:</strong> "Probemos la seguridad"
+                  </p>
+                  <p class="text-green-700">
+                    💰 <strong>Resultado:</strong> Eficiente y robusto
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Analogía de la Casa -->
+            <div class="house-analogy">
+              <div class="flex items-center justify-center mb-6">
+                <div class="text-4xl mr-4">🏠</div>
+                <h4 class="text-2xl font-bold">Analogía de la Casa</h4>
+              </div>
+              <p class="text-xl text-center leading-relaxed mb-4">
+                No construyes una casa y luego piensas en cómo hacerla
+                <strong>resistente a los terremotos</strong>. Usas
+                <strong>materiales y diseños sismorresistentes</strong> desde
+                los cimientos.
+              </p>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                <div class="benefit-highlight">
+                  <div class="text-center">
+                    <div class="text-3xl mb-2">🏗️</div>
+                    <h5 class="font-bold text-lg mb-2">Desde los Cimientos</h5>
+                    <p class="text-sm opacity-90">
+                      Estructura sismorresistente integrada
                     </p>
+                  </div>
                 </div>
-                
-                <div class="type-card whitebox-card">
-                    <h4>⬜ Caja Blanca</h4>
-                    <p style="text-align: center; font-size: 1.1rem;">
-                        <strong>"¿Cómo lo hace?"</strong><br>
-                        Enfoque interno basado en código
+                <div class="benefit-highlight">
+                  <div class="text-center">
+                    <div class="text-3xl mb-2">🔧</div>
+                    <h5 class="font-bold text-lg mb-2">No Como Parche</h5>
+                    <p class="text-sm opacity-90">Refuerzos añadidos después</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Beneficios -->
+            <div
+              class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-8 text-white"
+            >
+              <div class="flex items-center justify-center mb-6">
+                <div class="text-4xl mr-4">📈</div>
+                <h4 class="text-2xl font-bold">Beneficios del Shift-Left</h4>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="benefit-highlight">
+                  <div class="flex items-center mb-3">
+                    <div class="text-2xl mr-3">💰</div>
+                    <h5 class="font-bold text-lg">Costo-Efectivo</h5>
+                  </div>
+                  <p class="text-sm opacity-90">
+                    Es <strong>exponencialmente más barato</strong> corregir una
+                    vulnerabilidad en la fase de diseño que encontrarla en
+                    producción.
+                  </p>
+                </div>
+                <div class="benefit-highlight">
+                  <div class="flex items-center mb-3">
+                    <div class="text-2xl mr-3">🛡️</div>
+                    <h5 class="font-bold text-lg">Más Seguro</h5>
+                  </div>
+                  <p class="text-sm opacity-90">
+                    Previene brechas de seguridad en lugar de reaccionar después
+                    de que ocurran.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conclusión -->
+          <div
+            class="bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl p-8 text-white"
+          >
+            <div class="flex items-center justify-center mb-4">
+              <div class="text-4xl mr-4">⚖️</div>
+              <h3 class="text-2xl font-bold">
+                La Seguridad Como Atributo de Calidad
+              </h3>
+            </div>
+            <p class="text-xl text-center leading-relaxed opacity-95">
+              La seguridad es una
+              <strong>característica no funcional</strong> tan importante como
+              el rendimiento o la usabilidad. Debe ser medida, probada y
+              garantizada.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3: OWASP Top 10 -->
+      <div id="slide3" class="slide-transition hidden">
+        <div
+          class="bg-white bg-opacity-95 rounded-2xl shadow-xl p-8 mb-8 card-hover"
+        >
+          <div class="text-center mb-8">
+            <div class="owasp-logo">OWASP</div>
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">OWASP Top 10</h2>
+            <h3 class="text-2xl text-red-600 font-semibold">
+              Los "10 Más Buscados" de las Vulnerabilidades Web
+            </h3>
+          </div>
+
+          <!-- Introducción OWASP -->
+          <div
+            class="bg-gradient-to-r from-gray-700 to-gray-900 rounded-2xl p-8 text-white mb-8"
+          >
+            <div class="flex items-center justify-center mb-6">
+              <div class="text-4xl mr-4">🌐</div>
+              <h3 class="text-2xl font-bold">¿Qué es OWASP?</h3>
+            </div>
+            <p class="text-xl text-center leading-relaxed mb-6 opacity-95">
+              El <strong>OWASP</strong> (Open Web Application Security Project)
+              es una comunidad global sin fines de lucro que trabaja para
+              mejorar la seguridad del software.
+            </p>
+            <div class="bg-white bg-opacity-20 rounded-lg p-4">
+              <p class="text-lg text-center">
+                Su proyecto más famoso es el <strong>OWASP Top 10</strong>, un
+                documento que crea conciencia sobre los
+                <strong>riesgos de seguridad más críticos</strong> para las
+                aplicaciones web.
+              </p>
+            </div>
+          </div>
+
+          <!-- Container de Vulnerabilidades -->
+          <div class="owasp-container">
+            <div class="text-center mb-8">
+              <h3 class="text-2xl font-bold text-gray-800 mb-4">
+                Los 3 Riesgos Más Comunes y Peligrosos
+              </h3>
+              <p class="text-gray-600">
+                Haz clic en cada vulnerabilidad para explorar sus detalles
+              </p>
+            </div>
+
+            <!-- A01: Inyección -->
+            <div
+              class="vulnerability-card injection-card"
+              onclick="highlightVulnerability(this)"
+            >
+              <div class="flex items-start">
+                <div
+                  class="w-16 h-16 bg-red-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-lg">A01</span>
+                </div>
+                <div class="flex-1">
+                  <h4 class="text-2xl font-bold text-red-800 mb-3">
+                    💉 Inyección (Injection)
+                  </h4>
+
+                  <div class="space-y-4">
+                    <div class="bg-red-50 rounded-lg p-4">
+                      <h5 class="font-bold text-red-800 mb-2">🎯 ¿Qué es?</h5>
+                      <p class="text-red-700">
+                        Ocurre cuando un atacante envía
+                        <strong>datos maliciosos</strong> a una aplicación,
+                        engañándola para que ejecute
+                        <strong>comandos no intencionados</strong>. El ejemplo
+                        más clásico es la <strong>Inyección SQL</strong>, donde
+                        se manipulan las consultas a la base de datos para robar
+                        o corromper información.
+                      </p>
+                    </div>
+
+                    <div class="bg-red-100 rounded-lg p-4">
+                      <h5 class="font-bold text-red-800 mb-2">
+                        💻 Ejemplo simple:
+                      </h5>
+                      <div class="code-example">
+                        SELECT * FROM usuarios WHERE id = '1' OR '1'='1';
+                      </div>
+                      <p class="text-red-700 text-sm mt-2">
+                        ⚠️ Esta consulta maliciosa devolvería
+                        <strong>todos los usuarios</strong>
+                        de la base de datos, no solo el usuario con ID 1.
+                      </p>
+                    </div>
+
+                    <div class="bg-red-50 rounded-lg p-4">
+                      <h5 class="font-bold text-red-800 mb-2">🛡️ Impacto:</h5>
+                      <p class="text-red-700">
+                        Robo de datos, corrupción de información, acceso no
+                        autorizado a sistemas.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- A02: Autenticación Rota -->
+            <div
+              class="vulnerability-card auth-card"
+              onclick="highlightVulnerability(this)"
+            >
+              <div class="flex items-start">
+                <div
+                  class="w-16 h-16 bg-yellow-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-lg">A02</span>
+                </div>
+                <div class="flex-1">
+                  <h4 class="text-2xl font-bold text-yellow-800 mb-3">
+                    🔐 Autenticación Rota (Broken Authentication)
+                  </h4>
+
+                  <div class="space-y-4">
+                    <div class="bg-yellow-50 rounded-lg p-4">
+                      <h5 class="font-bold text-yellow-800 mb-2">
+                        🎯 ¿Qué es?
+                      </h5>
+                      <p class="text-yellow-700">
+                        Son
+                        <strong
+                          >fallas en las funciones relacionadas con la identidad
+                          del usuario</strong
+                        >. Permiten a los atacantes robar contraseñas, claves o
+                        tokens de sesión para
+                        <strong>hacerse pasar por otros usuarios</strong>.
+                      </p>
+                    </div>
+
+                    <div class="bg-yellow-100 rounded-lg p-4">
+                      <h5 class="font-bold text-yellow-800 mb-2">
+                        💻 Ejemplos comunes:
+                      </h5>
+                      <div class="space-y-2">
+                        <div class="flex items-center">
+                          <span class="text-yellow-600 mr-2">•</span>
+                          <p class="text-yellow-700">
+                            Permitir
+                            <strong>contraseñas débiles</strong> (123456,
+                            password)
+                          </p>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-yellow-600 mr-2">•</span>
+                          <p class="text-yellow-700">
+                            No <strong>invalidar la sesión</strong> después de
+                            cerrar sesión
+                          </p>
+                        </div>
+                        <div class="flex items-center">
+                          <span class="text-yellow-600 mr-2">•</span>
+                          <p class="text-yellow-700">
+                            Enviar el <strong>ID de sesión en la URL</strong>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="bg-yellow-50 rounded-lg p-4">
+                      <h5 class="font-bold text-yellow-800 mb-2">
+                        🛡️ Impacto:
+                      </h5>
+                      <p class="text-yellow-700">
+                        Suplantación de identidad, acceso no autorizado a
+                        cuentas de usuario.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- A04: Exposición de Datos Sensibles -->
+            <div
+              class="vulnerability-card data-card"
+              onclick="highlightVulnerability(this)"
+            >
+              <div class="flex items-start">
+                <div
+                  class="w-16 h-16 bg-purple-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-lg">A04</span>
+                </div>
+                <div class="flex-1">
+                  <h4 class="text-2xl font-bold text-purple-800 mb-3">
+                    📊 Exposición de Datos Sensibles (Sensitive Data Exposure)
+                  </h4>
+
+                  <div class="space-y-4">
+                    <div class="bg-purple-50 rounded-lg p-4">
+                      <h5 class="font-bold text-purple-800 mb-2">
+                        🎯 ¿Qué es?
+                      </h5>
+                      <p class="text-purple-700">
+                        Sucede cuando la aplicación
+                        <strong
+                          >no protege adecuadamente información sensible</strong
+                        >
+                        como números de tarjetas de crédito, contraseñas, o
+                        datos personales. Esta información puede ser robada si
+                        no está cifrada tanto en
+                        <strong>almacenamiento ("at-rest")</strong> como en
+                        <strong>tránsito ("in-transit")</strong>.
+                      </p>
+                    </div>
+
+                    <div class="bg-purple-100 rounded-lg p-4">
+                      <h5 class="font-bold text-purple-800 mb-2">
+                        💻 Ejemplo crítico:
+                      </h5>
+                      <div
+                        class="bg-gray-800 text-red-400 p-3 rounded font-mono text-sm"
+                      >
+                        ❌ Almacenar contraseñas como texto plano en la base de
+                        datos
+                      </div>
+                      <p class="text-purple-700 text-sm mt-2">
+                        ⚠️ Si alguien accede a la base de datos, puede ver
+                        <strong>todas las contraseñas</strong>
+                        directamente.
+                      </p>
+                    </div>
+
+                    <div class="bg-purple-50 rounded-lg p-4">
+                      <h5 class="font-bold text-purple-800 mb-2">
+                        🛡️ Impacto:
+                      </h5>
+                      <p class="text-purple-700">
+                        Robo de identidad, fraude financiero, violación de
+                        privacidad, multas regulatorias.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conclusión -->
+          <div
+            class="bg-gradient-to-r from-red-500 to-pink-600 rounded-2xl p-8 text-white"
+          >
+            <div class="flex items-center justify-center mb-4">
+              <div class="text-4xl mr-4">🎯</div>
+              <h3 class="text-2xl font-bold">Conocer es Prevenir</h3>
+            </div>
+            <p class="text-xl text-center leading-relaxed opacity-95">
+              El <strong>OWASP Top 10</strong> es nuestra guía para entender las
+              amenazas más comunes. Conocer estas vulnerabilidades es el
+              <strong>primer paso para defenderse</strong> de ellas.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 4: Foro de Discusión -->
+      <div id="slide4" class="slide-transition hidden">
+        <div
+          class="bg-white bg-opacity-95 rounded-2xl shadow-xl p-8 mb-8 card-hover"
+        >
+          <div class="text-center mb-8">
+            <div class="text-6xl mb-4">💬</div>
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">
+              Foro de Discusión
+            </h2>
+            <h3 class="text-3xl text-orange-600 font-semibold">
+              La Seguridad: ¿El Problema de Quién?
+            </h3>
+          </div>
+
+          <!-- Pregunta Principal -->
+          <div
+            class="bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl p-8 text-white mb-8"
+          >
+            <div class="flex items-center justify-center mb-6">
+              <div class="text-4xl mr-4">❓</div>
+              <h3 class="text-2xl font-bold">Pregunta para el Debate</h3>
+            </div>
+            <div class="bg-white bg-opacity-20 rounded-xl p-6">
+              <p class="text-xl text-center leading-relaxed font-semibold">
+                "¿De quién es la
+                <strong>responsabilidad de la seguridad</strong> en un equipo de
+                desarrollo? ¿Del programador, del tester, de un especialista
+                externo? <strong>Justifica tu respuesta.</strong>"
+              </p>
+            </div>
+          </div>
+
+          <!-- Puntos para Reflexionar -->
+          <div
+            class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-8 text-white mb-8"
+          >
+            <div class="flex items-center justify-center mb-6">
+              <div class="text-4xl mr-4">🤔</div>
+              <h3 class="text-2xl font-bold">Puntos para Reflexionar</h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Pregunta 1 -->
+              <div
+                class="bg-white bg-opacity-20 rounded-xl p-6 hover:bg-opacity-30 transition-all duration-300 cursor-pointer"
+                onclick="highlightReflection(this)"
+              >
+                <div class="flex items-start mb-4">
+                  <div
+                    class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0"
+                  >
+                    <span class="text-white font-bold">1</span>
+                  </div>
+                  <div>
+                    <h4 class="text-lg font-bold mb-2">👨‍💻 El Programador</h4>
+                    <p class="text-sm opacity-90">
+                      ¿Puede un programador escribir código
+                      <strong>sin pensar en la seguridad</strong>?
                     </p>
+                  </div>
                 </div>
-            </div>
-            
-            <div class="highlight-box">
-                <p>🎯 <strong>Objetivo:</strong> Comprender cuándo y cómo aplicar cada enfoque de testing</p>
-            </div>
-        </div>
+                <div class="bg-white bg-opacity-10 rounded-lg p-3 mt-3">
+                  <p class="text-xs opacity-80">
+                    💭 Considera: ¿Es realista esperar que conozcan todas las
+                    vulnerabilidades?
+                  </p>
+                </div>
+              </div>
 
-        <!-- Slide 2: Caja Negra -->
-        <div class="slide">
-            <h2>⬛ Pruebas de Caja Negra</h2>
-            
-            <div class="definition-box">
-                <h4>📋 Características Principales</h4>
-                <ul>
-                    <li><strong>Basada en requisitos y funcionalidad</strong> - no en implementación</li>
-                    <li><strong>No interesa el código interno</strong> - solo entradas y salidas</li>
-                    <li><strong>Perspectiva del usuario final</strong> - comportamiento esperado</li>
-                    <li><strong>Independiente de la tecnología</strong> - funciona con cualquier lenguaje</li>
+              <!-- Pregunta 2 -->
+              <div
+                class="bg-white bg-opacity-20 rounded-xl p-6 hover:bg-opacity-30 transition-all duration-300 cursor-pointer"
+                onclick="highlightReflection(this)"
+              >
+                <div class="flex items-start mb-4">
+                  <div
+                    class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0"
+                  >
+                    <span class="text-white font-bold">2</span>
+                  </div>
+                  <div>
+                    <h4 class="text-lg font-bold mb-2">🧪 El Tester de QA</h4>
+                    <p class="text-sm opacity-90">
+                      ¿Puede un tester de QA
+                      <strong>ignorar las vulnerabilidades</strong> y enfocarse
+                      solo en la funcionalidad?
+                    </p>
+                  </div>
+                </div>
+                <div class="bg-white bg-opacity-10 rounded-lg p-3 mt-3">
+                  <p class="text-xs opacity-80">
+                    💭 Considera: ¿Dónde termina el testing funcional y empieza
+                    el de seguridad?
+                  </p>
+                </div>
+              </div>
+
+              <!-- Pregunta 3 -->
+              <div
+                class="bg-white bg-opacity-20 rounded-xl p-6 hover:bg-opacity-30 transition-all duration-300 cursor-pointer"
+                onclick="highlightReflection(this)"
+              >
+                <div class="flex items-start mb-4">
+                  <div
+                    class="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0"
+                  >
+                    <span class="text-white font-bold">3</span>
+                  </div>
+                  <div>
+                    <h4 class="text-lg font-bold mb-2">
+                      🎓 Expertos en Seguridad
+                    </h4>
+                    <p class="text-sm opacity-90">
+                      ¿Es realista esperar que
+                      <strong>todos en el equipo sean expertos</strong> en
+                      seguridad?
+                    </p>
+                  </div>
+                </div>
+                <div class="bg-white bg-opacity-10 rounded-lg p-3 mt-3">
+                  <p class="text-xs opacity-80">
+                    💭 Considera: ¿Cuál es el nivel mínimo de conocimiento
+                    necesario?
+                  </p>
+                </div>
+              </div>
+
+              <!-- Pregunta 4 -->
+              <div
+                class="bg-white bg-opacity-20 rounded-xl p-6 hover:bg-opacity-30 transition-all duration-300 cursor-pointer"
+                onclick="highlightReflection(this)"
+              >
+                <div class="flex items-start mb-4">
+                  <div
+                    class="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0"
+                  >
+                    <span class="text-white font-bold">4</span>
+                  </div>
+                  <div>
+                    <h4 class="text-lg font-bold mb-2">
+                      ⬅️ Shift-Left Security
+                    </h4>
+                    <p class="text-sm opacity-90">
+                      ¿Cómo encaja el concepto
+                      <strong>"Shift-Left Security"</strong> en esta discusión?
+                    </p>
+                  </div>
+                </div>
+                <div class="bg-white bg-opacity-10 rounded-lg p-3 mt-3">
+                  <p class="text-xs opacity-80">
+                    💭 Considera: ¿Cambia esto la responsabilidad de cada rol?
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Escenarios para Debate -->
+          <div
+            class="bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl p-8 text-white mb-8"
+          >
+            <div class="flex items-center justify-center mb-6">
+              <div class="text-4xl mr-4">🎭</div>
+              <h3 class="text-2xl font-bold">Escenarios para Considerar</h3>
+            </div>
+
+            <div class="space-y-4">
+              <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                <div class="flex items-start">
+                  <div class="text-2xl mr-3">🚨</div>
+                  <div>
+                    <h4 class="font-bold text-lg mb-2">
+                      Escenario 1: La Vulnerabilidad Encontrada
+                    </h4>
+                    <p class="text-sm opacity-90">
+                      Un tester encuentra una vulnerabilidad de inyección SQL
+                      durante las pruebas. ¿De quién es la "culpa"? ¿Del
+                      programador que la creó o del proceso que no la previno?
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                <div class="flex items-start">
+                  <div class="text-2xl mr-3">⏰</div>
+                  <div>
+                    <h4 class="font-bold text-lg mb-2">
+                      Escenario 2: Presión de Tiempo
+                    </h4>
+                    <p class="text-sm opacity-90">
+                      El equipo tiene una fecha límite muy ajustada. ¿Es
+                      aceptable "saltarse" las pruebas de seguridad para cumplir
+                      con la entrega?
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                <div class="flex items-start">
+                  <div class="text-2xl mr-3">💰</div>
+                  <div>
+                    <h4 class="font-bold text-lg mb-2">
+                      Escenario 3: Recursos Limitados
+                    </h4>
+                    <p class="text-sm opacity-90">
+                      Una startup pequeña no puede permitirse contratar un
+                      especialista en seguridad. ¿Cómo deben distribuir las
+                      responsabilidades de seguridad?
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Instrucciones para el Debate -->
+          <div
+            class="bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl p-8 text-white"
+          >
+            <div class="flex items-center justify-center mb-6">
+              <div class="text-4xl mr-4">🗣️</div>
+              <h3 class="text-2xl font-bold">Prepárense para el Debate</h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                <h4 class="font-bold text-lg mb-3">📝 Antes de Participar:</h4>
+                <ul class="space-y-2 text-sm">
+                  <li class="flex items-center">
+                    <span class="mr-2">•</span>
+                    <span>Reflexiona sobre cada pregunta</span>
+                  </li>
+                  <li class="flex items-center">
+                    <span class="mr-2">•</span>
+                    <span>Piensa en ejemplos concretos</span>
+                  </li>
+                  <li class="flex items-center">
+                    <span class="mr-2">•</span>
+                    <span>Considera diferentes perspectivas</span>
+                  </li>
+                  <li class="flex items-center">
+                    <span class="mr-2">•</span>
+                    <span>Prepara argumentos sólidos</span>
+                  </li>
                 </ul>
-            </div>
-            
-            <div class="examples-container">
-                <h4>💡 Ejemplos Prácticos</h4>
-                
-                <div class="examples-grid">
-                    <div class="example-card">
-                        <h5>🔐 Validación de Login</h5>
-                        <p><strong>Entrada:</strong> usuario/contraseña<br>
-                        <strong>Salida esperada:</strong> acceso concedido/denegado<br>
-                        <strong>No importa:</strong> cómo se valida internamente</p>
-                    </div>
-                    
-                    <div class="example-card">
-                        <h5>🛒 Flujo de Compra</h5>
-                        <p><strong>Escenario:</strong> agregar producto al carrito<br>
-                        <strong>Resultado esperado:</strong> total actualizado<br>
-                        <strong>No importa:</strong> algoritmo de cálculo interno</p>
-                    </div>
-                    
-                    <div class="example-card">
-                        <h5>📊 Reporte de Ventas</h5>
-                        <p><strong>Entrada:</strong> rango de fechas<br>
-                        <strong>Salida esperada:</strong> datos correctos<br>
-                        <strong>No importa:</strong> consultas SQL específicas</p>
-                    </div>
-                    
-                    <div class="example-card">
-                        <h5>📱 Navegación de App</h5>
-                        <p><strong>Acción:</strong> tocar botón "Siguiente"<br>
-                        <strong>Resultado esperado:</strong> pantalla siguiente<br>
-                        <strong>No importa:</strong> framework de navegación</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="quote-box">
-                <h4>🎯 Enfoque Principal</h4>
-                <p>"¿El sistema hace lo que el usuario espera que haga?"</p>
-            </div>
-            
-            <div class="highlight-box">
-                <p>👤 <strong>Ventaja:</strong> Refleja la experiencia real del usuario final</p>
-            </div>
-        </div>
+              </div>
 
-        <!-- Slide 3: Caja Blanca -->
-        <div class="slide">
-            <h2>⬜ Pruebas de Caja Blanca</h2>
-            
-            <div class="definition-box">
-                <h4>📋 Características Principales</h4>
-                <ul>
-                    <li><strong>Basada en la estructura interna del código</strong> - algoritmos y lógica</li>
-                    <li><strong>Requiere conocimiento técnico</strong> - acceso al código fuente</li>
-                    <li><strong>Enfoque en cobertura</strong> - ejecutar todas las rutas posibles</li>
-                    <li><strong>Detecta errores de implementación</strong> - lógica incorrecta</li>
+              <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                <h4 class="font-bold text-lg mb-3">🎯 Durante el Debate:</h4>
+                <ul class="space-y-2 text-sm">
+                  <li class="flex items-center">
+                    <span class="mr-2">•</span>
+                    <span>Escucha activamente a otros</span>
+                  </li>
+                  <li class="flex items-center">
+                    <span class="mr-2">•</span>
+                    <span>Respeta opiniones diferentes</span>
+                  </li>
+                  <li class="flex items-center">
+                    <span class="mr-2">•</span>
+                    <span>Usa ejemplos del mundo real</span>
+                  </li>
+                  <li class="flex items-center">
+                    <span class="mr-2">•</span>
+                    <span>Conecta con conceptos aprendidos</span>
+                  </li>
                 </ul>
+              </div>
             </div>
-            
-            <div class="techniques-container">
-                <h4>🔧 Técnicas de Cobertura</h4>
-                
-                <div class="techniques-grid">
-                    <div class="technique-item">
-                        <div class="technique-icon">📝</div>
-                        <div class="technique-content">
-                            <h5>Cobertura de Sentencias</h5>
-                            <p>Asegurar que cada línea de código se ejecute al menos una vez</p>
-                        </div>
-                    </div>
-                    
-                    <div class="technique-item">
-                        <div class="technique-icon">🔀</div>
-                        <div class="technique-content">
-                            <h5>Cobertura de Ramas</h5>
-                            <p>Verificar que cada decisión (if/else) tome ambos caminos posibles</p>
-                        </div>
-                    </div>
-                    
-                    <div class="technique-item">
-                        <div class="technique-icon">🎯</div>
-                        <div class="technique-content">
-                            <h5>Cobertura de Condiciones</h5>
-                            <p>Evaluar cada condición booleana como verdadera y falsa</p>
-                        </div>
-                    </div>
-                    
-                    <div class="technique-item">
-                        <div class="technique-icon">🛤️</div>
-                        <div class="technique-content">
-                            <h5>Cobertura de Caminos</h5>
-                            <p>Ejecutar todas las combinaciones posibles de rutas en el código</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="examples-container">
-                <h4>💡 Ejemplo Práctico</h4>
-                
-                <div class="example-card" style="grid-column: 1 / -1;">
-                    <h5>🔍 Verificar Función Crítica</h5>
-                    <p><strong>Objetivo:</strong> Asegurar que todos los caminos en una función de cálculo de descuentos se ejecuten correctamente<br>
-                    <strong>Método:</strong> Crear casos de prueba que cubran cada condición (cliente VIP, monto > $100, día de la semana)<br>
-                    <strong>Beneficio:</strong> Detectar lógica incorrecta que podría no manifestarse en uso normal</p>
-                </div>
-            </div>
-            
-            <div class="highlight-box">
-                <p>🔬 <strong>Ventaja:</strong> Detecta errores de lógica que pueden no ser evidentes externamente</p>
-            </div>
-        </div>
 
-        <!-- Slide 4: Complementariedad -->
-        <div class="slide">
-            <h2>🤝 Complementariedad</h2>
-            
-            <div class="comparison-container">
-                <h4>🎯 Preguntas Fundamentales</h4>
-                
-                <div class="comparison-grid">
-                    <div class="comparison-card">
-                        <h5>⬛ Caja Negra</h5>
-                        <p><strong>"¿Hace lo que debe?"</strong></p>
-                        <p>Valida que el comportamiento externo cumple con los requisitos y expectativas del usuario</p>
-                    </div>
-                    
-                    <div class="comparison-card">
-                        <h5>⬜ Caja Blanca</h5>
-                        <p><strong>"¿Cómo lo hace internamente?"</strong></p>
-                        <p>Verifica que la implementación interna es correcta y robusta</p>
-                    </div>
-                </div>
+            <div class="text-center mt-6">
+              <p class="text-xl font-semibold">
+                🎪 ¡Prepárense para compartir y debatir sus puntos de vista!
+              </p>
             </div>
-            
-            <div class="definition-box">
-                <h4>🔄 ¿Por qué Ambas son Necesarias?</h4>
-                <ul>
-                    <li><strong>Diferentes tipos de errores:</strong> Caja negra encuentra problemas de requisitos, caja blanca encuentra bugs de implementación</li>
-                    <li><strong>Perspectivas complementarias:</strong> Usuario final vs. desarrollador técnico</li>
-                    <li><strong>Cobertura completa:</strong> Funcionalidad + estructura interna</li>
-                    <li><strong>Confianza total:</strong> El sistema funciona bien por dentro y por fuera</li>
-                </ul>
-            </div>
-            
-            <div class="examples-container">
-                <h4>💡 Ejemplo Comparativo</h4>
-                
-                <div class="examples-grid">
-                    <div class="example-card">
-                        <h5>⬛ Enfoque Caja Negra</h5>
-                        <p><strong>Calculadora:</strong><br>
-                        Entrada: 2 + 2<br>
-                        Salida esperada: 4<br>
-                        ✅ Si da 4, está bien</p>
-                    </div>
-                    
-                    <div class="example-card">
-                        <h5>⬜ Enfoque Caja Blanca</h5>
-                        <p><strong>Calculadora:</strong><br>
-                        Revisar algoritmo interno<br>
-                        ¿Maneja overflow?<br>
-                        ¿Todas las ramas funcionan?</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="quote-box">
-                <h4>🎯 Estrategia Integral</h4>
-                <p>La combinación de ambos enfoques proporciona la máxima confianza en la calidad del software</p>
-            </div>
-            
-            <div class="source-note">
-                📚 <strong>Fuente:</strong> Pressman, Capítulo 18
-            </div>
+          </div>
         </div>
+      </div>
+    </main>
 
-        <!-- Slide 5: Actividad - Ejercicio en vivo -->
-        <div class="slide">
-            <h2>🎮 Actividad: Ejercicio en Vivo</h2>
-            <div class="subtitle">Diseño de Casos de Prueba (20 min)</div>
-            
-            <div class="activity-container">
-                <h4>💻 Pseudocódigo para Analizar</h4>
-                
-                <div class="code-box">
-<span class="keyword">function</span> <span class="function">calcularDescuento</span>(tipoCliente, montoCompra, diaSemanа) {
-    <span class="comment">// Función que calcula descuento basado en reglas de negocio</span>
-    
-    <span class="keyword">if</span> (montoCompra < 0) {
-        <span class="keyword">return</span> <span class="comment">"Error: Monto inválido"</span>
-    }
-    
-    descuento = 0
-    
-    <span class="keyword">if</span> (tipoCliente == <span class="comment">"VIP"</span>) {
-        descuento = 0.15  <span class="comment">// 15% para VIP</span>
-    } <span class="keyword">else if</span> (tipoCliente == <span class="comment">"Premium"</span>) {
-        descuento = 0.10  <span class="comment">// 10% para Premium</span>
-    } <span class="keyword">else</span> {
-        descuento = 0.05  <span class="comment">// 5% para Regular</span>
-    }
-    
-    <span class="keyword">if</span> (montoCompra > 1000) {
-        descuento = descuento + 0.05  <span class="comment">// 5% adicional por compra alta</span>
-    }
-    
-    <span class="keyword">if</span> (diaSemana == <span class="comment">"Viernes"</span>) {
-        descuento = descuento + 0.03  <span class="comment">// 3% adicional los viernes</span>
-    }
-    
-    <span class="keyword">return</span> montoCompra * descuento
-}
-                </div>
-                
-                <div class="tasks-container">
-                    <h5>📋 Tareas por Equipos</h5>
-                    
-                    <div class="task-list">
-                        <div class="task-item">
-                            <h6>⬛ Diseñar 2 Casos de Prueba Caja Negra</h6>
-                            <p>Basándose solo en los requisitos de negocio. ¿Qué entradas y salidas esperarían los usuarios?</p>
-                        </div>
-                        
-                        <div class="task-item">
-                            <h6>⬜ Diseñar 2 Casos de Prueba Caja Blanca</h6>
-                            <p>Basándose en la estructura del código. ¿Qué casos cubren diferentes caminos de ejecución?</p>
-                        </div>
-                        
-                        <div class="task-item">
-                            <h6>🔍 Identificar Defectos Potenciales</h6>
-                            <p>¿Qué tipo de errores detectaría cada técnica? ¿Hay casos que una técnica encuentra y la otra no?</p>
-                        </div>
-                        
-                        <div class="task-item">
-                            <h6>💭 Análisis de Cobertura</h6>
-                            <p>¿Sus casos de caja blanca cubren todas las ramas? ¿Sus casos de caja negra cubren todos los escenarios de usuario?</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="discussion-box">
-                    <h5>💬 Discusión Final</h5>
-                    <p><strong>¿Qué defectos detectaría cada técnica que la otra podría pasar por alto?</strong></p>
-                </div>
-            </div>
-            
-            <div class="highlight-box">
-                <p>🎯 <strong>Objetivo:</strong> Experimentar la diferencia práctica entre ambos enfoques de testing</p>
-            </div>
-        </div>
-
-        <!-- Navigation -->
-        <div class="navigation">
-            <div class="slide-counter">
-                Diapositiva <span id="currentSlide">1</span> de <span id="totalSlides">5</span>
-            </div>
-            <div class="nav-buttons">
-                <button class="nav-btn" onclick="previousSlide()" id="prevBtn" disabled>← Anterior</button>
-                <button class="nav-btn" onclick="nextSlide()" id="nextBtn">Siguiente →</button>
-            </div>
-        </div>
+    <!-- Navigation -->
+    <div class="navigation">
+      <button class="nav-button" onclick="previousSlide()">⬅️ Anterior</button>
+      <button class="nav-button" onclick="resetAll()">🔄 Reiniciar</button>
+      <button class="nav-button" onclick="nextSlide()">Siguiente ➡️</button>
     </div>
 
     <script>
-        let currentSlideIndex = 1;
-        const totalSlidesCount = 5;
+      let currentSlide = 1;
+      const totalSlides = 4;
 
-        function nextSlide() {
-            if (currentSlideIndex < totalSlidesCount) {
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
-                currentSlideIndex++;
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
-                updateNavigation();
-            }
+      function updateSlideCounter() {
+        document.getElementById("current-slide").textContent = currentSlide;
+        document.getElementById("total-slides").textContent = totalSlides;
+      }
+
+      function showSlide(slideNumber) {
+        // Hide all slides
+        for (let i = 1; i <= totalSlides; i++) {
+          document.getElementById("slide" + i).classList.add("hidden");
         }
 
-        function previousSlide() {
-            if (currentSlideIndex > 1) {
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
-                currentSlideIndex--;
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
-                updateNavigation();
-            }
-        }
+        // Show selected slide
+        document
+          .getElementById("slide" + slideNumber)
+          .classList.remove("hidden");
 
-        function updateNavigation() {
-            document.getElementById('currentSlide').textContent = currentSlideIndex;
-            document.getElementById('totalSlides').textContent = totalSlidesCount;
-            
-            document.getElementById('prevBtn').disabled = currentSlideIndex === 1;
-            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlidesCount;
-        }
+        currentSlide = slideNumber;
+        updateSlideCounter();
+        updateNavigationButtons();
 
-        // Keyboard navigation
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'ArrowRight' || event.key === ' ') {
-                nextSlide();
-            } else if (event.key === 'ArrowLeft') {
-                previousSlide();
-            }
+        // Auto-scroll to top when changing slides
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      }
+
+      function updateNavigationButtons() {
+        const prevButton = document.querySelector(
+          ".navigation button:first-child"
+        );
+        const nextButton = document.querySelector(
+          ".navigation button:last-child"
+        );
+
+        prevButton.disabled = currentSlide === 1;
+        nextButton.disabled = currentSlide === totalSlides;
+      }
+
+      function previousSlide() {
+        if (currentSlide > 1) {
+          showSlide(currentSlide - 1);
+        }
+      }
+
+      function nextSlide() {
+        if (currentSlide < totalSlides) {
+          showSlide(currentSlide + 1);
+        }
+      }
+
+      function resetAll() {
+        showSlide(1);
+      }
+
+      function highlightVulnerability(element) {
+        // Remove highlight from all vulnerability cards
+        const cards = document.querySelectorAll(".vulnerability-card");
+        cards.forEach((card) => {
+          card.style.transform = "translateY(0) scale(1)";
+          card.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
         });
 
-        // Initialize
-        updateNavigation();
+        // Highlight the clicked card
+        element.style.transform = "translateY(-8px) scale(1.02)";
+        element.style.boxShadow = "0 15px 40px rgba(0, 0, 0, 0.2)";
+
+        // Add a subtle pulse effect
+        element.style.animation = "none";
+        setTimeout(() => {
+          element.style.animation = "pulse 1s ease-in-out";
+        }, 10);
+      }
+
+      function highlightReflection(element) {
+        // Remove highlight from all reflection cards
+        const reflectionCards = document.querySelectorAll(
+          '[onclick="highlightReflection(this)"]'
+        );
+        reflectionCards.forEach((card) => {
+          card.style.transform = "scale(1)";
+          card.style.boxShadow = "none";
+          card.classList.remove("bg-opacity-30");
+          card.classList.add("bg-opacity-20");
+        });
+
+        // Highlight the clicked card
+        element.style.transform = "scale(1.05)";
+        element.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.3)";
+        element.classList.remove("bg-opacity-20");
+        element.classList.add("bg-opacity-30");
+
+        // Add a subtle glow effect
+        element.style.animation = "none";
+        setTimeout(() => {
+          element.style.animation = "pulse 1.5s ease-in-out";
+        }, 10);
+      }
+
+      // Keyboard navigation
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowLeft") {
+          previousSlide();
+        } else if (e.key === "ArrowRight") {
+          nextSlide();
+        } else if (e.key === "Home") {
+          resetAll();
+        }
+      });
+
+      // Initialize
+      showSlide(1);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a861e2b42ecdb0',t:'MTc1NzEwMzE1NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97b2fa267608cdb0',t:'MTc1NzIxNDI1MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  
+<!-- Pie de página -->
+<footer class="footer">
+  <div class="footer-content">© 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua</div>
+</footer>
+
+</body>
 </html>
