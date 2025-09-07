@@ -3,467 +3,302 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sesión 14 - Pruebas No Funcionales</title>
+    <title>Sesión 14: Pruebas de Software (Testing)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', sans-serif;
+            background: #764ba2;
+        }
+        
+        .slide-transition {
+            transition: all 0.5s ease-in-out;
+        }
+        
+        .gradient-bg {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
         }
-
-        .slide-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 3rem;
-            max-width: 900px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-            position: relative;
-            min-height: 600px;
-            display: flex;
-            flex-direction: column;
+        
+        .card-hover {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
-        .slide {
-            display: none;
-            flex: 1;
-            animation: fadeIn 0.5s ease-in-out;
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
         }
-
-        .slide.active {
-            display: flex;
-            flex-direction: column;
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
         }
-
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        .slide h1 {
-            color: #2d3748;
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
         }
-
-        .slide h2 {
-            color: #2d3748;
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
-
-        .slide h3 {
-            color: #4a5568;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .subtitle {
-            font-size: 1.3rem;
-            color: #718096;
-            text-align: center;
-            font-style: italic;
-            margin-bottom: 2rem;
-        }
-
-        .quote-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            text-align: center;
-            margin: 2rem 0;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        }
-
-        .quote-box h4 {
-            color: white;
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-        }
-
-        .quote-box p {
-            font-size: 1.2rem;
-            line-height: 1.6;
-        }
-
-        .definition-box {
-            background: #e6fffa;
-            padding: 2rem;
-            border-radius: 15px;
-            border-left: 5px solid #38b2ac;
-            margin: 2rem 0;
-        }
-
-        .definition-box h4 {
-            color: #2d3748;
-            margin-bottom: 1.5rem;
-            font-size: 1.4rem;
-        }
-
-        .definition-box ul {
-            color: #4a5568;
-            line-height: 1.8;
-            font-size: 1.1rem;
-        }
-
-        .definition-box li {
-            margin-bottom: 1rem;
-            padding-left: 0.5rem;
-        }
-
-        .definition-box strong {
-            color: #2d3748;
-        }
-
-        .types-container {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .types-container h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .types-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .type-card {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .type-card h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .type-card p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.5;
-            font-size: 0.95rem;
-        }
-
-        .comparison-container {
-            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .comparison-container h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .comparison-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-            margin-top: 1.5rem;
-        }
-
-        .comparison-card {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .comparison-card h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.3rem;
-            text-align: center;
-        }
-
-        .comparison-card .scenario {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            backdrop-filter: blur(5px);
-        }
-
-        .comparison-card .scenario h6 {
-            color: white;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .comparison-card .scenario p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.4;
-            font-size: 0.9rem;
-        }
-
-        .activity-container {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .activity-container h4 {
-            color: white;
-            margin-bottom: 1rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .apps-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1.5rem;
-            margin: 1.5rem 0;
-        }
-
-        .app-card {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            text-align: center;
-        }
-
-        .app-card h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .app-card p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.5;
-            font-size: 0.9rem;
-        }
-
-        .task-instructions {
-            background: rgba(255, 255, 255, 0.3);
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: center;
-            margin-top: 1.5rem;
-            backdrop-filter: blur(10px);
-        }
-
-        .task-instructions h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .task-instructions p {
-            color: white;
-            font-weight: 500;
-            line-height: 1.5;
-        }
-
-        .examples-container {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin: 1.5rem 0;
-            backdrop-filter: blur(5px);
-        }
-
-        .examples-container h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .example-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            backdrop-filter: blur(3px);
-        }
-
-        .example-item h6 {
-            color: white;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .example-item p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.4;
-            font-size: 0.9rem;
-        }
-
-        .key-points {
-            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .key-points h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .key-points ul {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.8;
-            font-size: 1.1rem;
-            margin-left: 1rem;
-        }
-
-        .key-points li {
-            margin-bottom: 1rem;
-        }
-
-        .key-points strong {
-            color: white;
-        }
-
+        
         .navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 2px solid #e2e8f0;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
         }
-
-        .slide-counter {
-            color: #718096;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .nav-btn {
-            padding: 0.8rem 1.5rem;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+        
+        .nav-button {
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             border: none;
-            border-radius: 10px;
+            padding: 12px 20px;
+            border-radius: 25px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 14px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
         }
-
-        .nav-btn:hover {
+        
+        .nav-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
         }
-
-        .nav-btn:disabled {
-            background: #cbd5e0;
+        
+        .nav-button:disabled {
+            background: #9ca3af;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
-
-        .source-note {
-            background: #fff5f5;
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid #f56565;
-            margin-top: 1.5rem;
-            font-style: italic;
-            color: #4a5568;
+        
+        .slide-counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #374151;
+            z-index: 1000;
         }
-
-        .highlight-box {
-            background: #fffaf0;
+        
+        .section-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 6px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .section-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .principle-card {
+            background: white;
+            border-radius: 1rem;
             padding: 1.5rem;
-            border-radius: 12px;
-            border: 2px dashed #ed8936;
-            text-align: center;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .principle-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .highlight-box {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .testing-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 2rem;
+            color: white;
+            font-size: 3rem;
+        }
+        
+        .istqb-badge {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 1rem;
+            font-weight: 600;
+            display: inline-block;
+            margin: 0.5rem 0;
+        }
+        
+        .reason-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
             margin: 2rem 0;
         }
-
-        .highlight-box p {
-            color: #2d3748;
-            font-weight: 600;
-            font-size: 1.1rem;
+        
+        .reason-item {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
+        
+        .reason-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .pyramid-level {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 6px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .pyramid-level:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .test-type-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-top: 4px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .test-type-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .lab-instruction {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .lab-instruction:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
         @media (max-width: 768px) {
-            .slide-container {
-                padding: 2rem;
-                margin: 1rem;
-            }
-            
-            .slide h1 {
-                font-size: 2rem;
-            }
-            
-            .slide h2 {
-                font-size: 1.5rem;
-            }
-            
-            .types-grid, .comparison-grid, .apps-grid {
+            .reason-grid {
                 grid-template-columns: 1fr;
                 gap: 1rem;
             }
-            
-            .nav-buttons {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
         }
     </style>
-</head>
-<body>
 
 <style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+/* Fondo como index */
+body{
+  font-family:'Inter','Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height:1.6;
+  color:#333;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  min-height:100vh;
+  padding-top:80px; /* nav fijo */
+}
+
+/* NAV Plataforma QS (fijo) */
+.qs-nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:saturate(140%) blur(20px);
+       background:rgba(255,255,255,.95);border-bottom:1px solid rgba(255,255,255,.2);
+       box-shadow:0 8px 32px rgba(0,0,0,.10)}
+.qs-nav .wrap{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:nowrap}
+.qs-brand{display:flex;gap:15px;align-items:center;color:#1f2937;font-weight:800;font-size:1.3rem;text-decoration:none;position:relative;padding:8px 16px;border-radius:20px;flex:0 0 auto}
+.qs-brand::before{content:"🎓";font-size:1.6rem}
+.qs-tabs{display:flex;gap:12px;background:rgba(255,255,255,.3);padding:8px;border-radius:30px;backdrop-filter:blur(10px);
+         flex:1 1 auto;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.qs-btn{border:0;padding:12px 20px;border-radius:25px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;font-weight:600;font-size:.9rem;
+       transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(10px);border:2px solid transparent;position:relative;overflow:hidden;flex:0 0 auto}
+.qs-btn::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);transition:all .4s ease;z-index:-1}
+.qs-btn:hover{color:#fff;transform:translateY(-3px);box-shadow:0 8px 25px rgba(102,126,234,.4);border-color:rgba(102,126,234,.3)}
+.qs-btn:hover::before{left:0}
+.qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none;box-shadow:0 6px 20px rgba(102,126,234,.5);transform:translateY(-2px)}
+.qs-btn[aria-current="page"]::before{left:0}
+
+/* Footer como index */
+.footer{
+  margin-top:60px;
+  padding:30px 20px;
+  text-align:center;
+  background:rgba(255, 255, 255, 0.1);
+  backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255, 255, 255, 0.2);
+}
+.footer-content{
+  max-width:1200px;
+  margin:0 auto;
+  color:rgba(255,255,255,0.8);
+  font-size:0.95rem;
+  transition:all 0.3s ease;
+  cursor:default;
+}
+.footer-content:hover{ color:#fff; transform:translateY(-2px); }
+
+/* Slide counter reducido */
+.slide-counter, #slideIndicator, .slide-indicator{
+  font-size:10px !important;
+  line-height:1 !important;
+  padding:4px 8px !important;
+  min-width:28px !important;
+  border-radius:12px !important;
+  opacity:.8 !important;
+}
 </style>
+
+</head>
+<body class="min-h-screen">
+
+<!-- NAV Plataforma QS -->
 <div class="qs-nav">
   <div class="wrap">
     <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
@@ -474,309 +309,796 @@
       <a class="qs-btn" href="Foro.html">Foro</a>
       <a class="qs-btn" href="paneldocente.html">Panel</a>
       <a class="qs-btn" href="roadmap.html">Roadmap</a>
-          <a class="qs-btn" href="checklist.html">Checklist</a>
-\1
+      <a class="qs-btn" href="checklist.html">Checklist</a>
+      <a class="qs-btn" href="status.html">Status</a>
+    </nav>
   </div>
 </div>
-<script>
-(function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
-  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
-  });
-})();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
-</script>
 
+    <!-- Slide Counter -->
+    <div class="slide-counter">
+        <span id="current-slide">1</span> / <span id="total-slides">6</span>
+    </div>
 
-    <div class="slide-container">
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8 pb-32">
         <!-- Slide 1: Título -->
-        <div class="slide active">
-            <h1>⚡ Pruebas No Funcionales</h1>
-            <div class="subtitle">Más allá del "qué"</div>
-            
-            <div class="quote-box">
-                <h4>🎯 "El cómo importa tanto como el qué"</h4>
-                <p>Evaluamos la calidad de la experiencia, no solo la funcionalidad</p>
-            </div>
-            
-            <div class="highlight-box">
-                <p>🎯 <strong>Objetivo:</strong> Comprender y aplicar pruebas de atributos de calidad del software</p>
-            </div>
-        </div>
-
-        <!-- Slide 2: Definición -->
-        <div class="slide">
-            <h2>📋 Definición</h2>
-            
-            <div class="definition-box">
-                <h4>🔍 ¿Qué son las Pruebas No Funcionales?</h4>
-                <ul>
-                    <li><strong>Evalúan atributos de calidad:</strong> rendimiento, seguridad, usabilidad, confiabilidad</li>
-                    <li><strong>Responden al "cómo"</strong> se comporta el software en condiciones reales</li>
-                    <li><strong>Miden características cualitativas</strong> - no solo si funciona, sino qué tan bien</li>
-                    <li><strong>Críticas para la experiencia del usuario</strong> - determinan satisfacción y adopción</li>
-                </ul>
-            </div>
-            
-            <div class="key-points">
-                <h4>🎯 Diferencias Clave</h4>
-                <ul>
-                    <li><strong>Funcionales:</strong> "¿El login funciona?" → Sí/No</li>
-                    <li><strong>No Funcionales:</strong> "¿El login es rápido, seguro y fácil?" → Medible</li>
-                    <li><strong>Funcionales:</strong> Basadas en requisitos específicos</li>
-                    <li><strong>No Funcionales:</strong> Basadas en expectativas de calidad</li>
-                </ul>
-            </div>
-            
-            <div class="quote-box">
-                <h4>💡 Perspectiva Real</h4>
-                <p>"Un software que funciona pero es lento, inseguro o difícil de usar, fracasará en el mercado"</p>
-            </div>
-            
-            <div class="source-note">
-                📚 <strong>Fuente:</strong> Pressman, Capítulo 17
-            </div>
-        </div>
-
-        <!-- Slide 3: Tipos de Pruebas No Funcionales -->
-        <div class="slide">
-            <h2>🔧 Tipos de Pruebas No Funcionales</h2>
-            
-            <div class="types-container">
-                <h4>📊 Clasificación Principal</h4>
-                
-                <div class="types-grid">
-                    <div class="type-card">
-                        <h5>⚡ Rendimiento</h5>
-                        <p><strong>Qué mide:</strong> Tiempos de respuesta, throughput<br>
-                        <strong>Ejemplo:</strong> "La página debe cargar en < 3 segundos"<br>
-                        <strong>Herramientas:</strong> JMeter, LoadRunner</p>
-                    </div>
+        <div id="slide1" class="slide-transition fade-in">
+            <div class="gradient-bg rounded-2xl p-12 text-white text-center mb-8 card-hover">
+                <div class="max-w-4xl mx-auto">
+                    <div class="testing-icon">🔧</div>
+                    <h1 class="text-5xl font-bold mb-6 pulse-animation">El Arte de Romper para Construir: Pruebas de Software (Testing)</h1>
+                    <h2 class="text-3xl font-semibold mb-8 opacity-90">Buscando la perfección a través de la imperfección</h2>
                     
-                    <div class="type-card">
-                        <h5>👥 Carga</h5>
-                        <p><strong>Qué mide:</strong> Comportamiento con usuarios concurrentes<br>
-                        <strong>Ejemplo:</strong> "Soportar 1000 usuarios simultáneos"<br>
-                        <strong>Objetivo:</strong> Validar capacidad esperada</p>
-                    </div>
-                    
-                    <div class="type-card">
-                        <h5>💥 Estrés</h5>
-                        <p><strong>Qué mide:</strong> Límite de capacidad antes de fallar<br>
-                        <strong>Ejemplo:</strong> "¿Cuántos usuarios antes del colapso?"<br>
-                        <strong>Objetivo:</strong> Encontrar punto de quiebre</p>
-                    </div>
-                    
-                    <div class="type-card">
-                        <h5>👤 Usabilidad</h5>
-                        <p><strong>Qué mide:</strong> Facilidad de uso y aprendizaje<br>
-                        <strong>Ejemplo:</strong> "Usuario nuevo completa tarea en < 5 min"<br>
-                        <strong>Métodos:</strong> Observación, encuestas</p>
-                    </div>
-                    
-                    <div class="type-card">
-                        <h5>🔒 Seguridad</h5>
-                        <p><strong>Qué mide:</strong> Resistencia ante ataques<br>
-                        <strong>Ejemplo:</strong> "Prevenir inyección SQL"<br>
-                        <strong>Técnicas:</strong> Penetration testing, análisis de vulnerabilidades</p>
-                    </div>
-                    
-                    <div class="type-card">
-                        <h5>📱 Compatibilidad</h5>
-                        <p><strong>Qué mide:</strong> Funcionamiento en distintos dispositivos/navegadores<br>
-                        <strong>Ejemplo:</strong> "Funcionar en Chrome, Firefox, Safari"<br>
-                        <strong>Alcance:</strong> Cross-platform, cross-browser</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="highlight-box">
-                <p>🎯 <strong>Clave:</strong> Cada tipo responde a una expectativa específica de calidad del usuario</p>
-            </div>
-        </div>
-
-        <!-- Slide 4: Ejemplo - App de Streaming -->
-        <div class="slide">
-            <h2>📺 Ejemplo: App de Streaming</h2>
-            
-            <div class="comparison-container">
-                <h4>🎯 Funcional vs No Funcional</h4>
-                
-                <div class="comparison-grid">
-                    <div class="comparison-card">
-                        <h5>✅ Funcional</h5>
-                        <div class="scenario">
-                            <h6>🎬 Caso de Prueba</h6>
-                            <p><strong>Acción:</strong> Presionar botón "Play" en un video<br>
-                            <strong>Resultado esperado:</strong> El video se reproduce<br>
-                            <strong>Criterio:</strong> Sí/No - funciona o no funciona</p>
+                    <div class="highlight-box">
+                        <div class="flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <h3 class="text-xl font-semibold">Fuentes</h3>
                         </div>
-                    </div>
-                    
-                    <div class="comparison-card">
-                        <h5>⚡ No Funcional</h5>
-                        <div class="scenario">
-                            <h6>🎬 Caso de Prueba</h6>
-                            <p><strong>Requisito:</strong> Iniciar video en < 2 segundos para 1 millón de usuarios simultáneos<br>
-                            <strong>Medición:</strong> Tiempo de respuesta bajo carga<br>
-                            <strong>Criterio:</strong> Medible - cumple o no el estándar</p>
+                        <div class="text-lg opacity-90 space-y-2">
+                            <p>• Pressman - Ingeniería de Software</p>
+                            <p>• Sommerville - Ingeniería de Software</p>
+                            <p>• QA Lovers</p>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="types-container">
-                <h4>🎯 Otros Ejemplos No Funcionales</h4>
-                
-                <div class="types-grid">
-                    <div class="type-card">
-                        <h5>📊 Rendimiento</h5>
-                        <p>"El catálogo de películas debe cargar en menos de 1.5 segundos en conexión 4G"</p>
-                    </div>
-                    
-                    <div class="type-card">
-                        <h5>👥 Carga</h5>
-                        <p>"Soportar 500,000 usuarios viendo contenido simultáneamente sin degradación"</p>
-                    </div>
-                    
-                    <div class="type-card">
-                        <h5>👤 Usabilidad</h5>
-                        <p>"Un usuario nuevo debe poder encontrar y reproducir contenido en menos de 30 segundos"</p>
-                    </div>
-                    
-                    <div class="type-card">
-                        <h5>🔒 Seguridad</h5>
-                        <p>"Prevenir descarga no autorizada de contenido premium y proteger datos de pago"</p>
+            <!-- Notas para el docente -->
+            <div class="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
+                <div class="flex items-start">
+                    <svg class="w-6 h-6 text-blue-400 mr-3 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <h4 class="text-lg font-semibold text-blue-800 mb-2">Notas para el docente:</h4>
+                        <p class="text-blue-700 leading-relaxed">
+                            "Hoy exploraremos el mundo del testing: el arte de encontrar problemas para crear soluciones más robustas. Veremos por qué probar software es tanto ciencia como arte."
+                        </p>
                     </div>
                 </div>
-            </div>
-            
-            <div class="quote-box">
-                <h4>💡 Reflexión</h4>
-                <p>Netflix no sería exitoso solo porque "reproduce videos" - su éxito está en la calidad de la experiencia</p>
             </div>
         </div>
 
-        <!-- Slide 5: Actividad - Brainstorming -->
-        <div class="slide">
-            <h2>🧠 Actividad: Brainstorming</h2>
-            <div class="subtitle">Diseño de Pruebas No Funcionales (15 min)</div>
-            
-            <div class="activity-container">
-                <h4>📱 Aplicaciones para Analizar</h4>
+        <!-- Slide 2: ¿Por Qué Probamos el Software? -->
+        <div id="slide2" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🔍</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">¿Por Qué Probamos el Software?</h2>
+                    <h3 class="text-2xl font-semibold text-green-600">Más Allá de "Encontrar Bugs"</h3>
+                    <p class="text-lg text-gray-600 mt-4">Las pruebas de software son una <strong>investigación sistemática</strong> para evaluar la calidad de una pieza de software y reducir el riesgo de fallos en operación. No se trata solo de encontrar errores, sino de:</p>
+                </div>
                 
-                <div class="apps-grid">
-                    <div class="app-card">
-                        <h5>🚗 Uber</h5>
-                        <p><strong>Contexto:</strong> App de transporte urbano<br>
-                        <strong>Usuarios críticos:</strong> Pasajeros y conductores<br>
-                        <strong>Momento crítico:</strong> Solicitar viaje en hora pico</p>
+                <!-- Razones para probar -->
+                <div class="reason-grid">
+                    
+                    <!-- Verificar requisitos -->
+                    <div class="reason-item" style="border-left-color: #3b82f6;">
+                        <div class="flex items-start">
+                            <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-blue-800 mb-2">Verificar que el software cumple los requisitos</h4>
+                                <div class="bg-blue-50 rounded-lg p-3">
+                                    <p class="text-blue-700 font-semibold">¿Hace lo que se supone que debe hacer?</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="app-card">
-                        <h5>🎵 Spotify</h5>
-                        <p><strong>Contexto:</strong> Streaming de música<br>
-                        <strong>Usuarios críticos:</strong> Millones simultáneos<br>
-                        <strong>Momento crítico:</strong> Reproducir música sin interrupciones</p>
+                    <!-- Validar necesidades -->
+                    <div class="reason-item" style="border-left-color: #10b981;">
+                        <div class="flex items-start">
+                            <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-green-800 mb-2">Validar que el software satisface las necesidades del usuario</h4>
+                                <div class="bg-green-50 rounded-lg p-3">
+                                    <p class="text-green-700 font-semibold">¿Resuelve el problema real del cliente?</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="app-card">
-                        <h5>💬 WhatsApp</h5>
-                        <p><strong>Contexto:</strong> Mensajería instantánea<br>
-                        <strong>Usuarios críticos:</strong> 2 mil millones activos<br>
-                        <strong>Momento crítico:</strong> Enviar mensaje importante</p>
+                    <!-- Aumentar confianza -->
+                    <div class="reason-item" style="border-left-color: #f59e0b;">
+                        <div class="flex items-start">
+                            <div class="w-12 h-12 bg-amber-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-amber-800 mb-2">Aumentar la confianza</h4>
+                                <div class="bg-amber-50 rounded-lg p-3">
+                                    <p class="text-amber-700">Proporcionar a los interesados (clientes, directivos) un nivel de confianza en que el producto funcionará como se espera.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Prevenir defectos -->
+                    <div class="reason-item" style="border-left-color: #8b5cf6;">
+                        <div class="flex items-start">
+                            <div class="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-purple-800 mb-2">Prevenir defectos</h4>
+                                <div class="bg-purple-50 rounded-lg p-3">
+                                    <p class="text-purple-700">La preparación de las pruebas en etapas tempranas ayuda a identificar omisiones o ambigüedades en los requisitos y el diseño.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Reducir riesgo -->
+                    <div class="reason-item" style="border-left-color: #ef4444;">
+                        <div class="flex items-start">
+                            <div class="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-red-800 mb-2">Reducir el riesgo</h4>
+                                <div class="bg-red-50 rounded-lg p-3">
+                                    <p class="text-red-700">Identificar fallos potenciales antes de que causen daños financieros, de reputación o incluso físicos en el mundo real.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="task-instructions">
-                    <h5>📝 Tarea por Equipos</h5>
-                    <p><strong>1. Elegir una aplicación</strong><br>
-                    <strong>2. Diseñar 2 pruebas no funcionales específicas</strong><br>
-                    <strong>3. Incluir: tipo de prueba, métrica, criterio de éxito</strong></p>
-                </div>
-                
-                <div class="examples-container">
-                    <h5>💡 Ejemplos de Referencia</h5>
-                    
-                    <div class="example-item">
-                        <h6>🚗 Uber - Rendimiento</h6>
-                        <p><strong>Prueba:</strong> "Tiempo de respuesta al solicitar viaje"<br>
-                        <strong>Métrica:</strong> < 3 segundos desde tap hasta confirmación<br>
-                        <strong>Condición:</strong> En hora pico con 10,000 solicitudes/minuto</p>
+                <!-- Conclusión -->
+                <div class="bg-gradient-to-r from-green-500 to-blue-600 rounded-2xl p-8 text-white mt-8">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="text-4xl mr-4">🏗️</div>
+                        <h3 class="text-2xl font-bold">La Filosofía del Testing</h3>
                     </div>
-                    
-                    <div class="example-item">
-                        <h6>🎵 Spotify - Usabilidad</h6>
-                        <p><strong>Prueba:</strong> "Facilidad para descubrir música nueva"<br>
-                        <strong>Métrica:</strong> Usuario encuentra canción que le gusta en < 2 minutos<br>
-                        <strong>Método:</strong> Observación de 20 usuarios nuevos</p>
-                    </div>
+                    <p class="text-xl text-center leading-relaxed opacity-95">
+                        <strong>Probar es una actividad constructiva, no destructiva.</strong> Su objetivo final es mejorar la calidad.
+                    </p>
                 </div>
-            </div>
-            
-            <div class="highlight-box">
-                <p>🎯 <strong>Enfoque:</strong> Piensen en momentos críticos donde la calidad marca la diferencia</p>
             </div>
         </div>
 
-        <!-- Navigation -->
-        <div class="navigation">
-            <div class="slide-counter">
-                Diapositiva <span id="currentSlide">1</span> de <span id="totalSlides">5</span>
-            </div>
-            <div class="nav-buttons">
-                <button class="nav-btn" onclick="previousSlide()" id="prevBtn" disabled>← Anterior</button>
-                <button class="nav-btn" onclick="nextSlide()" id="nextBtn">Siguiente →</button>
+        <!-- Slide 3: Los 7 Principios del Testing (ISTQB) -->
+        <div id="slide3" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">⚖️</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Los 7 Principios del Testing (ISTQB)</h2>
+                    <h3 class="text-2xl font-semibold text-purple-600">Las Leyes Universales de las Pruebas</h3>
+                    <div class="istqb-badge mt-4">
+                        ISTQB - International Software Testing Qualifications Board
+                    </div>
+                    <p class="text-lg text-gray-600 mt-4">La comunidad internacional de testing (ISTQB) ha definido <strong>siete principios</strong> que son la base de toda prueba profesional:</p>
+                </div>
+                
+                <!-- Los 7 principios -->
+                <div class="space-y-6 mb-8">
+                    
+                    <!-- Principio 1 -->
+                    <div class="principle-card" style="border-left-color: #ef4444;">
+                        <div class="flex items-start">
+                            <div class="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <span class="text-white font-bold text-lg">1</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-red-800 mb-2">Las pruebas demuestran la presencia de defectos, no su ausencia</h4>
+                                <div class="bg-red-50 rounded-lg p-3">
+                                    <p class="text-red-700">No podemos probar que un software no tiene errores, solo que los errores que hemos buscado no están presentes.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Principio 2 -->
+                    <div class="principle-card" style="border-left-color: #f59e0b;">
+                        <div class="flex items-start">
+                            <div class="w-12 h-12 bg-amber-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <span class="text-white font-bold text-lg">2</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-amber-800 mb-2">Las pruebas exhaustivas (probar todo) son imposibles</h4>
+                                <div class="bg-amber-50 rounded-lg p-3">
+                                    <p class="text-amber-700">Probar todas las combinaciones de entradas y condiciones es inviable, excepto en casos triviales. Debemos usar técnicas y análisis de riesgo para enfocar el esfuerzo.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Principio 3 -->
+                    <div class="principle-card" style="border-left-color: #10b981;">
+                        <div class="flex items-start">
+                            <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <span class="text-white font-bold text-lg">3</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-green-800 mb-2">Las pruebas tempranas ahorran tiempo y dinero</h4>
+                                <div class="bg-green-50 rounded-lg p-3">
+                                    <p class="text-green-700">Iniciar las pruebas lo antes posible en el ciclo de vida reduce drásticamente el costo de la corrección.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Principio 4 -->
+                    <div class="principle-card" style="border-left-color: #3b82f6;">
+                        <div class="flex items-start">
+                            <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <span class="text-white font-bold text-lg">4</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-blue-800 mb-2">Los defectos se agrupan (Principio de Pareto)</h4>
+                                <div class="bg-blue-50 rounded-lg p-3">
+                                    <p class="text-blue-700">El <strong>80% de los problemas</strong> se suelen encontrar en el <strong>20% de los módulos</strong> del sistema.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Principio 5 -->
+                    <div class="principle-card" style="border-left-color: #8b5cf6;">
+                        <div class="flex items-start">
+                            <div class="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <span class="text-white font-bold text-lg">5</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-purple-800 mb-2">La paradoja del pesticida</h4>
+                                <div class="bg-purple-50 rounded-lg p-3">
+                                    <p class="text-purple-700">Si ejecutas las mismas pruebas una y otra vez, eventualmente dejarán de encontrar nuevos defectos. Los casos de prueba deben revisarse y actualizarse regularmente.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Principio 6 -->
+                    <div class="principle-card" style="border-left-color: #06b6d4;">
+                        <div class="flex items-start">
+                            <div class="w-12 h-12 bg-cyan-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <span class="text-white font-bold text-lg">6</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-cyan-800 mb-2">Las pruebas dependen del contexto</h4>
+                                <div class="bg-cyan-50 rounded-lg p-3">
+                                    <p class="text-cyan-700">La forma en que se prueba un sitio de e-commerce es diferente a cómo se prueba el software de un marcapasos. El riesgo, la tecnología y el uso definen la estrategia.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Principio 7 -->
+                    <div class="principle-card" style="border-left-color: #ec4899;">
+                        <div class="flex items-start">
+                            <div class="w-12 h-12 bg-pink-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0">
+                                <span class="text-white font-bold text-lg">7</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-xl font-bold text-pink-800 mb-2">La falacia de "ausencia de errores"</h4>
+                                <div class="bg-pink-50 rounded-lg p-3">
+                                    <p class="text-pink-700">Encontrar y corregir muchos defectos no servirá de nada si el sistema construido es inútil y no satisface las necesidades del usuario.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conclusión -->
+                <div class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="text-4xl mr-4">🎯</div>
+                        <h3 class="text-2xl font-bold">Los Fundamentos del Testing Profesional</h3>
+                    </div>
+                    <p class="text-xl text-center leading-relaxed opacity-95">
+                        Estos principios son la <strong>brújula</strong> que guía a todo profesional del testing para tomar decisiones informadas y efectivas.
+                    </p>
+                </div>
             </div>
         </div>
+
+        <!-- Slide 4: Niveles de Pruebas (La Pirámide) -->
+        <div id="slide4" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🏗️</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Niveles de Pruebas (La Pirámide)</h2>
+                    <h3 class="text-2xl font-semibold text-blue-600">Construyendo Confianza Nivel por Nivel</h3>
+                    <p class="text-lg text-gray-600 mt-4">Las pruebas se organizan en <strong>niveles</strong>, comenzando desde las partes más pequeñas hasta el sistema completo.</p>
+                </div>
+                
+                <!-- Niveles de pruebas -->
+                <div class="space-y-6 mb-8">
+                    
+                    <!-- Nivel 1: Pruebas Unitarias -->
+                    <div class="pyramid-level" style="border-left-color: #10b981;">
+                        <div class="flex items-start">
+                            <div class="w-16 h-16 bg-green-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <span class="text-white font-bold text-lg">1</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-green-800 mb-4">Nivel 1: Pruebas Unitarias (Unit Tests)</h4>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="bg-green-50 rounded-lg p-4">
+                                        <h5 class="font-bold text-green-800 mb-2">¿Qué prueban?</h5>
+                                        <p class="text-green-700 text-sm">Unidades individuales de código (una función, un método, una clase) de forma aislada.</p>
+                                    </div>
+                                    
+                                    <div class="bg-green-100 rounded-lg p-4">
+                                        <h5 class="font-bold text-green-800 mb-2">¿Quién las hace?</h5>
+                                        <p class="text-green-700 text-sm">El desarrollador que escribe el código.</p>
+                                    </div>
+                                    
+                                    <div class="bg-green-50 rounded-lg p-4">
+                                        <h5 class="font-bold text-green-800 mb-2">Objetivo:</h5>
+                                        <p class="text-green-700 text-sm">Asegurar que cada pieza del rompecabezas funciona correctamente por sí sola.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Nivel 2: Pruebas de Integración -->
+                    <div class="pyramid-level" style="border-left-color: #3b82f6;">
+                        <div class="flex items-start">
+                            <div class="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <span class="text-white font-bold text-lg">2</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-blue-800 mb-4">Nivel 2: Pruebas de Integración (Integration Tests)</h4>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="bg-blue-50 rounded-lg p-4">
+                                        <h5 class="font-bold text-blue-800 mb-2">¿Qué prueban?</h5>
+                                        <p class="text-blue-700 text-sm">Cómo interactúan dos o más unidades/componentes entre sí.</p>
+                                    </div>
+                                    
+                                    <div class="bg-blue-100 rounded-lg p-4">
+                                        <h5 class="font-bold text-blue-800 mb-2">¿Quién las hace?</h5>
+                                        <p class="text-blue-700 text-sm">Desarrolladores o Testers de QA.</p>
+                                    </div>
+                                    
+                                    <div class="bg-blue-50 rounded-lg p-4">
+                                        <h5 class="font-bold text-blue-800 mb-2">Objetivo:</h5>
+                                        <p class="text-blue-700 text-sm">Asegurar que las piezas del rompecabezas encajan y se comunican correctamente.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Nivel 3: Pruebas de Sistema -->
+                    <div class="pyramid-level" style="border-left-color: #f59e0b;">
+                        <div class="flex items-start">
+                            <div class="w-16 h-16 bg-amber-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <span class="text-white font-bold text-lg">3</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-amber-800 mb-4">Nivel 3: Pruebas de Sistema (System Tests)</h4>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="bg-amber-50 rounded-lg p-4">
+                                        <h5 class="font-bold text-amber-800 mb-2">¿Qué prueban?</h5>
+                                        <p class="text-amber-700 text-sm">El sistema completo, ya integrado, contra los requisitos funcionales y no funcionales.</p>
+                                    </div>
+                                    
+                                    <div class="bg-amber-100 rounded-lg p-4">
+                                        <h5 class="font-bold text-amber-800 mb-2">¿Quién las hace?</h5>
+                                        <p class="text-amber-700 text-sm">El equipo de QA, de forma independiente al desarrollo.</p>
+                                    </div>
+                                    
+                                    <div class="bg-amber-50 rounded-lg p-4">
+                                        <h5 class="font-bold text-amber-800 mb-2">Objetivo:</h5>
+                                        <p class="text-amber-700 text-sm">Asegurar que el rompecabezas completo se ve y funciona como el modelo de la caja.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Nivel 4: Pruebas de Aceptación -->
+                    <div class="pyramid-level" style="border-left-color: #ef4444;">
+                        <div class="flex items-start">
+                            <div class="w-16 h-16 bg-red-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <span class="text-white font-bold text-lg">4</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-red-800 mb-4">Nivel 4: Pruebas de Aceptación (UAT - User Acceptance Tests)</h4>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="bg-red-50 rounded-lg p-4">
+                                        <h5 class="font-bold text-red-800 mb-2">¿Qué prueban?</h5>
+                                        <p class="text-red-700 text-sm">Si el sistema es "apto para su propósito" desde la perspectiva del cliente o usuario final.</p>
+                                    </div>
+                                    
+                                    <div class="bg-red-100 rounded-lg p-4">
+                                        <h5 class="font-bold text-red-800 mb-2">¿Quién las hace?</h5>
+                                        <p class="text-red-700 text-sm">El cliente, los usuarios finales o un representante.</p>
+                                    </div>
+                                    
+                                    <div class="bg-red-50 rounded-lg p-4">
+                                        <h5 class="font-bold text-red-800 mb-2">Objetivo:</h5>
+                                        <p class="text-red-700 text-sm">Obtener la validación final y la luz verde para el lanzamiento.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conclusión -->
+                <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="text-4xl mr-4">🏗️</div>
+                        <h3 class="text-2xl font-bold">La Pirámide de Testing</h3>
+                    </div>
+                    <p class="text-xl text-center leading-relaxed opacity-95">
+                        Cada nivel construye sobre el anterior, creando una <strong>base sólida de confianza</strong> en la calidad del software.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: Tipos de Pruebas (El Espectro) -->
+        <div id="slide5" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🌈</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Tipos de Pruebas (El Espectro)</h2>
+                    <h3 class="text-2xl font-semibold text-purple-600">Funcionales vs. No Funcionales</h3>
+                    <p class="text-lg text-gray-600 mt-4">Podemos clasificar las pruebas en <strong>dos grandes familias</strong>, según lo que evalúan.</p>
+                </div>
+                
+                <!-- Tipos de pruebas -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    
+                    <!-- Pruebas Funcionales -->
+                    <div class="test-type-card" style="border-top-color: #10b981;">
+                        <div class="text-center mb-6">
+                            <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-green-800">Pruebas Funcionales</h3>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <h4 class="font-bold text-green-800 mb-2">Enfoque:</h4>
+                                <p class="text-green-700 text-lg font-semibold">"¿El sistema hace lo correcto?"</p>
+                            </div>
+                            
+                            <div class="bg-green-100 rounded-lg p-4">
+                                <h4 class="font-bold text-green-800 mb-2">Verifican:</h4>
+                                <p class="text-green-700">Las funciones y características del software. Se basan en los requisitos y especificaciones.</p>
+                            </div>
+                            
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <h4 class="font-bold text-green-800 mb-2">Ejemplos:</h4>
+                                <div class="space-y-2 text-sm text-green-700">
+                                    <div class="flex items-center">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                        <span>Pruebas de humo (Smoke Testing)</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                        <span>Pruebas de regresión (Regression Testing)</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                        <span>Pruebas de interfaz de usuario (UI Testing)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pruebas No Funcionales -->
+                    <div class="test-type-card" style="border-top-color: #3b82f6;">
+                        <div class="text-center mb-6">
+                            <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-2xl font-bold text-blue-800">Pruebas No Funcionales</h3>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <h4 class="font-bold text-blue-800 mb-2">Enfoque:</h4>
+                                <p class="text-blue-700 text-lg font-semibold">"¿El sistema lo hace de la forma correcta?"</p>
+                            </div>
+                            
+                            <div class="bg-blue-100 rounded-lg p-4">
+                                <h4 class="font-bold text-blue-800 mb-2">Verifican:</h4>
+                                <p class="text-blue-700">Los atributos de calidad del software (el "cómo").</p>
+                            </div>
+                            
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <h4 class="font-bold text-blue-800 mb-2">Ejemplos:</h4>
+                                <div class="space-y-2 text-sm text-blue-700">
+                                    <div class="flex items-start">
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full mr-2 mt-1.5"></div>
+                                        <span><strong>Pruebas de Rendimiento:</strong> ¿Es rápido y escalable? (Pruebas de carga, estrés).</span>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full mr-2 mt-1.5"></div>
+                                        <span><strong>Pruebas de Usabilidad:</strong> ¿Es fácil e intuitivo de usar?</span>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full mr-2 mt-1.5"></div>
+                                        <span><strong>Pruebas de Seguridad:</strong> ¿Es vulnerable a ataques?</span>
+                                    </div>
+                                    <div class="flex items-start">
+                                        <div class="w-2 h-2 bg-blue-500 rounded-full mr-2 mt-1.5"></div>
+                                        <span><strong>Pruebas de Compatibilidad:</strong> ¿Funciona en diferentes navegadores, sistemas operativos o dispositivos?</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conclusión -->
+                <div class="bg-gradient-to-r from-green-500 to-blue-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="text-4xl mr-4">⚖️</div>
+                        <h3 class="text-2xl font-bold">El Equilibrio Perfecto</h3>
+                    </div>
+                    <p class="text-xl text-center leading-relaxed opacity-95">
+                        Un software de calidad necesita <strong>ambos tipos de pruebas</strong>: debe hacer lo correcto Y hacerlo de la forma correcta.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 6: Laboratorio 3 - "Diseño de Casos de Prueba" -->
+        <div id="slide6" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🧪</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Laboratorio 3 - "Diseño de Casos de Prueba"</h2>
+                    <h3 class="text-2xl font-semibold text-red-600">Pensando como un Tester: Rompiendo un Login</h3>
+                </div>
+                
+                <!-- Objetivo -->
+                <div class="bg-gradient-to-r from-red-500 to-pink-600 rounded-2xl p-8 text-white mb-8">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">🎯 Objetivo</h3>
+                            <p class="text-lg leading-relaxed opacity-95">
+                                Aplicar el pensamiento analítico para diseñar <strong>casos de prueba efectivos</strong> que cubran escenarios positivos, negativos y límite para una funcionalidad común.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Funcionalidad a Probar -->
+                <div class="lab-instruction mb-8" style="border-left-color: #3b82f6;">
+                    <div class="flex items-start">
+                        <div class="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 8a6 6 0 01-7.743 5.743L10 14l-1 1-1 1H6v2H2v-4l4.257-4.257A6 6 0 1118 8zm-6-4a1 1 0 100 2 2 2 0 012 2 1 1 0 102 0 4 4 0 00-4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-blue-800 mb-4">Funcionalidad a Probar</h4>
+                            
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <p class="text-blue-700 text-lg leading-relaxed">
+                                    Una pantalla de <strong>inicio de sesión (Login)</strong> con dos campos: "Usuario" y "Contraseña", y un botón "Ingresar".
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Reglas de Negocio -->
+                <div class="lab-instruction mb-8" style="border-left-color: #f59e0b;">
+                    <div class="flex items-start">
+                        <div class="w-16 h-16 bg-amber-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-amber-800 mb-4">Reglas de Negocio</h4>
+                            
+                            <div class="space-y-3">
+                                <div class="bg-amber-50 rounded-lg p-4">
+                                    <p class="text-amber-700 text-lg">
+                                        • El <strong>usuario</strong> debe tener entre <strong>6 y 20 caracteres</strong>.
+                                    </p>
+                                </div>
+                                
+                                <div class="bg-amber-100 rounded-lg p-4">
+                                    <p class="text-amber-700 text-lg">
+                                        • La <strong>contraseña</strong> debe tener al menos <strong>8 caracteres, una mayúscula y un número</strong>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Instrucciones -->
+                <div class="lab-instruction mb-8" style="border-left-color: #10b981;">
+                    <div class="flex items-start">
+                        <div class="w-16 h-16 bg-green-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-green-800 mb-4">Instrucciones</h4>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-green-50 rounded-lg p-4">
+                                    <p class="text-green-700 text-lg">
+                                        1. En equipos, diseñen <strong>al menos 10 casos de prueba</strong> para esta funcionalidad.
+                                    </p>
+                                </div>
+                                
+                                <div class="bg-green-100 rounded-lg p-4">
+                                    <p class="text-green-700 text-lg">
+                                        2. Usen una tabla simple con las columnas: <strong>ID del Caso, Descripción, Pasos a Seguir, Dato de Prueba, Resultado Esperado</strong>.
+                                    </p>
+                                </div>
+                                
+                                <div class="bg-green-50 rounded-lg p-4">
+                                    <h5 class="font-bold text-green-800 mb-2">3. Asegúrense de incluir:</h5>
+                                    <div class="space-y-2 text-green-700">
+                                        <div class="flex items-start">
+                                            <div class="w-2 h-2 bg-green-500 rounded-full mr-2 mt-2"></div>
+                                            <span><strong>Casos Positivos:</strong> El "camino feliz" (datos válidos).</span>
+                                        </div>
+                                        <div class="flex items-start">
+                                            <div class="w-2 h-2 bg-green-500 rounded-full mr-2 mt-2"></div>
+                                            <span><strong>Casos Negativos:</strong> Intentos con datos inválidos, campos vacíos, etc.</span>
+                                        </div>
+                                        <div class="flex items-start">
+                                            <div class="w-2 h-2 bg-green-500 rounded-full mr-2 mt-2"></div>
+                                            <span><strong>Casos Límite:</strong> Pruebas en los bordes de las reglas (ej. un usuario de 5, 6, 20 y 21 caracteres).</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Entregable -->
+                <div class="lab-instruction mb-8" style="border-left-color: #8b5cf6;">
+                    <div class="flex items-start">
+                        <div class="w-16 h-16 bg-purple-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-purple-800 mb-4">Entregable</h4>
+                            
+                            <div class="bg-purple-50 rounded-lg p-4">
+                                <p class="text-purple-700 text-lg leading-relaxed">
+                                    La <strong>tabla con los casos de prueba diseñados</strong>.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Conclusión -->
+                <div class="bg-gradient-to-r from-purple-500 to-red-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-center justify-center mb-4">
+                        <div class="text-4xl mr-4">🧠</div>
+                        <h3 class="text-2xl font-bold">Pensamiento de Tester</h3>
+                    </div>
+                    <p class="text-xl text-center leading-relaxed opacity-95">
+                        Un buen tester no solo piensa en lo que <strong>debería funcionar</strong>, sino en todas las formas creativas en que algo <strong>podría fallar</strong>.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Navigation -->
+    <div class="navigation">
+        <button class="nav-button" onclick="previousSlide()">⬅️ Anterior</button>
+        <button class="nav-button" onclick="resetAll()">🔄 Reiniciar</button>
+        <button class="nav-button" onclick="nextSlide()">Siguiente ➡️</button>
     </div>
 
     <script>
-        let currentSlideIndex = 1;
-        const totalSlidesCount = 5;
-
-        function nextSlide() {
-            if (currentSlideIndex < totalSlidesCount) {
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
-                currentSlideIndex++;
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
-                updateNavigation();
-            }
+        let currentSlide = 1;
+        const totalSlides = 6;
+        
+        function updateSlideCounter() {
+            document.getElementById('current-slide').textContent = currentSlide;
+            document.getElementById('total-slides').textContent = totalSlides;
         }
-
-        function previousSlide() {
-            if (currentSlideIndex > 1) {
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
-                currentSlideIndex--;
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
-                updateNavigation();
+        
+        function showSlide(slideNumber) {
+            // Hide all slides
+            for (let i = 1; i <= totalSlides; i++) {
+                document.getElementById('slide' + i).classList.add('hidden');
             }
-        }
-
-        function updateNavigation() {
-            document.getElementById('currentSlide').textContent = currentSlideIndex;
-            document.getElementById('totalSlides').textContent = totalSlidesCount;
             
-            document.getElementById('prevBtn').disabled = currentSlideIndex === 1;
-            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlidesCount;
+            // Show selected slide
+            document.getElementById('slide' + slideNumber).classList.remove('hidden');
+            
+            currentSlide = slideNumber;
+            updateSlideCounter();
+            updateNavigationButtons();
+            
+            // Auto-scroll to top when changing slides
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         }
-
+        
+        function updateNavigationButtons() {
+            const prevButton = document.querySelector('.navigation button:first-child');
+            const nextButton = document.querySelector('.navigation button:last-child');
+            
+            prevButton.disabled = currentSlide === 1;
+            nextButton.disabled = currentSlide === totalSlides;
+        }
+        
+        function previousSlide() {
+            if (currentSlide > 1) {
+                showSlide(currentSlide - 1);
+            }
+        }
+        
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                showSlide(currentSlide + 1);
+            }
+        }
+        
+        function resetAll() {
+            showSlide(1);
+        }
+        
         // Keyboard navigation
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'ArrowRight' || event.key === ' ') {
-                nextSlide();
-            } else if (event.key === 'ArrowLeft') {
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
                 previousSlide();
+            } else if (e.key === 'ArrowRight') {
+                nextSlide();
+            } else if (e.key === 'Home') {
+                resetAll();
             }
         });
-
+        
         // Initialize
-        updateNavigation();
+        showSlide(1);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a862f65643cdb0',t:'MTc1NzEwMzE5OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+<!-- Pie de página -->
+<footer class="footer">
+  <div class="footer-content">© 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua</div>
+</footer>
+
+</body>
 </html>
