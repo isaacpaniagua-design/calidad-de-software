@@ -3,454 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sesión 8 - El Plan Maestro: Software Quality Assurance Plan (SQAP)</title>
+    <title>Sesión 8: CMMI Nivel 3 (Estandarización de Procesos)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
+            font-family: 'Inter', sans-serif;
         }
-
-        .slide-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 3rem;
-            max-width: 900px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-            position: relative;
-            min-height: 600px;
-            display: flex;
-            flex-direction: column;
+        
+        .slide-transition {
+            transition: all 0.5s ease-in-out;
         }
-
-        .slide {
-            display: none;
-            flex: 1;
-            animation: fadeIn 0.5s ease-in-out;
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
         }
-
-        .slide.active {
-            display: flex;
-            flex-direction: column;
+        
+        .card-hover {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
+        }
+        
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
-        .slide h1 {
-            color: #2d3748;
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
         }
-
-        .slide h2 {
-            color: #2d3748;
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
-
-        .slide h3 {
-            color: #4a5568;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .subtitle {
-            font-size: 1.3rem;
-            color: #718096;
-            text-align: center;
-            font-style: italic;
-            margin-bottom: 2rem;
-        }
-
-        .quote-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            text-align: center;
-            margin: 2rem 0;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        }
-
-        .quote-box h4 {
-            color: white;
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-        }
-
-        .quote-box p {
-            font-size: 1.2rem;
-            line-height: 1.6;
-        }
-
-        .definition-box {
-            background: #e6fffa;
-            padding: 2rem;
-            border-radius: 15px;
-            border-left: 5px solid #38b2ac;
-            margin: 2rem 0;
-        }
-
-        .definition-box h4 {
-            color: #2d3748;
-            margin-bottom: 1.5rem;
-            font-size: 1.4rem;
-        }
-
-        .definition-box ul {
-            color: #4a5568;
-            line-height: 1.8;
-            font-size: 1.1rem;
-        }
-
-        .definition-box li {
-            margin-bottom: 1rem;
-            padding-left: 0.5rem;
-        }
-
-        .definition-box strong {
-            color: #2d3748;
-        }
-
-        .importance-grid {
-            display: grid;
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-
-        .importance-card {
-            background: #f0fff4;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border-left: 4px solid #48bb78;
-            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.1);
-        }
-
-        .importance-card h5 {
-            color: #2f855a;
-            margin-bottom: 0.8rem;
-            font-size: 1.2rem;
-        }
-
-        .importance-card p {
-            color: #4a5568;
-            line-height: 1.6;
-        }
-
-        .structure-container {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .structure-container h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .structure-grid {
-            display: grid;
-            gap: 1rem;
-            margin-top: 1.5rem;
-        }
-
-        .structure-item {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.2rem;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-            border-left: 4px solid rgba(255, 255, 255, 0.5);
-        }
-
-        .structure-item h5 {
-            color: white;
-            margin-bottom: 0.8rem;
-            font-size: 1.1rem;
-        }
-
-        .structure-item p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.5;
-            font-size: 0.95rem;
-        }
-
-        .example-container {
-            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .example-container h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .example-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .example-card {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.2rem;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-        }
-
-        .example-card h5 {
-            color: white;
-            margin-bottom: 0.8rem;
-            font-size: 1.1rem;
-        }
-
-        .example-card p, .example-card ul {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.5;
-            font-size: 0.95rem;
-        }
-
-        .example-card ul {
-            margin-left: 1rem;
-            margin-top: 0.5rem;
-        }
-
-        .benefits-grid {
-            display: grid;
-            gap: 1.5rem;
-            margin: 2rem 0;
-        }
-
-        .benefit-card {
-            background: #fff5f5;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border-left: 4px solid #f56565;
-            box-shadow: 0 4px 15px rgba(245, 101, 101, 0.1);
-        }
-
-        .benefit-card h5 {
-            color: #c53030;
-            margin-bottom: 0.8rem;
-            font-size: 1.2rem;
-        }
-
-        .benefit-card p {
-            color: #4a5568;
-            line-height: 1.6;
-        }
-
-        .activity-container {
-            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .activity-container h4 {
-            color: white;
-            margin-bottom: 1rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .activity-context {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin: 1.5rem 0;
-            backdrop-filter: blur(10px);
-        }
-
-        .activity-context h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .activity-tasks {
-            display: grid;
-            gap: 1rem;
-            margin: 1.5rem 0;
-        }
-
-        .task-item {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 1rem;
-            border-radius: 8px;
-            backdrop-filter: blur(5px);
-        }
-
-        .task-item h6 {
-            color: white;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .task-item p {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-
-        .deliverable-box {
-            background: rgba(255, 255, 255, 0.3);
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: center;
-            margin-top: 1.5rem;
-            backdrop-filter: blur(10px);
-        }
-
-        .deliverable-box h5 {
-            color: white;
-            margin-bottom: 0.8rem;
-            font-size: 1.2rem;
-        }
-
-        .deliverable-box p {
-            color: white;
-            font-weight: 500;
-        }
-
+        
         .navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 2px solid #e2e8f0;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
         }
-
-        .slide-counter {
-            color: #718096;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .nav-btn {
-            padding: 0.8rem 1.5rem;
-            background: linear-gradient(45deg, #667eea, #764ba2);
+        
+        .nav-button {
+            background: linear-gradient(135deg, #059669, #10b981);
             color: white;
             border: none;
-            border-radius: 10px;
+            padding: 12px 20px;
+            border-radius: 25px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 14px;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
         }
-
-        .nav-btn:hover {
+        
+        .nav-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 20px rgba(5, 150, 105, 0.4);
         }
-
-        .nav-btn:disabled {
-            background: #cbd5e0;
+        
+        .nav-button:disabled {
+            background: #9ca3af;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
         }
-
-        .source-note {
-            background: #fff5f5;
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid #f56565;
-            margin-top: 1.5rem;
-            font-style: italic;
-            color: #4a5568;
+        
+        .slide-counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #374151;
+            z-index: 1000;
         }
-
-        .highlight-box {
-            background: #fffaf0;
+        
+        .process-card {
+            background: white;
+            border-radius: 1rem;
             padding: 1.5rem;
-            border-radius: 12px;
-            border: 2px dashed #ed8936;
-            text-align: center;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .process-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
             margin: 2rem 0;
         }
-
-        .highlight-box p {
-            color: #2d3748;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
+        
         @media (max-width: 768px) {
-            .slide-container {
-                padding: 2rem;
-                margin: 1rem;
-            }
-            
-            .slide h1 {
-                font-size: 2rem;
-            }
-            
-            .slide h2 {
-                font-size: 1.5rem;
-            }
-            
-            .example-grid {
+            .comparison-grid {
                 grid-template-columns: 1fr;
-                gap: 1rem;
             }
-            
-            .nav-buttons {
+        }
+        
+        .level-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .level-2-badge {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+        }
+        
+        .level-3-badge {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+        }
+        
+        .engineering-flow {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .flow-step {
+            flex: 1;
+            min-width: 200px;
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .flow-step:hover {
+            transform: translateY(-5px);
+        }
+        
+        .flow-arrow {
+            font-size: 2rem;
+            color: #059669;
+            margin: 0 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .engineering-flow {
                 flex-direction: column;
-                gap: 0.5rem;
+            }
+            .flow-arrow {
+                transform: rotate(90deg);
             }
         }
     </style>
-</head>
-<body>
 
 <style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+/* Fondo como index */
+body{
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height:1.6;
+  color:#333;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height:100vh;
+  padding-top:80px; /* nav fijo */
+}
+
+/* NAV Plataforma QS (fijo) */
+.qs-nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:saturate(140%) blur(20px);
+       background:rgba(255,255,255,.95);border-bottom:1px solid rgba(255,255,255,.2);
+       box-shadow:0 8px 32px rgba(0,0,0,.10)}
+.qs-nav .wrap{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;gap:20px;align-items:center;justify-content:space-between}
+.qs-brand{display:flex;gap:15px;align-items:center;color:#1f2937;font-weight:800;font-size:1.3rem;text-decoration:none;position:relative;padding:8px 16px;border-radius:20px}
+.qs-brand::before{content:"🎓";font-size:1.6rem}
+.qs-tabs{display:flex;gap:12px;flex-wrap:wrap;background:rgba(255,255,255,.3);padding:8px;border-radius:30px;backdrop-filter:blur(10px)}
+.qs-btn{border:0;padding:12px 20px;border-radius:25px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;font-weight:600;font-size:.9rem;
+       transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(10px);border:2px solid transparent;position:relative;overflow:hidden}
+.qs-btn::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);transition:all .4s ease;z-index:-1}
+.qs-btn:hover{color:#fff;transform:translateY(-3px);box-shadow:0 8px 25px rgba(102,126,234,.4);border-color:rgba(102,126,234,.3)}
+.qs-btn:hover::before{left:0}
+.qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none;box-shadow:0 6px 20px rgba(102,126,234,.5);transform:translateY(-2px)}
+.qs-btn[aria-current="page"]::before{left:0}
+
+/* Footer como index */
+.footer{
+  margin-top:60px;
+  padding:30px 20px;
+  text-align:center;
+  background:rgba(255, 255, 255, 0.1);
+  backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255, 255, 255, 0.2);
+}
+.footer-content{
+  max-width:1200px;
+  margin:0 auto;
+  color:rgba(255,255,255,0.8);
+  font-size:0.95rem;
+  transition:all 0.3s ease;
+  cursor:default;
+}
+.footer-content:hover{ color:#fff; transform:translateY(-2px); }
+
+/* Slide counter más pequeño */
+.slide-counter{
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:14px;
+  opacity:0.9;
+}
 </style>
+
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- NAV Plataforma QS -->
 <div class="qs-nav">
   <div class="wrap">
     <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
@@ -461,317 +256,491 @@
       <a class="qs-btn" href="Foro.html">Foro</a>
       <a class="qs-btn" href="paneldocente.html">Panel</a>
       <a class="qs-btn" href="roadmap.html">Roadmap</a>
-          <a class="qs-btn" href="checklist.html">Checklist</a>
-\1
+      <a class="qs-btn" href="checklist.html">Checklist</a>
+      <a class="qs-btn" href="status.html">Status</a>
+    </nav>
   </div>
 </div>
-<script>
-(function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
-  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
-  });
-})();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
-</script>
 
+    <!-- Slide Counter -->
+    <div class="slide-counter">
+        <span id="current-slide">1</span> / <span id="total-slides">4</span>
+    </div>
 
-    <div class="slide-container">
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8 pb-32">
         <!-- Slide 1: Título -->
-        <div class="slide active">
-            <h1>📋 El Plan Maestro: SQAP</h1>
-            <div class="subtitle">Software Quality Assurance Plan</div>
-            
-            <div class="quote-box">
-                <h4>🎯 "La calidad no ocurre por accidente, se planifica"</h4>
-                <p>Un roadmap estratégico para garantizar la excelencia del software desde el día uno</p>
+        <div id="slide1" class="slide-transition fade-in">
+            <div class="gradient-bg rounded-2xl p-12 text-white text-center mb-8 card-hover">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-6xl mb-6">🏢</div>
+                    <h1 class="text-5xl font-bold mb-6 pulse-animation">La Forma en que Hacemos las Cosas Aquí</h1>
+                    <h2 class="text-3xl font-semibold mb-8 opacity-90">CMMI Nivel 3: Estandarización de Procesos</h2>
+                    <p class="text-xl mb-8 opacity-80">De la gestión de proyectos a la estandarización organizacional</p>
+                    
+                    <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 mt-12">
+                        <div class="flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <h3 class="text-xl font-semibold">Fuentes Principales</h3>
+                        </div>
+                        <div class="text-lg opacity-90 space-y-2">
+                            <p>CMMI for Development v1.3</p>
+                            <p>Pressman - Ingeniería de Software</p>
+                            <p>MoProSoft.pdf</p>
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <div class="highlight-box">
-                <p>🎯 <strong>Objetivo:</strong> Dominar la creación y gestión de planes de aseguramiento de calidad</p>
+            <!-- Notas para el docente -->
+            <div class="bg-green-50 border-l-4 border-green-400 p-6 rounded-r-lg">
+                <div class="flex items-start">
+                    <svg class="w-6 h-6 text-green-400 mr-3 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <h4 class="text-lg font-semibold text-green-800 mb-2">Notas para el docente:</h4>
+                        <p class="text-green-700 leading-relaxed">
+                            "Hemos visto cómo gestionar proyectos individuales en Nivel 2. Ahora vamos a ver cómo las organizaciones exitosas crean una 'cultura de procesos' que trasciende proyectos individuales y se convierte en 'la forma en que hacemos las cosas aquí'."
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Slide 2: ¿Qué es un SQAP? -->
-        <div class="slide">
-            <h2>🔍 ¿Qué es un SQAP?</h2>
-            
-            <div class="definition-box">
-                <h4>📋 Documento Formal que Define:</h4>
-                <ul>
-                    <li><strong>Objetivos de calidad</strong> del proyecto específico</li>
-                    <li><strong>Estándares y procesos</strong> que se seguirán durante el desarrollo</li>
-                    <li><strong>Roles y responsabilidades</strong> del equipo de calidad</li>
-                    <li><strong>Criterios de aceptación</strong> y métricas de éxito</li>
-                </ul>
-            </div>
-            
-            <div class="quote-box">
-                <h4>🛡️ Enfoque Principal</h4>
-                <p>Asegurar que el software cumpla con <strong>requisitos y normas desde el inicio</strong>, no como una actividad posterior</p>
-            </div>
-            
-            <div class="highlight-box">
-                <p>💡 <strong>Clave:</strong> Es la brújula que guía todas las actividades de calidad</p>
-            </div>
-            
-            <div class="source-note">
-                📚 <strong>Fuentes:</strong> IEEE 730, Pressman
+        <!-- Slide 2: El Gran Salto: De Nivel 2 a Nivel 3 -->
+        <div id="slide2" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🚀</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">El Gran Salto: De Nivel 2 a Nivel 3</h2>
+                    <h3 class="text-2xl font-semibold text-green-600">De "Mi Proyecto" a "Nuestra Organización"</h3>
+                </div>
+                
+                <!-- Imagen conceptual -->
+                <div class="bg-gradient-to-r from-blue-500 to-green-500 rounded-2xl p-8 text-white mb-8">
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-bold mb-4">Visualización del Cambio</h3>
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div class="bg-white/20 rounded-lg p-6">
+                                <h4 class="text-xl font-bold mb-3">❌ Equipos Aislados (Nivel 2)</h4>
+                                <p class="opacity-90">Varios equipos de proyecto trabajando en silos aislados, cada uno con sus propias herramientas y métodos.</p>
+                            </div>
+                            <div class="bg-white/20 rounded-lg p-6">
+                                <h4 class="text-xl font-bold mb-3">✅ Herramientas Compartidas (Nivel 3)</h4>
+                                <p class="opacity-90">Todos los equipos comparten un conjunto común de herramientas y planos organizacionales.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Introducción -->
+                <div class="bg-gray-50 rounded-xl p-6 mb-8">
+                    <p class="text-lg text-gray-700 leading-relaxed">
+                        En Nivel 2, aprendimos a gestionar proyectos individuales. Cada proyecto tenía su plan, sus requisitos y su control. Sin embargo, el <strong>"cómo"</strong> se hacían las cosas podía variar mucho de un proyecto a otro.
+                    </p>
+                    <p class="text-lg text-gray-700 leading-relaxed mt-4">
+                        <strong>El Nivel 3 representa un cambio de mentalidad fundamental:</strong>
+                    </p>
+                </div>
+                
+                <!-- Comparación Nivel 2 vs Nivel 3 -->
+                <div class="comparison-grid">
+                    <!-- Nivel 2 -->
+                    <div class="bg-orange-50 border-2 border-orange-200 rounded-xl p-6">
+                        <div class="text-center mb-6">
+                            <span class="level-2-badge">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Nivel 2 (Gestionado)
+                            </span>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-white rounded-lg p-4 border-l-4 border-orange-400">
+                                <h4 class="font-bold text-orange-800 mb-2">🎯 Foco: El PROYECTO</h4>
+                                <p class="text-orange-700">Cada proyecto es una entidad independiente.</p>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-4 border-l-4 border-orange-400">
+                                <h4 class="font-bold text-orange-800 mb-2">⚙️ Procesos: Reactivos</h4>
+                                <p class="text-orange-700">Definidos para cada proyecto. El éxito de un proyecto no garantiza el éxito del siguiente.</p>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-4 border-l-4 border-orange-400">
+                                <h4 class="font-bold text-orange-800 mb-2">🧠 Mentalidad:</h4>
+                                <p class="text-orange-700 italic">"Este es el plan para nuestro proyecto."</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Nivel 3 -->
+                    <div class="bg-green-50 border-2 border-green-200 rounded-xl p-6">
+                        <div class="text-center mb-6">
+                            <span class="level-3-badge">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                Nivel 3 (Definido)
+                            </span>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-white rounded-lg p-4 border-l-4 border-green-400">
+                                <h4 class="font-bold text-green-800 mb-2">🏢 Foco: La ORGANIZACIÓN</h4>
+                                <p class="text-green-700">Todos los proyectos son parte de un ecosistema organizacional.</p>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-4 border-l-4 border-green-400">
+                                <h4 class="font-bold text-green-800 mb-2">🔄 Procesos: Proactivos</h4>
+                                <p class="text-green-700">Estandarizados para toda la organización. Se crea un "activo organizacional" de procesos.</p>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-4 border-l-4 border-green-400">
+                                <h4 class="font-bold text-green-800 mb-2">🧠 Mentalidad:</h4>
+                                <p class="text-green-700 italic">"Esta es la forma estándar en que nuestra empresa ejecuta todos los proyectos."</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Objetivo -->
+                <div class="bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl p-8 text-white">
+                    <div class="flex items-start">
+                        <svg class="w-8 h-8 mr-4 mt-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">🎯 El Objetivo</h3>
+                            <p class="text-lg leading-relaxed opacity-95">
+                                La <strong>consistencia</strong>, la <strong>predictibilidad</strong> y la <strong>eficiencia a escala</strong>.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Slide 3: ¿Por qué es importante? -->
-        <div class="slide">
-            <h2>⚡ ¿Por qué es Importante?</h2>
-            
-            <div class="importance-grid">
-                <div class="importance-card">
-                    <h5>🤝 Proporciona Confianza</h5>
-                    <p>Genera <strong>confianza en clientes y directivos</strong> al demostrar un enfoque sistemático y profesional hacia la calidad</p>
+        <!-- Slide 3: El "Corazón" de Nivel 3 -->
+        <div id="slide3" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">👨‍🍳</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">El "Corazón" de Nivel 3: El Conjunto de Procesos Estándar</h2>
+                    <h3 class="text-2xl font-semibold text-green-600">Una Receta Maestra para el Éxito</h3>
                 </div>
                 
-                <div class="importance-card">
-                    <h5>🗺️ Establece un Mapa de Ruta</h5>
-                    <p>Crea una <strong>guía clara para prevenir defectos</strong> antes de que ocurran, reduciendo costos y tiempo de corrección</p>
+                <!-- Concepto Clave -->
+                <div class="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl p-8 text-white mb-8">
+                    <div class="flex items-start">
+                        <svg class="w-12 h-12 mr-6 mt-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                        </svg>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">El concepto clave en Nivel 3:</h3>
+                            <h4 class="text-3xl font-bold mb-4">Conjunto de Procesos Organizacionales Estándar</h4>
+                            <p class="text-lg leading-relaxed opacity-95">
+                                Es una colección de procesos bien definidos, documentados y aprobados que describen la forma de trabajo de la organización.
+                            </p>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="importance-card">
-                    <h5>📊 Sirve como Guía de Auditoría</h5>
-                    <p>Facilita la <strong>trazabilidad y auditoría</strong> de procesos, cumpliendo con estándares internacionales y regulaciones</p>
+                <!-- ¿Qué incluye? -->
+                <div class="mb-8">
+                    <h3 class="text-3xl font-bold text-gray-800 mb-6 text-center">¿Qué incluye?</h3>
+                    
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="process-card" style="border-left-color: #3b82f6;">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-blue-800 mb-2">Procedimientos y Metodologías</h4>
+                                    <p class="text-blue-700">Ejemplo: ciclo de vida del desarrollo</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="process-card" style="border-left-color: #10b981;">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-green-800 mb-2">Plantillas</h4>
+                                    <p class="text-green-700">Ejemplo: plan de proyecto, especificación de requisitos</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="process-card" style="border-left-color: #f59e0b;">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-amber-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-amber-800 mb-2">Guías y Checklists</h4>
+                                    <p class="text-amber-700">Listas de verificación para asegurar completitud</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="process-card" style="border-left-color: #8b5cf6;">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h4 class="text-xl font-bold text-purple-800 mb-2">Criterios de Entrada y Salida</h4>
+                                    <p class="text-purple-700">Para las tareas y fases del proyecto</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="quote-box">
-                <h4>🎯 Impacto Real</h4>
-                <p>Los proyectos con SQAP bien definido tienen <strong>40% menos defectos</strong> y se entregan <strong>25% más rápido</strong></p>
-            </div>
-            
-            <div class="source-note">
-                📚 <strong>Fuente:</strong> Mahfuz, Capítulo 2
+                
+                <!-- Adecuación (Tailoring) -->
+                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 text-white mb-8">
+                    <h3 class="text-2xl font-bold mb-6 flex items-center">
+                        <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                        </svg>
+                        Adecuación (Tailoring)
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <p class="text-lg leading-relaxed opacity-95">
+                            <strong>No todos los proyectos son iguales.</strong> Un proyecto pequeño y ágil no necesita la misma burocracia que un sistema crítico para un avión.
+                        </p>
+                        
+                        <div class="bg-white/20 rounded-lg p-6">
+                            <p class="text-lg leading-relaxed">
+                                El Nivel 3 exige que la organización provea <strong>guías de adecuación</strong> para que cada proyecto pueda adaptar el proceso estándar a sus necesidades específicas, sin omitir lo esencial.
+                            </p>
+                        </div>
+                        
+                        <div class="bg-white/30 rounded-lg p-4">
+                            <p class="font-bold text-xl text-center">
+                                💡 El proceso estándar no es una camisa de fuerza, es un punto de partida inteligente.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Slide 4: Estructura del Plan (según IEEE 730) -->
-        <div class="slide">
-            <h2>🏗️ Estructura del Plan (IEEE 730)</h2>
-            
-            <div class="structure-container">
-                <h4>📋 Componentes Esenciales del SQAP</h4>
+        <!-- Slide 4: Áreas de Proceso Clave de Nivel 3 (Parte 1) -->
+        <div id="slide4" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🔧</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Áreas de Proceso Clave de Nivel 3 (Parte 1)</h2>
+                    <h3 class="text-2xl font-semibold text-blue-600">Construyendo el Producto Correctamente</h3>
+                    <p class="text-lg text-gray-600 mt-4">Nivel 3 introduce áreas de proceso enfocadas en la ingeniería del producto.</p>
+                </div>
                 
-                <div class="structure-grid">
-                    <div class="structure-item">
-                        <h5>🎯 Propósito y Alcance</h5>
-                        <p>Define qué cubre el plan y qué queda fuera del alcance</p>
+                <!-- Flujo de Ingeniería Visual -->
+                <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-8 text-white mb-8">
+                    <h3 class="text-2xl font-bold mb-6 text-center">Flujo: De Requisitos a Producto Integrado</h3>
+                    
+                    <div class="engineering-flow">
+                        <div class="flow-step">
+                            <div class="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <h4 class="font-bold text-blue-800">Requisitos</h4>
+                            <p class="text-gray-600 text-sm">Necesidades del cliente</p>
+                        </div>
+                        
+                        <div class="flow-arrow">➡️</div>
+                        
+                        <div class="flow-step">
+                            <div class="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <h4 class="font-bold text-green-800">Solución Técnica</h4>
+                            <p class="text-gray-600 text-sm">Diseño y código</p>
+                        </div>
+                        
+                        <div class="flow-arrow">➡️</div>
+                        
+                        <div class="flow-step">
+                            <div class="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <h4 class="font-bold text-purple-800">Producto Integrado</h4>
+                            <p class="text-gray-600 text-sm">Sistema completo</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Áreas de Proceso Detalladas -->
+                <div class="space-y-8">
+                    <!-- Desarrollo de Requisitos (RD) -->
+                    <div class="process-card" style="border-left-color: #3b82f6;">
+                        <div class="flex items-start mb-6">
+                            <div class="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-blue-800 mb-4">Desarrollo de Requisitos (RD - Requirements Development)</h4>
+                                
+                                <div class="bg-blue-50 rounded-lg p-4 mb-4">
+                                    <h5 class="font-bold text-blue-800 mb-2">Más allá de la gestión (Nivel 2):</h5>
+                                    <p class="text-blue-700 leading-relaxed">
+                                        No solo gestionamos los requisitos, sino que los <strong>analizamos, especificamos y elaboramos</strong>. Se enfoca en traducir las necesidades del cliente en requisitos técnicos claros y sin ambigüedad.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="structure-item">
-                        <h5>📚 Documentos de Referencia</h5>
-                        <p>Normas, políticas, manuales y estándares aplicables</p>
+                    <!-- Solución Técnica (TS) -->
+                    <div class="process-card" style="border-left-color: #10b981;">
+                        <div class="flex items-start mb-6">
+                            <div class="w-16 h-16 bg-green-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-green-800 mb-4">Solución Técnica (TS - Technical Solution)</h4>
+                                
+                                <div class="bg-green-50 rounded-lg p-4 mb-4">
+                                    <h5 class="font-bold text-green-800 mb-2">Diseñar y construir:</h5>
+                                    <p class="text-green-700 leading-relaxed">
+                                        Selecciona un diseño, lo implementa y realiza pruebas unitarias. Aquí es donde los requisitos se convierten en <strong>código y componentes funcionales</strong>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="structure-item">
-                        <h5>👥 Gestión</h5>
-                        <p>Roles, responsabilidades y recursos asignados</p>
-                    </div>
-                    
-                    <div class="structure-item">
-                        <h5>⚙️ Tareas de SQA</h5>
-                        <p>Revisiones, auditorías, reportes de defectos y seguimiento</p>
-                    </div>
-                    
-                    <div class="structure-item">
-                        <h5>🛠️ Herramientas y Métodos</h5>
-                        <p>Frameworks, métricas y herramientas de prueba específicas</p>
-                    </div>
-                    
-                    <div class="structure-item">
-                        <h5>✅ Criterios de Aceptación</h5>
-                        <p>Cuándo considerar una fase como "aprobada" y lista</p>
+                    <!-- Integración del Producto (PI) -->
+                    <div class="process-card" style="border-left-color: #8b5cf6;">
+                        <div class="flex items-start mb-6">
+                            <div class="w-16 h-16 bg-purple-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                                <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="text-2xl font-bold text-purple-800 mb-4">Integración del Producto (PI - Product Integration)</h4>
+                                
+                                <div class="bg-purple-50 rounded-lg p-4 mb-4">
+                                    <h5 class="font-bold text-purple-800 mb-2">Ensamblando el rompecabezas:</h5>
+                                    <p class="text-purple-700 leading-relaxed">
+                                        Se asegura de que los componentes de software (desarrollados en TS) se integren entre sí y con otros elementos del sistema de manera controlada, creando el <strong>producto final</strong>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <div class="source-note">
-                📚 <strong>Fuente:</strong> QA Lovers
-            </div>
         </div>
+    </main>
 
-        <!-- Slide 5: Ejemplo Real - App Bancaria -->
-        <div class="slide">
-            <h2>🏦 Ejemplo Real: App Bancaria</h2>
-            
-            <div class="example-container">
-                <h4>💳 SQAP para Aplicación Bancaria Móvil</h4>
-                
-                <div class="example-grid">
-                    <div class="example-card">
-                        <h5>🎯 Propósito</h5>
-                        <p>Asegurar <strong>seguridad y usabilidad</strong> en operaciones financieras críticas</p>
-                    </div>
-                    
-                    <div class="example-card">
-                        <h5>📋 Estándares</h5>
-                        <ul>
-                            <li>ISO/IEC 25010 (Calidad)</li>
-                            <li>OWASP (Seguridad)</li>
-                            <li>PCI DSS (Pagos)</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="example-card">
-                        <h5>⚙️ Tareas Clave</h5>
-                        <ul>
-                            <li>Pruebas de penetración</li>
-                            <li>Revisiones de código</li>
-                            <li>Auditorías externas</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="example-card">
-                        <h5>🛠️ Herramientas</h5>
-                        <ul>
-                            <li>SonarQube (Calidad código)</li>
-                            <li>Appium (Testing móvil)</li>
-                            <li>JMeter (Performance)</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="highlight-box">
-                <p>🔒 <strong>Resultado:</strong> App con 99.9% uptime y cero brechas de seguridad reportadas</p>
-            </div>
-        </div>
-
-        <!-- Slide 6: Beneficios de un buen SQAP -->
-        <div class="slide">
-            <h2>🎯 Beneficios de un Buen SQAP</h2>
-            
-            <div class="benefits-grid">
-                <div class="benefit-card">
-                    <h5>🛡️ Reduce Riesgos Críticos</h5>
-                    <p>Previene fallos críticos como caídas en sistemas financieros, pérdida de datos o brechas de seguridad</p>
-                </div>
-                
-                <div class="benefit-card">
-                    <h5>💬 Mejora la Comunicación</h5>
-                    <p>Establece un lenguaje común entre equipos de desarrollo, testing, y stakeholders del negocio</p>
-                </div>
-                
-                <div class="benefit-card">
-                    <h5>😊 Aumenta Confianza del Cliente</h5>
-                    <p>Demuestra profesionalismo y compromiso con la calidad, facilitando la obtención de certificaciones</p>
-                </div>
-            </div>
-            
-            <div class="quote-box">
-                <h4>📈 Impacto Medible</h4>
-                <p>Organizaciones con SQAP robusto reportan <strong>60% menos incidentes en producción</strong> y <strong>35% mayor satisfacción del cliente</strong></p>
-            </div>
-            
-            <div class="highlight-box">
-                <p>🏆 <strong>ROI:</strong> Cada dólar invertido en SQAP ahorra $5-10 en costos de corrección</p>
-            </div>
-        </div>
-
-        <!-- Slide 7: Actividad en Equipos -->
-        <div class="slide">
-            <h2>🎮 Actividad en Equipos</h2>
-            <div class="subtitle">Diseñando un Mini-SQAP (20 min)</div>
-            
-            <div class="activity-container">
-                <h4>📱 Proyecto: App Móvil de Pagos Electrónicos</h4>
-                
-                <div class="activity-context">
-                    <h5>🎯 Contexto del Proyecto</h5>
-                    <p>Desarrollar una aplicación móvil para pagos peer-to-peer, similar a Venmo o Bizum, que maneje transacciones de hasta $10,000 USD</p>
-                </div>
-                
-                <div class="activity-tasks">
-                    <div class="task-item">
-                        <h6>1️⃣ Propósito del Plan</h6>
-                        <p>Define el objetivo principal de calidad para esta app de pagos</p>
-                    </div>
-                    
-                    <div class="task-item">
-                        <h6>2️⃣ Dos Tareas Clave de SQA</h6>
-                        <p>Identifica las actividades más críticas para asegurar la calidad</p>
-                    </div>
-                    
-                    <div class="task-item">
-                        <h6>3️⃣ Herramienta o Estándar</h6>
-                        <p>Selecciona una herramienta técnica o estándar de calidad específico</p>
-                    </div>
-                </div>
-                
-                <div class="deliverable-box">
-                    <h5>📋 Entregable</h5>
-                    <p><strong>Esquema visual en Miro o Canva</strong> con los 3 puntos clave por equipo</p>
-                </div>
-            </div>
-            
-            <div class="highlight-box">
-                <p>🎯 <strong>Objetivo:</strong> Aplicar conceptos de SQAP a un caso real y práctico</p>
-            </div>
-        </div>
-
-        <!-- Navigation -->
-        <div class="navigation">
-            <div class="slide-counter">
-                Diapositiva <span id="currentSlide">1</span> de <span id="totalSlides">7</span>
-            </div>
-            <div class="nav-buttons">
-                <button class="nav-btn" onclick="previousSlide()" id="prevBtn" disabled>← Anterior</button>
-                <button class="nav-btn" onclick="nextSlide()" id="nextBtn">Siguiente →</button>
-            </div>
-        </div>
+    <!-- Navigation -->
+    <div class="navigation">
+        <button class="nav-button" onclick="previousSlide()">⬅️ Anterior</button>
+        <button class="nav-button" onclick="resetAll()">🔄 Reiniciar</button>
+        <button class="nav-button" onclick="nextSlide()">Siguiente ➡️</button>
     </div>
 
     <script>
-        let currentSlideIndex = 1;
-        const totalSlidesCount = 7;
-
-        function nextSlide() {
-            if (currentSlideIndex < totalSlidesCount) {
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
-                currentSlideIndex++;
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
-                updateNavigation();
-            }
+        let currentSlide = 1;
+        const totalSlides = 4;
+        
+        function updateSlideCounter() {
+            document.getElementById('current-slide').textContent = currentSlide;
+            document.getElementById('total-slides').textContent = totalSlides;
         }
-
-        function previousSlide() {
-            if (currentSlideIndex > 1) {
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
-                currentSlideIndex--;
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
-                updateNavigation();
+        
+        function showSlide(slideNumber) {
+            // Hide all slides
+            for (let i = 1; i <= totalSlides; i++) {
+                document.getElementById('slide' + i).classList.add('hidden');
             }
-        }
-
-        function updateNavigation() {
-            document.getElementById('currentSlide').textContent = currentSlideIndex;
-            document.getElementById('totalSlides').textContent = totalSlidesCount;
             
-            document.getElementById('prevBtn').disabled = currentSlideIndex === 1;
-            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlidesCount;
+            // Show selected slide
+            document.getElementById('slide' + slideNumber).classList.remove('hidden');
+            
+            currentSlide = slideNumber;
+            updateSlideCounter();
+            updateNavigationButtons();
+            
+            // Auto-scroll to top when changing slides
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         }
-
+        
+        function updateNavigationButtons() {
+            const prevButton = document.querySelector('.navigation button:first-child');
+            const nextButton = document.querySelector('.navigation button:last-child');
+            
+            prevButton.disabled = currentSlide === 1;
+            nextButton.disabled = currentSlide === totalSlides;
+        }
+        
+        function previousSlide() {
+            if (currentSlide > 1) {
+                showSlide(currentSlide - 1);
+            }
+        }
+        
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                showSlide(currentSlide + 1);
+            }
+        }
+        
+        function resetAll() {
+            showSlide(1);
+        }
+        
         // Keyboard navigation
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'ArrowRight' || event.key === ' ') {
-                nextSlide();
-            } else if (event.key === 'ArrowLeft') {
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
                 previousSlide();
+            } else if (e.key === 'ArrowRight') {
+                nextSlide();
+            } else if (e.key === 'Home') {
+                resetAll();
             }
         });
-
+        
         // Initialize
-        updateNavigation();
+        showSlide(1);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a85f042083cdb0',t:'MTc1NzEwMzAzOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+<!-- Pie de página -->
+<footer class="footer">
+  <div class="footer-content">© 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua</div>
+</footer>
+
+</body>
 </html>
