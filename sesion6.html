@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sesión 6 - Midiendo la Fábrica: Métricas de Proceso y Proyecto</title>
+    <title>Sesión 6: Tipos de Métricas (Proceso y Proyecto)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -12,23 +12,34 @@
             font-family: 'Inter', sans-serif;
         }
         
-        .slide {
-            display: none;
-            animation: slideIn 0.5s ease-in-out;
+        .slide-transition {
+            transition: all 0.5s ease-in-out;
         }
         
-        .slide.active {
-            display: block;
+        .gradient-bg {
+            background: linear-gradient(135deg, #1e40af 0%, #7c3aed 100%);
         }
         
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
+        .card-hover {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
         }
         
         @keyframes pulse {
@@ -36,255 +47,178 @@
             50% { transform: scale(1.05); }
         }
         
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
+        .navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            border-radius: 50px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
         }
         
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        .nav-button {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
         }
         
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
         }
         
-        @keyframes typing {
-            from { width: 0; }
-            to { width: 100%; }
-        }
-        
-        @keyframes conveyor {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100vw); }
-        }
-        
-        @keyframes gauge-fill {
-            from { stroke-dasharray: 0 100; }
-            to { stroke-dasharray: var(--progress) 100; }
-        }
-        
-        .float-animation {
-            animation: float 3s ease-in-out infinite;
-        }
-        
-        .pulse-animation {
-            animation: pulse 2s infinite;
-        }
-        
-        .bounce-animation {
-            animation: bounce 2s infinite;
-        }
-        
-        .rotate-animation {
-            animation: rotate 4s linear infinite;
-        }
-        
-        .glow-animation {
-            animation: glow 2s infinite;
-        }
-        
-        .conveyor-animation {
-            animation: conveyor 8s linear infinite;
-        }
-        
-        .slide-bg-1 {
-            background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .slide-bg-1::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-            animation: float 30s linear infinite;
-        }
-        
-        .slide-bg-2 {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .slide-bg-3 {
-            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .slide-bg-4 {
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .slide-bg-5 {
-            background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
-            position: relative;
-            overflow: hidden;
+        .nav-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         
         .metric-card {
-            transition: all 0.3s ease;
-            cursor: pointer;
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
         }
         
-        .metric-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        .metric-card.process {
+            border-left-color: #10b981;
         }
         
-        .calculator-input {
-            transition: all 0.3s ease;
+        .metric-card.project {
+            border-left-color: #f59e0b;
         }
         
-        .calculator-input:focus {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        .warning-box {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
         }
         
-        .factory-conveyor {
-            position: relative;
-            height: 60px;
-            background: linear-gradient(90deg, #374151 0%, #4b5563 50%, #374151 100%);
-            border-radius: 30px;
-            overflow: hidden;
+        .advantage-box {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border-radius: 1rem;
+            padding: 1rem;
+            margin: 0.5rem 0;
         }
         
-        .factory-item {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 2rem;
-            animation: conveyor 6s linear infinite;
+        .formula-box {
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            color: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            text-align: center;
         }
         
-        .factory-item:nth-child(2) { animation-delay: -2s; }
-        .factory-item:nth-child(3) { animation-delay: -4s; }
-        
-        .metric-gauge {
-            position: relative;
-            width: 120px;
-            height: 120px;
-        }
-        
-        .gauge-bg {
-            fill: none;
-            stroke: #e5e7eb;
-            stroke-width: 8;
-        }
-        
-        .gauge-fill {
-            fill: none;
-            stroke: #3b82f6;
-            stroke-width: 8;
-            stroke-linecap: round;
-            transform: rotate(-90deg);
-            transform-origin: 50% 50%;
-            transition: stroke-dasharray 1s ease-in-out;
-        }
-        
-        .typing-effect {
-            overflow: hidden;
-            white-space: nowrap;
-            border-right: 3px solid;
-            animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
-        }
-        
-        @keyframes blink-caret {
-            from, to { border-color: transparent; }
-            50% { border-color: currentColor; }
-        }
-        
-        .app-selector {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .app-selector:hover {
-            transform: scale(1.05);
-        }
-        
-        .app-selector.selected {
-            transform: scale(1.1);
-            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
-        }
-        
-        .metric-result {
-            animation: slideIn 0.5s ease-out;
-        }
-        
-        .comparison-table {
-            background: rgba(255, 255, 255, 0.95);
+        .slide-counter {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            color: #374151;
+            z-index: 1000;
         }
         
-        .process-flow {
-            position: relative;
+        .assignment-card {
+            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+            color: white;
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin: 1rem 0;
         }
         
-        .process-arrow {
-            position: absolute;
-            top: 50%;
-            right: -20px;
-            transform: translateY(-50%);
-            font-size: 2rem;
-            color: #3b82f6;
-            animation: bounce 2s infinite;
+        .deliverable-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            backdrop-filter: blur(5px);
         }
-        
-        .health-indicator {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-        
-        .health-good { background-color: #10b981; }
-        .health-warning { background-color: #f59e0b; }
-        .health-critical { background-color: #ef4444; }
-        
-        .evm-chart {
-            position: relative;
-            height: 200px;
-            background: linear-gradient(to right, #f3f4f6 0%, #e5e7eb 100%);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        
-        .chart-line {
-            position: absolute;
-            height: 3px;
-            border-radius: 2px;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-        
-        .planned-line { background-color: #3b82f6; width: 60%; }
-        .earned-line { background-color: #10b981; width: 45%; }
-        .actual-line { background-color: #ef4444; width: 70%; }
     </style>
+
+<style>
+/* Fondo como index */
+body{
+  font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height:1.6;
+  color:#333;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height:100vh;
+  padding-top:80px; /* nav fijo */
+}
+
+/* NAV Plataforma QS (fijo) */
+.qs-nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:saturate(140%) blur(20px);
+       background:rgba(255,255,255,.95);border-bottom:1px solid rgba(255,255,255,.2);
+       box-shadow:0 8px 32px rgba(0,0,0,.10)}
+.qs-nav .wrap{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;gap:20px;align-items:center;justify-content:space-between}
+.qs-brand{display:flex;gap:15px;align-items:center;color:#1f2937;font-weight:800;font-size:1.3rem;text-decoration:none;position:relative;padding:8px 16px;border-radius:20px}
+.qs-brand::before{content:"🎓";font-size:1.6rem}
+.qs-tabs{display:flex;gap:12px;flex-wrap:wrap;background:rgba(255,255,255,.3);padding:8px;border-radius:30px;backdrop-filter:blur(10px)}
+.qs-btn{border:0;padding:12px 20px;border-radius:25px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;font-weight:600;font-size:.9rem;
+       transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(10px);border:2px solid transparent;position:relative;overflow:hidden}
+.qs-btn::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);transition:all .4s ease;z-index:-1}
+.qs-btn:hover{color:#fff;transform:translateY(-3px);box-shadow:0 8px 25px rgba(102,126,234,.4);border-color:rgba(102,126,234,.3)}
+.qs-btn:hover::before{left:0}
+.qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none;box-shadow:0 6px 20px rgba(102,126,234,.5);transform:translateY(-2px)}
+.qs-btn[aria-current="page"]::before{left:0}
+
+/* Footer como index */
+.footer{
+  margin-top:60px;
+  padding:30px 20px;
+  text-align:center;
+  background:rgba(255, 255, 255, 0.1);
+  backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255, 255, 255, 0.2);
+}
+.footer-content{
+  max-width:1200px;
+  margin:0 auto;
+  color:rgba(255,255,255,0.8);
+  font-size:0.95rem;
+  transition:all 0.3s ease;
+  cursor:default;
+}
+.footer-content:hover{ color:#fff; transform:translateY(-2px); }
+.footer-content::before{ content:"©"; margin-right:8px; font-size:1.1rem; opacity:0.7; }
+
+/* Slide counter más pequeño */
+.slide-counter{
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:14px;
+  opacity:0.9;
+}
+</style>
+
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-<style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
-</style>
+<!-- NAV Plataforma QS -->
 <div class="qs-nav">
   <div class="wrap">
     <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
@@ -295,1505 +229,432 @@
       <a class="qs-btn" href="Foro.html">Foro</a>
       <a class="qs-btn" href="paneldocente.html">Panel</a>
       <a class="qs-btn" href="roadmap.html">Roadmap</a>
-          <a class="qs-btn" href="checklist.html">Checklist</a>
-\1
+      <a class="qs-btn" href="checklist.html">Checklist</a>
+      <a class="qs-btn" href="status.html">Status</a>
+    </nav>
   </div>
 </div>
-<script>
-(function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
-  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
-  });
-})();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
-</script>
 
+    <!-- Slide Counter -->
+    <div class="slide-counter">
+        <span id="current-slide">1</span> / <span id="total-slides">4</span>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8 pb-32">
+        <!-- Slide 1: Título -->
+        <div id="slide1" class="slide-transition fade-in">
+            <div class="gradient-bg rounded-2xl p-12 text-white text-center mb-8 card-hover">
+                <div class="max-w-4xl mx-auto">
+                    <div class="text-6xl mb-6">🏭</div>
+                    <h1 class="text-5xl font-bold mb-6 pulse-animation">Midiendo la Fábrica</h1>
+                    <h2 class="text-3xl font-semibold mb-8 opacity-90">Métricas de Proceso y Proyecto</h2>
+                    <p class="text-xl mb-8 opacity-80">¿Qué tan eficientes y predecibles somos construyendo software?</p>
+                    
+                    <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 mt-12">
+                        <div class="flex items-center justify-center mb-4">
+                            <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <h3 class="text-xl font-semibold">Sesión 6</h3>
+                        </div>
+                        <p class="text-lg opacity-90">De medir "el coche" a medir "la fábrica que lo produce"</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notas para el docente -->
+            <div class="bg-green-50 border-l-4 border-green-400 p-6 rounded-r-lg">
+                <div class="flex items-start">
+                    <svg class="w-6 h-6 text-green-400 mr-3 mt-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <h4 class="text-lg font-semibold text-green-800 mb-2">Notas para el docente:</h4>
+                        <p class="text-green-700 leading-relaxed">
+                            "La sesión pasada medimos el producto final. Hoy cambiamos el enfoque: vamos a medir nuestros procesos de trabajo y la gestión del proyecto. Es como la diferencia entre evaluar un coche terminado vs. evaluar qué tan eficiente es la fábrica que lo produce."
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 2: Métricas de Proceso -->
+        <div id="slide2" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🩺</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Métricas de Proceso</h2>
+                    <h3 class="text-2xl font-semibold text-green-600">Radiografía de Nuestra Forma de Trabajar</h3>
+                    <p class="text-lg text-gray-600 mt-4">Estas métricas no miden el software en sí, sino la eficacia de nuestras actividades para construirlo.</p>
+                </div>
+                
+                <!-- Eficacia en Detección de Defectos -->
+                <div class="metric-card process mb-12">
+                    <div class="flex items-start mb-6">
+                        <div class="w-16 h-16 bg-green-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-green-800 mb-3">Eficacia en Detección de Defectos</h4>
+                            <h5 class="text-lg font-semibold text-green-700 mb-4">(DDE - Defect Detection Effectiveness)</h5>
+                            
+                            <div class="bg-green-50 rounded-lg p-4 mb-4">
+                                <h6 class="font-semibold text-green-800 mb-2">🎯 Pregunta que responde:</h6>
+                                <p class="text-green-700 text-lg leading-relaxed">
+                                    "¿Qué porcentaje de los bugs encontramos internamente antes de que lleguen al cliente?"
+                                </p>
+                            </div>
+                            
+                            <div class="formula-box mb-4">
+                                <h6 class="font-bold text-xl mb-3">📐 Fórmula Simple:</h6>
+                                <div class="text-xl font-bold mb-2">
+                                    DDE = (Defectos Encontrados Internamente / (Defectos Encontrados Internamente + Defectos Reportados por el Cliente)) × 100
+                                </div>
+                            </div>
+                            
+                            <div class="advantage-box mb-4">
+                                <h6 class="font-semibold mb-2">✅ ¿Por qué es importante?</h6>
+                                <p>Un DDE alto indica que nuestros procesos de SQA y QC (revisiones, pruebas) son robustos.</p>
+                            </div>
+                            
+                            <div class="warning-box">
+                                <h6 class="font-bold text-xl mb-3">⚠️ Señal de Alerta:</h6>
+                                <p class="text-lg">Un DDE bajo significa que <strong>el cliente es nuestro principal "tester"</strong>, lo cual es caro y daña la reputación.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lead Time vs Cycle Time -->
+                <div class="metric-card process">
+                    <div class="flex items-start mb-6">
+                        <div class="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-blue-800 mb-4">Lead Time vs. Cycle Time</h4>
+                            
+                            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                                <!-- Lead Time -->
+                                <div class="bg-blue-50 rounded-lg p-4">
+                                    <h5 class="text-xl font-bold text-blue-800 mb-3">🚀 Lead Time</h5>
+                                    <p class="text-blue-700 mb-3">
+                                        Mide el tiempo total desde que una idea es solicitada por el cliente hasta que se le entrega.
+                                    </p>
+                                    <div class="bg-blue-100 rounded-lg p-3">
+                                        <p class="font-semibold text-blue-800">Es la velocidad de negocio.</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Cycle Time -->
+                                <div class="bg-purple-50 rounded-lg p-4">
+                                    <h5 class="text-xl font-bold text-purple-800 mb-3">⚡ Cycle Time</h5>
+                                    <p class="text-purple-700 mb-3">
+                                        Mide el tiempo que el equipo de desarrollo tarda en completar una tarea desde que empieza a trabajar en ella.
+                                    </p>
+                                    <div class="bg-purple-100 rounded-lg p-3">
+                                        <p class="font-semibold text-purple-800">Es la velocidad de desarrollo.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="advantage-box">
+                                <h6 class="font-semibold mb-2">🔍 ¿Por qué es importante?</h6>
+                                <p>Analizar la diferencia entre ambos ayuda a identificar cuellos de botella fuera del equipo de desarrollo (ej. aprobaciones lentas, definición de requisitos, etc.).</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Métricas de Proyecto (EVM) -->
+        <div id="slide3" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">🧭</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Métricas de Proyecto (EVM)</h2>
+                    <h3 class="text-2xl font-semibold text-amber-600">¿Vamos por Buen Camino?</h3>
+                    <p class="text-lg text-gray-600 mt-4">Estas métricas nos ayudan a responder las dos preguntas más importantes para un gestor de proyectos, usando la <strong>Gestión del Valor Ganado (EVM - Earned Value Management)</strong>.</p>
+                </div>
+                
+                <!-- Cost Variance -->
+                <div class="metric-card project mb-12">
+                    <div class="flex items-start mb-6">
+                        <div class="w-16 h-16 bg-amber-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z"/>
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-amber-800 mb-3">Cost Variance (CV)</h4>
+                            <h5 class="text-lg font-semibold text-amber-700 mb-4">Variación del Costo</h5>
+                            
+                            <div class="bg-amber-50 rounded-lg p-4 mb-4">
+                                <h6 class="font-semibold text-amber-800 mb-2">🎯 Pregunta que responde:</h6>
+                                <p class="text-amber-700 text-lg leading-relaxed">
+                                    "¿Estamos gastando más o menos de lo presupuestado para el trabajo que hemos realizado?"
+                                </p>
+                            </div>
+                            
+                            <div class="bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg p-6 mb-4">
+                                <h6 class="font-bold text-xl mb-4">📊 Señales:</h6>
+                                <div class="space-y-3">
+                                    <div class="flex items-center">
+                                        <div class="w-4 h-4 bg-green-400 rounded-full mr-3"></div>
+                                        <div>
+                                            <p class="font-semibold">CV Positivo o Cero:</p>
+                                            <p class="opacity-90">¡Buenas noticias! Estamos en o por debajo del presupuesto.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-4 h-4 bg-red-400 rounded-full mr-3"></div>
+                                        <div>
+                                            <p class="font-semibold">CV Negativo:</p>
+                                            <p class="opacity-90">¡Alerta! Estamos gastando más de lo que deberíamos.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Schedule Variance -->
+                <div class="metric-card project">
+                    <div class="flex items-start mb-6">
+                        <div class="w-16 h-16 bg-indigo-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="text-2xl font-bold text-indigo-800 mb-3">Schedule Variance (SV)</h4>
+                            <h5 class="text-lg font-semibold text-indigo-700 mb-4">Variación del Cronograma</h5>
+                            
+                            <div class="bg-indigo-50 rounded-lg p-4 mb-4">
+                                <h6 class="font-semibold text-indigo-800 mb-2">🎯 Pregunta que responde:</h6>
+                                <p class="text-indigo-700 text-lg leading-relaxed">
+                                    "¿Estamos adelantados o atrasados respecto al plan?"
+                                </p>
+                            </div>
+                            
+                            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg p-6">
+                                <h6 class="font-bold text-xl mb-4">📊 Señales:</h6>
+                                <div class="space-y-3">
+                                    <div class="flex items-center">
+                                        <div class="w-4 h-4 bg-green-400 rounded-full mr-3"></div>
+                                        <div>
+                                            <p class="font-semibold">SV Positivo o Cero:</p>
+                                            <p class="opacity-90">¡Excelente! Vamos a tiempo o adelantados.</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <div class="w-4 h-4 bg-red-400 rounded-full mr-3"></div>
+                                        <div>
+                                            <p class="font-semibold">SV Negativo:</p>
+                                            <p class="opacity-90">¡Cuidado! Llevamos un retraso respecto al cronograma planificado.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 4: Asignación 2 -->
+        <div id="slide4" class="slide-transition hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+                <div class="text-center mb-8">
+                    <div class="text-6xl mb-4">📝</div>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Asignación 2</h2>
+                    <h3 class="text-2xl font-semibold text-purple-600">"Métricas en el Mundo Real"</h3>
+                    <p class="text-lg text-gray-600 mt-4"><strong>Objetivo:</strong> Conectar los conceptos teóricos de métricas con las aplicaciones que usamos todos los días.</p>
+                </div>
+                
+                <!-- Instrucciones -->
+                <div class="assignment-card mb-8">
+                    <h3 class="text-2xl font-bold mb-6">📋 Instrucciones:</h3>
+                    
+                    <div class="space-y-6">
+                        <div class="deliverable-item">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-4 flex-shrink-0 mt-1">
+                                    <span class="text-white font-bold">1</span>
+                                </div>
+                                <div>
+                                    <p class="text-lg font-semibold mb-2">Elige una aplicación de software popular que conozcas bien</p>
+                                    <p class="opacity-90">Ejemplos: Spotify, Uber, Netflix, TikTok, WhatsApp, Instagram, etc.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="deliverable-item">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-4 flex-shrink-0 mt-1">
+                                    <span class="text-white font-bold">2</span>
+                                </div>
+                                <div>
+                                    <p class="text-lg font-semibold mb-2">Ponte en el rol de un Gerente de Calidad para esa aplicación</p>
+                                    <p class="opacity-90">Piensa como si fueras responsable de garantizar que la app funcione perfectamente.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="deliverable-item">
+                            <div class="flex items-start">
+                                <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-4 flex-shrink-0 mt-1">
+                                    <span class="text-white font-bold">3</span>
+                                </div>
+                                <div>
+                                    <p class="text-lg font-semibold mb-3">Propón y justifica un conjunto de métricas clave para monitorear su éxito:</p>
+                                    <div class="space-y-2 ml-4">
+                                        <div class="flex items-center">
+                                            <div class="w-2 h-2 bg-white rounded-full mr-3"></div>
+                                            <span><strong>3 métricas de producto</strong> (ej. de fiabilidad, rendimiento, usabilidad)</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <div class="w-2 h-2 bg-white rounded-full mr-3"></div>
+                                            <span><strong>2 métricas de proceso</strong> (ej. de eficacia, velocidad)</span>
+                                        </div>
+                                        <div class="flex items-center">
+                                            <div class="w-2 h-2 bg-white rounded-full mr-3"></div>
+                                            <span><strong>1 métrica de proyecto</strong> (ej. de costo o tiempo)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Entregable -->
+                <div class="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-8 text-white">
+                    <h3 class="text-2xl font-bold mb-6">🎯 Entregable: Una presentación corta de 3 diapositivas</h3>
+                    
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+                            <div class="text-center mb-4">
+                                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <span class="text-xl font-bold">1</span>
+                                </div>
+                                <h4 class="text-lg font-bold">Diapositiva 1</h4>
+                            </div>
+                            <p class="text-center opacity-90">Portada y app seleccionada</p>
+                        </div>
+                        
+                        <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+                            <div class="text-center mb-4">
+                                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <span class="text-xl font-bold">2</span>
+                                </div>
+                                <h4 class="text-lg font-bold">Diapositiva 2</h4>
+                            </div>
+                            <p class="text-center opacity-90">Las 6 métricas propuestas</p>
+                        </div>
+                        
+                        <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+                            <div class="text-center mb-4">
+                                <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <span class="text-xl font-bold">3</span>
+                                </div>
+                                <h4 class="text-lg font-bold">Diapositiva 3</h4>
+                            </div>
+                            <p class="text-center opacity-90">Justificación de por qué elegiste esas métricas y qué decisiones tomarías con ellas</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 
     <!-- Navigation -->
-    <div class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50 px-6 py-4">
-        <div class="flex justify-between items-center max-w-6xl mx-auto">
-            <div class="flex items-center space-x-4">
-                <h1 class="text-xl font-bold text-gray-800">Sesión 6 - Métricas de Proceso y Proyecto</h1>
-                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                    Diapositiva <span id="currentSlide">1</span> de 5
-                </span>
-            </div>
-            <div class="flex space-x-2">
-                <button onclick="previousSlide()" id="prevBtn" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
-                    ← Anterior
-                </button>
-                <button onclick="nextSlide()" id="nextBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                    Siguiente →
-                </button>
-            </div>
-        </div>
-        <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
-            <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 20%"></div>
-        </div>
-    </div>
-
-    <!-- Slides Container -->
-    <div class="pt-24 pb-8 px-6">
-        <div class="max-w-6xl mx-auto">
-            
-            <!-- Slide 1: Título -->
-            <div class="slide active" id="slide1">
-                <div class="slide-bg-1 rounded-3xl p-12 text-center text-white min-h-[600px] flex flex-col justify-center items-center relative z-10">
-                    <!-- Factory Animation -->
-                    <div class="factory-conveyor mb-8 w-full max-w-4xl">
-                        <div class="factory-item">📊</div>
-                        <div class="factory-item">⚙️</div>
-                        <div class="factory-item">📈</div>
-                        <div class="factory-item">🔧</div>
-                        <div class="factory-item">📋</div>
-                        <div class="factory-item">⏱️</div>
-                    </div>
-                    
-                    <div class="flex items-center justify-center mb-8 relative">
-                        <div class="text-6xl mr-6 float-animation">🏭</div>
-                        <div class="text-6xl mx-4 pulse-animation">📊</div>
-                        <div class="text-6xl mx-4 rotate-animation">⚙️</div>
-                        <div class="text-6xl ml-6 bounce-animation">📈</div>
-                    </div>
-                    
-                    <h1 class="text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
-                        <span class="text-yellow-300">Midiendo la</span><br>
-                        <span class="pulse-animation text-blue-300">Fábrica:</span><br>
-                        <span class="text-white typing-effect">Métricas de Proceso y Proyecto</span>
-                    </h1>
-                    
-                    <div class="bg-white bg-opacity-20 rounded-2xl p-6 mb-8 max-w-2xl">
-                        <p class="text-2xl font-semibold text-yellow-300 mb-4">
-                            "Lo que se mide, se mejora."
-                        </p>
-                        <p class="text-lg opacity-90">
-                            Transformando datos en decisiones inteligentes
-                        </p>
-                    </div>
-                    
-                    <!-- Live Metrics Display -->
-                    <div class="grid grid-cols-4 gap-6 max-w-4xl">
-                        <div class="bg-white bg-opacity-10 rounded-lg p-4">
-                            <div class="metric-gauge mx-auto mb-2">
-                                <svg width="80" height="80" viewBox="0 0 80 80">
-                                    <circle cx="40" cy="40" r="30" class="gauge-bg"/>
-                                    <circle cx="40" cy="40" r="30" class="gauge-fill" style="--progress: 75" stroke-dasharray="75 100"/>
-                                </svg>
-                            </div>
-                            <div class="text-sm opacity-80">Eficiencia</div>
-                            <div class="text-xl font-bold text-green-300">75%</div>
-                        </div>
-                        <div class="bg-white bg-opacity-10 rounded-lg p-4">
-                            <div class="metric-gauge mx-auto mb-2">
-                                <svg width="80" height="80" viewBox="0 0 80 80">
-                                    <circle cx="40" cy="40" r="30" class="gauge-bg"/>
-                                    <circle cx="40" cy="40" r="30" class="gauge-fill" style="--progress: 60" stroke-dasharray="60 100"/>
-                                </svg>
-                            </div>
-                            <div class="text-sm opacity-80">Calidad</div>
-                            <div class="text-xl font-bold text-blue-300">60%</div>
-                        </div>
-                        <div class="bg-white bg-opacity-10 rounded-lg p-4">
-                            <div class="metric-gauge mx-auto mb-2">
-                                <svg width="80" height="80" viewBox="0 0 80 80">
-                                    <circle cx="40" cy="40" r="30" class="gauge-bg"/>
-                                    <circle cx="40" cy="40" r="30" class="gauge-fill" style="--progress: 90" stroke-dasharray="90 100"/>
-                                </svg>
-                            </div>
-                            <div class="text-sm opacity-80">Velocidad</div>
-                            <div class="text-xl font-bold text-yellow-300">90%</div>
-                        </div>
-                        <div class="bg-white bg-opacity-10 rounded-lg p-4">
-                            <div class="metric-gauge mx-auto mb-2">
-                                <svg width="80" height="80" viewBox="0 0 80 80">
-                                    <circle cx="40" cy="40" r="30" class="gauge-bg"/>
-                                    <circle cx="40" cy="40" r="30" class="gauge-fill" style="--progress: 45" stroke-dasharray="45 100"/>
-                                </svg>
-                            </div>
-                            <div class="text-sm opacity-80">Costo</div>
-                            <div class="text-xl font-bold text-red-300">45%</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 2: Métricas de Proceso -->
-            <div class="slide" id="slide2">
-                <div class="slide-bg-2 rounded-3xl p-12 min-h-[600px] relative z-10">
-                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
-                        ⚙️ Métricas de Proceso
-                    </h2>
-                    
-                    <!-- Definition -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
-                        <div class="text-center mb-6">
-                            <div class="text-6xl mb-4 pulse-animation">🔧</div>
-                            <h3 class="text-2xl font-bold text-gray-800">Definición</h3>
-                        </div>
-                        <div class="bg-green-50 rounded-lg p-6">
-                            <p class="text-lg text-green-800 text-center font-medium mb-4">
-                                "Evalúan cómo se construye el software"
-                            </p>
-                            <div class="text-center">
-                                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm">
-                                    Fuente: Pressman, Cap. 25
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Process Metrics Examples -->
-                    <div class="grid md:grid-cols-3 gap-8 mb-8">
-                        <!-- DDE Calculator -->
-                        <div class="metric-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="showDDECalculator()">
-                            <div class="text-center mb-6">
-                                <div class="text-6xl mb-4 float-animation">🎯</div>
-                                <h3 class="text-2xl font-bold text-green-600 mb-4">Eficacia en Detección de Defectos (DDE)</h3>
-                            </div>
-                            <div class="space-y-4">
-                                <div class="bg-green-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-green-800 mb-2">Fórmula:</h4>
-                                    <div class="bg-white rounded p-3 font-mono text-sm">
-                                        DDE = (Defectos encontrados antes de entrega / Total defectos encontrados) × 100
-                                    </div>
-                                </div>
-                                <div class="bg-gray-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-gray-800 mb-2">Interpretación:</h4>
-                                    <ul class="text-sm text-gray-600 space-y-1">
-                                        <li>• >90%: Excelente proceso de QA</li>
-                                        <li>• 70-90%: Proceso bueno</li>
-                                        <li>• <70%: Necesita mejoras</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="mt-6 text-center">
-                                <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
-                                    Calcular DDE
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Lead Time -->
-                        <div class="metric-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="showLeadTimeSimulator()">
-                            <div class="text-center mb-6">
-                                <div class="text-6xl mb-4 bounce-animation">⏱️</div>
-                                <h3 class="text-2xl font-bold text-blue-600 mb-4">Lead Time</h3>
-                            </div>
-                            <div class="space-y-4">
-                                <div class="bg-blue-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-blue-800 mb-2">Definición:</h4>
-                                    <p class="text-sm text-blue-600">
-                                        Tiempo total desde que se concibe una idea hasta que se entrega al usuario final
-                                    </p>
-                                </div>
-                                <div class="process-flow bg-gray-50 rounded-lg p-4 relative">
-                                    <div class="flex items-center justify-between text-xs text-gray-600">
-                                        <div class="text-center">
-                                            <div class="bg-blue-100 rounded-full w-8 h-8 flex items-center justify-center mb-1">💡</div>
-                                            <div>Idea</div>
-                                        </div>
-                                        <div class="process-arrow">→</div>
-                                        <div class="text-center">
-                                            <div class="bg-yellow-100 rounded-full w-8 h-8 flex items-center justify-center mb-1">🔨</div>
-                                            <div>Desarrollo</div>
-                                        </div>
-                                        <div class="process-arrow">→</div>
-                                        <div class="text-center">
-                                            <div class="bg-green-100 rounded-full w-8 h-8 flex items-center justify-center mb-1">🚀</div>
-                                            <div>Entrega</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="mt-6 text-center">
-                                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                                    Simular Lead Time
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Cycle Time -->
-                        <div class="metric-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="showCycleTimeAnalyzer()">
-                            <div class="text-center mb-6">
-                                <div class="text-6xl mb-4 rotate-animation">🔄</div>
-                                <h3 class="text-2xl font-bold text-purple-600 mb-4">Cycle Time</h3>
-                            </div>
-                            <div class="space-y-4">
-                                <div class="bg-purple-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-purple-800 mb-2">Definición:</h4>
-                                    <p class="text-sm text-purple-600">
-                                        Tiempo de desarrollo efectivo de una tarea específica (trabajo activo)
-                                    </p>
-                                </div>
-                                <div class="bg-gray-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-gray-800 mb-2">Diferencia con Lead Time:</h4>
-                                    <ul class="text-sm text-gray-600 space-y-1">
-                                        <li>• Lead Time: incluye esperas</li>
-                                        <li>• Cycle Time: solo trabajo activo</li>
-                                        <li>• Cycle Time ≤ Lead Time</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="mt-6 text-center">
-                                <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
-                                    Analizar Cycle Time
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Key Insight -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center">
-                            <span class="mr-3">🔍</span> Clave: Identificación de Cuellos de Botella
-                        </h3>
-                        <div class="grid md:grid-cols-2 gap-6">
-                            <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-6">
-                                <h4 class="font-bold text-red-800 mb-3">🚫 Problemas Comunes</h4>
-                                <ul class="text-sm text-red-600 space-y-2">
-                                    <li>• Tiempo de espera excesivo entre fases</li>
-                                    <li>• Procesos de revisión lentos</li>
-                                    <li>• Falta de automatización en testing</li>
-                                    <li>• Dependencias externas no gestionadas</li>
-                                    <li>• Comunicación ineficiente entre equipos</li>
-                                </ul>
-                            </div>
-                            <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-6">
-                                <h4 class="font-bold text-green-800 mb-3">✅ Beneficios de Medición</h4>
-                                <ul class="text-sm text-green-600 space-y-2">
-                                    <li>• Identificación temprana de problemas</li>
-                                    <li>• Optimización de flujos de trabajo</li>
-                                    <li>• Mejora continua basada en datos</li>
-                                    <li>• Predicción más precisa de entregas</li>
-                                    <li>• Aumento de la eficiencia del equipo</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 3: Métricas de Proyecto -->
-            <div class="slide" id="slide3">
-                <div class="slide-bg-3 rounded-3xl p-12 min-h-[600px] relative z-10">
-                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
-                        📈 Métricas de Proyecto
-                    </h2>
-                    
-                    <!-- Definition -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
-                        <div class="text-center mb-6">
-                            <div class="text-6xl mb-4 pulse-animation">📊</div>
-                            <h3 class="text-2xl font-bold text-gray-800">Definición</h3>
-                        </div>
-                        <div class="bg-red-50 rounded-lg p-6">
-                            <p class="text-lg text-red-800 text-center font-medium mb-4">
-                                "Miden el desempeño en costo, tiempo y alcance"
-                            </p>
-                            <div class="text-center">
-                                <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm">
-                                    Fuente: Sommerville, Cap. 23
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- EVM Metrics -->
-                    <div class="grid md:grid-cols-2 gap-8 mb-8">
-                        <!-- Cost Variance Calculator -->
-                        <div class="metric-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="showCVCalculator()">
-                            <div class="text-center mb-6">
-                                <div class="text-6xl mb-4 float-animation">💰</div>
-                                <h3 class="text-2xl font-bold text-green-600 mb-4">Cost Variance (CV)</h3>
-                            </div>
-                            <div class="space-y-4">
-                                <div class="bg-green-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-green-800 mb-2">Fórmula:</h4>
-                                    <div class="bg-white rounded p-3 font-mono text-sm">
-                                        CV = EV - AC
-                                    </div>
-                                    <div class="text-xs text-green-600 mt-2">
-                                        EV = Earned Value, AC = Actual Cost
-                                    </div>
-                                </div>
-                                <div class="bg-gray-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-gray-800 mb-2">Interpretación:</h4>
-                                    <ul class="text-sm text-gray-600 space-y-1">
-                                        <li>• CV > 0: Bajo presupuesto ✅</li>
-                                        <li>• CV = 0: En presupuesto ⚖️</li>
-                                        <li>• CV < 0: Sobre presupuesto ❌</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="mt-6 text-center">
-                                <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
-                                    Calcular CV
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Schedule Variance Calculator -->
-                        <div class="metric-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="showSVCalculator()">
-                            <div class="text-center mb-6">
-                                <div class="text-6xl mb-4 bounce-animation">📅</div>
-                                <h3 class="text-2xl font-bold text-blue-600 mb-4">Schedule Variance (SV)</h3>
-                            </div>
-                            <div class="space-y-4">
-                                <div class="bg-blue-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-blue-800 mb-2">Fórmula:</h4>
-                                    <div class="bg-white rounded p-3 font-mono text-sm">
-                                        SV = EV - PV
-                                    </div>
-                                    <div class="text-xs text-blue-600 mt-2">
-                                        EV = Earned Value, PV = Planned Value
-                                    </div>
-                                </div>
-                                <div class="bg-gray-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-gray-800 mb-2">Interpretación:</h4>
-                                    <ul class="text-sm text-gray-600 space-y-1">
-                                        <li>• SV > 0: Adelantado ⚡</li>
-                                        <li>• SV = 0: A tiempo ⏰</li>
-                                        <li>• SV < 0: Atrasado 🐌</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="mt-6 text-center">
-                                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                                    Calcular SV
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- EVM Visualization -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
-                            📊 Visualización EVM
-                        </h3>
-                        <div class="evm-chart mb-6">
-                            <div class="absolute top-4 left-4 text-sm text-gray-600">
-                                <div class="flex items-center mb-2">
-                                    <div class="w-4 h-1 bg-blue-500 mr-2"></div>
-                                    <span>Planned Value (PV)</span>
-                                </div>
-                                <div class="flex items-center mb-2">
-                                    <div class="w-4 h-1 bg-green-500 mr-2"></div>
-                                    <span>Earned Value (EV)</span>
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="w-4 h-1 bg-red-500 mr-2"></div>
-                                    <span>Actual Cost (AC)</span>
-                                </div>
-                            </div>
-                            <div class="chart-line planned-line" style="top: 30%;"></div>
-                            <div class="chart-line earned-line" style="top: 50%;"></div>
-                            <div class="chart-line actual-line" style="top: 70%;"></div>
-                        </div>
-                        <div class="grid md:grid-cols-3 gap-4">
-                            <div class="text-center p-4 bg-blue-50 rounded-lg">
-                                <div class="health-indicator health-good"></div>
-                                <div class="font-semibold text-blue-800">SV = +$15K</div>
-                                <div class="text-sm text-blue-600">Adelantado</div>
-                            </div>
-                            <div class="text-center p-4 bg-red-50 rounded-lg">
-                                <div class="health-indicator health-critical"></div>
-                                <div class="font-semibold text-red-800">CV = -$25K</div>
-                                <div class="text-sm text-red-600">Sobre presupuesto</div>
-                            </div>
-                            <div class="text-center p-4 bg-yellow-50 rounded-lg">
-                                <div class="health-indicator health-warning"></div>
-                                <div class="font-semibold text-yellow-800">CPI = 0.78</div>
-                                <div class="text-sm text-yellow-600">Eficiencia baja</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Project Health Impact -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center">
-                            <span class="mr-3">🏥</span> Impacto: Gestión de la Salud del Proyecto
-                        </h3>
-                        <div class="grid md:grid-cols-3 gap-6">
-                            <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-6">
-                                <h4 class="font-bold text-green-800 mb-3 flex items-center">
-                                    <div class="health-indicator health-good mr-2"></div>
-                                    Proyecto Saludable
-                                </h4>
-                                <ul class="text-sm text-green-600 space-y-2">
-                                    <li>• CV ≥ 0 (dentro del presupuesto)</li>
-                                    <li>• SV ≥ 0 (a tiempo o adelantado)</li>
-                                    <li>• CPI ≥ 1.0 (eficiente en costos)</li>
-                                    <li>• SPI ≥ 1.0 (eficiente en tiempo)</li>
-                                </ul>
-                            </div>
-                            <div class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-6">
-                                <h4 class="font-bold text-yellow-800 mb-3 flex items-center">
-                                    <div class="health-indicator health-warning mr-2"></div>
-                                    Proyecto en Riesgo
-                                </h4>
-                                <ul class="text-sm text-yellow-600 space-y-2">
-                                    <li>• CV ligeramente negativo</li>
-                                    <li>• SV ligeramente negativo</li>
-                                    <li>• Tendencias preocupantes</li>
-                                    <li>• Requiere atención inmediata</li>
-                                </ul>
-                            </div>
-                            <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-6">
-                                <h4 class="font-bold text-red-800 mb-3 flex items-center">
-                                    <div class="health-indicator health-critical mr-2"></div>
-                                    Proyecto Crítico
-                                </h4>
-                                <ul class="text-sm text-red-600 space-y-2">
-                                    <li>• CV muy negativo</li>
-                                    <li>• SV muy negativo</li>
-                                    <li>• CPI < 0.8 o SPI < 0.8</li>
-                                    <li>• Requiere intervención urgente</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 4: Diferencias Clave -->
-            <div class="slide" id="slide4">
-                <div class="slide-bg-4 rounded-3xl p-12 min-h-[600px] relative z-10">
-                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
-                        ⚖️ Diferencias Clave
-                    </h2>
-                    
-                    <!-- Comparison Table -->
-                    <div class="comparison-table rounded-2xl p-8 mb-8">
-                        <div class="grid md:grid-cols-2 gap-8">
-                            <!-- Process Metrics -->
-                            <div class="bg-green-50 border-2 border-green-200 rounded-2xl p-8">
-                                <div class="text-center mb-6">
-                                    <div class="text-6xl mb-4 pulse-animation">⚙️</div>
-                                    <h3 class="text-3xl font-bold text-green-600">Métricas de Proceso</h3>
-                                    <p class="text-lg text-green-700 mt-2">Calidad interna del CÓMO trabajamos</p>
-                                </div>
-                                
-                                <div class="space-y-4">
-                                    <div class="bg-white rounded-lg p-4">
-                                        <h4 class="font-bold text-green-800 mb-2">🎯 Enfoque:</h4>
-                                        <p class="text-sm text-green-600">Optimización de métodos y procedimientos</p>
-                                    </div>
-                                    
-                                    <div class="bg-white rounded-lg p-4">
-                                        <h4 class="font-bold text-green-800 mb-2">📊 Ejemplos:</h4>
-                                        <ul class="text-sm text-green-600 space-y-1">
-                                            <li>• Eficacia en Detección de Defectos</li>
-                                            <li>• Lead Time y Cycle Time</li>
-                                            <li>• Velocidad del equipo</li>
-                                            <li>• Tasa de defectos por fase</li>
-                                            <li>• Tiempo de revisión de código</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <div class="bg-white rounded-lg p-4">
-                                        <h4 class="font-bold text-green-800 mb-2">🔍 Propósito:</h4>
-                                        <ul class="text-sm text-green-600 space-y-1">
-                                            <li>• Identificar cuellos de botella</li>
-                                            <li>• Mejorar eficiencia del equipo</li>
-                                            <li>• Optimizar flujos de trabajo</li>
-                                            <li>• Reducir desperdicios</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <div class="bg-white rounded-lg p-4">
-                                        <h4 class="font-bold text-green-800 mb-2">⏰ Frecuencia:</h4>
-                                        <p class="text-sm text-green-600">Medición continua, análisis semanal/mensual</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Project Metrics -->
-                            <div class="bg-blue-50 border-2 border-blue-200 rounded-2xl p-8">
-                                <div class="text-center mb-6">
-                                    <div class="text-6xl mb-4 bounce-animation">📈</div>
-                                    <h3 class="text-3xl font-bold text-blue-600">Métricas de Proyecto</h3>
-                                    <p class="text-lg text-blue-700 mt-2">Control externo del QUÉ y CUÁNDO entregamos</p>
-                                </div>
-                                
-                                <div class="space-y-4">
-                                    <div class="bg-white rounded-lg p-4">
-                                        <h4 class="font-bold text-blue-800 mb-2">🎯 Enfoque:</h4>
-                                        <p class="text-sm text-blue-600">Gestión de restricciones: tiempo, costo, alcance</p>
-                                    </div>
-                                    
-                                    <div class="bg-white rounded-lg p-4">
-                                        <h4 class="font-bold text-blue-800 mb-2">📊 Ejemplos:</h4>
-                                        <ul class="text-sm text-blue-600 space-y-1">
-                                            <li>• Cost Variance (CV)</li>
-                                            <li>• Schedule Variance (SV)</li>
-                                            <li>• Índices CPI y SPI</li>
-                                            <li>• Porcentaje de completitud</li>
-                                            <li>• Burn rate y runway</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <div class="bg-white rounded-lg p-4">
-                                        <h4 class="font-bold text-blue-800 mb-2">🔍 Propósito:</h4>
-                                        <ul class="text-sm text-blue-600 space-y-1">
-                                            <li>• Controlar presupuesto</li>
-                                            <li>• Gestionar cronograma</li>
-                                            <li>• Evaluar salud del proyecto</li>
-                                            <li>• Tomar decisiones estratégicas</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <div class="bg-white rounded-lg p-4">
-                                        <h4 class="font-bold text-blue-800 mb-2">⏰ Frecuencia:</h4>
-                                        <p class="text-sm text-blue-600">Reportes semanales, revisiones mensuales</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Impact on Quality -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center">
-                            <span class="mr-3">🎯</span> Ambos Influyen en la Calidad Final del Producto
-                        </h3>
-                        
-                        <div class="grid md:grid-cols-3 gap-6">
-                            <div class="text-center">
-                                <div class="bg-green-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                                    <span class="text-3xl">⚙️</span>
-                                </div>
-                                <h4 class="font-bold text-green-600 mb-2">Proceso Eficiente</h4>
-                                <p class="text-sm text-gray-600">
-                                    Menos defectos, entregas más rápidas, equipo más productivo
-                                </p>
-                            </div>
-                            
-                            <div class="text-center">
-                                <div class="bg-purple-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                                    <span class="text-3xl">➕</span>
-                                </div>
-                                <h4 class="font-bold text-purple-600 mb-2">Sinergia</h4>
-                                <p class="text-sm text-gray-600">
-                                    La combinación de ambos tipos de métricas maximiza el éxito
-                                </p>
-                            </div>
-                            
-                            <div class="text-center">
-                                <div class="bg-blue-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                                    <span class="text-3xl">📈</span>
-                                </div>
-                                <h4 class="font-bold text-blue-600 mb-2">Proyecto Controlado</h4>
-                                <p class="text-sm text-gray-600">
-                                    Dentro de presupuesto, a tiempo, con el alcance correcto
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Reference -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-6">
-                        <div class="text-center">
-                            <span class="bg-purple-100 text-purple-700 px-4 py-2 rounded-full text-sm font-medium">
-                                Fuente: Tian, Cap. 23
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 5: Actividad - Asignación 2 -->
-            <div class="slide" id="slide5">
-                <div class="slide-bg-5 rounded-3xl p-12 min-h-[600px] relative z-10">
-                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
-                        🎯 Actividad - Asignación 2: "Métricas en el Mundo Real"
-                    </h2>
-                    
-                    <!-- Instructions -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
-                        <div class="text-center mb-6">
-                            <div class="text-6xl mb-4 pulse-animation">📱</div>
-                            <h3 class="text-2xl font-bold text-gray-800">Instrucciones</h3>
-                        </div>
-                        
-                        <div class="grid md:grid-cols-2 gap-8">
-                            <div class="space-y-6">
-                                <div class="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-6">
-                                    <h4 class="font-bold text-orange-800 mb-3">📋 Pasos a Seguir:</h4>
-                                    <ol class="text-sm text-orange-600 space-y-2">
-                                        <li><strong>1.</strong> Elige una app popular (Spotify, Uber, Netflix)</li>
-                                        <li><strong>2.</strong> Define 3 métricas de producto</li>
-                                        <li><strong>3.</strong> Define 2 métricas de proceso</li>
-                                        <li><strong>4.</strong> Define 1 métrica de proyecto</li>
-                                        <li><strong>5.</strong> Crea presentación de 3 diapositivas</li>
-                                    </ol>
-                                </div>
-                                
-                                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6">
-                                    <h4 class="font-bold text-blue-800 mb-3">🎯 Objetivo:</h4>
-                                    <p class="text-sm text-blue-600">
-                                        Aplicar conceptos de métricas a software real, entendiendo cómo las empresas 
-                                        tecnológicas miden y optimizan sus productos y procesos.
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-6">
-                                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-6">
-                                    <h4 class="font-bold text-green-800 mb-3">📊 Entregable:</h4>
-                                    <ul class="text-sm text-green-600 space-y-2">
-                                        <li>• <strong>Diapositiva 1:</strong> App elegida y métricas de producto</li>
-                                        <li>• <strong>Diapositiva 2:</strong> Métricas de proceso</li>
-                                        <li>• <strong>Diapositiva 3:</strong> Métrica de proyecto y conclusiones</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-6">
-                                    <h4 class="font-bold text-purple-800 mb-3">⏰ Formato:</h4>
-                                    <ul class="text-sm text-purple-600 space-y-1">
-                                        <li>• Presentación de 3 diapositivas</li>
-                                        <li>• Incluir justificación de cada métrica</li>
-                                        <li>• Explicar cómo se mediría</li>
-                                        <li>• Mencionar el impacto esperado</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- App Selector -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
-                            📱 Selecciona tu App
-                        </h3>
-                        
-                        <div class="grid md:grid-cols-3 gap-6 mb-8">
-                            <div class="app-selector bg-green-50 border-2 border-green-200 rounded-2xl p-6 text-center" onclick="selectApp('spotify')">
-                                <div class="text-6xl mb-4">🎵</div>
-                                <h4 class="text-2xl font-bold text-green-600 mb-2">Spotify</h4>
-                                <p class="text-sm text-green-600 mb-4">Streaming de música</p>
-                                <div class="text-xs text-gray-500">
-                                    <div>• 456M usuarios activos</div>
-                                    <div>• 195M suscriptores premium</div>
-                                    <div>• 100M+ canciones</div>
-                                </div>
-                            </div>
-                            
-                            <div class="app-selector bg-blue-50 border-2 border-blue-200 rounded-2xl p-6 text-center" onclick="selectApp('uber')">
-                                <div class="text-6xl mb-4">🚗</div>
-                                <h4 class="text-2xl font-bold text-blue-600 mb-2">Uber</h4>
-                                <p class="text-sm text-blue-600 mb-4">Transporte y delivery</p>
-                                <div class="text-xs text-gray-500">
-                                    <div>• 131M usuarios mensuales</div>
-                                    <div>• 5.4M conductores</div>
-                                    <div>• 70+ países</div>
-                                </div>
-                            </div>
-                            
-                            <div class="app-selector bg-red-50 border-2 border-red-200 rounded-2xl p-6 text-center" onclick="selectApp('netflix')">
-                                <div class="text-6xl mb-4">🎬</div>
-                                <h4 class="text-2xl font-bold text-red-600 mb-2">Netflix</h4>
-                                <p class="text-sm text-red-600 mb-4">Streaming de video</p>
-                                <div class="text-xs text-gray-500">
-                                    <div>• 260M suscriptores</div>
-                                    <div>• 190+ países</div>
-                                    <div>• 15,000+ títulos</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div id="selectedAppDetails" class="text-center text-gray-500">
-                            <p>Selecciona una app para ver métricas sugeridas</p>
-                        </div>
-                    </div>
-
-                    <!-- Metrics Generator -->
-                    <div id="metricsGenerator" class="bg-white bg-opacity-90 rounded-2xl p-8" style="display: none;">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
-                            📊 Métricas Sugeridas para <span id="selectedAppName"></span>
-                        </h3>
-                        
-                        <div class="grid md:grid-cols-3 gap-6">
-                            <!-- Product Metrics -->
-                            <div class="bg-blue-50 rounded-lg p-6">
-                                <h4 class="font-bold text-blue-800 mb-4 flex items-center">
-                                    <span class="mr-2">📈</span> Métricas de Producto (3)
-                                </h4>
-                                <div id="productMetrics" class="space-y-3">
-                                    <!-- Generated content -->
-                                </div>
-                            </div>
-                            
-                            <!-- Process Metrics -->
-                            <div class="bg-green-50 rounded-lg p-6">
-                                <h4 class="font-bold text-green-800 mb-4 flex items-center">
-                                    <span class="mr-2">⚙️</span> Métricas de Proceso (2)
-                                </h4>
-                                <div id="processMetrics" class="space-y-3">
-                                    <!-- Generated content -->
-                                </div>
-                            </div>
-                            
-                            <!-- Project Metrics -->
-                            <div class="bg-orange-50 rounded-lg p-6">
-                                <h4 class="font-bold text-orange-800 mb-4 flex items-center">
-                                    <span class="mr-2">📊</span> Métrica de Proyecto (1)
-                                </h4>
-                                <div id="projectMetrics" class="space-y-3">
-                                    <!-- Generated content -->
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="text-center mt-8">
-                            <button onclick="generateTemplate()" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg transition-colors">
-                                📋 Generar Plantilla de Presentación
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- Calculators Modal -->
-    <div id="calculatorModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-6">
-        <div class="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-6">
-                <h3 id="calculatorTitle" class="text-2xl font-bold text-gray-800"></h3>
-                <button onclick="closeCalculator()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
-            </div>
-            <div id="calculatorContent">
-                <!-- Dynamic content -->
-            </div>
-        </div>
+    <div class="navigation">
+        <button class="nav-button" onclick="previousSlide()">⬅️ Anterior</button>
+        <button class="nav-button" onclick="resetAll()">🔄 Reiniciar</button>
+        <button class="nav-button" onclick="nextSlide()">Siguiente ➡️</button>
     </div>
 
     <script>
-        let currentSlideIndex = 0;
-        const totalSlides = 5;
-        let selectedApp = null;
-
-        const appMetrics = {
-            spotify: {
-                name: "Spotify",
-                icon: "🎵",
-                product: [
-                    {
-                        name: "Monthly Active Users (MAU)",
-                        description: "Número de usuarios únicos que usan la app cada mes",
-                        measurement: "Conteo directo de usuarios activos",
-                        impact: "Indica crecimiento y retención de la base de usuarios"
-                    },
-                    {
-                        name: "Average Session Duration",
-                        description: "Tiempo promedio que un usuario pasa escuchando música",
-                        measurement: "Tiempo total de reproducción / número de sesiones",
-                        impact: "Mide engagement y satisfacción del usuario"
-                    },
-                    {
-                        name: "Conversion Rate (Free to Premium)",
-                        description: "Porcentaje de usuarios gratuitos que se convierten a premium",
-                        measurement: "(Nuevos suscriptores premium / Usuarios gratuitos) × 100",
-                        impact: "Directamente relacionado con ingresos y modelo de negocio"
-                    }
-                ],
-                process: [
-                    {
-                        name: "Music Recommendation Accuracy",
-                        description: "Precisión del algoritmo de recomendación musical",
-                        measurement: "Porcentaje de canciones recomendadas que el usuario escucha completas",
-                        impact: "Mejora la experiencia del usuario y aumenta el tiempo de uso"
-                    },
-                    {
-                        name: "Content Ingestion Lead Time",
-                        description: "Tiempo desde que se recibe nueva música hasta que está disponible",
-                        measurement: "Tiempo promedio desde upload hasta publicación",
-                        impact: "Afecta la competitividad y frescura del catálogo"
-                    }
-                ],
-                project: {
-                    name: "Feature Development Cost Variance",
-                    description: "Variación en el costo de desarrollo de nuevas características",
-                    measurement: "CV = Valor Ganado - Costo Real de desarrollo de features",
-                    impact: "Controla el presupuesto de innovación y desarrollo de producto"
-                }
-            },
-            uber: {
-                name: "Uber",
-                icon: "🚗",
-                product: [
-                    {
-                        name: "Average Wait Time",
-                        description: "Tiempo promedio que espera un usuario por un conductor",
-                        measurement: "Tiempo desde solicitud hasta llegada del conductor",
-                        impact: "Factor clave en satisfacción del usuario y competitividad"
-                    },
-                    {
-                        name: "Driver Utilization Rate",
-                        description: "Porcentaje del tiempo que los conductores están ocupados",
-                        measurement: "(Tiempo en viajes / Tiempo total conectado) × 100",
-                        impact: "Optimiza la eficiencia de la plataforma y ingresos de conductores"
-                    },
-                    {
-                        name: "Trip Completion Rate",
-                        description: "Porcentaje de viajes solicitados que se completan exitosamente",
-                        measurement: "(Viajes completados / Viajes solicitados) × 100",
-                        impact: "Indica confiabilidad del servicio y satisfacción del usuario"
-                    }
-                ],
-                process: [
-                    {
-                        name: "Matching Algorithm Efficiency",
-                        description: "Eficiencia del algoritmo que conecta usuarios con conductores",
-                        measurement: "Tiempo promedio de matching y tasa de matches exitosos",
-                        impact: "Reduce tiempos de espera y mejora la experiencia"
-                    },
-                    {
-                        name: "Support Ticket Resolution Time",
-                        description: "Tiempo promedio para resolver problemas de usuarios",
-                        measurement: "Tiempo desde reporte hasta resolución del ticket",
-                        impact: "Afecta satisfacción del cliente y retención"
-                    }
-                ],
-                project: {
-                    name: "Market Expansion Schedule Variance",
-                    description: "Variación en el cronograma de expansión a nuevas ciudades",
-                    measurement: "SV = Valor Ganado - Valor Planificado en expansión",
-                    impact: "Controla el crecimiento geográfico y captura de mercado"
-                }
-            },
-            netflix: {
-                name: "Netflix",
-                icon: "🎬",
-                product: [
-                    {
-                        name: "Content Engagement Rate",
-                        description: "Porcentaje de contenido que los usuarios ven completamente",
-                        measurement: "(Contenido visto completo / Contenido iniciado) × 100",
-                        impact: "Indica calidad del contenido y efectividad de recomendaciones"
-                    },
-                    {
-                        name: "Monthly Churn Rate",
-                        description: "Porcentaje de suscriptores que cancelan cada mes",
-                        measurement: "(Suscriptores cancelados / Total suscriptores) × 100",
-                        impact: "Directamente afecta ingresos recurrentes y crecimiento"
-                    },
-                    {
-                        name: "Average Viewing Hours per User",
-                        description: "Horas promedio de visualización por usuario al mes",
-                        measurement: "Total horas vistas / Número de usuarios activos",
-                        impact: "Mide engagement y valor percibido del servicio"
-                    }
-                ],
-                process: [
-                    {
-                        name: "Content Production Lead Time",
-                        description: "Tiempo desde concepto hasta lanzamiento de contenido original",
-                        measurement: "Tiempo promedio de desarrollo de series/películas originales",
-                        impact: "Afecta competitividad y capacidad de respuesta al mercado"
-                    },
-                    {
-                        name: "Streaming Quality Consistency",
-                        description: "Porcentaje de tiempo con calidad de streaming óptima",
-                        measurement: "Tiempo sin buffering / Tiempo total de streaming",
-                        impact: "Crucial para experiencia del usuario y retención"
-                    }
-                ],
-                project: {
-                    name: "Original Content Budget Variance",
-                    description: "Variación en el presupuesto de producción de contenido original",
-                    measurement: "CV = Presupuesto planificado - Costo real de producción",
-                    impact: "Controla inversión en contenido y rentabilidad"
-                }
+        let currentSlide = 1;
+        const totalSlides = 4;
+        
+        function updateSlideCounter() {
+            document.getElementById('current-slide').textContent = currentSlide;
+            document.getElementById('total-slides').textContent = totalSlides;
+        }
+        
+        function showSlide(slideNumber) {
+            // Hide all slides
+            for (let i = 1; i <= totalSlides; i++) {
+                document.getElementById('slide' + i).classList.add('hidden');
             }
-        };
-
-        function showSlide(index) {
-            document.querySelectorAll('.slide').forEach(slide => {
-                slide.classList.remove('active');
+            
+            // Show selected slide
+            document.getElementById('slide' + slideNumber).classList.remove('hidden');
+            
+            currentSlide = slideNumber;
+            updateSlideCounter();
+            updateNavigationButtons();
+            
+            // Auto-scroll to top when changing slides
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
             });
-            
-            document.getElementById(`slide${index + 1}`).classList.add('active');
-            
-            document.getElementById('currentSlide').textContent = index + 1;
-            document.getElementById('prevBtn').disabled = index === 0;
-            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
-            
-            const progress = ((index + 1) / totalSlides) * 100;
-            document.getElementById('progressBar').style.width = progress + '%';
-            
-            if (index === 0) {
-                document.getElementById('prevBtn').classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                document.getElementById('prevBtn').classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-            
-            if (index === totalSlides - 1) {
-                document.getElementById('nextBtn').classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                document.getElementById('nextBtn').classList.remove('opacity-50', 'cursor-not-allowed');
-            }
         }
-
-        function nextSlide() {
-            if (currentSlideIndex < totalSlides - 1) {
-                currentSlideIndex++;
-                showSlide(currentSlideIndex);
-            }
+        
+        function updateNavigationButtons() {
+            const prevButton = document.querySelector('.navigation button:first-child');
+            const nextButton = document.querySelector('.navigation button:last-child');
+            
+            prevButton.disabled = currentSlide === 1;
+            nextButton.disabled = currentSlide === totalSlides;
         }
-
+        
         function previousSlide() {
-            if (currentSlideIndex > 0) {
-                currentSlideIndex--;
-                showSlide(currentSlideIndex);
+            if (currentSlide > 1) {
+                showSlide(currentSlide - 1);
             }
         }
-
-        function showDDECalculator() {
-            document.getElementById('calculatorTitle').textContent = '🎯 Calculadora de Eficacia en Detección de Defectos (DDE)';
-            document.getElementById('calculatorContent').innerHTML = `
-                <div class="space-y-6">
-                    <div class="bg-green-50 rounded-lg p-6">
-                        <h4 class="font-bold text-green-800 mb-4">Fórmula: DDE = (Defectos encontrados antes de entrega / Total defectos encontrados) × 100</h4>
-                        
-                        <div class="grid md:grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Defectos encontrados antes de entrega:</label>
-                                <input type="number" id="defectsBeforeDelivery" class="calculator-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Ej: 85">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Total de defectos encontrados:</label>
-                                <input type="number" id="totalDefects" class="calculator-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Ej: 100">
-                            </div>
-                        </div>
-                        
-                        <button onclick="calculateDDE()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors">
-                            Calcular DDE
-                        </button>
-                    </div>
-                    
-                    <div id="ddeResult" class="hidden bg-white border-2 border-green-200 rounded-lg p-6">
-                        <h4 class="font-bold text-gray-800 mb-4">Resultado:</h4>
-                        <div id="ddeValue" class="text-3xl font-bold text-green-600 mb-4"></div>
-                        <div id="ddeInterpretation" class="text-sm text-gray-600"></div>
-                    </div>
-                    
-                    <div class="bg-blue-50 rounded-lg p-6">
-                        <h4 class="font-bold text-blue-800 mb-3">💡 Ejemplo Práctico:</h4>
-                        <p class="text-sm text-blue-600 mb-3">
-                            Un equipo encuentra 85 defectos durante desarrollo y testing, pero los usuarios reportan 15 defectos adicionales después del lanzamiento.
-                        </p>
-                        <div class="bg-white rounded p-3 text-sm">
-                            <div>• Defectos antes de entrega: 85</div>
-                            <div>• Total defectos: 85 + 15 = 100</div>
-                            <div>• DDE = (85/100) × 100 = 85%</div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            document.getElementById('calculatorModal').classList.remove('hidden');
-        }
-
-        function calculateDDE() {
-            const beforeDelivery = parseFloat(document.getElementById('defectsBeforeDelivery').value);
-            const total = parseFloat(document.getElementById('totalDefects').value);
-            
-            if (isNaN(beforeDelivery) || isNaN(total) || total === 0) {
-                alert('Por favor ingresa valores válidos');
-                return;
+        
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                showSlide(currentSlide + 1);
             }
-            
-            const dde = (beforeDelivery / total) * 100;
-            
-            document.getElementById('ddeValue').textContent = `${dde.toFixed(1)}%`;
-            
-            let interpretation = '';
-            let colorClass = '';
-            
-            if (dde >= 90) {
-                interpretation = '🎉 Excelente! Tu proceso de QA es muy efectivo. Estás detectando la mayoría de defectos antes de la entrega.';
-                colorClass = 'text-green-600';
-            } else if (dde >= 70) {
-                interpretation = '👍 Buen proceso de QA. Hay oportunidades de mejora para detectar más defectos tempranamente.';
-                colorClass = 'text-yellow-600';
-            } else {
-                interpretation = '⚠️ Tu proceso de QA necesita mejoras significativas. Muchos defectos llegan a producción.';
-                colorClass = 'text-red-600';
-            }
-            
-            document.getElementById('ddeInterpretation').innerHTML = `<span class="${colorClass}">${interpretation}</span>`;
-            document.getElementById('ddeResult').classList.remove('hidden');
         }
-
-        function showCVCalculator() {
-            document.getElementById('calculatorTitle').textContent = '💰 Calculadora de Cost Variance (CV)';
-            document.getElementById('calculatorContent').innerHTML = `
-                <div class="space-y-6">
-                    <div class="bg-green-50 rounded-lg p-6">
-                        <h4 class="font-bold text-green-800 mb-4">Fórmula: CV = EV - AC</h4>
-                        <p class="text-sm text-green-600 mb-4">EV = Earned Value (Valor Ganado), AC = Actual Cost (Costo Real)</p>
-                        
-                        <div class="grid md:grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Earned Value (EV) - $:</label>
-                                <input type="number" id="earnedValue" class="calculator-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Ej: 150000">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Actual Cost (AC) - $:</label>
-                                <input type="number" id="actualCost" class="calculator-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Ej: 175000">
-                            </div>
-                        </div>
-                        
-                        <button onclick="calculateCV()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg transition-colors">
-                            Calcular CV
-                        </button>
-                    </div>
-                    
-                    <div id="cvResult" class="hidden bg-white border-2 border-green-200 rounded-lg p-6">
-                        <h4 class="font-bold text-gray-800 mb-4">Resultado:</h4>
-                        <div id="cvValue" class="text-3xl font-bold mb-4"></div>
-                        <div id="cvInterpretation" class="text-sm"></div>
-                    </div>
-                    
-                    <div class="bg-blue-50 rounded-lg p-6">
-                        <h4 class="font-bold text-blue-800 mb-3">💡 Interpretación:</h4>
-                        <ul class="text-sm text-blue-600 space-y-1">
-                            <li>• <strong>CV > 0:</strong> Proyecto bajo presupuesto ✅</li>
-                            <li>• <strong>CV = 0:</strong> Proyecto en presupuesto ⚖️</li>
-                            <li>• <strong>CV < 0:</strong> Proyecto sobre presupuesto ❌</li>
-                        </ul>
-                    </div>
-                </div>
-            `;
-            document.getElementById('calculatorModal').classList.remove('hidden');
+        
+        function resetAll() {
+            showSlide(1);
         }
-
-        function calculateCV() {
-            const ev = parseFloat(document.getElementById('earnedValue').value);
-            const ac = parseFloat(document.getElementById('actualCost').value);
-            
-            if (isNaN(ev) || isNaN(ac)) {
-                alert('Por favor ingresa valores válidos');
-                return;
-            }
-            
-            const cv = ev - ac;
-            
-            document.getElementById('cvValue').textContent = `$${cv.toLocaleString()}`;
-            
-            let interpretation = '';
-            let colorClass = '';
-            
-            if (cv > 0) {
-                interpretation = '🎉 ¡Excelente! El proyecto está bajo presupuesto. Estás gastando menos de lo planificado para el trabajo realizado.';
-                colorClass = 'text-green-600';
-                document.getElementById('cvValue').className = 'text-3xl font-bold mb-4 text-green-600';
-            } else if (cv === 0) {
-                interpretation = '⚖️ Perfecto. El proyecto está exactamente en presupuesto.';
-                colorClass = 'text-blue-600';
-                document.getElementById('cvValue').className = 'text-3xl font-bold mb-4 text-blue-600';
-            } else {
-                interpretation = '⚠️ Atención. El proyecto está sobre presupuesto. Necesitas revisar los costos y tomar medidas correctivas.';
-                colorClass = 'text-red-600';
-                document.getElementById('cvValue').className = 'text-3xl font-bold mb-4 text-red-600';
-            }
-            
-            document.getElementById('cvInterpretation').innerHTML = `<span class="${colorClass}">${interpretation}</span>`;
-            document.getElementById('cvResult').classList.remove('hidden');
-        }
-
-        function showSVCalculator() {
-            document.getElementById('calculatorTitle').textContent = '📅 Calculadora de Schedule Variance (SV)';
-            document.getElementById('calculatorContent').innerHTML = `
-                <div class="space-y-6">
-                    <div class="bg-blue-50 rounded-lg p-6">
-                        <h4 class="font-bold text-blue-800 mb-4">Fórmula: SV = EV - PV</h4>
-                        <p class="text-sm text-blue-600 mb-4">EV = Earned Value (Valor Ganado), PV = Planned Value (Valor Planificado)</p>
-                        
-                        <div class="grid md:grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Earned Value (EV) - $:</label>
-                                <input type="number" id="earnedValueSV" class="calculator-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ej: 120000">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Planned Value (PV) - $:</label>
-                                <input type="number" id="plannedValue" class="calculator-input w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ej: 150000">
-                            </div>
-                        </div>
-                        
-                        <button onclick="calculateSV()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
-                            Calcular SV
-                        </button>
-                    </div>
-                    
-                    <div id="svResult" class="hidden bg-white border-2 border-blue-200 rounded-lg p-6">
-                        <h4 class="font-bold text-gray-800 mb-4">Resultado:</h4>
-                        <div id="svValue" class="text-3xl font-bold mb-4"></div>
-                        <div id="svInterpretation" class="text-sm"></div>
-                    </div>
-                    
-                    <div class="bg-green-50 rounded-lg p-6">
-                        <h4 class="font-bold text-green-800 mb-3">💡 Interpretación:</h4>
-                        <ul class="text-sm text-green-600 space-y-1">
-                            <li>• <strong>SV > 0:</strong> Proyecto adelantado ⚡</li>
-                            <li>• <strong>SV = 0:</strong> Proyecto a tiempo ⏰</li>
-                            <li>• <strong>SV < 0:</strong> Proyecto atrasado 🐌</li>
-                        </ul>
-                    </div>
-                </div>
-            `;
-            document.getElementById('calculatorModal').classList.remove('hidden');
-        }
-
-        function calculateSV() {
-            const ev = parseFloat(document.getElementById('earnedValueSV').value);
-            const pv = parseFloat(document.getElementById('plannedValue').value);
-            
-            if (isNaN(ev) || isNaN(pv)) {
-                alert('Por favor ingresa valores válidos');
-                return;
-            }
-            
-            const sv = ev - pv;
-            
-            document.getElementById('svValue').textContent = `$${sv.toLocaleString()}`;
-            
-            let interpretation = '';
-            let colorClass = '';
-            
-            if (sv > 0) {
-                interpretation = '⚡ ¡Excelente! El proyecto está adelantado. Has completado más trabajo del planificado para esta fecha.';
-                colorClass = 'text-green-600';
-                document.getElementById('svValue').className = 'text-3xl font-bold mb-4 text-green-600';
-            } else if (sv === 0) {
-                interpretation = '⏰ Perfecto. El proyecto está exactamente a tiempo según lo planificado.';
-                colorClass = 'text-blue-600';
-                document.getElementById('svValue').className = 'text-3xl font-bold mb-4 text-blue-600';
-            } else {
-                interpretation = '🐌 Atención. El proyecto está atrasado. Necesitas acelerar el ritmo o revisar el cronograma.';
-                colorClass = 'text-red-600';
-                document.getElementById('svValue').className = 'text-3xl font-bold mb-4 text-red-600';
-            }
-            
-            document.getElementById('svInterpretation').innerHTML = `<span class="${colorClass}">${interpretation}</span>`;
-            document.getElementById('svResult').classList.remove('hidden');
-        }
-
-        function showLeadTimeSimulator() {
-            document.getElementById('calculatorTitle').textContent = '⏱️ Simulador de Lead Time';
-            document.getElementById('calculatorContent').innerHTML = `
-                <div class="space-y-6">
-                    <div class="bg-blue-50 rounded-lg p-6">
-                        <h4 class="font-bold text-blue-800 mb-4">Simula el Lead Time de tu proceso</h4>
-                        
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Tiempo de Análisis (días):</label>
-                                <input type="number" id="analysisTime" class="calculator-input w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Ej: 3" value="3">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Tiempo de Desarrollo (días):</label>
-                                <input type="number" id="developmentTime" class="calculator-input w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Ej: 10" value="10">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Tiempo de Testing (días):</label>
-                                <input type="number" id="testingTime" class="calculator-input w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Ej: 5" value="5">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-2">Tiempo de Deployment (días):</label>
-                                <input type="number" id="deploymentTime" class="calculator-input w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="Ej: 1" value="1">
-                            </div>
-                        </div>
-                        
-                        <button onclick="simulateLeadTime()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors mt-4">
-                            Simular Lead Time
-                        </button>
-                    </div>
-                    
-                    <div id="leadTimeResult" class="hidden bg-white border-2 border-blue-200 rounded-lg p-6">
-                        <h4 class="font-bold text-gray-800 mb-4">Resultado de la Simulación:</h4>
-                        <div id="leadTimeValue" class="text-3xl font-bold text-blue-600 mb-4"></div>
-                        <div id="leadTimeBreakdown" class="space-y-2 text-sm text-gray-600"></div>
-                        <div id="leadTimeRecommendations" class="mt-4 p-4 bg-yellow-50 rounded-lg"></div>
-                    </div>
-                </div>
-            `;
-            document.getElementById('calculatorModal').classList.remove('hidden');
-        }
-
-        function simulateLeadTime() {
-            const analysis = parseFloat(document.getElementById('analysisTime').value) || 0;
-            const development = parseFloat(document.getElementById('developmentTime').value) || 0;
-            const testing = parseFloat(document.getElementById('testingTime').value) || 0;
-            const deployment = parseFloat(document.getElementById('deploymentTime').value) || 0;
-            
-            const totalLeadTime = analysis + development + testing + deployment;
-            
-            document.getElementById('leadTimeValue').textContent = `${totalLeadTime} días`;
-            
-            document.getElementById('leadTimeBreakdown').innerHTML = `
-                <div class="flex justify-between"><span>📋 Análisis:</span><span>${analysis} días (${((analysis/totalLeadTime)*100).toFixed(1)}%)</span></div>
-                <div class="flex justify-between"><span>🔨 Desarrollo:</span><span>${development} días (${((development/totalLeadTime)*100).toFixed(1)}%)</span></div>
-                <div class="flex justify-between"><span>🧪 Testing:</span><span>${testing} días (${((testing/totalLeadTime)*100).toFixed(1)}%)</span></div>
-                <div class="flex justify-between"><span>🚀 Deployment:</span><span>${deployment} días (${((deployment/totalLeadTime)*100).toFixed(1)}%)</span></div>
-            `;
-            
-            let recommendations = '';
-            const devPercentage = (development/totalLeadTime)*100;
-            
-            if (devPercentage < 50) {
-                recommendations = '💡 El tiempo de desarrollo es menos del 50% del Lead Time. Considera optimizar los procesos de análisis y testing.';
-            } else if (devPercentage > 70) {
-                recommendations = '⚠️ El desarrollo toma más del 70% del tiempo. Podrías necesitar más recursos de desarrollo o mejor planificación.';
-            } else {
-                recommendations = '✅ Distribución balanceada del tiempo. Tu proceso parece bien estructurado.';
-            }
-            
-            document.getElementById('leadTimeRecommendations').innerHTML = `<div class="font-semibold text-yellow-800 mb-2">Recomendaciones:</div><div class="text-yellow-700">${recommendations}</div>`;
-            document.getElementById('leadTimeResult').classList.remove('hidden');
-        }
-
-        function showCycleTimeAnalyzer() {
-            alert('🔄 Analizador de Cycle Time\n\nEsta funcionalidad se expandiría en una implementación completa con:\n• Análisis de tiempo de trabajo activo\n• Comparación con Lead Time\n• Identificación de interrupciones\n• Métricas de eficiencia del equipo');
-        }
-
-        function selectApp(appName) {
-            selectedApp = appName;
-            const app = appMetrics[appName];
-            
-            // Update visual selection
-            document.querySelectorAll('.app-selector').forEach(selector => {
-                selector.classList.remove('selected');
-            });
-            event.currentTarget.classList.add('selected');
-            
-            // Update selected app details
-            document.getElementById('selectedAppDetails').innerHTML = `
-                <div class="text-center">
-                    <div class="text-4xl mb-2">${app.icon}</div>
-                    <h4 class="text-xl font-bold text-gray-800 mb-2">Has seleccionado: ${app.name}</h4>
-                    <p class="text-gray-600">Generando métricas sugeridas...</p>
-                </div>
-            `;
-            
-            // Show metrics generator
-            setTimeout(() => {
-                document.getElementById('selectedAppName').textContent = app.name;
-                generateMetricsDisplay(app);
-                document.getElementById('metricsGenerator').style.display = 'block';
-            }, 1000);
-        }
-
-        function generateMetricsDisplay(app) {
-            // Product Metrics
-            document.getElementById('productMetrics').innerHTML = app.product.map((metric, index) => `
-                <div class="bg-white rounded-lg p-4 border border-blue-200">
-                    <h5 class="font-semibold text-blue-800 mb-2">${index + 1}. ${metric.name}</h5>
-                    <p class="text-xs text-blue-600 mb-2">${metric.description}</p>
-                    <div class="text-xs text-gray-500">
-                        <div><strong>Medición:</strong> ${metric.measurement}</div>
-                        <div><strong>Impacto:</strong> ${metric.impact}</div>
-                    </div>
-                </div>
-            `).join('');
-            
-            // Process Metrics
-            document.getElementById('processMetrics').innerHTML = app.process.map((metric, index) => `
-                <div class="bg-white rounded-lg p-4 border border-green-200">
-                    <h5 class="font-semibold text-green-800 mb-2">${index + 1}. ${metric.name}</h5>
-                    <p class="text-xs text-green-600 mb-2">${metric.description}</p>
-                    <div class="text-xs text-gray-500">
-                        <div><strong>Medición:</strong> ${metric.measurement}</div>
-                        <div><strong>Impacto:</strong> ${metric.impact}</div>
-                    </div>
-                </div>
-            `).join('');
-            
-            // Project Metrics
-            document.getElementById('projectMetrics').innerHTML = `
-                <div class="bg-white rounded-lg p-4 border border-orange-200">
-                    <h5 class="font-semibold text-orange-800 mb-2">1. ${app.project.name}</h5>
-                    <p class="text-xs text-orange-600 mb-2">${app.project.description}</p>
-                    <div class="text-xs text-gray-500">
-                        <div><strong>Medición:</strong> ${app.project.measurement}</div>
-                        <div><strong>Impacto:</strong> ${app.project.impact}</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function generateTemplate() {
-            if (!selectedApp) {
-                alert('Por favor selecciona una app primero');
-                return;
-            }
-            
-            const app = appMetrics[selectedApp];
-            
-            const template = `
-📊 PLANTILLA DE PRESENTACIÓN - ${app.name.toUpperCase()}
-
-═══════════════════════════════════════════════════════════════
-
-DIAPOSITIVA 1: APP SELECCIONADA Y MÉTRICAS DE PRODUCTO
-═══════════════════════════════════════════════════════════════
-
-🎯 App Elegida: ${app.name} ${app.icon}
-
-📈 MÉTRICAS DE PRODUCTO (3):
-
-1️⃣ ${app.product[0].name}
-   • Descripción: ${app.product[0].description}
-   • Cómo se mide: ${app.product[0].measurement}
-   • Por qué es importante: ${app.product[0].impact}
-
-2️⃣ ${app.product[1].name}
-   • Descripción: ${app.product[1].description}
-   • Cómo se mide: ${app.product[1].measurement}
-   • Por qué es importante: ${app.product[1].impact}
-
-3️⃣ ${app.product[2].name}
-   • Descripción: ${app.product[2].description}
-   • Cómo se mide: ${app.product[2].measurement}
-   • Por qué es importante: ${app.product[2].impact}
-
-═══════════════════════════════════════════════════════════════
-
-DIAPOSITIVA 2: MÉTRICAS DE PROCESO
-═══════════════════════════════════════════════════════════════
-
-⚙️ MÉTRICAS DE PROCESO (2):
-
-1️⃣ ${app.process[0].name}
-   • Descripción: ${app.process[0].description}
-   • Cómo se mide: ${app.process[0].measurement}
-   • Por qué es importante: ${app.process[0].impact}
-
-2️⃣ ${app.process[1].name}
-   • Descripción: ${app.process[1].description}
-   • Cómo se mide: ${app.process[1].measurement}
-   • Por qué es importante: ${app.process[1].impact}
-
-🔍 ANÁLISIS:
-• Estas métricas ayudan a ${app.name} a optimizar sus procesos internos
-• Permiten identificar cuellos de botella y áreas de mejora
-• Contribuyen directamente a la experiencia del usuario final
-
-═══════════════════════════════════════════════════════════════
-
-DIAPOSITIVA 3: MÉTRICA DE PROYECTO Y CONCLUSIONES
-═══════════════════════════════════════════════════════════════
-
-📊 MÉTRICA DE PROYECTO (1):
-
-1️⃣ ${app.project.name}
-   • Descripción: ${app.project.description}
-   • Cómo se mide: ${app.project.measurement}
-   • Por qué es importante: ${app.project.impact}
-
-💡 CONCLUSIONES:
-
-✅ Integración de Métricas:
-• Las métricas de producto miden el valor entregado al usuario
-• Las métricas de proceso optimizan la eficiencia interna
-• Las métricas de proyecto controlan recursos y cronogramas
-
-🎯 Impacto en ${app.name}:
-• Mejora continua basada en datos
-• Toma de decisiones informada
-• Optimización de recursos y experiencia del usuario
-• Ventaja competitiva sostenible
-
-🚀 Recomendaciones:
-• Implementar dashboard en tiempo real
-• Establecer alertas automáticas
-• Revisar métricas semanalmente
-• Ajustar estrategias basándose en tendencias
-
-═══════════════════════════════════════════════════════════════
-
-¡Plantilla generada exitosamente! 
-Copia este contenido y adáptalo a tu presentación.
-            `;
-            
-            // Create a modal to show the template
-            const templateModal = document.createElement('div');
-            templateModal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-6';
-            templateModal.innerHTML = `
-                <div class="bg-white rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-2xl font-bold text-gray-800">📋 Plantilla de Presentación - ${app.name}</h3>
-                        <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
-                    </div>
-                    <div class="bg-gray-50 rounded-lg p-6 mb-6">
-                        <pre class="whitespace-pre-wrap text-sm text-gray-800 font-mono">${template}</pre>
-                    </div>
-                    <div class="text-center">
-                        <button onclick="copyTemplate('${template.replace(/'/g, "\\'")}'); this.textContent='¡Copiado!'; this.classList.add('bg-green-600'); setTimeout(() => { this.textContent='📋 Copiar Plantilla'; this.classList.remove('bg-green-600'); }, 2000);" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg transition-colors">
-                            📋 Copiar Plantilla
-                        </button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(templateModal);
-        }
-
-        function copyTemplate(template) {
-            navigator.clipboard.writeText(template).then(() => {
-                console.log('Template copied to clipboard');
-            }).catch(err => {
-                console.error('Error copying template: ', err);
-            });
-        }
-
-        function closeCalculator() {
-            document.getElementById('calculatorModal').classList.add('hidden');
-        }
-
+        
         // Keyboard navigation
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === ' ') {
-                e.preventDefault();
-                nextSlide();
-            } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
                 previousSlide();
-            } else if (e.key === 'Escape') {
-                closeCalculator();
+            } else if (e.key === 'ArrowRight') {
+                nextSlide();
+            } else if (e.key === 'Home') {
+                resetAll();
             }
         });
-
+        
         // Initialize
-        showSlide(0);
-
-        // Add click effects to interactive elements
-        document.querySelectorAll('.metric-card, .app-selector').forEach(element => {
-            element.addEventListener('click', () => {
-                element.style.transform = 'scale(0.98)';
-                setTimeout(() => {
-                    element.style.transform = '';
-                }, 150);
-            });
-        });
-
-        // Auto-update gauges on slide 1
-        setInterval(() => {
-            if (currentSlideIndex === 0) {
-                const gauges = document.querySelectorAll('.gauge-fill');
-                gauges.forEach(gauge => {
-                    const currentProgress = parseInt(gauge.style.getPropertyValue('--progress')) || 0;
-                    const newProgress = Math.max(20, Math.min(95, currentProgress + (Math.random() - 0.5) * 10));
-                    gauge.style.setProperty('--progress', newProgress);
-                    gauge.style.strokeDasharray = `${newProgress} 100`;
-                });
-            }
-        }, 3000);
+        showSlide(1);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a86af6c20bcdb0',t:'MTc1NzEwMzUyNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+<!-- Pie de página -->
+<footer class="footer">
+  <div class="footer-content">2024 Plataforma QS - Calidad de Software | Isaac Paniagua</div>
+</footer>
+
+</body>
 </html>
