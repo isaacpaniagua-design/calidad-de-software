@@ -40,14 +40,26 @@
 </head>
 <body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-screen">
 
+
+<!-- NAV Plataforma QS -->
 <style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+  body{padding-top:80px}
+  .qs-nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:saturate(140%) blur(18px);
+         background:rgba(255,255,255,.95);border-bottom:1px solid rgba(255,255,255,.2);
+         box-shadow:0 8px 32px rgba(0,0,0,.10)}
+  .qs-nav .wrap{max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;gap:16px;align-items:center;justify-content:space-between}
+  .qs-brand{display:flex;gap:12px;align-items:center;color:#1f2937;font-weight:800;font-size:1.2rem;text-decoration:none}
+  .qs-brand::before{content:"🎓";font-size:1.3rem}
+  .qs-tabs{display:flex;gap:10px;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap}
+  .qs-btn{border:0;padding:10px 16px;border-radius:22px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;
+         font-weight:600;font-size:.9rem;transition:all .25s ease;border:2px solid transparent;flex:0 0 auto}
+  .qs-btn:hover{color:#fff;transform:translateY(-2px);box-shadow:0 8px 18px rgba(102,126,234,.35);border-color:rgba(102,126,234,.25);
+                background:linear-gradient(135deg,#667eea,#764ba2)}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;box-shadow:0 6px 16px rgba(102,126,234,.45)}
+  /* Footer */
+  .footer{margin-top:60px;padding:30px 20px;text-align:center;background:rgba(255,255,255,.1);
+          backdrop-filter:blur(10px);border-top:1px solid rgba(255,255,255,.2)}
+  .footer-content{max-width:1200px;margin:0 auto;color:rgba(255,255,255,.9);font-size:.95rem}
 </style>
 <div class="qs-nav">
   <div class="wrap">
@@ -59,67 +71,21 @@
       <a class="qs-btn" href="Foro.html">Foro</a>
       <a class="qs-btn" href="paneldocente.html">Panel</a>
       <a class="qs-btn" href="roadmap.html">Roadmap</a>
-          <a class="qs-btn" href="checklist.html">Checklist</a>
-\1
+      <a class="qs-btn" href="checklist.html">Checklist</a>
+      <a class="qs-btn" href="status.html">Status</a>
+    </nav>
   </div>
 </div>
 <script>
 (function(){
   var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
   document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+    var href = (a.getAttribute('href')||'').toLowerCase();
+    if (href === path) a.setAttribute('aria-current','page');
   });
 })();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
 </script>
-
-
-  <!-- QS · NAVBAR -->
-<style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.8);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
-</style>
-<div class="qs-nav">
-  <div class="wrap">
-    <a class="qs-brand" href="?page=home"><span>Plataforma QS</span></a>
-    <nav class="qs-tabs" aria-label="Navegación">
-      <a id="qs-slides" class="qs-btn" href="?page=sesion3">Diapositivas</a>
-      <a id="qs-mat"    class="qs-btn" href="?page=materiales">Materiales</a>
-      <a id="qs-asis"   class="qs-btn" href="?page=asistencia">Asistencia</a>
-      <a id="qs-cal"    class="qs-btn" href="?page=calificaciones">Calificaciones</a>
-      <a id="qs-foro"   class="qs-btn" href="?page=Foro">Foro</a>
-      <a id="qs-panel"  class="qs-btn" href="?page=paneldocente" style="display:none">Panel</a>
-          <a class="qs-btn" href="status.html">Status</a>
-</nav>
-  </div>
-</div>
-<script>
-  (function(){
-    const params = new URLSearchParams(location.search);
-    const page = (params.get('page')||'home').toLowerCase();
-    const map = { materiales:'qs-mat', asistencia:'qs-asis', calificaciones:'qs-cal', foro:'qs-foro', paneldocente:'qs-panel' };
-    const id = map[page] || 'qs-slides';
-    const el = document.getElementById(id); if (el) el.setAttribute('aria-current','page');
-    // muestra Panel solo a docente
-    if (google && google.script && google.script.run){
-      google.script.run.withSuccessHandler(function(ctx){
-        if (ctx && ctx.isTeacher) document.getElementById('qs-panel').style.display='';
-      }).getContext();
-    }
-  })();
-</script>
-<!-- /QS · NAVBAR -->
-
-    <div class="container mx-auto px-4 py-8 max-w-6xl">
+<div class="container mx-auto px-4 py-8 max-w-6xl">
         <!-- Header -->
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100">
             <div class="text-center">
@@ -437,6 +403,11 @@ if (!google.script.run){
             return attendanceRecord;
         };
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97aa25497775cdb0',t:'MTc1NzEyMTY0NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
+<footer class="footer">
+  <div class="footer-content">© 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua</div>
+</footer>
+
+</body>
 
 </html>
