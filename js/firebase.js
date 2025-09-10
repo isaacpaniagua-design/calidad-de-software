@@ -2,12 +2,13 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/fireba
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import { getFirestore, collection, doc, setDoc, addDoc, getDoc, getDocs, deleteDoc, updateDoc, onSnapshot, query, where, orderBy, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
-import { firebaseConfig, allowedEmailDomain, useStorage } from './firebase-config.js';
+import { firebaseConfig, allowedEmailDomain, useStorage, driveFolderId } from './firebase-config.js';
 
 let app;
 let auth;
 let db;
 let storage;
+let driveAccessToken = null;
 
 export function initFirebase() {
   if (!app) {
@@ -40,10 +41,16 @@ export async function signInWithGooglePotros() {
   const provider = new GoogleAuthProvider();
   // Sugerencia visual del dominio (no es seguridad)
   provider.setCustomParameters({ hd: allowedEmailDomain });
+  // Permiso para subir a Google Drive (archivos creados por la app)
+  try { provider.addScope('https://www.googleapis.com/auth/drive.file'); } catch(_) {}
 
   try {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
+    try {
+      const cred = GoogleAuthProvider.credentialFromResult(result);
+      if (cred?.accessToken) driveAccessToken = cred.accessToken;
+    } catch(_) {}
     if (!user?.email || !user.email.toLowerCase().endsWith(`@${allowedEmailDomain}`)) {
       await signOut(auth);
       throw new Error(`Solo se permite acceder con cuenta @${allowedEmailDomain}`);
@@ -56,6 +63,20 @@ export async function signInWithGooglePotros() {
     }
     throw e;
   }
+}
+
+export async function getDriveAccessTokenInteractive() {
+  if (driveAccessToken) return driveAccessToken;
+  // Intentar re-solicitar el token con alcance de Drive
+  const auth = getAuthInstance();
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ hd: allowedEmailDomain });
+  try { provider.addScope('https://www.googleapis.com/auth/drive.file'); } catch(_) {}
+  const result = await signInWithPopup(auth, provider);
+  const cred = GoogleAuthProvider.credentialFromResult(result);
+  driveAccessToken = cred?.accessToken || null;
+  if (!driveAccessToken) throw new Error('No se pudo obtener token de Google Drive');
+  return driveAccessToken;
 }
 
 export async function signOutCurrent() {
@@ -226,6 +247,89 @@ export async function addMaterialLink({ title, category, description, url, owner
     url,
     path: null,
     ownerEmail: (ownerEmail?.toLowerCase() || auth?.currentUser?.email?.toLowerCase() || null),
+    createdAt: serverTimestamp(),
+    downloads: 0
+  });
+  return { id: docRef.id, title, category, description, url };
+}
+
+export async function uploadMaterialToDrive({ file, title, category, description, folderId = driveFolderId, onProgress }) {
+  if (!file) throw new Error('Archivo requerido');
+  const token = await getDriveAccessTokenInteractive();
+
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const metadata = {
+    name: safeName,
+    parents: folderId ? [folderId] : undefined,
+    description: description || undefined
+  };
+  const boundary = '-------driveFormBoundary' + Math.random().toString(16).slice(2);
+  const delimiter = `--${boundary}\r\n`;
+  const closeDelim = `--${boundary}--`;
+
+  const body = new Blob([
+    delimiter,
+    'Content-Type: application/json; charset=UTF-8\r\n\r\n',
+    JSON.stringify(metadata),
+    '\r\n',
+    delimiter,
+    `Content-Type: ${file.type || 'application/octet-stream'}\r\n\r\n`,
+    file,
+    '\r\n',
+    closeDelim
+  ], { type: `multipart/related; boundary=${boundary}` });
+
+  const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,webContentLink';
+
+  const uploadResponse = await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', uploadUrl, true);
+    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+    xhr.setRequestHeader('Content-Type', `multipart/related; boundary=${boundary}`);
+    if (xhr.upload && onProgress) {
+      xhr.upload.onprogress = (evt) => {
+        if (evt.lengthComputable) {
+          const pct = Math.round((evt.loaded / evt.total) * 100);
+          onProgress(pct);
+        }
+      };
+    }
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4) {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try { resolve(JSON.parse(xhr.responseText)); } catch (e) { resolve({}); }
+        } else {
+          reject(new Error('Error subiendo a Drive (' + xhr.status + '): ' + xhr.responseText));
+        }
+      }
+    };
+    xhr.send(body);
+  });
+
+  const id = uploadResponse?.id;
+  let url = uploadResponse?.webViewLink || uploadResponse?.webContentLink || (id ? `https://drive.google.com/file/d/${id}/view?usp=sharing` : null);
+
+  // Intentar hacer el archivo accesible con enlace
+  if (id) {
+    try {
+      await fetch(`https://www.googleapis.com/drive/v3/files/${id}/permissions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ role: 'reader', type: 'anyone' })
+      });
+    } catch(_) {}
+  }
+
+  const db = getDb();
+  const auth = getAuthInstance();
+  const docRef = await addDoc(collection(db, 'materials'), {
+    title, category, description,
+    url,
+    path: null,
+    ownerEmail: (auth?.currentUser?.email?.toLowerCase() || null),
     createdAt: serverTimestamp(),
     downloads: 0
   });

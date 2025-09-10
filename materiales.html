@@ -12,6 +12,12 @@
         font-family: "Inter", sans-serif;
         background: #764ba2;
         min-height: 100vh;
+      } else {
+        // Si Storage está habilitado, ocultar el campo de enlace y el botón
+        const urlInput = document.getElementById('materialUrl');
+        if (urlInput && urlInput.parentElement) urlInput.parentElement.style.display = 'none';
+        const showLinkBtn = document.getElementById('showLinkForm');
+        if (showLinkBtn) showLinkBtn.style.display = 'none';
       }
 
       .main-container {
@@ -1354,8 +1360,22 @@ body{
       switchRole("teacher");
     </script>
     <script type="module">
-      import { onAuth, signInWithGooglePotros, signOutCurrent, uploadMaterial, addMaterialLink, subscribeMaterials, deleteMaterialById, incrementMaterialDownloads } from './js/firebase.js';
+      import { onAuth, signInWithGooglePotros, signOutCurrent, uploadMaterial, uploadMaterialToDrive, addMaterialLink, subscribeMaterials, deleteMaterialById, incrementMaterialDownloads } from './js/firebase.js';
       import { allowedEmailDomain, allowedTeacherEmails, useStorage } from './js/firebase-config.js';
+
+      // Si Storage está deshabilitado, ocultar dropzone y mostrar formulario de enlace
+      if (!useStorage) {
+        const drop = document.querySelector('.upload-area');
+        if (drop) drop.style.display = 'none';
+        const form = document.getElementById('uploadForm');
+        if (form) form.classList.remove('hidden');
+        const hint = document.createElement('p');
+        hint.className = 'text-sm text-indigo-700 mt-2';
+        hint.textContent = 'Almacenamiento deshabilitado: agrega materiales con enlace externo.';
+        form?.prepend(hint);
+        const showLinkBtn = document.getElementById('showLinkForm');
+        if (showLinkBtn) showLinkBtn.style.display = 'none';
+      }
 
       const signInBtn = document.getElementById('signInMaterials');
       const signOutBtn = document.getElementById('signOutMaterials');
@@ -1455,7 +1475,7 @@ body{
             alert('Proporciona archivo o enlace, y t��tulo');
             return;
           }
-          if (!file && url) {
+          if (!file && url && !useStorage) {
             e.preventDefault(); e.stopImmediatePropagation();
             try {
               await addMaterialLink({ title, category, description, url });
@@ -1468,7 +1488,20 @@ body{
             }
           } else if (file && !useStorage) {
             e.preventDefault(); e.stopImmediatePropagation();
-            alert('Storage deshabilitado. Usa el campo de enlace externo.');
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            progressBar?.classList.remove('hidden');
+            try {
+              await uploadMaterialToDrive({ file, title, category, description, onProgress: (p) => { if (progressFill) progressFill.style.width = `${p}%`; } });
+              progressBar?.classList.add('hidden');
+              if (progressFill) progressFill.style.width = '0%';
+              (document.getElementById('materialForm')).reset();
+              const uploadArea = document.querySelector('.upload-area');
+              if (uploadArea) uploadArea.style.display = 'block';
+              alert('Material subido a Google Drive');
+            } catch (err) {
+              alert((err && err.message) ? err.message : 'No se pudo subir a Google Drive');
+            }
           }
         }, { capture: true });
       }
