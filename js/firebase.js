@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/fireba
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import { getFirestore, collection, doc, setDoc, addDoc, getDoc, getDocs, deleteDoc, updateDoc, onSnapshot, query, where, orderBy, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
-import { firebaseConfig, allowedEmailDomain } from './firebase-config.js';
+import { firebaseConfig, allowedEmailDomain, useStorage } from './firebase-config.js';
 
 let app;
 let auth;
@@ -30,6 +30,7 @@ export function getDb() {
 }
 
 export function getStorageInstance() {
+  if (!useStorage) return null;
   if (!storage) initFirebase();
   return storage;
 }
@@ -187,12 +188,15 @@ export async function updateStudentGradePartial(studentId, path, value) {
 
 // ====== Materiales (Storage + Firestore) ======
 export async function uploadMaterial({ file, title, category, description, ownerEmail, onProgress }) {
-  const storage = getStorageInstance();
+  if (!useStorage) {
+    throw new Error('Firebase Storage está deshabilitado. Usa addMaterialLink con un URL.');
+  }
+  const st = getStorageInstance();
   const db = getDb();
   const ts = Date.now();
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
   const path = `materials/${ts}_${safeName}`;
-  const ref = storageRef(storage, path);
+  const ref = storageRef(st, path);
 
   const task = uploadBytesResumable(ref, file);
   return new Promise((resolve, reject) => {
@@ -201,16 +205,31 @@ export async function uploadMaterial({ file, title, category, description, owner
       if (onProgress) onProgress(progress);
     }, reject, async () => {
       const url = await getDownloadURL(ref);
+      const auth = getAuthInstance();
       const docRef = await addDoc(collection(db, 'materials'), {
         title, category, description,
         path, url,
-        ownerEmail: ownerEmail?.toLowerCase() || null,
+        ownerEmail: (ownerEmail?.toLowerCase() || auth?.currentUser?.email?.toLowerCase() || null),
         createdAt: serverTimestamp(),
         downloads: 0
       });
       resolve({ id: docRef.id, title, category, description, path, url });
     });
   });
+}
+
+export async function addMaterialLink({ title, category, description, url, ownerEmail }) {
+  const db = getDb();
+  const auth = getAuthInstance();
+  const docRef = await addDoc(collection(db, 'materials'), {
+    title, category, description,
+    url,
+    path: null,
+    ownerEmail: (ownerEmail?.toLowerCase() || auth?.currentUser?.email?.toLowerCase() || null),
+    createdAt: serverTimestamp(),
+    downloads: 0
+  });
+  return { id: docRef.id, title, category, description, url };
 }
 
 export function subscribeMaterials(cb) {
@@ -228,14 +247,18 @@ export function subscribeMaterials(cb) {
 
 export async function deleteMaterialById(id) {
   const db = getDb();
-  const st = getStorageInstance();
   const refDoc = doc(collection(db, 'materials'), id);
   const snap = await getDoc(refDoc);
   if (snap.exists()) {
     const data = snap.data();
-    if (data.path) {
-      const ref = storageRef(st, data.path);
-      await deleteObject(ref).catch(() => {});
+    if (useStorage && data.path) {
+      try {
+        const st = getStorageInstance();
+        if (st) {
+          const ref = storageRef(st, data.path);
+          await deleteObject(ref).catch(() => {});
+        }
+      } catch (_) {}
     }
   }
   await deleteDoc(refDoc);

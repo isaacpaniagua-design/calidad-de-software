@@ -18,3 +18,7 @@ export const allowedEmailDomain = "potros.itson.edu.mx";
 export const allowedTeacherEmails = [
   "isaac.paniagua@potros.itson.edu.mx"
 ];
+
+// Habilitar o deshabilitar Firebase Storage.
+// Si no puedes crear un bucket en tu región, déjalo en false.
+export const useStorage = false;

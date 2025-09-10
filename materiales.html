@@ -680,6 +680,10 @@ body{
             />
           </div>
 
+          <div class="text-center mt-3">
+            <button type="button" id="showLinkForm" class="text-indigo-600 underline">Agregar enlace (sin archivo)</button>
+          </div>
+
           <!-- Upload Form -->
           <div class="upload-form hidden" id="uploadForm">
             <h3 class="text-xl font-bold text-gray-800 mb-4">
@@ -713,6 +717,17 @@ body{
                   id="materialDescription"
                   placeholder="Breve descripción del contenido y propósito del material"
                 ></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Enlace externo (opcional si no hay Storage)</label>
+                <input
+                  type="url"
+                  class="form-input"
+                  id="materialUrl"
+                  placeholder="https://drive.google.com/... o https://..."
+                />
+                <p class="text-sm text-gray-500 mt-1">Si no puedes usar almacenamiento, pega un URL. Si eliges archivo, ignora este campo.</p>
               </div>
 
               <div class="form-group">
@@ -1061,6 +1076,17 @@ body{
           }
         });
 
+      // Show form for link-only submission
+      const showLinkBtn = document.getElementById('showLinkForm');
+      if (showLinkBtn) {
+        showLinkBtn.addEventListener('click', function() {
+          const form = document.getElementById('uploadForm');
+          if (form) form.classList.remove('hidden');
+          const area = document.querySelector('.upload-area');
+          if (area) area.style.display = 'none';
+        });
+      }
+
       // Drag and drop
       const uploadArea = document.querySelector(".upload-area");
 
@@ -1328,8 +1354,8 @@ body{
       switchRole("teacher");
     </script>
     <script type="module">
-      import { onAuth, signInWithGooglePotros, signOutCurrent, uploadMaterial, subscribeMaterials, deleteMaterialById, incrementMaterialDownloads } from './js/firebase.js';
-      import { allowedEmailDomain, allowedTeacherEmails } from './js/firebase-config.js';
+      import { onAuth, signInWithGooglePotros, signOutCurrent, uploadMaterial, addMaterialLink, subscribeMaterials, deleteMaterialById, incrementMaterialDownloads } from './js/firebase.js';
+      import { allowedEmailDomain, allowedTeacherEmails, useStorage } from './js/firebase-config.js';
 
       const signInBtn = document.getElementById('signInMaterials');
       const signOutBtn = document.getElementById('signOutMaterials');
@@ -1410,9 +1436,42 @@ body{
               }
               grid.appendChild(card);
             }
-          });
+      });
         }
       });
+
+      // Soporte de enlace externo cuando Storage no está disponible
+      const f2 = document.getElementById('materialForm');
+      if (f2) {
+        f2.addEventListener('submit', async (e) => {
+          const fileInput = document.getElementById('fileInput');
+          const file = fileInput?.files?.[0];
+          const url = (document.getElementById('materialUrl')?.value || '').trim();
+          const title = document.getElementById('materialTitle').value.trim();
+          const category = document.getElementById('materialCategory').value;
+          const description = document.getElementById('materialDescription').value.trim();
+          if (!title || (!file && !url)) {
+            e.preventDefault(); e.stopImmediatePropagation();
+            alert('Proporciona archivo o enlace, y t��tulo');
+            return;
+          }
+          if (!file && url) {
+            e.preventDefault(); e.stopImmediatePropagation();
+            try {
+              await addMaterialLink({ title, category, description, url });
+              (document.getElementById('materialForm')).reset();
+              const uploadArea = document.querySelector('.upload-area');
+              if (uploadArea) uploadArea.style.display = 'block';
+              alert('Material agregado con enlace');
+            } catch (err) {
+              alert('No se pudo guardar el enlace');
+            }
+          } else if (file && !useStorage) {
+            e.preventDefault(); e.stopImmediatePropagation();
+            alert('Storage deshabilitado. Usa el campo de enlace externo.');
+          }
+        }, { capture: true });
+      }
 
       // Override submit to upload to Firebase
       const form = document.getElementById('materialForm');
