@@ -6,7 +6,7 @@ export const firebaseConfig = {
   apiKey: "AIzaSyBtNovYd0nk0JCgEIZcnip3ynVwZq4mXSE",
   authDomain: "clase-calidad-software.firebaseapp.com",
   projectId: "clase-calidad-software",
-  storageBucket: "clase-calidad-software.firebasestorage.app",
+  storageBucket: "clase-calidad-software.appspot.com",
   messagingSenderId: "506608159674",
   appId: "1:506608159674:web:ae1cc61c9e9ffda583eb83"
 };

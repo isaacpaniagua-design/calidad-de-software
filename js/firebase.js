@@ -40,16 +40,21 @@ export async function signInWithGooglePotros() {
   // Sugerencia visual del dominio (no es seguridad)
   provider.setCustomParameters({ hd: allowedEmailDomain });
 
-  const result = await signInWithPopup(auth, provider);
-  const user = result.user;
-
-  if (!user?.email || !user.email.toLowerCase().endsWith(`@${allowedEmailDomain}`)) {
-    // Si el dominio no es válido, cerramos sesión y rechazamos
-    await signOut(auth);
-    throw new Error(`Solo se permite acceder con cuenta @${allowedEmailDomain}`);
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    if (!user?.email || !user.email.toLowerCase().endsWith(`@${allowedEmailDomain}`)) {
+      await signOut(auth);
+      throw new Error(`Solo se permite acceder con cuenta @${allowedEmailDomain}`);
+    }
+    return user;
+  } catch (e) {
+    if (e?.code === 'auth/unauthorized-domain') {
+      const host = (typeof location !== 'undefined' ? location.hostname : '(desconocido)');
+      throw new Error(`Dominio no autorizado en Firebase Auth (${host}). Agrega este hostname en Firebase Console → Authentication → Settings → Authorized domains.`);
+    }
+    throw e;
   }
-
-  return user;
 }
 
 export async function signOutCurrent() {

@@ -324,7 +324,7 @@
             noAttendance.style.display = 'none';
             container.innerHTML = '';
             
-            const filtered = getFilteredAttendances();
+            const filtered = (typeof getFilteredAttendances === 'function') ? getFilteredAttendances() : registeredAttendances.slice();
             filtered.forEach((record, index) => {
                 const isTeacher = record.type === 'teacher';
                 const timeAgo = getTimeAgo(record.timestamp);
@@ -393,6 +393,22 @@
                 const end = new Date(dateObj); end.setHours(eh, em, 59, 999);
                 return dateObj >= start && dateObj <= end;
             } catch (_) { return true; }
+        }
+
+        // Filtros (texto/tipo)
+        function getFilteredAttendances() {
+            try {
+                const q = (document.getElementById('attFilterText')?.value || '').toLowerCase().trim();
+                const type = document.getElementById('attFilterType')?.value || 'all';
+                let items = registeredAttendances.slice();
+                if (q) {
+                    items = items.filter(it => (it.name||'').toLowerCase().includes(q) || (it.email||'').toLowerCase().includes(q));
+                }
+                if (type !== 'all') items = items.filter(it => (it.type||'') === type);
+                return items;
+            } catch (e) {
+                return registeredAttendances.slice();
+            }
         }
 
         // Toast de confirmación
