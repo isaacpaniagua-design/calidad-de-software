@@ -3398,15 +3398,16 @@
             const final = avg*0.3 + (s.projectFinal||0)*0.7;
             return `<tr><td>${idx+1}</td><td>${s.id||''}</td><td>${s.name||''}</td><td>${(s.email||'').toLowerCase()}</td><td>${g1.toFixed(2)}</td><td>${g2.toFixed(2)}</td><td>${g3.toFixed(2)}</td><td>${avg.toFixed(2)}</td><td>${(s.projectFinal||0).toFixed(1)}</td><td>${final.toFixed(2)}</td></tr>`;
           }).join('');
-          w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>
+          const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>
             <style>body{font-family:Arial,sans-serif;padding:24px} h1{font-size:18px;margin:0 0 12px} table{width:100%;border-collapse:collapse} th,td{border:1px solid #ddd;padding:6px;font-size:12px} th{background:#f3f4f6;text-align:left}</style>
             </head><body>
             <h1>${title} - ${new Date().toLocaleDateString('es-MX')}</h1>
             <table><thead><tr><th>#</th><th>ID</th><th>Nombre</th><th>Email</th><th>U1</th><th>U2</th><th>U3</th><th>Promedio</th><th>Proyecto</th><th>Final</th></tr></thead>
             <tbody>${rows}</tbody></table>
-            <script>window.onload=function(){window.print();}</script>
-            </body></html>`);
+            </body></html>`;
+          w.document.write(html);
           w.document.close();
+          setTimeout(()=>{ try{ w.focus(); w.print(); }catch(_){} }, 300);
         }
 
         document.getElementById('exportGradesCsvBtn')?.addEventListener('click', exportGradesCSV);
@@ -3454,8 +3455,10 @@
               const upd = s.updatedAt?.toDate ? s.updatedAt.toDate().toLocaleString('es-MX') : '';
               return `<tr><td>${idx+1}</td><td>${s.id||''}</td><td>${s.name||''}</td><td>${(s.email||'').toLowerCase()}</td><td>${g1.toFixed(2)}</td><td>${g2.toFixed(2)}</td><td>${g3.toFixed(2)}</td><td>${avg.toFixed(2)}</td><td>${(s.projectFinal||0).toFixed(1)}</td><td>${fin.toFixed(2)}</td><td>${upd}</td></tr>`;
             }).join('');
-            w.document.write(`<!DOCTYPE html><html><head><meta charset='utf-8'><title>Calificaciones ${start} a ${end}</title><style>body{font-family:Arial,sans-serif;padding:24px} table{width:100%;border-collapse:collapse} th,td{border:1px solid #ddd;padding:6px;font-size:12px} th{background:#f3f4f6;text-align:left}</style></head><body><h1>Calificaciones ${start} a ${end}</h1><table><thead><tr><th>#</th><th>ID</th><th>Nombre</th><th>Email</th><th>U1</th><th>U2</th><th>U3</th><th>Promedio</th><th>Proyecto</th><th>Final</th><th>Actualizado</th></tr></thead><tbody>${rows}</tbody></table><script>window.onload=function(){window.print();}</script></body></html>`);
+            const htmlRange = `<!DOCTYPE html><html><head><meta charset='utf-8'><title>Calificaciones ${start} a ${end}</title><style>body{font-family:Arial,sans-serif;padding:24px} table{width:100%;border-collapse:collapse} th,td{border:1px solid #ddd;padding:6px;font-size:12px} th{background:#f3f4f6;text-align:left}</style></head><body><h1>Calificaciones ${start} a ${end}</h1><table><thead><tr><th>#</th><th>ID</th><th>Nombre</th><th>Email</th><th>U1</th><th>U2</th><th>U3</th><th>Promedio</th><th>Proyecto</th><th>Final</th><th>Actualizado</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+            w.document.write(htmlRange);
             w.document.close();
+            setTimeout(()=>{ try{ w.focus(); w.print(); }catch(_){} }, 300);
           }
         }
 
