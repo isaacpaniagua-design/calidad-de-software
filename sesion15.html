@@ -4,17 +4,1080 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sesión 15: Introducción a la Unidad II</title>
-    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: #764ba2;
+      }
+
+      .slide-transition {
+        transition: all 0.5s ease-in-out;
+      }
+
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .card-hover {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      }
+
+      .fade-in {
+        animation: fadeIn 0.8s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .pulse-animation {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      .navigation {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 15px 20px;
+        border-radius: 50px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+      }
+
+      .nav-button {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+      }
+
+      .nav-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
+      }
+
+      .nav-button:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .slide-counter {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 10px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        color: #374151;
+        z-index: 1000;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .highlight-box {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .foundation-icon {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        color: white;
+        font-size: 3rem;
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+      }
+
+      .models-container {
+        background: white;
+        border-radius: 2rem;
+        padding: 3rem;
+        margin: 2rem 0;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .reason-card {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        margin: 2rem 0;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border-left: 8px solid;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+      }
+
+      .reason-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+      }
+
+      .language-card {
+        border-left-color: #3b82f6;
+        background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      }
+
+      .roadmap-card {
+        border-left-color: #10b981;
+        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+      }
+
+      .competitive-card {
+        border-left-color: #f59e0b;
+        background: linear-gradient(135deg, #fffbeb, #fef3c7);
+      }
+
+      .big-three-container {
+        background: white;
+        border-radius: 2rem;
+        padding: 3rem;
+        margin: 2rem 0;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .model-card {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        margin: 2rem 0;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border: 4px solid;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+      }
+
+      .model-card:hover {
+        transform: translateY(-10px) scale(1.03);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+      }
+
+      .cmmi-card {
+        border-color: #dc2626;
+        background: linear-gradient(135deg, #fef2f2, #fee2e2);
+      }
+
+      .iso-card {
+        border-color: #2563eb;
+        background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      }
+
+      .moprosoft-card {
+        border-color: #059669;
+        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+      }
+
+      .model-logo {
+        width: 100px;
+        height: 100px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        color: white;
+        font-weight: bold;
+        font-size: 1.5rem;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      }
+
+      .cmmi-logo {
+        background: linear-gradient(135deg, #dc2626, #991b1b);
+      }
+
+      .iso-logo {
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      }
+
+      .moprosoft-logo {
+        background: linear-gradient(135deg, #059669, #047857);
+      }
+
+      .foundation-animation {
+        animation: foundationGlow 3s ease-in-out infinite;
+      }
+
+      @keyframes foundationGlow {
+        0%,
+        100% {
+          box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3);
+        }
+        50% {
+          box-shadow: 0 8px 35px rgba(245, 158, 11, 0.5);
+        }
+      }
+
+      .recipe-analogy {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin: 2rem 0;
+        color: white;
+      }
+
+      .gps-analogy {
+        background: linear-gradient(135deg, #10b981, #047857);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin: 2rem 0;
+        color: white;
+      }
+
+      .trust-analogy {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin: 2rem 0;
+        color: white;
+      }
+
+      .keyword-highlight {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 1rem;
+        padding: 1rem;
+        margin: 1rem 0;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        text-align: center;
+      }
+
+      .unit-transition {
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin: 2rem 0;
+        color: white;
+      }
+
+      @media (max-width: 768px) {
+        .grid-responsive {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+
+        .models-container,
+        .big-three-container {
+          padding: 2rem 1rem;
+        }
+      }
+    </style>
+  
+<style>
+body{
+  font-family:'Inter','Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height:1.6;
+  color:#333;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  min-height:100vh;
+  padding-top:80px;
+}
+.qs-nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:saturate(140%) blur(20px);
+       background:rgba(255,255,255,.95);border-bottom:1px solid rgba(255,255,255,.2);
+       box-shadow:0 8px 32px rgba(0,0,0,.10)}
+.qs-nav .wrap{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:nowrap}
+.qs-brand{display:flex;gap:15px;align-items:center;color:#1f2937;font-weight:800;font-size:1.3rem;text-decoration:none;position:relative;padding:8px 16px;border-radius:20px;flex:0 0 auto}
+.qs-brand::before{content:"🎓";font-size:1.6rem}
+.qs-tabs{display:flex;gap:12px;background:rgba(255,255,255,.3);padding:8px;border-radius:30px;backdrop-filter:blur(10px);
+         flex:1 1 auto;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.qs-btn{border:0;padding:12px 20px;border-radius:25px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;font-weight:600;font-size:.9rem;
+       transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(10px);border:2px solid transparent;position:relative;overflow:hidden;flex:0 0 auto}
+.qs-btn::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);transition:all .4s ease;z-index:-1}
+.qs-btn:hover{color:#fff;transform:translateY(-3px);box-shadow:0 8px 25px rgba(102,126,234,.4);border-color:rgba(102,126,234,.3)}
+.qs-btn:hover::before{left:0}
+.qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none;box-shadow:0 6px 20px rgba(102,126,234,.5);transform:translateY(-2px)}
+.qs-btn[aria-current="page"]::before{left:0}
+.footer{margin-top:60px;padding:30px 20px;text-align:center;background:rgba(255, 255, 255, 0.1);
+        backdrop-filter:blur(10px);border-top:1px solid rgba(255, 255, 255, 0.2)}
+.footer-content{max-width:1200px;margin:0 auto;color:rgba(255,255,255,0.8);font-size:0.95rem;transition:all 0.3s ease;cursor:default}
+.footer-content:hover{ color:#fff; transform:translateY(-2px); }
+.slide-counter, #slideIndicator, .slide-indicator{
+  font-size:10px !important; line-height:1 !important; padding:4px 8px !important; min-width:28px !important; border-radius:12px !important; opacity:.85 !important;
+}
+</style>
+
+</head>
+  <body class="min-h-screen">
+
+<!-- NAV Plataforma QS -->
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+      
+    </nav>
+  </div>
+</div>
+
+    <!-- Slide Counter -->
+    <div class="slide-counter">
+      <span id="current-slide">1</span> / <span id="total-slides">3</span>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8 pb-32">
+      <!-- Slide 1: Título -->
+      <div id="slide1" class="slide-transition fade-in">
+        <div
+          class="gradient-bg rounded-2xl p-12 text-white text-center mb-8 card-hover"
+        >
+          <div class="max-w-4xl mx-auto">
+            <div class="foundation-icon foundation-animation">🏗️</div>
+            <h1 class="text-5xl font-bold mb-6 pulse-animation">
+              Unidad II - Modelos y Estándares de Calidad
+            </h1>
+            <h2 class="text-3xl font-semibold mb-8 opacity-90">
+              Construyendo sobre roca: Los planos de la industria del software
+            </h2>
+
+            <div class="highlight-box">
+              <div class="flex items-center justify-center mb-4">
+                <svg
+                  class="w-8 h-8 mr-3"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="text-xl font-semibold">
+                  De la Teoría a la Práctica
+                </h3>
+              </div>
+              <div class="text-lg opacity-90">
+                <p>
+                  "No basta con saber qué es la calidad, hay que saber cómo
+                  implementarla sistemáticamente"
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Transición de Unidades -->
+        <div class="unit-transition">
+          <div class="flex items-center justify-center mb-6">
+            <div class="text-4xl mr-4">🔄</div>
+            <h3 class="text-2xl font-bold">
+              Transición: De la Unidad I a la Unidad II
+            </h3>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-white bg-opacity-20 rounded-xl p-6">
+              <div class="text-center">
+                <div class="text-3xl mb-3">📚</div>
+                <h4 class="font-bold text-lg mb-2">
+                  Unidad I: Los Fundamentos
+                </h4>
+                <p class="text-sm opacity-90">
+                  Establecimos <strong>qué es la calidad</strong> y
+                  <strong>cómo medirla</strong>. Aprendimos los conceptos
+                  teóricos fundamentales.
+                </p>
+              </div>
+            </div>
+            <div class="bg-white bg-opacity-20 rounded-xl p-6">
+              <div class="text-center">
+                <div class="text-3xl mb-3">🏭</div>
+                <h4 class="font-bold text-lg mb-2">
+                  Unidad II: La Implementación
+                </h4>
+                <p class="text-sm opacity-90">
+                  Veremos
+                  <strong>cómo las organizaciones exitosas</strong> implementan
+                  la calidad de manera <strong>sistemática y probada</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2: ¿Por qué necesitamos Modelos? -->
+      <div id="slide2" class="slide-transition hidden">
+        <div
+          class="bg-white bg-opacity-95 rounded-2xl shadow-xl p-8 mb-8 card-hover"
+        >
+          <div class="text-center mb-8">
+            <div class="text-6xl mb-4">🤔</div>
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">
+              ¿Por qué necesitamos Modelos?
+            </h2>
+            <h3 class="text-2xl text-purple-600 font-semibold">
+              La diferencia entre el caos y el orden
+            </h3>
+          </div>
+
+          <!-- Introducción -->
+          <div
+            class="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl p-8 text-white mb-8"
+          >
+            <div class="flex items-center justify-center mb-6">
+              <div class="text-4xl mr-4">🎯</div>
+              <h3 class="text-2xl font-bold">El Contexto</h3>
+            </div>
+            <p class="text-xl text-center leading-relaxed opacity-95">
+              En la Unidad I establecimos <strong>qué es la calidad</strong> y
+              <strong>cómo medirla</strong>. Ahora, en la Unidad II, veremos
+              cómo las organizaciones exitosas la implementan de manera
+              <strong>sistemática</strong>. No lo hacen al azar; usan
+              <strong>modelos y estándares</strong>. ¿Por qué?
+            </p>
+          </div>
+
+          <!-- Container de Razones -->
+          <div class="models-container">
+            <div class="text-center mb-8">
+              <h3 class="text-3xl font-bold text-gray-800 mb-4">
+                Tres Razones Fundamentales
+              </h3>
+              <p class="text-gray-600">
+                Haz clic en cada razón para explorar su importancia
+              </p>
+            </div>
+
+            <!-- Razón 1: Lenguaje Común -->
+            <div
+              class="reason-card language-card"
+              onclick="highlightReason(this)"
+            >
+              <div class="flex items-start">
+                <div
+                  class="w-20 h-20 bg-blue-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-2xl">🗣️</span>
+                </div>
+                <div class="flex-1">
+                  <h4 class="text-2xl font-bold text-blue-800 mb-4">
+                    Para tener un Lenguaje Común sobre la Calidad
+                  </h4>
+
+                  <div class="space-y-4">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                      <h5 class="font-bold text-blue-800 mb-2">
+                        🎯 El Problema de la Subjetividad
+                      </h5>
+                      <p class="text-blue-700">
+                        Sin un modelo, la palabra <strong>"calidad"</strong> es
+                        subjetiva. Cada persona, cada equipo, cada empresa puede
+                        tener una interpretación diferente.
+                      </p>
+                    </div>
+
+                    <div class="bg-blue-100 rounded-lg p-4">
+                      <h5 class="font-bold text-blue-800 mb-2">
+                        ✅ La Solución: Estándares Universales
+                      </h5>
+                      <p class="text-blue-700">
+                        Con un modelo, todos en la industria entienden qué
+                        significa ser
+                        <strong>"Nivel de Madurez 3"</strong> o tener una
+                        <strong>"Certificación ISO 9001"</strong>.
+                      </p>
+                    </div>
+
+                    <!-- Analogía de la Receta -->
+                    <div class="recipe-analogy">
+                      <div class="flex items-center justify-center mb-4">
+                        <div class="text-3xl mr-3">👨‍🍳</div>
+                        <h5 class="font-bold text-lg">Analogía de la Cocina</h5>
+                      </div>
+                      <p class="text-center opacity-95">
+                        Es la diferencia entre decir
+                        <strong>"cocina algo rico"</strong> y seguir una
+                        <strong>receta con medidas exactas</strong>. Una es
+                        subjetiva, la otra es reproducible.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Razón 2: Mapa de Ruta -->
+            <div
+              class="reason-card roadmap-card"
+              onclick="highlightReason(this)"
+            >
+              <div class="flex items-start">
+                <div
+                  class="w-20 h-20 bg-green-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-2xl">🗺️</span>
+                </div>
+                <div class="flex-1">
+                  <h4 class="text-2xl font-bold text-green-800 mb-4">
+                    Para tener un Mapa de Ruta para la Mejora
+                  </h4>
+
+                  <div class="space-y-4">
+                    <div class="bg-green-50 rounded-lg p-4">
+                      <h5 class="font-bold text-green-800 mb-2">
+                        🎯 El Problema del Caos
+                      </h5>
+                      <p class="text-green-700">
+                        Sin un modelo, las organizaciones intentan mejorar
+                        <strong>al azar</strong>. No saben por dónde empezar ni
+                        cuál es el siguiente paso lógico.
+                      </p>
+                    </div>
+
+                    <div class="bg-green-100 rounded-lg p-4">
+                      <h5 class="font-bold text-green-800 mb-2">
+                        ✅ La Solución: Camino Probado
+                      </h5>
+                      <p class="text-green-700">
+                        Los modelos como <strong>CMMI</strong> nos dan un camino
+                        probado y escalonado. Nos muestran
+                        <strong>paso a paso</strong> cómo pasar de un estado
+                        caótico a uno predecible y optimizado.
+                      </p>
+                    </div>
+
+                    <!-- Analogía del GPS -->
+                    <div class="gps-analogy">
+                      <div class="flex items-center justify-center mb-4">
+                        <div class="text-3xl mr-3">🧭</div>
+                        <h5 class="font-bold text-lg">Analogía del GPS</h5>
+                      </div>
+                      <p class="text-center opacity-95">
+                        Son el
+                        <strong>GPS para la excelencia organizacional</strong>.
+                        Te dicen exactamente dónde estás y cómo llegar a donde
+                        quieres ir.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Razón 3: Competitividad -->
+            <div
+              class="reason-card competitive-card"
+              onclick="highlightReason(this)"
+            >
+              <div class="flex items-start">
+                <div
+                  class="w-20 h-20 bg-yellow-500 rounded-xl flex items-center justify-center mr-6 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-2xl">🏆</span>
+                </div>
+                <div class="flex-1">
+                  <h4 class="text-2xl font-bold text-yellow-800 mb-4">
+                    Para ser Competitivos y Demostrar Capacidad
+                  </h4>
+
+                  <div class="space-y-4">
+                    <div class="bg-yellow-50 rounded-lg p-4">
+                      <h5 class="font-bold text-yellow-800 mb-2">
+                        🎯 El Problema de la Credibilidad
+                      </h5>
+                      <p class="text-yellow-700">
+                        En un mercado global, no basta con
+                        <strong>decir</strong> que eres bueno. Los clientes
+                        necesitan <strong>pruebas objetivas</strong> de tu
+                        capacidad.
+                      </p>
+                    </div>
+
+                    <div class="bg-yellow-100 rounded-lg p-4">
+                      <h5 class="font-bold text-yellow-800 mb-2">
+                        ✅ La Solución: Certificación Independiente
+                      </h5>
+                      <p class="text-yellow-700">
+                        Una certificación es un
+                        <strong
+                          >sello de confianza reconocido globalmente</strong
+                        >. Le dice a tus clientes: "No solo decimos que somos
+                        buenos, hemos sido evaluados por un tercero
+                        independiente".
+                      </p>
+                    </div>
+
+                    <!-- Analogía de la Confianza -->
+                    <div class="trust-analogy">
+                      <div class="flex items-center justify-center mb-4">
+                        <div class="text-3xl mr-3">🤝</div>
+                        <h5 class="font-bold text-lg">
+                          El Poder de la Confianza
+                        </h5>
+                      </div>
+                      <p class="text-center opacity-95">
+                        Cumplimos con los
+                        <strong>más altos estándares de la industria</strong>.
+                        Esto abre las puertas a
+                        <strong>contratos más grandes</strong> y
+                        <strong>mercados internacionales</strong>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conclusión -->
+          <div
+            class="bg-gradient-to-r from-gray-700 to-gray-900 rounded-2xl p-8 text-white"
+          >
+            <div class="flex items-center justify-center mb-4">
+              <div class="text-4xl mr-4">💡</div>
+              <h3 class="text-2xl font-bold">La Clave del Éxito</h3>
+            </div>
+            <p class="text-xl text-center leading-relaxed opacity-95">
+              Los modelos y estándares no son
+              <strong>burocracia innecesaria</strong>. Son las
+              <strong>herramientas probadas</strong> que separan a las
+              organizaciones exitosas de las que luchan por sobrevivir en un
+              mercado cada vez más competitivo.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3: Los "3 Grandes" -->
+      <div id="slide3" class="slide-transition hidden">
+        <div
+          class="bg-white bg-opacity-95 rounded-2xl shadow-xl p-8 mb-8 card-hover"
+        >
+          <div class="text-center mb-8">
+            <div class="text-6xl mb-4">🏛️</div>
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">
+              Los "3 Grandes"
+            </h2>
+            <h3 class="text-2xl text-indigo-600 font-semibold">
+              Los marcos de trabajo más influyentes en la industria del software
+            </h3>
+          </div>
+
+          <!-- Introducción -->
+          <div
+            class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 text-white mb-8"
+          >
+            <div class="flex items-center justify-center mb-6">
+              <div class="text-4xl mr-4">🎯</div>
+              <h3 class="text-2xl font-bold">Enfoque de la Unidad</h3>
+            </div>
+            <p class="text-xl text-center leading-relaxed opacity-95">
+              En esta unidad, nos enfocaremos en
+              <strong>tres de los marcos de trabajo más influyentes</strong> en
+              la industria del software. Cada uno tiene un
+              <strong>enfoque y un propósito distinto</strong>.
+            </p>
+          </div>
+
+          <!-- Container de los 3 Grandes -->
+          <div class="big-three-container">
+            <div class="text-center mb-8">
+              <h3 class="text-3xl font-bold text-gray-800 mb-4">
+                Los Tres Pilares de la Calidad
+              </h3>
+              <p class="text-gray-600">
+                Haz clic en cada modelo para explorar su filosofía y enfoque
+              </p>
+            </div>
+
+            <!-- CMMI -->
+            <div class="model-card cmmi-card" onclick="highlightModel(this)">
+              <div class="cmmi-logo">CMMI</div>
+              <h4 class="text-3xl font-bold text-red-800 mb-4 text-center">
+                CMMI
+              </h4>
+              <h5 class="text-xl font-semibold text-red-700 mb-4 text-center">
+                (Capability Maturity Model Integration)
+              </h5>
+
+              <div class="space-y-4">
+                <div class="bg-red-50 rounded-lg p-4">
+                  <div class="flex items-center mb-3">
+                    <div class="text-2xl mr-3">🎯</div>
+                    <h5 class="font-bold text-red-800 text-lg">Enfoque:</h5>
+                  </div>
+                  <p class="text-red-700 text-lg">
+                    La <strong>madurez de los procesos de desarrollo</strong>.
+                  </p>
+                </div>
+
+                <div class="bg-red-100 rounded-lg p-4">
+                  <div class="flex items-center mb-3">
+                    <div class="text-2xl mr-3">💭</div>
+                    <h5 class="font-bold text-red-800 text-lg">Filosofía:</h5>
+                  </div>
+                  <p class="text-red-700">
+                    Proporciona un
+                    <strong>camino de mejora incremental</strong> a través de
+                    <strong>5 niveles de madurez</strong>. Es el modelo de
+                    referencia para organizaciones que buscan optimizar su
+                    ingeniería de software de manera <strong>rigurosa</strong>.
+                  </p>
+                </div>
+
+                <div class="keyword-highlight bg-red-200">
+                  <div class="flex items-center justify-center">
+                    <div class="text-2xl mr-3">🔑</div>
+                    <h5 class="font-bold text-red-800 text-xl">
+                      Palabra Clave: Madurez
+                    </h5>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ISO -->
+            <div class="model-card iso-card" onclick="highlightModel(this)">
+              <div class="iso-logo">ISO</div>
+              <h4 class="text-3xl font-bold text-blue-800 mb-4 text-center">
+                ISO
+              </h4>
+              <h5 class="text-xl font-semibold text-blue-700 mb-4 text-center">
+                (International Organization for Standardization)
+              </h5>
+
+              <div class="space-y-4">
+                <div class="bg-blue-50 rounded-lg p-4">
+                  <div class="flex items-center mb-3">
+                    <div class="text-2xl mr-3">🎯</div>
+                    <h5 class="font-bold text-blue-800 text-lg">Enfoque:</h5>
+                  </div>
+                  <p class="text-blue-700 text-lg">
+                    <strong>Estándares internacionales</strong> para la gestión
+                    y la calidad.
+                  </p>
+                </div>
+
+                <div class="bg-blue-100 rounded-lg p-4">
+                  <div class="flex items-center mb-3">
+                    <div class="text-2xl mr-3">💭</div>
+                    <h5 class="font-bold text-blue-800 text-lg">Filosofía:</h5>
+                  </div>
+                  <p class="text-blue-700">
+                    Se divide en dos grandes áreas para nosotros:
+                    <strong>ISO 9001</strong>, que certifica el sistema de
+                    gestión de calidad de toda la organización, y la familia
+                    <strong>ISO 25010</strong>, que define con precisión la
+                    calidad del producto de software.
+                  </p>
+                </div>
+
+                <div class="keyword-highlight bg-blue-200">
+                  <div class="flex items-center justify-center">
+                    <div class="text-2xl mr-3">🔑</div>
+                    <h5 class="font-bold text-blue-800 text-xl">
+                      Palabra Clave: Universalidad
+                    </h5>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- MoProSoft -->
+            <div
+              class="model-card moprosoft-card"
+              onclick="highlightModel(this)"
+            >
+              <div class="moprosoft-logo">MPS</div>
+              <h4 class="text-3xl font-bold text-green-800 mb-4 text-center">
+                MoProSoft
+              </h4>
+              <h5 class="text-xl font-semibold text-green-700 mb-4 text-center">
+                (Modelo de Procesos para la Industria de Software)
+              </h5>
+
+              <div class="space-y-4">
+                <div class="bg-green-50 rounded-lg p-4">
+                  <div class="flex items-center mb-3">
+                    <div class="text-2xl mr-3">🎯</div>
+                    <h5 class="font-bold text-green-800 text-lg">Enfoque:</h5>
+                  </div>
+                  <p class="text-green-700 text-lg">
+                    Un modelo <strong>mexicano, ágil</strong> y adaptado a la
+                    realidad de las <strong>PyMEs</strong>.
+                  </p>
+                </div>
+
+                <div class="bg-green-100 rounded-lg p-4">
+                  <div class="flex items-center mb-3">
+                    <div class="text-2xl mr-3">💭</div>
+                    <h5 class="font-bold text-green-800 text-lg">Filosofía:</h5>
+                  </div>
+                  <p class="text-green-700">
+                    Busca ser una
+                    <strong>alternativa más ligera y accesible</strong> a CMMI,
+                    permitiendo a las pequeñas y medianas empresas adoptar
+                    mejores prácticas de ingeniería de software sin una
+                    <strong>inversión prohibitiva</strong>.
+                  </p>
+                </div>
+
+                <div class="keyword-highlight bg-green-200">
+                  <div class="flex items-center justify-center">
+                    <div class="text-2xl mr-3">🔑</div>
+                    <h5 class="font-bold text-green-800 text-xl">
+                      Palabra Clave: Accesibilidad
+                    </h5>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Comparación Visual -->
+          <div
+            class="bg-gradient-to-r from-gray-700 to-gray-900 rounded-2xl p-8 text-white"
+          >
+            <div class="flex items-center justify-center mb-6">
+              <div class="text-4xl mr-4">⚖️</div>
+              <h3 class="text-2xl font-bold">Tres Enfoques, Un Objetivo</h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                <div class="text-3xl mb-3">🏗️</div>
+                <h4 class="font-bold text-lg mb-2">CMMI</h4>
+                <p class="text-sm opacity-90">
+                  Para organizaciones que buscan
+                  <strong>excelencia rigurosa</strong>
+                </p>
+              </div>
+              <div class="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                <div class="text-3xl mb-3">🌍</div>
+                <h4 class="font-bold text-lg mb-2">ISO</h4>
+                <p class="text-sm opacity-90">
+                  Para organizaciones que buscan
+                  <strong>reconocimiento global</strong>
+                </p>
+              </div>
+              <div class="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                <div class="text-3xl mb-3">🚀</div>
+                <h4 class="font-bold text-lg mb-2">MoProSoft</h4>
+                <p class="text-sm opacity-90">
+                  Para PyMEs que buscan <strong>mejora práctica</strong>
+                </p>
+              </div>
+            </div>
+
+            <div class="text-center mt-6">
+              <p class="text-xl opacity-95">
+                Todos comparten el mismo objetivo:
+                <strong>elevar la calidad del software</strong>
+                de manera sistemática y medible.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Navigation -->
+    <div class="navigation">
+      <button class="nav-button" onclick="previousSlide()">⬅️ Anterior</button>
+      <button class="nav-button" onclick="resetAll()">🔄 Reiniciar</button>
+      <button class="nav-button" onclick="nextSlide()">Siguiente ➡️</button>
+    </div>
+
+    <script>
+      let currentSlide = 1;
+      const totalSlides = 3;
+
+      function updateSlideCounter() {
+        document.getElementById("current-slide").textContent = currentSlide;
+        document.getElementById("total-slides").textContent = totalSlides;
+      }
+
+      function showSlide(slideNumber) {
+        // Hide all slides
+        for (let i = 1; i <= totalSlides; i++) {
+          document.getElementById("slide" + i).classList.add("hidden");
+        }
+
+        // Show selected slide
+        document
+          .getElementById("slide" + slideNumber)
+          .classList.remove("hidden");
+
+        currentSlide = slideNumber;
+        updateSlideCounter();
+        updateNavigationButtons();
+
+        // Auto-scroll to top when changing slides
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      }
+
+      function updateNavigationButtons() {
+        const prevButton = document.querySelector(
+          ".navigation button:first-child"
+        );
+        const nextButton = document.querySelector(
+          ".navigation button:last-child"
+        );
+
+        prevButton.disabled = currentSlide === 1;
+        nextButton.disabled = currentSlide === totalSlides;
+      }
+
+      function previousSlide() {
+        if (currentSlide > 1) {
+          showSlide(currentSlide - 1);
+        }
+      }
+
+      function nextSlide() {
+        if (currentSlide < totalSlides) {
+          showSlide(currentSlide + 1);
+        }
+      }
+
+      function resetAll() {
+        showSlide(1);
+      }
+
+      function highlightReason(element) {
+        // Remove highlight from all reason cards
+        const cards = document.querySelectorAll(".reason-card");
+        cards.forEach((card) => {
+          card.style.transform = "translateY(0) scale(1)";
+          card.style.boxShadow = "0 8px 25px rgba(0, 0, 0, 0.1)";
+        });
+
+        // Highlight the clicked card
+        element.style.transform = "translateY(-8px) scale(1.02)";
+        element.style.boxShadow = "0 15px 40px rgba(0, 0, 0, 0.2)";
+
+        // Add a subtle pulse effect
+        element.style.animation = "none";
+        setTimeout(() => {
+          element.style.animation = "pulse 1s ease-in-out";
+        }, 10);
+      }
+
+      function highlightModel(element) {
+        // Remove highlight from all model cards
+        const modelCards = document.querySelectorAll(".model-card");
+        modelCards.forEach((card) => {
+          card.style.transform = "translateY(0) scale(1)";
+          card.style.boxShadow = "0 8px 25px rgba(0, 0, 0, 0.1)";
+        });
+
+        // Highlight the clicked card
+        element.style.transform = "translateY(-10px) scale(1.03)";
+        element.style.boxShadow = "0 20px 50px rgba(0, 0, 0, 0.2)";
+
+        // Add a subtle glow effect
+        element.style.animation = "none";
+        setTimeout(() => {
+          element.style.animation = "pulse 1.5s ease-in-out";
+        }, 10);
+      }
+
+      // Keyboard navigation
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowLeft") {
+          previousSlide();
+        } else if (e.key === "ArrowRight") {
+          nextSlide();
+        } else if (e.key === "Home") {
+          resetAll();
+        }
+      });
+
+      // Initialize
+      showSlide(1);
+    </script>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97b386d2d2d7f7af',t:'MTc1NzIyMDAxMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
   
 <!-- Pie de página -->
 <footer class="footer">
   <div class="footer-content">© 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua</div>
 </footer>
 
-  <script defer src="js/layout.js"></script>
 </body>
 </html>
-
-
-
-

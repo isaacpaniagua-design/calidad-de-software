@@ -4,10 +4,1909 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sesión 28 - Introducción a Normas de Calidad</title>
-      <script defer src="js/layout.js"></script>
-</body>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .slide {
+            display: none;
+            animation: slideIn 0.5s ease-in-out;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
+        }
+        
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        @keyframes certification-flow {
+            0% { transform: translateX(-100%) rotate(0deg); }
+            50% { transform: translateX(50vw) rotate(180deg); }
+            100% { transform: translateX(100vw) rotate(360deg); }
+        }
+        
+        @keyframes quality-wave {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.2); }
+        }
+        
+        @keyframes standard-orbit {
+            0% { transform: rotate(0deg) translateX(100px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(100px) rotate(-360deg); }
+        }
+        
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        .bounce-animation {
+            animation: bounce 2s infinite;
+        }
+        
+        .rotate-animation {
+            animation: rotate 4s linear infinite;
+        }
+        
+        .glow-animation {
+            animation: glow 2s infinite;
+        }
+        
+        .certification-animation {
+            animation: certification-flow 8s linear infinite;
+        }
+        
+        .quality-wave-animation {
+            animation: quality-wave 3s ease-in-out infinite;
+        }
+        
+        .standard-orbit-animation {
+            animation: standard-orbit 10s linear infinite;
+        }
+        
+        .slide-bg-1 {
+            background: linear-gradient(135deg, #1e40af 0%, #3730a3 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide-bg-1::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            animation: float 30s linear infinite;
+        }
+        
+        .slide-bg-2 {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide-bg-3 {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slide-bg-4 {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .standard-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .standard-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .benefit-meter {
+            position: relative;
+            width: 120px;
+            height: 120px;
+        }
+        
+        .meter-bg {
+            fill: none;
+            stroke: #e5e7eb;
+            stroke-width: 8;
+        }
+        
+        .meter-fill {
+            fill: none;
+            stroke: #3b82f6;
+            stroke-width: 8;
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+            transition: stroke-dasharray 1s ease-in-out;
+        }
+        
+        .typing-effect {
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 3px solid;
+            animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: currentColor; }
+        }
+        
+        .certification-badge {
+            position: relative;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        
+        .certification-badge:hover {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        .risk-indicator {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .risk-low { background-color: #10b981; }
+        .risk-medium { background-color: #f59e0b; }
+        .risk-high { background-color: #ef4444; }
+        .risk-critical { background-color: #dc2626; animation: pulse 1s infinite; }
+        
+        .comparison-table {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+        
+        .standard-explorer {
+            transition: all 0.3s ease;
+        }
+        
+        .standard-explorer.active {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+        }
+        
+        .maturity-level {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .maturity-level:hover {
+            transform: translateX(10px);
+        }
+        
+        .consequence-simulator {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border: 2px solid #f87171;
+        }
+        
+        .discussion-prompt {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border: 2px solid #60a5fa;
+        }
+        
+        .orbit-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+        }
+        
+        .orbit-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: white;
+            z-index: 10;
+        }
+        
+        .orbit-item {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 60px;
+            height: 60px;
+            margin: -30px 0 0 -30px;
+        }
+        
+        .orbit-item-content {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border: 3px solid #e5e7eb;
+        }
+        
+        .scenario-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .scenario-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .impact-visualization {
+            position: relative;
+            height: 200px;
+            background: linear-gradient(to right, #ef4444 0%, #f59e0b 50%, #10b981 100%);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .impact-marker {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 80%;
+            background: white;
+            border-radius: 2px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+      
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <!-- Navigation -->
+    <div class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50 px-6 py-4">
+        <div class="flex justify-between items-center max-w-6xl mx-auto">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xl font-bold text-gray-800">Sesión 28 - Introducción a Normas de Calidad</h1>
+                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                    Diapositiva <span id="currentSlide">1</span> de 4
+                </span>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="previousSlide()" id="prevBtn" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
+                    ← Anterior
+                </button>
+                <button onclick="nextSlide()" id="nextBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    Siguiente →
+                </button>
+            </div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+            <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 25%"></div>
+        </div>
+    </div>
+
+    <!-- Slides Container -->
+    <div class="pt-24 pb-8 px-6">
+        <div class="max-w-6xl mx-auto">
+            
+            <!-- Slide 1: Título -->
+            <div class="slide active" id="slide1">
+                <div class="slide-bg-1 rounded-3xl p-12 text-center text-white min-h-[600px] flex flex-col justify-center items-center relative z-10">
+                    <!-- Orbiting Standards Animation -->
+                    <div class="orbit-container mb-8">
+                        <div class="orbit-center pulse-animation">🏆</div>
+                        <div class="orbit-item standard-orbit-animation" style="animation-delay: 0s;">
+                            <div class="orbit-item-content">📋</div>
+                        </div>
+                        <div class="orbit-item standard-orbit-animation" style="animation-delay: -2s;">
+                            <div class="orbit-item-content">🌍</div>
+                        </div>
+                        <div class="orbit-item standard-orbit-animation" style="animation-delay: -4s;">
+                            <div class="orbit-item-content">⚖️</div>
+                        </div>
+                        <div class="orbit-item standard-orbit-animation" style="animation-delay: -6s;">
+                            <div class="orbit-item-content">🔒</div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-center mb-8 relative">
+                        <div class="text-6xl mr-6 float-animation">📜</div>
+                        <div class="text-6xl mx-4 pulse-animation">🌐</div>
+                        <div class="text-6xl mx-4 bounce-animation">🏅</div>
+                        <div class="text-6xl ml-6 rotate-animation">⚙️</div>
+                    </div>
+                    
+                    <h1 class="text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
+                        <span class="text-yellow-300 typing-effect">Normas de Calidad:</span><br>
+                        <span class="text-blue-300 pulse-animation">El Lenguaje Común</span><br>
+                        <span class="text-white">de la Industria</span>
+                    </h1>
+                    
+                    <!-- Certification Flow Animation -->
+                    <div class="relative w-full h-20 mb-8 overflow-hidden">
+                        <div class="certification-animation text-4xl absolute top-1/2 transform -translate-y-1/2">🏆</div>
+                        <div class="certification-animation text-4xl absolute top-1/2 transform -translate-y-1/2" style="animation-delay: -2s;">📋</div>
+                        <div class="certification-animation text-4xl absolute top-1/2 transform -translate-y-1/2" style="animation-delay: -4s;">✅</div>
+                        <div class="certification-animation text-4xl absolute top-1/2 transform -translate-y-1/2" style="animation-delay: -6s;">🌟</div>
+                    </div>
+                    
+                    <!-- Live Standards Counter -->
+                    <div class="grid grid-cols-4 gap-6 max-w-4xl">
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                            <div class="text-3xl mb-2">🌍</div>
+                            <div class="text-sm opacity-80">Normas ISO</div>
+                            <div class="text-2xl font-bold text-blue-300" id="isoCounter">23,000+</div>
+                        </div>
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                            <div class="text-3xl mb-2">⚡</div>
+                            <div class="text-sm opacity-80">Normas IEEE</div>
+                            <div class="text-2xl font-bold text-green-300" id="ieeeCounter">1,300+</div>
+                        </div>
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                            <div class="text-3xl mb-2">🏢</div>
+                            <div class="text-sm opacity-80">Empresas Certificadas</div>
+                            <div class="text-2xl font-bold text-yellow-300" id="companiesCounter">1M+</div>
+                        </div>
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4">
+                            <div class="text-3xl mb-2">🌎</div>
+                            <div class="text-sm opacity-80">Países Participantes</div>
+                            <div class="text-2xl font-bold text-red-300" id="countriesCounter">165</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 bg-white bg-opacity-20 rounded-2xl p-6 max-w-3xl">
+                        <p class="text-xl font-medium text-yellow-300 mb-2">
+                            "Estableciendo estándares globales para la excelencia"
+                        </p>
+                        <p class="text-lg opacity-90">
+                            Conectando organizaciones a través de un lenguaje común de calidad
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2: ¿Por qué son necesarias? -->
+            <div class="slide" id="slide2">
+                <div class="slide-bg-2 rounded-3xl p-12 min-h-[600px] relative z-10">
+                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                        🤔 ¿Por qué son necesarias las Normas de Calidad?
+                    </h2>
+                    
+                    <!-- Main Benefits -->
+                    <div class="grid md:grid-cols-3 gap-8 mb-8">
+                        <!-- Comparar -->
+                        <div class="standard-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="showComparisonSimulator()">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 pulse-animation">⚖️</div>
+                                <h3 class="text-2xl font-bold text-green-600 mb-4">Comparar</h3>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-green-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-green-800 mb-2">Beneficios:</h4>
+                                    <ul class="text-sm text-green-600 space-y-1">
+                                        <li>• Evaluación objetiva de procesos</li>
+                                        <li>• Benchmarking con competidores</li>
+                                        <li>• Identificación de mejores prácticas</li>
+                                        <li>• Medición consistente de calidad</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Ejemplo:</h4>
+                                    <p class="text-sm text-gray-600">
+                                        Dos empresas pueden comparar sus procesos de desarrollo usando ISO 9001
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mt-6 text-center">
+                                <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    Simular Comparación
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Certificar -->
+                        <div class="standard-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="showCertificationBenefits()">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 bounce-animation">🏆</div>
+                                <h3 class="text-2xl font-bold text-blue-600 mb-4">Certificar</h3>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-blue-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-blue-800 mb-2">Beneficios:</h4>
+                                    <ul class="text-sm text-blue-600 space-y-1">
+                                        <li>• Validación externa de calidad</li>
+                                        <li>• Credibilidad en el mercado</li>
+                                        <li>• Acceso a nuevos clientes</li>
+                                        <li>• Diferenciación competitiva</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2">ROI Promedio:</h4>
+                                    <div class="text-2xl font-bold text-blue-600">15-25%</div>
+                                    <p class="text-xs text-gray-500">Retorno en 2-3 años</p>
+                                </div>
+                            </div>
+                            <div class="mt-6 text-center">
+                                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    Calcular ROI
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Mejorar -->
+                        <div class="standard-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="showImprovementTracker()">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 rotate-animation">📈</div>
+                                <h3 class="text-2xl font-bold text-purple-600 mb-4">Mejorar</h3>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="bg-purple-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-purple-800 mb-2">Beneficios:</h4>
+                                    <ul class="text-sm text-purple-600 space-y-1">
+                                        <li>• Mejora continua estructurada</li>
+                                        <li>• Reducción de defectos</li>
+                                        <li>• Optimización de procesos</li>
+                                        <li>• Aumento de eficiencia</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Mejoras Típicas:</h4>
+                                    <div class="text-sm text-gray-600">
+                                        <div>• Defectos: -40%</div>
+                                        <div>• Tiempo: -30%</div>
+                                        <div>• Costos: -20%</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-6 text-center">
+                                <button class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    Ver Mejoras
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Additional Benefits -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center">
+                            <span class="mr-3">🎯</span> Beneficios Adicionales
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <!-- Consistency & Trust -->
+                            <div class="space-y-6">
+                                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-6">
+                                    <h4 class="font-bold text-green-800 mb-3 flex items-center">
+                                        <span class="mr-2">🔒</span> Consistencia y Confianza
+                                    </h4>
+                                    <ul class="text-sm text-green-600 space-y-2">
+                                        <li>• Procesos estandarizados y repetibles</li>
+                                        <li>• Reducción de variabilidad en resultados</li>
+                                        <li>• Mayor confianza del cliente</li>
+                                        <li>• Predictibilidad en entregas</li>
+                                    </ul>
+                                    
+                                    <div class="mt-4 bg-white rounded-lg p-4">
+                                        <h5 class="font-semibold text-green-800 mb-2">Medidor de Confianza:</h5>
+                                        <div class="benefit-meter mx-auto">
+                                            <svg width="120" height="120" viewBox="0 0 120 120">
+                                                <circle cx="60" cy="60" r="45" class="meter-bg"/>
+                                                <circle cx="60" cy="60" r="45" class="meter-fill" stroke="#10b981" stroke-dasharray="85 100"/>
+                                            </svg>
+                                            <div class="text-center mt-2">
+                                                <div class="text-2xl font-bold text-green-600">85%</div>
+                                                <div class="text-xs text-green-500">Confianza del Cliente</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- International Competitiveness -->
+                            <div class="space-y-6">
+                                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6">
+                                    <h4 class="font-bold text-blue-800 mb-3 flex items-center">
+                                        <span class="mr-2">🌍</span> Competitividad Internacional
+                                    </h4>
+                                    <ul class="text-sm text-blue-600 space-y-2">
+                                        <li>• Acceso a mercados globales</li>
+                                        <li>• Cumplimiento de requisitos internacionales</li>
+                                        <li>• Facilitación de exportaciones</li>
+                                        <li>• Reconocimiento mundial</li>
+                                    </ul>
+                                    
+                                    <div class="mt-4 bg-white rounded-lg p-4">
+                                        <h5 class="font-semibold text-blue-800 mb-2">Alcance Global:</h5>
+                                        <div class="grid grid-cols-2 gap-4 text-center">
+                                            <div>
+                                                <div class="text-xl font-bold text-blue-600">165</div>
+                                                <div class="text-xs text-blue-500">Países</div>
+                                            </div>
+                                            <div>
+                                                <div class="text-xl font-bold text-blue-600">1M+</div>
+                                                <div class="text-xs text-blue-500">Certificaciones</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reference -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                        <div class="text-center">
+                            <span class="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
+                                Fuente: Cantú, Cap. 6
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3: Clasificación -->
+            <div class="slide" id="slide3">
+                <div class="slide-bg-3 rounded-3xl p-12 min-h-[600px] relative z-10">
+                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                        📊 Clasificación de Normas de Calidad
+                    </h2>
+                    
+                    <!-- Standards Categories -->
+                    <div class="grid md:grid-cols-3 gap-8 mb-8">
+                        <!-- International Standards -->
+                        <div class="standard-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="exploreInternationalStandards()">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 float-animation">🌍</div>
+                                <h3 class="text-2xl font-bold text-blue-600 mb-4">Normas Internacionales</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-blue-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-blue-800 mb-2">ISO (International Organization for Standardization)</h4>
+                                    <ul class="text-sm text-blue-600 space-y-1">
+                                        <li>• ISO 9001: Sistemas de Gestión de Calidad</li>
+                                        <li>• ISO 27001: Seguridad de la Información</li>
+                                        <li>• ISO 14001: Gestión Ambiental</li>
+                                        <li>• ISO 20000: Gestión de Servicios TI</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2">IEEE (Institute of Electrical and Electronics Engineers)</h4>
+                                    <ul class="text-sm text-gray-600 space-y-1">
+                                        <li>• IEEE 830: Especificación de Requisitos</li>
+                                        <li>• IEEE 1012: Verificación y Validación</li>
+                                        <li>• IEEE 828: Planes de Configuración</li>
+                                        <li>• IEEE 1028: Revisiones de Software</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 text-center">
+                                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    Explorar Normas
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Maturity Models -->
+                        <div class="standard-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="exploreCMMI()">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 pulse-animation">📈</div>
+                                <h3 class="text-2xl font-bold text-green-600 mb-4">Modelos de Madurez</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-green-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-green-800 mb-3">CMMI (Capability Maturity Model Integration)</h4>
+                                    <div class="space-y-2">
+                                        <div class="maturity-level bg-white rounded p-2 text-sm">
+                                            <span class="font-semibold text-red-600">Nivel 1:</span> Inicial (Caótico)
+                                        </div>
+                                        <div class="maturity-level bg-white rounded p-2 text-sm">
+                                            <span class="font-semibold text-orange-600">Nivel 2:</span> Gestionado (Repetible)
+                                        </div>
+                                        <div class="maturity-level bg-white rounded p-2 text-sm">
+                                            <span class="font-semibold text-yellow-600">Nivel 3:</span> Definido (Estándar)
+                                        </div>
+                                        <div class="maturity-level bg-white rounded p-2 text-sm">
+                                            <span class="font-semibold text-blue-600">Nivel 4:</span> Cuantitativamente Gestionado
+                                        </div>
+                                        <div class="maturity-level bg-white rounded p-2 text-sm">
+                                            <span class="font-semibold text-green-600">Nivel 5:</span> Optimizado (Mejora Continua)
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Otros Modelos:</h4>
+                                    <ul class="text-sm text-gray-600 space-y-1">
+                                        <li>• SPICE (ISO 15504)</li>
+                                        <li>• TMM (Test Maturity Model)</li>
+                                        <li>• P-CMM (People CMM)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 text-center">
+                                <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    Evaluar Madurez
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- National Standards -->
+                        <div class="standard-card bg-white bg-opacity-90 rounded-2xl p-8" onclick="exploreMoProSoft()">
+                            <div class="text-center mb-6">
+                                <div class="text-6xl mb-4 bounce-animation">🇲🇽</div>
+                                <h3 class="text-2xl font-bold text-red-600 mb-4">Normas Nacionales</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-red-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-red-800 mb-2">MoProSoft (México)</h4>
+                                    <p class="text-sm text-red-600 mb-3">
+                                        Modelo de Procesos para la Industria de Software
+                                    </p>
+                                    <div class="space-y-2">
+                                        <div class="bg-white rounded p-2 text-sm">
+                                            <span class="font-semibold">Alta Dirección:</span> Gestión de Negocio
+                                        </div>
+                                        <div class="bg-white rounded p-2 text-sm">
+                                            <span class="font-semibold">Gerencia:</span> Gestión de Procesos, Proyectos y Recursos
+                                        </div>
+                                        <div class="bg-white rounded p-2 text-sm">
+                                            <span class="font-semibold">Operación:</span> Desarrollo y Mantenimiento de Software
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2">Otras Normas Nacionales:</h4>
+                                    <ul class="text-sm text-gray-600 space-y-1">
+                                        <li>• COMPETISOFT (Iberoamérica)</li>
+                                        <li>• NMX-I-059-NYCE (México)</li>
+                                        <li>• Normas AENOR (España)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 text-center">
+                                <button class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                    Conocer MoProSoft
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Standards Comparison -->
+                    <div class="comparison-table rounded-2xl p-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                            📋 Comparación de Enfoques
+                        </h3>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="bg-gray-100">
+                                        <th class="text-left p-4 font-semibold">Aspecto</th>
+                                        <th class="text-left p-4 font-semibold text-blue-600">ISO/IEEE</th>
+                                        <th class="text-left p-4 font-semibold text-green-600">CMMI</th>
+                                        <th class="text-left p-4 font-semibold text-red-600">MoProSoft</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b">
+                                        <td class="p-4 font-medium">Alcance</td>
+                                        <td class="p-4 text-blue-600">Global</td>
+                                        <td class="p-4 text-green-600">Global (EE.UU. origen)</td>
+                                        <td class="p-4 text-red-600">Nacional (México/Iberoamérica)</td>
+                                    </tr>
+                                    <tr class="border-b bg-gray-50">
+                                        <td class="p-4 font-medium">Enfoque</td>
+                                        <td class="p-4 text-blue-600">Requisitos específicos</td>
+                                        <td class="p-4 text-green-600">Madurez de procesos</td>
+                                        <td class="p-4 text-red-600">PyMEs de software</td>
+                                    </tr>
+                                    <tr class="border-b">
+                                        <td class="p-4 font-medium">Complejidad</td>
+                                        <td class="p-4 text-blue-600">Media-Alta</td>
+                                        <td class="p-4 text-green-600">Alta</td>
+                                        <td class="p-4 text-red-600">Media-Baja</td>
+                                    </tr>
+                                    <tr class="border-b bg-gray-50">
+                                        <td class="p-4 font-medium">Costo Implementación</td>
+                                        <td class="p-4 text-blue-600">$50K - $200K</td>
+                                        <td class="p-4 text-green-600">$100K - $500K</td>
+                                        <td class="p-4 text-red-600">$20K - $80K</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-4 font-medium">Tiempo Implementación</td>
+                                        <td class="p-4 text-blue-600">6-18 meses</td>
+                                        <td class="p-4 text-green-600">12-36 meses</td>
+                                        <td class="p-4 text-red-600">6-12 meses</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 4: Actividad - Discusión -->
+            <div class="slide" id="slide4">
+                <div class="slide-bg-4 rounded-3xl p-12 min-h-[600px] relative z-10">
+                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                        💬 Actividad - Discusión Rápida (10 min)
+                    </h2>
+                    
+                    <!-- Main Question -->
+                    <div class="discussion-prompt rounded-2xl p-8 mb-8">
+                        <div class="text-center mb-6">
+                            <div class="text-6xl mb-4 pulse-animation">❓</div>
+                            <h3 class="text-3xl font-bold text-blue-800">Pregunta Central</h3>
+                        </div>
+                        
+                        <div class="bg-white rounded-2xl p-8 text-center">
+                            <h4 class="text-2xl font-bold text-gray-800 mb-4">
+                                "¿Qué pasa si una empresa ignora las normas de calidad?"
+                            </h4>
+                            <p class="text-lg text-gray-600">
+                                Analicemos las consecuencias y riesgos desde diferentes perspectivas
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Consequence Simulator -->
+                    <div class="grid md:grid-cols-2 gap-8 mb-8">
+                        <!-- Risk Scenarios -->
+                        <div class="consequence-simulator rounded-2xl p-8">
+                            <h3 class="text-2xl font-bold text-red-800 mb-6 text-center flex items-center justify-center">
+                                <span class="mr-3">⚠️</span> Simulador de Consecuencias
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div class="scenario-card bg-white rounded-lg p-4" onclick="showScenario('market')">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-bold text-red-800">Pérdida de Mercado</h4>
+                                            <p class="text-sm text-red-600">Clientes prefieren competidores certificados</p>
+                                        </div>
+                                        <div class="risk-indicator risk-high"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="scenario-card bg-white rounded-lg p-4" onclick="showScenario('quality')">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-bold text-red-800">Problemas de Calidad</h4>
+                                            <p class="text-sm text-red-600">Aumento de defectos y reclamos</p>
+                                        </div>
+                                        <div class="risk-indicator risk-critical"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="scenario-card bg-white rounded-lg p-4" onclick="showScenario('legal')">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-bold text-red-800">Riesgos Legales</h4>
+                                            <p class="text-sm text-red-600">Incumplimiento de regulaciones</p>
+                                        </div>
+                                        <div class="risk-indicator risk-high"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="scenario-card bg-white rounded-lg p-4" onclick="showScenario('costs')">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-bold text-red-800">Costos Ocultos</h4>
+                                            <p class="text-sm text-red-600">Reprocesos y correcciones</p>
+                                        </div>
+                                        <div class="risk-indicator risk-medium"></div>
+                                    </div>
+                                </div>
+                                
+                                <div class="scenario-card bg-white rounded-lg p-4" onclick="showScenario('reputation')">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <h4 class="font-bold text-red-800">Daño Reputacional</h4>
+                                            <p class="text-sm text-red-600">Pérdida de confianza del mercado</p>
+                                        </div>
+                                        <div class="risk-indicator risk-high"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-6 text-center">
+                                <button onclick="calculateTotalRisk()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg transition-colors">
+                                    📊 Calcular Riesgo Total
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Discussion Prompts -->
+                        <div class="bg-white bg-opacity-90 rounded-2xl p-8">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center flex items-center justify-center">
+                                <span class="mr-3">💡</span> Puntos de Discusión
+                            </h3>
+                            
+                            <div class="space-y-6">
+                                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-blue-800 mb-2">🏢 Perspectiva Empresarial</h4>
+                                    <ul class="text-sm text-blue-600 space-y-1">
+                                        <li>• ¿Cómo afecta la competitividad?</li>
+                                        <li>• ¿Qué impacto tiene en los costos?</li>
+                                        <li>• ¿Cómo reaccionan los clientes?</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-green-800 mb-2">👥 Perspectiva del Cliente</h4>
+                                    <ul class="text-sm text-green-600 space-y-1">
+                                        <li>• ¿Qué riesgos asume el cliente?</li>
+                                        <li>• ¿Cómo evalúa la confiabilidad?</li>
+                                        <li>• ¿Qué alternativas considera?</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-purple-800 mb-2">🔧 Perspectiva Técnica</h4>
+                                    <ul class="text-sm text-purple-600 space-y-1">
+                                        <li>• ¿Cómo afecta la calidad del código?</li>
+                                        <li>• ¿Qué pasa con la mantenibilidad?</li>
+                                        <li>• ¿Cómo impacta la productividad?</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-yellow-800 mb-2">⚖️ Perspectiva Legal</h4>
+                                    <ul class="text-sm text-yellow-600 space-y-1">
+                                        <li>• ¿Qué regulaciones se incumplen?</li>
+                                        <li>• ¿Cuáles son las penalizaciones?</li>
+                                        <li>• ¿Qué responsabilidades legales surgen?</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Impact Visualization -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                            📈 Visualización del Impacto
+                        </h3>
+                        
+                        <div class="impact-visualization mb-6">
+                            <div class="impact-marker" style="left: 15%;" title="Con Normas"></div>
+                            <div class="impact-marker" style="left: 75%;" title="Sin Normas"></div>
+                            <div class="absolute bottom-4 left-4 text-white text-sm font-semibold">Alto Riesgo</div>
+                            <div class="absolute bottom-4 right-4 text-white text-sm font-semibold">Bajo Riesgo</div>
+                        </div>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="text-center">
+                                <h4 class="font-bold text-green-600 mb-2">✅ Con Normas de Calidad</h4>
+                                <ul class="text-sm text-green-600 space-y-1">
+                                    <li>• Procesos predecibles y controlados</li>
+                                    <li>• Mayor confianza del cliente</li>
+                                    <li>• Acceso a mercados internacionales</li>
+                                    <li>• Reducción de riesgos operativos</li>
+                                </ul>
+                            </div>
+                            <div class="text-center">
+                                <h4 class="font-bold text-red-600 mb-2">❌ Sin Normas de Calidad</h4>
+                                <ul class="text-sm text-red-600 space-y-1">
+                                    <li>• Procesos inconsistentes y caóticos</li>
+                                    <li>• Pérdida de credibilidad</li>
+                                    <li>• Limitaciones en el mercado</li>
+                                    <li>• Altos costos de corrección</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Discussion Timer -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="font-bold text-gray-800">⏱️ Tiempo de Discusión</h4>
+                                <p class="text-sm text-gray-600">Usa estos puntos para guiar la conversación</p>
+                            </div>
+                            <div class="text-center">
+                                <div id="discussionTimer" class="text-3xl font-bold text-purple-600">10:00</div>
+                                <button onclick="startDiscussionTimer()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors text-sm mt-2">
+                                    Iniciar Timer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal for detailed views -->
+    <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-6">
+        <div class="bg-white rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="modalTitle" class="text-2xl font-bold text-gray-800"></h3>
+                <button onclick="closeModal()" class="text-gray-500 hover:text-gray-700 text-2xl">×</button>
+            </div>
+            <div id="modalContent">
+                <!-- Dynamic content -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const totalSlides = 4;
+        let discussionTimerInterval = null;
+        let discussionTimeLeft = 600; // 10 minutes in seconds
+
+        function showSlide(index) {
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            document.getElementById(`slide${index + 1}`).classList.add('active');
+            
+            document.getElementById('currentSlide').textContent = index + 1;
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
+            
+            const progress = ((index + 1) / totalSlides) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            if (index === 0) {
+                document.getElementById('prevBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('prevBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            if (index === totalSlides - 1) {
+                document.getElementById('nextBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('nextBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlides - 1) {
+                currentSlideIndex++;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function showComparisonSimulator() {
+            document.getElementById('modalTitle').textContent = '⚖️ Simulador de Comparación de Procesos';
+            document.getElementById('modalContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-green-50 rounded-lg p-6">
+                        <h4 class="font-bold text-green-800 mb-4">Compara dos empresas usando normas de calidad</h4>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-lg p-4 border-2 border-blue-200">
+                                <h5 class="font-semibold text-blue-800 mb-3">🏢 Empresa A (Certificada ISO 9001)</h5>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Defectos por entrega:</span>
+                                        <span class="font-semibold text-green-600">2-3</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Tiempo de entrega:</span>
+                                        <span class="font-semibold text-green-600">95% a tiempo</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Satisfacción cliente:</span>
+                                        <span class="font-semibold text-green-600">4.7/5</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Costo de calidad:</span>
+                                        <span class="font-semibold text-green-600">8% ingresos</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-4 border-2 border-red-200">
+                                <h5 class="font-semibold text-red-800 mb-3">🏢 Empresa B (Sin certificación)</h5>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span>Defectos por entrega:</span>
+                                        <span class="font-semibold text-red-600">8-12</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Tiempo de entrega:</span>
+                                        <span class="font-semibold text-red-600">70% a tiempo</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Satisfacción cliente:</span>
+                                        <span class="font-semibold text-red-600">3.2/5</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Costo de calidad:</span>
+                                        <span class="font-semibold text-red-600">18% ingresos</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 bg-blue-50 rounded-lg p-4">
+                            <h5 class="font-semibold text-blue-800 mb-2">💡 Conclusión:</h5>
+                            <p class="text-sm text-blue-600">
+                                La empresa certificada muestra consistentemente mejores resultados en todos los indicadores clave, 
+                                demostrando el valor de implementar normas de calidad.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h4 class="font-bold text-gray-800 mb-4">🎯 Beneficios de la Comparación Estandarizada</h4>
+                        <ul class="text-sm text-gray-600 space-y-2">
+                            <li>• <strong>Objetividad:</strong> Criterios uniformes para evaluación</li>
+                            <li>• <strong>Benchmarking:</strong> Identificación de mejores prácticas</li>
+                            <li>• <strong>Mejora continua:</strong> Metas claras basadas en estándares</li>
+                            <li>• <strong>Transparencia:</strong> Métricas comprensibles para todos los stakeholders</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function showCertificationBenefits() {
+            document.getElementById('modalTitle').textContent = '🏆 Calculadora de ROI de Certificación';
+            document.getElementById('modalContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-blue-50 rounded-lg p-6">
+                        <h4 class="font-bold text-blue-800 mb-4">Calcula el retorno de inversión de tu certificación</h4>
+                        
+                        <div class="grid md:grid-cols-2 gap-6 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Ingresos anuales actuales ($):</label>
+                                <input type="number" id="currentRevenue" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="1000000">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Costo de certificación ($):</label>
+                                <input type="number" id="certificationCost" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="100000">
+                            </div>
+                        </div>
+                        
+                        <button onclick="calculateCertificationROI()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
+                            Calcular ROI
+                        </button>
+                    </div>
+                    
+                    <div id="roiResult" class="hidden bg-white border-2 border-blue-200 rounded-lg p-6">
+                        <h4 class="font-bold text-gray-800 mb-4">Resultados del ROI:</h4>
+                        <div id="roiDetails" class="space-y-4"></div>
+                    </div>
+                    
+                    <div class="bg-green-50 rounded-lg p-6">
+                        <h4 class="font-bold text-green-800 mb-4">📈 Beneficios Típicos de la Certificación</h4>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <h5 class="font-semibold text-green-700 mb-2">Beneficios Cuantificables:</h5>
+                                <ul class="text-sm text-green-600 space-y-1">
+                                    <li>• Aumento de ventas: 15-25%</li>
+                                    <li>• Reducción de defectos: 30-50%</li>
+                                    <li>• Mejora en eficiencia: 20-35%</li>
+                                    <li>• Reducción de costos: 10-20%</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h5 class="font-semibold text-green-700 mb-2">Beneficios Intangibles:</h5>
+                                <ul class="text-sm text-green-600 space-y-1">
+                                    <li>• Mayor credibilidad en el mercado</li>
+                                    <li>• Acceso a nuevos clientes</li>
+                                    <li>• Mejora en la moral del equipo</li>
+                                    <li>• Diferenciación competitiva</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function calculateCertificationROI() {
+            const revenue = parseFloat(document.getElementById('currentRevenue').value);
+            const cost = parseFloat(document.getElementById('certificationCost').value);
+            
+            if (isNaN(revenue) || isNaN(cost)) {
+                alert('Por favor ingresa valores válidos');
+                return;
+            }
+            
+            // Typical benefits from certification
+            const revenueIncrease = revenue * 0.20; // 20% average increase
+            const costReduction = revenue * 0.15; // 15% cost reduction
+            const totalBenefit = revenueIncrease + costReduction;
+            const roi = ((totalBenefit - cost) / cost) * 100;
+            const paybackPeriod = cost / (totalBenefit / 12); // months
+            
+            document.getElementById('roiDetails').innerHTML = `
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <h5 class="font-semibold text-green-800">Beneficios Anuales</h5>
+                        <div class="text-2xl font-bold text-green-600">$${totalBenefit.toLocaleString()}</div>
+                        <div class="text-sm text-green-500">
+                            Aumento ingresos: $${revenueIncrease.toLocaleString()}<br>
+                            Reducción costos: $${costReduction.toLocaleString()}
+                        </div>
+                    </div>
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <h5 class="font-semibold text-blue-800">ROI</h5>
+                        <div class="text-2xl font-bold text-blue-600">${roi.toFixed(1)}%</div>
+                        <div class="text-sm text-blue-500">
+                            Período de recuperación: ${paybackPeriod.toFixed(1)} meses
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-yellow-50 rounded-lg p-4 mt-4">
+                    <h5 class="font-semibold text-yellow-800 mb-2">💡 Interpretación:</h5>
+                    <p class="text-sm text-yellow-700">
+                        ${roi > 100 ? 
+                            'Excelente ROI! La certificación se pagará por sí misma y generará beneficios significativos.' :
+                            roi > 50 ?
+                            'Buen ROI. La certificación es una inversión sólida para tu empresa.' :
+                            'ROI moderado. Considera los beneficios intangibles adicionales.'
+                        }
+                    </p>
+                </div>
+            `;
+            document.getElementById('roiResult').classList.remove('hidden');
+        }
+
+        function showImprovementTracker() {
+            alert('📈 Rastreador de Mejoras\n\nEsta funcionalidad se expandiría con:\n• Métricas de mejora continua\n• Gráficos de tendencias\n• Comparación antes/después\n• Planes de acción personalizados');
+        }
+
+        function exploreInternationalStandards() {
+            document.getElementById('modalTitle').textContent = '🌍 Explorador de Normas Internacionales';
+            document.getElementById('modalContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-blue-50 rounded-lg p-6">
+                            <h4 class="font-bold text-blue-800 mb-4 flex items-center">
+                                <span class="mr-2">🌐</span> Normas ISO Principales
+                            </h4>
+                            <div class="space-y-3">
+                                <div class="standard-explorer bg-white rounded-lg p-4 border border-blue-200" onclick="this.classList.toggle('active')">
+                                    <h5 class="font-semibold text-blue-700">ISO 9001 - Gestión de Calidad</h5>
+                                    <p class="text-sm text-blue-600 mt-1">Sistema de gestión de calidad más reconocido mundialmente</p>
+                                    <div class="text-xs text-gray-500 mt-2">
+                                        <div>• 1M+ organizaciones certificadas</div>
+                                        <div>• Aplicable a cualquier industria</div>
+                                        <div>• Enfoque en satisfacción del cliente</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="standard-explorer bg-white rounded-lg p-4 border border-blue-200" onclick="this.classList.toggle('active')">
+                                    <h5 class="font-semibold text-blue-700">ISO 27001 - Seguridad de la Información</h5>
+                                    <p class="text-sm text-blue-600 mt-1">Gestión de seguridad de la información</p>
+                                    <div class="text-xs text-gray-500 mt-2">
+                                        <div>• Protección de datos críticos</div>
+                                        <div>• Gestión de riesgos de seguridad</div>
+                                        <div>• Cumplimiento regulatorio</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="standard-explorer bg-white rounded-lg p-4 border border-blue-200" onclick="this.classList.toggle('active')">
+                                    <h5 class="font-semibold text-blue-700">ISO 20000 - Gestión de Servicios TI</h5>
+                                    <p class="text-sm text-blue-600 mt-1">Gestión de servicios de tecnología de información</p>
+                                    <div class="text-xs text-gray-500 mt-2">
+                                        <div>• Alineado con ITIL</div>
+                                        <div>• Mejora de servicios TI</div>
+                                        <div>• Satisfacción del usuario</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-50 rounded-lg p-6">
+                            <h4 class="font-bold text-gray-800 mb-4 flex items-center">
+                                <span class="mr-2">⚡</span> Normas IEEE Principales
+                            </h4>
+                            <div class="space-y-3">
+                                <div class="standard-explorer bg-white rounded-lg p-4 border border-gray-200" onclick="this.classList.toggle('active')">
+                                    <h5 class="font-semibold text-gray-700">IEEE 830 - Especificación de Requisitos</h5>
+                                    <p class="text-sm text-gray-600 mt-1">Práctica recomendada para especificaciones de requisitos de software</p>
+                                </div>
+                                
+                                <div class="standard-explorer bg-white rounded-lg p-4 border border-gray-200" onclick="this.classList.toggle('active')">
+                                    <h5 class="font-semibold text-gray-700">IEEE 1012 - Verificación y Validación</h5>
+                                    <p class="text-sm text-gray-600 mt-1">Procesos de verificación y validación de software</p>
+                                </div>
+                                
+                                <div class="standard-explorer bg-white rounded-lg p-4 border border-gray-200" onclick="this.classList.toggle('active')">
+                                    <h5 class="font-semibold text-gray-700">IEEE 828 - Planes de Configuración</h5>
+                                    <p class="text-sm text-gray-600 mt-1">Gestión de configuración de software</p>
+                                </div>
+                                
+                                <div class="standard-explorer bg-white rounded-lg p-4 border border-gray-200" onclick="this.classList.toggle('active')">
+                                    <h5 class="font-semibold text-gray-700">IEEE 1028 - Revisiones de Software</h5>
+                                    <p class="text-sm text-gray-600 mt-1">Estándar para revisiones y auditorías de software</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-50 rounded-lg p-6">
+                        <h4 class="font-bold text-green-800 mb-4">🎯 Cómo Elegir la Norma Correcta</h4>
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <div class="bg-white rounded-lg p-4">
+                                <h5 class="font-semibold text-green-700 mb-2">1. Evalúa tu Industria</h5>
+                                <p class="text-sm text-green-600">Identifica qué normas son más relevantes para tu sector</p>
+                            </div>
+                            <div class="bg-white rounded-lg p-4">
+                                <h5 class="font-semibold text-green-700 mb-2">2. Analiza tus Objetivos</h5>
+                                <p class="text-sm text-green-600">Define qué quieres lograr con la certificación</p>
+                            </div>
+                            <div class="bg-white rounded-lg p-4">
+                                <h5 class="font-semibold text-green-700 mb-2">3. Considera Recursos</h5>
+                                <p class="text-sm text-green-600">Evalúa tiempo, costo y capacidades disponibles</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function exploreCMMI() {
+            document.getElementById('modalTitle').textContent = '📈 Explorador de Niveles CMMI';
+            document.getElementById('modalContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-green-50 rounded-lg p-6">
+                        <h4 class="font-bold text-green-800 mb-4">CMMI - Capability Maturity Model Integration</h4>
+                        <p class="text-green-700 mb-4">
+                            Modelo que ayuda a las organizaciones a mejorar sus procesos y capacidades de desarrollo de software.
+                        </p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="maturity-level bg-red-50 border-l-4 border-red-500 rounded-lg p-6">
+                            <h5 class="font-bold text-red-800 mb-2">Nivel 1: Inicial (Caótico)</h5>
+                            <p class="text-sm text-red-600 mb-3">
+                                Los procesos son impredecibles, poco controlados y reactivos. El éxito depende de individuos heroicos.
+                            </p>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <h6 class="font-semibold text-red-700 mb-1">Características:</h6>
+                                    <ul class="text-xs text-red-600 space-y-1">
+                                        <li>• Procesos ad-hoc</li>
+                                        <li>• Sin documentación estándar</li>
+                                        <li>• Resultados impredecibles</li>
+                                        <li>• Crisis constantes</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h6 class="font-semibold text-red-700 mb-1">Problemas Típicos:</h6>
+                                    <ul class="text-xs text-red-600 space-y-1">
+                                        <li>• Sobrecostos frecuentes</li>
+                                        <li>• Retrasos en entregas</li>
+                                        <li>• Calidad inconsistente</li>
+                                        <li>• Alta rotación de personal</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="maturity-level bg-orange-50 border-l-4 border-orange-500 rounded-lg p-6">
+                            <h5 class="font-bold text-orange-800 mb-2">Nivel 2: Gestionado (Repetible)</h5>
+                            <p class="text-sm text-orange-600 mb-3">
+                                Los proyectos tienen procesos básicos de gestión. Se pueden repetir éxitos anteriores.
+                            </p>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <h6 class="font-semibold text-orange-700 mb-1">Áreas Clave:</h6>
+                                    <ul class="text-xs text-orange-600 space-y-1">
+                                        <li>• Gestión de requisitos</li>
+                                        <li>• Planificación de proyectos</li>
+                                        <li>• Seguimiento y control</li>
+                                        <li>• Gestión de proveedores</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h6 class="font-semibold text-orange-700 mb-1">Beneficios:</h6>
+                                    <ul class="text-xs text-orange-600 space-y-1">
+                                        <li>• Mayor predictibilidad</li>
+                                        <li>• Mejor control de costos</li>
+                                        <li>• Entregas más confiables</li>
+                                        <li>• Procesos repetibles</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="maturity-level bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-6">
+                            <h5 class="font-bold text-yellow-800 mb-2">Nivel 3: Definido (Estándar)</h5>
+                            <p class="text-sm text-yellow-600 mb-3">
+                                Los procesos están bien caracterizados, documentados y estandarizados en toda la organización.
+                            </p>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <h6 class="font-semibold text-yellow-700 mb-1">Características:</h6>
+                                    <ul class="text-xs text-yellow-600 space-y-1">
+                                        <li>• Procesos organizacionales estándar</li>
+                                        <li>• Programas de entrenamiento</li>
+                                        <li>• Gestión integrada</li>
+                                        <li>• Revisiones por pares</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h6 class="font-semibold text-yellow-700 mb-1">Mejoras:</h6>
+                                    <ul class="text-xs text-yellow-600 space-y-1">
+                                        <li>• Consistencia entre proyectos</li>
+                                        <li>• Mejor calidad de productos</li>
+                                        <li>• Reducción de riesgos</li>
+                                        <li>• Mejora continua</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="maturity-level bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6">
+                            <h5 class="font-bold text-blue-800 mb-2">Nivel 4: Cuantitativamente Gestionado</h5>
+                            <p class="text-sm text-blue-600 mb-3">
+                                Los procesos se controlan usando técnicas estadísticas y cuantitativas.
+                            </p>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <h6 class="font-semibold text-blue-700 mb-1">Enfoques:</h6>
+                                    <ul class="text-xs text-blue-600 space-y-1">
+                                        <li>• Control estadístico de procesos</li>
+                                        <li>• Métricas cuantitativas</li>
+                                        <li>• Análisis de causas</li>
+                                        <li>• Gestión cuantitativa</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h6 class="font-semibold text-blue-700 mb-1">Resultados:</h6>
+                                    <ul class="text-xs text-blue-600 space-y-1">
+                                        <li>• Procesos predecibles</li>
+                                        <li>• Calidad consistente</li>
+                                        <li>• Mejora basada en datos</li>
+                                        <li>• Reducción de variabilidad</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="maturity-level bg-green-50 border-l-4 border-green-500 rounded-lg p-6">
+                            <h5 class="font-bold text-green-800 mb-2">Nivel 5: Optimizado (Mejora Continua)</h5>
+                            <p class="text-sm text-green-600 mb-3">
+                                La organización se enfoca en la mejora continua del rendimiento de los procesos.
+                            </p>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <h6 class="font-semibold text-green-700 mb-1">Actividades:</h6>
+                                    <ul class="text-xs text-green-600 space-y-1">
+                                        <li>• Innovación organizacional</li>
+                                        <li>• Análisis causal y resolución</li>
+                                        <li>• Mejora continua</li>
+                                        <li>• Gestión del cambio</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h6 class="font-semibold text-green-700 mb-1">Beneficios:</h6>
+                                    <ul class="text-xs text-green-600 space-y-1">
+                                        <li>• Excelencia operacional</li>
+                                        <li>• Innovación sistemática</li>
+                                        <li>• Adaptabilidad al cambio</li>
+                                        <li>• Ventaja competitiva sostenible</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-purple-50 rounded-lg p-6">
+                        <h4 class="font-bold text-purple-800 mb-4">📊 Estadísticas de Adopción CMMI</h4>
+                        <div class="grid md:grid-cols-4 gap-4 text-center">
+                            <div class="bg-white rounded-lg p-4">
+                                <div class="text-2xl font-bold text-red-600">60%</div>
+                                <div class="text-xs text-red-500">Nivel 1</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4">
+                                <div class="text-2xl font-bold text-orange-600">25%</div>
+                                <div class="text-xs text-orange-500">Nivel 2</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4">
+                                <div class="text-2xl font-bold text-yellow-600">10%</div>
+                                <div class="text-xs text-yellow-500">Nivel 3</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4">
+                                <div class="text-2xl font-bold text-green-600">5%</div>
+                                <div class="text-xs text-green-500">Niveles 4-5</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function exploreMoProSoft() {
+            document.getElementById('modalTitle').textContent = '🇲🇽 Explorador de MoProSoft';
+            document.getElementById('modalContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-red-50 rounded-lg p-6">
+                        <h4 class="font-bold text-red-800 mb-4">MoProSoft - Modelo de Procesos para la Industria de Software</h4>
+                        <p class="text-red-700 mb-4">
+                            Norma mexicana (NMX-I-059-NYCE) diseñada específicamente para PyMEs de la industria de software.
+                        </p>
+                        <div class="bg-white rounded-lg p-4">
+                            <h5 class="font-semibold text-red-800 mb-2">🎯 Objetivo Principal:</h5>
+                            <p class="text-sm text-red-600">
+                                Elevar la capacidad de las organizaciones para ofrecer servicios con calidad y alcanzar niveles internacionales de competitividad.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-6">
+                            <h5 class="font-bold text-blue-800 mb-4 text-center">🏢 Categoría de Alta Dirección</h5>
+                            <div class="space-y-3">
+                                <div class="bg-white rounded-lg p-4">
+                                    <h6 class="font-semibold text-blue-700 mb-2">Gestión de Negocio (GN)</h6>
+                                    <ul class="text-xs text-blue-600 space-y-1">
+                                        <li>• Establecer la razón de ser de la organización</li>
+                                        <li>• Considerar las necesidades de los clientes</li>
+                                        <li>• Evaluar los resultados para la toma de decisiones</li>
+                                        <li>• Habilitar mejoras a partir de los resultados</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <div class="text-sm text-blue-600 font-medium">Responsabilidad: CEO/Directores</div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-green-50 border-2 border-green-200 rounded-lg p-6">
+                            <h5 class="font-bold text-green-800 mb-4 text-center">⚙️ Categoría de Gerencia</h5>
+                            <div class="space-y-3">
+                                <div class="bg-white rounded-lg p-3">
+                                    <h6 class="font-semibold text-green-700 text-sm mb-1">Gestión de Procesos (GP)</h6>
+                                    <p class="text-xs text-green-600">Establecer procesos de la organización</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-3">
+                                    <h6 class="font-semibold text-green-700 text-sm mb-1">Gestión de Proyectos (GPR)</h6>
+                                    <p class="text-xs text-green-600">Asegurar que los proyectos contribuyan al cumplimiento de objetivos</p>
+                                </div>
+                                <div class="bg-white rounded-lg p-3">
+                                    <h6 class="font-semibold text-green-700 text-sm mb-1">Gestión de Recursos (GR)</h6>
+                                    <p class="text-xs text-green-600">Conseguir y dotar recursos humanos, infraestructura y ambiente de trabajo</p>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <div class="text-sm text-green-600 font-medium">Responsabilidad: Gerentes/Coordinadores</div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-purple-50 border-2 border-purple-200 rounded-lg p-6">
+                            <h5 class="font-bold text-purple-800 mb-4 text-center">🔧 Categoría de Operación</h5>
+                            <div class="space-y-3">
+                                <div class="bg-white rounded-lg p-4">
+                                    <h6 class="font-semibold text-purple-700 mb-2">Desarrollo y Mantenimiento de Software (DMS)</h6>
+                                    <ul class="text-xs text-purple-600 space-y-1">
+                                        <li>• Realizar sistemáticamente actividades de análisis</li>
+                                        <li>• Diseño, construcción, integración y pruebas</li>
+                                        <li>• Producir productos de software que satisfagan requisitos</li>
+                                        <li>• Dar mantenimiento a productos de software</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="mt-4 text-center">
+                                <div class="text-sm text-purple-600 font-medium">Responsabilidad: Desarrolladores/Analistas</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-yellow-50 rounded-lg p-6">
+                        <h4 class="font-bold text-yellow-800 mb-4">🏆 Ventajas de MoProSoft</h4>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h5 class="font-semibold text-yellow-700 mb-2">Para PyMEs:</h5>
+                                <ul class="text-sm text-yellow-600 space-y-1">
+                                    <li>• Diseñado específicamente para empresas pequeñas</li>
+                                    <li>• Menor costo de implementación</li>
+                                    <li>• Procesos simplificados pero efectivos</li>
+                                    <li>• Compatible con otros estándares internacionales</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h5 class="font-semibold text-yellow-700 mb-2">Beneficios Obtenidos:</h5>
+                                <ul class="text-sm text-yellow-600 space-y-1">
+                                    <li>• Mejora en la calidad de productos</li>
+                                    <li>• Incremento en la productividad</li>
+                                    <li>• Mayor satisfacción del cliente</li>
+                                    <li>• Acceso a mercados internacionales</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h4 class="font-bold text-gray-800 mb-4">📈 Estadísticas de Adopción en México</h4>
+                        <div class="grid md:grid-cols-3 gap-4 text-center">
+                            <div class="bg-white rounded-lg p-4">
+                                <div class="text-2xl font-bold text-red-600">500+</div>
+                                <div class="text-sm text-red-500">Empresas Evaluadas</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4">
+                                <div class="text-2xl font-bold text-green-600">200+</div>
+                                <div class="text-sm text-green-500">Empresas Certificadas</div>
+                            </div>
+                            <div class="bg-white rounded-lg p-4">
+                                <div class="text-2xl font-bold text-blue-600">85%</div>
+                                <div class="text-sm text-blue-500">Satisfacción Promedio</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function showScenario(type) {
+            const scenarios = {
+                market: {
+                    title: '📉 Pérdida de Mercado',
+                    description: 'Los clientes prefieren proveedores certificados',
+                    impact: 'Alto',
+                    details: [
+                        'Clientes corporativos requieren certificaciones como requisito',
+                        'Competidores certificados ganan licitaciones',
+                        'Pérdida de credibilidad en el mercado',
+                        'Dificultad para acceder a nuevos segmentos'
+                    ],
+                    cost: '25-40% de ingresos potenciales'
+                },
+                quality: {
+                    title: '🐛 Problemas de Calidad',
+                    description: 'Aumento significativo de defectos y reclamos',
+                    impact: 'Crítico',
+                    details: [
+                        'Mayor número de bugs en producción',
+                        'Tiempo de resolución más largo',
+                        'Insatisfacción del cliente',
+                        'Daño a la reputación de la marca'
+                    ],
+                    cost: '15-30% de costos operativos adicionales'
+                },
+                legal: {
+                    title: '⚖️ Riesgos Legales',
+                    description: 'Incumplimiento de regulaciones y normativas',
+                    impact: 'Alto',
+                    details: [
+                        'Multas por incumplimiento regulatorio',
+                        'Problemas con auditorías gubernamentales',
+                        'Responsabilidad legal por fallas de software',
+                        'Restricciones para operar en ciertos mercados'
+                    ],
+                    cost: '$50K - $500K en multas potenciales'
+                },
+                costs: {
+                    title: '💸 Costos Ocultos',
+                    description: 'Reprocesos y correcciones constantes',
+                    impact: 'Medio',
+                    details: [
+                        'Tiempo extra para corregir defectos',
+                        'Recursos dedicados a "apagar incendios"',
+                        'Pérdida de eficiencia del equipo',
+                        'Costos de soporte post-venta elevados'
+                    ],
+                    cost: '20-35% de tiempo de desarrollo desperdiciado'
+                },
+                reputation: {
+                    title: '💔 Daño Reputacional',
+                    description: 'Pérdida de confianza del mercado',
+                    impact: 'Alto',
+                    details: [
+                        'Reseñas negativas en redes sociales',
+                        'Pérdida de referencias de clientes',
+                        'Dificultad para atraer talento',
+                        'Impacto en valuación de la empresa'
+                    ],
+                    cost: 'Difícil de cuantificar, pero duradero'
+                }
+            };
+            
+            const scenario = scenarios[type];
+            alert(`${scenario.title}\n\n${scenario.description}\n\nImpacto: ${scenario.impact}\n\nCosto Estimado: ${scenario.cost}\n\nDetalles:\n${scenario.details.map(d => `• ${d}`).join('\n')}`);
+        }
+
+        function calculateTotalRisk() {
+            document.getElementById('modalTitle').textContent = '📊 Análisis de Riesgo Total';
+            document.getElementById('modalContent').innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-red-50 rounded-lg p-6">
+                        <h4 class="font-bold text-red-800 mb-4">Evaluación de Riesgos por Ignorar Normas de Calidad</h4>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="space-y-4">
+                                <h5 class="font-semibold text-red-700">Riesgos Identificados:</h5>
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between bg-white rounded p-3">
+                                        <span class="text-sm">Pérdida de Mercado</span>
+                                        <div class="risk-indicator risk-high"></div>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-white rounded p-3">
+                                        <span class="text-sm">Problemas de Calidad</span>
+                                        <div class="risk-indicator risk-critical"></div>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-white rounded p-3">
+                                        <span class="text-sm">Riesgos Legales</span>
+                                        <div class="risk-indicator risk-high"></div>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-white rounded p-3">
+                                        <span class="text-sm">Costos Ocultos</span>
+                                        <div class="risk-indicator risk-medium"></div>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-white rounded p-3">
+                                        <span class="text-sm">Daño Reputacional</span>
+                                        <div class="risk-indicator risk-high"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white rounded-lg p-6">
+                                <h5 class="font-semibold text-gray-800 mb-4">Impacto Financiero Estimado</h5>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between">
+                                        <span class="text-sm">Pérdida de ingresos:</span>
+                                        <span class="font-semibold text-red-600">25-40%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-sm">Costos adicionales:</span>
+                                        <span class="font-semibold text-red-600">15-30%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-sm">Tiempo desperdiciado:</span>
+                                        <span class="font-semibold text-red-600">20-35%</span>
+                                    </div>
+                                    <div class="flex justify-between border-t pt-2">
+                                        <span class="font-semibold">Impacto total:</span>
+                                        <span class="font-bold text-red-600">60-105%</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4 p-4 bg-red-100 rounded-lg">
+                                    <h6 class="font-semibold text-red-800 mb-2">⚠️ Conclusión:</h6>
+                                    <p class="text-sm text-red-700">
+                                        Ignorar las normas de calidad puede costar más que el doble de los ingresos anuales 
+                                        de una empresa, considerando pérdidas directas e indirectas.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-green-50 rounded-lg p-6">
+                        <h4 class="font-bold text-green-800 mb-4">💡 Recomendaciones para la Discusión</h4>
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h5 class="font-semibold text-green-700 mb-2">Preguntas Clave:</h5>
+                                <ul class="text-sm text-green-600 space-y-1">
+                                    <li>• ¿Vale la pena el riesgo de no certificarse?</li>
+                                    <li>• ¿Cómo afecta esto a empleados y stakeholders?</li>
+                                    <li>• ¿Qué alternativas existen para mitigar riesgos?</li>
+                                    <li>• ¿Cuál es el costo de oportunidad real?</li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h5 class="font-semibold text-green-700 mb-2">Casos de Estudio:</h5>
+                                <ul class="text-sm text-green-600 space-y-1">
+                                    <li>• Empresas que perdieron contratos importantes</li>
+                                    <li>• Startups que fracasaron por problemas de calidad</li>
+                                    <li>• Compañías que se recuperaron tras certificarse</li>
+                                    <li>• Diferencias competitivas observables</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function startDiscussionTimer() {
+            if (discussionTimerInterval) {
+                clearInterval(discussionTimerInterval);
+            }
+            
+            discussionTimeLeft = 600; // Reset to 10 minutes
+            
+            discussionTimerInterval = setInterval(() => {
+                discussionTimeLeft--;
+                
+                const minutes = Math.floor(discussionTimeLeft / 60);
+                const seconds = discussionTimeLeft % 60;
+                
+                document.getElementById('discussionTimer').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (discussionTimeLeft <= 0) {
+                    clearInterval(discussionTimerInterval);
+                    document.getElementById('discussionTimer').textContent = '¡Tiempo!';
+                    document.getElementById('discussionTimer').className = 'text-3xl font-bold text-red-600';
+                    alert('⏰ ¡Tiempo de discusión terminado!\n\nResumir puntos clave y conclusiones.');
+                }
+            }, 1000);
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                previousSlide();
+            } else if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Initialize
+        showSlide(0);
+
+        // Add click effects to interactive elements
+        document.querySelectorAll('.standard-card, .scenario-card').forEach(element => {
+            element.addEventListener('click', () => {
+                element.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    element.style.transform = '';
+                }, 150);
+            });
+        });
+
+        // Animate counters on slide 1
+        function animateCounters() {
+            if (currentSlideIndex === 0) {
+                const counters = [
+                    { id: 'isoCounter', target: 23000, suffix: '+' },
+                    { id: 'ieeeCounter', target: 1300, suffix: '+' },
+                    { id: 'companiesCounter', target: 1000000, suffix: '+', format: 'M' },
+                    { id: 'countriesCounter', target: 165, suffix: '' }
+                ];
+                
+                counters.forEach(counter => {
+                    const element = document.getElementById(counter.id);
+                    let current = 0;
+                    const increment = counter.target / 50;
+                    
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if (current >= counter.target) {
+                            current = counter.target;
+                            clearInterval(timer);
+                        }
+                        
+                        let displayValue = Math.floor(current);
+                        if (counter.format === 'M' && displayValue >= 1000000) {
+                            displayValue = (displayValue / 1000000).toFixed(0) + 'M';
+                        } else if (displayValue >= 1000) {
+                            displayValue = (displayValue / 1000).toFixed(0) + 'K';
+                        }
+                        
+                        element.textContent = displayValue + counter.suffix;
+                    }, 50);
+                });
+            }
+        }
+
+        // Start counter animation when slide 1 is shown
+        setTimeout(animateCounters, 1000);
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a86b78f462cdb0',t:'MTc1NzEwMzU0OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
-
-
-
-

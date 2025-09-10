@@ -4,7 +4,807 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Examen - Sesión 14</title>
-    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .exam-container {
+        background: white;
+        border-radius: 2rem;
+        padding: 4rem;
+        margin: 2rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .exam-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 8px;
+        background: linear-gradient(90deg, #3b82f6, #1d4ed8, #1e40af, #1e3a8a);
+      }
+
+      .exam-icon {
+        width: 180px;
+        height: 180px;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 3rem;
+        color: white;
+        font-size: 4rem;
+        font-weight: bold;
+        box-shadow: 0 15px 40px rgba(59, 130, 246, 0.4);
+        animation: pulse 3s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow: 0 15px 40px rgba(59, 130, 246, 0.4);
+        }
+        50% {
+          transform: scale(1.05);
+          box-shadow: 0 20px 50px rgba(59, 130, 246, 0.6);
+        }
+      }
+
+      .session-badge {
+        background: linear-gradient(135deg, #dc2626, #991b1b);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 2rem;
+        font-size: 1.5rem;
+        font-weight: 700;
+        display: inline-block;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3);
+      }
+
+      .exam-title {
+        font-size: 4rem;
+        font-weight: 800;
+        color: #1e40af;
+        margin-bottom: 1rem;
+        line-height: 1.1;
+      }
+
+      .exam-subtitle {
+        font-size: 2rem;
+        color: #4a5568;
+        margin-bottom: 3rem;
+        font-weight: 500;
+      }
+
+      .info-section {
+        background: linear-gradient(135deg, #eff6ff, #dbeafe);
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        margin: 3rem 0;
+        border-left: 8px solid #3b82f6;
+        text-align: left;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin: 2rem 0;
+      }
+
+      .info-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border: 2px solid #e5e7eb;
+        transition: transform 0.3s ease, border-color 0.3s ease;
+      }
+
+      .info-card:hover {
+        transform: translateY(-5px);
+        border-color: #3b82f6;
+      }
+
+      .info-card-icon {
+        width: 3rem;
+        height: 3rem;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .topics-section {
+        background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        margin: 3rem 0;
+        border-left: 8px solid #16a34a;
+        text-align: left;
+      }
+
+      .topic-item {
+        display: flex;
+        align-items: center;
+        margin: 1rem 0;
+        padding: 1rem;
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .topic-number {
+        background: linear-gradient(135deg, #16a34a, #15803d);
+        color: white;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 1rem;
+        flex-shrink: 0;
+      }
+
+      .study-tips {
+        background: linear-gradient(135deg, #fef3c7, #fde68a);
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        margin: 3rem 0;
+        border-left: 8px solid #f59e0b;
+      }
+
+      .tip-item {
+        display: flex;
+        align-items: flex-start;
+        margin: 1.5rem 0;
+        padding: 1rem;
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .tip-icon {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+        flex-shrink: 0;
+      }
+
+      .checklist {
+        background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        margin: 3rem 0;
+        border-left: 8px solid #8b5cf6;
+        text-align: left;
+      }
+
+      .checklist-item {
+        display: flex;
+        align-items: center;
+        margin: 1rem 0;
+        padding: 1rem;
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .checklist-item:hover {
+        transform: translateX(5px);
+      }
+
+      .checklist-item.completed {
+        background: #f0fdf4;
+        border-left: 4px solid #16a34a;
+      }
+
+      .checkbox {
+        width: 1.5rem;
+        height: 1.5rem;
+        border: 2px solid #d1d5db;
+        border-radius: 0.25rem;
+        margin-right: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .checkbox.checked {
+        background: #16a34a;
+        border-color: #16a34a;
+        color: white;
+      }
+
+      .ready-button {
+        background: linear-gradient(135deg, #16a34a, #15803d);
+        color: white;
+        padding: 1.5rem 4rem;
+        border-radius: 3rem;
+        font-size: 1.5rem;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgba(22, 163, 74, 0.4);
+        transition: all 0.3s ease;
+        margin-top: 2rem;
+      }
+
+      .ready-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(22, 163, 74, 0.6);
+      }
+
+      .floating-shapes {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        pointer-events: none;
+      }
+
+      .shape {
+        position: absolute;
+        opacity: 0.1;
+        animation: float 8s ease-in-out infinite;
+      }
+
+      .shape:nth-child(1) {
+        top: 10%;
+        left: 10%;
+        animation-delay: 0s;
+      }
+
+      .shape:nth-child(2) {
+        top: 20%;
+        right: 10%;
+        animation-delay: 3s;
+      }
+
+      .shape:nth-child(3) {
+        bottom: 20%;
+        left: 15%;
+        animation-delay: 6s;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        50% {
+          transform: translateY(-15px) rotate(180deg);
+        }
+      }
+
+      @media (max-width: 768px) {
+        .exam-container {
+          padding: 2rem;
+          margin: 1rem;
+        }
+
+        .exam-title {
+          font-size: 2.5rem;
+        }
+
+        .exam-subtitle {
+          font-size: 1.5rem;
+        }
+
+        .info-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  
+<style>
+/* Fondo como index */
+body{
+  font-family:'Inter','Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height:1.6;
+  color:#333;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  min-height:100vh;
+  padding-top:80px; /* nav fijo */
+}
+
+/* NAV Plataforma QS (fijo, una fila con scroll si no cabe) */
+.qs-nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:saturate(140%) blur(20px);
+       background:rgba(255,255,255,.95);border-bottom:1px solid rgba(255,255,255,.2);
+       box-shadow:0 8px 32px rgba(0,0,0,.10)}
+.qs-nav .wrap{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:nowrap}
+.qs-brand{display:flex;gap:15px;align-items:center;color:#1f2937;font-weight:800;font-size:1.3rem;text-decoration:none;position:relative;padding:8px 16px;border-radius:20px;flex:0 0 auto}
+.qs-brand::before{content:"🎓";font-size:1.6rem}
+.qs-tabs{display:flex;gap:12px;background:rgba(255,255,255,.3);padding:8px;border-radius:30px;backdrop-filter:blur(10px);
+         flex:1 1 auto;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.qs-btn{border:0;padding:12px 20px;border-radius:25px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;font-weight:600;font-size:.9rem;
+       transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(10px);border:2px solid transparent;position:relative;overflow:hidden;flex:0 0 auto}
+.qs-btn::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);transition:all .4s ease;z-index:-1}
+.qs-btn:hover{color:#fff;transform:translateY(-3px);box-shadow:0 8px 25px rgba(102,126,234,.4);border-color:rgba(102,126,234,.3)}
+.qs-btn:hover::before{left:0}
+.qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none;box-shadow:0 6px 20px rgba(102,126,234,.5);transform:translateY(-2px)}
+.qs-btn[aria-current="page"]::before{left:0}
+
+/* Footer como index */
+.footer{
+  margin-top:60px;
+  padding:30px 20px;
+  text-align:center;
+  background:rgba(255, 255, 255, 0.1);
+  backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255, 255, 255, 0.2);
+}
+.footer-content{
+  max-width:1200px;
+  margin:0 auto;
+  color:rgba(255,255,255,0.8);
+  font-size:0.95rem;
+  transition:all 0.3s ease;
+  cursor:default;
+}
+.footer-content:hover{ color:#fff; transform:translateY(-2px); }
+
+/* Slide counter reducido */
+.slide-counter, #slideIndicator, .slide-indicator{
+  font-size:10px !important;
+  line-height:1 !important;
+  padding:4px 8px !important;
+  min-width:28px !important;
+  border-radius:12px !important;
+  opacity:.85 !important;
+}
+</style>
+
+
+<style>
+/* Extender fondo y flujo del documento */
+html{
+  min-height:100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) fixed !important;
+  background-repeat:no-repeat;
+}
+body{
+  min-height:100%;
+  background: transparent !important; /* el gradiente vive en <html> */
+}
+
+/* Asegurar que el footer se coloque después de todo el contenido y no se superponga */
+.footer{ position:relative; clear:both; }
+</style>
+
+
+<style>
+/* Footer siempre debajo y alineado al contenedor */
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; }
+.footer { 
+  margin-top: auto; 
+  width: 100%; 
+  clear: both; 
+  float: none; 
+  display: flow-root;     /* contiene floats y evita desbordes laterales */
+  align-self: stretch;    /* se estira al ancho disponible aunque el padre sea flex */
+}
+.footer .footer-content {
+  max-width: 1200px; 
+  margin: 0 auto; 
+}
+</style>
+
+</head>
+  <body class="flex items-center justify-center min-h-screen">
+
+<!-- NAV Plataforma QS -->
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+      
+      
+    </nav>
+  </div>
+</div>
+
+    <div class="exam-container">
+      <!-- Floating Shapes -->
+      <div class="floating-shapes">
+        <div class="shape text-6xl">📚</div>
+        <div class="shape text-6xl">✏️</div>
+        <div class="shape text-6xl">🎓</div>
+      </div>
+
+      <!-- Session Badge -->
+      <div class="session-badge">📋 Sesión 14</div>
+
+      <!-- Exam Icon -->
+      <div class="exam-icon">📝</div>
+
+      <!-- Main Title -->
+      <h1 class="exam-title">¡Examen!</h1>
+      <h2 class="exam-subtitle">Evaluación de Conocimientos</h2>
+
+      <!-- Exam Information -->
+      <div class="info-section">
+        <h3 class="text-2xl font-bold text-blue-800 mb-4 text-center">
+          📋 Información del Examen
+        </h3>
+
+        <div class="info-grid">
+          <div class="info-card">
+            <div class="info-card-icon">📅</div>
+            <h4 class="text-xl font-bold text-gray-800 mb-2">Fecha y Hora</h4>
+            <p class="text-gray-600">Según cronograma de clase</p>
+            <p class="text-sm text-gray-500 mt-1">Confirmar con el profesor</p>
+          </div>
+
+          <div class="info-card">
+            <div class="info-card-icon">⏱️</div>
+            <h4 class="text-xl font-bold text-gray-800 mb-2">Duración</h4>
+            <p class="text-gray-600">90 minutos</p>
+            <p class="text-sm text-gray-500 mt-1">
+              Tiempo suficiente para reflexionar
+            </p>
+          </div>
+
+          <div class="info-card">
+            <div class="info-card-icon">📄</div>
+            <h4 class="text-xl font-bold text-gray-800 mb-2">Formato</h4>
+            <p class="text-gray-600">Preguntas teóricas y prácticas</p>
+            <p class="text-sm text-gray-500 mt-1">
+              Opción múltiple y desarrollo
+            </p>
+          </div>
+
+          <div class="info-card">
+            <div class="info-card-icon">🎯</div>
+            <h4 class="text-xl font-bold text-gray-800 mb-2">Modalidad</h4>
+            <p class="text-gray-600">Presencial</p>
+            <p class="text-sm text-gray-500 mt-1">
+              Traer materiales de escritura
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Topics to Review -->
+      <div class="topics-section">
+        <h3 class="text-2xl font-bold text-green-800 mb-4 text-center">
+          📚 Temas a Repasar
+        </h3>
+
+        <div class="topic-item">
+          <div class="topic-number">1</div>
+          <div>
+            <h4 class="font-bold text-gray-800">
+              Fundamentos de Calidad de Software
+            </h4>
+            <p class="text-gray-600">
+              Definiciones, importancia y conceptos básicos
+            </p>
+          </div>
+        </div>
+
+        <div class="topic-item">
+          <div class="topic-number">2</div>
+          <div>
+            <h4 class="font-bold text-gray-800">Modelos de Calidad</h4>
+            <p class="text-gray-600">
+              ISO 25010, McCall, Boehm y sus características
+            </p>
+          </div>
+        </div>
+
+        <div class="topic-item">
+          <div class="topic-number">3</div>
+          <div>
+            <h4 class="font-bold text-gray-800">Métricas y Medición</h4>
+            <p class="text-gray-600">Tipos de métricas, técnicas de medición</p>
+          </div>
+        </div>
+
+        <div class="topic-item">
+          <div class="topic-number">4</div>
+          <div>
+            <h4 class="font-bold text-gray-800">Procesos de Desarrollo</h4>
+            <p class="text-gray-600">
+              Metodologías ágiles, tradicionales y híbridas
+            </p>
+          </div>
+        </div>
+
+        <div class="topic-item">
+          <div class="topic-number">5</div>
+          <div>
+            <h4 class="font-bold text-gray-800">Gestión de la Calidad</h4>
+            <p class="text-gray-600">Planificación, aseguramiento y control</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Study Tips -->
+      <div class="study-tips">
+        <h3 class="text-2xl font-bold text-yellow-800 mb-4 text-center">
+          💡 Consejos de Estudio
+        </h3>
+
+        <div class="tip-item">
+          <div class="tip-icon">📖</div>
+          <div>
+            <h4 class="font-bold text-gray-800 mb-1">
+              Repasa las presentaciones
+            </h4>
+            <p class="text-gray-600">
+              Revisa todas las diapositivas y toma notas de los puntos clave
+            </p>
+          </div>
+        </div>
+
+        <div class="tip-item">
+          <div class="tip-icon">🤝</div>
+          <div>
+            <h4 class="font-bold text-gray-800 mb-1">Estudia en grupo</h4>
+            <p class="text-gray-600">
+              Discute conceptos con compañeros para reforzar el aprendizaje
+            </p>
+          </div>
+        </div>
+
+        <div class="tip-item">
+          <div class="tip-icon">✍️</div>
+          <div>
+            <h4 class="font-bold text-gray-800 mb-1">Practica con ejemplos</h4>
+            <p class="text-gray-600">
+              Resuelve casos prácticos y ejercicios similares
+            </p>
+          </div>
+        </div>
+
+        <div class="tip-item">
+          <div class="tip-icon">🧠</div>
+          <div>
+            <h4 class="font-bold text-gray-800 mb-1">Conecta conceptos</h4>
+            <p class="text-gray-600">
+              Relaciona los diferentes temas entre sí para una comprensión
+              integral
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preparation Checklist -->
+      <div class="checklist">
+        <h3 class="text-2xl font-bold text-purple-800 mb-4 text-center">
+          ✅ Lista de Preparación
+        </h3>
+
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checkbox"></div>
+          <div>
+            <h4 class="font-bold text-gray-800">
+              Revisar todas las presentaciones de clase
+            </h4>
+            <p class="text-gray-600 text-sm">Sesiones 1-13 completas</p>
+          </div>
+        </div>
+
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checkbox"></div>
+          <div>
+            <h4 class="font-bold text-gray-800">Repasar definiciones clave</h4>
+            <p class="text-gray-600 text-sm">
+              Conceptos fundamentales y terminología
+            </p>
+          </div>
+        </div>
+
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checkbox"></div>
+          <div>
+            <h4 class="font-bold text-gray-800">Practicar con ejercicios</h4>
+            <p class="text-gray-600 text-sm">Casos prácticos y ejemplos</p>
+          </div>
+        </div>
+
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checkbox"></div>
+          <div>
+            <h4 class="font-bold text-gray-800">Preparar materiales</h4>
+            <p class="text-gray-600 text-sm">
+              Lápices, borrador, calculadora si es necesaria
+            </p>
+          </div>
+        </div>
+
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checkbox"></div>
+          <div>
+            <h4 class="font-bold text-gray-800">
+              Descansar bien la noche anterior
+            </h4>
+            <p class="text-gray-600 text-sm">
+              Una mente descansada rinde mejor
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ready Button -->
+      <button class="ready-button" onclick="showMotivation()">
+        📚 ¡Listo para Estudiar!
+      </button>
+
+      <!-- Motivation Message -->
+      <div
+        id="motivation"
+        class="hidden mt-6 p-6 bg-green-100 border-l-4 border-green-500 rounded-lg"
+      >
+        <div class="flex items-center">
+          <div class="text-3xl mr-4">🌟</div>
+          <div>
+            <h4 class="font-bold text-green-800 text-xl">
+              ¡Excelente actitud!
+            </h4>
+            <p class="text-green-700 text-lg mt-2">
+              Recuerda: has aprendido mucho durante estas sesiones. Confía en tu
+              preparación y demuestra todo lo que sabes.
+              <strong>¡Tú puedes!</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function toggleCheck(item) {
+        const checkbox = item.querySelector(".checkbox");
+        const isChecked = checkbox.classList.contains("checked");
+
+        if (isChecked) {
+          checkbox.classList.remove("checked");
+          checkbox.innerHTML = "";
+          item.classList.remove("completed");
+        } else {
+          checkbox.classList.add("checked");
+          checkbox.innerHTML = "✓";
+          item.classList.add("completed");
+        }
+
+        // Check if all items are completed
+        checkAllCompleted();
+      }
+
+      function checkAllCompleted() {
+        const allItems = document.querySelectorAll(".checklist-item");
+        const completedItems = document.querySelectorAll(
+          ".checklist-item.completed"
+        );
+
+        if (allItems.length === completedItems.length && allItems.length > 0) {
+          setTimeout(() => {
+            alert(
+              "🎉 ¡Felicitaciones! Has completado toda la lista de preparación. ¡Estás listo para el examen!"
+            );
+          }, 500);
+        }
+      }
+
+      function showMotivation() {
+        const motivation = document.getElementById("motivation");
+        motivation.classList.remove("hidden");
+        motivation.style.animation = "fadeIn 0.5s ease-in";
+
+        // Add sparkle effect
+        createSparkles();
+      }
+
+      function createSparkles() {
+        const colors = ["#3b82f6", "#16a34a", "#f59e0b", "#8b5cf6"];
+        const container = document.querySelector(".exam-container");
+
+        for (let i = 0; i < 30; i++) {
+          const sparkle = document.createElement("div");
+          sparkle.style.position = "absolute";
+          sparkle.style.width = "8px";
+          sparkle.style.height = "8px";
+          sparkle.style.backgroundColor =
+            colors[Math.floor(Math.random() * colors.length)];
+          sparkle.style.left = Math.random() * 100 + "%";
+          sparkle.style.top = "-10px";
+          sparkle.style.borderRadius = "50%";
+          sparkle.style.pointerEvents = "none";
+          sparkle.style.animation = `fall ${
+            Math.random() * 3 + 2
+          }s linear forwards`;
+
+          container.appendChild(sparkle);
+
+          setTimeout(() => {
+            sparkle.remove();
+          }, 5000);
+        }
+      }
+
+      // Add fall animation for sparkles
+      const style = document.createElement("style");
+      style.textContent = `
+            @keyframes fall {
+                to {
+                    transform: translateY(100vh) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        `;
+      document.head.appendChild(style);
+    </script>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97b3a627d2d10929',t:'MTc1NzIyMTI5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
   
 <!-- Pie de página -->
 <footer class="footer">
@@ -30,10 +830,5 @@
 })();
 </script>
 
-  <script defer src="js/layout.js"></script>
 </body>
 </html>
-
-
-
-

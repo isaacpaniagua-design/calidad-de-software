@@ -4,10 +4,1203 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🎤 Sesión 43: Presentaciones por Equipo (Día 1)</title>
-      <script defer src="js/layout.js"></script>
-</body>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        .slide {
+            min-height: 100vh;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            padding-top: 6rem;
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 0.5s ease;
+        }
+        
+        .slide.active {
+            display: flex;
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .team-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-left: 6px solid;
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideInUp 0.6s ease forwards;
+            margin: 1rem 0;
+        }
+        
+        .team-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        .team-innovatech { border-left-color: #10b981; }
+        .team-legacy { border-left-color: #3b82f6; }
+        
+        .criteria-card {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideInUp 0.6s ease forwards;
+            margin: 0.5rem 0;
+        }
+        
+        .criteria-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .criteria-card:nth-child(1) { animation-delay: 0.1s; }
+        .criteria-card:nth-child(2) { animation-delay: 0.2s; }
+        .criteria-card:nth-child(3) { animation-delay: 0.3s; }
+        .criteria-card:nth-child(4) { animation-delay: 0.4s; }
+        .criteria-card:nth-child(5) { animation-delay: 0.5s; }
+        
+        .agenda-item {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+            margin: 1rem 0;
+            opacity: 0;
+            transform: translateX(-30px);
+            animation: slideInLeft 0.6s ease forwards;
+        }
+        
+        .agenda-item:nth-child(1) { border-left-color: #ef4444; animation-delay: 0.1s; }
+        .agenda-item:nth-child(2) { border-left-color: #f59e0b; animation-delay: 0.2s; }
+        .agenda-item:nth-child(3) { border-left-color: #10b981; animation-delay: 0.3s; }
+        
+        .timer-display {
+            font-size: 4rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 2rem 0;
+            padding: 2rem;
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .timer-normal { color: #10b981; }
+        .timer-warning { color: #f59e0b; }
+        .timer-danger { color: #ef4444; }
+        
+        .rubric-container {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin: 1rem 0;
+        }
+        
+        .rubric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            margin: 0.5rem 0;
+        }
+        
+        .rubric-item:last-child {
+            border-bottom: none;
+        }
+        
+        .score-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .score-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid #e5e7eb;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .score-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .score-btn.selected {
+            border-color: #3b82f6;
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .question-panel {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            margin: 1rem 0;
+        }
+        
+        .question-item {
+            background: #f8fafc;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            border-left: 4px solid;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification-success { border-left-color: #10b981; }
+        .notification-warning { border-left-color: #f59e0b; }
+        .notification-danger { border-left-color: #ef4444; }
+        
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+      
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-lg z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <h1 class="text-xl font-bold text-gray-800">🎤 Sesión 43: Presentaciones por Equipo (Día 1)</h1>
+                    <span class="text-sm text-gray-600" id="slide-counter">1 / 6</span>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="previousSlide()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        ← Anterior
+                    </button>
+                    <button onclick="nextSlide()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        Siguiente →
+                    </button>
+                </div>
+            </div>
+        </div>
+      
+</nav>
+
+    <!-- Slide 1: Título -->
+    <div class="slide active" id="slide-1">
+        <div class="text-center max-w-5xl mx-auto">
+            <div class="mb-8">
+                <div class="text-8xl mb-6 float-animation">🎤</div>
+                <h1 class="text-6xl font-bold text-gray-800 mb-4">Presentaciones Finales</h1>
+                <h2 class="text-4xl font-bold text-purple-600 mb-8">Plan de Certificación de Calidad</h2>
+                <div class="text-2xl text-gray-600 font-medium">Sesión 43 - Día 1</div>
+            </div>
+            
+            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="text-center pulse-animation">
+                        <div class="text-5xl mb-4">🏢</div>
+                        <h3 class="font-bold text-green-600 text-xl mb-2">Equipo 1</h3>
+                        <p class="text-gray-600">Innovatech Startup</p>
+                        <p class="text-sm text-gray-500 mt-2">MoProSoft para PyMEs</p>
+                    </div>
+                    <div class="text-center pulse-animation" style="animation-delay: 0.3s">
+                        <div class="text-5xl mb-4">🏛️</div>
+                        <h3 class="font-bold text-blue-600 text-xl mb-2">Equipo 2</h3>
+                        <p class="text-gray-600">Legacy Corp</p>
+                        <p class="text-sm text-gray-500 mt-2">CMMI Nivel 3</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8">
+                <p class="text-lg text-gray-700 italic">
+                    "Presentando soluciones reales para desafíos de calidad"
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 2: Agenda del día -->
+    <div class="slide" id="slide-2">
+        <div class="max-w-5xl mx-auto">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-bold text-gray-800 mb-4">📅 Agenda del Día</h1>
+                <div class="w-24 h-1 bg-purple-600 mx-auto mb-8"></div>
+                <p class="text-xl text-gray-600">Estructura de las presentaciones</p>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="agenda-item">
+                    <div class="flex items-center space-x-6">
+                        <div class="text-5xl">⏱️</div>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-red-600 mb-2">15 minutos → Exposición por equipo</h3>
+                            <p class="text-gray-700 mb-3">Presentación completa del plan de certificación</p>
+                            <div class="bg-red-50 p-4 rounded-lg">
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h4 class="font-semibold text-red-800 mb-2">📋 Contenido a cubrir:</h4>
+                                        <ul class="text-sm text-red-700 space-y-1">
+                                            <li>• Diagnóstico de la empresa</li>
+                                            <li>• Justificación del modelo</li>
+                                            <li>• Gap Analysis detallado</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-red-800 mb-2">🎯 Entregables:</h4>
+                                        <ul class="text-sm text-red-700 space-y-1">
+                                            <li>• Roadmap de implementación</li>
+                                            <li>• Plan de gestión del cambio</li>
+                                            <li>• Métricas y cronograma</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="agenda-item">
+                    <div class="flex items-center space-x-6">
+                        <div class="text-5xl">❓</div>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-orange-600 mb-2">5 minutos → Preguntas y respuestas</h3>
+                            <p class="text-gray-700 mb-3">Sesión interactiva con el equipo presentador</p>
+                            <div class="bg-orange-50 p-4 rounded-lg">
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h4 class="font-semibold text-orange-800 mb-2">🎤 Tipos de preguntas:</h4>
+                                        <ul class="text-sm text-orange-700 space-y-1">
+                                            <li>• Clarificaciones técnicas</li>
+                                            <li>• Justificación de decisiones</li>
+                                            <li>• Viabilidad del plan</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-orange-800 mb-2">👥 Participantes:</h4>
+                                        <ul class="text-sm text-orange-700 space-y-1">
+                                            <li>• Otros equipos</li>
+                                            <li>• Docente</li>
+                                            <li>• Observadores</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="agenda-item">
+                    <div class="flex items-center space-x-6">
+                        <div class="text-5xl">📊</div>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-green-600 mb-2">Rúbrica en tiempo real</h3>
+                            <p class="text-gray-700 mb-3">Evaluación inmediata con retroalimentación constructiva</p>
+                            <div class="bg-green-50 p-4 rounded-lg">
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h4 class="font-semibold text-green-800 mb-2">⚡ Evaluación inmediata:</h4>
+                                        <ul class="text-sm text-green-700 space-y-1">
+                                            <li>• Puntaje por criterio</li>
+                                            <li>• Comentarios específicos</li>
+                                            <li>• Sugerencias de mejora</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-green-800 mb-2">🎯 Beneficios:</h4>
+                                        <ul class="text-sm text-green-700 space-y-1">
+                                            <li>• Feedback instantáneo</li>
+                                            <li>• Aprendizaje continuo</li>
+                                            <li>• Transparencia en evaluación</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: Criterios de evaluación -->
+    <div class="slide" id="slide-3">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-bold text-gray-800 mb-4">📋 Recordatorio de Criterios</h1>
+                <div class="w-24 h-1 bg-blue-600 mx-auto mb-8"></div>
+                <p class="text-xl text-gray-600">Aspectos clave para la evaluación</p>
+            </div>
+            
+            <div class="grid md:grid-cols-1 gap-6">
+                <div class="criteria-card">
+                    <div class="flex items-start space-x-4">
+                        <div class="text-4xl">🔍</div>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-blue-600 mb-3">Claridad del Diagnóstico</h3>
+                            <p class="text-gray-700 mb-4">Análisis preciso y fundamentado de la situación actual</p>
+                            <div class="grid md:grid-cols-3 gap-4">
+                                <div class="bg-blue-50 p-3 rounded-lg">
+                                    <h4 class="font-semibold text-blue-800 mb-2">🎯 Excelente (4-5)</h4>
+                                    <ul class="text-sm text-blue-700 space-y-1">
+                                        <li>• Análisis exhaustivo</li>
+                                        <li>• Datos concretos</li>
+                                        <li>• Problemas bien identificados</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-yellow-50 p-3 rounded-lg">
+                                    <h4 class="font-semibold text-yellow-800 mb-2">⚠️ Bueno (2-3)</h4>
+                                    <ul class="text-sm text-yellow-700 space-y-1">
+                                        <li>• Análisis general</li>
+                                        <li>• Algunos datos</li>
+                                        <li>• Problemas identificados</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-red-50 p-3 rounded-lg">
+                                    <h4 class="font-semibold text-red-800 mb-2">❌ Mejorable (0-1)</h4>
+                                    <ul class="text-sm text-red-700 space-y-1">
+                                        <li>• Análisis superficial</li>
+                                        <li>• Pocos datos</li>
+                                        <li>• Problemas vagos</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="criteria-card">
+                    <div class="flex items-start space-x-4">
+                        <div class="text-4xl">🎯</div>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-green-600 mb-3">Justificación del Modelo Seleccionado</h3>
+                            <p class="text-gray-700 mb-4">Argumentación sólida para la elección del modelo de calidad</p>
+                            <div class="bg-green-50 p-4 rounded-lg">
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h4 class="font-semibold text-green-800 mb-2">✅ Aspectos a evaluar:</h4>
+                                        <ul class="text-sm text-green-700 space-y-1">
+                                            <li>• Alineación con necesidades</li>
+                                            <li>• Consideración de recursos</li>
+                                            <li>• Análisis de alternativas</li>
+                                            <li>• Beneficios esperados</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-green-800 mb-2">🔍 Evidencias esperadas:</h4>
+                                        <ul class="text-sm text-green-700 space-y-1">
+                                            <li>• Matriz de comparación</li>
+                                            <li>• Análisis costo-beneficio</li>
+                                            <li>• Referencias del sector</li>
+                                            <li>• Casos de éxito similares</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="criteria-card">
+                    <div class="flex items-start space-x-4">
+                        <div class="text-4xl">📊</div>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-orange-600 mb-3">Calidad del Gap Analysis</h3>
+                            <p class="text-gray-700 mb-4">Identificación precisa de brechas y priorización efectiva</p>
+                            <div class="bg-orange-50 p-4 rounded-lg">
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h4 class="font-semibold text-orange-800 mb-2">🎯 Elementos clave:</h4>
+                                        <ul class="text-sm text-orange-700 space-y-1">
+                                            <li>• Brechas bien definidas</li>
+                                            <li>• Priorización justificada</li>
+                                            <li>• Impacto vs esfuerzo</li>
+                                            <li>• Métricas específicas</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-orange-800 mb-2">📋 Herramientas esperadas:</h4>
+                                        <ul class="text-sm text-orange-700 space-y-1">
+                                            <li>• Matriz de brechas</li>
+                                            <li>• Análisis de riesgos</li>
+                                            <li>• Plan de priorización</li>
+                                            <li>• Cronograma preliminar</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="criteria-card">
+                    <div class="flex items-start space-x-4">
+                        <div class="text-4xl">🗺️</div>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-purple-600 mb-3">Factibilidad del Roadmap</h3>
+                            <p class="text-gray-700 mb-4">Plan de implementación realista y bien estructurado</p>
+                            <div class="bg-purple-50 p-4 rounded-lg">
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h4 class="font-semibold text-purple-800 mb-2">⚡ Factibilidad técnica:</h4>
+                                        <ul class="text-sm text-purple-700 space-y-1">
+                                            <li>• Recursos disponibles</li>
+                                            <li>• Capacidades del equipo</li>
+                                            <li>• Tecnología requerida</li>
+                                            <li>• Dependencias externas</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-purple-800 mb-2">💰 Factibilidad económica:</h4>
+                                        <ul class="text-sm text-purple-700 space-y-1">
+                                            <li>• Presupuesto realista</li>
+                                            <li>• ROI esperado</li>
+                                            <li>• Costos ocultos</li>
+                                            <li>• Fuentes de financiamiento</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="criteria-card">
+                    <div class="flex items-start space-x-4">
+                        <div class="text-4xl">🚀</div>
+                        <div class="flex-1">
+                            <h3 class="text-2xl font-bold text-red-600 mb-3">Gestión del Cambio Propuesta</h3>
+                            <p class="text-gray-700 mb-4">Estrategia integral para la adopción y sostenibilidad</p>
+                            <div class="bg-red-50 p-4 rounded-lg">
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h4 class="font-semibold text-red-800 mb-2">👥 Gestión de personas:</h4>
+                                        <ul class="text-sm text-red-700 space-y-1">
+                                            <li>• Plan de comunicación</li>
+                                            <li>• Estrategia de capacitación</li>
+                                            <li>• Manejo de resistencias</li>
+                                            <li>• Incentivos y motivación</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-red-800 mb-2">🔄 Sostenibilidad:</h4>
+                                        <ul class="text-sm text-red-700 space-y-1">
+                                            <li>• Métricas de adopción</li>
+                                            <li>• Planes de contingencia</li>
+                                            <li>• Mejora continua</li>
+                                            <li>• Lecciones aprendidas</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Equipo 1 - Innovatech -->
+    <div class="slide" id="slide-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-bold text-gray-800 mb-4">🏢 Equipo 1: Innovatech Startup</h1>
+                <div class="w-24 h-1 bg-green-600 mx-auto mb-8"></div>
+                <p class="text-xl text-gray-600">Transformación de procesos caóticos a estándares PyME</p>
+            </div>
+            
+            <div class="team-card team-innovatech">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <div class="flex items-center mb-6">
+                            <div class="text-5xl mr-4">🔍</div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-green-600">Diagnóstico Identificado</h3>
+                                <p class="text-gray-600">Situación actual de la startup</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-500">
+                                <h4 class="font-semibold text-red-800 mb-2">❌ Problemas Críticos:</h4>
+                                <ul class="text-sm text-red-700 space-y-1">
+                                    <li>• <strong>Procesos caóticos:</strong> Sin documentación estándar</li>
+                                    <li>• <strong>Falta de control:</strong> No hay seguimiento de calidad</li>
+                                    <li>• <strong>Comunicación deficiente:</strong> Información dispersa</li>
+                                    <li>• <strong>Entregas inconsistentes:</strong> Calidad variable</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-500">
+                                <h4 class="font-semibold text-yellow-800 mb-2">⚠️ Impacto en el Negocio:</h4>
+                                <ul class="text-sm text-yellow-700 space-y-1">
+                                    <li>• Retrasos frecuentes en entregas</li>
+                                    <li>• Costos de re-trabajo elevados</li>
+                                    <li>• Insatisfacción del cliente</li>
+                                    <li>• Dificultad para escalar</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex items-center mb-6">
+                            <div class="text-5xl mr-4">🎯</div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-green-600">Modelo Sugerido</h3>
+                                <p class="text-gray-600">MoProSoft - Accesible para PyMEs</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-green-50 p-4 rounded-lg border-l-4 border-green-500">
+                                <h4 class="font-semibold text-green-800 mb-2">✅ ¿Por qué MoProSoft?</h4>
+                                <ul class="text-sm text-green-700 space-y-1">
+                                    <li>• <strong>Diseñado para PyMEs:</strong> Recursos limitados</li>
+                                    <li>• <strong>Implementación gradual:</strong> Fases manejables</li>
+                                    <li>• <strong>Costo-efectivo:</strong> ROI rápido</li>
+                                    <li>• <strong>Enfoque práctico:</strong> Resultados tangibles</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                                <h4 class="font-semibold text-blue-800 mb-2">🎯 Beneficios Esperados:</h4>
+                                <ul class="text-sm text-blue-700 space-y-1">
+                                    <li>• Procesos documentados y estandarizados</li>
+                                    <li>• Mejora en tiempos de entrega (30%)</li>
+                                    <li>• Reducción de defectos (40%)</li>
+                                    <li>• Base para crecimiento sostenible</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Timer y Rúbrica para Equipo 1 -->
+                <div class="mt-8 grid md:grid-cols-2 gap-6">
+                    <div class="text-center">
+                        <h4 class="text-lg font-bold text-gray-800 mb-4">⏱️ Timer de Presentación</h4>
+                        <div class="timer-display timer-normal" id="team1-timer">15:00</div>
+                        <div class="space-x-4">
+                            <button onclick="startTimer('team1')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                                ▶️ Iniciar
+                            </button>
+                            <button onclick="pauseTimer('team1')" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg">
+                                ⏸️ Pausar
+                            </button>
+                            <button onclick="resetTimer('team1')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
+                                🔄 Reset
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="rubric-container">
+                        <h4 class="text-lg font-bold text-gray-800 mb-4">📊 Rúbrica - Equipo 1</h4>
+                        <div id="team1-rubric">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                        <div class="mt-4 text-center">
+                            <div class="text-2xl font-bold text-blue-600" id="team1-total">Total: 0/25</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Equipo 2 - Legacy Corp -->
+    <div class="slide" id="slide-5">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-bold text-gray-800 mb-4">🏛️ Equipo 2: Legacy Corp</h1>
+                <div class="w-24 h-1 bg-blue-600 mx-auto mb-8"></div>
+                <p class="text-xl text-gray-600">De burocracia sin estándares a madurez organizacional</p>
+            </div>
+            
+            <div class="team-card team-legacy">
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <div class="flex items-center mb-6">
+                            <div class="text-5xl mr-4">🔍</div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-blue-600">Diagnóstico Identificado</h3>
+                                <p class="text-gray-600">Situación actual de la corporación</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-500">
+                                <h4 class="font-semibold text-red-800 mb-2">❌ Problemas Estructurales:</h4>
+                                <ul class="text-sm text-red-700 space-y-1">
+                                    <li>• <strong>Burocracia excesiva:</strong> Procesos lentos y complejos</li>
+                                    <li>• <strong>Sin estandarización:</strong> Cada área trabaja diferente</li>
+                                    <li>• <strong>Silos organizacionales:</strong> Falta de integración</li>
+                                    <li>• <strong>Resistencia al cambio:</strong> Cultura conservadora</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-500">
+                                <h4 class="font-semibold text-yellow-800 mb-2">⚠️ Consecuencias:</h4>
+                                <ul class="text-sm text-yellow-700 space-y-1">
+                                    <li>• Ineficiencias operativas</li>
+                                    <li>• Duplicación de esfuerzos</li>
+                                    <li>• Falta de visibilidad ejecutiva</li>
+                                    <li>• Competitividad reducida</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="flex items-center mb-6">
+                            <div class="text-5xl mr-4">🎯</div>
+                            <div>
+                                <h3 class="text-2xl font-bold text-blue-600">Modelo Sugerido</h3>
+                                <p class="text-gray-600">CMMI Nivel 3 - Madurez Organizacional</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
+                                <h4 class="font-semibold text-blue-800 mb-2">✅ ¿Por qué CMMI Nivel 3?</h4>
+                                <ul class="text-sm text-blue-700 space-y-1">
+                                    <li>• <strong>Madurez organizacional:</strong> Procesos definidos</li>
+                                    <li>• <strong>Estandarización:</strong> Consistencia en toda la org.</li>
+                                    <li>• <strong>Mejora continua:</strong> Cultura de optimización</li>
+                                    <li>• <strong>Reconocimiento:</strong> Credibilidad en el mercado</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-purple-50 p-4 rounded-lg border-l-4 border-purple-500">
+                                <h4 class="font-semibold text-purple-800 mb-2">🎯 Transformación Esperada:</h4>
+                                <ul class="text-sm text-purple-700 space-y-1">
+                                    <li>• Procesos optimizados y medibles</li>
+                                    <li>• Reducción de tiempos (50%)</li>
+                                    <li>• Mejora en satisfacción cliente (35%)</li>
+                                    <li>• Cultura de excelencia operacional</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Timer y Rúbrica para Equipo 2 -->
+                <div class="mt-8 grid md:grid-cols-2 gap-6">
+                    <div class="text-center">
+                        <h4 class="text-lg font-bold text-gray-800 mb-4">⏱️ Timer de Presentación</h4>
+                        <div class="timer-display timer-normal" id="team2-timer">15:00</div>
+                        <div class="space-x-4">
+                            <button onclick="startTimer('team2')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                                ▶️ Iniciar
+                            </button>
+                            <button onclick="pauseTimer('team2')" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg">
+                                ⏸️ Pausar
+                            </button>
+                            <button onclick="resetTimer('team2')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
+                                🔄 Reset
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="rubric-container">
+                        <h4 class="text-lg font-bold text-gray-800 mb-4">📊 Rúbrica - Equipo 2</h4>
+                        <div id="team2-rubric">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                        <div class="mt-4 text-center">
+                            <div class="text-2xl font-bold text-blue-600" id="team2-total">Total: 0/25</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: Panel de preguntas -->
+    <div class="slide" id="slide-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl font-bold text-gray-800 mb-4">❓ Actividad: Panel de Preguntas</h1>
+                <div class="w-24 h-1 bg-orange-600 mx-auto mb-8"></div>
+                <p class="text-xl text-gray-600">Preguntas cruzadas entre equipos</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- Panel de preguntas para Equipo 1 -->
+                <div class="question-panel">
+                    <h3 class="text-2xl font-bold text-green-600 mb-6">🏢 Preguntas para Innovatech</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="question-item">
+                            <div class="flex items-start space-x-3">
+                                <div class="text-2xl">❓</div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Sobre MoProSoft:</h4>
+                                    <p class="text-sm text-gray-700">¿Cómo planean manejar la resistencia al cambio en una startup donde la agilidad es clave?</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="question-item">
+                            <div class="flex items-start space-x-3">
+                                <div class="text-2xl">💰</div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Sobre Recursos:</h4>
+                                    <p class="text-sm text-gray-700">¿Cuál es el presupuesto estimado y cómo justifican el ROI en el corto plazo?</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="question-item">
+                            <div class="flex items-start space-x-3">
+                                <div class="text-2xl">📊</div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Sobre Métricas:</h4>
+                                    <p class="text-sm text-gray-700">¿Qué métricas específicas usarán para medir el éxito de la implementación?</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="question-item">
+                            <div class="flex items-start space-x-3">
+                                <div class="text-2xl">⏱️</div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Sobre Timeline:</h4>
+                                    <p class="text-sm text-gray-700">¿Es realista implementar MoProSoft en 6 meses considerando el crecimiento de la startup?</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <h4 class="font-semibold text-green-800 mb-3">💡 Agregar pregunta personalizada:</h4>
+                        <textarea id="custom-question-team1" class="w-full p-3 border-2 border-gray-300 rounded-lg" rows="3" placeholder="Escribe tu pregunta para el Equipo 1..."></textarea>
+                        <button onclick="addCustomQuestion('team1')" class="mt-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                            ➕ Agregar Pregunta
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Panel de preguntas para Equipo 2 -->
+                <div class="question-panel">
+                    <h3 class="text-2xl font-bold text-blue-600 mb-6">🏛️ Preguntas para Legacy Corp</h3>
+                    
+                    <div class="space-y-4">
+                        <div class="question-item">
+                            <div class="flex items-start space-x-3">
+                                <div class="text-2xl">❓</div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Sobre CMMI Nivel 3:</h4>
+                                    <p class="text-sm text-gray-700">¿Cómo planean superar la resistencia cultural en una organización establecida?</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="question-item">
+                            <div class="flex items-start space-x-3">
+                                <div class="text-2xl">🏢</div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Sobre Estructura:</h4>
+                                    <p class="text-sm text-gray-700">¿Qué cambios organizacionales específicos requiere la implementación de CMMI?</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="question-item">
+                            <div class="flex items-start space-x-3">
+                                <div class="text-2xl">📈</div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Sobre Escalabilidad:</h4>
+                                    <p class="text-sm text-gray-700">¿Cómo asegurarán que los procesos sean sostenibles a largo plazo?</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="question-item">
+                            <div class="flex items-start space-x-3">
+                                <div class="text-2xl">🎯</div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Sobre Competencia:</h4>
+                                    <p class="text-sm text-gray-700">¿Qué ventajas competitivas específicas esperan obtener con CMMI Nivel 3?</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <h4 class="font-semibold text-blue-800 mb-3">💡 Agregar pregunta personalizada:</h4>
+                        <textarea id="custom-question-team2" class="w-full p-3 border-2 border-gray-300 rounded-lg" rows="3" placeholder="Escribe tu pregunta para el Equipo 2..."></textarea>
+                        <button onclick="addCustomQuestion('team2')" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            ➕ Agregar Pregunta
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Resumen de evaluaciones -->
+            <div class="mt-12 bg-white rounded-2xl p-8 shadow-xl">
+                <h3 class="text-2xl font-bold text-center text-gray-800 mb-6">📊 Resumen de Evaluaciones</h3>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="text-center">
+                        <h4 class="text-xl font-bold text-green-600 mb-4">🏢 Equipo 1: Innovatech</h4>
+                        <div class="text-4xl font-bold text-green-600" id="team1-final-score">0/25</div>
+                        <div class="text-sm text-gray-600 mt-2">Puntuación Final</div>
+                    </div>
+                    <div class="text-center">
+                        <h4 class="text-xl font-bold text-blue-600 mb-4">🏛️ Equipo 2: Legacy Corp</h4>
+                        <div class="text-4xl font-bold text-blue-600" id="team2-final-score">0/25</div>
+                        <div class="text-sm text-gray-600 mt-2">Puntuación Final</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="fixed bottom-0 left-0 right-0 h-2 bg-gray-200">
+        <div class="h-full bg-gradient-to-r from-purple-600 to-blue-600 transition-all duration-300" id="progress-bar" style="width: 16.67%"></div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+
+    <script>
+        let currentSlide = 1;
+        const totalSlides = 6;
+        let timers = {
+            team1: { time: 900, interval: null, running: false }, // 15 minutes
+            team2: { time: 900, interval: null, running: false }
+        };
+        
+        const criteria = [
+            { name: 'Claridad del diagnóstico', weight: 5 },
+            { name: 'Justificación del modelo', weight: 5 },
+            { name: 'Calidad del Gap Analysis', weight: 5 },
+            { name: 'Factibilidad del Roadmap', weight: 5 },
+            { name: 'Gestión del cambio', weight: 5 }
+        ];
+
+        function updateSlideCounter() {
+            document.getElementById('slide-counter').textContent = `${currentSlide} / ${totalSlides}`;
+            document.getElementById('progress-bar').style.width = `${(currentSlide / totalSlides) * 100}%`;
+        }
+
+        function showSlide(slideNumber) {
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            const currentSlideElement = document.getElementById(`slide-${slideNumber}`);
+            currentSlideElement.classList.add('active');
+            
+            updateSlideCounter();
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides) {
+                currentSlide++;
+                showSlide(currentSlide);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlide > 1) {
+                currentSlide--;
+                showSlide(currentSlide);
+            }
+        }
+
+        function startTimer(team) {
+            if (timers[team].running) return;
+            
+            timers[team].running = true;
+            timers[team].interval = setInterval(() => {
+                timers[team].time--;
+                updateTimerDisplay(team);
+                
+                // Change color based on remaining time
+                const timerElement = document.getElementById(`${team}-timer`);
+                if (timers[team].time <= 60) { // Last minute
+                    timerElement.className = 'timer-display timer-danger';
+                } else if (timers[team].time <= 300) { // Last 5 minutes
+                    timerElement.className = 'timer-display timer-warning';
+                }
+                
+                if (timers[team].time <= 0) {
+                    clearInterval(timers[team].interval);
+                    timers[team].running = false;
+                    showNotification(`⏰ ¡Tiempo terminado para ${team === 'team1' ? 'Innovatech' : 'Legacy Corp'}!`, 'danger');
+                }
+            }, 1000);
+            
+            showNotification(`▶️ Timer iniciado para ${team === 'team1' ? 'Innovatech' : 'Legacy Corp'}`, 'success');
+        }
+
+        function pauseTimer(team) {
+            if (timers[team].interval) {
+                clearInterval(timers[team].interval);
+                timers[team].running = false;
+                showNotification(`⏸️ Timer pausado para ${team === 'team1' ? 'Innovatech' : 'Legacy Corp'}`, 'warning');
+            }
+        }
+
+        function resetTimer(team) {
+            if (timers[team].interval) {
+                clearInterval(timers[team].interval);
+            }
+            timers[team].time = 900; // Reset to 15 minutes
+            timers[team].running = false;
+            updateTimerDisplay(team);
+            document.getElementById(`${team}-timer`).className = 'timer-display timer-normal';
+            showNotification(`🔄 Timer reiniciado para ${team === 'team1' ? 'Innovatech' : 'Legacy Corp'}`, 'success');
+        }
+
+        function updateTimerDisplay(team) {
+            const minutes = Math.floor(timers[team].time / 60);
+            const seconds = timers[team].time % 60;
+            document.getElementById(`${team}-timer`).textContent = 
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function createRubric(team) {
+            const rubricContainer = document.getElementById(`${team}-rubric`);
+            let html = '';
+            
+            criteria.forEach((criterion, index) => {
+                html += `
+                    <div class="rubric-item">
+                        <div>
+                            <div class="font-semibold text-gray-800">${criterion.name}</div>
+                            <div class="text-sm text-gray-600">Peso: ${criterion.weight} puntos</div>
+                        </div>
+                        <div class="score-buttons">
+                            ${[0, 1, 2, 3, 4, 5].map(score => 
+                                `<button class="score-btn" onclick="setScore('${team}', ${index}, ${score})" data-score="${score}">${score}</button>`
+                            ).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            rubricContainer.innerHTML = html;
+        }
+
+        function setScore(team, criterionIndex, score) {
+            // Update button appearance
+            const rubricItem = document.getElementById(`${team}-rubric`).children[criterionIndex];
+            const buttons = rubricItem.querySelectorAll('.score-btn');
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            buttons[score].classList.add('selected');
+            
+            // Calculate total
+            calculateTotal(team);
+        }
+
+        function calculateTotal(team) {
+            const rubricItems = document.getElementById(`${team}-rubric`).children;
+            let total = 0;
+            
+            for (let i = 0; i < rubricItems.length; i++) {
+                const selectedBtn = rubricItems[i].querySelector('.score-btn.selected');
+                if (selectedBtn) {
+                    total += parseInt(selectedBtn.dataset.score);
+                }
+            }
+            
+            document.getElementById(`${team}-total`).textContent = `Total: ${total}/25`;
+            document.getElementById(`${team}-final-score`).textContent = `${total}/25`;
+            
+            // Show notification for score updates
+            if (total > 0) {
+                const teamName = team === 'team1' ? 'Innovatech' : 'Legacy Corp';
+                showNotification(`📊 Puntuación actualizada para ${teamName}: ${total}/25`, 'success');
+            }
+        }
+
+        function addCustomQuestion(team) {
+            const textarea = document.getElementById(`custom-question-${team}`);
+            const question = textarea.value.trim();
+            
+            if (!question) {
+                showNotification('⚠️ Por favor, escribe una pregunta antes de agregar', 'warning');
+                return;
+            }
+            
+            const questionPanel = textarea.closest('.question-panel').querySelector('.space-y-4');
+            const newQuestion = document.createElement('div');
+            newQuestion.className = 'question-item';
+            newQuestion.innerHTML = `
+                <div class="flex items-start space-x-3">
+                    <div class="text-2xl">💭</div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-2">Pregunta personalizada:</h4>
+                        <p class="text-sm text-gray-700">${question}</p>
+                    </div>
+                </div>
+            `;
+            
+            questionPanel.appendChild(newQuestion);
+            textarea.value = '';
+            
+            const teamName = team === 'team1' ? 'Innovatech' : 'Legacy Corp';
+            showNotification(`✅ Pregunta agregada para ${teamName}`, 'success');
+        }
+
+        function showNotification(message, type) {
+            const container = document.getElementById('notification-container');
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <div class="text-lg">
+                        ${type === 'success' ? '✅' : type === 'warning' ? '⚠️' : '❌'}
+                    </div>
+                    <div class="text-sm font-medium">${message}</div>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Show notification
+            setTimeout(() => notification.classList.add('show'), 100);
+            
+            // Hide and remove notification
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => container.removeChild(notification), 300);
+            }, 3000);
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                previousSlide();
+            }
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            showSlide(1);
+            createRubric('team1');
+            createRubric('team2');
+            
+            // Show welcome notification
+            setTimeout(() => {
+                showNotification('🎤 ¡Bienvenidos a las presentaciones finales! Listos para evaluar los planes de certificación.', 'success');
+            }, 1000);
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a87bd4a212cdb0',t:'MTc1NzEwNDIxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
-
-
-
-

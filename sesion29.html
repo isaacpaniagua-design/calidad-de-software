@@ -4,10 +4,1278 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sesión 29 - ISO/IEC 25010 e IEEE</title>
-      <script defer src="js/layout.js"></script>
-</body>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .slide {
+            display: none;
+            animation: slideIn 0.5s ease-in-out;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
+        }
+        
+        @keyframes typewriter {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200px 0; }
+            100% { background-position: calc(200px + 100%) 0; }
+        }
+        
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        .bounce-animation {
+            animation: bounce 2s infinite;
+        }
+        
+        .rotate-animation {
+            animation: rotate 4s linear infinite;
+        }
+        
+        .glow-animation {
+            animation: glow 2s infinite;
+        }
+        
+        .typewriter {
+            overflow: hidden;
+            white-space: nowrap;
+            animation: typewriter 3s steps(40, end);
+        }
+        
+        .shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200px 100%;
+            animation: shimmer 2s infinite;
+        }
+        
+        .slide-bg-1 {
+            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+        }
+        
+        .slide-bg-2 {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+        
+        .slide-bg-3 {
+            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+        }
+        
+        .slide-bg-4 {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+        }
+        
+        .slide-bg-5 {
+            background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+        }
+        
+        .characteristic-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .characteristic-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .quality-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .quality-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .sqap-section {
+            transition: all 0.3s ease;
+        }
+        
+        .sqap-section:hover {
+            transform: scale(1.02);
+        }
+        
+        .case-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .case-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .metric-gauge {
+            position: relative;
+            width: 100px;
+            height: 50px;
+            background: #e5e7eb;
+            border-radius: 50px 50px 0 0;
+            overflow: hidden;
+        }
+        
+        .metric-fill {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 100%;
+            border-radius: 50px 50px 0 0;
+            transition: width 1s ease;
+        }
+        
+        .excellent-fill { background: linear-gradient(90deg, #10b981, #059669); }
+        .good-fill { background: linear-gradient(90deg, #3b82f6, #2563eb); }
+        .average-fill { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .poor-fill { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        
+        .progress-ring {
+            width: 80px;
+            height: 80px;
+        }
+        
+        .progress-ring-circle {
+            stroke: #e5e7eb;
+            stroke-width: 8;
+            fill: transparent;
+            r: 30;
+            cx: 40;
+            cy: 40;
+        }
+        
+        .progress-ring-progress {
+            stroke: #3b82f6;
+            stroke-width: 8;
+            stroke-linecap: round;
+            fill: transparent;
+            r: 30;
+            cx: 40;
+            cy: 40;
+            stroke-dasharray: 188.5;
+            stroke-dashoffset: 188.5;
+            transition: stroke-dashoffset 1s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+      
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <!-- Navigation -->
+    <div class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50 px-6 py-4">
+        <div class="flex justify-between items-center max-w-6xl mx-auto">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xl font-bold text-gray-800">Sesión 29 - ISO/IEC 25010 e IEEE</h1>
+                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                    Diapositiva <span id="currentSlide">1</span> de 5
+                </span>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="previousSlide()" id="prevBtn" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
+                    ← Anterior
+                </button>
+                <button onclick="nextSlide()" id="nextBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    Siguiente →
+                </button>
+            </div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+            <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 20%"></div>
+        </div>
+    </div>
+
+    <!-- Slides Container -->
+    <div class="pt-24 pb-8 px-6">
+        <div class="max-w-6xl mx-auto">
+            
+            <!-- Slide 1: Título -->
+            <div class="slide active" id="slide1">
+                <div class="slide-bg-1 rounded-3xl p-12 text-center text-white min-h-[600px] flex flex-col justify-center items-center">
+                    <!-- Standards Icons Animation -->
+                    <div class="flex items-center justify-center mb-8">
+                        <div class="text-6xl mr-6 float-animation">📋</div>
+                        <div class="text-6xl mx-4 pulse-animation">🌍</div>
+                        <div class="text-6xl mx-4 bounce-animation">⚖️</div>
+                        <div class="text-6xl mx-4 rotate-animation">🎯</div>
+                        <div class="text-6xl ml-6 glow-animation">✅</div>
+                    </div>
+                    
+                    <h1 class="text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
+                        <span class="text-blue-300">ISO/IEC 25010</span><br>
+                        <span class="text-white pulse-animation">e</span><br>
+                        <span class="text-yellow-300">IEEE</span>
+                    </h1>
+                    
+                    <h2 class="text-3xl font-semibold mb-8 text-blue-200">
+                        Estándares Globales de Calidad
+                    </h2>
+                    
+                    <!-- Global Standards Stats -->
+                    <div class="grid grid-cols-4 gap-6 max-w-4xl mb-8">
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4 characteristic-card">
+                            <div class="text-3xl mb-2">🏆</div>
+                            <div class="text-sm opacity-80">ISO/IEC 25010</div>
+                            <div class="text-2xl font-bold text-blue-300">8 Características</div>
+                        </div>
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4 characteristic-card">
+                            <div class="text-3xl mb-2">📊</div>
+                            <div class="text-sm opacity-80">Calidad en Uso</div>
+                            <div class="text-2xl font-bold text-green-300">5 Dimensiones</div>
+                        </div>
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4 characteristic-card">
+                            <div class="text-3xl mb-2">📋</div>
+                            <div class="text-sm opacity-80">IEEE 730</div>
+                            <div class="text-2xl font-bold text-yellow-300">SQAP</div>
+                        </div>
+                        <div class="bg-white bg-opacity-10 rounded-lg p-4 characteristic-card">
+                            <div class="text-3xl mb-2">🌍</div>
+                            <div class="text-sm opacity-80">Adopción Global</div>
+                            <div class="text-2xl font-bold text-red-300">190+ Países</div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white bg-opacity-20 rounded-2xl p-6 max-w-3xl">
+                        <p class="text-xl font-medium text-blue-200 mb-2 typewriter">
+                            "Los estándares son la base de la excelencia en software"
+                        </p>
+                        <p class="text-lg opacity-90">
+                            Marcos de referencia internacionales para asegurar la calidad
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2: ISO/IEC 25010 - Modelo de Calidad de Producto -->
+            <div class="slide" id="slide2">
+                <div class="slide-bg-2 rounded-3xl p-12 min-h-[600px]">
+                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                        🏆 ISO/IEC 25010 - Modelo de Calidad de Producto
+                    </h2>
+                    
+                    <!-- 8 Main Characteristics Grid -->
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <!-- Functional Suitability -->
+                        <div class="characteristic-card bg-white bg-opacity-90 rounded-2xl p-6" onclick="showCharacteristicDemo('functional')">
+                            <div class="text-center mb-4">
+                                <div class="text-4xl mb-3 pulse-animation">🎯</div>
+                                <h3 class="text-lg font-bold text-green-600 mb-2">Adecuación Funcional</h3>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="bg-green-50 rounded-lg p-3">
+                                    <h4 class="font-semibold text-green-800 text-sm mb-1">Subcaracterísticas:</h4>
+                                    <ul class="text-xs text-green-600 space-y-1">
+                                        <li>• Completitud funcional</li>
+                                        <li>• Corrección funcional</li>
+                                        <li>• Pertinencia funcional</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="metric-gauge mx-auto">
+                                    <div class="metric-fill excellent-fill" style="width: 95%"></div>
+                                </div>
+                                <div class="text-center text-xs text-gray-600">Criticidad: Alta</div>
+                            </div>
+                        </div>
+
+                        <!-- Performance Efficiency -->
+                        <div class="characteristic-card bg-white bg-opacity-90 rounded-2xl p-6" onclick="showCharacteristicDemo('performance')">
+                            <div class="text-center mb-4">
+                                <div class="text-4xl mb-3 bounce-animation">⚡</div>
+                                <h3 class="text-lg font-bold text-blue-600 mb-2">Rendimiento</h3>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="bg-blue-50 rounded-lg p-3">
+                                    <h4 class="font-semibold text-blue-800 text-sm mb-1">Subcaracterísticas:</h4>
+                                    <ul class="text-xs text-blue-600 space-y-1">
+                                        <li>• Comportamiento temporal</li>
+                                        <li>• Utilización de recursos</li>
+                                        <li>• Capacidad</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="metric-gauge mx-auto">
+                                    <div class="metric-fill good-fill" style="width: 85%"></div>
+                                </div>
+                                <div class="text-center text-xs text-gray-600">Criticidad: Alta</div>
+                            </div>
+                        </div>
+
+                        <!-- Compatibility -->
+                        <div class="characteristic-card bg-white bg-opacity-90 rounded-2xl p-6" onclick="showCharacteristicDemo('compatibility')">
+                            <div class="text-center mb-4">
+                                <div class="text-4xl mb-3 rotate-animation">🔗</div>
+                                <h3 class="text-lg font-bold text-purple-600 mb-2">Compatibilidad</h3>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="bg-purple-50 rounded-lg p-3">
+                                    <h4 class="font-semibold text-purple-800 text-sm mb-1">Subcaracterísticas:</h4>
+                                    <ul class="text-xs text-purple-600 space-y-1">
+                                        <li>• Coexistencia</li>
+                                        <li>• Interoperabilidad</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="metric-gauge mx-auto">
+                                    <div class="metric-fill average-fill" style="width: 70%"></div>
+                                </div>
+                                <div class="text-center text-xs text-gray-600">Criticidad: Media</div>
+                            </div>
+                        </div>
+
+                        <!-- Usability -->
+                        <div class="characteristic-card bg-white bg-opacity-90 rounded-2xl p-6" onclick="showCharacteristicDemo('usability')">
+                            <div class="text-center mb-4">
+                                <div class="text-4xl mb-3 glow-animation">👤</div>
+                                <h3 class="text-lg font-bold text-orange-600 mb-2">Usabilidad</h3>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="bg-orange-50 rounded-lg p-3">
+                                    <h4 class="font-semibold text-orange-800 text-sm mb-1">Subcaracterísticas:</h4>
+                                    <ul class="text-xs text-orange-600 space-y-1">
+                                        <li>• Reconocimiento de idoneidad</li>
+                                        <li>• Capacidad de aprendizaje</li>
+                                        <li>• Operabilidad</li>
+                                        <li>• Protección contra errores</li>
+                                        <li>• Estética de la interfaz</li>
+                                        <li>• Accesibilidad</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="metric-gauge mx-auto">
+                                    <div class="metric-fill good-fill" style="width: 80%"></div>
+                                </div>
+                                <div class="text-center text-xs text-gray-600">Criticidad: Alta</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Second Row of Characteristics -->
+                    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <!-- Reliability -->
+                        <div class="characteristic-card bg-white bg-opacity-90 rounded-2xl p-6" onclick="showCharacteristicDemo('reliability')">
+                            <div class="text-center mb-4">
+                                <div class="text-4xl mb-3 pulse-animation">🛡️</div>
+                                <h3 class="text-lg font-bold text-red-600 mb-2">Fiabilidad</h3>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="bg-red-50 rounded-lg p-3">
+                                    <h4 class="font-semibold text-red-800 text-sm mb-1">Subcaracterísticas:</h4>
+                                    <ul class="text-xs text-red-600 space-y-1">
+                                        <li>• Madurez</li>
+                                        <li>• Disponibilidad</li>
+                                        <li>• Tolerancia a fallos</li>
+                                        <li>• Capacidad de recuperación</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="metric-gauge mx-auto">
+                                    <div class="metric-fill excellent-fill" style="width: 90%"></div>
+                                </div>
+                                <div class="text-center text-xs text-gray-600">Criticidad: Crítica</div>
+                            </div>
+                        </div>
+
+                        <!-- Security -->
+                        <div class="characteristic-card bg-white bg-opacity-90 rounded-2xl p-6" onclick="showCharacteristicDemo('security')">
+                            <div class="text-center mb-4">
+                                <div class="text-4xl mb-3 bounce-animation">🔒</div>
+                                <h3 class="text-lg font-bold text-indigo-600 mb-2">Seguridad</h3>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="bg-indigo-50 rounded-lg p-3">
+                                    <h4 class="font-semibold text-indigo-800 text-sm mb-1">Subcaracterísticas:</h4>
+                                    <ul class="text-xs text-indigo-600 space-y-1">
+                                        <li>• Confidencialidad</li>
+                                        <li>• Integridad</li>
+                                        <li>• No repudio</li>
+                                        <li>• Responsabilidad</li>
+                                        <li>• Autenticidad</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="metric-gauge mx-auto">
+                                    <div class="metric-fill excellent-fill" style="width: 88%"></div>
+                                </div>
+                                <div class="text-center text-xs text-gray-600">Criticidad: Crítica</div>
+                            </div>
+                        </div>
+
+                        <!-- Maintainability -->
+                        <div class="characteristic-card bg-white bg-opacity-90 rounded-2xl p-6" onclick="showCharacteristicDemo('maintainability')">
+                            <div class="text-center mb-4">
+                                <div class="text-4xl mb-3 rotate-animation">🔧</div>
+                                <h3 class="text-lg font-bold text-teal-600 mb-2">Mantenibilidad</h3>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="bg-teal-50 rounded-lg p-3">
+                                    <h4 class="font-semibold text-teal-800 text-sm mb-1">Subcaracterísticas:</h4>
+                                    <ul class="text-xs text-teal-600 space-y-1">
+                                        <li>• Modularidad</li>
+                                        <li>• Reusabilidad</li>
+                                        <li>• Analizabilidad</li>
+                                        <li>• Capacidad de modificación</li>
+                                        <li>• Capacidad de prueba</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="metric-gauge mx-auto">
+                                    <div class="metric-fill good-fill" style="width: 75%"></div>
+                                </div>
+                                <div class="text-center text-xs text-gray-600">Criticidad: Media</div>
+                            </div>
+                        </div>
+
+                        <!-- Portability -->
+                        <div class="characteristic-card bg-white bg-opacity-90 rounded-2xl p-6" onclick="showCharacteristicDemo('portability')">
+                            <div class="text-center mb-4">
+                                <div class="text-4xl mb-3 glow-animation">📱</div>
+                                <h3 class="text-lg font-bold text-pink-600 mb-2">Portabilidad</h3>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div class="bg-pink-50 rounded-lg p-3">
+                                    <h4 class="font-semibold text-pink-800 text-sm mb-1">Subcaracterísticas:</h4>
+                                    <ul class="text-xs text-pink-600 space-y-1">
+                                        <li>• Adaptabilidad</li>
+                                        <li>• Capacidad de instalación</li>
+                                        <li>• Capacidad de reemplazo</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="metric-gauge mx-auto">
+                                    <div class="metric-fill average-fill" style="width: 65%"></div>
+                                </div>
+                                <div class="text-center text-xs text-gray-600">Criticidad: Baja</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reference -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                        <div class="text-center">
+                            <span class="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
+                                Fuente: ISO/IEC 25010:2011 - Systems and software engineering - Software product Quality Requirements and Evaluation (SQuaRE)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3: ISO/IEC 25010 - Calidad en Uso -->
+            <div class="slide" id="slide3">
+                <div class="slide-bg-3 rounded-3xl p-12 min-h-[600px]">
+                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                        📊 ISO/IEC 25010 - Calidad en Uso
+                    </h2>
+                    
+                    <!-- Quality in Use Introduction -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
+                        <div class="text-center mb-6">
+                            <div class="text-6xl mb-4 pulse-animation">🎯</div>
+                            <h3 class="text-3xl font-bold text-purple-800">5 Características de Calidad en Uso</h3>
+                            <p class="text-lg text-gray-600 mt-2">
+                                Medición del grado en que un producto satisface las necesidades de usuarios específicos
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 5 Quality in Use Characteristics -->
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+                        <!-- Effectiveness -->
+                        <div class="quality-card bg-white bg-opacity-90 rounded-2xl p-6" onclick="showQualityDemo('effectiveness')">
+                            <div class="text-center mb-6">
+                                <div class="text-5xl mb-4 bounce-animation">🎯</div>
+                                <h3 class="text-2xl font-bold text-green-600 mb-4">Efectividad</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-green-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-green-800 mb-2">Definición:</h4>
+                                    <p class="text-sm text-green-600">
+                                        Precisión y completitud con que los usuarios alcanzan objetivos específicos
+                                    </p>
+                                </div>
+                                
+                                <div class="bg-white rounded-lg p-4 border border-green-200">
+                                    <h5 class="font-semibold text-green-700 mb-2">Métricas Típicas:</h5>
+                                    <ul class="text-sm text-green-600 space-y-1">
+                                        <li>• Tasa de completitud de tareas: 95%</li>
+                                        <li>• Precisión de resultados: 98%</li>
+                                        <li>• Objetivos alcanzados: 92%</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="progress-ring mx-auto">
+                                    <svg class="progress-ring">
+                                        <circle class="progress-ring-circle"></circle>
+                                        <circle class="progress-ring-progress" style="stroke-dashoffset: 37.7;"></circle>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Efficiency -->
+                        <div class="quality-card bg-white bg-opacity-90 rounded-2xl p-6" onclick="showQualityDemo('efficiency')">
+                            <div class="text-center mb-6">
+                                <div class="text-5xl mb-4 pulse-animation">⚡</div>
+                                <h3 class="text-2xl font-bold text-blue-600 mb-4">Eficiencia</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-blue-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-blue-800 mb-2">Definición:</h4>
+                                    <p class="text-sm text-blue-600">
+                                        Recursos gastados en relación con la precisión y completitud de objetivos
+                                    </p>
+                                </div>
+                                
+                                <div class="bg-white rounded-lg p-4 border border-blue-200">
+                                    <h5 class="font-semibold text-blue-700 mb-2">Métricas Típicas:</h5>
+                                    <ul class="text-sm text-blue-600 space-y-1">
+                                        <li>• Tiempo promedio de tarea: 2.5 min</li>
+                                        <li>• Clics por objetivo: 4.2</li>
+                                        <li>• Eficiencia relativa: 85%</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="progress-ring mx-auto">
+                                    <svg class="progress-ring">
+                                        <circle class="progress-ring-circle"></circle>
+                                        <circle class="progress-ring-progress" style="stroke-dashoffset: 47.1;"></circle>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Satisfaction -->
+                        <div class="quality-card bg-white bg-opacity-90 rounded-2xl p-6" onclick="showQualityDemo('satisfaction')">
+                            <div class="text-center mb-6">
+                                <div class="text-5xl mb-4 rotate-animation">😊</div>
+                                <h3 class="text-2xl font-bold text-yellow-600 mb-4">Satisfacción</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-yellow-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-yellow-800 mb-2">Definición:</h4>
+                                    <p class="text-sm text-yellow-600">
+                                        Grado en que se satisfacen las necesidades del usuario cuando se usa el producto
+                                    </p>
+                                </div>
+                                
+                                <div class="bg-white rounded-lg p-4 border border-yellow-200">
+                                    <h5 class="font-semibold text-yellow-700 mb-2">Subcaracterísticas:</h5>
+                                    <ul class="text-sm text-yellow-600 space-y-1">
+                                        <li>• Utilidad</li>
+                                        <li>• Confianza</li>
+                                        <li>• Placer</li>
+                                        <li>• Comodidad</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="progress-ring mx-auto">
+                                    <svg class="progress-ring">
+                                        <circle class="progress-ring-circle"></circle>
+                                        <circle class="progress-ring-progress" style="stroke-dashoffset: 28.3;"></circle>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Freedom from Risk -->
+                        <div class="quality-card bg-white bg-opacity-90 rounded-2xl p-6" onclick="showQualityDemo('risk')">
+                            <div class="text-center mb-6">
+                                <div class="text-5xl mb-4 glow-animation">🛡️</div>
+                                <h3 class="text-2xl font-bold text-red-600 mb-4">Seguridad</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-red-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-red-800 mb-2">Definición:</h4>
+                                    <p class="text-sm text-red-600">
+                                        Grado en que el producto mitiga riesgos potenciales para personas, negocio, software, etc.
+                                    </p>
+                                </div>
+                                
+                                <div class="bg-white rounded-lg p-4 border border-red-200">
+                                    <h5 class="font-semibold text-red-700 mb-2">Subcaracterísticas:</h5>
+                                    <ul class="text-sm text-red-600 space-y-1">
+                                        <li>• Mitigación de riesgo económico</li>
+                                        <li>• Mitigación de riesgo de salud</li>
+                                        <li>• Mitigación de riesgo ambiental</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="progress-ring mx-auto">
+                                    <svg class="progress-ring">
+                                        <circle class="progress-ring-circle"></circle>
+                                        <circle class="progress-ring-progress" style="stroke-dashoffset: 18.9;"></circle>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Context Coverage -->
+                        <div class="quality-card bg-white bg-opacity-90 rounded-2xl p-6" onclick="showQualityDemo('context')">
+                            <div class="text-center mb-6">
+                                <div class="text-5xl mb-4 bounce-animation">🌐</div>
+                                <h3 class="text-2xl font-bold text-purple-600 mb-4">Cobertura de Contexto</h3>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-purple-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-purple-800 mb-2">Definición:</h4>
+                                    <p class="text-sm text-purple-600">
+                                        Grado en que el producto puede usarse con efectividad, eficiencia y satisfacción en todos los contextos especificados
+                                    </p>
+                                </div>
+                                
+                                <div class="bg-white rounded-lg p-4 border border-purple-200">
+                                    <h5 class="font-semibold text-purple-700 mb-2">Subcaracterísticas:</h5>
+                                    <ul class="text-sm text-purple-600 space-y-1">
+                                        <li>• Completitud del contexto</li>
+                                        <li>• Flexibilidad</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="progress-ring mx-auto">
+                                    <svg class="progress-ring">
+                                        <circle class="progress-ring-circle"></circle>
+                                        <circle class="progress-ring-progress" style="stroke-dashoffset: 56.6;"></circle>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quality in Use Examples -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">
+                            📋 Ejemplos de Medición de Calidad en Uso
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h4 class="font-bold text-gray-700 mb-3">🛒 E-commerce App:</h4>
+                                <div class="space-y-2 text-sm text-gray-600">
+                                    <div class="flex justify-between">
+                                        <span>Efectividad (compras completadas):</span>
+                                        <span class="font-semibold text-green-600">94%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Eficiencia (tiempo promedio compra):</span>
+                                        <span class="font-semibold text-blue-600">3.2 min</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Satisfacción (NPS):</span>
+                                        <span class="font-semibold text-yellow-600">8.7/10</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h4 class="font-bold text-gray-700 mb-3">🏦 Banking App:</h4>
+                                <div class="space-y-2 text-sm text-gray-600">
+                                    <div class="flex justify-between">
+                                        <span>Seguridad (incidentes/mes):</span>
+                                        <span class="font-semibold text-red-600">0.02</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Cobertura contexto (dispositivos):</span>
+                                        <span class="font-semibold text-purple-600">98%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Confianza del usuario:</span>
+                                        <span class="font-semibold text-indigo-600">9.1/10</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 4: IEEE 730 - Software Quality Assurance Plan -->
+            <div class="slide" id="slide4">
+                <div class="slide-bg-4 rounded-3xl p-12 min-h-[600px]">
+                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                        📋 IEEE 730 - Software Quality Assurance Plan
+                    </h2>
+                    
+                    <!-- SQAP Introduction -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
+                        <div class="text-center mb-6">
+                            <div class="text-6xl mb-4 pulse-animation">📊</div>
+                            <h3 class="text-3xl font-bold text-red-800">Software Quality Assurance Plan (SQAP)</h3>
+                            <p class="text-lg text-gray-600 mt-2">
+                                Define cómo elaborar un plan de aseguramiento de la calidad del software
+                            </p>
+                        </div>
+                        
+                        <div class="bg-red-50 rounded-2xl p-6">
+                            <h4 class="text-xl font-bold text-red-800 mb-4 text-center">Estructura Principal del SQAP</h4>
+                            <div class="grid md:grid-cols-4 gap-4 text-center">
+                                <div class="bg-white rounded-lg p-4">
+                                    <div class="text-3xl mb-2">🎯</div>
+                                    <div class="font-semibold text-red-700">Propósito</div>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <div class="text-3xl mb-2">👥</div>
+                                    <div class="font-semibold text-red-700">Gestión</div>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <div class="text-3xl mb-2">✅</div>
+                                    <div class="font-semibold text-red-700">Tareas SQA</div>
+                                </div>
+                                <div class="bg-white rounded-lg p-4">
+                                    <div class="text-3xl mb-2">📏</div>
+                                    <div class="font-semibold text-red-700">Criterios</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SQAP Detailed Structure -->
+                    <div class="grid md:grid-cols-2 gap-8 mb-8">
+                        <!-- Purpose and Management -->
+                        <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                            <h3 class="text-xl font-bold text-red-600 mb-4 text-center">
+                                🎯 Propósito y Gestión
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div class="sqap-section bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
+                                    <h4 class="font-semibold text-red-800 mb-2">1. Propósito</h4>
+                                    <ul class="text-sm text-red-600 space-y-1">
+                                        <li>• Identificar el propósito del SQAP</li>
+                                        <li>• Definir el alcance del proyecto</li>
+                                        <li>• Establecer objetivos de calidad</li>
+                                        <li>• Referenciar documentos aplicables</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="sqap-section bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
+                                    <h4 class="font-semibold text-blue-800 mb-2">2. Productos Referenciados</h4>
+                                    <ul class="text-sm text-blue-600 space-y-1">
+                                        <li>• Documentos del proyecto</li>
+                                        <li>• Estándares aplicables</li>
+                                        <li>• Convenciones y prácticas</li>
+                                        <li>• Métricas de calidad</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="sqap-section bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
+                                    <h4 class="font-semibold text-green-800 mb-2">3. Gestión</h4>
+                                    <ul class="text-sm text-green-600 space-y-1">
+                                        <li>• Organización del equipo SQA</li>
+                                        <li>• Responsabilidades y autoridad</li>
+                                        <li>• Recursos asignados</li>
+                                        <li>• Cronograma de actividades</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SQA Tasks and Criteria -->
+                        <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                            <h3 class="text-xl font-bold text-red-600 mb-4 text-center">
+                                ✅ Tareas SQA y Criterios
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div class="sqap-section bg-purple-50 border-l-4 border-purple-500 rounded-lg p-4">
+                                    <h4 class="font-semibold text-purple-800 mb-2">4. Documentación</h4>
+                                    <ul class="text-sm text-purple-600 space-y-1">
+                                        <li>• Revisión de documentos técnicos</li>
+                                        <li>• Verificación de completitud</li>
+                                        <li>• Control de versiones</li>
+                                        <li>• Trazabilidad de requisitos</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="sqap-section bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4">
+                                    <h4 class="font-semibold text-orange-800 mb-2">5. Estándares y Prácticas</h4>
+                                    <ul class="text-sm text-orange-600 space-y-1">
+                                        <li>• Cumplimiento de estándares</li>
+                                        <li>• Revisiones de código</li>
+                                        <li>• Metodologías de desarrollo</li>
+                                        <li>• Herramientas y técnicas</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="sqap-section bg-teal-50 border-l-4 border-teal-500 rounded-lg p-4">
+                                    <h4 class="font-semibold text-teal-800 mb-2">6. Revisiones y Auditorías</h4>
+                                    <ul class="text-sm text-teal-600 space-y-1">
+                                        <li>• Planificación de revisiones</li>
+                                        <li>• Criterios de entrada/salida</li>
+                                        <li>• Auditorías de proceso</li>
+                                        <li>• Seguimiento de acciones correctivas</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SQAP Template -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-6 mb-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">
+                            📝 Template Interactivo de SQAP
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-3 gap-6">
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h4 class="font-bold text-gray-700 mb-3">📋 Secciones Principales:</h4>
+                                <div class="space-y-2">
+                                    <div class="flex items-center space-x-2">
+                                        <input type="checkbox" checked class="form-checkbox h-4 w-4 text-red-600">
+                                        <span class="text-sm">1. Propósito y alcance</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="checkbox" checked class="form-checkbox h-4 w-4 text-red-600">
+                                        <span class="text-sm">2. Productos referenciados</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="checkbox" class="form-checkbox h-4 w-4 text-red-600">
+                                        <span class="text-sm">3. Gestión SQA</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="checkbox" class="form-checkbox h-4 w-4 text-red-600">
+                                        <span class="text-sm">4. Documentación</span>
+                                    </div>
+                                    <div class="flex items-center space-x-2">
+                                        <input type="checkbox" class="form-checkbox h-4 w-4 text-red-600">
+                                        <span class="text-sm">5. Estándares y prácticas</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h4 class="font-bold text-gray-700 mb-3">🎯 Criterios de Aceptación:</h4>
+                                <div class="space-y-2 text-sm text-gray-600">
+                                    <div>• Cobertura de pruebas ≥ 80%</div>
+                                    <div>• Defectos críticos = 0</div>
+                                    <div>• Tiempo de respuesta ≤ 2s</div>
+                                    <div>• Disponibilidad ≥ 99.9%</div>
+                                    <div>• Cumplimiento estándares: 100%</div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h4 class="font-bold text-gray-700 mb-3">📊 Métricas de Seguimiento:</h4>
+                                <div class="space-y-2 text-sm text-gray-600">
+                                    <div class="flex justify-between">
+                                        <span>Revisiones completadas:</span>
+                                        <span class="font-semibold text-green-600">85%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Defectos encontrados:</span>
+                                        <span class="font-semibold text-red-600">23</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Acciones correctivas:</span>
+                                        <span class="font-semibold text-blue-600">18</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span>Cumplimiento proceso:</span>
+                                        <span class="font-semibold text-purple-600">92%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reference -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                        <div class="text-center">
+                            <span class="bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-medium">
+                                Fuente: Mahfuz - IEEE 730-2014 Standard for Software Quality Assurance Processes
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 5: Actividad - Caso práctico -->
+            <div class="slide" id="slide5">
+                <div class="slide-bg-5 rounded-3xl p-12 min-h-[600px]">
+                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
+                        💡 Actividad - Caso Práctico (20 min)
+                    </h2>
+                    
+                    <!-- Activity Instructions -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
+                        <div class="text-center mb-6">
+                            <div class="text-6xl mb-4 pulse-animation">🚗</div>
+                            <h3 class="text-3xl font-bold text-orange-800">Caso: Aplicación Uber</h3>
+                        </div>
+                        
+                        <div class="bg-orange-50 rounded-2xl p-6 text-center mb-6">
+                            <h4 class="text-2xl font-bold text-gray-800 mb-4">
+                                "Equipos: seleccionar 2 características de ISO/IEC 25010 y proponer cómo evaluarlas en Uber"
+                            </h4>
+                            <p class="text-lg text-gray-600">
+                                Definan métricas específicas y métodos de medición para cada característica
+                            </p>
+                        </div>
+                        
+                        <!-- Timer -->
+                        <div class="text-center">
+                            <div id="caseTimer" class="text-4xl font-bold text-orange-600 mb-4">20:00</div>
+                            <button onclick="startCaseTimer()" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg transition-colors">
+                                🚀 Iniciar Análisis
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Uber App Context -->
+                    <div class="grid md:grid-cols-2 gap-8 mb-8">
+                        <!-- App Features -->
+                        <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                            <h3 class="text-xl font-bold text-blue-600 mb-4 text-center">
+                                🚗 Características de la App Uber
+                            </h3>
+                            
+                            <div class="space-y-4">
+                                <div class="case-card bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+                                    <h4 class="font-bold text-blue-800 mb-2 flex items-center">
+                                        <span class="mr-2">📍</span> Geolocalización en Tiempo Real
+                                    </h4>
+                                    <ul class="text-sm text-blue-600 space-y-1">
+                                        <li>• Ubicación precisa del usuario y conductor</li>
+                                        <li>• Cálculo de rutas optimizadas</li>
+                                        <li>• Seguimiento en vivo del viaje</li>
+                                        <li>• Estimación de tiempo de llegada</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="case-card bg-green-50 border-2 border-green-200 rounded-lg p-4">
+                                    <h4 class="font-bold text-green-800 mb-2 flex items-center">
+                                        <span class="mr-2">💳</span> Sistema de Pagos
+                                    </h4>
+                                    <ul class="text-sm text-green-600 space-y-1">
+                                        <li>• Múltiples métodos de pago</li>
+                                        <li>• Procesamiento seguro de transacciones</li>
+                                        <li>• Cálculo automático de tarifas</li>
+                                        <li>• Facturación y recibos digitales</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="case-card bg-purple-50 border-2 border-purple-200 rounded-lg p-4">
+                                    <h4 class="font-bold text-purple-800 mb-2 flex items-center">
+                                        <span class="mr-2">👥</span> Gestión de Usuarios
+                                    </h4>
+                                    <ul class="text-sm text-purple-600 space-y-1">
+                                        <li>• Perfiles de pasajeros y conductores</li>
+                                        <li>• Sistema de calificaciones</li>
+                                        <li>• Historial de viajes</li>
+                                        <li>• Soporte al cliente integrado</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Evaluation Template -->
+                        <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                            <h3 class="text-xl font-bold text-purple-600 mb-4 text-center">
+                                📝 Template de Evaluación
+                            </h3>
+                            
+                            <div class="bg-purple-50 rounded-lg p-4 mb-4">
+                                <h4 class="font-bold text-purple-800 mb-3">Estructura para cada Característica:</h4>
+                                <div class="space-y-3 text-sm">
+                                    <div class="bg-white rounded p-3">
+                                        <strong class="text-purple-700">1. Característica Seleccionada:</strong>
+                                        <p class="text-gray-600 mt-1">Ej: Rendimiento/Eficiencia</p>
+                                    </div>
+                                    <div class="bg-white rounded p-3">
+                                        <strong class="text-purple-700">2. Subcaracterísticas Relevantes:</strong>
+                                        <p class="text-gray-600 mt-1">Ej: Comportamiento temporal, Utilización de recursos</p>
+                                    </div>
+                                    <div class="bg-white rounded p-3">
+                                        <strong class="text-purple-700">3. Métricas Específicas:</strong>
+                                        <p class="text-gray-600 mt-1">Ej: Tiempo de respuesta de búsqueda ≤ 3s</p>
+                                    </div>
+                                    <div class="bg-white rounded p-3">
+                                        <strong class="text-purple-700">4. Método de Medición:</strong>
+                                        <p class="text-gray-600 mt-1">Ej: Pruebas de carga automatizadas</p>
+                                    </div>
+                                    <div class="bg-white rounded p-3">
+                                        <strong class="text-purple-700">5. Criterios de Aceptación:</strong>
+                                        <p class="text-gray-600 mt-1">Ej: 95% de búsquedas en ≤ 3s</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Example Evaluations -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">
+                            💡 Ejemplos de Evaluación para Uber
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <!-- Performance Example -->
+                            <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+                                <h4 class="font-bold text-blue-800 mb-2">Ejemplo 1: Rendimiento/Eficiencia ⚡</h4>
+                                <div class="text-sm text-blue-700 space-y-2">
+                                    <div><strong>Subcaracterística:</strong> Comportamiento temporal</div>
+                                    <div><strong>Métrica:</strong> Tiempo de búsqueda de conductor</div>
+                                    <div><strong>Objetivo:</strong> ≤ 30 segundos en 95% de casos</div>
+                                    <div><strong>Medición:</strong> Monitoreo en tiempo real con APM</div>
+                                    <div><strong>Herramientas:</strong> New Relic, DataDog</div>
+                                    <div class="bg-white rounded p-2 mt-2">
+                                        <div class="flex justify-between items-center">
+                                            <span>Rendimiento actual:</span>
+                                            <div class="metric-gauge w-16">
+                                                <div class="metric-fill excellent-fill" style="width: 92%"></div>
+                                            </div>
+                                            <span class="font-bold text-green-600">92%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Usability Example -->
+                            <div class="bg-green-50 border-2 border-green-300 rounded-lg p-4">
+                                <h4 class="font-bold text-green-800 mb-2">Ejemplo 2: Usabilidad 👤</h4>
+                                <div class="text-sm text-green-700 space-y-2">
+                                    <div><strong>Subcaracterística:</strong> Capacidad de aprendizaje</div>
+                                    <div><strong>Métrica:</strong> Tiempo para completar primer viaje</div>
+                                    <div><strong>Objetivo:</strong> ≤ 5 minutos para usuarios nuevos</div>
+                                    <div><strong>Medición:</strong> Pruebas de usuario + Analytics</div>
+                                    <div><strong>Herramientas:</strong> Hotjar, Google Analytics</div>
+                                    <div class="bg-white rounded p-2 mt-2">
+                                        <div class="flex justify-between items-center">
+                                            <span>Usabilidad actual:</span>
+                                            <div class="metric-gauge w-16">
+                                                <div class="metric-fill good-fill" style="width: 88%"></div>
+                                            </div>
+                                            <span class="font-bold text-blue-600">88%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Additional Characteristics -->
+                        <div class="mt-6 grid md:grid-cols-3 gap-4">
+                            <div class="bg-yellow-50 rounded-lg p-3 text-center">
+                                <div class="text-2xl mb-1">🔒</div>
+                                <div class="font-semibold text-yellow-800">Seguridad</div>
+                                <div class="text-xs text-yellow-600">Protección datos personales</div>
+                            </div>
+                            <div class="bg-red-50 rounded-lg p-3 text-center">
+                                <div class="text-2xl mb-1">🛡️</div>
+                                <div class="font-semibold text-red-800">Fiabilidad</div>
+                                <div class="text-xs text-red-600">Disponibilidad 24/7</div>
+                            </div>
+                            <div class="bg-indigo-50 rounded-lg p-3 text-center">
+                                <div class="text-2xl mb-1">🔗</div>
+                                <div class="font-semibold text-indigo-800">Compatibilidad</div>
+                                <div class="text-xs text-indigo-600">Múltiples plataformas</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const totalSlides = 5;
+        let caseTimerInterval = null;
+        let caseTimeLeft = 1200; // 20 minutes in seconds
+
+        function showSlide(index) {
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            document.getElementById(`slide${index + 1}`).classList.add('active');
+            
+            document.getElementById('currentSlide').textContent = index + 1;
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
+            
+            const progress = ((index + 1) / totalSlides) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            if (index === 0) {
+                document.getElementById('prevBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('prevBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            if (index === totalSlides - 1) {
+                document.getElementById('nextBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('nextBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlides - 1) {
+                currentSlideIndex++;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function showCharacteristicDemo(characteristic) {
+            const demos = {
+                functional: "Adecuación Funcional - Evalúa si el software proporciona funciones que satisfacen necesidades declaradas e implícitas. Incluye completitud, corrección y pertinencia funcional.",
+                performance: "Rendimiento/Eficiencia - Mide el rendimiento relativo a la cantidad de recursos utilizados. Incluye comportamiento temporal, utilización de recursos y capacidad.",
+                compatibility: "Compatibilidad - Grado en que un producto puede intercambiar información con otros productos y realizar funciones requeridas compartiendo el mismo entorno.",
+                usability: "Usabilidad - Grado en que un producto puede ser usado por usuarios específicos para lograr objetivos con efectividad, eficiencia y satisfacción.",
+                reliability: "Fiabilidad - Grado en que un sistema realiza funciones específicas bajo condiciones específicas durante un período de tiempo específico.",
+                security: "Seguridad - Grado en que un producto protege información y datos para que personas o sistemas no autorizados no puedan leerlos o modificarlos.",
+                maintainability: "Mantenibilidad - Grado de efectividad y eficiencia con que un producto puede ser modificado por los mantenedores previstos.",
+                portability: "Portabilidad - Grado de efectividad y eficiencia con que un sistema puede ser transferido de un hardware, software u otro entorno a otro."
+            };
+            
+            alert(demos[characteristic] || "Demo no disponible para esta característica.");
+        }
+
+        function showQualityDemo(quality) {
+            const demos = {
+                effectiveness: "Efectividad - Precisión y completitud con que los usuarios alcanzan objetivos específicos. Se mide con tasa de completitud de tareas y precisión de resultados.",
+                efficiency: "Eficiencia - Recursos gastados en relación con la precisión y completitud de objetivos alcanzados. Se mide con tiempo de tarea y eficiencia relativa.",
+                satisfaction: "Satisfacción - Grado en que se satisfacen las necesidades del usuario. Incluye utilidad, confianza, placer y comodidad.",
+                risk: "Seguridad - Grado en que el producto mitiga riesgos potenciales. Incluye mitigación de riesgos económicos, de salud y ambientales.",
+                context: "Cobertura de Contexto - Grado en que el producto puede usarse en todos los contextos especificados. Incluye completitud del contexto y flexibilidad."
+            };
+            
+            alert(demos[quality] || "Demo no disponible para esta característica de calidad en uso.");
+        }
+
+        function startCaseTimer() {
+            if (caseTimerInterval) {
+                clearInterval(caseTimerInterval);
+            }
+            
+            caseTimeLeft = 1200; // Reset to 20 minutes
+            
+            caseTimerInterval = setInterval(() => {
+                caseTimeLeft--;
+                
+                const minutes = Math.floor(caseTimeLeft / 60);
+                const seconds = caseTimeLeft % 60;
+                
+                document.getElementById('caseTimer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (caseTimeLeft <= 0) {
+                    clearInterval(caseTimerInterval);
+                    alert('¡Tiempo de análisis terminado! Presenten sus evaluaciones de las características seleccionadas.');
+                }
+            }, 1000);
+        }
+
+        // Initialize
+        showSlide(0);
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') previousSlide();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a86d78938ecdb0',t:'MTc1NzEwMzYzMC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
-
-
-
-

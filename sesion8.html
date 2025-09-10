@@ -4,17 +4,1132 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sesión 8: El Plan de SQA</title>
-    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: #764ba2;
+      }
+
+      .slide-transition {
+        transition: all 0.5s ease-in-out;
+      }
+
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .card-hover {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      }
+
+      .fade-in {
+        animation: fadeIn 0.8s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .pulse-animation {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      .navigation {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 15px 20px;
+        border-radius: 50px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+      }
+
+      .nav-button {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+      }
+
+      .nav-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
+      }
+
+      .nav-button:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .slide-counter {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        padding: 10px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        color: #374151;
+        z-index: 1000;
+      }
+
+      .section-card {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-left: 6px solid;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .section-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .highlight-box {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .plan-icon {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        color: white;
+        font-size: 3rem;
+      }
+
+      .structure-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-left: 6px solid;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .structure-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .activity-workspace {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border: 3px dashed #d1d5db;
+        transition: all 0.3s ease;
+        min-height: 200px;
+      }
+
+      .activity-workspace:hover {
+        border-color: #3b82f6;
+        background: #f8fafc;
+      }
+
+      .timer-display {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 2rem;
+        font-size: 1.5rem;
+        font-weight: bold;
+        text-align: center;
+        margin: 1rem 0;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+      }
+
+      .question-card {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin: 0.5rem 0;
+      }
+
+      @media (max-width: 768px) {
+        .grid-responsive {
+          grid-template-columns: 1fr;
+          gap: 1rem;
+        }
+      }
+    </style>
+  
+<style>
+body{
+  font-family:'Inter','Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height:1.6;
+  color:#333;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  min-height:100vh;
+  padding-top:80px;
+}
+.qs-nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:saturate(140%) blur(20px);
+       background:rgba(255,255,255,.95);border-bottom:1px solid rgba(255,255,255,.2);
+       box-shadow:0 8px 32px rgba(0,0,0,.10)}
+.qs-nav .wrap{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:nowrap}
+.qs-brand{display:flex;gap:15px;align-items:center;color:#1f2937;font-weight:800;font-size:1.3rem;text-decoration:none;position:relative;padding:8px 16px;border-radius:20px;flex:0 0 auto}
+.qs-brand::before{content:"🎓";font-size:1.6rem}
+.qs-tabs{display:flex;gap:12px;background:rgba(255,255,255,.3);padding:8px;border-radius:30px;backdrop-filter:blur(10px);
+         flex:1 1 auto;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.qs-btn{border:0;padding:12px 20px;border-radius:25px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;font-weight:600;font-size:.9rem;
+       transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(10px);border:2px solid transparent;position:relative;overflow:hidden;flex:0 0 auto}
+.qs-btn::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);transition:all .4s ease;z-index:-1}
+.qs-btn:hover{color:#fff;transform:translateY(-3px);box-shadow:0 8px 25px rgba(102,126,234,.4);border-color:rgba(102,126,234,.3)}
+.qs-btn:hover::before{left:0}
+.qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none;box-shadow:0 6px 20px rgba(102,126,234,.5);transform:translateY(-2px)}
+.qs-btn[aria-current="page"]::before{left:0}
+.footer{margin-top:60px;padding:30px 20px;text-align:center;background:rgba(255, 255, 255, 0.1);
+        backdrop-filter:blur(10px);border-top:1px solid rgba(255, 255, 255, 0.2)}
+.footer-content{max-width:1200px;margin:0 auto;color:rgba(255,255,255,0.8);font-size:0.95rem;transition:all 0.3s ease;cursor:default}
+.footer-content:hover{ color:#fff; transform:translateY(-2px); }
+.slide-counter, #slideIndicator, .slide-indicator{
+  font-size:10px !important; line-height:1 !important; padding:4px 8px !important; min-width:28px !important; border-radius:12px !important; opacity:.85 !important;
+}
+</style>
+
+</head>
+  <body class="min-h-screen">
+
+<!-- NAV Plataforma QS -->
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+      
+    </nav>
+  </div>
+</div>
+
+    <!-- Slide Counter -->
+    <div class="slide-counter">
+      <span id="current-slide">1</span> / <span id="total-slides">4</span>
+    </div>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8 pb-32">
+      <!-- Slide 1: Título -->
+      <div id="slide1" class="slide-transition fade-in">
+        <div
+          class="gradient-bg rounded-2xl p-12 text-white text-center mb-8 card-hover"
+        >
+          <div class="max-w-4xl mx-auto">
+            <div class="plan-icon">📋</div>
+            <h1 class="text-5xl font-bold mb-6 pulse-animation">
+              El Plan Maestro: Software Quality Assurance Plan (SQAP)
+            </h1>
+            <h2 class="text-3xl font-semibold mb-8 opacity-90">
+              La estrategia documentada para construir calidad en cada fase del
+              proyecto
+            </h2>
+
+            <div class="highlight-box">
+              <div class="flex items-center justify-center mb-4">
+                <svg
+                  class="w-8 h-8 mr-3"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="text-xl font-semibold">Sesión 8: El Plan de SQA</h3>
+              </div>
+              <div class="text-lg opacity-90">
+                <p>
+                  Aprenderemos a crear el documento fundamental que guía todas
+                  las actividades de aseguramiento de la calidad en un proyecto
+                  de software.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notas para el docente -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
+          <div class="flex items-start">
+            <svg
+              class="w-6 h-6 text-blue-400 mr-3 mt-1"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <div>
+              <h4 class="text-lg font-semibold text-blue-800 mb-2">
+                Notas para el docente:
+              </h4>
+              <p class="text-blue-700 leading-relaxed">
+                "El SQAP es como el GPS de la calidad: nos dice exactamente qué
+                ruta tomar para llegar a un software de calidad. Sin él,
+                navegamos a ciegas."
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2: ¿Qué es un Plan de SQA? -->
+      <div id="slide2" class="slide-transition hidden">
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+          <div class="text-center mb-8">
+            <div class="text-6xl mb-4">📋</div>
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">
+              ¿Qué es un Plan de SQA?
+            </h2>
+          </div>
+
+          <!-- Definición Principal -->
+          <div
+            class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-8 text-white mb-8"
+          >
+            <div class="flex items-center justify-center mb-6">
+              <div class="text-4xl mr-4">🏛️</div>
+              <h3 class="text-2xl font-bold">
+                La "Constitución" de la Calidad
+              </h3>
+            </div>
+            <p class="text-xl text-center leading-relaxed opacity-95 mb-4">
+              Un Plan de Aseguramiento de la Calidad del Software (SQAP) es el
+              <strong>documento formal</strong> que sirve como la "constitución"
+              para todas las actividades de calidad dentro de un proyecto.
+            </p>
+            <div class="bg-white bg-opacity-20 rounded-lg p-4">
+              <p class="text-lg text-center font-semibold">
+                ⚠️ No es una lista de pruebas; es una
+                <strong>hoja de ruta estratégica</strong>.
+              </p>
+            </div>
+          </div>
+
+          <!-- Propósito del SQAP -->
+          <div class="mb-8">
+            <div class="bg-green-500 text-white rounded-t-2xl p-6">
+              <div class="flex items-center justify-center">
+                <div class="text-3xl mr-4">🎯</div>
+                <h3 class="text-2xl font-bold">
+                  Su propósito es describir de manera clara y concisa:
+                </h3>
+              </div>
+            </div>
+
+            <div class="bg-green-50 rounded-b-2xl p-6 space-y-4">
+              <div class="flex items-start">
+                <div
+                  class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-sm">1</span>
+                </div>
+                <div>
+                  <h4 class="font-bold text-green-800 text-lg mb-1">
+                    Las actividades de calidad que se realizarán
+                  </h4>
+                  <p class="text-green-700">
+                    (ej. auditorías, revisiones técnicas)
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-start">
+                <div
+                  class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-sm">2</span>
+                </div>
+                <div>
+                  <h4 class="font-bold text-green-800 text-lg mb-1">
+                    Los estándares que se deben seguir
+                  </h4>
+                  <p class="text-green-700">
+                    (ej. guías de estilo de código, estándares de documentación)
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-start">
+                <div
+                  class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-sm">3</span>
+                </div>
+                <div>
+                  <h4 class="font-bold text-green-800 text-lg mb-1">
+                    Los procedimientos que se aplicarán
+                  </h4>
+                  <p class="text-green-700">para verificar el cumplimiento</p>
+                </div>
+              </div>
+
+              <div class="flex items-start">
+                <div
+                  class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-sm">4</span>
+                </div>
+                <div>
+                  <h4 class="font-bold text-green-800 text-lg mb-1">
+                    Los roles y responsabilidades
+                  </h4>
+                  <p class="text-green-700">
+                    de todos los involucrados en la calidad
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resumen -->
+          <div
+            class="bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl p-8 text-white"
+          >
+            <div class="flex items-center justify-center mb-4">
+              <div class="text-4xl mr-4">📝</div>
+              <h3 class="text-2xl font-bold">En Resumen</h3>
+            </div>
+            <p class="text-xl text-center leading-relaxed opacity-95">
+              El SQAP define <strong>qué se hará</strong>,
+              <strong>quién lo hará</strong>, <strong>cuándo se hará</strong> y
+              <strong>cómo se hará</strong> para asegurar que el software cumpla
+              con los requisitos de calidad establecidos.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3: Estructura del Plan (Según IEEE 730) -->
+      <div id="slide3" class="slide-transition hidden">
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+          <div class="text-center mb-8">
+            <div class="text-6xl mb-4">🏗️</div>
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">
+              Estructura del Plan (Según IEEE 730)
+            </h2>
+            <p class="text-lg text-gray-600">
+              El estándar IEEE 730 es una guía reconocida internacionalmente que
+              define la estructura y el contenido de un Plan de SQA.
+            </p>
+          </div>
+
+          <!-- Introducción IEEE 730 -->
+          <div
+            class="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg mb-8"
+          >
+            <div class="flex items-start">
+              <svg
+                class="w-6 h-6 text-blue-400 mr-3 mt-1"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <div>
+                <h4 class="text-lg font-semibold text-blue-800 mb-2">
+                  Estándar Internacional
+                </h4>
+                <p class="text-blue-700 leading-relaxed">
+                  Un plan profesional y completo debe incluir, como mínimo, las
+                  siguientes <strong>secciones clave</strong>:
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Secciones del Plan -->
+          <div class="space-y-6">
+            <!-- Sección 1: Propósito y Alcance -->
+            <div class="structure-card" style="border-left-color: #3b82f6">
+              <div class="flex items-start">
+                <div
+                  class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0"
+                >
+                  <span class="text-white font-bold">1</span>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-xl font-bold text-blue-800 mb-3">
+                    Propósito y Alcance
+                  </h3>
+                  <div class="space-y-2">
+                    <div class="flex items-start">
+                      <div
+                        class="w-2 h-2 bg-blue-400 rounded-full mr-3 mt-2"
+                      ></div>
+                      <p class="text-gray-700">
+                        Describe
+                        <strong>para qué proyecto específico</strong> es el
+                        plan.
+                      </p>
+                    </div>
+                    <div class="flex items-start">
+                      <div
+                        class="w-2 h-2 bg-blue-400 rounded-full mr-3 mt-2"
+                      ></div>
+                      <p class="text-gray-700">
+                        Define claramente
+                        <strong
+                          >qué partes del software y del ciclo de vida</strong
+                        >
+                        están cubiertas por este plan y cuáles no.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sección 2: Documentos de Referencia -->
+            <div class="structure-card" style="border-left-color: #10b981">
+              <div class="flex items-start">
+                <div
+                  class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0"
+                >
+                  <span class="text-white font-bold">2</span>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-xl font-bold text-green-800 mb-3">
+                    Documentos de Referencia
+                  </h3>
+                  <div class="flex items-start">
+                    <div
+                      class="w-2 h-2 bg-green-400 rounded-full mr-3 mt-2"
+                    ></div>
+                    <p class="text-gray-700">
+                      Lista todos los
+                      <strong>documentos importantes</strong> con los que este
+                      plan se relaciona, como el plan del proyecto, la
+                      especificación de requisitos, o los documentos de diseño.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sección 3: Gestión -->
+            <div class="structure-card" style="border-left-color: #f59e0b">
+              <div class="flex items-start">
+                <div
+                  class="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0"
+                >
+                  <span class="text-white font-bold">3</span>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-xl font-bold text-yellow-800 mb-3">
+                    Gestión (Roles y Responsabilidades)
+                  </h3>
+                  <div class="space-y-2">
+                    <div class="flex items-start">
+                      <div
+                        class="w-2 h-2 bg-yellow-400 rounded-full mr-3 mt-2"
+                      ></div>
+                      <p class="text-gray-700">
+                        Define la <strong>estructura organizativa</strong> para
+                        la calidad.
+                      </p>
+                    </div>
+                    <div class="flex items-start">
+                      <div
+                        class="w-2 h-2 bg-yellow-400 rounded-full mr-3 mt-2"
+                      ></div>
+                      <p class="text-gray-700">
+                        Especifica quién es el
+                        <strong>responsable final de la SQA</strong> (ej. Líder
+                        de QA) y qué responsabilidades de calidad tienen otros
+                        roles (ej. desarrolladores, project managers).
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sección 4: Tareas de SQA -->
+            <div class="structure-card" style="border-left-color: #ef4444">
+              <div class="flex items-start">
+                <div
+                  class="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0"
+                >
+                  <span class="text-white font-bold">4</span>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-xl font-bold text-red-800 mb-3">
+                    Tareas de SQA ❤️
+                  </h3>
+                  <div class="bg-red-50 rounded-lg p-3 mb-3">
+                    <p class="text-red-700 font-semibold text-center">
+                      El corazón del plan
+                    </p>
+                  </div>
+                  <div class="space-y-2">
+                    <div class="flex items-start">
+                      <div
+                        class="w-2 h-2 bg-red-400 rounded-full mr-3 mt-2"
+                      ></div>
+                      <p class="text-gray-700">
+                        Detalla las
+                        <strong
+                          >actividades específicas de aseguramiento de la
+                          calidad</strong
+                        >
+                        que se llevarán a cabo.
+                      </p>
+                    </div>
+                    <div class="flex items-start">
+                      <div
+                        class="w-2 h-2 bg-red-400 rounded-full mr-3 mt-2"
+                      ></div>
+                      <p class="text-gray-700">
+                        Describe cómo se realizarán las
+                        <strong
+                          >revisiones técnicas formales, las auditorías de
+                          proceso y producto</strong
+                        >, y cómo se gestionarán las no conformidades.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sección 5: Herramientas -->
+            <div class="structure-card" style="border-left-color: #8b5cf6">
+              <div class="flex items-start">
+                <div
+                  class="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center mr-4 flex-shrink-0"
+                >
+                  <span class="text-white font-bold">5</span>
+                </div>
+                <div class="flex-1">
+                  <h3 class="text-xl font-bold text-purple-800 mb-3">
+                    Herramientas, Técnicas y Métodos
+                  </h3>
+                  <div class="space-y-2">
+                    <div class="flex items-start">
+                      <div
+                        class="w-2 h-2 bg-purple-400 rounded-full mr-3 mt-2"
+                      ></div>
+                      <p class="text-gray-700">
+                        Especifica las
+                        <strong>herramientas de software</strong> que se
+                        utilizarán para apoyar las actividades de SQA (ej. Jira
+                        para seguimiento de defectos, SonarQube para análisis de
+                        código estático).
+                      </p>
+                    </div>
+                    <div class="flex items-start">
+                      <div
+                        class="w-2 h-2 bg-purple-400 rounded-full mr-3 mt-2"
+                      ></div>
+                      <p class="text-gray-700">
+                        Describe las
+                        <strong>técnicas y metodologías específicas</strong> que
+                        se emplearán.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conclusión -->
+          <div
+            class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 text-white mt-8"
+          >
+            <div class="flex items-center justify-center mb-4">
+              <div class="text-4xl mr-4">🏆</div>
+              <h3 class="text-2xl font-bold">
+                Plan Profesional = Calidad Garantizada
+              </h3>
+            </div>
+            <p class="text-xl text-center leading-relaxed opacity-95">
+              Seguir el estándar IEEE 730 asegura que nuestro plan sea
+              <strong
+                >completo, profesional y reconocido internacionalmente</strong
+              >.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 4: Actividad en Equipos -->
+      <div id="slide4" class="slide-transition hidden">
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+          <div class="text-center mb-8">
+            <div class="text-6xl mb-4">🏦</div>
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">
+              Actividad en Equipos (20 min)
+            </h2>
+            <h3 class="text-2xl font-semibold text-blue-600">
+              Diseñando un Esqueleto de SQA para una App Bancaria
+            </h3>
+          </div>
+
+          <!-- Timer Display -->
+          <div class="timer-display">
+            ⏰ Tiempo restante: <span id="timer">20:00</span>
+          </div>
+
+          <!-- Instrucciones -->
+          <div
+            class="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg mb-8"
+          >
+            <div class="flex items-start">
+              <svg
+                class="w-6 h-6 text-blue-400 mr-3 mt-1"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <div>
+                <h4 class="text-lg font-semibold text-blue-800 mb-3">
+                  Instrucciones:
+                </h4>
+                <ol class="text-blue-700 leading-relaxed space-y-2">
+                  <li><strong>1.</strong> Reúnanse en sus equipos.</li>
+                  <li>
+                    <strong>2.</strong> Abran un tablero en Miro (o una
+                    herramienta similar).
+                  </li>
+                  <li>
+                    <strong>3.</strong> Imaginen que están a punto de iniciar el
+                    desarrollo de una nueva
+                    <strong>aplicación de banca móvil</strong> para
+                    transferencias y consulta de saldos.
+                  </li>
+                  <li>
+                    <strong>4.</strong> Como equipo, discutan y escriban en
+                    post-its virtuales los
+                    <strong>3 puntos más críticos e importantes</strong> que
+                    incluirían en el Plan de SQA para este proyecto. Piensen en
+                    los mayores riesgos.
+                  </li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <!-- Escenario -->
+          <div
+            class="bg-gradient-to-r from-green-500 to-blue-600 rounded-2xl p-8 text-white mb-8"
+          >
+            <div class="flex items-center justify-center mb-4">
+              <div class="text-4xl mr-4">🏦</div>
+              <h3 class="text-2xl font-bold">Escenario: App Bancaria Móvil</h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                <h4 class="font-bold mb-2">📱 Funcionalidades:</h4>
+                <ul class="space-y-1 text-sm">
+                  <li>• Consulta de saldos</li>
+                  <li>• Transferencias entre cuentas</li>
+                  <li>• Historial de transacciones</li>
+                  <li>• Autenticación biométrica</li>
+                </ul>
+              </div>
+              <div class="bg-white bg-opacity-20 rounded-lg p-4">
+                <h4 class="font-bold mb-2">⚠️ Riesgos Críticos:</h4>
+                <ul class="space-y-1 text-sm">
+                  <li>• Seguridad de datos financieros</li>
+                  <li>• Exactitud en cálculos</li>
+                  <li>• Disponibilidad 24/7</li>
+                  <li>• Cumplimiento regulatorio</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- Preguntas Guía -->
+          <div class="mb-8">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+              🤔 Preguntas para guiar la discusión:
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="question-card">
+                <div class="flex items-start">
+                  <div class="text-2xl mr-3">🔒</div>
+                  <div>
+                    <h4 class="font-bold text-yellow-800 mb-1">
+                      ¿Cuál es el mayor riesgo en una app bancaria?
+                    </h4>
+                    <p class="text-yellow-700 text-sm">
+                      (Seguridad, exactitud de los cálculos)
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="question-card">
+                <div class="flex items-start">
+                  <div class="text-2xl mr-3">📋</div>
+                  <div>
+                    <h4 class="font-bold text-yellow-800 mb-1">
+                      ¿Qué estándar sería innegociable seguir?
+                    </h4>
+                    <p class="text-yellow-700 text-sm">
+                      (¿Alguna norma de seguridad de datos como PCI DSS?)
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="question-card">
+                <div class="flex items-start">
+                  <div class="text-2xl mr-3">⚙️</div>
+                  <div>
+                    <h4 class="font-bold text-yellow-800 mb-1">
+                      ¿Qué tarea de SQA sería la más importante?
+                    </h4>
+                    <p class="text-yellow-700 text-sm">
+                      (¿Auditorías de seguridad? ¿Revisiones rigurosas del
+                      código de transacciones?)
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="question-card">
+                <div class="flex items-start">
+                  <div class="text-2xl mr-3">👥</div>
+                  <div>
+                    <h4 class="font-bold text-yellow-800 mb-1">
+                      ¿Quién debería tener la responsabilidad final?
+                    </h4>
+                    <p class="text-yellow-700 text-sm">
+                      sobre la calidad de la seguridad?
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Workspace para equipos -->
+          <div class="mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">
+              💡 Espacio de Trabajo - Sus 3 Puntos Críticos:
+            </h3>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="activity-workspace">
+                <div class="text-center">
+                  <div class="text-4xl mb-4">1️⃣</div>
+                  <h4 class="font-bold text-gray-700 mb-2">Punto Crítico #1</h4>
+                  <div
+                    class="bg-gray-100 rounded-lg p-4 min-h-[100px] flex items-center justify-center"
+                  >
+                    <p class="text-gray-500 text-center">
+                      Escriban aquí su primer punto más importante
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="activity-workspace">
+                <div class="text-center">
+                  <div class="text-4xl mb-4">2️⃣</div>
+                  <h4 class="font-bold text-gray-700 mb-2">Punto Crítico #2</h4>
+                  <div
+                    class="bg-gray-100 rounded-lg p-4 min-h-[100px] flex items-center justify-center"
+                  >
+                    <p class="text-gray-500 text-center">
+                      Escriban aquí su segundo punto más importante
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="activity-workspace">
+                <div class="text-center">
+                  <div class="text-4xl mb-4">3️⃣</div>
+                  <h4 class="font-bold text-gray-700 mb-2">Punto Crítico #3</h4>
+                  <div
+                    class="bg-gray-100 rounded-lg p-4 min-h-[100px] flex items-center justify-center"
+                  >
+                    <p class="text-gray-500 text-center">
+                      Escriban aquí su tercer punto más importante
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Presentación -->
+          <div
+            class="bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl p-8 text-white"
+          >
+            <div class="flex items-center justify-center mb-4">
+              <div class="text-4xl mr-4">🎤</div>
+              <h3 class="text-2xl font-bold">Presentación Final</h3>
+            </div>
+            <p class="text-xl text-center leading-relaxed opacity-95 mb-4">
+              Al final de los 20 minutos, cada equipo presentará brevemente sus
+              <strong>3 puntos</strong> y justificará su elección.
+            </p>
+            <div class="text-center">
+              <button
+                onclick="startTimer()"
+                class="bg-white text-purple-600 px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors"
+              >
+                ▶️ Iniciar Timer de 20 minutos
+              </button>
+              <button
+                onclick="stopTimer()"
+                class="bg-red-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-600 transition-colors ml-4"
+              >
+                ⏹️ Detener Timer
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Navigation -->
+    <div class="navigation">
+      <button class="nav-button" onclick="previousSlide()">⬅️ Anterior</button>
+      <button class="nav-button" onclick="resetAll()">🔄 Reiniciar</button>
+      <button class="nav-button" onclick="nextSlide()">Siguiente ➡️</button>
+    </div>
+
+    <script>
+      let currentSlide = 1;
+      const totalSlides = 4;
+      let timerInterval;
+      let timeLeft = 20 * 60; // 20 minutes in seconds
+
+      function updateSlideCounter() {
+        document.getElementById("current-slide").textContent = currentSlide;
+        document.getElementById("total-slides").textContent = totalSlides;
+      }
+
+      function showSlide(slideNumber) {
+        // Hide all slides
+        for (let i = 1; i <= totalSlides; i++) {
+          document.getElementById("slide" + i).classList.add("hidden");
+        }
+
+        // Show selected slide
+        document
+          .getElementById("slide" + slideNumber)
+          .classList.remove("hidden");
+
+        currentSlide = slideNumber;
+        updateSlideCounter();
+        updateNavigationButtons();
+
+        // Auto-scroll to top when changing slides
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
+        });
+      }
+
+      function updateNavigationButtons() {
+        const prevButton = document.querySelector(
+          ".navigation button:first-child"
+        );
+        const nextButton = document.querySelector(
+          ".navigation button:last-child"
+        );
+
+        prevButton.disabled = currentSlide === 1;
+        nextButton.disabled = currentSlide === totalSlides;
+      }
+
+      function previousSlide() {
+        if (currentSlide > 1) {
+          showSlide(currentSlide - 1);
+        }
+      }
+
+      function nextSlide() {
+        if (currentSlide < totalSlides) {
+          showSlide(currentSlide + 1);
+        }
+      }
+
+      function resetAll() {
+        showSlide(1);
+        stopTimer();
+        timeLeft = 20 * 60;
+        updateTimerDisplay();
+      }
+
+      function startTimer() {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+        }
+
+        timerInterval = setInterval(() => {
+          timeLeft--;
+          updateTimerDisplay();
+
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            alert("¡Tiempo terminado! Es hora de presentar sus resultados.");
+          }
+        }, 1000);
+      }
+
+      function stopTimer() {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+      }
+
+      function updateTimerDisplay() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        const display = `${minutes.toString().padStart(2, "0")}:${seconds
+          .toString()
+          .padStart(2, "0")}`;
+        document.getElementById("timer").textContent = display;
+
+        // Change color based on time left
+        const timerElement = document.querySelector(".timer-display");
+        if (timeLeft <= 300) {
+          // Last 5 minutes
+          timerElement.style.background =
+            "linear-gradient(135deg, #ef4444, #dc2626)";
+        } else if (timeLeft <= 600) {
+          // Last 10 minutes
+          timerElement.style.background =
+            "linear-gradient(135deg, #f59e0b, #d97706)";
+        } else {
+          timerElement.style.background =
+            "linear-gradient(135deg, #ef4444, #dc2626)";
+        }
+      }
+
+      // Keyboard navigation
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowLeft") {
+          previousSlide();
+        } else if (e.key === "ArrowRight") {
+          nextSlide();
+        } else if (e.key === "Home") {
+          resetAll();
+        }
+      });
+
+      // Initialize
+      showSlide(1);
+      updateTimerDisplay();
+    </script>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97b2b2fbf5152a88',t:'MTc1NzIxMTMzNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
   
 <!-- Pie de página -->
 <footer class="footer">
   <div class="footer-content">© 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua</div>
 </footer>
 
-  <script defer src="js/layout.js"></script>
 </body>
 </html>
-
-
-
-

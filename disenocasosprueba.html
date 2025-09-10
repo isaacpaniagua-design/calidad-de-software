@@ -672,10 +672,926 @@
 \1
   </div>
 </div>
-  <script defer src="js/layout.js"></script>
-</body>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="main-title">🧪 Diseño de Casos de Prueba</div>
+            <div class="subtitle">Sistema de Gestión de Test Cases</div>
+        </div>
+
+        <!-- Dashboard -->
+        <div class="dashboard">
+            <div class="metric-card passed">
+                <div class="metric-number passed" id="passedTests">15</div>
+                <div class="metric-label">Pasaron</div>
+            </div>
+            <div class="metric-card failed">
+                <div class="metric-number failed" id="failedTests">3</div>
+                <div class="metric-label">Fallaron</div>
+            </div>
+            <div class="metric-card pending">
+                <div class="metric-number pending" id="pendingTests">8</div>
+                <div class="metric-label">Pendientes</div>
+            </div>
+            <div class="metric-card blocked">
+                <div class="metric-number blocked" id="blockedTests">2</div>
+                <div class="metric-label">Bloqueados</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-number" id="totalTests">28</div>
+                <div class="metric-label">Total Casos</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-number" id="coveragePercent">85</div>
+                <div class="metric-label">% Cobertura</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Test Case Form -->
+            <div class="test-form">
+                <div class="form-title">📝 Nuevo Caso de Prueba</div>
+
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <span class="section-icon">📋</span>
+                        Información Básica
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">ID del Caso de Prueba</label>
+                            <input type="text" class="form-input" id="testId" value="CP-LOGIN-001" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Módulo/Funcionalidad</label>
+                            <select class="form-select" id="module" onchange="updateTestId()">
+                                <option value="LOGIN">Autenticación de Usuario</option>
+                                <option value="REG">Registro de Usuario</option>
+                                <option value="CART">Carrito de Compras</option>
+                                <option value="PAY">Procesamiento de Pagos</option>
+                                <option value="PROF">Gestión de Perfil</option>
+                                <option value="REP">Reportes y Analytics</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Requisito Asociado</label>
+                            <input type="text" class="form-input" id="requirement" value="REQ-005" placeholder="Ej: REQ-005">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Prioridad</label>
+                            <select class="form-select" id="priority">
+                                <option value="high" selected>Alta</option>
+                                <option value="medium">Media</option>
+                                <option value="low">Baja</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Tipo de Prueba</label>
+                            <select class="form-select" id="testType">
+                                <option value="functional" selected>Funcional</option>
+                                <option value="usability">Usabilidad</option>
+                                <option value="performance">Rendimiento</option>
+                                <option value="security">Seguridad</option>
+                                <option value="integration">Integración</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Estado</label>
+                            <select class="form-select" id="status">
+                                <option value="not-executed" selected>No Ejecutado</option>
+                                <option value="passed">Pasó</option>
+                                <option value="failed">Falló</option>
+                                <option value="pending">Pendiente</option>
+                                <option value="blocked">Bloqueado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Título/Propósito</label>
+                        <input type="text" class="form-input" id="title" value="Verificar el inicio de sesión exitoso con credenciales válidas" placeholder="Breve descripción del objetivo">
+                    </div>
+                </div>
+
+                <!-- Preconditions -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <span class="section-icon">⚙️</span>
+                        Precondiciones
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Estado requerido del sistema ANTES de ejecutar</label>
+                        <textarea class="form-textarea" id="preconditions" placeholder="Ej: El usuario 'testuser' debe existir en la base de datos y estar activo">- El usuario 'testuser' debe existir en la base de datos y estar activo.
+- El sistema debe estar en la página de login.
+- La base de datos debe estar disponible y funcionando correctamente.</textarea>
+                    </div>
+                </div>
+
+                <!-- Test Steps -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <span class="section-icon">📋</span>
+                        Pasos de la Prueba
+                    </div>
+                    
+                    <div class="steps-container" id="stepsContainer">
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <input type="text" class="step-input" value="Ingresar el nombre de usuario en el campo 'Usuario'" placeholder="Descripción del paso">
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <input type="text" class="step-input" value="Ingresar la contraseña en el campo 'Contraseña'" placeholder="Descripción del paso">
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <input type="text" class="step-input" value="Hacer clic en el botón 'Ingresar'" placeholder="Descripción del paso">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="add-step-btn" onclick="addTestStep()">➕ Agregar Paso</button>
+                </div>
+
+                <!-- Test Data -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <span class="section-icon">💾</span>
+                        Datos de Prueba
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Valores específicos a utilizar</label>
+                        <table class="data-table" id="testDataTable">
+                            <thead>
+                                <tr>
+                                    <th>Campo</th>
+                                    <th>Valor</th>
+                                    <th>Descripción</th>
+                                    <th>Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Usuario</td>
+                                    <td>testuser</td>
+                                    <td>Usuario válido existente</td>
+                                    <td><button class="step-btn fail" onclick="removeDataRow(this)">×</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Contraseña</td>
+                                    <td>Password123</td>
+                                    <td>Contraseña correcta</td>
+                                    <td><button class="step-btn fail" onclick="removeDataRow(this)">×</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button class="add-step-btn" onclick="addDataRow()">➕ Agregar Dato</button>
+                    </div>
+                </div>
+
+                <!-- Expected Results -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <span class="section-icon">✅</span>
+                        Resultados Esperados
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Descripción detallada de lo que DEBE ocurrir</label>
+                        <textarea class="form-textarea" id="expectedResult" placeholder="Ej: El sistema debe redirigir al usuario al Dashboard principal">El sistema debe redirigir al usuario al Dashboard principal. Se debe mostrar el nombre de usuario 'testuser' en la esquina superior derecha. Debe aparecer un mensaje de bienvenida: "Bienvenido, testuser".</textarea>
+                    </div>
+                </div>
+
+                <!-- Execution Results -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <span class="section-icon">📊</span>
+                        Resultados de Ejecución
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Resultado Actual</label>
+                            <textarea class="form-textarea" id="actualResult" placeholder="Se llena durante la ejecución de la prueba"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Observaciones</label>
+                            <textarea class="form-textarea" id="observations" placeholder="Información adicional, datos de rendimiento, sugerencias"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Ejecutado por</label>
+                            <input type="text" class="form-input" id="executedBy" placeholder="Nombre del tester">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Fecha de Ejecución</label>
+                            <input type="date" class="form-input" id="executionDate">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="action-button success" onclick="saveTestCase()">💾 Guardar Caso</button>
+                    <button class="action-button" onclick="executeTest()">▶️ Ejecutar Prueba</button>
+                    <button class="action-button secondary" onclick="previewTest()">👁️ Vista Previa</button>
+                    <button class="action-button secondary" onclick="clearForm()">🗑️ Limpiar</button>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Templates -->
+                <div class="sidebar-card">
+                    <div class="sidebar-title">📋 Plantillas Rápidas</div>
+                    
+                    <div class="template-button" onclick="loadTemplate('login')">
+                        <div class="template-title">🔐 Login/Autenticación</div>
+                        <div class="template-description">Casos de inicio de sesión</div>
+                    </div>
+                    
+                    <div class="template-button" onclick="loadTemplate('form')">
+                        <div class="template-title">📝 Validación de Formularios</div>
+                        <div class="template-description">Pruebas de campos y validaciones</div>
+                    </div>
+                    
+                    <div class="template-button" onclick="loadTemplate('navigation')">
+                        <div class="template-title">🧭 Navegación</div>
+                        <div class="template-description">Flujos de navegación y menús</div>
+                    </div>
+                    
+                    <div class="template-button" onclick="loadTemplate('api')">
+                        <div class="template-title">🔌 API/Integración</div>
+                        <div class="template-description">Pruebas de servicios web</div>
+                    </div>
+                </div>
+
+                <!-- Guidelines -->
+                <div class="sidebar-card">
+                    <div class="sidebar-title">💡 Mejores Prácticas</div>
+                    <ul style="color: #4a5568; font-size: 0.9em; line-height: 1.6;">
+                        <li>Use IDs únicos y descriptivos</li>
+                        <li>Escriba pasos claros y específicos</li>
+                        <li>Incluya datos de prueba exactos</li>
+                        <li>Defina resultados esperados detallados</li>
+                        <li>Mantenga precondiciones actualizadas</li>
+                        <li>Documente observaciones importantes</li>
+                    </ul>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="sidebar-card">
+                    <div class="sidebar-title">⚡ Acciones Rápidas</div>
+                    <button class="action-button" style="width: 100%; margin: 5px 0;" onclick="generateTestId()">🔄 Generar ID</button>
+                    <button class="action-button secondary" style="width: 100%; margin: 5px 0;" onclick="exportToPDF()">📄 Exportar PDF</button>
+                    <button class="action-button secondary" style="width: 100%; margin: 5px 0;" onclick="cloneTestCase()">📋 Clonar Caso</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Execution Panel -->
+        <div class="execution-panel" id="executionPanel">
+            <div class="form-title">🔄 Ejecución de Prueba: <span id="executingTestId"></span></div>
+            
+            <div id="executionSteps">
+                <!-- Steps will be populated here -->
+            </div>
+            
+            <div class="action-buttons">
+                <button class="action-button success" onclick="completeExecution('passed')">✅ Marcar como Pasó</button>
+                <button class="action-button danger" onclick="completeExecution('failed')">❌ Marcar como Falló</button>
+                <button class="action-button secondary" onclick="cancelExecution()">🚫 Cancelar</button>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-row">
+                <select class="filter-select" id="moduleFilter" onchange="applyFilters()">
+                    <option value="all">Todos los Módulos</option>
+                    <option value="LOGIN">Autenticación</option>
+                    <option value="REG">Registro</option>
+                    <option value="CART">Carrito</option>
+                    <option value="PAY">Pagos</option>
+                </select>
+                
+                <select class="filter-select" id="priorityFilter" onchange="applyFilters()">
+                    <option value="all">Todas las Prioridades</option>
+                    <option value="high">Alta</option>
+                    <option value="medium">Media</option>
+                    <option value="low">Baja</option>
+                </select>
+                
+                <select class="filter-select" id="typeFilter" onchange="applyFilters()">
+                    <option value="all">Todos los Tipos</option>
+                    <option value="functional">Funcional</option>
+                    <option value="usability">Usabilidad</option>
+                    <option value="performance">Rendimiento</option>
+                    <option value="security">Seguridad</option>
+                </select>
+                
+                <select class="filter-select" id="statusFilter" onchange="applyFilters()">
+                    <option value="all">Todos los Estados</option>
+                    <option value="passed">Pasó</option>
+                    <option value="failed">Falló</option>
+                    <option value="pending">Pendiente</option>
+                    <option value="not-executed">No Ejecutado</option>
+                </select>
+                
+                <input type="text" class="filter-select" id="searchFilter" placeholder="Buscar por título o ID..." onkeyup="applyFilters()">
+            </div>
+        </div>
+
+        <!-- Test Cases List -->
+        <div class="test-list">
+            <div class="list-title">📋 Casos de Prueba Registrados</div>
+            
+            <div class="test-item high" data-module="LOGIN" data-priority="high" data-type="functional" data-status="not-executed">
+                <div class="test-header">
+                    <span class="test-id">CP-LOGIN-001</span>
+                    <div class="test-meta">
+                        <span class="priority-badge priority-high">Alta</span>
+                        <span class="type-badge type-functional">Funcional</span>
+                        <span class="status-badge status-not-executed">No Ejecutado</span>
+                    </div>
+                </div>
+                <div class="test-title">Verificar el inicio de sesión exitoso con credenciales válidas</div>
+                <div class="test-module">Autenticación de Usuario • <a href="#" class="requirement-link">REQ-005</a></div>
+            </div>
+            
+            <div class="test-item medium" data-module="REG" data-priority="medium" data-type="functional" data-status="passed">
+                <div class="test-header">
+                    <span class="test-id">CP-REG-001</span>
+                    <div class="test-meta">
+                        <span class="priority-badge priority-medium">Media</span>
+                        <span class="type-badge type-functional">Funcional</span>
+                        <span class="status-badge status-passed">Pasó</span>
+                    </div>
+                </div>
+                <div class="test-title">Validar registro de usuario con datos correctos</div>
+                <div class="test-module">Registro de Usuario • <a href="#" class="requirement-link">REQ-012</a></div>
+            </div>
+            
+            <div class="test-item high" data-module="CART" data-priority="high" data-type="functional" data-status="failed">
+                <div class="test-header">
+                    <span class="test-id">CP-CART-003</span>
+                    <div class="test-meta">
+                        <span class="priority-badge priority-high">Alta</span>
+                        <span class="type-badge type-functional">Funcional</span>
+                        <span class="status-badge status-failed">Falló</span>
+                    </div>
+                </div>
+                <div class="test-title">Verificar cálculo correcto del total del carrito</div>
+                <div class="test-module">Carrito de Compras • <a href="#" class="requirement-link">REQ-025</a></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testCounter = 1;
+        let currentModule = 'LOGIN';
+
+        // Templates
+        const templates = {
+            login: {
+                title: "Verificar el inicio de sesión exitoso con credenciales válidas",
+                module: "LOGIN",
+                requirement: "REQ-005",
+                preconditions: "- El usuario 'testuser' debe existir en la base de datos y estar activo.\n- El sistema debe estar en la página de login.\n- La base de datos debe estar disponible y funcionando correctamente.",
+                steps: [
+                    "Ingresar el nombre de usuario en el campo 'Usuario'",
+                    "Ingresar la contraseña en el campo 'Contraseña'",
+                    "Hacer clic en el botón 'Ingresar'"
+                ],
+                expectedResult: "El sistema debe redirigir al usuario al Dashboard principal. Se debe mostrar el nombre de usuario 'testuser' en la esquina superior derecha. Debe aparecer un mensaje de bienvenida: 'Bienvenido, testuser'.",
+                testData: [
+                    {field: "Usuario", value: "testuser", description: "Usuario válido existente"},
+                    {field: "Contraseña", value: "Password123", description: "Contraseña correcta"}
+                ]
+            },
+            form: {
+                title: "Validar campos obligatorios en formulario de registro",
+                module: "REG",
+                requirement: "REQ-010",
+                preconditions: "- El sistema debe estar en la página de registro.\n- La base de datos debe estar disponible.",
+                steps: [
+                    "Navegar a la página de registro",
+                    "Dejar campos obligatorios vacíos",
+                    "Hacer clic en el botón 'Registrar'"
+                ],
+                expectedResult: "El sistema debe mostrar mensajes de error para cada campo obligatorio vacío. No debe permitir el envío del formulario.",
+                testData: [
+                    {field: "Nombre", value: "", description: "Campo vacío"},
+                    {field: "Email", value: "", description: "Campo vacío"}
+                ]
+            },
+            navigation: {
+                title: "Verificar navegación correcta entre páginas principales",
+                module: "NAV",
+                requirement: "REQ-001",
+                preconditions: "- El usuario debe estar autenticado.\n- Todas las páginas principales deben estar disponibles.",
+                steps: [
+                    "Hacer clic en el menú 'Inicio'",
+                    "Hacer clic en el menú 'Productos'",
+                    "Hacer clic en el menú 'Perfil'"
+                ],
+                expectedResult: "Cada clic debe cargar la página correspondiente correctamente. La URL debe cambiar apropiadamente.",
+                testData: []
+            },
+            api: {
+                title: "Verificar respuesta correcta de API de autenticación",
+                module: "API",
+                requirement: "REQ-100",
+                preconditions: "- El servicio de API debe estar disponible.\n- Credenciales de prueba deben estar configuradas.",
+                steps: [
+                    "Enviar petición POST a /api/auth/login",
+                    "Incluir credenciales válidas en el body",
+                    "Verificar código de respuesta HTTP"
+                ],
+                expectedResult: "La API debe retornar código 200 y un token de autenticación válido en formato JSON.",
+                testData: [
+                    {field: "username", value: "testapi", description: "Usuario de API"},
+                    {field: "password", value: "ApiPass123", description: "Contraseña de API"}
+                ]
+            }
+        };
+
+        // Load template
+        function loadTemplate(templateName) {
+            const template = templates[templateName];
+            if (template) {
+                document.getElementById('title').value = template.title;
+                document.getElementById('module').value = template.module;
+                document.getElementById('requirement').value = template.requirement;
+                document.getElementById('preconditions').value = template.preconditions;
+                document.getElementById('expectedResult').value = template.expectedResult;
+                
+                // Clear and populate steps
+                const stepsContainer = document.getElementById('stepsContainer');
+                stepsContainer.innerHTML = '';
+                template.steps.forEach((step, index) => {
+                    addTestStep(step, index + 1);
+                });
+                
+                // Clear and populate test data
+                const tbody = document.querySelector('#testDataTable tbody');
+                tbody.innerHTML = '';
+                template.testData.forEach(data => {
+                    addDataRow(data.field, data.value, data.description);
+                });
+                
+                updateTestId();
+                showNotification(`Plantilla "${templateName}" cargada exitosamente`, 'success');
+            }
+        }
+
+        // Generate test ID based on module
+        function updateTestId() {
+            const module = document.getElementById('module').value;
+            currentModule = module;
+            generateTestId();
+        }
+
+        function generateTestId() {
+            testCounter++;
+            const newId = `CP-${currentModule}-${String(testCounter).padStart(3, '0')}`;
+            document.getElementById('testId').value = newId;
+        }
+
+        // Test steps management
+        function addTestStep(stepText = '', stepNumber = null) {
+            const stepsContainer = document.getElementById('stepsContainer');
+            const stepCount = stepsContainer.children.length + 1;
+            const actualStepNumber = stepNumber || stepCount;
+            
+            const stepItem = document.createElement('div');
+            stepItem.className = 'step-item';
+            stepItem.innerHTML = `
+                <div class="step-number">${actualStepNumber}</div>
+                <div class="step-content">
+                    <input type="text" class="step-input" value="${stepText}" placeholder="Descripción del paso">
+                    <button class="step-btn fail" onclick="removeStep(this)" style="margin-left: 10px; margin-top: 5px;">×</button>
+                </div>
+            `;
+            
+            stepsContainer.appendChild(stepItem);
+        }
+
+        function removeStep(button) {
+            const stepItem = button.closest('.step-item');
+            stepItem.remove();
+            renumberSteps();
+        }
+
+        function renumberSteps() {
+            const steps = document.querySelectorAll('.step-item');
+            steps.forEach((step, index) => {
+                step.querySelector('.step-number').textContent = index + 1;
+            });
+        }
+
+        // Test data management
+        function addDataRow(field = '', value = '', description = '') {
+            const tbody = document.querySelector('#testDataTable tbody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><input type="text" value="${field}" placeholder="Campo" style="border: none; background: transparent; width: 100%;"></td>
+                <td><input type="text" value="${value}" placeholder="Valor" style="border: none; background: transparent; width: 100%;"></td>
+                <td><input type="text" value="${description}" placeholder="Descripción" style="border: none; background: transparent; width: 100%;"></td>
+                <td><button class="step-btn fail" onclick="removeDataRow(this)">×</button></td>
+            `;
+            tbody.appendChild(row);
+        }
+
+        function removeDataRow(button) {
+            const row = button.closest('tr');
+            row.remove();
+        }
+
+        // Form actions
+        function saveTestCase() {
+            const formData = collectFormData();
+            
+            if (validateForm(formData)) {
+                showNotification('Caso de prueba guardado exitosamente', 'success');
+                addTestToList(formData);
+                
+                setTimeout(() => {
+                    clearForm();
+                    generateTestId();
+                }, 1000);
+            }
+        }
+
+        function collectFormData() {
+            const steps = Array.from(document.querySelectorAll('.step-input')).map(input => input.value);
+            const testData = Array.from(document.querySelectorAll('#testDataTable tbody tr')).map(row => {
+                const inputs = row.querySelectorAll('input');
+                return {
+                    field: inputs[0].value,
+                    value: inputs[1].value,
+                    description: inputs[2].value
+                };
+            });
+            
+            return {
+                id: document.getElementById('testId').value,
+                title: document.getElementById('title').value,
+                module: document.getElementById('module').value,
+                requirement: document.getElementById('requirement').value,
+                priority: document.getElementById('priority').value,
+                testType: document.getElementById('testType').value,
+                status: document.getElementById('status').value,
+                preconditions: document.getElementById('preconditions').value,
+                steps: steps,
+                testData: testData,
+                expectedResult: document.getElementById('expectedResult').value,
+                actualResult: document.getElementById('actualResult').value,
+                observations: document.getElementById('observations').value,
+                executedBy: document.getElementById('executedBy').value,
+                executionDate: document.getElementById('executionDate').value
+            };
+        }
+
+        function validateForm(data) {
+            const required = ['title', 'module', 'preconditions', 'expectedResult'];
+            const missing = required.filter(field => !data[field] || data[field].trim() === '');
+            
+            if (missing.length > 0) {
+                showNotification(`Campos requeridos faltantes: ${missing.join(', ')}`, 'error');
+                return false;
+            }
+            
+            if (data.steps.length === 0 || data.steps.every(step => !step.trim())) {
+                showNotification('Debe agregar al menos un paso de prueba', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+
+        function addTestToList(data) {
+            const testList = document.querySelector('.test-list');
+            const testItem = document.createElement('div');
+            testItem.className = `test-item ${data.priority}`;
+            testItem.setAttribute('data-module', data.module);
+            testItem.setAttribute('data-priority', data.priority);
+            testItem.setAttribute('data-type', data.testType);
+            testItem.setAttribute('data-status', data.status);
+            
+            const moduleName = document.querySelector(`#module option[value="${data.module}"]`).textContent;
+            
+            testItem.innerHTML = `
+                <div class="test-header">
+                    <span class="test-id">${data.id}</span>
+                    <div class="test-meta">
+                        <span class="priority-badge priority-${data.priority}">${data.priority.charAt(0).toUpperCase() + data.priority.slice(1)}</span>
+                        <span class="type-badge type-${data.testType}">${data.testType.charAt(0).toUpperCase() + data.testType.slice(1)}</span>
+                        <span class="status-badge status-${data.status}">${data.status.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                    </div>
+                </div>
+                <div class="test-title">${data.title}</div>
+                <div class="test-module">${moduleName} • <a href="#" class="requirement-link">${data.requirement}</a></div>
+            `;
+            
+            const firstTestItem = testList.querySelector('.test-item');
+            if (firstTestItem) {
+                testList.insertBefore(testItem, firstTestItem);
+            } else {
+                testList.appendChild(testItem);
+            }
+        }
+
+        // Test execution
+        function executeTest() {
+            const formData = collectFormData();
+            
+            if (!validateForm(formData)) {
+                return;
+            }
+            
+            document.getElementById('executingTestId').textContent = formData.id;
+            const executionSteps = document.getElementById('executionSteps');
+            executionSteps.innerHTML = '';
+            
+            formData.steps.forEach((step, index) => {
+                const stepDiv = document.createElement('div');
+                stepDiv.className = 'execution-step';
+                stepDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>Paso ${index + 1}:</strong> ${step}
+                        </div>
+                        <div class="step-controls">
+                            <button class="step-btn pass" onclick="markStep(this, 'passed')">✓</button>
+                            <button class="step-btn fail" onclick="markStep(this, 'failed')">✗</button>
+                        </div>
+                    </div>
+                    <textarea placeholder="Observaciones del paso..." style="width: 100%; margin-top: 10px; padding: 8px; border: 1px solid #e2e8f0; border-radius: 5px;"></textarea>
+                `;
+                executionSteps.appendChild(stepDiv);
+            });
+            
+            document.getElementById('executionPanel').classList.add('active');
+            document.querySelector('.test-form').style.display = 'none';
+            
+            showNotification('Iniciando ejecución de prueba', 'info');
+        }
+
+        function markStep(button, result) {
+            const step = button.closest('.execution-step');
+            step.classList.remove('passed', 'failed', 'current');
+            step.classList.add(result);
+        }
+
+        function completeExecution(finalResult) {
+            const observations = Array.from(document.querySelectorAll('#executionSteps textarea'))
+                .map(textarea => textarea.value)
+                .filter(obs => obs.trim())
+                .join('\n');
+            
+            document.getElementById('status').value = finalResult;
+            document.getElementById('actualResult').value = `Resultado de ejecución: ${finalResult}`;
+            document.getElementById('observations').value = observations;
+            document.getElementById('executionDate').value = new Date().toISOString().split('T')[0];
+            
+            cancelExecution();
+            showNotification(`Prueba marcada como: ${finalResult}`, finalResult === 'passed' ? 'success' : 'error');
+        }
+
+        function cancelExecution() {
+            document.getElementById('executionPanel').classList.remove('active');
+            document.querySelector('.test-form').style.display = 'block';
+        }
+
+        // Other functions
+        function previewTest() {
+            const formData = collectFormData();
+            
+            const previewWindow = window.open('', '_blank', 'width=800,height=600');
+            previewWindow.document.write(`
+                <html>
+                <head>
+                    <title>Vista Previa - ${formData.id}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; padding: 20px; line-height: 1.6; }
+                        .header { background: #f0f0f0; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+                        .section { margin: 20px 0; }
+                        .label { font-weight: bold; color: #333; }
+                        .value { margin-bottom: 10px; }
+                        .steps { counter-reset: step; }
+                        .steps li { counter-increment: step; margin: 5px 0; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>🧪 ${formData.title}</h1>
+                        <p><strong>ID:</strong> ${formData.id} | <strong>Módulo:</strong> ${formData.module} | <strong>Requisito:</strong> ${formData.requirement}</p>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="label">Precondiciones:</div>
+                        <div class="value">${formData.preconditions.replace(/\n/g, '<br>')}</div>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="label">Pasos de la Prueba:</div>
+                        <ol class="steps">
+                            ${formData.steps.map(step => `<li>${step}</li>`).join('')}
+                        </ol>
+                    </div>
+                    
+                    <div class="section">
+                        <div class="label">Resultado Esperado:</div>
+                        <div class="value">${formData.expectedResult}</div>
+                    </div>
+                </body>
+                </html>
+            `);
+        }
+
+        function clearForm() {
+            document.getElementById('title').value = '';
+            document.getElementById('requirement').value = '';
+            document.getElementById('preconditions').value = '';
+            document.getElementById('expectedResult').value = '';
+            document.getElementById('actualResult').value = '';
+            document.getElementById('observations').value = '';
+            document.getElementById('executedBy').value = '';
+            document.getElementById('executionDate').value = '';
+            
+            document.getElementById('stepsContainer').innerHTML = '';
+            document.querySelector('#testDataTable tbody').innerHTML = '';
+            
+            // Reset selects
+            document.getElementById('priority').selectedIndex = 0;
+            document.getElementById('testType').selectedIndex = 0;
+            document.getElementById('status').selectedIndex = 0;
+        }
+
+        function cloneTestCase() {
+            const formData = collectFormData();
+            generateTestId();
+            document.getElementById('title').value = formData.title + ' (Copia)';
+            showNotification('Caso de prueba clonado', 'success');
+        }
+
+        // Filters
+        function applyFilters() {
+            const moduleFilter = document.getElementById('moduleFilter').value;
+            const priorityFilter = document.getElementById('priorityFilter').value;
+            const typeFilter = document.getElementById('typeFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+            
+            const testItems = document.querySelectorAll('.test-item');
+            
+            testItems.forEach(item => {
+                let show = true;
+                
+                if (moduleFilter !== 'all' && item.getAttribute('data-module') !== moduleFilter) {
+                    show = false;
+                }
+                
+                if (priorityFilter !== 'all' && item.getAttribute('data-priority') !== priorityFilter) {
+                    show = false;
+                }
+                
+                if (typeFilter !== 'all' && item.getAttribute('data-type') !== typeFilter) {
+                    show = false;
+                }
+                
+                if (statusFilter !== 'all' && item.getAttribute('data-status') !== statusFilter) {
+                    show = false;
+                }
+                
+                if (searchFilter && !item.textContent.toLowerCase().includes(searchFilter)) {
+                    show = false;
+                }
+                
+                item.style.display = show ? 'block' : 'none';
+            });
+        }
+
+        function exportToPDF() {
+            showNotification('Generando PDF... Descarga iniciará en breve', 'info');
+            setTimeout(() => {
+                showNotification('PDF generado exitosamente', 'success');
+            }, 2000);
+        }
+
+        // Notification system
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 10px;
+                color: white;
+                font-weight: bold;
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+                max-width: 300px;
+            `;
+            
+            switch(type) {
+                case 'success':
+                    notification.style.background = 'linear-gradient(135deg, #48bb78, #38a169)';
+                    break;
+                case 'error':
+                    notification.style.background = 'linear-gradient(135deg, #e53e3e, #c53030)';
+                    break;
+                case 'info':
+                    notification.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+                    break;
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 3000);
+        }
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            generateTestId();
+            
+            // Add initial steps
+            addTestStep("Ingresar el nombre de usuario en el campo 'Usuario'", 1);
+            addTestStep("Ingresar la contraseña en el campo 'Contraseña'", 2);
+            addTestStep("Hacer clic en el botón 'Ingresar'", 3);
+            
+            // Add initial test data
+            addDataRow("Usuario", "testuser", "Usuario válido existente");
+            addDataRow("Contraseña", "Password123", "Contraseña correcta");
+        });
+
+        // Add click animations
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'BUTTON') {
+                e.target.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    e.target.style.transform = '';
+                }, 150);
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a8d585d07b2b85',t:'MTc1NzEwNzg5Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
-
-
-
-

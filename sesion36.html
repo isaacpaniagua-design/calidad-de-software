@@ -4,10 +4,1162 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Métricas y Mejora Continua</title>
-      <script defer src="js/layout.js"></script>
-</body>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        
+        .metric-card {
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .rca-technique {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .rca-technique:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .rca-technique.active {
+            border: 2px solid #3b82f6;
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+        }
+        
+        .why-step {
+            transition: all 0.3s ease;
+            opacity: 0.5;
+        }
+        
+        .why-step.active {
+            opacity: 1;
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+        }
+        
+        .why-step.completed {
+            opacity: 1;
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        .ishikawa-branch {
+            stroke: #374151;
+            stroke-width: 2;
+            fill: none;
+        }
+        
+        .ishikawa-category {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .ishikawa-category:hover {
+            transform: scale(1.1);
+        }
+        
+        .case-study-card {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            border-left: 4px solid #dc2626;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 2rem;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            width: 0.75rem;
+            height: 0.75rem;
+            background: #3b82f6;
+            border-radius: 50%;
+        }
+        
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: 0.375rem;
+            top: 1.25rem;
+            width: 2px;
+            height: calc(100% - 1rem);
+            background: #e5e7eb;
+        }
+        
+        .timeline-item:last-child::after {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-100 min-h-screen">
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <!-- Header -->
+    <div class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-6 py-6">
+            <div class="text-center">
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">📊 Métricas y Mejora Continua</h1>
+                <p class="text-xl text-gray-600 italic">"Midiendo la salud de la calidad"</p>
+                <div class="mt-4 flex justify-center space-x-4 flex-wrap gap-2">
+                    <button onclick="showSection('metrics')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        📈 Métricas
+                    </button>
+                    <button onclick="showSection('rca')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        🔍 RCA Técnicas
+                    </button>
+                    <button onclick="showSection('case-study')" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        📚 Caso Windows Vista
+                    </button>
+                    <button onclick="showSection('workshop')" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        🛠️ Taller RCA
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metrics Section -->
+    <div id="metrics-section" class="max-w-7xl mx-auto px-6 py-8">
+        <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-blue-800 mb-6 text-center">📈 Métricas de Defectos</h2>
+            
+            <!-- Key Metrics Cards -->
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                <!-- Defect Density -->
+                <div class="metric-card rounded-xl p-6 shadow-lg">
+                    <div class="text-center">
+                        <div class="bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl text-white">🎯</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-blue-800 mb-2">Densidad de Defectos</h3>
+                        <p class="text-sm text-gray-600 mb-4">Defectos por cada 1000 líneas de código (KLOC)</p>
+                        <div class="bg-white rounded-lg p-4">
+                            <div class="text-2xl font-bold text-blue-600" id="defectDensity">0.0</div>
+                            <div class="text-xs text-gray-500">defectos/KLOC</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- MTTR -->
+                <div class="metric-card rounded-xl p-6 shadow-lg">
+                    <div class="text-center">
+                        <div class="bg-green-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl text-white">⏱️</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-green-800 mb-2">MTTR</h3>
+                        <p class="text-sm text-gray-600 mb-4">Mean Time To Repair (Tiempo promedio de reparación)</p>
+                        <div class="bg-white rounded-lg p-4">
+                            <div class="text-2xl font-bold text-green-600" id="mttr">0.0</div>
+                            <div class="text-xs text-gray-500">horas</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Reopened Defects -->
+                <div class="metric-card rounded-xl p-6 shadow-lg">
+                    <div class="text-center">
+                        <div class="bg-red-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl text-white">🔄</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-red-800 mb-2">% Defectos Reabiertos</h3>
+                        <p class="text-sm text-gray-600 mb-4">Porcentaje de defectos que se reabren</p>
+                        <div class="bg-white rounded-lg p-4">
+                            <div class="text-2xl font-bold text-red-600" id="reopenedPercent">0.0</div>
+                            <div class="text-xs text-gray-500">%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Interactive Calculator -->
+            <div class="bg-gray-50 rounded-xl p-6">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">🧮 Calculadora de Métricas</h3>
+                
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Input Form -->
+                    <div class="bg-white rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-4">📊 Datos del Proyecto</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Total de Defectos</label>
+                                <input type="number" id="totalDefects" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="ej: 45" onchange="calculateMetrics()">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Líneas de Código (miles)</label>
+                                <input type="number" id="linesOfCode" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="ej: 15" onchange="calculateMetrics()">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Tiempo Total de Resolución (horas)</label>
+                                <input type="number" id="totalResolutionTime" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="ej: 180" onchange="calculateMetrics()">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Defectos Reabiertos</label>
+                                <input type="number" id="reopenedDefects" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="ej: 5" onchange="calculateMetrics()">
+                            </div>
+                            
+                            <button onclick="calculateMetrics()" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                                📊 Calcular Métricas
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Results Chart -->
+                    <div class="bg-white rounded-lg p-4">
+                        <h4 class="font-semibold text-gray-800 mb-4">📈 Visualización</h4>
+                        <canvas id="metricsChart" width="400" height="300"></canvas>
+                    </div>
+                </div>
+                
+                <!-- Interpretation Guide -->
+                <div class="mt-6 bg-white rounded-lg p-4">
+                    <h4 class="font-semibold text-gray-800 mb-3">💡 Guía de Interpretación</h4>
+                    <div class="grid md:grid-cols-3 gap-4 text-sm">
+                        <div class="bg-blue-50 rounded-lg p-3">
+                            <h5 class="font-semibold text-blue-800">Densidad de Defectos</h5>
+                            <ul class="text-blue-700 mt-2 space-y-1">
+                                <li>• < 1.0: Excelente</li>
+                                <li>• 1.0-3.0: Bueno</li>
+                                <li>• 3.0-5.0: Aceptable</li>
+                                <li>• > 5.0: Necesita mejora</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-green-50 rounded-lg p-3">
+                            <h5 class="font-semibold text-green-800">MTTR</h5>
+                            <ul class="text-green-700 mt-2 space-y-1">
+                                <li>• < 4h: Excelente</li>
+                                <li>• 4-8h: Bueno</li>
+                                <li>• 8-24h: Aceptable</li>
+                                <li>• > 24h: Necesita mejora</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-red-50 rounded-lg p-3">
+                            <h5 class="font-semibold text-red-800">% Reabiertos</h5>
+                            <ul class="text-red-700 mt-2 space-y-1">
+                                <li>• < 5%: Excelente</li>
+                                <li>• 5-10%: Bueno</li>
+                                <li>• 10-15%: Aceptable</li>
+                                <li>• > 15%: Necesita mejora</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RCA Section -->
+    <div id="rca-section" class="max-w-7xl mx-auto px-6 py-8 hidden">
+        <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-green-800 mb-6 text-center">🔍 Root Cause Analysis (RCA)</h2>
+            
+            <!-- RCA Techniques -->
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                <!-- 5 Whys -->
+                <div class="rca-technique bg-yellow-50 rounded-xl p-6 shadow-lg border-2 border-transparent" onclick="selectTechnique('5whys')">
+                    <div class="text-center">
+                        <div class="bg-yellow-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl text-white">❓</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-yellow-800 mb-2">5 Whys</h3>
+                        <p class="text-sm text-gray-600">Técnica simple para llegar a la causa raíz preguntando "¿Por qué?" cinco veces</p>
+                    </div>
+                </div>
+                
+                <!-- Ishikawa -->
+                <div class="rca-technique bg-blue-50 rounded-xl p-6 shadow-lg border-2 border-transparent" onclick="selectTechnique('ishikawa')">
+                    <div class="text-center">
+                        <div class="bg-blue-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl text-white">🐟</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-blue-800 mb-2">Diagrama de Ishikawa</h3>
+                        <p class="text-sm text-gray-600">Diagrama de espina de pescado para categorizar posibles causas</p>
+                    </div>
+                </div>
+                
+                <!-- Pareto -->
+                <div class="rca-technique bg-purple-50 rounded-xl p-6 shadow-lg border-2 border-transparent" onclick="selectTechnique('pareto')">
+                    <div class="text-center">
+                        <div class="bg-purple-600 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                            <span class="text-2xl text-white">📊</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-purple-800 mb-2">Análisis de Pareto</h3>
+                        <p class="text-sm text-gray-600">Principio 80/20 para identificar las causas más significativas</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Interactive RCA Tools -->
+            <div id="rca-tools" class="bg-gray-50 rounded-xl p-6">
+                <div id="technique-content">
+                    <div class="text-center text-gray-500">
+                        <div class="text-4xl mb-4">🔍</div>
+                        <p>Selecciona una técnica de RCA para comenzar el análisis</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Case Study Section -->
+    <div id="case-study-section" class="max-w-7xl mx-auto px-6 py-8 hidden">
+        <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-red-800 mb-6 text-center">📚 Caso Real: Windows Vista</h2>
+            
+            <!-- Case Overview -->
+            <div class="case-study-card rounded-xl p-6 mb-8">
+                <div class="flex items-start space-x-4">
+                    <div class="bg-red-600 rounded-full w-16 h-16 flex items-center justify-center flex-shrink-0">
+                        <span class="text-2xl text-white">🪟</span>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-bold text-red-800 mb-2">El Desafío de Windows Vista</h3>
+                        <p class="text-gray-700 leading-relaxed">
+                            Windows Vista, lanzado en 2006, enfrentó uno de los mayores desafíos de calidad en la historia de Microsoft. 
+                            Miles de defectos abiertos retrasaron significativamente el lanzamiento y afectaron la adopción del sistema operativo.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Timeline -->
+            <div class="bg-gray-50 rounded-xl p-6 mb-8">
+                <h3 class="text-xl font-semibold text-gray-800 mb-6">📅 Cronología del Proyecto</h3>
+                <div class="space-y-6">
+                    <div class="timeline-item">
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-gray-800">Inicio del Desarrollo</h4>
+                                <span class="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">2001</span>
+                            </div>
+                            <p class="text-sm text-gray-600">Comienza el desarrollo de "Longhorn" (nombre código de Vista)</p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-gray-800">Primer Reset del Proyecto</h4>
+                                <span class="text-sm text-gray-500 bg-yellow-100 px-2 py-1 rounded">2004</span>
+                            </div>
+                            <p class="text-sm text-gray-600">Se reinicia el desarrollo debido a problemas de estabilidad y complejidad</p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-gray-800">Crisis de Calidad</h4>
+                                <span class="text-sm text-gray-500 bg-red-100 px-2 py-1 rounded">2005-2006</span>
+                            </div>
+                            <p class="text-sm text-gray-600">Miles de defectos abiertos, problemas de rendimiento y compatibilidad</p>
+                        </div>
+                    </div>
+                    
+                    <div class="timeline-item">
+                        <div class="bg-white rounded-lg p-4 shadow-sm">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-semibold text-gray-800">Lanzamiento Retrasado</h4>
+                                <span class="text-sm text-gray-500 bg-blue-100 px-2 py-1 rounded">Nov 2006</span>
+                            </div>
+                            <p class="text-sm text-gray-600">Lanzamiento final con 2 años de retraso</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Problem Analysis -->
+            <div class="grid md:grid-cols-2 gap-6 mb-8">
+                <div class="bg-red-50 rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-red-800 mb-4">🚨 Problemas Identificados</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start space-x-2">
+                            <span class="text-red-600 mt-1">•</span>
+                            <span class="text-sm text-gray-700">Más de 50,000 defectos abiertos en el pico del desarrollo</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <span class="text-red-600 mt-1">•</span>
+                            <span class="text-sm text-gray-700">Problemas de rendimiento severos</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <span class="text-red-600 mt-1">•</span>
+                            <span class="text-sm text-gray-700">Incompatibilidad con hardware y software existente</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <span class="text-red-600 mt-1">•</span>
+                            <span class="text-sm text-gray-700">Interfaz de usuario confusa (UAC)</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <span class="text-red-600 mt-1">•</span>
+                            <span class="text-sm text-gray-700">Requerimientos de hardware excesivos</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="bg-green-50 rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-green-800 mb-4">🔍 RCA: Causa Raíz</h3>
+                    <div class="bg-white rounded-lg p-4 mb-4">
+                        <h4 class="font-semibold text-green-800 mb-2">Causa Principal Identificada:</h4>
+                        <p class="text-sm text-gray-700 font-medium">Falta de pruebas de integración temprana</p>
+                    </div>
+                    <ul class="space-y-3">
+                        <li class="flex items-start space-x-2">
+                            <span class="text-green-600 mt-1">•</span>
+                            <span class="text-sm text-gray-700">Desarrollo en silos sin integración continua</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <span class="text-green-600 mt-1">•</span>
+                            <span class="text-sm text-gray-700">Pruebas de sistema tardías en el ciclo</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <span class="text-green-600 mt-1">•</span>
+                            <span class="text-sm text-gray-700">Falta de automatización en pruebas</span>
+                        </li>
+                        <li class="flex items-start space-x-2">
+                            <span class="text-green-600 mt-1">•</span>
+                            <span class="text-sm text-gray-700">Comunicación deficiente entre equipos</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Lessons Learned -->
+            <div class="bg-blue-50 rounded-xl p-6">
+                <h3 class="text-xl font-bold text-blue-800 mb-4">📚 Lecciones Aprendidas</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-blue-800 mb-3">✅ Mejoras Implementadas</h4>
+                        <ul class="space-y-2 text-sm text-gray-700">
+                            <li>• Integración continua obligatoria</li>
+                            <li>• Pruebas automatizadas desde el día 1</li>
+                            <li>• Builds diarios y testing</li>
+                            <li>• Métricas de calidad en tiempo real</li>
+                            <li>• Equipos multifuncionales</li>
+                        </ul>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-blue-800 mb-3">🎯 Impacto en Windows 7</h4>
+                        <ul class="space-y-2 text-sm text-gray-700">
+                            <li>• Desarrollo más ágil y eficiente</li>
+                            <li>• Mejor calidad desde el inicio</li>
+                            <li>• Lanzamiento a tiempo</li>
+                            <li>• Excelente recepción del mercado</li>
+                            <li>• Adopción rápida y exitosa</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Workshop Section -->
+    <div id="workshop-section" class="max-w-7xl mx-auto px-6 py-8 hidden">
+        <div class="bg-white rounded-2xl p-8 shadow-lg mb-8">
+            <h2 class="text-3xl font-bold text-orange-800 mb-6 text-center">🛠️ Taller RCA: Análisis de Causa Raíz</h2>
+            
+            <!-- Workshop Instructions -->
+            <div class="bg-orange-50 rounded-xl p-6 mb-8 border-l-4 border-orange-500">
+                <h3 class="text-2xl font-bold text-orange-800 mb-4">📋 Instrucciones del Taller</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-orange-800 mb-2">🎯 Objetivo</h4>
+                        <p class="text-sm text-gray-700 mb-4">
+                            Cada equipo tomará un bug ficticio y aplicará la técnica de "5 Whys" para identificar la causa raíz.
+                        </p>
+                        
+                        <h4 class="font-semibold text-orange-800 mb-2">⏰ Tiempo</h4>
+                        <p class="text-sm text-gray-700">20 minutos para análisis + presentación</p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-orange-800 mb-2">📝 Entregables</h4>
+                        <ul class="text-sm text-gray-700 space-y-1">
+                            <li>• Análisis completo de 5 Whys</li>
+                            <li>• Causa raíz identificada</li>
+                            <li>• Acciones correctivas propuestas</li>
+                            <li>• Presentación de 3 minutos</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Bug Scenarios -->
+            <div class="bg-gray-50 rounded-xl p-6 mb-8">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">🐛 Escenarios de Bugs</h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="bg-white rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onclick="selectBug('login')">
+                        <h4 class="font-semibold text-red-800 mb-2">🔐 Fallo de Login</h4>
+                        <p class="text-sm text-gray-600">Los usuarios no pueden iniciar sesión después de la actualización del sistema</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onclick="selectBug('performance')">
+                        <h4 class="font-semibold text-orange-800 mb-2">🐌 Rendimiento Lento</h4>
+                        <p class="text-sm text-gray-600">La aplicación tarda más de 30 segundos en cargar la página principal</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onclick="selectBug('data')">
+                        <h4 class="font-semibold text-purple-800 mb-2">💾 Pérdida de Datos</h4>
+                        <p class="text-sm text-gray-600">Los datos del formulario se pierden al cambiar de pestaña</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onclick="selectBug('payment')">
+                        <h4 class="font-semibold text-green-800 mb-2">💳 Error de Pago</h4>
+                        <p class="text-sm text-gray-600">Las transacciones fallan intermitentemente en el checkout</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onclick="selectBug('mobile')">
+                        <h4 class="font-semibold text-blue-800 mb-2">📱 Problema Mobile</h4>
+                        <p class="text-sm text-gray-600">La aplicación se cierra inesperadamente en dispositivos Android</p>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg p-4 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onclick="selectBug('email')">
+                        <h4 class="font-semibold text-indigo-800 mb-2">📧 Emails No Enviados</h4>
+                        <p class="text-sm text-gray-600">Las notificaciones por email no llegan a los usuarios</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 5 Whys Analysis Tool -->
+            <div id="analysis-tool" class="bg-white rounded-xl p-6 shadow-lg hidden">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">🔍 Análisis de 5 Whys</h3>
+                
+                <div id="selected-bug" class="bg-blue-50 rounded-lg p-4 mb-6">
+                    <!-- Bug details will be inserted here -->
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="why-step bg-gray-50 rounded-lg p-4" data-step="1">
+                        <div class="flex items-center mb-2">
+                            <span class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">1</span>
+                            <h4 class="font-semibold text-gray-800">¿Por qué ocurrió el problema?</h4>
+                        </div>
+                        <textarea id="why1" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" rows="2" placeholder="Describe la causa inmediata..."></textarea>
+                    </div>
+                    
+                    <div class="why-step bg-gray-50 rounded-lg p-4" data-step="2">
+                        <div class="flex items-center mb-2">
+                            <span class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">2</span>
+                            <h4 class="font-semibold text-gray-800">¿Por qué ocurrió esa causa?</h4>
+                        </div>
+                        <textarea id="why2" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" rows="2" placeholder="Profundiza en la causa anterior..."></textarea>
+                    </div>
+                    
+                    <div class="why-step bg-gray-50 rounded-lg p-4" data-step="3">
+                        <div class="flex items-center mb-2">
+                            <span class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">3</span>
+                            <h4 class="font-semibold text-gray-800">¿Por qué ocurrió esa causa?</h4>
+                        </div>
+                        <textarea id="why3" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" rows="2" placeholder="Continúa profundizando..."></textarea>
+                    </div>
+                    
+                    <div class="why-step bg-gray-50 rounded-lg p-4" data-step="4">
+                        <div class="flex items-center mb-2">
+                            <span class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">4</span>
+                            <h4 class="font-semibold text-gray-800">¿Por qué ocurrió esa causa?</h4>
+                        </div>
+                        <textarea id="why4" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" rows="2" placeholder="Busca causas más profundas..."></textarea>
+                    </div>
+                    
+                    <div class="why-step bg-gray-50 rounded-lg p-4" data-step="5">
+                        <div class="flex items-center mb-2">
+                            <span class="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-3">5</span>
+                            <h4 class="font-semibold text-gray-800">¿Por qué ocurrió esa causa?</h4>
+                        </div>
+                        <textarea id="why5" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" rows="2" placeholder="Identifica la causa raíz..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Root Cause and Actions -->
+                <div class="mt-6 grid md:grid-cols-2 gap-6">
+                    <div class="bg-red-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-red-800 mb-2">🎯 Causa Raíz Identificada</h4>
+                        <textarea id="rootCause" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" rows="3" placeholder="Resume la causa raíz principal..."></textarea>
+                    </div>
+                    
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <h4 class="font-semibold text-green-800 mb-2">✅ Acciones Correctivas</h4>
+                        <textarea id="correctiveActions" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm" rows="3" placeholder="Propón acciones para prevenir la recurrencia..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="mt-6 flex justify-center space-x-4">
+                    <button onclick="generateRCAReport()" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg transition-colors">
+                        📄 Generar Reporte
+                    </button>
+                    <button onclick="resetAnalysis()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors">
+                        🔄 Reiniciar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Presentation Tips -->
+            <div class="mt-8 bg-blue-50 rounded-xl p-6">
+                <h3 class="text-xl font-semibold text-blue-800 mb-4">🎤 Tips para la Presentación</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-blue-800 mb-2">📋 Estructura Sugerida</h4>
+                        <ol class="text-sm text-gray-700 space-y-1">
+                            <li>1. Presentación del problema (30 seg)</li>
+                            <li>2. Recorrido por los 5 Whys (90 seg)</li>
+                            <li>3. Causa raíz identificada (30 seg)</li>
+                            <li>4. Acciones correctivas (30 seg)</li>
+                        </ol>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-semibold text-blue-800 mb-2">💡 Consejos</h4>
+                        <ul class="text-sm text-gray-700 space-y-1">
+                            <li>• Sé específico en cada "Por qué"</li>
+                            <li>• Evita causas múltiples en un solo paso</li>
+                            <li>• Enfócate en procesos, no en personas</li>
+                            <li>• Propón acciones concretas y medibles</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Modal -->
+    <div id="resultsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b">
+                    <div class="flex justify-between items-center">
+                        <h2 class="text-2xl font-bold text-gray-800">📄 Reporte de Análisis RCA</h2>
+                        <button onclick="closeModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg">
+                            ✕ Cerrar
+                        </button>
+                    </div>
+                </div>
+                <div id="modalContent" class="p-6">
+                    <!-- Content will be generated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentSection = 'metrics';
+        let metricsChart = null;
+        let selectedTechnique = null;
+        let selectedBug = null;
+
+        // Section navigation
+        function showSection(section) {
+            document.querySelectorAll('[id$="-section"]').forEach(el => {
+                el.classList.add('hidden');
+            });
+            
+            document.getElementById(section + '-section').classList.remove('hidden');
+            currentSection = section;
+        }
+
+        // Metrics calculation
+        function calculateMetrics() {
+            const totalDefects = parseFloat(document.getElementById('totalDefects').value) || 0;
+            const linesOfCode = parseFloat(document.getElementById('linesOfCode').value) || 0;
+            const totalResolutionTime = parseFloat(document.getElementById('totalResolutionTime').value) || 0;
+            const reopenedDefects = parseFloat(document.getElementById('reopenedDefects').value) || 0;
+
+            // Calculate metrics
+            const defectDensity = linesOfCode > 0 ? (totalDefects / linesOfCode).toFixed(2) : 0;
+            const mttr = totalDefects > 0 ? (totalResolutionTime / totalDefects).toFixed(1) : 0;
+            const reopenedPercent = totalDefects > 0 ? ((reopenedDefects / totalDefects) * 100).toFixed(1) : 0;
+
+            // Update display
+            document.getElementById('defectDensity').textContent = defectDensity;
+            document.getElementById('mttr').textContent = mttr;
+            document.getElementById('reopenedPercent').textContent = reopenedPercent;
+
+            // Update chart
+            updateMetricsChart(defectDensity, mttr, reopenedPercent);
+        }
+
+        function updateMetricsChart(density, mttr, reopened) {
+            const ctx = document.getElementById('metricsChart').getContext('2d');
+            
+            if (metricsChart) {
+                metricsChart.destroy();
+            }
+
+            metricsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Densidad\n(defectos/KLOC)', 'MTTR\n(horas)', 'Reabiertos\n(%)'],
+                    datasets: [{
+                        label: 'Métricas Actuales',
+                        data: [density, mttr, reopened],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(59, 130, 246)',
+                            'rgb(16, 185, 129)',
+                            'rgb(239, 68, 68)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // RCA Techniques
+        function selectTechnique(technique) {
+            // Remove active class from all techniques
+            document.querySelectorAll('.rca-technique').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Add active class to selected technique
+            event.currentTarget.classList.add('active');
+            selectedTechnique = technique;
+            
+            // Show technique content
+            showTechniqueContent(technique);
+        }
+
+        function showTechniqueContent(technique) {
+            const content = document.getElementById('technique-content');
+            
+            switch(technique) {
+                case '5whys':
+                    content.innerHTML = `
+                        <div class="text-center">
+                            <h3 class="text-2xl font-bold text-yellow-800 mb-4">❓ Técnica de los 5 Whys</h3>
+                            <div class="bg-white rounded-lg p-6 text-left max-w-2xl mx-auto">
+                                <h4 class="font-semibold text-gray-800 mb-3">📋 Cómo aplicar los 5 Whys:</h4>
+                                <ol class="space-y-2 text-sm text-gray-700">
+                                    <li><strong>1.</strong> Define claramente el problema</li>
+                                    <li><strong>2.</strong> Pregunta "¿Por qué ocurrió esto?"</li>
+                                    <li><strong>3.</strong> Para cada respuesta, pregunta "¿Por qué?" nuevamente</li>
+                                    <li><strong>4.</strong> Repite hasta llegar a la causa raíz (usualmente 5 veces)</li>
+                                    <li><strong>5.</strong> Implementa acciones correctivas para la causa raíz</li>
+                                </ol>
+                                
+                                <div class="mt-4 bg-yellow-50 rounded-lg p-4">
+                                    <h5 class="font-semibold text-yellow-800 mb-2">💡 Ejemplo:</h5>
+                                    <div class="text-sm text-gray-700 space-y-1">
+                                        <div><strong>Problema:</strong> El servidor se cayó</div>
+                                        <div><strong>¿Por qué?</strong> Se quedó sin memoria</div>
+                                        <div><strong>¿Por qué?</strong> Había un memory leak</div>
+                                        <div><strong>¿Por qué?</strong> El código no liberaba objetos</div>
+                                        <div><strong>¿Por qué?</strong> No había code review</div>
+                                        <div><strong>¿Por qué?</strong> No está en el proceso de desarrollo</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'ishikawa':
+                    content.innerHTML = `
+                        <div class="text-center">
+                            <h3 class="text-2xl font-bold text-blue-800 mb-4">🐟 Diagrama de Ishikawa</h3>
+                            <div class="bg-white rounded-lg p-6">
+                                <svg width="600" height="400" class="mx-auto mb-4">
+                                    <!-- Main spine -->
+                                    <line x1="50" y1="200" x2="550" y2="200" class="ishikawa-branch" />
+                                    
+                                    <!-- Problem box -->
+                                    <rect x="520" y="180" width="60" height="40" fill="#fee2e2" stroke="#dc2626" stroke-width="2" />
+                                    <text x="550" y="205" text-anchor="middle" class="text-sm font-semibold">Problema</text>
+                                    
+                                    <!-- Categories -->
+                                    <!-- People -->
+                                    <line x1="150" y1="120" x2="200" y2="170" class="ishikawa-branch" />
+                                    <line x1="200" y1="170" x2="200" y2="200" class="ishikawa-branch" />
+                                    <circle cx="150" cy="120" r="30" fill="#fef3c7" stroke="#f59e0b" stroke-width="2" class="ishikawa-category" />
+                                    <text x="150" y="125" text-anchor="middle" class="text-xs font-semibold">Personas</text>
+                                    
+                                    <!-- Process -->
+                                    <line x1="300" y1="120" x2="350" y2="170" class="ishikawa-branch" />
+                                    <line x1="350" y1="170" x2="350" y2="200" class="ishikawa-branch" />
+                                    <circle cx="300" cy="120" r="30" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" class="ishikawa-category" />
+                                    <text x="300" y="125" text-anchor="middle" class="text-xs font-semibold">Procesos</text>
+                                    
+                                    <!-- Technology -->
+                                    <line x1="450" y1="120" x2="400" y2="170" class="ishikawa-branch" />
+                                    <line x1="400" y1="170" x2="400" y2="200" class="ishikawa-branch" />
+                                    <circle cx="450" cy="120" r="30" fill="#f3e8ff" stroke="#8b5cf6" stroke-width="2" class="ishikawa-category" />
+                                    <text x="450" y="125" text-anchor="middle" class="text-xs font-semibold">Tecnología</text>
+                                    
+                                    <!-- Environment -->
+                                    <line x1="150" y1="280" x2="200" y2="230" class="ishikawa-branch" />
+                                    <line x1="200" y1="230" x2="200" y2="200" class="ishikawa-branch" />
+                                    <circle cx="150" cy="280" r="30" fill="#dcfce7" stroke="#16a34a" stroke-width="2" class="ishikawa-category" />
+                                    <text x="150" y="285" text-anchor="middle" class="text-xs font-semibold">Entorno</text>
+                                    
+                                    <!-- Materials -->
+                                    <line x1="300" y1="280" x2="350" y2="230" class="ishikawa-branch" />
+                                    <line x1="350" y1="230" x2="350" y2="200" class="ishikawa-branch" />
+                                    <circle cx="300" cy="280" r="30" fill="#fef2f2" stroke="#ef4444" stroke-width="2" class="ishikawa-category" />
+                                    <text x="300" y="285" text-anchor="middle" class="text-xs font-semibold">Materiales</text>
+                                    
+                                    <!-- Methods -->
+                                    <line x1="450" y1="280" x2="400" y2="230" class="ishikawa-branch" />
+                                    <line x1="400" y1="230" x2="400" y2="200" class="ishikawa-branch" />
+                                    <circle cx="450" cy="280" r="30" fill="#f0f9ff" stroke="#0ea5e9" stroke-width="2" class="ishikawa-category" />
+                                    <text x="450" y="285" text-anchor="middle" class="text-xs font-semibold">Métodos</text>
+                                </svg>
+                                
+                                <div class="text-left max-w-2xl mx-auto">
+                                    <h4 class="font-semibold text-gray-800 mb-3">📋 Categorías principales (6M):</h4>
+                                    <div class="grid grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <strong>Personas:</strong> Habilidades, entrenamiento, experiencia<br>
+                                            <strong>Procesos:</strong> Procedimientos, políticas, flujos<br>
+                                            <strong>Tecnología:</strong> Herramientas, software, hardware
+                                        </div>
+                                        <div>
+                                            <strong>Entorno:</strong> Condiciones físicas, cultura<br>
+                                            <strong>Materiales:</strong> Recursos, información, datos<br>
+                                            <strong>Métodos:</strong> Técnicas, metodologías, estándares
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'pareto':
+                    content.innerHTML = `
+                        <div class="text-center">
+                            <h3 class="text-2xl font-bold text-purple-800 mb-4">📊 Análisis de Pareto (80/20)</h3>
+                            <div class="bg-white rounded-lg p-6 text-left max-w-2xl mx-auto">
+                                <h4 class="font-semibold text-gray-800 mb-3">📋 Principio de Pareto:</h4>
+                                <p class="text-sm text-gray-700 mb-4">
+                                    El 80% de los problemas son causados por el 20% de las causas. 
+                                    Identifica y enfócate en las causas más significativas.
+                                </p>
+                                
+                                <div class="bg-purple-50 rounded-lg p-4 mb-4">
+                                    <h5 class="font-semibold text-purple-800 mb-2">📈 Ejemplo de Análisis:</h5>
+                                    <canvas id="paretoChart" width="400" height="200"></canvas>
+                                </div>
+                                
+                                <h4 class="font-semibold text-gray-800 mb-3">🔍 Cómo aplicarlo:</h4>
+                                <ol class="space-y-2 text-sm text-gray-700">
+                                    <li><strong>1.</strong> Lista todas las posibles causas</li>
+                                    <li><strong>2.</strong> Cuantifica el impacto de cada causa</li>
+                                    <li><strong>3.</strong> Ordena de mayor a menor impacto</li>
+                                    <li><strong>4.</strong> Calcula el porcentaje acumulado</li>
+                                    <li><strong>5.</strong> Enfócate en el 20% que causa el 80% del problema</li>
+                                </ol>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Create Pareto chart
+                    setTimeout(() => {
+                        const ctx = document.getElementById('paretoChart').getContext('2d');
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: ['Causa A', 'Causa B', 'Causa C', 'Causa D', 'Otras'],
+                                datasets: [{
+                                    label: 'Frecuencia',
+                                    data: [45, 25, 15, 10, 5],
+                                    backgroundColor: 'rgba(139, 92, 246, 0.8)',
+                                    borderColor: 'rgb(139, 92, 246)',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        title: {
+                                            display: true,
+                                            text: 'Frecuencia (%)'
+                                        }
+                                    }
+                                },
+                                plugins: {
+                                    legend: {
+                                        display: false
+                                    }
+                                }
+                            }
+                        });
+                    }, 100);
+                    break;
+            }
+        }
+
+        // Workshop functions
+        function selectBug(bugType) {
+            selectedBug = bugType;
+            
+            const bugDetails = {
+                login: {
+                    title: "🔐 Fallo de Login",
+                    description: "Los usuarios no pueden iniciar sesión después de la actualización del sistema",
+                    details: "Después del despliegue de la versión 2.1.3, múltiples usuarios reportan que no pueden acceder al sistema. El mensaje de error es 'Credenciales inválidas' incluso con credenciales correctas.",
+                    impact: "Alto - 60% de usuarios afectados",
+                    frequency: "Constante desde el despliegue"
+                },
+                performance: {
+                    title: "🐌 Rendimiento Lento",
+                    description: "La aplicación tarda más de 30 segundos en cargar la página principal",
+                    details: "Los usuarios reportan tiempos de carga extremadamente lentos en la página principal. El problema es más notable durante las horas pico (9-11 AM y 2-4 PM).",
+                    impact: "Medio - Afecta experiencia de usuario",
+                    frequency: "Intermitente, peor en horas pico"
+                },
+                data: {
+                    title: "💾 Pérdida de Datos",
+                    description: "Los datos del formulario se pierden al cambiar de pestaña",
+                    details: "Cuando los usuarios llenan un formulario largo y cambian de pestaña del navegador, al regresar encuentran que todos los datos ingresados se han perdido.",
+                    impact: "Alto - Pérdida de trabajo del usuario",
+                    frequency: "Reproducible en Chrome y Firefox"
+                },
+                payment: {
+                    title: "💳 Error de Pago",
+                    description: "Las transacciones fallan intermitentemente en el checkout",
+                    details: "Aproximadamente el 15% de las transacciones fallan durante el proceso de checkout. Los usuarios reciben un error genérico y deben reintentar.",
+                    impact: "Crítico - Pérdida de ingresos",
+                    frequency: "15% de transacciones"
+                },
+                mobile: {
+                    title: "📱 Problema Mobile",
+                    description: "La aplicación se cierra inesperadamente en dispositivos Android",
+                    details: "La aplicación móvil se cierra sin previo aviso en dispositivos Android, especialmente en versiones 8.0 y superiores. Ocurre principalmente al navegar entre secciones.",
+                    impact: "Alto - Usuarios no pueden usar la app",
+                    frequency: "30% de usuarios Android"
+                },
+                email: {
+                    title: "📧 Emails No Enviados",
+                    description: "Las notificaciones por email no llegan a los usuarios",
+                    details: "Los usuarios no reciben emails de confirmación, notificaciones de estado, ni recordatorios. El sistema muestra que los emails fueron enviados exitosamente.",
+                    impact: "Medio - Comunicación interrumpida",
+                    frequency: "Afecta todos los emails desde hace 3 días"
+                }
+            };
+            
+            const bug = bugDetails[bugType];
+            
+            document.getElementById('selected-bug').innerHTML = `
+                <h4 class="text-lg font-bold text-blue-800 mb-2">${bug.title}</h4>
+                <p class="text-gray-700 mb-3">${bug.description}</p>
+                <div class="grid md:grid-cols-3 gap-4 text-sm">
+                    <div><strong>Detalles:</strong> ${bug.details}</div>
+                    <div><strong>Impacto:</strong> ${bug.impact}</div>
+                    <div><strong>Frecuencia:</strong> ${bug.frequency}</div>
+                </div>
+            `;
+            
+            document.getElementById('analysis-tool').classList.remove('hidden');
+            
+            // Activate first step
+            document.querySelector('.why-step[data-step="1"]').classList.add('active');
+        }
+
+        function generateRCAReport() {
+            if (!selectedBug) {
+                alert('Por favor selecciona un bug primero');
+                return;
+            }
+            
+            const whyAnswers = [];
+            for (let i = 1; i <= 5; i++) {
+                const answer = document.getElementById(`why${i}`).value.trim();
+                if (answer) {
+                    whyAnswers.push(`<strong>¿Por qué ${i}?</strong> ${answer}`);
+                }
+            }
+            
+            const rootCause = document.getElementById('rootCause').value.trim();
+            const correctiveActions = document.getElementById('correctiveActions').value.trim();
+            
+            const bugDetails = {
+                login: "🔐 Fallo de Login",
+                performance: "🐌 Rendimiento Lento",
+                data: "💾 Pérdida de Datos",
+                payment: "💳 Error de Pago",
+                mobile: "📱 Problema Mobile",
+                email: "📧 Emails No Enviados"
+            };
+            
+            const content = `
+                <div class="space-y-6">
+                    <div class="bg-blue-50 rounded-lg p-4">
+                        <h3 class="font-bold text-lg text-blue-800 mb-2">🐛 Problema Analizado</h3>
+                        <p class="text-blue-700">${bugDetails[selectedBug]}</p>
+                        <div class="text-sm text-gray-600 mt-2">
+                            <strong>Fecha de análisis:</strong> ${new Date().toLocaleDateString()}<br>
+                            <strong>Método utilizado:</strong> 5 Whys
+                        </div>
+                    </div>
+                    
+                    <div class="bg-yellow-50 rounded-lg p-4">
+                        <h3 class="font-bold text-lg text-yellow-800 mb-3">❓ Análisis de 5 Whys</h3>
+                        <div class="space-y-2 text-sm">
+                            ${whyAnswers.join('<br>')}
+                        </div>
+                    </div>
+                    
+                    ${rootCause ? `
+                    <div class="bg-red-50 rounded-lg p-4">
+                        <h3 class="font-bold text-lg text-red-800 mb-2">🎯 Causa Raíz Identificada</h3>
+                        <p class="text-red-700">${rootCause}</p>
+                    </div>
+                    ` : ''}
+                    
+                    ${correctiveActions ? `
+                    <div class="bg-green-50 rounded-lg p-4">
+                        <h3 class="font-bold text-lg text-green-800 mb-2">✅ Acciones Correctivas Propuestas</h3>
+                        <p class="text-green-700">${correctiveActions}</p>
+                    </div>
+                    ` : ''}
+                    
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <h3 class="font-bold text-lg text-gray-800 mb-2">📋 Próximos Pasos</h3>
+                        <ul class="text-sm text-gray-700 space-y-1">
+                            <li>• Validar la causa raíz con evidencia adicional</li>
+                            <li>• Implementar acciones correctivas</li>
+                            <li>• Establecer métricas de seguimiento</li>
+                            <li>• Programar revisión de efectividad</li>
+                            <li>• Documentar lecciones aprendidas</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('modalContent').innerHTML = content;
+            document.getElementById('resultsModal').classList.remove('hidden');
+        }
+
+        function resetAnalysis() {
+            if (confirm('¿Estás seguro de que quieres reiniciar el análisis?')) {
+                // Clear all textareas
+                for (let i = 1; i <= 5; i++) {
+                    document.getElementById(`why${i}`).value = '';
+                }
+                document.getElementById('rootCause').value = '';
+                document.getElementById('correctiveActions').value = '';
+                
+                // Reset step states
+                document.querySelectorAll('.why-step').forEach(step => {
+                    step.classList.remove('active', 'completed');
+                });
+                
+                // Activate first step
+                document.querySelector('.why-step[data-step="1"]').classList.add('active');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('resultsModal').classList.remove('hidden');
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            showSection('metrics');
+            
+            // Add event listeners for why steps
+            for (let i = 1; i <= 5; i++) {
+                document.getElementById(`why${i}`).addEventListener('input', function() {
+                    const currentStep = document.querySelector(`.why-step[data-step="${i}"]`);
+                    const nextStep = document.querySelector(`.why-step[data-step="${i + 1}"]`);
+                    
+                    if (this.value.trim()) {
+                        currentStep.classList.remove('active');
+                        currentStep.classList.add('completed');
+                        
+                        if (nextStep) {
+                            nextStep.classList.add('active');
+                        }
+                    } else {
+                        currentStep.classList.remove('completed');
+                        currentStep.classList.add('active');
+                        
+                        if (nextStep) {
+                            nextStep.classList.remove('active', 'completed');
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a874b6429ecdb0',t:'MTc1NzEwMzkyNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
-
-
-
-

@@ -4,7 +4,553 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Actividad Kahoot - Sesión 13</title>
-    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .kahoot-container {
+        background: white;
+        border-radius: 2rem;
+        padding: 4rem;
+        margin: 2rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .kahoot-container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 8px;
+        background: linear-gradient(
+          90deg,
+          #ff6b6b,
+          #4ecdc4,
+          #45b7d1,
+          #96ceb4,
+          #feca57
+        );
+      }
+
+      .kahoot-logo {
+        width: 200px;
+        height: 200px;
+        background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 3rem;
+        color: white;
+        font-size: 5rem;
+        font-weight: bold;
+        box-shadow: 0 15px 40px rgba(255, 107, 107, 0.4);
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow: 0 15px 40px rgba(255, 107, 107, 0.4);
+        }
+        50% {
+          transform: scale(1.05);
+          box-shadow: 0 20px 50px rgba(255, 107, 107, 0.6);
+        }
+      }
+
+      .session-badge {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 1rem 2rem;
+        border-radius: 2rem;
+        font-size: 1.5rem;
+        font-weight: 700;
+        display: inline-block;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 25px rgba(118, 75, 162, 0.3);
+      }
+
+      .activity-title {
+        font-size: 4rem;
+        font-weight: 800;
+        color: #2d3748;
+        margin-bottom: 1rem;
+        line-height: 1.1;
+      }
+
+      .activity-subtitle {
+        font-size: 2rem;
+        color: #4a5568;
+        margin-bottom: 3rem;
+        font-weight: 500;
+      }
+
+      .instructions {
+        background: linear-gradient(135deg, #f7fafc, #edf2f7);
+        border-radius: 1.5rem;
+        padding: 2.5rem;
+        margin: 3rem 0;
+        border-left: 8px solid #4ecdc4;
+      }
+
+      .instruction-item {
+        display: flex;
+        align-items: center;
+        margin: 1.5rem 0;
+        font-size: 1.25rem;
+        color: #2d3748;
+      }
+
+      .instruction-number {
+        background: linear-gradient(135deg, #4ecdc4, #44a08d);
+        color: white;
+        width: 3rem;
+        height: 3rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 1.5rem;
+        flex-shrink: 0;
+      }
+
+      .fun-elements {
+        display: flex;
+        justify-content: space-around;
+        margin: 3rem 0;
+        flex-wrap: wrap;
+        gap: 2rem;
+      }
+
+      .fun-card {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        flex: 1;
+        min-width: 200px;
+        border: 3px solid;
+        transition: transform 0.3s ease;
+      }
+
+      .fun-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .fun-card.questions {
+        border-color: #ff6b6b;
+      }
+
+      .fun-card.time {
+        border-color: #4ecdc4;
+      }
+
+      .fun-card.points {
+        border-color: #feca57;
+      }
+
+      .ready-button {
+        background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+        color: white;
+        padding: 1.5rem 4rem;
+        border-radius: 3rem;
+        font-size: 1.5rem;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgba(255, 107, 107, 0.4);
+        transition: all 0.3s ease;
+        margin-top: 2rem;
+      }
+
+      .ready-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(255, 107, 107, 0.6);
+      }
+
+      .floating-shapes {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        pointer-events: none;
+      }
+
+      .shape {
+        position: absolute;
+        opacity: 0.1;
+        animation: float 6s ease-in-out infinite;
+      }
+
+      .shape:nth-child(1) {
+        top: 10%;
+        left: 10%;
+        animation-delay: 0s;
+      }
+
+      .shape:nth-child(2) {
+        top: 20%;
+        right: 10%;
+        animation-delay: 2s;
+      }
+
+      .shape:nth-child(3) {
+        bottom: 20%;
+        left: 15%;
+        animation-delay: 4s;
+      }
+
+      .shape:nth-child(4) {
+        bottom: 10%;
+        right: 20%;
+        animation-delay: 1s;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        50% {
+          transform: translateY(-20px) rotate(180deg);
+        }
+      }
+
+      @media (max-width: 768px) {
+        .kahoot-container {
+          padding: 2rem;
+          margin: 1rem;
+        }
+
+        .activity-title {
+          font-size: 2.5rem;
+        }
+
+        .activity-subtitle {
+          font-size: 1.5rem;
+        }
+
+        .fun-elements {
+          flex-direction: column;
+        }
+      }
+    </style>
+  
+<style>
+/* Fondo como index */
+body{
+  font-family:'Inter','Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  line-height:1.6;
+  color:#333;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  min-height:100vh;
+  padding-top:80px; /* nav fijo */
+}
+
+/* NAV Plataforma QS (fijo, una fila con scroll si no cabe) */
+.qs-nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:saturate(140%) blur(20px);
+       background:rgba(255,255,255,.95);border-bottom:1px solid rgba(255,255,255,.2);
+       box-shadow:0 8px 32px rgba(0,0,0,.10)}
+.qs-nav .wrap{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:nowrap}
+.qs-brand{display:flex;gap:15px;align-items:center;color:#1f2937;font-weight:800;font-size:1.3rem;text-decoration:none;position:relative;padding:8px 16px;border-radius:20px;flex:0 0 auto}
+.qs-brand::before{content:"🎓";font-size:1.6rem}
+.qs-tabs{display:flex;gap:12px;background:rgba(255,255,255,.3);padding:8px;border-radius:30px;backdrop-filter:blur(10px);
+         flex:1 1 auto;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.qs-btn{border:0;padding:12px 20px;border-radius:25px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;font-weight:600;font-size:.9rem;
+       transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(10px);border:2px solid transparent;position:relative;overflow:hidden;flex:0 0 auto}
+.qs-btn::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);transition:all .4s ease;z-index:-1}
+.qs-btn:hover{color:#fff;transform:translateY(-3px);box-shadow:0 8px 25px rgba(102,126,234,.4);border-color:rgba(102,126,234,.3)}
+.qs-btn:hover::before{left:0}
+.qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none;box-shadow:0 6px 20px rgba(102,126,234,.5);transform:translateY(-2px)}
+.qs-btn[aria-current="page"]::before{left:0}
+
+/* Footer como index */
+.footer{
+  margin-top:60px;
+  padding:30px 20px;
+  text-align:center;
+  background:rgba(255, 255, 255, 0.1);
+  backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255, 255, 255, 0.2);
+}
+.footer-content{
+  max-width:1200px;
+  margin:0 auto;
+  color:rgba(255,255,255,0.8);
+  font-size:0.95rem;
+  transition:all 0.3s ease;
+  cursor:default;
+}
+.footer-content:hover{ color:#fff; transform:translateY(-2px); }
+
+/* Slide counter reducido */
+.slide-counter, #slideIndicator, .slide-indicator{
+  font-size:10px !important;
+  line-height:1 !important;
+  padding:4px 8px !important;
+  min-width:28px !important;
+  border-radius:12px !important;
+  opacity:.85 !important;
+}
+</style>
+
+
+<style>
+/* Extender fondo y flujo del documento */
+html{
+  min-height:100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) fixed !important;
+  background-repeat:no-repeat;
+}
+body{
+  min-height:100%;
+  background: transparent !important; /* el gradiente vive en <html> */
+}
+
+/* Asegurar que el footer se coloque después de todo el contenido y no se superponga */
+.footer{ position:relative; clear:both; }
+</style>
+
+
+<style>
+/* Footer siempre debajo y alineado al contenedor */
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; }
+.footer { 
+  margin-top: auto; 
+  width: 100%; 
+  clear: both; 
+  float: none; 
+  display: flow-root;     /* contiene floats y evita desbordes laterales */
+  align-self: stretch;    /* se estira al ancho disponible aunque el padre sea flex */
+}
+.footer .footer-content {
+  max-width: 1200px; 
+  margin: 0 auto; 
+}
+</style>
+
+</head>
+  <body class="flex items-center justify-center min-h-screen">
+
+<!-- NAV Plataforma QS -->
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+      
+    </nav>
+  </div>
+</div>
+
+    <div class="kahoot-container">
+      <!-- Floating Shapes -->
+      <div class="floating-shapes">
+        <div class="shape text-6xl">🎯</div>
+        <div class="shape text-6xl">⚡</div>
+        <div class="shape text-6xl">🏆</div>
+        <div class="shape text-6xl">🎮</div>
+      </div>
+
+      <!-- Session Badge -->
+      <div class="session-badge">📚 Sesión 13</div>
+
+      <!-- Kahoot Logo -->
+      <div class="kahoot-logo">K!</div>
+
+      <!-- Main Title -->
+      <h1 class="activity-title">¡Actividad Kahoot!</h1>
+      <h2 class="activity-subtitle">Pon a prueba tus conocimientos</h2>
+
+      <!-- Instructions -->
+      <div class="instructions">
+        <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">
+          📋 Instrucciones
+        </h3>
+
+        <div class="instruction-item">
+          <div class="instruction-number">1</div>
+          <div>
+            Abre <strong>kahoot.it</strong> en tu dispositivo móvil o
+            computadora
+          </div>
+        </div>
+
+        <div class="instruction-item">
+          <div class="instruction-number">2</div>
+          <div>
+            Ingresa el <strong>PIN del juego</strong> que aparecerá en pantalla
+          </div>
+        </div>
+
+        <div class="instruction-item">
+          <div class="instruction-number">3</div>
+          <div>
+            Escribe tu <strong>nombre</strong> o apodo para identificarte
+          </div>
+        </div>
+
+        <div class="instruction-item">
+          <div class="instruction-number">4</div>
+          <div>
+            ¡Espera a que todos se unan y
+            <strong>diviértete aprendiendo</strong>!
+          </div>
+        </div>
+      </div>
+
+      <!-- Fun Elements -->
+      <div class="fun-elements">
+        <div class="fun-card questions">
+          <div class="text-4xl mb-3">❓</div>
+          <h4 class="text-xl font-bold text-gray-800 mb-2">Preguntas</h4>
+          <p class="text-gray-600">Desafiantes y educativas</p>
+        </div>
+
+        <div class="fun-card time">
+          <div class="text-4xl mb-3">⏱️</div>
+          <h4 class="text-xl font-bold text-gray-800 mb-2">Tiempo Límite</h4>
+          <p class="text-gray-600">¡Piensa rápido!</p>
+        </div>
+
+        <div class="fun-card points">
+          <div class="text-4xl mb-3">🏆</div>
+          <h4 class="text-xl font-bold text-gray-800 mb-2">Puntos</h4>
+          <p class="text-gray-600">Velocidad + Precisión</p>
+        </div>
+      </div>
+
+      <!-- Ready Button -->
+      <button class="ready-button" onclick="showEncouragement()">
+        🚀 ¡Estoy Listo!
+      </button>
+
+      <!-- Encouragement Message -->
+      <div
+        id="encouragement"
+        class="hidden mt-6 p-4 bg-green-100 border-l-4 border-green-500 rounded-lg"
+      >
+        <div class="flex items-center">
+          <div class="text-2xl mr-3">🎉</div>
+          <div>
+            <h4 class="font-bold text-green-800">¡Excelente actitud!</h4>
+            <p class="text-green-700">
+              Recuerda: lo importante es aprender y divertirse. ¡Buena suerte!
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function showEncouragement() {
+        const encouragement = document.getElementById("encouragement");
+        encouragement.classList.remove("hidden");
+        encouragement.style.animation = "fadeIn 0.5s ease-in";
+
+        // Add confetti effect
+        createConfetti();
+      }
+
+      function createConfetti() {
+        const colors = ["#ff6b6b", "#4ecdc4", "#45b7d1", "#96ceb4", "#feca57"];
+        const container = document.querySelector(".kahoot-container");
+
+        for (let i = 0; i < 50; i++) {
+          const confetti = document.createElement("div");
+          confetti.style.position = "absolute";
+          confetti.style.width = "10px";
+          confetti.style.height = "10px";
+          confetti.style.backgroundColor =
+            colors[Math.floor(Math.random() * colors.length)];
+          confetti.style.left = Math.random() * 100 + "%";
+          confetti.style.top = "-10px";
+          confetti.style.borderRadius = "50%";
+          confetti.style.pointerEvents = "none";
+          confetti.style.animation = `fall ${
+            Math.random() * 3 + 2
+          }s linear forwards`;
+
+          container.appendChild(confetti);
+
+          setTimeout(() => {
+            confetti.remove();
+          }, 5000);
+        }
+      }
+
+      // Add fall animation for confetti
+      const style = document.createElement("style");
+      style.textContent = `
+            @keyframes fall {
+                to {
+                    transform: translateY(100vh) rotate(360deg);
+                    opacity: 0;
+                }
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+        `;
+      document.head.appendChild(style);
+    </script>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97b3a301b4280929',t:'MTc1NzIyMTE2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
   
 <!-- Pie de página -->
 <footer class="footer">
@@ -30,10 +576,5 @@
 })();
 </script>
 
-  <script defer src="js/layout.js"></script>
 </body>
 </html>
-
-
-
-

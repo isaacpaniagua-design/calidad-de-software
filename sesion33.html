@@ -4,10 +4,1691 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sesión 33 - Calidad en Software: Integrando Filosofías</title>
-      <script defer src="js/layout.js"></script>
-</body>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .slide {
+            display: none;
+            animation: slideIn 0.5s ease-in-out;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
+        }
+        
+        @keyframes typewriter {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200px 0; }
+            100% { background-position: calc(200px + 100%) 0; }
+        }
+        
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            25% { transform: scale(1.1); }
+            50% { transform: scale(1); }
+            75% { transform: scale(1.05); }
+        }
+        
+        @keyframes wave {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(5deg); }
+            75% { transform: rotate(-5deg); }
+        }
+        
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        .bounce-animation {
+            animation: bounce 2s infinite;
+        }
+        
+        .rotate-animation {
+            animation: rotate 4s linear infinite;
+        }
+        
+        .glow-animation {
+            animation: glow 2s infinite;
+        }
+        
+        .typewriter {
+            overflow: hidden;
+            white-space: nowrap;
+            animation: typewriter 3s steps(40, end);
+        }
+        
+        .shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200px 100%;
+            animation: shimmer 2s infinite;
+        }
+        
+        .heartbeat-animation {
+            animation: heartbeat 2s infinite;
+        }
+        
+        .wave-animation {
+            animation: wave 2s ease-in-out infinite;
+        }
+        
+        .slide-bg-1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .slide-bg-2 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .slide-bg-3 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .slide-bg-4 {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .guru-integration {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .guru-integration:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .model-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .model-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .case-study-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .case-study-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .philosophy-selector {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .philosophy-selector:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .philosophy-selector.selected {
+            ring: 4px;
+            ring-color: #3b82f6;
+            transform: scale(1.05);
+        }
+        
+        .integration-flow {
+            position: relative;
+        }
+        
+        .integration-arrow {
+            font-size: 2rem;
+            color: #3b82f6;
+            animation: pulse 2s infinite;
+        }
+        
+        .case-timer {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #10b981;
+        }
+        
+        .solution-area {
+            min-height: 200px;
+            transition: all 0.3s ease;
+        }
+        
+        .solution-item {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .solution-item:hover {
+            transform: translateX(5px);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .download-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            transition: all 0.3s ease;
+        }
+        
+        .download-btn:hover {
+            background: linear-gradient(45deg, #764ba2, #667eea);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<style>
+  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
+  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
+  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
+  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
+  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+</style>
+<div class="qs-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+      
+\1
+  </div>
+</div>
+<script>
+(function(){
+  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
+    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+  });
+})();
+window.google = window.google || {};
+google.script = google.script || {};
+if (!google.script.run){
+  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
+}
+</script>
+
+
+    <!-- Navigation -->
+    <div class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50 px-6 py-4">
+        <div class="flex justify-between items-center max-w-6xl mx-auto">
+            <div class="flex items-center space-x-4">
+                <h1 class="text-xl font-bold text-gray-800">Sesión 33 - Calidad en Software: Integrando Filosofías</h1>
+                <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                    Diapositiva <span id="currentSlide">1</span> de 4
+                </span>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="previousSlide()" id="prevBtn" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
+                    ← Anterior
+                </button>
+                <button onclick="nextSlide()" id="nextBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    Siguiente →
+                </button>
+            </div>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+            <div id="progressBar" class="bg-purple-600 h-2 rounded-full transition-all duration-300" style="width: 25%"></div>
+        </div>
+    </div>
+
+    <!-- Slides Container -->
+    <div class="pt-24 pb-8 px-6">
+        <div class="max-w-6xl mx-auto">
+            
+            <!-- Slide 1: Título -->
+            <div class="slide active" id="slide1">
+                <div class="slide-bg-1 rounded-3xl p-12 text-center text-white min-h-[600px] flex flex-col justify-center items-center">
+                    <!-- Evolution Icons -->
+                    <div class="flex items-center justify-center mb-8">
+                        <div class="text-6xl mr-6 heartbeat-animation">🏭</div>
+                        <div class="integration-arrow">➡️</div>
+                        <div class="text-6xl mx-4 pulse-animation">💻</div>
+                        <div class="integration-arrow">➡️</div>
+                        <div class="text-6xl ml-6 glow-animation">🚀</div>
+                    </div>
+                    
+                    <h1 class="text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
+                        <span class="text-purple-300">De la Industria</span><br>
+                        <span class="text-yellow-300 pulse-animation">al</span><br>
+                        <span class="text-blue-300">Software</span>
+                    </h1>
+                    
+                    <h2 class="text-3xl font-semibold mb-8 text-purple-200">
+                        Integrando Filosofías de Calidad en el Desarrollo Moderno
+                    </h2>
+                    
+                    <!-- Evolution Timeline -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mb-8">
+                        <div class="guru-integration bg-white bg-opacity-10 rounded-lg p-6">
+                            <div class="text-4xl mb-3">🏭</div>
+                            <div class="text-lg font-bold text-blue-300 mb-2">Era Industrial</div>
+                            <div class="text-sm opacity-80 mb-3">1950s - 1980s</div>
+                            <ul class="text-xs space-y-1 text-left">
+                                <li>• Manufactura física</li>
+                                <li>• Control estadístico</li>
+                                <li>• Procesos lineales</li>
+                                <li>• Inspección final</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="guru-integration bg-white bg-opacity-10 rounded-lg p-6">
+                            <div class="text-4xl mb-3">💻</div>
+                            <div class="text-lg font-bold text-green-300 mb-2">Era Digital</div>
+                            <div class="text-sm opacity-80 mb-3">1990s - 2010s</div>
+                            <ul class="text-xs space-y-1 text-left">
+                                <li>• Productos intangibles</li>
+                                <li>• Metodologías ágiles</li>
+                                <li>• Iteraciones rápidas</li>
+                                <li>• Testing continuo</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="guru-integration bg-white bg-opacity-10 rounded-lg p-6">
+                            <div class="text-4xl mb-3">🚀</div>
+                            <div class="text-lg font-bold text-pink-300 mb-2">Era DevOps</div>
+                            <div class="text-sm opacity-80 mb-3">2010s - Presente</div>
+                            <ul class="text-xs space-y-1 text-left">
+                                <li>• Entrega continua</li>
+                                <li>• Automatización total</li>
+                                <li>• Cultura colaborativa</li>
+                                <li>• Calidad integrada</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Key Transformation -->
+                    <div class="bg-white bg-opacity-20 rounded-2xl p-6 max-w-4xl">
+                        <h3 class="text-2xl font-bold mb-4">🔄 La Gran Transformación</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                            <div>
+                                <div class="text-3xl font-bold text-yellow-300">4</div>
+                                <div class="text-sm opacity-90">Filosofías Maestras</div>
+                            </div>
+                            <div>
+                                <div class="text-3xl font-bold text-blue-300">∞</div>
+                                <div class="text-sm opacity-90">Aplicaciones Modernas</div>
+                            </div>
+                            <div>
+                                <div class="text-3xl font-bold text-green-300">100%</div>
+                                <div class="text-sm opacity-90">Relevancia Actual</div>
+                            </div>
+                            <div>
+                                <div class="text-3xl font-bold text-pink-300">🌍</div>
+                                <div class="text-sm opacity-90">Impacto Global</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 bg-white bg-opacity-20 rounded-2xl p-6 max-w-3xl">
+                        <p class="text-xl font-medium text-purple-200 mb-2 typewriter">
+                            "Los principios atemporales encuentran nueva vida en el código"
+                        </p>
+                        <p class="text-lg opacity-90">
+                            Descubriendo cómo las filosofías industriales impulsan la excelencia en software
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 2: Aplicación de los gurús al software -->
+            <div class="slide" id="slide2">
+                <div class="slide-bg-2 rounded-3xl p-12 min-h-[600px]">
+                    <div class="text-center mb-8">
+                        <h2 class="text-4xl font-bold text-white mb-4 drop-shadow-lg">
+                            🔧 Aplicación de los Gurús al Software
+                        </h2>
+                        <div class="bg-white bg-opacity-20 rounded-full px-6 py-2 inline-block">
+                            <span class="text-white font-semibold">Filosofías Clásicas, Implementación Moderna</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Guru Applications Grid -->
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <!-- Deming Application -->
+                        <div class="guru-integration bg-white bg-opacity-90 rounded-2xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="text-4xl mr-4">🔄</div>
+                                <div>
+                                    <h3 class="text-xl font-bold text-blue-600">Deming en Software</h3>
+                                    <p class="text-sm text-gray-600">Retrospectivas ágiles y mejora continua</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-blue-700 mb-2">🔄 PDCA en Desarrollo:</h4>
+                                    <div class="grid grid-cols-2 gap-3 text-xs">
+                                        <div class="bg-white rounded p-2">
+                                            <strong>Plan:</strong> Sprint Planning
+                                        </div>
+                                        <div class="bg-white rounded p-2">
+                                            <strong>Do:</strong> Development Sprint
+                                        </div>
+                                        <div class="bg-white rounded p-2">
+                                            <strong>Check:</strong> Sprint Review
+                                        </div>
+                                        <div class="bg-white rounded p-2">
+                                            <strong>Act:</strong> Retrospective
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-white border border-blue-200 rounded-lg p-3">
+                                    <h5 class="font-semibold text-blue-700 text-sm mb-2">🎯 Implementaciones Prácticas:</h5>
+                                    <ul class="text-xs text-blue-600 space-y-1">
+                                        <li>• <strong>Retrospectivas estructuradas:</strong> What went well, what didn't, actions</li>
+                                        <li>• <strong>Métricas de mejora:</strong> Velocity, burn-down, cycle time</li>
+                                        <li>• <strong>Kaizen en código:</strong> Refactoring continuo, code reviews</li>
+                                        <li>• <strong>Cultura de aprendizaje:</strong> Post-mortems sin culpa</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-gradient-to-r from-blue-100 to-cyan-100 rounded-lg p-3 text-center">
+                                    <div class="text-lg font-bold text-blue-700">💡 Herramientas Modernas</div>
+                                    <div class="text-xs text-blue-600 mt-1">Jira, Azure DevOps, GitLab Analytics</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Juran Application -->
+                        <div class="guru-integration bg-white bg-opacity-90 rounded-2xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="text-4xl mr-4">🎯</div>
+                                <div>
+                                    <h3 class="text-xl font-bold text-cyan-600">Juran en Software</h3>
+                                    <p class="text-sm text-gray-600">Métricas de adecuación al uso</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-cyan-50 border-l-4 border-cyan-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-cyan-700 mb-2">📊 Métricas de Usabilidad:</h4>
+                                    <div class="space-y-2">
+                                        <div class="bg-white rounded p-2 text-xs">
+                                            <div class="flex justify-between">
+                                                <span><strong>User Satisfaction:</strong></span>
+                                                <span class="text-green-600">4.2/5.0</span>
+                                            </div>
+                                        </div>
+                                        <div class="bg-white rounded p-2 text-xs">
+                                            <div class="flex justify-between">
+                                                <span><strong>Task Completion Rate:</strong></span>
+                                                <span class="text-blue-600">87%</span>
+                                            </div>
+                                        </div>
+                                        <div class="bg-white rounded p-2 text-xs">
+                                            <div class="flex justify-between">
+                                                <span><strong>Time to Complete:</strong></span>
+                                                <span class="text-purple-600">2.3 min</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-white border border-cyan-200 rounded-lg p-3">
+                                    <h5 class="font-semibold text-cyan-700 text-sm mb-2">🎯 Trilogía en Software:</h5>
+                                    <ul class="text-xs text-cyan-600 space-y-1">
+                                        <li>• <strong>Planificación:</strong> User research, personas, user stories</li>
+                                        <li>• <strong>Control:</strong> A/B testing, analytics, user feedback</li>
+                                        <li>• <strong>Mejora:</strong> UX optimization, feature enhancement</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-gradient-to-r from-cyan-100 to-teal-100 rounded-lg p-3 text-center">
+                                    <div class="text-lg font-bold text-cyan-700">💡 Herramientas Modernas</div>
+                                    <div class="text-xs text-cyan-600 mt-1">Google Analytics, Hotjar, Mixpanel</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Crosby Application -->
+                        <div class="guru-integration bg-white bg-opacity-90 rounded-2xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="text-4xl mr-4">🎪</div>
+                                <div>
+                                    <h3 class="text-xl font-bold text-green-600">Crosby en Software</h3>
+                                    <p class="text-sm text-gray-600">Cero defectos mediante automatización</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-green-700 mb-2">🛡️ Prevención de Defectos:</h4>
+                                    <div class="grid grid-cols-1 gap-2 text-xs">
+                                        <div class="bg-white rounded p-2 flex justify-between">
+                                            <span><strong>Linters & Static Analysis:</strong></span>
+                                            <span class="text-green-600">✅ ESLint, SonarQube</span>
+                                        </div>
+                                        <div class="bg-white rounded p-2 flex justify-between">
+                                            <span><strong>Test-Driven Development:</strong></span>
+                                            <span class="text-blue-600">✅ Jest, Cypress</span>
+                                        </div>
+                                        <div class="bg-white rounded p-2 flex justify-between">
+                                            <span><strong>CI/CD Pipelines:</strong></span>
+                                            <span class="text-purple-600">✅ GitHub Actions</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-white border border-green-200 rounded-lg p-3">
+                                    <h5 class="font-semibold text-green-700 text-sm mb-2">🎯 Automatización Total:</h5>
+                                    <ul class="text-xs text-green-600 space-y-1">
+                                        <li>• <strong>Code Quality Gates:</strong> No merge sin tests pasando</li>
+                                        <li>• <strong>Automated Testing:</strong> Unit, Integration, E2E</li>
+                                        <li>• <strong>Security Scanning:</strong> SAST, DAST, dependency check</li>
+                                        <li>• <strong>Performance Monitoring:</strong> APM, alertas automáticas</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-gradient-to-r from-green-100 to-emerald-100 rounded-lg p-3 text-center">
+                                    <div class="text-lg font-bold text-green-700">💡 Herramientas Modernas</div>
+                                    <div class="text-xs text-green-600 mt-1">Jenkins, GitLab CI, SonarCloud</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Ishikawa Application -->
+                        <div class="guru-integration bg-white bg-opacity-90 rounded-2xl p-6">
+                            <div class="flex items-center mb-4">
+                                <div class="text-4xl mr-4">🐟</div>
+                                <div>
+                                    <h3 class="text-xl font-bold text-pink-600">Ishikawa en Software</h3>
+                                    <p class="text-sm text-gray-600">Análisis de causas raíz en bugs críticos</p>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-pink-50 border-l-4 border-pink-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-pink-700 mb-2">🔍 Root Cause Analysis:</h4>
+                                    <div class="space-y-2 text-xs">
+                                        <div class="bg-white rounded p-2">
+                                            <strong>People:</strong> Skill gaps, communication issues
+                                        </div>
+                                        <div class="bg-white rounded p-2">
+                                            <strong>Process:</strong> Missing code reviews, inadequate testing
+                                        </div>
+                                        <div class="bg-white rounded p-2">
+                                            <strong>Technology:</strong> Outdated dependencies, config errors
+                                        </div>
+                                        <div class="bg-white rounded p-2">
+                                            <strong>Environment:</strong> Production vs dev differences
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-white border border-pink-200 rounded-lg p-3">
+                                    <h5 class="font-semibold text-pink-700 text-sm mb-2">🎯 Implementación Práctica:</h5>
+                                    <ul class="text-xs text-pink-600 space-y-1">
+                                        <li>• <strong>Post-mortem estructurados:</strong> 5 Whys, fishbone diagrams</li>
+                                        <li>• <strong>Incident response:</strong> Blameless culture, learning focus</li>
+                                        <li>• <strong>Knowledge sharing:</strong> Documentation, team retrospectives</li>
+                                        <li>• <strong>Preventive actions:</strong> Process improvements, training</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-gradient-to-r from-pink-100 to-rose-100 rounded-lg p-3 text-center">
+                                    <div class="text-lg font-bold text-pink-700">💡 Herramientas Modernas</div>
+                                    <div class="text-xs text-pink-600 mt-1">PagerDuty, Slack, Confluence</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Integration Summary -->
+                    <div class="mt-8 bg-white bg-opacity-90 rounded-2xl p-6">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">🔗 Sinergia de Filosofías</h3>
+                        <div class="bg-gradient-to-r from-purple-100 via-blue-100 to-green-100 rounded-lg p-4">
+                            <p class="text-center text-gray-700 font-medium mb-3">
+                                💡 "La verdadera excelencia surge cuando combinamos todas las filosofías"
+                            </p>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-center">
+                                <div class="bg-white rounded p-2">
+                                    <div class="font-bold text-blue-600">Deming</div>
+                                    <div>Mejora Continua</div>
+                                </div>
+                                <div class="bg-white rounded p-2">
+                                    <div class="font-bold text-cyan-600">Juran</div>
+                                    <div>Enfoque al Usuario</div>
+                                </div>
+                                <div class="bg-white rounded p-2">
+                                    <div class="font-bold text-green-600">Crosby</div>
+                                    <div>Prevención Total</div>
+                                </div>
+                                <div class="bg-white rounded p-2">
+                                    <div class="font-bold text-pink-600">Ishikawa</div>
+                                    <div>Análisis Profundo</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 3: Cultura + Modelos -->
+            <div class="slide" id="slide3">
+                <div class="slide-bg-3 rounded-3xl p-12 min-h-[600px]">
+                    <div class="text-center mb-8">
+                        <h2 class="text-4xl font-bold text-white mb-4 drop-shadow-lg">
+                            🏛️ Cultura + Modelos
+                        </h2>
+                        <div class="bg-white bg-opacity-20 rounded-full px-6 py-2 inline-block">
+                            <span class="text-white font-semibold">ISO, CMMI y MoProSoft: Filosofías Institucionalizadas</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Models Overview -->
+                    <div class="grid md:grid-cols-3 gap-8 mb-8">
+                        <!-- ISO Standards -->
+                        <div class="model-card bg-white bg-opacity-90 rounded-2xl p-6">
+                            <div class="text-center mb-4">
+                                <div class="text-4xl mb-3">🌍</div>
+                                <h3 class="text-xl font-bold text-blue-600">ISO Standards</h3>
+                                <p class="text-sm text-gray-600">Estándares Internacionales</p>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-3">
+                                    <h4 class="font-bold text-blue-700 text-sm mb-2">📋 ISO/IEC 25010 (SQuaRE):</h4>
+                                    <ul class="text-xs text-blue-600 space-y-1">
+                                        <li>• <strong>Funcionalidad:</strong> Juran's "fitness for use"</li>
+                                        <li>• <strong>Confiabilidad:</strong> Crosby's "zero defects"</li>
+                                        <li>• <strong>Usabilidad:</strong> Juran's user satisfaction</li>
+                                        <li>• <strong>Mantenibilidad:</strong> Deming's continuous improvement</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-white border border-blue-200 rounded-lg p-3">
+                                    <h5 class="font-semibold text-blue-700 text-sm mb-2">🎯 ISO 9001 en Software:</h5>
+                                    <ul class="text-xs text-blue-600 space-y-1">
+                                        <li>• Enfoque por procesos (Deming)</li>
+                                        <li>• Mejora continua (Kaizen)</li>
+                                        <li>• Satisfacción del cliente (Juran)</li>
+                                        <li>• Prevención de no conformidades (Crosby)</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-gradient-to-r from-blue-100 to-indigo-100 rounded-lg p-2 text-center">
+                                    <div class="text-sm font-bold text-blue-700">🌟 Adopción Global</div>
+                                    <div class="text-xs text-blue-600">1M+ organizaciones certificadas</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- CMMI -->
+                        <div class="model-card bg-white bg-opacity-90 rounded-2xl p-6">
+                            <div class="text-center mb-4">
+                                <div class="text-4xl mb-3">📈</div>
+                                <h3 class="text-xl font-bold text-green-600">CMMI</h3>
+                                <p class="text-sm text-gray-600">Capability Maturity Model</p>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-3">
+                                    <h4 class="font-bold text-green-700 text-sm mb-2">🏗️ Niveles de Madurez:</h4>
+                                    <div class="space-y-1 text-xs">
+                                        <div class="bg-white rounded p-1 flex justify-between">
+                                            <span>1. Initial</span>
+                                            <span class="text-red-500">Caótico</span>
+                                        </div>
+                                        <div class="bg-white rounded p-1 flex justify-between">
+                                            <span>2. Managed</span>
+                                            <span class="text-yellow-500">Disciplinado</span>
+                                        </div>
+                                        <div class="bg-white rounded p-1 flex justify-between">
+                                            <span>3. Defined</span>
+                                            <span class="text-blue-500">Estandarizado</span>
+                                        </div>
+                                        <div class="bg-white rounded p-1 flex justify-between">
+                                            <span>4. Quantitatively Managed</span>
+                                            <span class="text-purple-500">Medido</span>
+                                        </div>
+                                        <div class="bg-white rounded p-1 flex justify-between">
+                                            <span>5. Optimizing</span>
+                                            <span class="text-green-500">Optimizado</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-white border border-green-200 rounded-lg p-3">
+                                    <h5 class="font-semibold text-green-700 text-sm mb-2">🎯 Filosofías Integradas:</h5>
+                                    <ul class="text-xs text-green-600 space-y-1">
+                                        <li>• <strong>Statistical Process Control:</strong> Deming</li>
+                                        <li>• <strong>Defect Prevention:</strong> Crosby</li>
+                                        <li>• <strong>Process Improvement:</strong> Juran</li>
+                                        <li>• <strong>Root Cause Analysis:</strong> Ishikawa</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-gradient-to-r from-green-100 to-teal-100 rounded-lg p-2 text-center">
+                                    <div class="text-sm font-bold text-green-700">🌟 Impacto Comprobado</div>
+                                    <div class="text-xs text-green-600">25-30% mejora en productividad</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- MoProSoft -->
+                        <div class="model-card bg-white bg-opacity-90 rounded-2xl p-6">
+                            <div class="text-center mb-4">
+                                <div class="text-4xl mb-3">🇲🇽</div>
+                                <h3 class="text-xl font-bold text-purple-600">MoProSoft</h3>
+                                <p class="text-sm text-gray-600">Modelo Mexicano de Procesos</p>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-3">
+                                    <h4 class="font-bold text-purple-700 text-sm mb-2">🏢 Categorías de Procesos:</h4>
+                                    <div class="space-y-1 text-xs">
+                                        <div class="bg-white rounded p-1">
+                                            <strong>Alta Dirección:</strong> Gestión de negocio
+                                        </div>
+                                        <div class="bg-white rounded p-1">
+                                            <strong>Gerencia:</strong> Gestión de procesos, proyectos, recursos
+                                        </div>
+                                        <div class="bg-white rounded p-1">
+                                            <strong>Operación:</strong> Administración de proyectos específicos, desarrollo y mantenimiento
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-white border border-purple-200 rounded-lg p-3">
+                                    <h5 class="font-semibold text-purple-700 text-sm mb-2">🎯 Enfoque Integral:</h5>
+                                    <ul class="text-xs text-purple-600 space-y-1">
+                                        <li>• <strong>Mejora continua:</strong> Ciclo PDCA de Deming</li>
+                                        <li>• <strong>Orientación al cliente:</strong> Filosofía de Juran</li>
+                                        <li>• <strong>Prevención de defectos:</strong> Principios de Crosby</li>
+                                        <li>• <strong>Análisis causal:</strong> Herramientas de Ishikawa</li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg p-2 text-center">
+                                    <div class="text-sm font-bold text-purple-700">🌟 Adaptado a LATAM</div>
+                                    <div class="text-xs text-purple-600">Especialmente para PyMEs</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Culture vs Models -->
+                    <div class="bg-white bg-opacity-90 rounded-2xl p-8">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                            ⚖️ La Cultura Asegura que los Modelos No Se Queden en Papel
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <div class="space-y-4">
+                                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-red-800 mb-3">❌ Sin Cultura de Calidad:</h4>
+                                    <ul class="text-sm text-red-600 space-y-2">
+                                        <li class="flex items-start">
+                                            <span class="text-red-500 mr-2">•</span>
+                                            <span><strong>Compliance Theater:</strong> Documentos perfectos, prácticas deficientes</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="text-red-500 mr-2">•</span>
+                                            <span><strong>Resistencia al cambio:</strong> "Así siempre lo hemos hecho"</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="text-red-500 mr-2">•</span>
+                                            <span><strong>Métricas vanidosas:</strong> Números que no reflejan calidad real</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="text-red-500 mr-2">•</span>
+                                            <span><strong>Silos organizacionales:</strong> Departamentos aislados</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="text-red-500 mr-2">•</span>
+                                            <span><strong>Cultura de culpa:</strong> Buscar responsables en lugar de soluciones</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-gray-100 rounded-lg p-4 text-center">
+                                    <div class="text-3xl mb-2">📄</div>
+                                    <div class="text-sm font-semibold text-gray-700">Resultado: Certificaciones sin Valor</div>
+                                    <div class="text-xs text-gray-600">Procesos burocráticos que frenan la innovación</div>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-4">
+                                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
+                                    <h4 class="font-bold text-green-800 mb-3">✅ Con Cultura de Calidad:</h4>
+                                    <ul class="text-sm text-green-600 space-y-2">
+                                        <li class="flex items-start">
+                                            <span class="text-green-500 mr-2">•</span>
+                                            <span><strong>Living Documentation:</strong> Procesos que evolucionan con el equipo</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="text-green-500 mr-2">•</span>
+                                            <span><strong>Mejora continua:</strong> Retrospectivas que generan cambios reales</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="text-green-500 mr-2">•</span>
+                                            <span><strong>Métricas accionables:</strong> Datos que impulsan decisiones</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="text-green-500 mr-2">•</span>
+                                            <span><strong>Colaboración cross-funcional:</strong> Equipos integrados</span>
+                                        </li>
+                                        <li class="flex items-start">
+                                            <span class="text-green-500 mr-2">•</span>
+                                            <span><strong>Blameless culture:</strong> Aprender de los errores</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                
+                                <div class="bg-green-100 rounded-lg p-4 text-center">
+                                    <div class="text-3xl mb-2">🚀</div>
+                                    <div class="text-sm font-semibold text-green-700">Resultado: Excelencia Sostenible</div>
+                                    <div class="text-xs text-green-600">Procesos que aceleran la entrega de valor</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Culture Building -->
+                        <div class="mt-6 bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100 rounded-2xl p-6">
+                            <h4 class="text-xl font-bold text-gray-800 mb-4 text-center">🌱 Construyendo Cultura de Calidad</h4>
+                            
+                            <div class="grid md:grid-cols-4 gap-4">
+                                <div class="text-center">
+                                    <div class="text-3xl mb-2">👑</div>
+                                    <div class="text-sm font-bold text-blue-700">Liderazgo</div>
+                                    <div class="text-xs text-blue-600">Ejemplo desde arriba</div>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <div class="text-3xl mb-2">🎓</div>
+                                    <div class="text-sm font-bold text-purple-700">Educación</div>
+                                    <div class="text-xs text-purple-600">Capacitación continua</div>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <div class="text-3xl mb-2">🏆</div>
+                                    <div class="text-sm font-bold text-pink-700">Reconocimiento</div>
+                                    <div class="text-xs text-pink-600">Celebrar mejoras</div>
+                                </div>
+                                
+                                <div class="text-center">
+                                    <div class="text-3xl mb-2">🔄</div>
+                                    <div class="text-sm font-bold text-green-700">Iteración</div>
+                                    <div class="text-xs text-green-600">Mejora constante</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 text-center">
+                                <div class="bg-white rounded-full px-6 py-3 inline-block shadow-sm">
+                                    <span class="text-lg font-bold text-gray-800">
+                                        💡 "La cultura se come a la estrategia en el desayuno" - Peter Drucker
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Slide 4: Actividad - Caso práctico -->
+            <div class="slide" id="slide4">
+                <div class="slide-bg-4 rounded-3xl p-12 min-h-[600px]">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">
+                        🎯 Actividad - Caso Práctico (20 min)
+                    </h2>
+                    
+                    <!-- Case Study -->
+                    <div class="bg-white rounded-2xl p-8 mb-8 shadow-lg">
+                        <div class="text-center mb-6">
+                            <div class="text-6xl mb-4 pulse-animation">🏢</div>
+                            <h3 class="text-3xl font-bold text-gray-800">Caso: TechSoft Solutions</h3>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-red-100 to-orange-100 rounded-2xl p-6 mb-6">
+                            <h4 class="text-2xl font-bold text-gray-800 mb-4 text-center">
+                                🚨 Situación Problemática
+                            </h4>
+                            
+                            <div class="grid md:grid-cols-2 gap-6">
+                                <div class="space-y-3">
+                                    <div class="bg-white rounded-lg p-4 border-l-4 border-red-500">
+                                        <h5 class="font-bold text-red-700 mb-2">📊 Métricas Alarmantes:</h5>
+                                        <ul class="text-sm text-red-600 space-y-1">
+                                            <li>• <strong>40% de retrabajos</strong> en cada sprint</li>
+                                            <li>• <strong>60% de bugs</strong> encontrados en producción</li>
+                                            <li>• <strong>3x tiempo estimado</strong> para completar features</li>
+                                            <li>• <strong>25% rotación</strong> de desarrolladores/año</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="bg-white rounded-lg p-4 border-l-4 border-orange-500">
+                                        <h5 class="font-bold text-orange-700 mb-2">😤 Quejas del Cliente:</h5>
+                                        <ul class="text-sm text-orange-600 space-y-1">
+                                            <li>• "La aplicación es muy lenta"</li>
+                                            <li>• "Constantemente aparecen errores nuevos"</li>
+                                            <li>• "Las funciones no son intuitivas"</li>
+                                            <li>• "El soporte técnico es deficiente"</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <div class="bg-white rounded-lg p-4 border-l-4 border-purple-500">
+                                        <h5 class="font-bold text-purple-700 mb-2">🏢 Contexto Organizacional:</h5>
+                                        <ul class="text-sm text-purple-600 space-y-1">
+                                            <li>• <strong>50 desarrolladores</strong> en 8 equipos</li>
+                                            <li>• <strong>Metodología ágil</strong> implementada superficialmente</li>
+                                            <li>• <strong>Sin estándares</strong> de código definidos</li>
+                                            <li>• <strong>Testing manual</strong> únicamente</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="bg-white rounded-lg p-4 border-l-4 border-blue-500">
+                                        <h5 class="font-bold text-blue-700 mb-2">💼 Presión del Negocio:</h5>
+                                        <ul class="text-sm text-blue-600 space-y-1">
+                                            <li>• Competencia lanzó producto similar</li>
+                                            <li>• Clientes amenazando con irse</li>
+                                            <li>• Inversores cuestionando ROI</li>
+                                            <li>• Deadline crítico en 6 meses</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Timer -->
+                        <div class="text-center mb-6">
+                            <div id="caseTimer" class="case-timer mb-4">20:00</div>
+                            <button onclick="startCaseTimer()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors">
+                                🚀 Iniciar Análisis del Caso
+                            </button>
+                        </div>
+                        
+                        <!-- Download Button -->
+                        <div class="text-center">
+                            <button onclick="downloadTestPlanTemplate()" class="download-btn text-white px-8 py-4 rounded-lg text-lg font-semibold transition-all">
+                                📄 Descargar Formato de Plan de Pruebas (IEEE 829/29119)
+                            </button>
+                            <p class="text-sm text-gray-600 mt-2">Plantilla profesional para entregar como proyecto</p>
+                        </div>
+                    </div>
+
+                    <!-- Philosophy Selection -->
+                    <div class="bg-white rounded-2xl p-8 mb-8 shadow-lg">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                            🤔 En Equipos: ¿Qué Filosofía Aplicarían?
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-6 mb-6">
+                            <!-- Deming Option -->
+                            <div class="philosophy-selector bg-blue-50 border-2 border-blue-200 rounded-2xl p-6" onclick="selectPhilosophy('deming')">
+                                <div class="flex items-center mb-4">
+                                    <div class="text-4xl mr-4">🔄</div>
+                                    <div>
+                                        <h4 class="text-xl font-bold text-blue-600">Enfoque Deming</h4>
+                                        <p class="text-sm text-gray-600">Mejora continua y transformación cultural</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <div class="bg-white rounded-lg p-3">
+                                        <h5 class="font-semibold text-blue-700 text-sm mb-2">🎯 Acciones Propuestas:</h5>
+                                        <ul class="text-xs text-blue-600 space-y-1">
+                                            <li>• Implementar retrospectivas estructuradas semanales</li>
+                                            <li>• Establecer métricas de proceso (cycle time, lead time)</li>
+                                            <li>• Crear cultura de experimentación y aprendizaje</li>
+                                            <li>• Capacitar líderes en gestión de calidad</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="bg-blue-100 rounded-lg p-2 text-center">
+                                        <div class="text-sm font-bold text-blue-700">⏱️ Tiempo de Impacto: 3-6 meses</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Juran Option -->
+                            <div class="philosophy-selector bg-cyan-50 border-2 border-cyan-200 rounded-2xl p-6" onclick="selectPhilosophy('juran')">
+                                <div class="flex items-center mb-4">
+                                    <div class="text-4xl mr-4">🎯</div>
+                                    <div>
+                                        <h4 class="text-xl font-bold text-cyan-600">Enfoque Juran</h4>
+                                        <p class="text-sm text-gray-600">Adecuación al uso y satisfacción del cliente</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <div class="bg-white rounded-lg p-3">
+                                        <h5 class="font-semibold text-cyan-700 text-sm mb-2">🎯 Acciones Propuestas:</h5>
+                                        <ul class="text-xs text-cyan-600 space-y-1">
+                                            <li>• Implementar research de usuarios y feedback loops</li>
+                                            <li>• Establecer métricas de usabilidad y satisfacción</li>
+                                            <li>• Crear equipos cross-funcionales con UX/UI</li>
+                                            <li>• Implementar A/B testing para features críticas</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="bg-cyan-100 rounded-lg p-2 text-center">
+                                        <div class="text-sm font-bold text-cyan-700">⏱️ Tiempo de Impacto: 2-4 meses</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Crosby Option -->
+                            <div class="philosophy-selector bg-green-50 border-2 border-green-200 rounded-2xl p-6" onclick="selectPhilosophy('crosby')">
+                                <div class="flex items-center mb-4">
+                                    <div class="text-4xl mr-4">🎪</div>
+                                    <div>
+                                        <h4 class="text-xl font-bold text-green-600">Enfoque Crosby</h4>
+                                        <p class="text-sm text-gray-600">Cero defectos mediante prevención</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <div class="bg-white rounded-lg p-3">
+                                        <h5 class="font-semibold text-green-700 text-sm mb-2">🎯 Acciones Propuestas:</h5>
+                                        <ul class="text-xs text-green-600 space-y-1">
+                                            <li>• Implementar CI/CD con quality gates estrictos</li>
+                                            <li>• Establecer TDD y testing automatizado al 100%</li>
+                                            <li>• Crear estándares de código y code reviews obligatorios</li>
+                                            <li>• Implementar static analysis y security scanning</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="bg-green-100 rounded-lg p-2 text-center">
+                                        <div class="text-sm font-bold text-green-700">⏱️ Tiempo de Impacto: 1-3 meses</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Ishikawa Option -->
+                            <div class="philosophy-selector bg-pink-50 border-2 border-pink-200 rounded-2xl p-6" onclick="selectPhilosophy('ishikawa')">
+                                <div class="flex items-center mb-4">
+                                    <div class="text-4xl mr-4">🐟</div>
+                                    <div>
+                                        <h4 class="text-xl font-bold text-pink-600">Enfoque Ishikawa</h4>
+                                        <p class="text-sm text-gray-600">Análisis de causas raíz y participación</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="space-y-3">
+                                    <div class="bg-white rounded-lg p-3">
+                                        <h5 class="font-semibold text-pink-700 text-sm mb-2">🎯 Acciones Propuestas:</h5>
+                                        <ul class="text-xs text-pink-600 space-y-1">
+                                            <li>• Implementar post-mortems estructurados para todos los bugs</li>
+                                            <li>• Crear equipos de análisis cross-funcionales</li>
+                                            <li>• Establecer knowledge base de problemas y soluciones</li>
+                                            <li>• Implementar 5 Whys y fishbone diagrams sistemáticamente</li>
+                                        </ul>
+                                    </div>
+                                    
+                                    <div class="bg-pink-100 rounded-lg p-2 text-center">
+                                        <div class="text-sm font-bold text-pink-700">⏱️ Tiempo de Impacto: 2-5 meses</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Selected Philosophy Details -->
+                        <div id="selectedPhilosophyDetails" class="hidden bg-gradient-to-r from-purple-100 to-blue-100 rounded-2xl p-6">
+                            <h4 class="text-xl font-bold text-gray-800 mb-4 text-center">📋 Plan de Implementación Detallado</h4>
+                            <div id="implementationPlan" class="space-y-4">
+                                <!-- Will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Solution Collection Area -->
+                    <div class="bg-white rounded-2xl p-6 shadow-lg">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">
+                            💡 Área de Soluciones Colaborativas
+                        </h3>
+                        
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h4 class="font-semibold text-gray-700 mb-3">🚀 Acciones Inmediatas (1-4 semanas):</h4>
+                                <div id="immediateActions" class="solution-area space-y-2 bg-green-50 rounded-lg p-4">
+                                    <div class="bg-white rounded-lg p-3 border-l-4 border-green-500">
+                                        <p class="text-sm text-green-700">
+                                            <strong>Ejemplo:</strong> "Implementar daily standups estructurados con foco en blockers"
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <input type="text" id="immediateInput" placeholder="Añadir acción inmediata..." 
+                                           class="w-full px-3 py-2 border border-green-300 rounded-lg text-sm">
+                                    <button onclick="addSolution('immediate')" class="mt-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                                        ➕ Añadir
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h4 class="font-semibold text-gray-700 mb-3">🎯 Acciones a Mediano Plazo (1-6 meses):</h4>
+                                <div id="mediumActions" class="solution-area space-y-2 bg-blue-50 rounded-lg p-4">
+                                    <div class="bg-white rounded-lg p-3 border-l-4 border-blue-500">
+                                        <p class="text-sm text-blue-700">
+                                            <strong>Ejemplo:</strong> "Establecer pipeline de CI/CD con quality gates automáticos"
+                                        </p>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-3">
+                                    <input type="text" id="mediumInput" placeholder="Añadir acción a mediano plazo..." 
+                                           class="w-full px-3 py-2 border border-blue-300 rounded-lg text-sm">
+                                    <button onclick="addSolution('medium')" class="mt-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
+                                        ➕ Añadir
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Synthesis Question -->
+                        <div class="mt-6 bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg p-4">
+                            <h4 class="font-bold text-gray-700 mb-2 text-center">🤔 Pregunta de Síntesis:</h4>
+                            <p class="text-center text-gray-600 text-sm mb-3">
+                                "¿Cómo medirían el éxito de la implementación de su filosofía elegida?"
+                            </p>
+                            
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs text-center">
+                                <div class="bg-white rounded p-2">
+                                    <div class="font-bold text-green-600">Métricas Técnicas</div>
+                                    <div>Bug rate, test coverage</div>
+                                </div>
+                                <div class="bg-white rounded p-2">
+                                    <div class="font-bold text-blue-600">Métricas de Proceso</div>
+                                    <div>Cycle time, lead time</div>
+                                </div>
+                                <div class="bg-white rounded p-2">
+                                    <div class="font-bold text-purple-600">Métricas de Negocio</div>
+                                    <div>Customer satisfaction, ROI</div>
+                                </div>
+                                <div class="bg-white rounded p-2">
+                                    <div class="font-bold text-pink-600">Métricas de Equipo</div>
+                                    <div>Engagement, retention</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        let currentSlideIndex = 0;
+        const totalSlides = 4;
+        let caseTimerInterval = null;
+        let caseTimeLeft = 1200; // 20 minutes in seconds
+        let selectedPhilosophy = null;
+
+        function showSlide(index) {
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            
+            document.getElementById(`slide${index + 1}`).classList.add('active');
+            
+            document.getElementById('currentSlide').textContent = index + 1;
+            document.getElementById('prevBtn').disabled = index === 0;
+            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
+            
+            const progress = ((index + 1) / totalSlides) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            if (index === 0) {
+                document.getElementById('prevBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('prevBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            
+            if (index === totalSlides - 1) {
+                document.getElementById('nextBtn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                document.getElementById('nextBtn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlideIndex < totalSlides - 1) {
+                currentSlideIndex++;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function previousSlide() {
+            if (currentSlideIndex > 0) {
+                currentSlideIndex--;
+                showSlide(currentSlideIndex);
+            }
+        }
+
+        function selectPhilosophy(philosophy) {
+            // Remove previous selection
+            document.querySelectorAll('.philosophy-selector').forEach(el => {
+                el.classList.remove('selected', 'ring-4', 'ring-blue-300');
+            });
+            
+            // Add selection to clicked philosophy
+            event.currentTarget.classList.add('selected', 'ring-4', 'ring-blue-300');
+            
+            selectedPhilosophy = philosophy;
+            
+            // Show detailed implementation plan
+            showImplementationPlan(philosophy);
+        }
+
+        function showImplementationPlan(philosophy) {
+            const plans = {
+                deming: {
+                    title: "Plan de Implementación - Enfoque Deming",
+                    phases: [
+                        {
+                            phase: "Fase 1: Diagnóstico (Semanas 1-2)",
+                            actions: [
+                                "Mapear procesos actuales de desarrollo",
+                                "Identificar puntos de dolor y desperdicios",
+                                "Establecer métricas baseline (cycle time, defect rate)",
+                                "Evaluar cultura organizacional actual"
+                            ]
+                        },
+                        {
+                            phase: "Fase 2: Capacitación (Semanas 3-4)",
+                            actions: [
+                                "Entrenar líderes en principios de Deming",
+                                "Workshops sobre PDCA y mejora continua",
+                                "Establecer estructura de retrospectivas",
+                                "Crear equipos de mejora cross-funcionales"
+                            ]
+                        },
+                        {
+                            phase: "Fase 3: Implementación (Meses 2-4)",
+                            actions: [
+                                "Implementar retrospectivas semanales estructuradas",
+                                "Establecer experimentos de mejora de proceso",
+                                "Crear dashboard de métricas de proceso",
+                                "Implementar ciclos PDCA en cada equipo"
+                            ]
+                        }
+                    ]
+                },
+                juran: {
+                    title: "Plan de Implementación - Enfoque Juran",
+                    phases: [
+                        {
+                            phase: "Fase 1: Investigación de Usuario (Semanas 1-3)",
+                            actions: [
+                                "Realizar entrevistas con usuarios clave",
+                                "Mapear journey del usuario actual",
+                                "Identificar pain points y necesidades no cubiertas",
+                                "Establecer métricas de satisfacción baseline"
+                            ]
+                        },
+                        {
+                            phase: "Fase 2: Rediseño de Procesos (Semanas 4-6)",
+                            actions: [
+                                "Crear equipos cross-funcionales (Dev, UX, Product)",
+                                "Redefinir definition of done incluyendo UX",
+                                "Implementar user story mapping",
+                                "Establecer criterios de aceptación centrados en usuario"
+                            ]
+                        },
+                        {
+                            phase: "Fase 3: Medición y Mejora (Meses 2-4)",
+                            actions: [
+                                "Implementar A/B testing para features críticas",
+                                "Establecer feedback loops con usuarios",
+                                "Crear dashboard de métricas de usabilidad",
+                                "Implementar programa de mejora continua de UX"
+                            ]
+                        }
+                    ]
+                },
+                crosby: {
+                    title: "Plan de Implementación - Enfoque Crosby",
+                    phases: [
+                        {
+                            phase: "Fase 1: Infraestructura de Calidad (Semanas 1-2)",
+                            actions: [
+                                "Configurar pipeline de CI/CD básico",
+                                "Implementar linters y static analysis",
+                                "Establecer quality gates en el pipeline",
+                                "Crear estándares de código documentados"
+                            ]
+                        },
+                        {
+                            phase: "Fase 2: Testing Automatizado (Semanas 3-6)",
+                            actions: [
+                                "Implementar TDD en equipos piloto",
+                                "Crear suite de tests automatizados (unit, integration, E2E)",
+                                "Establecer coverage mínimo del 80%",
+                                "Implementar testing de seguridad automatizado"
+                            ]
+                        },
+                        {
+                            phase: "Fase 3: Cultura de Prevención (Meses 2-3)",
+                            actions: [
+                                "Entrenar equipos en prácticas de código limpio",
+                                "Implementar code reviews obligatorios",
+                                "Establecer métricas de calidad de código",
+                                "Crear programa de reconocimiento por calidad"
+                            ]
+                        }
+                    ]
+                },
+                ishikawa: {
+                    title: "Plan de Implementación - Enfoque Ishikawa",
+                    phases: [
+                        {
+                            phase: "Fase 1: Estructura de Análisis (Semanas 1-2)",
+                            actions: [
+                                "Crear templates para post-mortems estructurados",
+                                "Entrenar equipos en técnicas de RCA (5 Whys, Fishbone)",
+                                "Establecer proceso de incident response",
+                                "Crear knowledge base de problemas y soluciones"
+                            ]
+                        },
+                        {
+                            phase: "Fase 2: Equipos Cross-funcionales (Semanas 3-4)",
+                            actions: [
+                                "Formar equipos de análisis multidisciplinarios",
+                                "Implementar sesiones de problem-solving colaborativo",
+                                "Crear canales de comunicación para sharing de conocimiento",
+                                "Establecer métricas de efectividad de soluciones"
+                            ]
+                        },
+                        {
+                            phase: "Fase 3: Mejora Sistemática (Meses 2-5)",
+                            actions: [
+                                "Implementar análisis de tendencias de defectos",
+                                "Crear programa de prevención basado en análisis",
+                                "Establecer círculos de calidad por equipo",
+                                "Implementar sistema de lecciones aprendidas"
+                            ]
+                        }
+                    ]
+                }
+            };
+
+            const plan = plans[philosophy];
+            const detailsDiv = document.getElementById('selectedPhilosophyDetails');
+            const planDiv = document.getElementById('implementationPlan');
+            
+            let planHTML = `<h5 class="text-lg font-bold text-purple-700 mb-4">${plan.title}</h5>`;
+            
+            plan.phases.forEach((phase, index) => {
+                planHTML += `
+                    <div class="bg-white rounded-lg p-4 border-l-4 border-purple-500">
+                        <h6 class="font-bold text-purple-700 mb-2">${phase.phase}</h6>
+                        <ul class="text-sm text-purple-600 space-y-1">
+                            ${phase.actions.map(action => `<li>• ${action}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            });
+            
+            planDiv.innerHTML = planHTML;
+            detailsDiv.classList.remove('hidden');
+        }
+
+        function startCaseTimer() {
+            if (caseTimerInterval) {
+                clearInterval(caseTimerInterval);
+            }
+            
+            caseTimeLeft = 1200; // Reset to 20 minutes
+            
+            caseTimerInterval = setInterval(() => {
+                caseTimeLeft--;
+                
+                const minutes = Math.floor(caseTimeLeft / 60);
+                const seconds = caseTimeLeft % 60;
+                
+                document.getElementById('caseTimer').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Change color as time runs out
+                const timerElement = document.getElementById('caseTimer');
+                if (caseTimeLeft <= 300) { // Last 5 minutes
+                    timerElement.classList.remove('text-green-600');
+                    timerElement.classList.add('text-red-600');
+                } else if (caseTimeLeft <= 600) { // Last 10 minutes
+                    timerElement.classList.remove('text-green-600');
+                    timerElement.classList.add('text-yellow-600');
+                }
+                
+                if (caseTimeLeft <= 0) {
+                    clearInterval(caseTimerInterval);
+                    alert('¡Tiempo del caso práctico terminado! Procedan con la presentación de soluciones.');
+                }
+            }, 1000);
+        }
+
+        function addSolution(type) {
+            const inputId = type === 'immediate' ? 'immediateInput' : 'mediumInput';
+            const areaId = type === 'immediate' ? 'immediateActions' : 'mediumActions';
+            const input = document.getElementById(inputId);
+            const area = document.getElementById(areaId);
+            
+            if (input.value.trim()) {
+                const solutionItem = document.createElement('div');
+                const borderColor = type === 'immediate' ? 'border-green-500' : 'border-blue-500';
+                const textColor = type === 'immediate' ? 'text-green-700' : 'text-blue-700';
+                
+                solutionItem.className = `bg-white rounded-lg p-3 border-l-4 ${borderColor}`;
+                solutionItem.innerHTML = `
+                    <p class="text-sm ${textColor}">
+                        ${input.value.trim()}
+                    </p>
+                `;
+                
+                area.appendChild(solutionItem);
+                input.value = '';
+                
+                // Add animation
+                solutionItem.style.opacity = '0';
+                solutionItem.style.transform = 'translateY(10px)';
+                setTimeout(() => {
+                    solutionItem.style.transition = 'all 0.3s ease';
+                    solutionItem.style.opacity = '1';
+                    solutionItem.style.transform = 'translateY(0)';
+                }, 10);
+            }
+        }
+
+        function downloadTestPlanTemplate() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Title
+            doc.setFontSize(20);
+            doc.setFont(undefined, 'bold');
+            doc.text('Plan de Pruebas - Proyecto [Nombre del Proyecto]', 20, 30);
+            
+            // Subtitle
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'normal');
+            doc.text('Formato de Entregable - IEEE 829/29119', 20, 40);
+            
+            let yPosition = 60;
+            
+            // Content sections
+            const sections = [
+                {
+                    title: '1. Identificación',
+                    content: [
+                        'ID del plan: PP-[Proyecto]-V1.0',
+                        'Fecha: [DD/MM/AAAA]',
+                        'Versión: 1.0',
+                        'Autores: [Nombres del equipo]'
+                    ]
+                },
+                {
+                    title: '2. Introducción',
+                    content: [
+                        'Objetivo del plan de pruebas:',
+                        '- Definir estrategia de testing para el proyecto',
+                        '- Establecer criterios de calidad y aceptación',
+                        'Alcance del software a probar:',
+                        '- [Módulos/funcionalidades incluidas]'
+                    ]
+                },
+                {
+                    title: '3. Referencias',
+                    content: [
+                        'Documento de requisitos: [REQ-001]',
+                        'Manual de diseño: [DIS-001]',
+                        'Normas aplicables: ISO/IEC 25010'
+                    ]
+                },
+                {
+                    title: '4. Funcionalidades a probar',
+                    content: [
+                        'Ejemplo: Módulo de login',
+                        'Ejemplo: Módulo de pagos',
+                        'Ejemplo: Gestión de usuarios',
+                        '[Agregar funcionalidades específicas]'
+                    ]
+                },
+                {
+                    title: '5. Funcionalidades fuera de alcance',
+                    content: [
+                        'Ejemplo: Pruebas de rendimiento (no incluidas en este ciclo)',
+                        'Ejemplo: Pruebas de seguridad avanzadas',
+                        '[Especificar exclusiones]'
+                    ]
+                },
+                {
+                    title: '6. Estrategia de prueba',
+                    content: [
+                        'Técnicas: Caja negra, caja blanca',
+                        'Automatización: [Porcentaje manual vs automatizado]',
+                        'Niveles de prueba:',
+                        '- Unitaria: [Responsable]',
+                        '- Integración: [Responsable]',
+                        '- Sistema: [Responsable]',
+                        '- Aceptación: [Responsable]'
+                    ]
+                }
+            ];
+            
+            doc.setFontSize(10);
+            
+            sections.forEach(section => {
+                if (yPosition > 250) {
+                    doc.addPage();
+                    yPosition = 30;
+                }
+                
+                // Section title
+                doc.setFont(undefined, 'bold');
+                doc.text(section.title, 20, yPosition);
+                yPosition += 10;
+                
+                // Section content
+                doc.setFont(undefined, 'normal');
+                section.content.forEach(line => {
+                    if (yPosition > 280) {
+                        doc.addPage();
+                        yPosition = 30;
+                    }
+                    doc.text(line, 25, yPosition);
+                    yPosition += 7;
+                });
+                
+                yPosition += 5;
+            });
+            
+            // Add remaining sections on new page
+            doc.addPage();
+            yPosition = 30;
+            
+            const remainingSections = [
+                {
+                    title: '7. Criterios de pase/falla',
+                    content: [
+                        'Caso pasa si: resultado actual = esperado',
+                        'Caso falla si: hay cualquier discrepancia',
+                        'Criterios específicos:',
+                        '- Funcionalidad: 100% de casos críticos pasan',
+                        '- Performance: Tiempo de respuesta < 3 segundos',
+                        '- Usabilidad: Satisfacción usuario > 4/5'
+                    ]
+                },
+                {
+                    title: '8. Criterios de suspensión/reanudación',
+                    content: [
+                        'Suspensión:',
+                        '- Defecto crítico bloqueante encontrado',
+                        '- Más del 30% de casos de prueba fallan',
+                        'Reanudación:',
+                        '- Defecto corregido y validado',
+                        '- Ambiente de pruebas estabilizado'
+                    ]
+                },
+                {
+                    title: '9. Entregables de prueba',
+                    content: [
+                        'Casos de prueba documentados',
+                        'Reportes de defectos',
+                        'Informe final de pruebas',
+                        'Métricas de cobertura',
+                        'Evidencias de ejecución'
+                    ]
+                },
+                {
+                    title: '10. Entorno de prueba',
+                    content: [
+                        'Hardware: [Especificaciones]',
+                        'Software: [OS, navegadores, versiones]',
+                        'Base de datos: [Tipo y versión]',
+                        'Herramientas: [Testing tools]',
+                        'Datos de prueba: [Fuente y tipo]'
+                    ]
+                },
+                {
+                    title: '11. Cronograma y recursos',
+                    content: [
+                        'Hitos clave de pruebas:',
+                        '- Inicio de pruebas unitarias: [Fecha]',
+                        '- Inicio de pruebas de integración: [Fecha]',
+                        '- Inicio de pruebas de sistema: [Fecha]',
+                        '- Finalización de pruebas: [Fecha]',
+                        '',
+                        'Roles asignados:',
+                        '- QA Lead: [Nombre]',
+                        '- QA Testers: [Nombres]',
+                        '- Developers: [Nombres]'
+                    ]
+                }
+            ];
+            
+            remainingSections.forEach(section => {
+                if (yPosition > 250) {
+                    doc.addPage();
+                    yPosition = 30;
+                }
+                
+                // Section title
+                doc.setFont(undefined, 'bold');
+                doc.text(section.title, 20, yPosition);
+                yPosition += 10;
+                
+                // Section content
+                doc.setFont(undefined, 'normal');
+                section.content.forEach(line => {
+                    if (yPosition > 280) {
+                        doc.addPage();
+                        yPosition = 30;
+                    }
+                    doc.text(line, 25, yPosition);
+                    yPosition += 7;
+                });
+                
+                yPosition += 5;
+            });
+            
+            // Footer
+            doc.addPage();
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'bold');
+            doc.text('Notas para el estudiante:', 20, 30);
+            
+            doc.setFontSize(10);
+            doc.setFont(undefined, 'normal');
+            const notes = [
+                '• Este formato sigue los estándares IEEE 829 e IEEE 29119',
+                '• Adapte las secciones según las necesidades específicas de su proyecto',
+                '• Incluya métricas cuantificables siempre que sea posible',
+                '• Mantenga la trazabilidad con los requisitos del proyecto',
+                '• Revise y actualice el plan según evolucione el proyecto',
+                '',
+                'Recursos adicionales:',
+                '• IEEE 829: Standard for Software Test Documentation',
+                '• IEEE 29119: Software Testing Standards',
+                '• ISTQB: International Software Testing Qualifications Board'
+            ];
+            
+            let noteY = 50;
+            notes.forEach(note => {
+                doc.text(note, 20, noteY);
+                noteY += 7;
+            });
+            
+            // Save the PDF
+            doc.save('Plan_de_Pruebas_Template_IEEE829.pdf');
+        }
+
+        // Initialize
+        showSlide(0);
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') nextSlide();
+            if (e.key === 'ArrowLeft') previousSlide();
+        });
+
+        // Enter key for adding solutions
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                if (e.target.id === 'immediateInput') {
+                    addSolution('immediate');
+                } else if (e.target.id === 'mediumInput') {
+                    addSolution('medium');
+                }
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a86fc0e6d7cdb0',t:'MTc1NzEwMzcyMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
-
-
-
-
