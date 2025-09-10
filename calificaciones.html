@@ -2976,42 +2976,18 @@
 
       // Grade calculations for student view
       function calculateUnitGradeStudent(unitNumber) {
-        const participation =
-          parseFloat(
-            document
-              .querySelector(`#unit${unitNumber}Grade`)
-              .closest(".unit-card")
-              .querySelector(
-                ".component-list .component-item:nth-child(1) .grade-input"
-              ).value
-          ) || 0;
-        const assignments =
-          parseFloat(
-            document
-              .querySelector(`#unit${unitNumber}Grade`)
-              .closest(".unit-card")
-              .querySelector(
-                ".component-list .component-item:nth-child(2) .grade-input"
-              ).value
-          ) || 0;
-        const classwork =
-          parseFloat(
-            document
-              .querySelector(`#unit${unitNumber}Grade`)
-              .closest(".unit-card")
-              .querySelector(
-                ".component-list .component-item:nth-child(3) .grade-input"
-              ).value
-          ) || 0;
-        const exam =
-          parseFloat(
-            document
-              .querySelector(`#unit${unitNumber}Grade`)
-              .closest(".unit-card")
-              .querySelector(
-                ".component-list .component-item:nth-child(4) .grade-input"
-              ).value
-          ) || 0;
+        const container = document.querySelector(`#unit${unitNumber}Grade`);
+        if (!container) return; // no student view inputs present
+        const card = container.closest('.unit-card');
+        if (!card) return;
+        const getVal = (idx) => {
+          const el = card.querySelector(`.component-list .component-item:nth-child(${idx}) .grade-input`);
+          return parseFloat(el?.value) || 0;
+        };
+        const participation = getVal(1);
+        const assignments = getVal(2);
+        const classwork = getVal(3);
+        const exam = getVal(4);
 
         // Calculate weighted scores
         const participationWeighted = participation * 0.1;
@@ -3562,40 +3538,6 @@ Saludos.`);
         }
       });
     </script>
-    <script>
-      (function () {
-        function c() {
-          var b = a.contentDocument || a.contentWindow.document;
-          if (b) {
-            var d = b.createElement("script");
-            d.innerHTML =
-              "window.__CF$cv$params={r:'97cb5d57221d9810',t:'MTc1NzQ2OTk3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
-            b.getElementsByTagName("head")[0].appendChild(d);
-          }
-        }
-        if (document.body) {
-          var a = document.createElement("iframe");
-          a.height = 1;
-          a.width = 1;
-          a.style.position = "absolute";
-          a.style.top = 0;
-          a.style.left = 0;
-          a.style.border = "none";
-          a.style.visibility = "hidden";
-          document.body.appendChild(a);
-          if ("loading" !== document.readyState) c();
-          else if (window.addEventListener)
-            document.addEventListener("DOMContentLoaded", c);
-          else {
-            var e = document.onreadystatechange || function () {};
-            document.onreadystatechange = function (b) {
-              e(b);
-              "loading" !== document.readyState &&
-                ((document.onreadystatechange = e), c());
-            };
-          }
-        }
-      })();
-    </script>
+    <!-- Cloudflare challenge script removed to avoid 404 errors in local/dev -->
   </body>
 </html>
