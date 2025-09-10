@@ -1,93 +1,3601 @@
+<!DOCTYPE html>
 
+<head>
 <style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
+  body{ padding-top:80px; }
+  .qs-nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:saturate(140%) blur(18px);
+         background:rgba(255,255,255,.95);border-bottom:1px solid rgba(255,255,255,.2);
+         box-shadow:0 8px 32px rgba(0,0,0,.10)}
+  .qs-nav .wrap{max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:nowrap}
+  .qs-brand{display:flex;gap:12px;align-items:center;color:#1f2937;font-weight:800;font-size:1.1rem;text-decoration:none}
+  .qs-brand::before{content:"🎓";font-size:1.3rem}
+  .qs-tabs{display:flex;gap:10px;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:thin}
+  .qs-btn{border:0;padding:10px 16px;border-radius:22px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;
+         font-weight:600;font-size:.9rem;transition:all .25s ease;border:2px solid transparent;flex:0 0 auto}
+  .qs-btn:hover{color:#fff;transform:translateY(-2px);box-shadow:0 8px 18px rgba(102,126,234,.35);border-color:rgba(102,126,234,.25);
+                background:linear-gradient(135deg,#667eea,#764ba2)}
+  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;box-shadow:0 6px 16px rgba(102,126,234,.45)}
+  .footer{margin-top:60px;padding:30px 20px;text-align:center;background:rgba(255,255,255,.1);
+          backdrop-filter:blur(10px);border-top:1px solid rgba(255,255,255,.2)}
+  .footer-content{max-width:1200px;margin:0 auto;color:rgba(255,255,255,.92);font-size:.95rem}
 </style>
+
+</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Evaluaciones - Calidad de Software</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: #764ba2;
+        min-height: 100vh;
+      }
+
+      .main-container {
+        background: white;
+        border-radius: 2rem;
+        margin: 2rem;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 2rem;
+        text-align: center;
+        position: relative;
+      }
+
+      .header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+        opacity: 0.3;
+      }
+
+      .header-content {
+        position: relative;
+        z-index: 1;
+      }
+
+      .platform-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      }
+
+      .platform-subtitle {
+        font-size: 1.5rem;
+        opacity: 0.9;
+        font-weight: 500;
+      }
+
+      .role-toggle {
+        position: absolute;
+        top: 2rem;
+        right: 2rem;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border-radius: 2rem;
+        padding: 0.5rem;
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .role-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 1.5rem;
+        background: transparent;
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .role-btn.active {
+        background: white;
+        color: #764ba2;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .content-area {
+        padding: 3rem 2rem;
+      }
+
+      .main-nav-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 1rem;
+      }
+
+      .nav-tab {
+        padding: 1rem 2rem;
+        border-radius: 1rem 1rem 0 0;
+        background: #f7fafc;
+        color: #4a5568;
+        border: 2px solid #e2e8f0;
+        border-bottom: none;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      .nav-tab:hover {
+        color: #764ba2;
+        border-color: #764ba2;
+      }
+
+      .nav-tab.active {
+        background: white;
+        color: #764ba2;
+        border-color: #764ba2;
+        transform: translateY(2px);
+      }
+
+      /* Evaluation System Styles */
+      .evaluation-overview {
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 3rem;
+        border: 2px solid #e2e8f0;
+      }
+
+      .overview-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .formula-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        border-left: 4px solid #764ba2;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .formula-title {
+        font-weight: 700;
+        color: #764ba2;
+        margin-bottom: 0.5rem;
+      }
+
+      .formula-text {
+        font-family: "Courier New", monospace;
+        background: #f7fafc;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        color: #2d3748;
+        font-size: 0.9rem;
+        line-height: 1.6;
+      }
+
+      .units-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+      }
+
+      .unit-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+      }
+
+      .unit-card:hover {
+        transform: translateY(-5px);
+        border-color: #764ba2;
+        box-shadow: 0 10px 30px rgba(118, 75, 162, 0.2);
+      }
+
+      .unit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .unit-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #1a202c;
+      }
+
+      .unit-grade {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #764ba2;
+        padding: 0.5rem 1rem;
+        background: linear-gradient(135deg, #f0f4ff, #e2e8f0);
+        border-radius: 1rem;
+      }
+
+      .component-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .component-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 0.5rem;
+        border: 1px solid #e2e8f0;
+      }
+
+      .component-name {
+        font-weight: 600;
+        color: #4a5568;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .component-weight {
+        font-size: 0.9rem;
+        color: #718096;
+        margin-left: 0.5rem;
+      }
+
+      .component-grade {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .grade-input {
+        width: 80px;
+        padding: 0.5rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 0.5rem;
+        text-align: center;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .grade-input:focus {
+        outline: none;
+        border-color: #764ba2;
+        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
+      }
+
+      .weighted-score {
+        font-weight: 700;
+        color: #764ba2;
+        min-width: 60px;
+        text-align: right;
+      }
+
+      .final-grade-section {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+      }
+
+      .final-grade-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+      }
+
+      .final-grade-breakdown {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+      }
+
+      .grade-component {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        backdrop-filter: blur(10px);
+      }
+
+      .component-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 0.5rem;
+      }
+
+      .component-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+
+      .final-grade-display {
+        font-size: 4rem;
+        font-weight: 800;
+        margin: 1rem 0;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      }
+
+      .grade-status {
+        font-size: 1.2rem;
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        display: inline-block;
+      }
+
+      .student-list {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        border: 2px solid #e2e8f0;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 0.5rem;
+        background: #e2e8f0;
+        border-radius: 0.25rem;
+        overflow: hidden;
+        margin-top: 0.5rem;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #16a34a, #15803d);
+        transition: width 0.3s ease;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .notification {
+        position: fixed;
+        top: 2rem;
+        right: 2rem;
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        border-left: 4px solid #16a34a;
+        z-index: 1000;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+      }
+
+      .notification.show {
+        transform: translateX(0);
+      }
+
+      .notification.error {
+        border-left-color: #dc2626;
+      }
+
+      /* Table Styles */
+      .grades-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .grades-table th {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 1rem 0.5rem;
+        text-align: center;
+        font-weight: 700;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        font-size: 0.9rem;
+      }
+
+      .grades-table td {
+        padding: 0.75rem 0.5rem;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+        font-weight: 600;
+      }
+
+      .grades-table tbody tr:hover {
+        background: #f8fafc;
+      }
+
+      .student-name-cell {
+        text-align: left !important;
+        min-width: 200px;
+      }
+
+      .student-name {
+        font-weight: 700;
+        color: #1a202c;
+        font-size: 0.9rem;
+      }
+
+      .student-id {
+        font-size: 0.75rem;
+        color: #718096;
+        margin-top: 0.25rem;
+      }
+
+      .grade-cell {
+        min-width: 70px;
+      }
+
+      .unit-average-cell {
+        background: #dbeafe !important;
+        color: #1e40af;
+        font-weight: 800;
+      }
+
+      .project-final-cell {
+        background: #dcfce7 !important;
+        color: #166534;
+        font-weight: 800;
+      }
+
+      .final-grade-cell {
+        background: #faf5ff !important;
+        color: #7c3aed;
+        font-weight: 800;
+      }
+
+      .edit-btn {
+        background: #7c3aed;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        font-size: 0.8rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .edit-btn:hover {
+        background: #6d28d9;
+        transform: translateY(-1px);
+      }
+
+      .unit-input {
+        width: 60px;
+        padding: 0.25rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.25rem;
+        text-align: center;
+        font-weight: 600;
+      }
+
+      .unit-input:focus {
+        outline: none;
+        border-color: #764ba2;
+        box-shadow: 0 0 0 2px rgba(118, 75, 162, 0.2);
+      }
+
+      /* Student Dashboard Styles */
+      .student-profile-header {
+        margin-bottom: 2rem;
+      }
+
+      .profile-card {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        box-shadow: 0 10px 30px rgba(118, 75, 162, 0.3);
+      }
+
+      .profile-avatar {
+        flex-shrink: 0;
+      }
+
+      .avatar-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .avatar-initials {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: white;
+      }
+
+      .profile-info {
+        flex: 1;
+      }
+
+      .student-name-display {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+
+      .student-id-display {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+      }
+
+      .student-status {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .status-badge,
+      .semester-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+
+      .profile-stats {
+        display: flex;
+        gap: 2rem;
+      }
+
+      .stat-item {
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 0.25rem;
+      }
+
+      .stat-label {
+        font-size: 0.9rem;
+        opacity: 0.9;
+      }
+
+      .student-dashboard {
+        margin-bottom: 3rem;
+      }
+
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+      }
+
+      .dashboard-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+      }
+
+      .dashboard-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .card-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1a202c;
+      }
+
+      .progress-percentage,
+      .attendance-percentage,
+      .assignments-count {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #764ba2;
+      }
+
+      .progress-visual {
+        display: flex;
+        justify-content: center;
+      }
+
+      .circular-progress {
+        position: relative;
+      }
+
+      .progress-ring {
+        transform: rotate(-90deg);
+      }
+
+      .progress-ring-circle {
+        transition: stroke-dashoffset 0.35s;
+      }
+
+      .progress-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+
+      .progress-text {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #764ba2;
+      }
+
+      .attendance-visual {
+        text-align: center;
+      }
+
+      .attendance-grid {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 0.25rem;
+        margin-bottom: 1rem;
+      }
+
+      .attendance-day {
+        width: 20px;
+        height: 20px;
+        border-radius: 0.25rem;
+        cursor: pointer;
+      }
+
+      .attendance-day.present {
+        background: #16a34a;
+      }
+
+      .attendance-day.absent {
+        background: #dc2626;
+      }
+
+      .attendance-legend {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        font-size: 0.8rem;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+
+      .legend-dot.present {
+        background: #16a34a;
+      }
+
+      .legend-dot.absent {
+        background: #dc2626;
+      }
+
+      .assignments-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .assignment-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 0.5rem;
+        border-left: 4px solid #764ba2;
+      }
+
+      .assignment-info {
+        flex: 1;
+      }
+
+      .assignment-name {
+        font-weight: 600;
+        color: #1a202c;
+        margin-bottom: 0.25rem;
+      }
+
+      .assignment-due {
+        font-size: 0.8rem;
+        color: #718096;
+      }
+
+      .assignment-priority {
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+      }
+
+      .assignment-priority.high {
+        background: #fecaca;
+        color: #dc2626;
+      }
+
+      .assignment-priority.medium {
+        background: #fed7aa;
+        color: #ea580c;
+      }
+
+      /* Student Unit Cards */
+      .student-unit-card {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .student-unit-card .unit-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+      }
+
+      .unit-info {
+        flex: 1;
+      }
+
+      .unit-subtitle {
+        font-size: 0.9rem;
+        color: #718096;
+        margin-top: 0.25rem;
+      }
+
+      .unit-grade-display {
+        text-align: right;
+      }
+
+      .unit-status {
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-top: 0.5rem;
+      }
+
+      .unit-status.approved {
+        color: #16a34a;
+      }
+
+      .component-item.readonly {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        cursor: default;
+      }
+
+      .component-item.readonly:hover {
+        background: #f1f5f9;
+      }
+
+      .component-name {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      .component-icon {
+        font-size: 1.2rem;
+      }
+
+      .component-details {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .component-title {
+        font-weight: 600;
+        color: #4a5568;
+      }
+
+      .grade-display {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1a202c;
+        padding: 0.5rem 1rem;
+        background: #e2e8f0;
+        border-radius: 0.5rem;
+        min-width: 60px;
+        text-align: center;
+      }
+
+      .unit-progress-bar {
+        margin-top: 1rem;
+        height: 6px;
+        background: #e2e8f0;
+        border-radius: 3px;
+        overflow: hidden;
+      }
+
+      .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(135deg, #16a34a, #15803d);
+        transition: width 0.3s ease;
+      }
+
+      /* Student Final Section */
+      .student-final-section {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-radius: 2rem;
+        padding: 3rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .student-final-section::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="2" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23dots)"/></svg>');
+        opacity: 0.3;
+      }
+
+      .final-grade-header {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .semester-info {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-top: 1rem;
+      }
+
+      .course-name,
+      .semester-period {
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 1rem;
+        backdrop-filter: blur(10px);
+        font-weight: 600;
+      }
+
+      .final-grade-breakdown {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+      }
+
+      .grade-component {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .grade-component .component-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .component-info {
+        margin-bottom: 1rem;
+      }
+
+      .component-label {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+
+      .component-percentage {
+        font-size: 0.9rem;
+        opacity: 0.8;
+      }
+
+      .grade-component .component-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+      }
+
+      .component-breakdown {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .breakdown-item {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.9rem;
+        opacity: 0.9;
+      }
+
+      .project-status {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .status-indicator {
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
+
+      .status-indicator.completed {
+        background: rgba(34, 197, 94, 0.2);
+        color: #16a34a;
+      }
+
+      .delivery-date {
+        font-size: 0.8rem;
+        opacity: 0.8;
+      }
+
+      .final-grade-display-container {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 3rem;
+        margin-bottom: 2rem;
+      }
+
+      .final-grade-circle {
+        display: flex;
+        justify-content: center;
+      }
+
+      .grade-circle {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .final-grade-display {
+        font-size: 3rem;
+        font-weight: 800;
+        line-height: 1;
+      }
+
+      .grade-scale {
+        font-size: 1rem;
+        opacity: 0.8;
+      }
+
+      .grade-details {
+        text-align: center;
+      }
+
+      .grade-status.approved {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+
+      .grade-letter {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+      }
+
+      .grade-description {
+        font-size: 1rem;
+        opacity: 0.9;
+      }
+
+      .progress-bar-container {
+        position: relative;
+        z-index: 1;
+      }
+
+      .progress-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        opacity: 0.8;
+      }
+
+      @media (max-width: 768px) {
+        .main-container {
+          margin: 1rem;
+        }
+
+        .header {
+          padding: 2rem 1rem;
+        }
+
+        .platform-title {
+          font-size: 2rem;
+        }
+
+        .role-toggle {
+          position: relative;
+          top: auto;
+          right: auto;
+          margin-top: 2rem;
+        }
+
+        .content-area {
+          padding: 2rem 1rem;
+        }
+
+        .units-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .final-grade-breakdown {
+          grid-template-columns: 1fr;
+        }
+
+        .grades-table th,
+        .grades-table td {
+          padding: 0.5rem 0.25rem;
+          font-size: 0.8rem;
+        }
+
+        .profile-card {
+          flex-direction: column;
+          text-align: center;
+          gap: 1.5rem;
+        }
+
+        .profile-stats {
+          justify-content: center;
+        }
+
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .final-grade-display-container {
+          flex-direction: column;
+          gap: 2rem;
+        }
+
+        .semester-info {
+          flex-direction: column;
+          gap: 1rem;
+        }
+      }
+    </style>
+  </head>
+  
+
+<!-- NAV Plataforma QS -->
 <div class="qs-nav">
   <div class="wrap">
     <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
     <nav class="qs-tabs" aria-label="Navegación">
       <a class="qs-btn" href="materiales.html">Materiales</a>
       <a class="qs-btn" href="asistencia.html">Asistencia</a>
-      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="calificaciones.html" aria-current="page">Calificaciones</a>
       <a class="qs-btn" href="Foro.html">Foro</a>
       <a class="qs-btn" href="paneldocente.html">Panel</a>
       <a class="qs-btn" href="roadmap.html">Roadmap</a>
-          <a class="qs-btn" href="checklist.html">Checklist</a>
-\1
+      <a class="qs-btn" href="checklist.html">Checklist</a>
+      <a class="qs-btn" href="status.html">Status</a>
+    </nav>
   </div>
 </div>
 <script>
 (function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
+  var path=(location.pathname.split('/').pop()||'index.html').toLowerCase();
   document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
+    var href=(a.getAttribute('href')||'').toLowerCase();
+    if(href===path){ a.setAttribute('aria-current','page'); }
   });
 })();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
 </script>
 
-<!DOCTYPE html>
-<input id="g-max" type="number" placeholder="máximo" style="width:110px"/>
-<button id="g-save">Guardar</button>
-</div>
-<div id="g-admin-msg" class="muted" style="margin:6px 0 10px"></div>
-<div id="g-stats" class="muted"></div>
-</div>
-</div>
+    <div class="main-container">
+      <!-- Header -->
+      <div class="header">
+        <div class="role-toggle">
+          <button
+            class="role-btn active"
+            onclick="switchRole('teacher')"
+            id="teacherBtn"
+          >
+            👨‍🏫 Profesor
+          </button>
+          <button
+            class="role-btn"
+            onclick="switchRole('student')"
+            id="studentBtn"
+          >
+            👨‍🎓 Estudiante
+          </button>
+        </div>
 
+        <div class="header-content">
+          <h1 class="platform-title">📊 Sistema de Evaluación</h1>
+          <p class="platform-subtitle">
+            Calidad de Software - Seguimiento de Calificaciones
+          </p>
+        </div>
+      </div>
 
-<script>
-function table(headers, rows){
-const th = '<thead><tr>'+headers.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead>';
-const tb = '<tbody>'+rows.map(r=>'<tr>'+r.map(c=>'<td>'+escapeHtml(String(c))+'</td>').join('')+'</tr>').join('')+'</tbody>';
-return '<table>'+th+tb+'</table>';
-}
-function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));}
+      <!-- Auth bar for Grades -->
+      <div class="w-full flex items-center justify-center py-3">
+        <div id="authAreaGrades" class="flex items-center justify-center gap-3">
+          <button id="signInGrades" class="bg-gradient-to-r from-emerald-600 to-green-600 text-white px-4 py-2 rounded-full hover:from-emerald-700 hover:to-green-700 transition-all duration-200 font-semibold">
+            Acceder con cuenta @potros
+          </button>
+          <div id="userInfoGrades" class="hidden items-center gap-3">
+            <img id="userPhotoGrades" class="w-8 h-8 rounded-full border" alt="Foto" />
+            <span id="userNameGrades" class="text-gray-800 font-medium"></span>
+            <button id="signOutGrades" class="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium">Salir</button>
+          </div>
+        </div>
+      </div>
 
+      <!-- Content Area -->
+      <div class="content-area">
+        <!-- Main Navigation Tabs -->
+        <div class="main-nav-tabs">
+          <div
+            class="nav-tab active"
+            onclick="switchMainTab('overview')"
+            id="overviewTab"
+          >
+            📊 Resumen General
+          </div>
+          <div class="nav-tab" onclick="switchMainTab('unit1')" id="unit1Tab">
+            📚 Unidad I
+          </div>
+          <div class="nav-tab" onclick="switchMainTab('unit2')" id="unit2Tab">
+            📚 Unidad II
+          </div>
+          <div class="nav-tab" onclick="switchMainTab('unit3')" id="unit3Tab">
+            📚 Unidad III
+          </div>
+        </div>
 
-// alumno
-google.script.run.withSuccessHandler(rows=>{
-document.getElementById('g-table').innerHTML = rows.length ? table(['fecha','actividad','título','sesión','puntaje','máximo'], rows) : '<i>Sin calificaciones</i>';
-}).getMyGrades();
+        <!-- Overview Section -->
+        <div id="overviewSection">
+          <!-- Evaluation Overview -->
+          <div class="evaluation-overview">
+            <h2 class="overview-title">
+              📋 Sistema de Evaluación - Calidad de Software
+            </h2>
 
+            <!-- Visual Unit Formula -->
+            <div class="formula-card">
+              <div class="formula-title">
+                📐 Evaluación por Unidad (I, II, III)
+              </div>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div
+                  class="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2 border-blue-200"
+                >
+                  <div class="text-3xl mb-2">📝</div>
+                  <div class="font-bold text-blue-800">Participación</div>
+                  <div class="text-2xl font-black text-blue-600">10%</div>
+                  <div class="w-full bg-blue-200 rounded-full h-2 mt-2">
+                    <div
+                      class="bg-blue-600 h-2 rounded-full"
+                      style="width: 10%"
+                    ></div>
+                  </div>
+                </div>
+                <div
+                  class="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border-2 border-green-200"
+                >
+                  <div class="text-3xl mb-2">📋</div>
+                  <div class="font-bold text-green-800">Asignaciones</div>
+                  <div class="text-2xl font-black text-green-600">20%</div>
+                  <div class="w-full bg-green-200 rounded-full h-2 mt-2">
+                    <div
+                      class="bg-green-600 h-2 rounded-full"
+                      style="width: 20%"
+                    ></div>
+                  </div>
+                </div>
+                <div
+                  class="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border-2 border-orange-200"
+                >
+                  <div class="text-3xl mb-2">💼</div>
+                  <div class="font-bold text-orange-800">Trabajos</div>
+                  <div class="text-2xl font-black text-orange-600">25%</div>
+                  <div class="w-full bg-orange-200 rounded-full h-2 mt-2">
+                    <div
+                      class="bg-orange-600 h-2 rounded-full"
+                      style="width: 25%"
+                    ></div>
+                  </div>
+                </div>
+                <div
+                  class="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border-2 border-purple-200"
+                >
+                  <div class="text-3xl mb-2">📊</div>
+                  <div class="font-bold text-purple-800">Examen</div>
+                  <div class="text-2xl font-black text-purple-600">45%</div>
+                  <div class="w-full bg-purple-200 rounded-full h-2 mt-2">
+                    <div
+                      class="bg-purple-600 h-2 rounded-full"
+                      style="width: 45%"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <div class="formula-text text-center">
+                <strong>Fórmula:</strong> Calificación = (0.10 × Participación)
+                + (0.20 × Asignaciones) + (0.25 × Trabajos) + (0.45 × Examen)
+              </div>
+            </div>
 
-// docente
-google.script.run.withSuccessHandler(ctx=>{
-if (ctx && ctx.isTeacher){
-document.getElementById('teacher').style.display='';
-google.script.run.withSuccessHandler(stat=>{
-document.getElementById('g-stats').textContent = `Promedio del grupo: ${stat.classAverage}% · Actividades: ${stat.totalActivities} · Pendientes: ${stat.pendingGrades} · En riesgo: ${stat.failingStudents}`;
-}).getGradeStats();
-}
-}).getContext();
+            <!-- Visual Final Formula -->
+            <div class="formula-card">
+              <div class="formula-title">
+                🎯 Calificación Final del Semestre
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                <div
+                  class="text-center p-6 bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl border-2 border-indigo-200"
+                >
+                  <div class="text-4xl mb-3">📚</div>
+                  <div class="font-bold text-indigo-800 text-lg">
+                    Promedio de Unidades
+                  </div>
+                  <div class="text-3xl font-black text-indigo-600 mb-2">
+                    30%
+                  </div>
+                  <div class="text-sm text-indigo-700">
+                    (Unidad I + II + III) ÷ 3
+                  </div>
+                  <div class="w-full bg-indigo-200 rounded-full h-3 mt-3">
+                    <div
+                      class="bg-indigo-600 h-3 rounded-full"
+                      style="width: 30%"
+                    ></div>
+                  </div>
+                </div>
+                <div
+                  class="text-center p-6 bg-gradient-to-br from-red-50 to-red-100 rounded-xl border-2 border-red-200"
+                >
+                  <div class="text-4xl mb-3">🏆</div>
+                  <div class="font-bold text-red-800 text-lg">
+                    Proyecto Final
+                  </div>
+                  <div class="text-3xl font-black text-red-600 mb-2">70%</div>
+                  <div class="text-sm text-red-700">Certificación Integral</div>
+                  <div class="w-full bg-red-200 rounded-full h-3 mt-3">
+                    <div
+                      class="bg-red-600 h-3 rounded-full"
+                      style="width: 70%"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              <div class="formula-text text-center">
+                <strong>Fórmula Final:</strong> Calificación = (0.30 × Promedio
+                Unidades) + (0.70 × Proyecto Final)
+              </div>
+            </div>
+          </div>
 
+          <!-- Teacher View -->
+          <div id="teacherEvaluationView">
+            <!-- Student List for Teachers -->
+            <div class="student-list">
+              <h3 class="text-xl font-bold text-gray-800 mb-4">
+                👥 Lista de Estudiantes - Calidad de Software
+              </h3>
 
-document.getElementById('g-save').onclick = function(){
-const email = document.getElementById('g-email').value.trim();
-const act = document.getElementById('g-act').value.trim();
-const title = document.getElementById('g-title').value.trim();
-const ses = document.getElementById('g-sesion').value.trim();
-const score = Number(document.getElementById('g-score').value);
-const max = Number(document.getElementById('g-max').value||100);
-this.disabled = true;
-google.script.run.withSuccessHandler(msg=>{
-document.getElementById('g-admin-msg').textContent = msg;
-this.disabled = false;
-}).withFailureHandler(err=>{
-document.getElementById('g-admin-msg').textContent = 'Error: '+(err && err.message || err);
-this.disabled = false;
-}).upsertGrade(email, act, title, score, max, ses, '');
-};
-</script>
-</body>
+              <div class="overflow-x-auto">
+                <div class="mb-3 flex justify-between items-center flex-wrap gap-2">
+                  <div class="text-sm text-gray-600">Operaciones</div>
+                  <div class="flex gap-2">
+                    <button id="exportGradesCsvBtn" class="edit-btn hidden">Exportar CSV</button>
+                    <button id="exportGradesPdfBtn" class="edit-btn hidden" style="background:#2563eb">Reporte PDF</button>
+                    <button class="edit-btn" onclick="addStudentRecord()">➕ Agregar Estudiante</button>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-sm text-gray-600">Rango por fecha actualización</span>
+                    <input type="date" id="gradesStartDate" class="border rounded-md px-2 py-1 text-sm">
+                    <input type="date" id="gradesEndDate" class="border rounded-md px-2 py-1 text-sm">
+                    <button id="exportGradesRangeCsvBtn" class="edit-btn hidden" style="background:#047857">CSV Rango</button>
+                    <button id="exportGradesRangePdfBtn" class="edit-btn hidden" style="background:#065f46">PDF Rango</button>
+                  </div>
+                </div>
+                <table class="grades-table">
+                  <thead>
+                    <tr>
+                      <th class="student-name-cell">Estudiante</th>
+                      <th class="grade-cell">Unidad I</th>
+                      <th class="grade-cell">Unidad II</th>
+                      <th class="grade-cell">Unidad III</th>
+                      <th class="grade-cell" style="background: #1e40af">
+                        Promedio<br />Unidades
+                      </th>
+                      <th class="grade-cell" style="background: #166534">
+                        Proyecto<br />Final
+                      </th>
+                      <th class="grade-cell" style="background: #7c3aed">
+                        Calificación<br />Final
+                      </th>
+                      <th class="grade-cell">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody id="overviewTableBody">
+                    <!-- Students will be populated here -->
+                  </tbody>
+                </table>
+              </div>
+              </div>
+            </div>
+
+            <!-- Student View -->
+            <div id="studentEvaluationView" class="hidden">
+            <!-- Student Profile Header -->
+            <div class="student-profile-header">
+              <div class="profile-card">
+                <div class="profile-avatar">
+                  <div class="avatar-circle">
+                    <span class="avatar-initials">DG</span>
+                  </div>
+                </div>
+                <div class="profile-info">
+                  <h2 class="student-name-display">
+                    Arana Guerrero, Danett Itzanami
+                  </h2>
+                  <p class="student-id-display">ID: 00000249116</p>
+                  <div class="student-status">
+                    <span class="status-badge status-active"
+                      >📚 Estudiante Activo</span
+                    >
+                    <span class="semester-badge">🗓️ Semestre 2024-1</span>
+                  </div>
+                </div>
+                <div class="profile-stats">
+                  <div class="stat-item">
+                    <div class="stat-value" id="studentOverallGPA">8.95</div>
+                    <div class="stat-label">Promedio General</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-value" id="studentRanking">#3</div>
+                    <div class="stat-label">Posición en Clase</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Stats Dashboard -->
+            <div class="student-dashboard">
+              <div class="dashboard-grid">
+                <div class="dashboard-card progress-card">
+                  <div class="card-header">
+                    <h3 class="card-title">📊 Progreso del Semestre</h3>
+                    <div class="progress-percentage">89.5%</div>
+                  </div>
+                  <div class="progress-visual">
+                    <div class="circular-progress">
+                      <svg class="progress-ring" width="120" height="120">
+                        <circle
+                          class="progress-ring-circle"
+                          stroke="#e2e8f0"
+                          stroke-width="8"
+                          fill="transparent"
+                          r="52"
+                          cx="60"
+                          cy="60"
+                        />
+                        <circle
+                          class="progress-ring-circle progress-ring-fill"
+                          stroke="#764ba2"
+                          stroke-width="8"
+                          fill="transparent"
+                          r="52"
+                          cx="60"
+                          cy="60"
+                          style="stroke-dasharray: 327; stroke-dashoffset: 34"
+                        />
+                      </svg>
+                      <div class="progress-center">
+                        <span class="progress-text">89.5%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="dashboard-card attendance-card">
+                  <div class="card-header">
+                    <h3 class="card-title">📅 Asistencia</h3>
+                    <div class="attendance-percentage">95%</div>
+                  </div>
+                  <div class="attendance-visual">
+                    <div class="attendance-grid">
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div class="attendance-day absent" title="Ausente"></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                      <div
+                        class="attendance-day present"
+                        title="Presente"
+                      ></div>
+                    </div>
+                    <div class="attendance-legend">
+                      <span class="legend-item"
+                        ><div class="legend-dot present"></div>
+                        Presente</span
+                      >
+                      <span class="legend-item"
+                        ><div class="legend-dot absent"></div>
+                        Ausente</span
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <div class="dashboard-card assignments-card">
+                  <div class="card-header">
+                    <h3 class="card-title">📋 Tareas Pendientes</h3>
+                    <div class="assignments-count">2</div>
+                  </div>
+                  <div class="assignments-list">
+                    <div class="assignment-item">
+                      <div class="assignment-info">
+                        <div class="assignment-name">
+                          Ensayo sobre Metodologías Ágiles
+                        </div>
+                        <div class="assignment-due">Vence: 15 Nov 2024</div>
+                      </div>
+                      <div class="assignment-priority high">Alta</div>
+                    </div>
+                    <div class="assignment-item">
+                      <div class="assignment-info">
+                        <div class="assignment-name">Práctica de Testing</div>
+                        <div class="assignment-due">Vence: 20 Nov 2024</div>
+                      </div>
+                      <div class="assignment-priority medium">Media</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Units Evaluation -->
+            <div class="units-grid">
+              <!-- Unit I -->
+              <div class="unit-card student-unit-card">
+                <div class="unit-header">
+                  <div class="unit-info">
+                    <h3 class="unit-title">📚 Unidad I</h3>
+                    <p class="unit-subtitle">Fundamentos de Calidad</p>
+                  </div>
+                  <div class="unit-grade-display">
+                    <div class="unit-grade" id="unit1Grade">8.5</div>
+                    <div class="unit-status approved">✅ Aprobada</div>
+                  </div>
+                </div>
+
+                <div class="component-list">
+                  <div class="component-item readonly">
+                    <div class="component-name">
+                      <div class="component-icon">📝</div>
+                      <div class="component-details">
+                        <span class="component-title">Participación</span>
+                        <span class="component-weight">(10%)</span>
+                      </div>
+                    </div>
+                    <div class="component-grade">
+                      <div class="grade-display">9.0</div>
+                      <div
+                        class="weighted-score"
+                        id="unit1_participation_weighted"
+                      >
+                        0.90
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="component-item readonly">
+                    <div class="component-name">
+                      <div class="component-icon">📋</div>
+                      <div class="component-details">
+                        <span class="component-title">Asignaciones</span>
+                        <span class="component-weight">(20%)</span>
+                      </div>
+                    </div>
+                    <div class="component-grade">
+                      <div class="grade-display">8.5</div>
+                      <div
+                        class="weighted-score"
+                        id="unit1_assignments_weighted"
+                      >
+                        1.70
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="component-item readonly">
+                    <div class="component-name">
+                      <div class="component-icon">💼</div>
+                      <div class="component-details">
+                        <span class="component-title">Trabajos en Clase</span>
+                        <span class="component-weight">(25%)</span>
+                      </div>
+                    </div>
+                    <div class="component-grade">
+                      <div class="grade-display">8.0</div>
+                      <div class="weighted-score" id="unit1_classwork_weighted">
+                        2.00
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="component-item readonly">
+                    <div class="component-name">
+                      <div class="component-icon">📊</div>
+                      <div class="component-details">
+                        <span class="component-title">Examen</span>
+                        <span class="component-weight">(45%)</span>
+                      </div>
+                    </div>
+                    <div class="component-grade">
+                      <div class="grade-display">8.7</div>
+                      <div class="weighted-score" id="unit1_exam_weighted">
+                        3.92
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="unit-progress-bar">
+                  <div class="progress-bar-fill" style="width: 85%"></div>
+                </div>
+              </div>
+
+              <!-- Unit II -->
+              <div class="unit-card student-unit-card">
+                <div class="unit-header">
+                  <div class="unit-info">
+                    <h3 class="unit-title">📚 Unidad II</h3>
+                    <p class="unit-subtitle">Metodologías y Procesos</p>
+                  </div>
+                  <div class="unit-grade-display">
+                    <div class="unit-grade" id="unit2Grade">9.2</div>
+                    <div class="unit-status approved">✅ Aprobada</div>
+                  </div>
+                </div>
+
+                <div class="component-list">
+                  <div class="component-item readonly">
+                    <div class="component-name">
+                      <div class="component-icon">📝</div>
+                      <div class="component-details">
+                        <span class="component-title">Participación</span>
+                        <span class="component-weight">(10%)</span>
+                      </div>
+                    </div>
+                    <div class="component-grade">
+                      <div class="grade-display">9.5</div>
+                      <div
+                        class="weighted-score"
+                        id="unit2_participation_weighted"
+                      >
+                        0.95
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="component-item readonly">
+                    <div class="component-name">
+                      <div class="component-icon">📋</div>
+                      <div class="component-details">
+                        <span class="component-title">Asignaciones</span>
+                        <span class="component-weight">(20%)</span>
+                      </div>
+                    </div>
+                    <div class="component-grade">
+                      <div class="grade-display">9.0</div>
+                      <div
+                        class="weighted-score"
+                        id="unit2_assignments_weighted"
+                      >
+                        1.80
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="component-item readonly">
+                    <div class="component-name">
+                      <div class="component-icon">💼</div>
+                      <div class="component-details">
+                        <span class="component-title">Trabajos en Clase</span>
+                        <span class="component-weight">(25%)</span>
+                      </div>
+                    </div>
+                    <div class="component-grade">
+                      <div class="grade-display">9.3</div>
+                      <div class="weighted-score" id="unit2_classwork_weighted">
+                        2.33
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="component-item readonly">
+                    <div class="component-name">
+                      <div class="component-icon">📊</div>
+                      <div class="component-details">
+                        <span class="component-title">Examen</span>
+                        <span class="component-weight">(45%)</span>
+                      </div>
+                    </div>
+                    <div class="component-grade">
+                      <div class="grade-display">9.2</div>
+                      <div class="weighted-score" id="unit2_exam_weighted">
+                        4.14
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="unit-progress-bar">
+                  <div class="progress-bar-fill" style="width: 92%"></div>
+                </div>
+              </div>
+
+              <!-- Unit III -->
+              <div class="unit-card student-unit-card">
+                <div class="unit-header">
+                  <div class="unit-info">
+                    <h3 class="unit-title">📚 Unidad III</h3>
+                    <p class="unit-subtitle">Testing y Validación</p>
+                  </div>
+                  <div class="unit-grade-display">
+                    <div class="unit-grade" id="unit3Grade">8.8</div>
+                    <div class="unit-status approved">✅ Aprobada</div>
+                  </div>
+                </div>
+
+                <div class="component-list">
+                  <div class="component-item readonly">
+                    <div class="component-name">
+                      <div class="component-icon">📝</div>
+                      <div class="component-details">
+                        <span class="component-title">Participación</span>
+                        <span class="component-weight">(10%)</span>
+                      </div>
+                    </div>
+                    <div class="component-grade">
+                      <div class="grade-display">8.5</div>
+                      <div
+                        class="weighted-score"
+                        id="unit3_participation_weighted"
+                      >
+                        0.85
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="component-item readonly">
+                    <div class="component-name">
+                      <div class="component-icon">📋</div>
+                      <div class="component-details">
+                        <span class="component-title">Asignaciones</span>
+                        <span class="component-weight">(20%)</span>
+                      </div>
+                    </div>
+                    <div class="component-grade">
+                      <div class="grade-display">8.8</div>
+                      <div
+                        class="weighted-score"
+                        id="unit3_assignments_weighted"
+                      >
+                        1.76
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="component-item readonly">
+                    <div class="component-name">
+                      <div class="component-icon">💼</div>
+                      <div class="component-details">
+                        <span class="component-title">Trabajos en Clase</span>
+                        <span class="component-weight">(25%)</span>
+                      </div>
+                    </div>
+                    <div class="component-grade">
+                      <div class="grade-display">9.0</div>
+                      <div class="weighted-score" id="unit3_classwork_weighted">
+                        2.25
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="component-item readonly">
+                    <div class="component-name">
+                      <div class="component-icon">📊</div>
+                      <div class="component-details">
+                        <span class="component-title">Examen</span>
+                        <span class="component-weight">(45%)</span>
+                      </div>
+                    </div>
+                    <div class="component-grade">
+                      <div class="grade-display">8.7</div>
+                      <div class="weighted-score" id="unit3_exam_weighted">
+                        3.92
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="unit-progress-bar">
+                  <div class="progress-bar-fill" style="width: 88%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Final Grade Section -->
+            <div class="final-grade-section student-final-section">
+              <div class="final-grade-header">
+                <h2 class="final-grade-title">
+                  🎯 Calificación Final del Semestre
+                </h2>
+                <div class="semester-info">
+                  <span class="course-name">Calidad de Software</span>
+                  <span class="semester-period">2024-1</span>
+                </div>
+              </div>
+
+              <div class="final-grade-breakdown">
+                <div class="grade-component units-component">
+                  <div class="component-icon">📚</div>
+                  <div class="component-info">
+                    <div class="component-label">Promedio de Unidades</div>
+                    <div class="component-percentage">30%</div>
+                  </div>
+                  <div class="component-value" id="unitsAverage">8.83</div>
+                  <div class="component-breakdown">
+                    <div class="breakdown-item">
+                      <span>Unidad I:</span>
+                      <span>8.5</span>
+                    </div>
+                    <div class="breakdown-item">
+                      <span>Unidad II:</span>
+                      <span>9.2</span>
+                    </div>
+                    <div class="breakdown-item">
+                      <span>Unidad III:</span>
+                      <span>8.8</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grade-component project-component">
+                  <div class="component-icon">🏆</div>
+                  <div class="component-info">
+                    <div class="component-label">Proyecto Final</div>
+                    <div class="component-percentage">70%</div>
+                  </div>
+                  <div class="component-value">9.0</div>
+                  <div class="project-status">
+                    <div class="status-indicator completed">✅ Entregado</div>
+                    <div class="delivery-date">Entregado: 10 Nov 2024</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="final-grade-display-container">
+                <div class="final-grade-circle">
+                  <div class="grade-circle">
+                    <div class="final-grade-display" id="finalGrade">8.95</div>
+                    <div class="grade-scale">/ 10.0</div>
+                  </div>
+                </div>
+                <div class="grade-details">
+                  <div class="grade-status approved" id="gradeStatus">
+                    ✅ APROBADO
+                  </div>
+                  <div class="grade-letter">A-</div>
+                  <div class="grade-description">
+                    Excelente desempeño académico
+                  </div>
+                </div>
+              </div>
+
+              <div class="progress-bar-container">
+                <div class="progress-bar">
+                  <div
+                    class="progress-fill"
+                    id="progressFill"
+                    style="width: 89.5%"
+                  ></div>
+                </div>
+                <div class="progress-labels">
+                  <span>0</span>
+                  <span>5</span>
+                  <span>7</span>
+                  <span>10</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Unit I Section -->
+        <div id="unit1Section" class="hidden">
+          <div class="bg-white rounded-xl p-6 border-2 border-gray-200">
+            <h2
+              class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3"
+            >
+              📚 Unidad I - Seguimiento Detallado
+            </h2>
+
+            <div class="overflow-x-auto">
+              <table class="grades-table">
+                <thead>
+                  <tr>
+                    <th class="student-name-cell">Estudiante</th>
+                    <th class="grade-cell">
+                      Participación<br /><span class="text-xs font-normal"
+                        >(10%)</span
+                      >
+                    </th>
+                    <th class="grade-cell">
+                      Asignaciones<br /><span class="text-xs font-normal"
+                        >(20%)</span
+                      >
+                    </th>
+                    <th class="grade-cell">
+                      Trabajos<br /><span class="text-xs font-normal"
+                        >(25%)</span
+                      >
+                    </th>
+                    <th class="grade-cell">
+                      Examen<br /><span class="text-xs font-normal">(45%)</span>
+                    </th>
+                    <th class="grade-cell" style="background: #1e40af">
+                      Promedio<br />Unidad I
+                    </th>
+                    <th class="grade-cell">Acciones</th>
+                  </tr>
+                  </thead>
+                  <tbody id="unit1TableBody">
+                  <!-- Students will be populated here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Unit II Section -->
+        <div id="unit2Section" class="hidden">
+          <div class="bg-white rounded-xl p-6 border-2 border-gray-200">
+            <h2
+              class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3"
+            >
+              📚 Unidad II - Seguimiento Detallado
+            </h2>
+
+            <div class="overflow-x-auto">
+              <table class="grades-table">
+                <thead>
+                  <tr>
+                    <th class="student-name-cell">Estudiante</th>
+                    <th class="grade-cell">
+                      Participación<br /><span class="text-xs font-normal"
+                        >(10%)</span
+                      >
+                    </th>
+                    <th class="grade-cell">
+                      Asignaciones<br /><span class="text-xs font-normal"
+                        >(20%)</span
+                      >
+                    </th>
+                    <th class="grade-cell">
+                      Trabajos<br /><span class="text-xs font-normal"
+                        >(25%)</span
+                      >
+                    </th>
+                    <th class="grade-cell">
+                      Examen<br /><span class="text-xs font-normal">(45%)</span>
+                    </th>
+                    <th class="grade-cell" style="background: #166534">
+                      Promedio<br />Unidad II
+                    </th>
+                    <th class="grade-cell">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="unit2TableBody">
+                  <!-- Students will be populated here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Unit III Section -->
+        <div id="unit3Section" class="hidden">
+          <div class="bg-white rounded-xl p-6 border-2 border-gray-200">
+            <h2
+              class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3"
+            >
+              📚 Unidad III - Seguimiento Detallado
+            </h2>
+
+            <div class="overflow-x-auto">
+              <table class="grades-table">
+                <thead>
+                  <tr>
+                    <th class="student-name-cell">Estudiante</th>
+                    <th class="grade-cell">
+                      Participación<br /><span class="text-xs font-normal"
+                        >(10%)</span
+                      >
+                    </th>
+                    <th class="grade-cell">
+                      Asignaciones<br /><span class="text-xs font-normal"
+                        >(20%)</span
+                      >
+                    </th>
+                    <th class="grade-cell">
+                      Trabajos<br /><span class="text-xs font-normal"
+                        >(25%)</span
+                      >
+                    </th>
+                    <th class="grade-cell">
+                      Examen<br /><span class="text-xs font-normal">(45%)</span>
+                    </th>
+                    <th class="grade-cell" style="background: #ea580c">
+                      Promedio<br />Unidad III
+                    </th>
+                    <th class="grade-cell">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="unit3TableBody">
+                  <!-- Students will be populated here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Crear/Editar Estudiante -->
+    <div id="studentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+      <div class="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl">
+        <h3 id="studentModalTitle" class="text-xl font-bold text-gray-900 mb-4">Agregar estudiante</h3>
+        <form id="studentForm" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">ID (documento)</label>
+            <input id="studentIdInput" type="text" class="w-full border rounded-lg p-2" placeholder="Ej: 00000249116" required />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre completo</label>
+            <input id="studentNameInput" type="text" class="w-full border rounded-lg p-2" placeholder="Nombre Apellido" required />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Correo @potros</label>
+            <input id="studentEmailInput" type="email" class="w-full border rounded-lg p-2" placeholder="usuario@potros.itson.edu.mx" required />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Proyecto Final</label>
+            <input id="studentProjectFinalInput" type="number" min="0" max="10" step="0.1" class="w-full border rounded-lg p-2" value="0" />
+          </div>
+          <div class="flex justify-end gap-3 pt-2">
+            <button type="button" id="studentCancelBtn" class="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700">Cancelar</button>
+            <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification">
+      <div class="flex items-center">
+        <div class="text-2xl mr-3" id="notificationIcon">✅</div>
+        <div>
+          <div class="font-bold" id="notificationTitle">Éxito</div>
+          <div class="text-sm text-gray-600" id="notificationMessage">
+            Operación completada correctamente
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentRole = "teacher";
+      let currentMainTab = "overview";
+
+      // Student data with detailed grades
+      const studentsData = [
+        {
+          id: "00000249116",
+          name: "Arana Guerrero, Danett Itzanami",
+          unit1: {
+            participation: 9.0,
+            assignments: 8.5,
+            classwork: 8.0,
+            exam: 8.7,
+          },
+          unit2: {
+            participation: 9.5,
+            assignments: 9.0,
+            classwork: 9.3,
+            exam: 9.2,
+          },
+          unit3: {
+            participation: 8.5,
+            assignments: 8.8,
+            classwork: 9.0,
+            exam: 8.7,
+          },
+          projectFinal: 9.0,
+        },
+        {
+          id: "00000147818",
+          name: "Araujo Godoy, Abraham Francisco",
+          unit1: {
+            participation: 8.0,
+            assignments: 7.5,
+            classwork: 7.8,
+            exam: 8.0,
+          },
+          unit2: {
+            participation: 8.5,
+            assignments: 8.2,
+            classwork: 8.7,
+            exam: 8.6,
+          },
+          unit3: {
+            participation: 8.2,
+            assignments: 7.9,
+            classwork: 8.1,
+            exam: 7.8,
+          },
+          projectFinal: 8.3,
+        },
+        {
+          id: "00000244228",
+          name: "Avalos Morales, Egla Icel",
+          unit1: {
+            participation: 9.8,
+            assignments: 9.5,
+            classwork: 9.2,
+            exam: 9.6,
+          },
+          unit2: {
+            participation: 9.9,
+            assignments: 9.7,
+            classwork: 9.8,
+            exam: 9.8,
+          },
+          unit3: {
+            participation: 9.3,
+            assignments: 9.1,
+            classwork: 9.4,
+            exam: 9.0,
+          },
+          projectFinal: 9.4,
+        },
+        {
+          id: "00000244442",
+          name: "Blasco Villagomez, Luis Mario",
+          unit1: {
+            participation: 8.5,
+            assignments: 8.0,
+            classwork: 8.3,
+            exam: 8.1,
+          },
+          unit2: {
+            participation: 8.0,
+            assignments: 7.8,
+            classwork: 7.9,
+            exam: 7.9,
+          },
+          unit3: {
+            participation: 8.7,
+            assignments: 8.2,
+            classwork: 8.5,
+            exam: 8.3,
+          },
+          projectFinal: 8.0,
+        },
+        {
+          id: "00000244242",
+          name: "Duarte Lopez, Adlemi Guadalupe",
+          unit1: {
+            participation: 9.2,
+            assignments: 8.8,
+            classwork: 9.0,
+            exam: 9.0,
+          },
+          unit2: {
+            participation: 8.8,
+            assignments: 8.5,
+            classwork: 8.9,
+            exam: 8.6,
+          },
+          unit3: {
+            participation: 9.3,
+            assignments: 9.0,
+            classwork: 9.2,
+            exam: 9.0,
+          },
+          projectFinal: 8.8,
+        },
+        {
+          id: "00000244473",
+          name: "Espericueta Ramos, Jesus Alan",
+          unit1: {
+            participation: 7.8,
+            assignments: 7.2,
+            classwork: 7.5,
+            exam: 7.5,
+          },
+          unit2: {
+            participation: 8.2,
+            assignments: 7.8,
+            classwork: 8.0,
+            exam: 8.0,
+          },
+          unit3: {
+            participation: 8.0,
+            assignments: 7.6,
+            classwork: 7.9,
+            exam: 7.7,
+          },
+          projectFinal: 7.7,
+        },
+        {
+          id: "00000244608",
+          name: "Gracia Morales, Sergio Alejandro",
+          unit1: {
+            participation: 9.0,
+            assignments: 8.6,
+            classwork: 8.9,
+            exam: 8.7,
+          },
+          unit2: {
+            participation: 9.5,
+            assignments: 9.1,
+            classwork: 9.4,
+            exam: 9.2,
+          },
+          unit3: {
+            participation: 9.1,
+            assignments: 8.7,
+            classwork: 9.0,
+            exam: 8.8,
+          },
+          projectFinal: 9.0,
+        },
+        {
+          id: "00000228847",
+          name: "Hernandez Gonzalez, Julian Ricardo",
+          unit1: {
+            participation: 7.5,
+            assignments: 7.0,
+            classwork: 7.2,
+            exam: 7.1,
+          },
+          unit2: {
+            participation: 8.0,
+            assignments: 7.6,
+            classwork: 7.9,
+            exam: 7.7,
+          },
+          unit3: {
+            participation: 7.8,
+            assignments: 7.2,
+            classwork: 7.6,
+            exam: 7.4,
+          },
+          projectFinal: 7.3,
+        },
+        {
+          id: "00000248997",
+          name: "Le Blohic Garay, Mario Enrique",
+          unit1: {
+            participation: 9.3,
+            assignments: 8.9,
+            classwork: 9.2,
+            exam: 9.0,
+          },
+          unit2: {
+            participation: 9.0,
+            assignments: 8.8,
+            classwork: 9.1,
+            exam: 8.8,
+          },
+          unit3: {
+            participation: 9.2,
+            assignments: 8.8,
+            classwork: 9.0,
+            exam: 9.0,
+          },
+          projectFinal: 9.0,
+        },
+        {
+          id: "00000249012",
+          name: "Lopez Guerrero, Luis Carlos",
+          unit1: {
+            participation: 8.5,
+            assignments: 8.1,
+            classwork: 8.4,
+            exam: 8.2,
+          },
+          unit2: {
+            participation: 8.8,
+            assignments: 8.4,
+            classwork: 8.7,
+            exam: 8.5,
+          },
+          unit3: {
+            participation: 8.3,
+            assignments: 7.9,
+            classwork: 8.2,
+            exam: 8.0,
+          },
+          projectFinal: 8.5,
+        },
+        {
+          id: "00000248990",
+          name: "Maldonado Montoya, Jose Gabriel",
+          unit1: {
+            participation: 8.2,
+            assignments: 7.7,
+            classwork: 8.0,
+            exam: 7.8,
+          },
+          unit2: {
+            participation: 8.4,
+            assignments: 8.0,
+            classwork: 8.3,
+            exam: 8.1,
+          },
+          unit3: {
+            participation: 8.2,
+            assignments: 7.8,
+            classwork: 8.1,
+            exam: 7.9,
+          },
+          projectFinal: 8.0,
+        },
+        {
+          id: "00000244378",
+          name: "Martínez Santacruz, Yolanda",
+          unit1: {
+            participation: 9.5,
+            assignments: 9.1,
+            classwork: 9.4,
+            exam: 9.2,
+          },
+          unit2: {
+            participation: 9.7,
+            assignments: 9.3,
+            classwork: 9.6,
+            exam: 9.4,
+          },
+          unit3: {
+            participation: 9.3,
+            assignments: 8.9,
+            classwork: 9.2,
+            exam: 9.0,
+          },
+          projectFinal: 9.3,
+        },
+        {
+          id: "00000217812",
+          name: "Martínez Soto, Dainiz Raí",
+          unit1: {
+            participation: 8.2,
+            assignments: 7.8,
+            classwork: 8.1,
+            exam: 7.9,
+          },
+          unit2: {
+            participation: 8.6,
+            assignments: 8.2,
+            classwork: 8.5,
+            exam: 8.3,
+          },
+          unit3: {
+            participation: 8.4,
+            assignments: 8.0,
+            classwork: 8.3,
+            exam: 8.1,
+          },
+          projectFinal: 8.2,
+        },
+        {
+          id: "00000244321",
+          name: "Nevescanin Moreno, Angel Stipe",
+          unit1: {
+            participation: 7.8,
+            assignments: 7.4,
+            classwork: 7.7,
+            exam: 7.5,
+          },
+          unit2: {
+            participation: 8.3,
+            assignments: 7.9,
+            classwork: 8.2,
+            exam: 8.0,
+          },
+          unit3: {
+            participation: 8.0,
+            assignments: 7.6,
+            classwork: 7.9,
+            exam: 7.7,
+          },
+          projectFinal: 7.8,
+        },
+        {
+          id: "00000244477",
+          name: "Osuna Aguilera, Erik David",
+          unit1: {
+            participation: 8.9,
+            assignments: 8.5,
+            classwork: 8.8,
+            exam: 8.6,
+          },
+          unit2: {
+            participation: 9.2,
+            assignments: 8.8,
+            classwork: 9.1,
+            exam: 8.9,
+          },
+          unit3: {
+            participation: 8.7,
+            assignments: 8.3,
+            classwork: 8.6,
+            exam: 8.4,
+          },
+          projectFinal: 8.7,
+        },
+        {
+          id: "00000244711",
+          name: "Palacios Cardenas, Jorge Eduardo",
+          unit1: {
+            participation: 7.6,
+            assignments: 7.2,
+            classwork: 7.5,
+            exam: 7.3,
+          },
+          unit2: {
+            participation: 7.9,
+            assignments: 7.5,
+            classwork: 7.8,
+            exam: 7.6,
+          },
+          unit3: {
+            participation: 7.5,
+            assignments: 7.1,
+            classwork: 7.4,
+            exam: 7.2,
+          },
+          projectFinal: 7.5,
+        },
+        {
+          id: "00000244569",
+          name: "Preciado Ruiz, Juan Carlos",
+          unit1: {
+            participation: 9.1,
+            assignments: 8.7,
+            classwork: 9.0,
+            exam: 8.8,
+          },
+          unit2: {
+            participation: 9.3,
+            assignments: 8.9,
+            classwork: 9.2,
+            exam: 9.0,
+          },
+          unit3: {
+            participation: 9.0,
+            assignments: 8.6,
+            classwork: 8.9,
+            exam: 8.7,
+          },
+          projectFinal: 8.9,
+        },
+        {
+          id: "00000244373",
+          name: "Reyes Galaz, Jose Abelardo",
+          unit1: {
+            participation: 8.0,
+            assignments: 7.6,
+            classwork: 7.9,
+            exam: 7.7,
+          },
+          unit2: {
+            participation: 8.5,
+            assignments: 8.1,
+            classwork: 8.4,
+            exam: 8.2,
+          },
+          unit3: {
+            participation: 8.2,
+            assignments: 7.8,
+            classwork: 8.1,
+            exam: 7.9,
+          },
+          projectFinal: 8.0,
+        },
+        {
+          id: "00000240691",
+          name: "Rivas Quintana, Emmanuel",
+          unit1: {
+            participation: 9.4,
+            assignments: 9.0,
+            classwork: 9.3,
+            exam: 9.1,
+          },
+          unit2: {
+            participation: 9.6,
+            assignments: 9.2,
+            classwork: 9.5,
+            exam: 9.3,
+          },
+          unit3: {
+            participation: 9.2,
+            assignments: 8.8,
+            classwork: 9.1,
+            exam: 8.9,
+          },
+          projectFinal: 9.2,
+        },
+        {
+          id: "00000244266",
+          name: "Rocha Aguilar, Víctor Emmanuel",
+          unit1: {
+            participation: 8.3,
+            assignments: 7.9,
+            classwork: 8.2,
+            exam: 8.0,
+          },
+          unit2: {
+            participation: 8.7,
+            assignments: 8.3,
+            classwork: 8.6,
+            exam: 8.4,
+          },
+          unit3: {
+            participation: 8.5,
+            assignments: 8.1,
+            classwork: 8.4,
+            exam: 8.2,
+          },
+          projectFinal: 8.3,
+        },
+        {
+          id: "00000244312",
+          name: "Rodriguez Alvarado, Jose Agustin",
+          unit1: {
+            participation: 7.9,
+            assignments: 7.5,
+            classwork: 7.8,
+            exam: 7.6,
+          },
+          unit2: {
+            participation: 8.2,
+            assignments: 7.8,
+            classwork: 8.1,
+            exam: 7.9,
+          },
+          unit3: {
+            participation: 8.1,
+            assignments: 7.7,
+            classwork: 8.0,
+            exam: 7.8,
+          },
+          projectFinal: 7.9,
+        },
+        {
+          id: "00000244621",
+          name: "Soto Carrazco, Francisco Javier",
+          unit1: {
+            participation: 8.8,
+            assignments: 8.4,
+            classwork: 8.7,
+            exam: 8.5,
+          },
+          unit2: {
+            participation: 9.0,
+            assignments: 8.6,
+            classwork: 8.9,
+            exam: 8.7,
+          },
+          unit3: {
+            participation: 8.6,
+            assignments: 8.2,
+            classwork: 8.5,
+            exam: 8.3,
+          },
+          projectFinal: 8.6,
+        },
+        {
+          id: "00000216759",
+          name: "Sánchez Zavala, Dulce María",
+          unit1: {
+            participation: 9.8,
+            assignments: 9.4,
+            classwork: 9.7,
+            exam: 9.5,
+          },
+          unit2: {
+            participation: 9.9,
+            assignments: 9.5,
+            classwork: 9.8,
+            exam: 9.6,
+          },
+          unit3: {
+            participation: 9.6,
+            assignments: 9.2,
+            classwork: 9.5,
+            exam: 9.3,
+          },
+          projectFinal: 9.6,
+        },
+        {
+          id: "00000244689",
+          name: "Villegas Sosa, Ramsés Mauricio",
+          unit1: {
+            participation: 8.6,
+            assignments: 8.2,
+            classwork: 8.5,
+            exam: 8.3,
+          },
+          unit2: {
+            participation: 8.9,
+            assignments: 8.5,
+            classwork: 8.8,
+            exam: 8.6,
+          },
+          unit3: {
+            participation: 8.4,
+            assignments: 8.0,
+            classwork: 8.3,
+            exam: 8.1,
+          },
+          projectFinal: 8.4,
+        },
+        {
+          id: "00000244679",
+          name: "Viveros Zavala, Angel Gael",
+          unit1: {
+            participation: 7.5,
+            assignments: 7.1,
+            classwork: 7.4,
+            exam: 7.2,
+          },
+          unit2: {
+            participation: 7.8,
+            assignments: 7.4,
+            classwork: 7.7,
+            exam: 7.5,
+          },
+          unit3: {
+            participation: 7.6,
+            assignments: 7.2,
+            classwork: 7.5,
+            exam: 7.3,
+          },
+          projectFinal: 7.4,
+        },
+      ];
+
+      // Role switching
+      function switchRole(role) {
+        currentRole = role;
+
+        // Update buttons
+        document
+          .getElementById("teacherBtn")
+          .classList.toggle("active", role === "teacher");
+        document
+          .getElementById("studentBtn")
+          .classList.toggle("active", role === "student");
+
+        // Update views
+        document
+          .getElementById("teacherEvaluationView")
+          .classList.toggle("hidden", role !== "teacher");
+        document
+          .getElementById("studentEvaluationView")
+          .classList.toggle("hidden", role !== "student");
+
+        showNotification(
+          "success",
+          "Vista cambiada",
+          `Ahora viendo como ${role === "teacher" ? "Profesor" : "Estudiante"}`
+        );
+      }
+
+      // Main tab switching
+      function switchMainTab(tab) {
+        currentMainTab = tab;
+
+        // Update tab buttons
+        document
+          .querySelectorAll(".nav-tab")
+          .forEach((t) => t.classList.remove("active"));
+        document.getElementById(tab + "Tab").classList.add("active");
+
+        // Update sections
+        document
+          .getElementById("overviewSection")
+          .classList.toggle("hidden", tab !== "overview");
+        document
+          .getElementById("unit1Section")
+          .classList.toggle("hidden", tab !== "unit1");
+        document
+          .getElementById("unit2Section")
+          .classList.toggle("hidden", tab !== "unit2");
+        document
+          .getElementById("unit3Section")
+          .classList.toggle("hidden", tab !== "unit3");
+
+        // Populate tables when switching
+        if (tab === "overview") populateOverviewTable();
+        if (tab === "unit1") populateUnitTable(1);
+        if (tab === "unit2") populateUnitTable(2);
+        if (tab === "unit3") populateUnitTable(3);
+
+        showNotification(
+          "success",
+          "Sección cambiada",
+          `Viendo ${
+            tab === "overview" ? "Resumen General" : "Unidad " + tab.slice(-1)
+          }`
+        );
+      }
+
+      // Calculate unit grade
+      function calculateUnitGrade(participation, assignments, classwork, exam) {
+        return (
+          participation * 0.1 +
+          assignments * 0.2 +
+          classwork * 0.25 +
+          exam * 0.45
+        );
+      }
+
+      // Calculate units average
+      function calculateUnitsAverage(unit1, unit2, unit3) {
+        return (unit1 + unit2 + unit3) / 3;
+      }
+
+      // Calculate final grade
+      function calculateFinalGrade(unitsAverage, projectFinal) {
+        return unitsAverage * 0.3 + projectFinal * 0.7;
+      }
+
+      // Populate overview table
+      function populateOverviewTable() {
+        const tableBody = document.getElementById("overviewTableBody");
+        tableBody.innerHTML = "";
+
+        ((window.getFilteredStudentsData && window.getFilteredStudentsData()) || (window.getStudentsData ? window.getStudentsData() : studentsData)).forEach((student) => {
+          const unit1Grade = calculateUnitGrade(
+            student.unit1.participation,
+            student.unit1.assignments,
+            student.unit1.classwork,
+            student.unit1.exam
+          );
+          const unit2Grade = calculateUnitGrade(
+            student.unit2.participation,
+            student.unit2.assignments,
+            student.unit2.classwork,
+            student.unit2.exam
+          );
+          const unit3Grade = calculateUnitGrade(
+            student.unit3.participation,
+            student.unit3.assignments,
+            student.unit3.classwork,
+            student.unit3.exam
+          );
+          const unitsAverage = calculateUnitsAverage(
+            unit1Grade,
+            unit2Grade,
+            unit3Grade
+          );
+          const finalGrade = calculateFinalGrade(
+            unitsAverage,
+            student.projectFinal
+          );
+
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td class="student-name-cell">
+                        <div class="student-name">${student.name}</div>
+                        <div class="student-id">ID: ${student.id}</div>
+                    </td>
+                    <td class="grade-cell">${unit1Grade.toFixed(2)}</td>
+                    <td class="grade-cell">${unit2Grade.toFixed(2)}</td>
+                    <td class="grade-cell">${unit3Grade.toFixed(2)}</td>
+                    <td class="grade-cell unit-average-cell">${unitsAverage.toFixed(
+                      2
+                    )}</td>
+                    <td class="grade-cell project-final-cell">
+                      ${ (window.isTeacher ? `<input type=\"number\" min=\"0\" max=\"10\" step=\"0.1\" value=\"${(student.projectFinal??0).toFixed(1)}\" class=\"unit-input\" onchange=\"saveProjectFinal('${student.id}', this.value)\">` : `${(student.projectFinal??0).toFixed(1)}`) }
+                    </td>
+                    <td class="grade-cell final-grade-cell">${finalGrade.toFixed(
+                      2
+                    )}</td>
+                    <td class="grade-cell">
+                        <button class="edit-btn" onclick="editStudentGrades('${
+                          student.id
+                        }')">✏️ Editar</button>
+                    </td>
+                `;
+          tableBody.appendChild(row);
+          // Agregar botón de email si hay correo
+          try {
+            const actionsCell = row.querySelector('td:last-child');
+            if (actionsCell && student.email) {
+              const btn = document.createElement('button');
+              btn.className = 'edit-btn';
+              btn.style.background = '#059669';
+              btn.textContent = '✉️ Email';
+              btn.onclick = () => window.emailStudentGrades && window.emailStudentGrades(student.id);
+              actionsCell.appendChild(btn);
+            }
+          } catch(_) {}
+        });
+      }
+
+      // Populate unit table
+      function populateUnitTable(unitNumber) {
+        const tableBody = document.getElementById(`unit${unitNumber}TableBody`);
+        tableBody.innerHTML = "";
+
+        ((window.getFilteredStudentsData && window.getFilteredStudentsData()) || (window.getStudentsData ? window.getStudentsData() : studentsData)).forEach((student) => {
+          const unitData = student[`unit${unitNumber}`];
+          const unitGrade = calculateUnitGrade(
+            unitData.participation,
+            unitData.assignments,
+            unitData.classwork,
+            unitData.exam
+          );
+
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                    <td class="student-name-cell">
+                        <div class="student-name">${student.name}</div>
+                        <div class="student-id">ID: ${student.id}</div>
+                    </td>
+                    <td class="grade-cell">
+                        <input type="number" class="unit-input" 
+                               value="${
+                                  unitData.participation
+                               }" min="0" max="10" step="0.1"
+                               onchange="updateGrade('${
+                                  student.id
+                               }', ${unitNumber}, 'participation', this.value)">
+                    </td>
+                    <td class="grade-cell">
+                        <input type="number" class="unit-input" 
+                               value="${
+                                  unitData.assignments
+                               }" min="0" max="10" step="0.1"
+                               onchange="updateGrade('${
+                                  student.id
+                               }', ${unitNumber}, 'assignments', this.value)">
+                    </td>
+                    <td class="grade-cell">
+                        <input type="number" class="unit-input" 
+                               value="${
+                                  unitData.classwork
+                               }" min="0" max="10" step="0.1"
+                               onchange="updateGrade('${
+                                  student.id
+                               }', ${unitNumber}, 'classwork', this.value)">
+                    </td>
+                    <td class="grade-cell">
+                        <input type="number" class="unit-input" 
+                               value="${
+                                  unitData.exam
+                               }" min="0" max="10" step="0.1"
+                               onchange="updateGrade('${
+                                  student.id
+                               }', ${unitNumber}, 'exam', this.value)">
+                    </td>
+                    <td class="grade-cell unit-average-cell" id="unit${unitNumber}_${
+           student.id
+          }_average">
+                        ${unitGrade.toFixed(2)}
+                    </td>
+                    <td class="grade-cell">
+                      ${student.email ? `<button class=\"edit-btn\" style=\"background:#059669\" onclick=\"emailStudentGrades('${student.id}')\">✉️ Email</button>` : ''}
+                    </td>
+                `;
+          tableBody.appendChild(row);
+        });
+      }
+
+      // Update grade
+      function updateGrade(studentId, unitNumber, component, value) {
+        const listRef = (window.getStudentsData ? window.getStudentsData() : studentsData);
+        const student = listRef.find((s) => s.id === studentId);
+        if (student) {
+          student[`unit${unitNumber}`][component] = parseFloat(value) || 0;
+
+          // Recalculate unit average
+          const unitData = student[`unit${unitNumber}`];
+          const unitGrade = calculateUnitGrade(
+            unitData.participation,
+            unitData.assignments,
+            unitData.classwork,
+            unitData.exam
+          );
+
+          // Update unit average display
+          const averageCell = document.getElementById(
+            `unit${unitNumber}_${studentId}_average`
+          );
+          if (averageCell) {
+            averageCell.textContent = unitGrade.toFixed(2);
+          }
+
+          // Update overview table if visible
+          if (currentMainTab === "overview") {
+            populateOverviewTable();
+          }
+
+          showNotification(
+            "success",
+            "Calificación actualizada",
+            `Promedio de unidad recalculado: ${unitGrade.toFixed(2)}`
+          );
+        }
+      }
+
+      // Grade calculations for student view
+      function calculateUnitGradeStudent(unitNumber) {
+        const participation =
+          parseFloat(
+            document
+              .querySelector(`#unit${unitNumber}Grade`)
+              .closest(".unit-card")
+              .querySelector(
+                ".component-list .component-item:nth-child(1) .grade-input"
+              ).value
+          ) || 0;
+        const assignments =
+          parseFloat(
+            document
+              .querySelector(`#unit${unitNumber}Grade`)
+              .closest(".unit-card")
+              .querySelector(
+                ".component-list .component-item:nth-child(2) .grade-input"
+              ).value
+          ) || 0;
+        const classwork =
+          parseFloat(
+            document
+              .querySelector(`#unit${unitNumber}Grade`)
+              .closest(".unit-card")
+              .querySelector(
+                ".component-list .component-item:nth-child(3) .grade-input"
+              ).value
+          ) || 0;
+        const exam =
+          parseFloat(
+            document
+              .querySelector(`#unit${unitNumber}Grade`)
+              .closest(".unit-card")
+              .querySelector(
+                ".component-list .component-item:nth-child(4) .grade-input"
+              ).value
+          ) || 0;
+
+        // Calculate weighted scores
+        const participationWeighted = participation * 0.1;
+        const assignmentsWeighted = assignments * 0.2;
+        const classworkWeighted = classwork * 0.25;
+        const examWeighted = exam * 0.45;
+
+        // Update weighted score displays
+        document.getElementById(
+          `unit${unitNumber}_participation_weighted`
+        ).textContent = participationWeighted.toFixed(2);
+        document.getElementById(
+          `unit${unitNumber}_assignments_weighted`
+        ).textContent = assignmentsWeighted.toFixed(2);
+        document.getElementById(
+          `unit${unitNumber}_classwork_weighted`
+        ).textContent = classworkWeighted.toFixed(2);
+        document.getElementById(`unit${unitNumber}_exam_weighted`).textContent =
+          examWeighted.toFixed(2);
+
+        // Calculate unit grade
+        const unitGrade =
+          participationWeighted +
+          assignmentsWeighted +
+          classworkWeighted +
+          examWeighted;
+
+        // Update unit grade display
+        document.getElementById(`unit${unitNumber}Grade`).textContent =
+          unitGrade.toFixed(1);
+
+        // Recalculate final grade
+        calculateFinalGradeStudent();
+      }
+
+      function calculateFinalGradeStudent() {
+        // Get unit grades
+        const unit1 =
+          parseFloat(document.getElementById("unit1Grade").textContent) || 0;
+        const unit2 =
+          parseFloat(document.getElementById("unit2Grade").textContent) || 0;
+        const unit3 =
+          parseFloat(document.getElementById("unit3Grade").textContent) || 0;
+
+        // Calculate units average
+        const unitsAverage = (unit1 + unit2 + unit3) / 3;
+        document.getElementById("unitsAverage").textContent =
+          unitsAverage.toFixed(2);
+
+        // Get project final grade
+        const projectFinal =
+          parseFloat(
+            document.querySelector(".final-grade-section .grade-input").value
+          ) || 0;
+
+        // Calculate final grade
+        const finalGrade = unitsAverage * 0.3 + projectFinal * 0.7;
+
+        // Update final grade display
+        document.getElementById("finalGrade").textContent =
+          finalGrade.toFixed(2);
+
+        // Update grade status
+        const gradeStatus = document.getElementById("gradeStatus");
+        const progressFill = document.getElementById("progressFill");
+
+        if (finalGrade >= 7.0) {
+          gradeStatus.textContent = "✅ APROBADO";
+          gradeStatus.style.background = "rgba(34, 197, 94, 0.2)";
+        } else if (finalGrade >= 6.0) {
+          gradeStatus.textContent = "⚠️ EN RIESGO";
+          gradeStatus.style.background = "rgba(245, 158, 11, 0.2)";
+        } else {
+          gradeStatus.textContent = "❌ REPROBADO";
+          gradeStatus.style.background = "rgba(239, 68, 68, 0.2)";
+        }
+
+        // Update progress bar
+        progressFill.style.width = `${Math.min(finalGrade * 10, 100)}%`;
+      }
+
+      // Student grade editing (for teachers)
+      function editStudentGrades(studentId) {
+        showNotification(
+          "info",
+          "Editar calificaciones",
+          `Editando calificaciones del estudiante ${studentId}`
+        );
+        // In a real implementation, this would open a modal or navigate to a detailed grade editing page
+      }
+
+      // Notification system
+      function showNotification(type, title, message) {
+        const notification = document.getElementById("notification");
+        const icon = document.getElementById("notificationIcon");
+        const titleEl = document.getElementById("notificationTitle");
+        const messageEl = document.getElementById("notificationMessage");
+
+        // Set content
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+
+        // Set type
+        notification.classList.remove("error");
+        if (type === "error") {
+          notification.classList.add("error");
+          icon.textContent = "❌";
+        } else if (type === "info") {
+          icon.textContent = "ℹ️";
+        } else {
+          icon.textContent = "✅";
+        }
+
+        // Show notification
+        notification.classList.add("show");
+
+        // Hide after 3 seconds
+        setTimeout(() => {
+          notification.classList.remove("show");
+        }, 3000);
+      }
+
+      // Initialize calculations for student view
+      document.addEventListener("DOMContentLoaded", function () {
+        calculateUnitGradeStudent(1);
+        calculateUnitGradeStudent(2);
+        calculateUnitGradeStudent(3);
+        calculateFinalGradeStudent();
+      });
+
+      // Initialize
+      document.addEventListener("DOMContentLoaded", function () {
+        switchRole("teacher");
+        switchMainTab("overview");
+      });
+    </script>
+    <script type="module">
+      import { onAuth, signInWithGooglePotros, signOutCurrent, subscribeGrades, updateStudentGradePartial, upsertStudentGrades, fetchGradesByDateRange } from './js/firebase.js';
+      import { allowedEmailDomain, allowedTeacherEmails } from './js/firebase-config.js';
+      import { emailServiceId, emailTemplateId, emailPublicKey, isEmailConfigured } from './js/email-config.js';
+
+      const signInBtn = document.getElementById('signInGrades');
+      const signOutBtn = document.getElementById('signOutGrades');
+      const userInfo = document.getElementById('userInfoGrades');
+      const userName = document.getElementById('userNameGrades');
+      const userPhoto = document.getElementById('userPhotoGrades');
+      const roleToggle = document.querySelector('.role-toggle');
+
+      window.studentsDataLive = [];
+      window.getStudentsData = function() {
+        if (Array.isArray(window.studentsDataLive) && window.studentsDataLive.length) return window.studentsDataLive;
+        try { return window.studentsData; } catch(e) { return []; }
+      }
+      window.getFilteredStudentsData = function() {
+        const list = window.getStudentsData ? window.getStudentsData() : [];
+        const q = (document.getElementById('gradesFilterText')?.value || '').toLowerCase().trim();
+        if (!q) return list;
+        return list.filter(s =>
+          (s.name||'').toLowerCase().includes(q) ||
+          (s.email||'').toLowerCase().includes(q) ||
+          (s.id||'').toLowerCase().includes(q)
+        );
+      }
+
+      if (signInBtn) signInBtn.addEventListener('click', async () => {
+        try { await signInWithGooglePotros(); } catch(e) { alert(e.message || 'No se pudo iniciar sesión'); }
+      });
+      if (signOutBtn) signOutBtn.addEventListener('click', async () => { await signOutCurrent(); });
+
+      // Re-render on filter input
+      document.getElementById('gradesFilterText')?.addEventListener('input', () => {
+        const tab = window.currentMainTab;
+        if (tab === 'overview') window.populateOverviewTable && window.populateOverviewTable();
+        if (tab === 'unit1') window.populateUnitTable && window.populateUnitTable(1);
+        if (tab === 'unit2') window.populateUnitTable && window.populateUnitTable(2);
+        if (tab === 'unit3') window.populateUnitTable && window.populateUnitTable(3);
+      });
+
+      let unsubscribeGrades = null;
+      onAuth(async (user) => {
+        const isPotros = !!user?.email?.toLowerCase().endsWith(`@${allowedEmailDomain}`);
+        const isTeacher = isPotros && allowedTeacherEmails.includes(user.email.toLowerCase());
+        window.isTeacher = !!isTeacher;
+
+        if (isPotros) {
+          userName.textContent = user.displayName || user.email;
+          if (user.photoURL) { userPhoto.src = user.photoURL; userPhoto.classList.remove('hidden'); } else { userPhoto.classList.add('hidden'); }
+          userInfo.classList.remove('hidden');
+          if (signInBtn) signInBtn.classList.add('hidden');
+        } else {
+          userInfo.classList.add('hidden');
+          if (signInBtn) signInBtn.classList.remove('hidden');
+        }
+
+        // Control de vistas según rol
+        if (isTeacher) {
+          if (roleToggle) roleToggle.classList.remove('hidden');
+          // Mantener vista de profesor por defecto
+          if (typeof window.switchRole === 'function') window.switchRole('teacher');
+          document.getElementById('exportGradesCsvBtn')?.classList.remove('hidden');
+          document.getElementById('exportGradesPdfBtn')?.classList.remove('hidden');
+          document.getElementById('exportGradesRangeCsvBtn')?.classList.remove('hidden');
+          document.getElementById('exportGradesRangePdfBtn')?.classList.remove('hidden');
+        } else {
+          // Forzar vista estudiante
+          if (roleToggle) roleToggle.classList.add('hidden');
+          if (typeof window.switchRole === 'function') window.switchRole('student');
+          document.getElementById('exportGradesCsvBtn')?.classList.add('hidden');
+          document.getElementById('exportGradesPdfBtn')?.classList.add('hidden');
+          document.getElementById('exportGradesRangeCsvBtn')?.classList.add('hidden');
+          document.getElementById('exportGradesRangePdfBtn')?.classList.add('hidden');
+        }
+
+        // Suscripción a calificaciones
+        if (unsubscribeGrades) { unsubscribeGrades(); unsubscribeGrades = null; }
+        if (isPotros) {
+          unsubscribeGrades = subscribeGrades((items) => {
+            window.studentsDataLive = items;
+            // Refrescar tablas según la pestaña activa
+            try {
+              const tab = window.currentMainTab;
+              if (tab === 'overview' && typeof window.populateOverviewTable === 'function') window.populateOverviewTable();
+              if (tab === 'unit1' && typeof window.populateUnitTable === 'function') window.populateUnitTable(1);
+              if (tab === 'unit2' && typeof window.populateUnitTable === 'function') window.populateUnitTable(2);
+              if (tab === 'unit3' && typeof window.populateUnitTable === 'function') window.populateUnitTable(3);
+            } catch (_) {}
+
+            // Render vista alumno solo con su calificación individual
+            if (!window.isTeacher && user?.email) {
+              const me = items.find(it => (it.email||'').toLowerCase() === user.email.toLowerCase());
+              const el = document.getElementById('studentEvaluationView');
+              if (el && me) {
+                const u1 = (me.unit1||{}), u2 = (me.unit2||{}), u3 = (me.unit3||{});
+                const ug1 = (u1.participation*0.1 + u1.assignments*0.2 + u1.classwork*0.25 + u1.exam*0.45) || 0;
+                const ug2 = (u2.participation*0.1 + u2.assignments*0.2 + u2.classwork*0.25 + u2.exam*0.45) || 0;
+                const ug3 = (u3.participation*0.1 + u3.assignments*0.2 + u3.classwork*0.25 + u3.exam*0.45) || 0;
+                const avg = (ug1 + ug2 + ug3)/3;
+                const final = avg*0.3 + (me.projectFinal||0)*0.7;
+                el.innerHTML = `
+                  <div class="student-profile-header">
+                    <div class="profile-card">
+                      <div class="profile-avatar"><div class="avatar-circle"><span class="avatar-initials">${(me.name||user.email).split(' ').slice(0,2).map(s=>s[0]).join('').toUpperCase()}</span></div></div>
+                      <div class="profile-info">
+                        <div class="student-name-display">${me.name || user.email}</div>
+                        <div class="student-id-display">${me.email || ''}</div>
+                        <div class="student-status">
+                          <span class="status-badge">Calificación final: ${final.toFixed(2)}</span>
+                          <span class="semester-badge">Proyecto Final: ${(me.projectFinal||0).toFixed(1)}</span>
+                        </div>
+                        <div class="mt-3">
+                          <button id="emailMeBtn" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold">Enviarme por correo</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="units-grid">
+                    <div class="unit-card student-unit-card"><div class="unit-header"><div class="unit-info"><div class="unit-title">Unidad I</div></div><div class="unit-grade-display"><div class="grade-display">${ug1.toFixed(2)}</div></div></div></div>
+                    <div class="unit-card student-unit-card"><div class="unit-header"><div class="unit-info"><div class="unit-title">Unidad II</div></div><div class="unit-grade-display"><div class="grade-display">${ug2.toFixed(2)}</div></div></div></div>
+                    <div class="unit-card student-unit-card"><div class="unit-header"><div class="unit-info"><div class="unit-title">Unidad III</div></div><div class="unit-grade-display"><div class="grade-display">${ug3.toFixed(2)}</div></div></div></div>
+                  </div>`;
+                // Listener email me
+                document.getElementById('emailMeBtn')?.addEventListener('click', async () => {
+                  if (!me.email) { alert('No hay email registrado'); return; }
+                  try {
+                    const ok = await sendGradesEmail(me);
+                    if (ok) showNotification && showNotification('success', 'Correo enviado', 'Se envió tu resumen de calificaciones');
+                  } catch (e) {
+                    alert('No se pudo enviar el correo');
+                  }
+                });
+              }
+            }
+          });
+        }
+
+        // Persistencia al editar (docente)
+        if (typeof window.updateGrade === 'function') {
+          const originalUpdateGrade = window.updateGrade;
+          window.updateGrade = async function(studentId, unitNumber, component, value) {
+            originalUpdateGrade(studentId, unitNumber, component, value);
+            if (isTeacher) {
+              try {
+                await updateStudentGradePartial(studentId, `unit${unitNumber}.${component}`, parseFloat(value) || 0);
+              } catch (e) {
+                console.error('No se pudo guardar en Firestore', e);
+              }
+            }
+          }
+        }
+
+        // Guardado de Proyecto Final
+        window.saveProjectFinal = async function(studentId, value) {
+          try { await updateStudentGradePartial(studentId, 'projectFinal', parseFloat(value)||0); }
+          catch(e){ alert('No se pudo guardar Proyecto Final'); }
+        }
+
+        // Crear registro nuevo (docente)
+        const modal = document.getElementById('studentModal');
+        const form = document.getElementById('studentForm');
+        const idInput = document.getElementById('studentIdInput');
+        const nameInput = document.getElementById('studentNameInput');
+        const emailInput = document.getElementById('studentEmailInput');
+        const projectInput = document.getElementById('studentProjectFinalInput');
+        const cancelBtn = document.getElementById('studentCancelBtn');
+        const titleEl = document.getElementById('studentModalTitle');
+        let editingId = null;
+
+        function openModal(data) {
+          titleEl.textContent = data ? 'Editar estudiante' : 'Agregar estudiante';
+          editingId = data?.id || null;
+          idInput.disabled = !!editingId;
+          idInput.value = data?.id || '';
+          nameInput.value = data?.name || '';
+          emailInput.value = (data?.email || '').toLowerCase();
+          projectInput.value = (data?.projectFinal ?? 0);
+          modal.classList.remove('hidden');
+          modal.classList.add('flex');
+        }
+        function closeModal() {
+          modal.classList.add('hidden');
+          modal.classList.remove('flex');
+          form.reset();
+          idInput.disabled = false;
+          editingId = null;
+        }
+        cancelBtn?.addEventListener('click', closeModal);
+        modal?.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+
+        window.addStudentRecord = function() {
+          if (!window.isTeacher) return;
+          openModal(null);
+        }
+        window.editStudentGrades = function(studentId) {
+          if (!window.isTeacher) return;
+          const src = window.getStudentsData ? window.getStudentsData() : [];
+          const found = src.find(s => s.id === studentId);
+          openModal(found || { id: studentId });
+        }
+        form?.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          if (!window.isTeacher) return;
+          const id = (editingId || idInput.value).trim();
+          const name = nameInput.value.trim();
+          const email = emailInput.value.trim().toLowerCase();
+          const projectFinal = parseFloat(projectInput.value) || 0;
+          if (!id || !name || !email) return;
+          try {
+            await upsertStudentGrades(id, {
+              name,
+              email,
+              projectFinal,
+            });
+            if (typeof window.showNotification === 'function') {
+              window.showNotification('success', 'Guardado', 'Registro de estudiante actualizado');
+            }
+            closeModal();
+          } catch (err) {
+            alert('No se pudo guardar el registro');
+          }
+        });
+
+        // Exportadores Calificaciones
+        function exportGradesCSV() {
+          if (!window.isTeacher) { alert('Solo docentes'); return; }
+          const list = (window.getStudentsData ? window.getStudentsData() : []) || [];
+          const header = [
+            'ID','Nombre','Email',
+            'U1_Participación','U1_Asignaciones','U1_Trabajos','U1_Examen','U1_Nota',
+            'U2_Participación','U2_Asignaciones','U2_Trabajos','U2_Examen','U2_Nota',
+            'U3_Participación','U3_Asignaciones','U3_Trabajos','U3_Examen','U3_Nota',
+            'Promedio_Unidades','Proyecto_Final','Calificación_Final'
+          ];
+          const rows = list.map(s => {
+            const u1=s.unit1||{}, u2=s.unit2||{}, u3=s.unit3||{};
+            const g1 = (u1.participation*0.1 + u1.assignments*0.2 + u1.classwork*0.25 + u1.exam*0.45)||0;
+            const g2 = (u2.participation*0.1 + u2.assignments*0.2 + u2.classwork*0.25 + u2.exam*0.45)||0;
+            const g3 = (u3.participation*0.1 + u3.assignments*0.2 + u3.classwork*0.25 + u3.exam*0.45)||0;
+            const avg = (g1+g2+g3)/3;
+            const final = avg*0.3 + (s.projectFinal||0)*0.7;
+            return [
+              s.id||'', s.name||'', (s.email||'').toLowerCase(),
+              u1.participation||0, u1.assignments||0, u1.classwork||0, u1.exam||0, g1.toFixed(2),
+              u2.participation||0, u2.assignments||0, u2.classwork||0, u2.exam||0, g2.toFixed(2),
+              u3.participation||0, u3.assignments||0, u3.classwork||0, u3.exam||0, g3.toFixed(2),
+              avg.toFixed(2), (s.projectFinal||0).toFixed(1), final.toFixed(2)
+            ];
+          });
+          const csv = [header].concat(rows).map(r => r.map(v => '"'+String(v).replace('"','""')+'"').join(',')).join('\r\n');
+          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `calificaciones_${new Date().toISOString().slice(0,10)}.csv`;
+          a.click();
+          URL.revokeObjectURL(a.href);
+        }
+
+        function exportGradesPDF() {
+          if (!window.isTeacher) { alert('Solo docentes'); return; }
+          const list = (window.getStudentsData ? window.getStudentsData() : []) || [];
+          const w = window.open('', '_blank');
+          const title = 'Reporte de Calificaciones';
+          const rows = list.map((s,idx)=>{
+            const u1=s.unit1||{}, u2=s.unit2||{}, u3=s.unit3||{};
+            const g1 = (u1.participation*0.1 + u1.assignments*0.2 + u1.classwork*0.25 + u1.exam*0.45)||0;
+            const g2 = (u2.participation*0.1 + u2.assignments*0.2 + u2.classwork*0.25 + u2.exam*0.45)||0;
+            const g3 = (u3.participation*0.1 + u3.assignments*0.2 + u3.classwork*0.25 + u3.exam*0.45)||0;
+            const avg = (g1+g2+g3)/3;
+            const final = avg*0.3 + (s.projectFinal||0)*0.7;
+            return `<tr><td>${idx+1}</td><td>${s.id||''}</td><td>${s.name||''}</td><td>${(s.email||'').toLowerCase()}</td><td>${g1.toFixed(2)}</td><td>${g2.toFixed(2)}</td><td>${g3.toFixed(2)}</td><td>${avg.toFixed(2)}</td><td>${(s.projectFinal||0).toFixed(1)}</td><td>${final.toFixed(2)}</td></tr>`;
+          }).join('');
+          w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${title}</title>
+            <style>body{font-family:Arial,sans-serif;padding:24px} h1{font-size:18px;margin:0 0 12px} table{width:100%;border-collapse:collapse} th,td{border:1px solid #ddd;padding:6px;font-size:12px} th{background:#f3f4f6;text-align:left}</style>
+            </head><body>
+            <h1>${title} - ${new Date().toLocaleDateString('es-MX')}</h1>
+            <table><thead><tr><th>#</th><th>ID</th><th>Nombre</th><th>Email</th><th>U1</th><th>U2</th><th>U3</th><th>Promedio</th><th>Proyecto</th><th>Final</th></tr></thead>
+            <tbody>${rows}</tbody></table>
+            <script>window.onload=function(){window.print();}</script>
+            </body></html>`);
+          w.document.close();
+        }
+
+        document.getElementById('exportGradesCsvBtn')?.addEventListener('click', exportGradesCSV);
+        document.getElementById('exportGradesPdfBtn')?.addEventListener('click', exportGradesPDF);
+
+        // Rango de fechas (updatedAt)
+        const gStart = document.getElementById('gradesStartDate');
+        const gEnd = document.getElementById('gradesEndDate');
+        const todayStr = new Date().toISOString().slice(0,10);
+        if (gStart && !gStart.value) gStart.value = todayStr;
+        if (gEnd && !gEnd.value) gEnd.value = todayStr;
+
+        async function exportGradesRange(isPdf) {
+          if (!window.isTeacher) { alert('Solo docentes'); return; }
+          const start = gStart?.value, end = gEnd?.value;
+          if (!start || !end || start > end) { alert('Selecciona rango válido'); return; }
+          const items = await fetchGradesByDateRange(start, end);
+          // Reusar cálculo y export similar
+          const list = items;
+          if (!isPdf) {
+            const header = ['ID','Nombre','Email','U1','U2','U3','Promedio','Proyecto','Final','Actualizado'];
+            const rows = list.map(s => {
+              const u1=s.unit1||{}, u2=s.unit2||{}, u3=s.unit3||{};
+              const g1=(u1.participation*0.1+u1.assignments*0.2+u1.classwork*0.25+u1.exam*0.45)||0;
+              const g2=(u2.participation*0.1+u2.assignments*0.2+u2.classwork*0.25+u2.exam*0.45)||0;
+              const g3=(u3.participation*0.1+u3.assignments*0.2+u3.classwork*0.25+u3.exam*0.45)||0;
+              const avg=(g1+g2+g3)/3; const fin=avg*0.3+(s.projectFinal||0)*0.7;
+              const upd = s.updatedAt?.toDate ? s.updatedAt.toDate().toLocaleString('es-MX') : '';
+              return [s.id||'', s.name||'', (s.email||'').toLowerCase(), g1.toFixed(2), g2.toFixed(2), g3.toFixed(2), avg.toFixed(2), (s.projectFinal||0).toFixed(1), fin.toFixed(2), upd];
+            });
+            const csv = [header].concat(rows).map(r => r.map(v => '"'+String(v).replace('"','""')+'"').join(',')).join('\r\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `calificaciones_${start}_a_${end}.csv`;
+            a.click(); URL.revokeObjectURL(a.href);
+          } else {
+            const w = window.open('', '_blank');
+            const rows = list.map((s,idx)=>{
+              const u1=s.unit1||{}, u2=s.unit2||{}, u3=s.unit3||{};
+              const g1=(u1.participation*0.1+u1.assignments*0.2+u1.classwork*0.25+u1.exam*0.45)||0;
+              const g2=(u2.participation*0.1+u2.assignments*0.2+u2.classwork*0.25+u2.exam*0.45)||0;
+              const g3=(u3.participation*0.1+u3.assignments*0.2+u3.classwork*0.25+u3.exam*0.45)||0;
+              const avg=(g1+g2+g3)/3; const fin=avg*0.3+(s.projectFinal||0)*0.7;
+              const upd = s.updatedAt?.toDate ? s.updatedAt.toDate().toLocaleString('es-MX') : '';
+              return `<tr><td>${idx+1}</td><td>${s.id||''}</td><td>${s.name||''}</td><td>${(s.email||'').toLowerCase()}</td><td>${g1.toFixed(2)}</td><td>${g2.toFixed(2)}</td><td>${g3.toFixed(2)}</td><td>${avg.toFixed(2)}</td><td>${(s.projectFinal||0).toFixed(1)}</td><td>${fin.toFixed(2)}</td><td>${upd}</td></tr>`;
+            }).join('');
+            w.document.write(`<!DOCTYPE html><html><head><meta charset='utf-8'><title>Calificaciones ${start} a ${end}</title><style>body{font-family:Arial,sans-serif;padding:24px} table{width:100%;border-collapse:collapse} th,td{border:1px solid #ddd;padding:6px;font-size:12px} th{background:#f3f4f6;text-align:left}</style></head><body><h1>Calificaciones ${start} a ${end}</h1><table><thead><tr><th>#</th><th>ID</th><th>Nombre</th><th>Email</th><th>U1</th><th>U2</th><th>U3</th><th>Promedio</th><th>Proyecto</th><th>Final</th><th>Actualizado</th></tr></thead><tbody>${rows}</tbody></table><script>window.onload=function(){window.print();}</script></body></html>`);
+            w.document.close();
+          }
+        }
+
+        document.getElementById('exportGradesRangeCsvBtn')?.addEventListener('click', () => exportGradesRange(false));
+        document.getElementById('exportGradesRangePdfBtn')?.addEventListener('click', () => exportGradesRange(true));
+
+        // Email helpers
+        function computeGradesSummary(s) {
+          const u1=s.unit1||{}, u2=s.unit2||{}, u3=s.unit3||{};
+          const g1=(u1.participation*0.1+u1.assignments*0.2+u1.classwork*0.25+u1.exam*0.45)||0;
+          const g2=(u2.participation*0.1+u2.assignments*0.2+u2.classwork*0.25+u2.exam*0.45)||0;
+          const g3=(u3.participation*0.1+u3.assignments*0.2+u3.classwork*0.25+u3.exam*0.45)||0;
+          const avg=(g1+g2+g3)/3; const fin=avg*0.3+(s.projectFinal||0)*0.7;
+          return { g1, g2, g3, avg, fin };
+        }
+        function buildMailtoForStudent(s) {
+          const { g1,g2,g3,avg,fin } = computeGradesSummary(s);
+          const subject = encodeURIComponent('Resultados de calificaciones - Calidad de Software');
+          const body = encodeURIComponent(
+`Hola ${s.name||''},
+
+Compartimos tus calificaciones:
+- Unidad I: ${g1.toFixed(2)}
+- Unidad II: ${g2.toFixed(2)}
+- Unidad III: ${g3.toFixed(2)}
+- Promedio de Unidades: ${avg.toFixed(2)}
+- Proyecto Final: ${(s.projectFinal||0).toFixed(1)}
+- Calificación Final: ${fin.toFixed(2)}
+
+Saludos.`);
+          return `mailto:${(s.email||'')}?subject=${subject}&body=${body}`;
+        }
+        window.emailStudentGrades = async function(studentId) {
+          const list = window.getStudentsData ? window.getStudentsData() : [];
+          const s = list.find(x=>x.id===studentId);
+          if (!s || !s.email) { alert('No hay email del estudiante'); return; }
+          try {
+            const ok = await sendGradesEmail(s);
+            if (ok) showNotification && showNotification('success', 'Correo enviado', 'Se envió el resumen al estudiante');
+          } catch (e) {
+            alert('No se pudo enviar el correo');
+          }
+        }
+
+        // EmailJS integration (formal email)
+        async function ensureEmailJs() {
+          if (window.emailjs) return true;
+          return new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js';
+            s.onload = () => { try { window.emailjs.init(emailPublicKey); resolve(true); } catch(e){ reject(e); } };
+            s.onerror = reject;
+            document.head.appendChild(s);
+          });
+        }
+
+        async function sendGradesEmail(student) {
+          // Prefiere EmailJS si está configurado, sino usa mailto como fallback
+          if (isEmailConfigured()) {
+            await ensureEmailJs();
+            const summary = computeGradesSummary(student);
+            const params = {
+              to_email: (student.email||'').toLowerCase(),
+              to_name: student.name || student.email || 'Alumno',
+              unit1: summary.g1.toFixed(2),
+              unit2: summary.g2.toFixed(2),
+              unit3: summary.g3.toFixed(2),
+              avg: summary.avg.toFixed(2),
+              project: (student.projectFinal||0).toFixed(1),
+              final: summary.fin.toFixed(2),
+              subject: 'Resultados de calificaciones - Calidad de Software'
+            };
+            const res = await window.emailjs.send(emailServiceId, emailTemplateId, params);
+            return !!res;
+          } else {
+            // Fallback: mailto
+            window.open(buildMailtoForStudent(student), '_self');
+            return true;
+          }
+        }
+      });
+    </script>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97cb5d57221d9810',t:'MTc1NzQ2OTk3MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  </body>
 </html>

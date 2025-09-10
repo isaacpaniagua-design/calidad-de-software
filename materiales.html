@@ -619,6 +619,19 @@ body{
 
       <!-- Content Area -->
       <div class="content-area">
+        <!-- Auth bar for Materials -->
+        <div class="w-full flex items-center justify-center py-3">
+          <div id="authAreaMaterials" class="flex items-center justify-center gap-3">
+            <button id="signInMaterials" class="bg-gradient-to-r from-emerald-600 to-green-600 text-white px-4 py-2 rounded-full hover:from-emerald-700 hover:to-green-700 transition-all duration-200 font-semibold">
+              Acceder con cuenta @potros
+            </button>
+            <div id="userInfoMaterials" class="hidden items-center gap-3">
+              <img id="userPhotoMaterials" class="w-8 h-8 rounded-full border" alt="Foto" />
+              <span id="userNameMaterials" class="text-gray-800 font-medium"></span>
+              <button id="signOutMaterials" class="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium">Salir</button>
+            </div>
+          </div>
+        </div>
         <!-- Teacher View -->
         <div id="teacherView">
           <!-- Statistics -->
@@ -1313,6 +1326,122 @@ body{
 
       // Initialize
       switchRole("teacher");
+    </script>
+    <script type="module">
+      import { onAuth, signInWithGooglePotros, signOutCurrent, uploadMaterial, subscribeMaterials, deleteMaterialById, incrementMaterialDownloads } from './js/firebase.js';
+      import { allowedEmailDomain, allowedTeacherEmails } from './js/firebase-config.js';
+
+      const signInBtn = document.getElementById('signInMaterials');
+      const signOutBtn = document.getElementById('signOutMaterials');
+      const userInfo = document.getElementById('userInfoMaterials');
+      const userName = document.getElementById('userNameMaterials');
+      const userPhoto = document.getElementById('userPhotoMaterials');
+
+      if (signInBtn) signInBtn.addEventListener('click', async () => {
+        try { await signInWithGooglePotros(); } catch (e) { alert(e.message || 'No se pudo iniciar sesión'); }
+      });
+      if (signOutBtn) signOutBtn.addEventListener('click', async () => { await signOutCurrent(); });
+
+      function setRoleUI(isTeacher) {
+        if (typeof window.switchRole === 'function') window.switchRole(isTeacher ? 'teacher' : 'student');
+      }
+
+      let unsubscribeMaterials = null;
+      onAuth(async (user) => {
+        const isPotros = !!user?.email?.toLowerCase().endsWith(`@${allowedEmailDomain}`);
+        const isTeacher = isPotros && allowedTeacherEmails.includes(user.email.toLowerCase());
+
+        if (isPotros) {
+          userName.textContent = user.displayName || user.email;
+          if (user.photoURL) { userPhoto.src = user.photoURL; userPhoto.classList.remove('hidden'); } else { userPhoto.classList.add('hidden'); }
+          userInfo.classList.remove('hidden');
+          if (signInBtn) signInBtn.classList.add('hidden');
+        } else {
+          userInfo.classList.add('hidden');
+          if (signInBtn) signInBtn.classList.remove('hidden');
+        }
+
+        setRoleUI(!!isTeacher);
+
+        if (unsubscribeMaterials) { unsubscribeMaterials(); unsubscribeMaterials = null; }
+        if (isPotros) {
+          const grid = document.getElementById('materialsGrid');
+          unsubscribeMaterials = subscribeMaterials((items) => {
+            if (!grid) return;
+            grid.innerHTML = '';
+            for (const item of items) {
+              const ext = (item.path || '').split('.').pop().toLowerCase();
+              let iconClass = 'default'; let iconEmoji = '📄';
+              if (ext === 'pdf') { iconClass = 'pdf'; iconEmoji = '📄'; }
+              else if (['doc','docx'].includes(ext)) { iconClass='doc'; iconEmoji='📝'; }
+              else if (['xls','xlsx'].includes(ext)) { iconClass='xls'; iconEmoji='📊'; }
+              else if (['ppt','pptx'].includes(ext)) { iconClass='ppt'; iconEmoji='📈'; }
+              const card = document.createElement('div');
+              card.className = 'material-card';
+              card.setAttribute('data-category', item.category || 'others');
+              card.innerHTML = `
+                <div class="material-header">
+                  <div class="file-icon ${iconClass}">${iconEmoji}</div>
+                  <div>
+                    <div class="material-title">${item.title || 'Sin título'}</div>
+                    <div class="material-meta">
+                      <span>📅 ${(item.createdAt && item.createdAt.toDate) ? item.createdAt.toDate().toLocaleDateString('es-MX') : 'Hoy'}</span>
+                      <span>⬇️ ${item.downloads || 0} descargas</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="material-description">${item.description || ''}</div>
+                <div class="material-actions">
+                  <button class="action-btn download-btn">⬇️ Descargar</button>
+                  ${isTeacher ? `<button class="action-btn delete-btn" data-id="${item.id}">🗑️ Eliminar</button>` : ''}
+                </div>`;
+              const dlBtn = card.querySelector('.download-btn');
+              dlBtn?.addEventListener('click', async () => {
+                try { await incrementMaterialDownloads(item.id); } catch (_) {}
+                window.open(item.url, '_blank', 'noopener');
+              });
+              if (isTeacher) {
+                const btn = card.querySelector('.delete-btn');
+                btn?.addEventListener('click', async () => {
+                  if (confirm('¿Eliminar este material?')) {
+                    try { await deleteMaterialById(item.id); } catch (e) { alert('No se pudo eliminar'); }
+                  }
+                });
+              }
+              grid.appendChild(card);
+            }
+          });
+        }
+      });
+
+      // Override submit to upload to Firebase
+      const form = document.getElementById('materialForm');
+      if (form) {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          const fileInput = document.getElementById('fileInput');
+          const file = fileInput?.files?.[0];
+          const title = document.getElementById('materialTitle').value.trim();
+          const category = document.getElementById('materialCategory').value;
+          const description = document.getElementById('materialDescription').value.trim();
+          if (!file || !title) { alert('Selecciona archivo y título'); return; }
+          const progressBar = document.getElementById('progressBar');
+          const progressFill = document.getElementById('progressFill');
+          progressBar?.classList.remove('hidden');
+          try {
+            await uploadMaterial({ file, title, category, description, onProgress: (p) => { if (progressFill) progressFill.style.width = `${p}%`; } });
+            // Reset form
+            progressBar?.classList.add('hidden');
+            if (progressFill) progressFill.style.width = '0%';
+            (document.getElementById('materialForm')).reset();
+            const uploadArea = document.querySelector('.upload-area');
+            if (uploadArea) uploadArea.style.display = 'block';
+          } catch (err) {
+            alert('No se pudo subir el material');
+          }
+        }, { capture: true });
+      }
     </script>
     <script>
       (function () {
