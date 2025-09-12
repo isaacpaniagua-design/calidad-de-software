@@ -1,891 +1,1308 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sesión 7: SQA vs QC - Dos Caras de la Misma Moneda</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #764ba2;
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+      }
+
+      .slide-transition {
+        transition: all 0.5s ease-in-out;
+      }
+
+      .gradient-bg {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .card-hover {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      }
+
+      .fade-in {
+        animation: fadeIn 0.8s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
         }
-        
-        .slide-transition {
-            transition: all 0.5s ease-in-out;
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
-        
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .pulse-animation {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
         }
-        
-        .card-hover {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        50% {
+          transform: scale(1.05);
         }
-        
-        .card-hover:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      }
+
+      .navigation {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 15px 20px;
+        border-radius: 50px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+      }
+
+      .nav-button {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
+      }
+
+      .nav-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
+      }
+
+      .nav-button:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .slide-counter {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(10px);
+        padding: 10px 15px;
+        border-radius: 20px;
+        font-weight: 600;
+        color: #374151;
+        z-index: 1000;
+      }
+
+      .section-card {
+        background: white;
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-left: 6px solid;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .section-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .highlight-box {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .vs-icon {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 2rem;
+        color: white;
+        font-size: 3rem;
+      }
+
+      .comparison-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-top: 4px solid;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .comparison-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .activity-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-left: 6px solid;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+      }
+
+      .activity-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .activity-card.revealed {
+        border-left-width: 8px;
+      }
+
+      .answer-reveal {
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-top: 1rem;
+        display: none;
+      }
+
+      .answer-reveal.show {
+        display: block;
+        animation: fadeIn 0.5s ease-in;
+      }
+
+      @media (max-width: 768px) {
+        .grid-responsive {
+          grid-template-columns: 1fr;
+          gap: 1rem;
         }
-        
-        .fade-in {
-            animation: fadeIn 0.8s ease-in;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .pulse-animation {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        .navigation {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 15px 20px;
-            border-radius: 50px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-        }
-        
-        .nav-button {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
-        }
-        
-        .nav-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
-        }
-        
-        .nav-button:disabled {
-            background: #9ca3af;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .slide-counter {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            padding: 10px 15px;
-            border-radius: 20px;
-            font-weight: 600;
-            color: #374151;
-            z-index: 1000;
-        }
-        
-        .section-card {
-            background: white;
-            border-radius: 1.5rem;
-            padding: 2rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border-left: 6px solid;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .section-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-        
-        .highlight-box {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .vs-icon {
-            width: 120px;
-            height: 120px;
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 2rem;
-            color: white;
-            font-size: 3rem;
-        }
-        
-        .comparison-card {
-            background: white;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border-top: 4px solid;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-        
-        .comparison-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-        
-        .activity-card {
-            background: white;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border-left: 6px solid;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .activity-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-        
-        .activity-card.revealed {
-            border-left-width: 8px;
-        }
-        
-        .answer-reveal {
-            background: rgba(0, 0, 0, 0.05);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-top: 1rem;
-            display: none;
-        }
-        
-        .answer-reveal.show {
-            display: block;
-            animation: fadeIn 0.5s ease-in;
-        }
-        
-        @media (max-width: 768px) {
-            .grid-responsive {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-        }
+      }
     </style>
 
-<style>
-body{
-  font-family:'Inter','Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  line-height:1.6;
-  color:#333;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  min-height:100vh;
-  padding-top:80px;
-}
-.qs-nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:saturate(140%) blur(20px);
-       background:rgba(255,255,255,.95);border-bottom:1px solid rgba(255,255,255,.2);
-       box-shadow:0 8px 32px rgba(0,0,0,.10)}
-.qs-nav .wrap{max-width:1200px;margin:0 auto;padding:15px 20px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:nowrap}
-.qs-brand{display:flex;gap:15px;align-items:center;color:#1f2937;font-weight:800;font-size:1.3rem;text-decoration:none;position:relative;padding:8px 16px;border-radius:20px;flex:0 0 auto}
-.qs-brand::before{content:"🎓";font-size:1.6rem}
-.qs-tabs{display:flex;gap:12px;background:rgba(255,255,255,.3);padding:8px;border-radius:30px;backdrop-filter:blur(10px);
-         flex:1 1 auto;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
-.qs-btn{border:0;padding:12px 20px;border-radius:25px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;font-weight:600;font-size:.9rem;
-       transition:all .4s cubic-bezier(.4,0,.2,1);backdrop-filter:blur(10px);border:2px solid transparent;position:relative;overflow:hidden;flex:0 0 auto}
-.qs-btn::before{content:"";position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(135deg,#667eea,#764ba2);transition:all .4s ease;z-index:-1}
-.qs-btn:hover{color:#fff;transform:translateY(-2px);box-shadow:0 8px 25px rgba(102,126,234,.4);border-color:rgba(102,126,234,.3)}
-.qs-btn:hover::before{left:0}
-.qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none;box-shadow:0 6px 20px rgba(102,126,234,.5);transform:translateY(-2px)}
-.qs-btn[aria-current="page"]::before{left:0}
-.footer{margin-top:60px;padding:30px 20px;text-align:center;background:rgba(255, 255, 255, 0.1);
-        backdrop-filter:blur(10px);border-top:1px solid rgba(255, 255, 255, 0.2)}
-.footer-content{max-width:1200px;margin:0 auto;color:rgba(255,255,255,0.8);font-size:0.95rem;transition:all 0.3s ease;cursor:default}
-.footer-content:hover{ color:#fff; transform:translateY(-2px); }
-.slide-counter, #slideIndicator, .slide-indicator{
-  font-size:10px !important; line-height:1 !important; padding:4px 8px !important; min-width:28px !important; border-radius:12px !important; opacity:.85 !important;
-}
-</style>
-
-</head>
-<body class="min-h-screen">
-
-<!-- NAV Plataforma QS -->
-<div class="qs-nav">
-  <div class="wrap">
-    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
-    <nav class="qs-tabs" aria-label="Navegación">
-      <a class="qs-btn" href="materiales.html">Materiales</a>
-      <a class="qs-btn" href="asistencia.html">Asistencia</a>
-      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
-      <a class="qs-btn" href="Foro.html">Foro</a>
-      <a class="qs-btn" href="paneldocente.html">Panel</a>
-      <a class="qs-btn" href="roadmap.html">Roadmap</a>
-      
-      
-    </nav>
-  </div>
-</div>
+    <style>
+      body {
+        font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background: linear-gradient(
+          135deg,
+          #667eea 0%,
+          #764ba2 100%
+        ) !important;
+        min-height: 100vh;
+        padding-top: 80px;
+      }
+      .qs-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        backdrop-filter: saturate(140%) blur(20px);
+        background: rgba(255, 255, 255, 0.95);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
+      .qs-nav .wrap {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 15px 20px;
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: nowrap;
+      }
+      .qs-brand {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        color: #1f2937;
+        font-weight: 800;
+        font-size: 1.3rem;
+        text-decoration: none;
+        position: relative;
+        padding: 8px 16px;
+        border-radius: 20px;
+        flex: 0 0 auto;
+      }
+      .qs-brand::before {
+        content: "🎓";
+        font-size: 1.6rem;
+      }
+      .qs-tabs {
+        display: flex;
+        gap: 12px;
+        background: rgba(255, 255, 255, 0.3);
+        padding: 8px;
+        border-radius: 30px;
+        backdrop-filter: blur(10px);
+        flex: 1 1 auto;
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        white-space: nowrap;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+      }
+      .qs-btn {
+        border: 0;
+        padding: 12px 20px;
+        border-radius: 25px;
+        background: rgba(255, 255, 255, 0.7);
+        color: #374151;
+        cursor: pointer;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        backdrop-filter: blur(10px);
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+        flex: 0 0 auto;
+      }
+      .qs-btn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        transition: all 0.4s ease;
+        z-index: -1;
+      }
+      .qs-btn:hover {
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        border-color: rgba(102, 126, 234, 0.3);
+      }
+      .qs-btn:hover::before {
+        left: 0;
+      }
+      .qs-btn[aria-current="page"] {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: #fff;
+        pointer-events: none;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        transform: translateY(-2px);
+      }
+      .qs-btn[aria-current="page"]::before {
+        left: 0;
+      }
+      .footer {
+        margin-top: 60px;
+        padding: 30px 20px;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      .footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        cursor: default;
+      }
+      .footer-content:hover {
+        color: #fff;
+        transform: translateY(-2px);
+      }
+      .slide-counter,
+      #slideIndicator,
+      .slide-indicator {
+        font-size: 10px !important;
+        line-height: 1 !important;
+        padding: 4px 8px !important;
+        min-width: 28px !important;
+        border-radius: 12px !important;
+        opacity: 0.85 !important;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <!-- NAV Plataforma QS -->
+    <div class="qs-nav">
+      <div class="wrap">
+        <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+        <nav class="qs-tabs" aria-label="Navegación">
+          <a class="qs-btn" href="materiales.html">Materiales</a>
+          <a class="qs-btn" href="asistencia.html">Asistencia</a>
+          <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+          <a class="qs-btn" href="Foro.html">Foro</a>
+          <a class="qs-btn" href="paneldocente.html">Panel</a>
+          <a class="qs-btn" href="roadmap.html">Roadmap</a>
+        </nav>
+      </div>
+    </div>
 
     <!-- Slide Counter -->
     <div class="slide-counter">
-        <span id="current-slide">1</span> / <span id="total-slides">4</span>
+      <span id="current-slide">1</span> / <span id="total-slides">4</span>
     </div>
 
     <!-- Main Content -->
     <main class="max-w-6xl mx-auto px-4 py-8 pb-32">
-        <!-- Slide 1: Título -->
-        <div id="slide1" class="slide-transition fade-in">
-            <div class="gradient-bg rounded-2xl p-12 text-white text-center mb-8 card-hover">
-                <div class="max-w-4xl mx-auto">
-                    <div class="vs-icon">⚖️</div>
-                    <h1 class="text-5xl font-bold mb-6 pulse-animation">SQA vs. QC: Prevención vs. Detección</h1>
-                    <h2 class="text-3xl font-semibold mb-8 opacity-90">Comprendiendo los dos pilares del aseguramiento de la calidad en software</h2>
-                    
-                    <div class="highlight-box">
-                        <div class="flex items-center justify-center mb-4">
-                            <svg class="w-8 h-8 mr-3" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                            </svg>
-                            <h3 class="text-xl font-semibold">Fuentes</h3>
-                        </div>
-                        <div class="text-lg opacity-90 space-y-2">
-                            <p>• "Software Quality Assurance" - Abu Sayed Mahfuz</p>
-                            <p>• "Ingeniería de Software" - Roger Pressman</p>
-                        </div>
-                    </div>
-                </div>
+      <!-- Slide 1: Título -->
+      <div id="slide1" class="slide-transition fade-in">
+        <div
+          class="gradient-bg rounded-2xl p-12 text-white text-center mb-8 card-hover"
+        >
+          <div class="max-w-4xl mx-auto">
+            <div class="vs-icon">⚖️</div>
+            <h1 class="text-5xl font-bold mb-6 pulse-animation">
+              SQA vs. QC: Prevención vs. Detección
+            </h1>
+            <h2 class="text-3xl font-semibold mb-8 opacity-90">
+              Comprendiendo los dos pilares del aseguramiento de la calidad en
+              software
+            </h2>
+
+            <div class="highlight-box">
+              <div class="flex items-center justify-center mb-4">
+                <svg
+                  class="w-8 h-8 mr-3"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="text-xl font-semibold">Fuentes</h3>
+              </div>
+              <div class="text-lg opacity-90 space-y-2">
+                <p>• "Software Quality Assurance" - Abu Sayed Mahfuz</p>
+                <p>• "Ingeniería de Software" - Roger Pressman</p>
+              </div>
             </div>
-            
-            <!-- Notas para el docente -->
-            <div class="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
-                <div class="flex items-start">
-                    <svg class="w-6 h-6 text-blue-400 mr-3 mt-1" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                    </svg>
-                    <div>
-                        <h4 class="text-lg font-semibold text-blue-800 mb-2">Notas para el docente:</h4>
-                        <p class="text-blue-700 leading-relaxed">
-                            "Hoy aclaramos una confusión muy común: SQA y QC no son lo mismo. Uno previene, el otro detecta. Ambos son esenciales, pero trabajan de manera diferente."
-                        </p>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
 
-        <!-- Slide 2: Definiciones Clave -->
-        <div id="slide2" class="slide-transition hidden">
-            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
-                <div class="text-center mb-8">
-                    <div class="text-6xl mb-4">🎯</div>
-                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Definiciones Clave</h2>
-                    <h3 class="text-2xl font-semibold text-purple-600">Dos Enfoques, un Mismo Objetivo: La Calidad</h3>
-                    <p class="text-lg text-gray-600 mt-4">Aunque a menudo se usan indistintamente, <strong>SQA y QC son disciplinas distintas</strong> con enfoques y metas diferentes.</p>
+        <!-- Notas para el docente -->
+        <div class="bg-blue-50 border-l-4 border-blue-400 p-6 rounded-r-lg">
+          <div class="flex items-start">
+            <svg
+              class="w-6 h-6 text-blue-400 mr-3 mt-1"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                clip-rule="evenodd"
+              />
+            </svg>
+            <div>
+              <h4 class="text-lg font-semibold text-blue-800 mb-2">
+                Notas para el docente:
+              </h4>
+              <p class="text-blue-700 leading-relaxed">
+                "Hoy aclaramos una confusión muy común: SQA y QC no son lo
+                mismo. Uno previene, el otro detecta. Ambos son esenciales, pero
+                trabajan de manera diferente."
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2: Definiciones Clave -->
+      <div id="slide2" class="slide-transition hidden">
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+          <div class="text-center mb-8">
+            <div class="text-6xl mb-4">🎯</div>
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">
+              Definiciones Clave
+            </h2>
+            <h3 class="text-2xl font-semibold text-purple-600">
+              Dos Enfoques, un Mismo Objetivo: La Calidad
+            </h3>
+            <p class="text-lg text-gray-600 mt-4">
+              Aunque a menudo se usan indistintamente,
+              <strong>SQA y QC son disciplinas distintas</strong> con enfoques y
+              metas diferentes.
+            </p>
+          </div>
+
+          <!-- Comparación SQA vs QC -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- SQA Card -->
+            <div class="comparison-card" style="border-top-color: #10b981">
+              <div class="text-center mb-6">
+                <div
+                  class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4"
+                >
+                  <span class="text-white font-bold text-2xl">SQA</span>
                 </div>
-                
-                <!-- Comparación SQA vs QC -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-                    
-                    <!-- SQA Card -->
-                    <div class="comparison-card" style="border-top-color: #10b981;">
-                        <div class="text-center mb-6">
-                            <div class="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <span class="text-white font-bold text-2xl">SQA</span>
-                            </div>
-                            <h4 class="text-2xl font-bold text-green-800">Aseguramiento de la Calidad del Software</h4>
-                        </div>
-                        
-                        <div class="space-y-4">
-                            <div class="bg-green-50 rounded-lg p-4">
-                                <div class="flex items-center mb-2">
-                                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                                        <span class="text-white text-sm">⚙️</span>
-                                    </div>
-                                    <h5 class="font-bold text-green-800">Orientación: PROCESO</h5>
-                                </div>
-                            </div>
-                            
-                            <div class="bg-green-100 rounded-lg p-4">
-                                <div class="flex items-center mb-2">
-                                    <div class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3">
-                                        <span class="text-white text-sm">🛡️</span>
-                                    </div>
-                                    <h5 class="font-bold text-green-800">Naturaleza: Proactivo</h5>
-                                </div>
-                                <p class="text-green-700 text-sm ml-11">Se enfoca en la forma en que construimos el software.</p>
-                            </div>
-                            
-                            <div class="bg-green-50 rounded-lg p-4">
-                                <div class="flex items-center mb-2">
-                                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3">
-                                        <span class="text-white text-sm">🎯</span>
-                                    </div>
-                                    <h5 class="font-bold text-green-800">Meta Principal</h5>
-                                </div>
-                                <p class="text-green-700 font-semibold ml-11">PREVENIR que los defectos ocurran en primer lugar.</p>
-                            </div>
-                            
-                            <div class="bg-green-200 rounded-lg p-4">
-                                <div class="flex items-center mb-2">
-                                    <div class="w-8 h-8 bg-green-700 rounded-full flex items-center justify-center mr-3">
-                                        <span class="text-white text-sm">❓</span>
-                                    </div>
-                                    <h5 class="font-bold text-green-800">Pregunta Clave</h5>
-                                </div>
-                                <p class="text-green-800 font-bold text-lg ml-11">"¿Estamos haciendo las cosas de la manera correcta?"</p>
-                            </div>
-                        </div>
+                <h4 class="text-2xl font-bold text-green-800">
+                  Aseguramiento de la Calidad del Software
+                </h4>
+              </div>
+
+              <div class="space-y-4">
+                <div class="bg-green-50 rounded-lg p-4">
+                  <div class="flex items-center mb-2">
+                    <div
+                      class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3"
+                    >
+                      <span class="text-white text-sm">⚙️</span>
                     </div>
-                    
-                    <!-- QC Card -->
-                    <div class="comparison-card" style="border-top-color: #3b82f6;">
-                        <div class="text-center mb-6">
-                            <div class="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <span class="text-white font-bold text-2xl">QC</span>
-                            </div>
-                            <h4 class="text-2xl font-bold text-blue-800">Control de la Calidad del Software</h4>
-                        </div>
-                        
-                        <div class="space-y-4">
-                            <div class="bg-blue-50 rounded-lg p-4">
-                                <div class="flex items-center mb-2">
-                                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-                                        <span class="text-white text-sm">📦</span>
-                                    </div>
-                                    <h5 class="font-bold text-blue-800">Orientación: PRODUCTO</h5>
-                                </div>
-                            </div>
-                            
-                            <div class="bg-blue-100 rounded-lg p-4">
-                                <div class="flex items-center mb-2">
-                                    <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-3">
-                                        <span class="text-white text-sm">🔍</span>
-                                    </div>
-                                    <h5 class="font-bold text-blue-800">Naturaleza: Reactivo</h5>
-                                </div>
-                                <p class="text-blue-700 text-sm ml-11">Se enfoca en el software terminado (o en sus partes).</p>
-                            </div>
-                            
-                            <div class="bg-blue-50 rounded-lg p-4">
-                                <div class="flex items-center mb-2">
-                                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
-                                        <span class="text-white text-sm">🎯</span>
-                                    </div>
-                                    <h5 class="font-bold text-blue-800">Meta Principal</h5>
-                                </div>
-                                <p class="text-blue-700 font-semibold ml-11">ENCONTRAR los defectos antes de que lleguen al cliente.</p>
-                            </div>
-                            
-                            <div class="bg-blue-200 rounded-lg p-4">
-                                <div class="flex items-center mb-2">
-                                    <div class="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center mr-3">
-                                        <span class="text-white text-sm">❓</span>
-                                    </div>
-                                    <h5 class="font-bold text-blue-800">Pregunta Clave</h5>
-                                </div>
-                                <p class="text-blue-800 font-bold text-lg ml-11">"¿El resultado que obtuvimos es el correcto?"</p>
-                            </div>
-                        </div>
-                    </div>
+                    <h5 class="font-bold text-green-800">
+                      Orientación: PROCESO
+                    </h5>
+                  </div>
                 </div>
-                
-                <!-- Conclusión -->
-                <div class="bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl p-8 text-white">
-                    <div class="flex items-center justify-center mb-4">
-                        <div class="text-4xl mr-4">🤝</div>
-                        <h3 class="text-2xl font-bold">Complementarios, No Competidores</h3>
+
+                <div class="bg-green-100 rounded-lg p-4">
+                  <div class="flex items-center mb-2">
+                    <div
+                      class="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-3"
+                    >
+                      <span class="text-white text-sm">🛡️</span>
                     </div>
-                    <p class="text-xl text-center leading-relaxed opacity-95">
-                        SQA y QC trabajan juntos: uno construye la calidad desde el proceso, el otro la verifica en el producto.
+                    <h5 class="font-bold text-green-800">
+                      Naturaleza: Proactivo
+                    </h5>
+                  </div>
+                  <p class="text-green-700 text-sm ml-11">
+                    Se enfoca en la forma en que construimos el software.
+                  </p>
+                </div>
+
+                <div class="bg-green-50 rounded-lg p-4">
+                  <div class="flex items-center mb-2">
+                    <div
+                      class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-3"
+                    >
+                      <span class="text-white text-sm">🎯</span>
+                    </div>
+                    <h5 class="font-bold text-green-800">Meta Principal</h5>
+                  </div>
+                  <p class="text-green-700 font-semibold ml-11">
+                    PREVENIR que los defectos ocurran en primer lugar.
+                  </p>
+                </div>
+
+                <div class="bg-green-200 rounded-lg p-4">
+                  <div class="flex items-center mb-2">
+                    <div
+                      class="w-8 h-8 bg-green-700 rounded-full flex items-center justify-center mr-3"
+                    >
+                      <span class="text-white text-sm">❓</span>
+                    </div>
+                    <h5 class="font-bold text-green-800">Pregunta Clave</h5>
+                  </div>
+                  <p class="text-green-800 font-bold text-lg ml-11">
+                    "¿Estamos haciendo las cosas de la manera correcta?"
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- QC Card -->
+            <div class="comparison-card" style="border-top-color: #3b82f6">
+              <div class="text-center mb-6">
+                <div
+                  class="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4"
+                >
+                  <span class="text-white font-bold text-2xl">QC</span>
+                </div>
+                <h4 class="text-2xl font-bold text-blue-800">
+                  Control de la Calidad del Software
+                </h4>
+              </div>
+
+              <div class="space-y-4">
+                <div class="bg-blue-50 rounded-lg p-4">
+                  <div class="flex items-center mb-2">
+                    <div
+                      class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3"
+                    >
+                      <span class="text-white text-sm">📦</span>
+                    </div>
+                    <h5 class="font-bold text-blue-800">
+                      Orientación: PRODUCTO
+                    </h5>
+                  </div>
+                </div>
+
+                <div class="bg-blue-100 rounded-lg p-4">
+                  <div class="flex items-center mb-2">
+                    <div
+                      class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-3"
+                    >
+                      <span class="text-white text-sm">🔍</span>
+                    </div>
+                    <h5 class="font-bold text-blue-800">
+                      Naturaleza: Reactivo
+                    </h5>
+                  </div>
+                  <p class="text-blue-700 text-sm ml-11">
+                    Se enfoca en el software terminado (o en sus partes).
+                  </p>
+                </div>
+
+                <div class="bg-blue-50 rounded-lg p-4">
+                  <div class="flex items-center mb-2">
+                    <div
+                      class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3"
+                    >
+                      <span class="text-white text-sm">🎯</span>
+                    </div>
+                    <h5 class="font-bold text-blue-800">Meta Principal</h5>
+                  </div>
+                  <p class="text-blue-700 font-semibold ml-11">
+                    ENCONTRAR los defectos antes de que lleguen al cliente.
+                  </p>
+                </div>
+
+                <div class="bg-blue-200 rounded-lg p-4">
+                  <div class="flex items-center mb-2">
+                    <div
+                      class="w-8 h-8 bg-blue-700 rounded-full flex items-center justify-center mr-3"
+                    >
+                      <span class="text-white text-sm">❓</span>
+                    </div>
+                    <h5 class="font-bold text-blue-800">Pregunta Clave</h5>
+                  </div>
+                  <p class="text-blue-800 font-bold text-lg ml-11">
+                    "¿El resultado que obtuvimos es el correcto?"
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Conclusión -->
+          <div
+            class="bg-gradient-to-r from-purple-500 to-pink-600 rounded-2xl p-8 text-white"
+          >
+            <div class="flex items-center justify-center mb-4">
+              <div class="text-4xl mr-4">🤝</div>
+              <h3 class="text-2xl font-bold">
+                Complementarios, No Competidores
+              </h3>
+            </div>
+            <p class="text-xl text-center leading-relaxed opacity-95">
+              SQA y QC trabajan juntos: uno construye la calidad desde el
+              proceso, el otro la verifica en el producto.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3: Analogía: Construir un Coche -->
+      <div id="slide3" class="slide-transition hidden">
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+          <div class="text-center mb-8">
+            <div class="text-6xl mb-4">🚗</div>
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">
+              Analogía: Construir un Coche
+            </h2>
+            <h3 class="text-2xl font-semibold text-orange-600">
+              Construyendo Calidad vs. Inspeccionando Calidad
+            </h3>
+            <p class="text-lg text-gray-600 mt-4">
+              Imaginemos que somos <strong>fabricantes de automóviles</strong>.
+              ¿Cómo aplicaríamos SQA y QC?
+            </p>
+          </div>
+
+          <!-- SQA Activities -->
+          <div class="mb-8">
+            <div class="bg-green-500 text-white rounded-t-2xl p-6">
+              <div class="flex items-center justify-center">
+                <div class="text-3xl mr-4">⚙️</div>
+                <h3 class="text-2xl font-bold">
+                  Las actividades de SQA (Aseguramiento) serían:
+                </h3>
+              </div>
+            </div>
+
+            <div class="bg-green-50 rounded-b-2xl p-6 space-y-4">
+              <div class="flex items-start">
+                <div
+                  class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-sm">1</span>
+                </div>
+                <p class="text-green-800 text-lg">
+                  <strong>Diseñar los planos del motor</strong> para que sea
+                  eficiente y duradero.
+                </p>
+              </div>
+
+              <div class="flex items-start">
+                <div
+                  class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-sm">2</span>
+                </div>
+                <p class="text-green-800 text-lg">
+                  <strong>Seleccionar y certificar</strong> a los proveedores de
+                  acero y plásticos.
+                </p>
+              </div>
+
+              <div class="flex items-start">
+                <div
+                  class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-sm">3</span>
+                </div>
+                <p class="text-green-800 text-lg">
+                  <strong>Crear el manual de ensamblaje</strong> paso a paso
+                  para los trabajadores.
+                </p>
+              </div>
+
+              <div class="flex items-start">
+                <div
+                  class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-sm">4</span>
+                </div>
+                <p class="text-green-800 text-lg">
+                  <strong>Capacitar a los ensambladores</strong> en las técnicas
+                  correctas.
+                </p>
+              </div>
+
+              <div class="flex items-start">
+                <div
+                  class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-sm">5</span>
+                </div>
+                <p class="text-green-800 text-lg">
+                  <strong>Auditar la línea de producción</strong> para asegurar
+                  que se sigan los procedimientos.
+                </p>
+              </div>
+
+              <div class="bg-green-200 rounded-lg p-4 mt-6">
+                <div class="flex items-center">
+                  <div class="text-2xl mr-3">🎯</div>
+                  <div>
+                    <h4 class="font-bold text-green-800 mb-1">Enfoque:</h4>
+                    <p class="text-green-700 text-lg">
+                      Construir un sistema que, si se sigue, producirá un buen
+                      coche de manera consistente.
                     </p>
+                  </div>
                 </div>
+              </div>
             </div>
-        </div>
+          </div>
 
-        <!-- Slide 3: Analogía: Construir un Coche -->
-        <div id="slide3" class="slide-transition hidden">
-            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
-                <div class="text-center mb-8">
-                    <div class="text-6xl mb-4">🚗</div>
-                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Analogía: Construir un Coche</h2>
-                    <h3 class="text-2xl font-semibold text-orange-600">Construyendo Calidad vs. Inspeccionando Calidad</h3>
-                    <p class="text-lg text-gray-600 mt-4">Imaginemos que somos <strong>fabricantes de automóviles</strong>. ¿Cómo aplicaríamos SQA y QC?</p>
+          <!-- QC Activities -->
+          <div class="mb-8">
+            <div class="bg-blue-500 text-white rounded-t-2xl p-6">
+              <div class="flex items-center justify-center">
+                <div class="text-3xl mr-4">🔍</div>
+                <h3 class="text-2xl font-bold">
+                  Las actividades de QC (Control) serían:
+                </h3>
+              </div>
+            </div>
+
+            <div class="bg-blue-50 rounded-b-2xl p-6 space-y-4">
+              <div class="flex items-start">
+                <div
+                  class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-sm">1</span>
                 </div>
-                
-                <!-- SQA Activities -->
-                <div class="mb-8">
-                    <div class="bg-green-500 text-white rounded-t-2xl p-6">
-                        <div class="flex items-center justify-center">
-                            <div class="text-3xl mr-4">⚙️</div>
-                            <h3 class="text-2xl font-bold">Las actividades de SQA (Aseguramiento) serían:</h3>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-green-50 rounded-b-2xl p-6 space-y-4">
-                        <div class="flex items-start">
-                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0">
-                                <span class="text-white font-bold text-sm">1</span>
-                            </div>
-                            <p class="text-green-800 text-lg"><strong>Diseñar los planos del motor</strong> para que sea eficiente y duradero.</p>
-                        </div>
-                        
-                        <div class="flex items-start">
-                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0">
-                                <span class="text-white font-bold text-sm">2</span>
-                            </div>
-                            <p class="text-green-800 text-lg"><strong>Seleccionar y certificar</strong> a los proveedores de acero y plásticos.</p>
-                        </div>
-                        
-                        <div class="flex items-start">
-                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0">
-                                <span class="text-white font-bold text-sm">3</span>
-                            </div>
-                            <p class="text-green-800 text-lg"><strong>Crear el manual de ensamblaje</strong> paso a paso para los trabajadores.</p>
-                        </div>
-                        
-                        <div class="flex items-start">
-                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0">
-                                <span class="text-white font-bold text-sm">4</span>
-                            </div>
-                            <p class="text-green-800 text-lg"><strong>Capacitar a los ensambladores</strong> en las técnicas correctas.</p>
-                        </div>
-                        
-                        <div class="flex items-start">
-                            <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0">
-                                <span class="text-white font-bold text-sm">5</span>
-                            </div>
-                            <p class="text-green-800 text-lg"><strong>Auditar la línea de producción</strong> para asegurar que se sigan los procedimientos.</p>
-                        </div>
-                        
-                        <div class="bg-green-200 rounded-lg p-4 mt-6">
-                            <div class="flex items-center">
-                                <div class="text-2xl mr-3">🎯</div>
-                                <div>
-                                    <h4 class="font-bold text-green-800 mb-1">Enfoque:</h4>
-                                    <p class="text-green-700 text-lg">Construir un sistema que, si se sigue, producirá un buen coche de manera consistente.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <p class="text-blue-800 text-lg">
+                  <strong>Realizar la prueba de manejo</strong> al coche recién
+                  ensamblado.
+                </p>
+              </div>
+
+              <div class="flex items-start">
+                <div
+                  class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-sm">2</span>
                 </div>
-                
-                <!-- QC Activities -->
-                <div class="mb-8">
-                    <div class="bg-blue-500 text-white rounded-t-2xl p-6">
-                        <div class="flex items-center justify-center">
-                            <div class="text-3xl mr-4">🔍</div>
-                            <h3 class="text-2xl font-bold">Las actividades de QC (Control) serían:</h3>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-blue-50 rounded-b-2xl p-6 space-y-4">
-                        <div class="flex items-start">
-                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0">
-                                <span class="text-white font-bold text-sm">1</span>
-                            </div>
-                            <p class="text-blue-800 text-lg"><strong>Realizar la prueba de manejo</strong> al coche recién ensamblado.</p>
-                        </div>
-                        
-                        <div class="flex items-start">
-                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0">
-                                <span class="text-white font-bold text-sm">2</span>
-                            </div>
-                            <p class="text-blue-800 text-lg"><strong>Inspeccionar la pintura</strong> bajo una luz brillante en busca de rayones.</p>
-                        </div>
-                        
-                        <div class="flex items-start">
-                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0">
-                                <span class="text-white font-bold text-sm">3</span>
-                            </div>
-                            <p class="text-blue-800 text-lg"><strong>Verificar que todas las luces</strong> (faros, intermitentes) enciendan correctamente.</p>
-                        </div>
-                        
-                        <div class="flex items-start">
-                            <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0">
-                                <span class="text-white font-bold text-sm">4</span>
-                            </div>
-                            <p class="text-blue-800 text-lg"><strong>Medir que la presión de los neumáticos</strong> sea la correcta.</p>
-                        </div>
-                        
-                        <div class="bg-blue-200 rounded-lg p-4 mt-6">
-                            <div class="flex items-center">
-                                <div class="text-2xl mr-3">🎯</div>
-                                <div>
-                                    <h4 class="font-bold text-blue-800 mb-1">Enfoque:</h4>
-                                    <p class="text-blue-700 text-lg">Examinar el coche final para asegurarse de que cumple con los estándares de calidad definidos.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <p class="text-blue-800 text-lg">
+                  <strong>Inspeccionar la pintura</strong> bajo una luz
+                  brillante en busca de rayones.
+                </p>
+              </div>
+
+              <div class="flex items-start">
+                <div
+                  class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-sm">3</span>
                 </div>
-                
-                <!-- Conclusión -->
-                <div class="bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl p-8 text-white">
-                    <div class="flex items-center justify-center mb-4">
-                        <div class="text-4xl mr-4">💡</div>
-                        <h3 class="text-2xl font-bold">La Clave del Éxito</h3>
-                    </div>
-                    <p class="text-xl text-center leading-relaxed opacity-95">
-                        Un fabricante exitoso necesita <strong>ambos enfoques</strong>: buenos procesos (SQA) y buenas inspecciones (QC).
+                <p class="text-blue-800 text-lg">
+                  <strong>Verificar que todas las luces</strong> (faros,
+                  intermitentes) enciendan correctamente.
+                </p>
+              </div>
+
+              <div class="flex items-start">
+                <div
+                  class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-4 mt-1 flex-shrink-0"
+                >
+                  <span class="text-white font-bold text-sm">4</span>
+                </div>
+                <p class="text-blue-800 text-lg">
+                  <strong>Medir que la presión de los neumáticos</strong> sea la
+                  correcta.
+                </p>
+              </div>
+
+              <div class="bg-blue-200 rounded-lg p-4 mt-6">
+                <div class="flex items-center">
+                  <div class="text-2xl mr-3">🎯</div>
+                  <div>
+                    <h4 class="font-bold text-blue-800 mb-1">Enfoque:</h4>
+                    <p class="text-blue-700 text-lg">
+                      Examinar el coche final para asegurarse de que cumple con
+                      los estándares de calidad definidos.
                     </p>
+                  </div>
                 </div>
+              </div>
             </div>
-        </div>
+          </div>
 
-        <!-- Slide 4: Actividad - Clasificación -->
-        <div id="slide4" class="slide-transition hidden">
-            <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
-                <div class="text-center mb-8">
-                    <div class="text-6xl mb-4">🎮</div>
-                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Actividad - Clasificación (15 min)</h2>
-                    <h3 class="text-2xl font-semibold text-purple-600">¿Prevención o Detección? ¡A Clasificar!</h3>
+          <!-- Conclusión -->
+          <div
+            class="bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl p-8 text-white"
+          >
+            <div class="flex items-center justify-center mb-4">
+              <div class="text-4xl mr-4">💡</div>
+              <h3 class="text-2xl font-bold">La Clave del Éxito</h3>
+            </div>
+            <p class="text-xl text-center leading-relaxed opacity-95">
+              Un fabricante exitoso necesita <strong>ambos enfoques</strong>:
+              buenos procesos (SQA) y buenas inspecciones (QC).
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 4: Actividad - Clasificación -->
+      <div id="slide4" class="slide-transition hidden">
+        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 card-hover">
+          <div class="text-center mb-8">
+            <div class="text-6xl mb-4">🎮</div>
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">
+              Actividad - Clasificación (15 min)
+            </h2>
+            <h3 class="text-2xl font-semibold text-purple-600">
+              ¿Prevención o Detección? ¡A Clasificar!
+            </h3>
+          </div>
+
+          <!-- Instrucciones -->
+          <div
+            class="bg-purple-50 border-l-4 border-purple-400 p-6 rounded-r-lg mb-8"
+          >
+            <div class="flex items-start">
+              <svg
+                class="w-6 h-6 text-purple-400 mr-3 mt-1"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              <div>
+                <h4 class="text-lg font-semibold text-purple-800 mb-2">
+                  Instrucciones:
+                </h4>
+                <p class="text-purple-700 leading-relaxed">
+                  A continuación, aparecerá una lista de actividades comunes en
+                  un proyecto de software.
+                  <strong>Haz clic en cada actividad</strong> para revelar si
+                  pertenece a SQA (enfoque en proceso, prevención) o a QC
+                  (enfoque en producto, detección).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actividades para clasificar -->
+          <div class="space-y-4 mb-8">
+            <!-- Actividad 1 -->
+            <div
+              class="activity-card"
+              style="border-left-color: #ef4444"
+              onclick="revealAnswer(1)"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <h4 class="text-lg font-bold text-gray-800 mb-2">
+                    1. Ejecutar un caso de prueba funcional
+                  </h4>
+                  <p class="text-gray-600">
+                    Verificar que una funcionalidad específica del software
+                    funciona como se espera.
+                  </p>
                 </div>
-                
-                <!-- Instrucciones -->
-                <div class="bg-purple-50 border-l-4 border-purple-400 p-6 rounded-r-lg mb-8">
-                    <div class="flex items-start">
-                        <svg class="w-6 h-6 text-purple-400 mr-3 mt-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                        </svg>
-                        <div>
-                            <h4 class="text-lg font-semibold text-purple-800 mb-2">Instrucciones:</h4>
-                            <p class="text-purple-700 leading-relaxed">
-                                A continuación, aparecerá una lista de actividades comunes en un proyecto de software. <strong>Haz clic en cada actividad</strong> para revelar si pertenece a SQA (enfoque en proceso, prevención) o a QC (enfoque en producto, detección).
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Actividades para clasificar -->
-                <div class="space-y-4 mb-8">
-                    
-                    <!-- Actividad 1 -->
-                    <div class="activity-card" style="border-left-color: #ef4444;" onclick="revealAnswer(1)">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <h4 class="text-lg font-bold text-gray-800 mb-2">1. Ejecutar un caso de prueba funcional</h4>
-                                <p class="text-gray-600">Verificar que una funcionalidad específica del software funciona como se espera.</p>
-                            </div>
-                            <div class="text-2xl">👆</div>
-                        </div>
-                        <div id="answer1" class="answer-reveal">
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-4">
-                                    <span class="text-white font-bold">QC</span>
-                                </div>
-                                <div>
-                                    <h5 class="font-bold text-blue-800">Respuesta: QC</h5>
-                                    <p class="text-blue-700">Se está <strong>inspeccionando el producto</strong> (software) para encontrar defectos.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Actividad 2 -->
-                    <div class="activity-card" style="border-left-color: #f59e0b;" onclick="revealAnswer(2)">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <h4 class="text-lg font-bold text-gray-800 mb-2">2. Definir el estándar de codificación para el equipo</h4>
-                                <p class="text-gray-600">Establecer reglas sobre cómo debe escribirse el código (nombres de variables, indentación, etc.).</p>
-                            </div>
-                            <div class="text-2xl">👆</div>
-                        </div>
-                        <div id="answer2" class="answer-reveal">
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-4">
-                                    <span class="text-white font-bold">SQA</span>
-                                </div>
-                                <div>
-                                    <h5 class="font-bold text-green-800">Respuesta: SQA</h5>
-                                    <p class="text-green-700">Se está <strong>definiendo un proceso</strong> para prevenir problemas de calidad en el código.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Actividad 3 -->
-                    <div class="activity-card" style="border-left-color: #8b5cf6;" onclick="revealAnswer(3)">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <h4 class="text-lg font-bold text-gray-800 mb-2">3. Realizar una revisión por pares (peer review) de un documento de diseño</h4>
-                                <p class="text-gray-600">Otro desarrollador revisa el documento de diseño antes de implementar.</p>
-                            </div>
-                            <div class="text-2xl">👆</div>
-                        </div>
-                        <div id="answer3" class="answer-reveal">
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-4">
-                                    <span class="text-white font-bold">QC</span>
-                                </div>
-                                <div>
-                                    <h5 class="font-bold text-blue-800">Respuesta: QC</h5>
-                                    <p class="text-blue-700">Se está <strong>inspeccionando un producto de trabajo</strong> (el documento) para encontrar errores.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Actividad 4 -->
-                    <div class="activity-card" style="border-left-color: #10b981;" onclick="revealAnswer(4)">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <h4 class="text-lg font-bold text-gray-800 mb-2">4. Realizar una auditoría para verificar que el equipo está siguiendo la metodología Scrum</h4>
-                                <p class="text-gray-600">Revisar si se están realizando los daily standups, sprints, retrospectivas, etc.</p>
-                            </div>
-                            <div class="text-2xl">👆</div>
-                        </div>
-                        <div id="answer4" class="answer-reveal">
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-4">
-                                    <span class="text-white font-bold">SQA</span>
-                                </div>
-                                <div>
-                                    <h5 class="font-bold text-green-800">Respuesta: SQA</h5>
-                                    <p class="text-green-700">Se está <strong>verificando que se siga el proceso</strong> definido para asegurar calidad.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Actividad 5 -->
-                    <div class="activity-card" style="border-left-color: #ef4444;" onclick="revealAnswer(5)">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <h4 class="text-lg font-bold text-gray-800 mb-2">5. Reportar un bug encontrado en el ambiente de pruebas</h4>
-                                <p class="text-gray-600">Documentar un error encontrado durante las pruebas del software.</p>
-                            </div>
-                            <div class="text-2xl">👆</div>
-                        </div>
-                        <div id="answer5" class="answer-reveal">
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-4">
-                                    <span class="text-white font-bold">QC</span>
-                                </div>
-                                <div>
-                                    <h5 class="font-bold text-blue-800">Respuesta: QC</h5>
-                                    <p class="text-blue-700">Se <strong>detectó un defecto</strong> en el producto durante la inspección/prueba.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Actividad 6 -->
-                    <div class="activity-card" style="border-left-color: #f59e0b;" onclick="revealAnswer(6)">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <h4 class="text-lg font-bold text-gray-800 mb-2">6. Crear una plantilla para los planes de prueba del proyecto</h4>
-                                <p class="text-gray-600">Diseñar un formato estándar que todos los testers deben usar para documentar sus planes.</p>
-                            </div>
-                            <div class="text-2xl">👆</div>
-                        </div>
-                        <div id="answer6" class="answer-reveal">
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-4">
-                                    <span class="text-white font-bold">SQA</span>
-                                </div>
-                                <div>
-                                    <h5 class="font-bold text-green-800">Respuesta: SQA</h5>
-                                    <p class="text-green-700">Se está <strong>estandarizando un proceso</strong> para asegurar consistencia y calidad.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Actividad 7 -->
-                    <div class="activity-card" style="border-left-color: #8b5cf6;" onclick="revealAnswer(7)">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <h4 class="text-lg font-bold text-gray-800 mb-2">7. Medir el tiempo de respuesta de una página web bajo carga</h4>
-                                <p class="text-gray-600">Verificar que la página responda en menos de 2 segundos con 1000 usuarios simultáneos.</p>
-                            </div>
-                            <div class="text-2xl">👆</div>
-                        </div>
-                        <div id="answer7" class="answer-reveal">
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-4">
-                                    <span class="text-white font-bold">QC</span>
-                                </div>
-                                <div>
-                                    <h5 class="font-bold text-blue-800">Respuesta: QC</h5>
-                                    <p class="text-blue-700">Se está <strong>midiendo una característica del producto</strong> para verificar si cumple los requisitos.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Actividad 8 -->
-                    <div class="activity-card" style="border-left-color: #10b981;" onclick="revealAnswer(8)">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
-                                <h4 class="text-lg font-bold text-gray-800 mb-2">8. Capacitar a los desarrolladores en prácticas de desarrollo seguro</h4>
-                                <p class="text-gray-600">Enseñar al equipo cómo evitar vulnerabilidades comunes como SQL injection.</p>
-                            </div>
-                            <div class="text-2xl">👆</div>
-                        </div>
-                        <div id="answer8" class="answer-reveal">
-                            <div class="flex items-center">
-                                <div class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-4">
-                                    <span class="text-white font-bold">SQA</span>
-                                </div>
-                                <div>
-                                    <h5 class="font-bold text-green-800">Respuesta: SQA</h5>
-                                    <p class="text-green-700">Se está <strong>mejorando el proceso de desarrollo</strong> para prevenir problemas de seguridad.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Botón para revelar todas las respuestas -->
-                <div class="text-center mb-8">
-                    <button onclick="revealAllAnswers()" class="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-purple-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105">
-                        🎯 Revelar Todas las Respuestas
-                    </button>
-                </div>
-                
-                <!-- Conclusión -->
-                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 text-white">
-                    <div class="flex items-center justify-center mb-4">
-                        <div class="text-4xl mr-4">🧠</div>
-                        <h3 class="text-2xl font-bold">Reflexión Final</h3>
-                    </div>
-                    <p class="text-xl text-center leading-relaxed opacity-95">
-                        ¿Notaste el patrón? <strong>SQA se enfoca en "cómo hacemos las cosas"</strong> mientras que <strong>QC se enfoca en "qué obtuvimos"</strong>.
+                <div class="text-2xl">👆</div>
+              </div>
+              <div id="answer1" class="answer-reveal">
+                <div class="flex items-center">
+                  <div
+                    class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-4"
+                  >
+                    <span class="text-white font-bold">QC</span>
+                  </div>
+                  <div>
+                    <h5 class="font-bold text-blue-800">Respuesta: QC</h5>
+                    <p class="text-blue-700">
+                      Se está
+                      <strong>inspeccionando el producto</strong> (software)
+                      para encontrar defectos.
                     </p>
+                  </div>
                 </div>
+              </div>
             </div>
-        </div>
 
+            <!-- Actividad 2 -->
+            <div
+              class="activity-card"
+              style="border-left-color: #f59e0b"
+              onclick="revealAnswer(2)"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <h4 class="text-lg font-bold text-gray-800 mb-2">
+                    2. Definir el estándar de codificación para el equipo
+                  </h4>
+                  <p class="text-gray-600">
+                    Establecer reglas sobre cómo debe escribirse el código
+                    (nombres de variables, indentación, etc.).
+                  </p>
+                </div>
+                <div class="text-2xl">👆</div>
+              </div>
+              <div id="answer2" class="answer-reveal">
+                <div class="flex items-center">
+                  <div
+                    class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-4"
+                  >
+                    <span class="text-white font-bold">SQA</span>
+                  </div>
+                  <div>
+                    <h5 class="font-bold text-green-800">Respuesta: SQA</h5>
+                    <p class="text-green-700">
+                      Se está <strong>definiendo un proceso</strong> para
+                      prevenir problemas de calidad en el código.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actividad 3 -->
+            <div
+              class="activity-card"
+              style="border-left-color: #8b5cf6"
+              onclick="revealAnswer(3)"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <h4 class="text-lg font-bold text-gray-800 mb-2">
+                    3. Realizar una revisión por pares (peer review) de un
+                    documento de diseño
+                  </h4>
+                  <p class="text-gray-600">
+                    Otro desarrollador revisa el documento de diseño antes de
+                    implementar.
+                  </p>
+                </div>
+                <div class="text-2xl">👆</div>
+              </div>
+              <div id="answer3" class="answer-reveal">
+                <div class="flex items-center">
+                  <div
+                    class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-4"
+                  >
+                    <span class="text-white font-bold">QC</span>
+                  </div>
+                  <div>
+                    <h5 class="font-bold text-blue-800">Respuesta: QC</h5>
+                    <p class="text-blue-700">
+                      Se está
+                      <strong>inspeccionando un producto de trabajo</strong> (el
+                      documento) para encontrar errores.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actividad 4 -->
+            <div
+              class="activity-card"
+              style="border-left-color: #10b981"
+              onclick="revealAnswer(4)"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <h4 class="text-lg font-bold text-gray-800 mb-2">
+                    4. Realizar una auditoría para verificar que el equipo está
+                    siguiendo la metodología Scrum
+                  </h4>
+                  <p class="text-gray-600">
+                    Revisar si se están realizando los daily standups, sprints,
+                    retrospectivas, etc.
+                  </p>
+                </div>
+                <div class="text-2xl">👆</div>
+              </div>
+              <div id="answer4" class="answer-reveal">
+                <div class="flex items-center">
+                  <div
+                    class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-4"
+                  >
+                    <span class="text-white font-bold">SQA</span>
+                  </div>
+                  <div>
+                    <h5 class="font-bold text-green-800">Respuesta: SQA</h5>
+                    <p class="text-green-700">
+                      Se está
+                      <strong>verificando que se siga el proceso</strong>
+                      definido para asegurar calidad.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actividad 5 -->
+            <div
+              class="activity-card"
+              style="border-left-color: #ef4444"
+              onclick="revealAnswer(5)"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <h4 class="text-lg font-bold text-gray-800 mb-2">
+                    5. Reportar un bug encontrado en el ambiente de pruebas
+                  </h4>
+                  <p class="text-gray-600">
+                    Documentar un error encontrado durante las pruebas del
+                    software.
+                  </p>
+                </div>
+                <div class="text-2xl">👆</div>
+              </div>
+              <div id="answer5" class="answer-reveal">
+                <div class="flex items-center">
+                  <div
+                    class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-4"
+                  >
+                    <span class="text-white font-bold">QC</span>
+                  </div>
+                  <div>
+                    <h5 class="font-bold text-blue-800">Respuesta: QC</h5>
+                    <p class="text-blue-700">
+                      Se <strong>detectó un defecto</strong> en el producto
+                      durante la inspección/prueba.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actividad 6 -->
+            <div
+              class="activity-card"
+              style="border-left-color: #f59e0b"
+              onclick="revealAnswer(6)"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <h4 class="text-lg font-bold text-gray-800 mb-2">
+                    6. Crear una plantilla para los planes de prueba del
+                    proyecto
+                  </h4>
+                  <p class="text-gray-600">
+                    Diseñar un formato estándar que todos los testers deben usar
+                    para documentar sus planes.
+                  </p>
+                </div>
+                <div class="text-2xl">👆</div>
+              </div>
+              <div id="answer6" class="answer-reveal">
+                <div class="flex items-center">
+                  <div
+                    class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-4"
+                  >
+                    <span class="text-white font-bold">SQA</span>
+                  </div>
+                  <div>
+                    <h5 class="font-bold text-green-800">Respuesta: SQA</h5>
+                    <p class="text-green-700">
+                      Se está <strong>estandarizando un proceso</strong> para
+                      asegurar consistencia y calidad.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actividad 7 -->
+            <div
+              class="activity-card"
+              style="border-left-color: #8b5cf6"
+              onclick="revealAnswer(7)"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <h4 class="text-lg font-bold text-gray-800 mb-2">
+                    7. Medir el tiempo de respuesta de una página web bajo carga
+                  </h4>
+                  <p class="text-gray-600">
+                    Verificar que la página responda en menos de 2 segundos con
+                    1000 usuarios simultáneos.
+                  </p>
+                </div>
+                <div class="text-2xl">👆</div>
+              </div>
+              <div id="answer7" class="answer-reveal">
+                <div class="flex items-center">
+                  <div
+                    class="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center mr-4"
+                  >
+                    <span class="text-white font-bold">QC</span>
+                  </div>
+                  <div>
+                    <h5 class="font-bold text-blue-800">Respuesta: QC</h5>
+                    <p class="text-blue-700">
+                      Se está
+                      <strong>midiendo una característica del producto</strong>
+                      para verificar si cumple los requisitos.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actividad 8 -->
+            <div
+              class="activity-card"
+              style="border-left-color: #10b981"
+              onclick="revealAnswer(8)"
+            >
+              <div class="flex items-center justify-between">
+                <div class="flex-1">
+                  <h4 class="text-lg font-bold text-gray-800 mb-2">
+                    8. Capacitar a los desarrolladores en prácticas de
+                    desarrollo seguro
+                  </h4>
+                  <p class="text-gray-600">
+                    Enseñar al equipo cómo evitar vulnerabilidades comunes como
+                    SQL injection.
+                  </p>
+                </div>
+                <div class="text-2xl">👆</div>
+              </div>
+              <div id="answer8" class="answer-reveal">
+                <div class="flex items-center">
+                  <div
+                    class="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center mr-4"
+                  >
+                    <span class="text-white font-bold">SQA</span>
+                  </div>
+                  <div>
+                    <h5 class="font-bold text-green-800">Respuesta: SQA</h5>
+                    <p class="text-green-700">
+                      Se está
+                      <strong>mejorando el proceso de desarrollo</strong> para
+                      prevenir problemas de seguridad.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botón para revelar todas las respuestas -->
+          <div class="text-center mb-8">
+            <button
+              onclick="revealAllAnswers()"
+              class="bg-gradient-to-r from-purple-500 to-pink-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-purple-600 hover:to-pink-700 transition-all duration-300 transform hover:scale-105"
+            >
+              🎯 Revelar Todas las Respuestas
+            </button>
+          </div>
+
+          <!-- Conclusión -->
+          <div
+            class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 text-white"
+          >
+            <div class="flex items-center justify-center mb-4">
+              <div class="text-4xl mr-4">🧠</div>
+              <h3 class="text-2xl font-bold">Reflexión Final</h3>
+            </div>
+            <p class="text-xl text-center leading-relaxed opacity-95">
+              ¿Notaste el patrón?
+              <strong>SQA se enfoca en "cómo hacemos las cosas"</strong>
+              mientras que <strong>QC se enfoca en "qué obtuvimos"</strong>.
+            </p>
+          </div>
+        </div>
+      </div>
     </main>
 
     <!-- Navigation -->
     <div class="navigation">
-        <button class="nav-button" onclick="previousSlide()">⬅️ Anterior</button>
-        <button class="nav-button" onclick="resetAll()">🔄 Reiniciar</button>
-        <button class="nav-button" onclick="nextSlide()">Siguiente ➡️</button>
+      <button class="nav-button" onclick="previousSlide()">⬅️ Anterior</button>
+      <button class="nav-button" onclick="resetAll()">🔄 Reiniciar</button>
+      <button class="nav-button" onclick="nextSlide()">Siguiente ➡️</button>
     </div>
 
     <script>
-        let currentSlide = 1;
-        const totalSlides = 4;
-        
-        function updateSlideCounter() {
-            document.getElementById('current-slide').textContent = currentSlide;
-            document.getElementById('total-slides').textContent = totalSlides;
+      let currentSlide = 1;
+      const totalSlides = 4;
+
+      function updateSlideCounter() {
+        document.getElementById("current-slide").textContent = currentSlide;
+        document.getElementById("total-slides").textContent = totalSlides;
+      }
+
+      function showSlide(slideNumber) {
+        // Hide all slides
+        for (let i = 1; i <= totalSlides; i++) {
+          document.getElementById("slide" + i).classList.add("hidden");
         }
-        
-        function showSlide(slideNumber) {
-            // Hide all slides
-            for (let i = 1; i <= totalSlides; i++) {
-                document.getElementById('slide' + i).classList.add('hidden');
-            }
-            
-            // Show selected slide
-            document.getElementById('slide' + slideNumber).classList.remove('hidden');
-            
-            currentSlide = slideNumber;
-            updateSlideCounter();
-            updateNavigationButtons();
-            
-            // Auto-scroll to top when changing slides
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }
-        
-        function updateNavigationButtons() {
-            const prevButton = document.querySelector('.navigation button:first-child');
-            const nextButton = document.querySelector('.navigation button:last-child');
-            
-            prevButton.disabled = currentSlide === 1;
-            nextButton.disabled = currentSlide === totalSlides;
-        }
-        
-        function previousSlide() {
-            if (currentSlide > 1) {
-                showSlide(currentSlide - 1);
-            }
-        }
-        
-        function nextSlide() {
-            if (currentSlide < totalSlides) {
-                showSlide(currentSlide + 1);
-            }
-        }
-        
-        function resetAll() {
-            showSlide(1);
-            // Reset all activity answers
-            for (let i = 1; i <= 8; i++) {
-                const answer = document.getElementById('answer' + i);
-                if (answer) {
-                    answer.classList.remove('show');
-                }
-            }
-        }
-        
-        function revealAnswer(activityNumber) {
-            const answer = document.getElementById('answer' + activityNumber);
-            const card = answer.parentElement;
-            
-            if (answer.classList.contains('show')) {
-                answer.classList.remove('show');
-                card.classList.remove('revealed');
-            } else {
-                answer.classList.add('show');
-                card.classList.add('revealed');
-            }
-        }
-        
-        function revealAllAnswers() {
-            for (let i = 1; i <= 8; i++) {
-                const answer = document.getElementById('answer' + i);
-                const card = answer.parentElement;
-                answer.classList.add('show');
-                card.classList.add('revealed');
-            }
-        }
-        
-        // Keyboard navigation
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'ArrowLeft') {
-                previousSlide();
-            } else if (e.key === 'ArrowRight') {
-                nextSlide();
-            } else if (e.key === 'Home') {
-                resetAll();
-            }
+
+        // Show selected slide
+        document
+          .getElementById("slide" + slideNumber)
+          .classList.remove("hidden");
+
+        currentSlide = slideNumber;
+        updateSlideCounter();
+        updateNavigationButtons();
+
+        // Auto-scroll to top when changing slides
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
         });
-        
-        // Initialize
+      }
+
+      function updateNavigationButtons() {
+        const prevButton = document.querySelector(
+          ".navigation button:first-child"
+        );
+        const nextButton = document.querySelector(
+          ".navigation button:last-child"
+        );
+
+        prevButton.disabled = currentSlide === 1;
+        nextButton.disabled = currentSlide === totalSlides;
+      }
+
+      function previousSlide() {
+        if (currentSlide > 1) {
+          showSlide(currentSlide - 1);
+        }
+      }
+
+      function nextSlide() {
+        if (currentSlide < totalSlides) {
+          showSlide(currentSlide + 1);
+        }
+      }
+
+      function resetAll() {
         showSlide(1);
+        // Reset all activity answers
+        for (let i = 1; i <= 8; i++) {
+          const answer = document.getElementById("answer" + i);
+          if (answer) {
+            answer.classList.remove("show");
+          }
+        }
+      }
+
+      function revealAnswer(activityNumber) {
+        const answer = document.getElementById("answer" + activityNumber);
+        const card = answer.parentElement;
+
+        if (answer.classList.contains("show")) {
+          answer.classList.remove("show");
+          card.classList.remove("revealed");
+        } else {
+          answer.classList.add("show");
+          card.classList.add("revealed");
+        }
+      }
+
+      function revealAllAnswers() {
+        for (let i = 1; i <= 8; i++) {
+          const answer = document.getElementById("answer" + i);
+          const card = answer.parentElement;
+          answer.classList.add("show");
+          card.classList.add("revealed");
+        }
+      }
+
+      // Keyboard navigation
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowLeft") {
+          previousSlide();
+        } else if (e.key === "ArrowRight") {
+          nextSlide();
+        } else if (e.key === "Home") {
+          resetAll();
+        }
+      });
+
+      // Initialize
+      showSlide(1);
     </script>
 
-<!-- Pie de página -->
-<footer class="footer">
-  <div class="footer-content">© 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua</div>
-</footer>
+    <!-- Pie de página -->
+    <footer class="footer">
+      <div class="footer-content">
+        © 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua
+      </div>
+    </footer>
 
-</body>
+    <script defer src="js/layout.js"></script>
+  </body>
 </html>
