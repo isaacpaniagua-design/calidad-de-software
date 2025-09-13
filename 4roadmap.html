@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anexo 4: Formato de Roadmap de Implementación</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+        
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+            .page-break { page-break-before: always; }
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; }
+            .table-container { overflow: visible; }
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --dark-gradient: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.18);
+        }
+        
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            color: #2d3748;
+            overflow-x: hidden;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            padding: 30px 20px;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .sidebar-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+        }
+        
+        .sidebar-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .nav-item {
+            margin-bottom: 8px;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .stats-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .stats-title {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            color: rgba(255,255,255,0.8);
+            font-size: 12px;
+        }
+        
+        .stat-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        
+        .timeline-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .timeline-title {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .timeline-dot {
+            width: 12px;
+            height: 12px;
+            background: var(--success-gradient);
+            border-radius: 50%;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        
+        .timeline-content {
+            color: rgba(255,255,255,0.9);
+            font-size: 11px;
+            line-height: 1.3;
+        }
+        
+        .timeline-line {
+            position: absolute;
+            left: 5px;
+            top: 12px;
+            bottom: -15px;
+            width: 2px;
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .timeline-item:last-child .timeline-line {
+            display: none;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            padding: 30px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            color: white;
+            text-align: center;
+            padding: 60px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+            animation: float 15s ease-in-out infinite;
+        }
+        
+        .header::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
+            background-size: 400% 400%;
+            animation: gradientBorder 4s ease infinite;
+            z-index: -1;
+            border-radius: 25px;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-10px) rotate(120deg); }
+            66% { transform: translateY(5px) rotate(240deg); }
+        }
+        
+        @keyframes gradientBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .header-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 36px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .header h1 {
+            font-size: 42px;
+            font-weight: 800;
+            margin: 0;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: textShine 3s ease-in-out infinite;
+        }
+        
+        @keyframes textShine {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .header .subtitle {
+            font-size: 18px;
+            margin-top: 10px;
+            opacity: 0.95;
+            font-weight: 500;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .header-badges {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .badge {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1px solid #0ea5e9;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .info-box::before {
+            content: '🗺️';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 60px;
+            opacity: 0.1;
+            transform: rotate(15deg);
+        }
+        
+        .info-box h3 {
+            color: #0369a1;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-box p {
+            margin: 8px 0;
+            color: #0c4a6e;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 
+                0 15px 50px rgba(0,0,0,0.2),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+            border: 1px solid var(--glass-border);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .controls-title {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .btn {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 6px 20px rgba(102, 126, 234, 0.3),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            min-width: 140px;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 
+                0 12px 35px rgba(102, 126, 234, 0.4),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+        
+        .btn-secondary {
+            background: var(--secondary-gradient);
+            box-shadow: 
+                0 6px 20px rgba(240, 147, 251, 0.3),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+        
+        .btn-secondary:hover {
+            box-shadow: 
+                0 12px 35px rgba(240, 147, 251, 0.4),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        
+        .btn-success {
+            background: var(--success-gradient);
+            box-shadow: 
+                0 6px 20px rgba(79, 172, 254, 0.3),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+        
+        .btn-success:hover {
+            box-shadow: 
+                0 12px 35px rgba(79, 172, 254, 0.4),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        
+        .btn-danger {
+            background: var(--danger-gradient);
+            box-shadow: 
+                0 6px 20px rgba(250, 112, 154, 0.3),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+        
+        .btn-danger:hover {
+            box-shadow: 
+                0 12px 35px rgba(250, 112, 154, 0.4),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        
+        .btn i {
+            font-size: 16px;
+        }
+        
+        .table-section {
+            margin-top: 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 
+                0 15px 50px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .table-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            font-weight: 700;
+            font-size: 20px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .table-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .table-icon {
+            width: 45px;
+            height: 45px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            background: #fafafa;
+        }
+        
+        .roadmap-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            min-width: 1200px;
+        }
+        
+        .roadmap-table th {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-right: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .roadmap-table th:last-child {
+            border-right: none;
+        }
+        
+        .roadmap-table td {
+            padding: 0;
+            border-bottom: 1px solid #e5e7eb;
+            border-right: 1px solid #e5e7eb;
+            vertical-align: top;
+            position: relative;
+        }
+        
+        .roadmap-table td:last-child {
+            border-right: none;
+        }
+        
+        .roadmap-table tr:hover {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        
+        .cell-input {
+            width: 100%;
+            border: none;
+            padding: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 13px;
+            line-height: 1.4;
+            background: transparent;
+            resize: none;
+            min-height: 60px;
+            transition: all 0.3s ease;
+        }
+        
+        .cell-input:focus {
+            outline: none;
+            background: rgba(102, 126, 234, 0.05);
+            box-shadow: inset 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+        
+        .date-inputs {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 12px;
+        }
+        
+        .date-input {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            padding: 8px;
+            border-radius: 6px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            background: white;
+        }
+        
+        .date-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+        
+        .date-label {
+            font-size: 10px;
+            color: #6b7280;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+        
+        .add-row-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .add-row-btn:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-2px);
+        }
+        
+        .delete-row-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 25px;
+            height: 25px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 12px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .roadmap-table tr:hover .delete-row-btn {
+            display: flex;
+        }
+        
+        .delete-row-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+        
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-top: 1px solid #e2e8f0;
+            font-weight: 500;
+        }
+        
+        .example-row {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%) !important;
+        }
+        
+        .example-row td {
+            border-bottom: 2px solid #f59e0b;
+        }
+        
+        .example-label {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+            z-index: 5;
+        }
+        
+        .phase-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar no-print">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <i class="fas fa-route"></i>
+            </div>
+            <h3 class="sidebar-title">Roadmap Implementación</h3>
+        </div>
+        
+        <nav>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#info" class="nav-link">
+                        <i class="fas fa-info-circle"></i>
+                        Información
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#table" class="nav-link">
+                        <i class="fas fa-table"></i>
+                        Cronograma
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#timeline" class="nav-link">
+                        <i class="fas fa-clock"></i>
+                        Timeline
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="stats-section">
+            <div class="stats-title">
+                <i class="fas fa-chart-pie"></i>
+                Estadísticas
+            </div>
+            <div class="stat-item">
+                <span>Total Fases:</span>
+                <span class="stat-badge" id="totalPhases">1</span>
+            </div>
+            <div class="stat-item">
+                <span>Duración Total:</span>
+                <span class="stat-badge" id="totalDuration">15 días</span>
+            </div>
+            <div class="stat-item">
+                <span>Fecha Inicio:</span>
+                <span class="stat-badge" id="startDate">01/03/2025</span>
+            </div>
+            <div class="stat-item">
+                <span>Fecha Fin:</span>
+                <span class="stat-badge" id="endDate">15/03/2025</span>
+            </div>
+        </div>
+        
+        <div class="timeline-section" id="timeline">
+            <div class="timeline-title">
+                <i class="fas fa-timeline"></i>
+                Timeline Visual
+            </div>
+            <div id="timelineContainer">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <strong>Fase 1</strong><br>
+                        Diagnóstico y Planificación<br>
+                        <small>01/03 - 15/03/2025</small>
+                    </div>
+                    <div class="timeline-line"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="controls no-print">
+        <div class="controls-title">Acciones</div>
+        <button class="btn" onclick="window.print()">
+            <i class="fas fa-print"></i>
+            Imprimir
+        </button>
+        <button class="btn btn-secondary" onclick="saveData()">
+            <i class="fas fa-save"></i>
+            Guardar
+        </button>
+        <button class="btn btn-success" onclick="addPhase()">
+            <i class="fas fa-plus"></i>
+            Agregar Fase
+        </button>
+        <button class="btn btn-danger" onclick="clearAll()">
+            <i class="fas fa-trash"></i>
+            Limpiar
+        </button>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <i class="fas fa-map-marked-alt"></i>
+                    </div>
+                    <h1>Anexo 4: Formato de Roadmap de Implementación</h1>
+                    <div class="subtitle">Cronograma de Fases y Actividades</div>
+                    <div class="header-badges">
+                        <div class="badge">
+                            <i class="fas fa-calendar"></i>
+                            Semana 14 - Sesión 40
+                        </div>
+                        <div class="badge">
+                            <i class="fas fa-route"></i>
+                            Roadmap
+                        </div>
+                        <div class="badge">
+                            <i class="fas fa-tasks"></i>
+                            Implementación
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="info-box" id="info">
+                    <h3>🗺️ Instrucciones para el Alumno</h3>
+                    <p><strong>Cuándo presentarlo:</strong> Semana 14, Sesión 40 (Roadmap de Implementación)</p>
+                    <p><strong>Nota:</strong> Este formato es un entregable clave para planificar las fases de implementación de las mejoras propuestas. Incluya actividades, responsables, fechas y entregables por fase.</p>
+                    <p><strong>Instrucción:</strong> Complete la siguiente tabla con el cronograma de implementación de su empresa caso.</p>
+                </div>
+
+                <div class="table-section" id="table">
+                    <div class="table-header">
+                        <div class="table-icon">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div>Cronograma de Implementación</div>
+                    </div>
+                    <div class="table-container">
+                        <table class="roadmap-table" id="roadmapTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 20%;">Fase</th>
+                                    <th style="width: 25%;">Actividad</th>
+                                    <th style="width: 20%;">Responsable(s)</th>
+                                    <th style="width: 20%;">Entregable</th>
+                                    <th style="width: 15%;">Fecha Inicio - Fin</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <tr class="example-row">
+                                    <td style="position: relative;">
+                                        <div class="example-label">EJEMPLO</div>
+                                        <div class="phase-badge">Fase 1</div>
+                                        <textarea class="cell-input" readonly style="min-height: 40px;">Diagnóstico y Planificación</textarea>
+                                    </td>
+                                    <td>
+                                        <textarea class="cell-input" readonly>Capacitación en modelo CMMI Nivel 2</textarea>
+                                    </td>
+                                    <td>
+                                        <textarea class="cell-input" readonly>Consultor QA / Líder de proyecto</textarea>
+                                    </td>
+                                    <td>
+                                        <textarea class="cell-input" readonly>Lista de asistencia y material de capacitación</textarea>
+                                    </td>
+                                    <td>
+                                        <div class="date-inputs">
+                                            <div>
+                                                <div class="date-label">Inicio:</div>
+                                                <input type="date" class="date-input" value="2025-03-01" readonly>
+                                            </div>
+                                            <div>
+                                                <div class="date-label">Fin:</div>
+                                                <input type="date" class="date-input" value="2025-03-15" readonly>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button class="add-row-btn" onclick="addPhase()">
+                            <i class="fas fa-plus"></i>
+                            Agregar Nueva Fase
+                        </button>
+                    </div>
+                </div>
+
+                <div class="info-box" style="margin-top: 30px;">
+                    <h3>💡 Guía para Completar el Roadmap</h3>
+                    <p><strong>Fase:</strong> Nombre descriptivo de la fase (ej: Fase 1: Diagnóstico, Fase 2: Implementación)</p>
+                    <p><strong>Actividad:</strong> Descripción específica de la actividad a realizar</p>
+                    <p><strong>Responsable(s):</strong> Personas o roles encargados de ejecutar la actividad</p>
+                    <p><strong>Entregable:</strong> Producto o resultado esperado de la actividad</p>
+                    <p><strong>Fechas:</strong> Período de ejecución de la actividad (inicio y fin)</p>
+                </div>
+            </div>
+
+            <div class="footer">
+                <p>Formato de Roadmap de Implementación | Anexo 4 de 5</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let phaseCounter = 1;
+
+        function addPhase() {
+            phaseCounter++;
+            const tableBody = document.getElementById('tableBody');
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = `
+                <td style="position: relative;">
+                    <button class="delete-row-btn" onclick="deleteRow(this)" title="Eliminar fase">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="phase-badge">Fase ${phaseCounter}</div>
+                    <textarea class="cell-input" placeholder="Nombre de la fase..." style="min-height: 40px;"></textarea>
+                </td>
+                <td>
+                    <textarea class="cell-input" placeholder="Describe la actividad principal..."></textarea>
+                </td>
+                <td>
+                    <textarea class="cell-input" placeholder="Personas o roles responsables..."></textarea>
+                </td>
+                <td>
+                    <textarea class="cell-input" placeholder="Producto o resultado esperado..."></textarea>
+                </td>
+                <td>
+                    <div class="date-inputs">
+                        <div>
+                            <div class="date-label">Inicio:</div>
+                            <input type="date" class="date-input">
+                        </div>
+                        <div>
+                            <div class="date-label">Fin:</div>
+                            <input type="date" class="date-input">
+                        </div>
+                    </div>
+                </td>
+            `;
+            
+            tableBody.appendChild(newRow);
+            updateStats();
+            updateTimeline();
+            
+            // Auto-resize textareas
+            const textareas = newRow.querySelectorAll('.cell-input');
+            textareas.forEach(textarea => {
+                textarea.addEventListener('input', function() {
+                    this.style.height = 'auto';
+                    this.style.height = Math.max(60, this.scrollHeight) + 'px';
+                    updateStats();
+                    updateTimeline();
+                });
+            });
+            
+            // Update stats on date change
+            const dateInputs = newRow.querySelectorAll('.date-input');
+            dateInputs.forEach(input => {
+                input.addEventListener('change', function() {
+                    updateStats();
+                    updateTimeline();
+                });
+            });
+            
+            showNotification('Nueva fase agregada correctamente', 'success');
+        }
+
+        function deleteRow(button) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta fase?')) {
+                const row = button.closest('tr');
+                row.style.transition = 'all 0.3s ease';
+                row.style.transform = 'scale(0.95)';
+                row.style.opacity = '0';
+                
+                setTimeout(() => {
+                    row.remove();
+                    updateStats();
+                    updateTimeline();
+                    showNotification('Fase eliminada correctamente', 'info');
+                }, 300);
+            }
+        }
+
+        function updateStats() {
+            const rows = document.querySelectorAll('#tableBody tr:not(.example-row)');
+            const totalPhases = rows.length + 1; // +1 for example row
+            
+            let startDate = new Date('2025-03-01');
+            let endDate = new Date('2025-03-15');
+            
+            rows.forEach(row => {
+                const startInput = row.querySelector('.date-input:first-of-type');
+                const endInput = row.querySelector('.date-input:last-of-type');
+                
+                if (startInput && startInput.value) {
+                    const rowStart = new Date(startInput.value);
+                    if (rowStart < startDate) startDate = rowStart;
+                }
+                
+                if (endInput && endInput.value) {
+                    const rowEnd = new Date(endInput.value);
+                    if (rowEnd > endDate) endDate = rowEnd;
+                }
+            });
+            
+            const duration = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+            
+            document.getElementById('totalPhases').textContent = totalPhases;
+            document.getElementById('totalDuration').textContent = duration + ' días';
+            document.getElementById('startDate').textContent = formatDate(startDate);
+            document.getElementById('endDate').textContent = formatDate(endDate);
+        }
+
+        function updateTimeline() {
+            const timelineContainer = document.getElementById('timelineContainer');
+            const rows = document.querySelectorAll('#tableBody tr');
+            
+            timelineContainer.innerHTML = '';
+            
+            rows.forEach((row, index) => {
+                const phaseText = row.querySelector('td:first-child textarea').value || 
+                                 (index === 0 ? 'Diagnóstico y Planificación' : `Fase ${index + 1}`);
+                const startInput = row.querySelector('.date-input:first-of-type');
+                const endInput = row.querySelector('.date-input:last-of-type');
+                
+                const startDate = startInput ? startInput.value : '2025-03-01';
+                const endDate = endInput ? endInput.value : '2025-03-15';
+                
+                const timelineItem = document.createElement('div');
+                timelineItem.className = 'timeline-item';
+                timelineItem.innerHTML = `
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <strong>Fase ${index + 1}</strong><br>
+                        ${phaseText}<br>
+                        <small>${formatDate(new Date(startDate))} - ${formatDate(new Date(endDate))}</small>
+                    </div>
+                    ${index < rows.length - 1 ? '<div class="timeline-line"></div>' : ''}
+                `;
+                
+                timelineContainer.appendChild(timelineItem);
+            });
+        }
+
+        function formatDate(date) {
+            return date.toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+        }
+
+        function saveData() {
+            const rows = document.querySelectorAll('#tableBody tr:not(.example-row)');
+            const data = [];
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('textarea, .date-input');
+                const rowData = {
+                    fase: cells[0].value,
+                    actividad: cells[1].value,
+                    responsable: cells[2].value,
+                    entregable: cells[3].value,
+                    fechaInicio: cells[4].value,
+                    fechaFin: cells[5].value
+                };
+                data.push(rowData);
+            });
+            
+            localStorage.setItem('roadmapData', JSON.stringify(data));
+            showNotification('Datos guardados correctamente', 'success');
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('roadmapData');
+            if (saved) {
+                const data = JSON.parse(saved);
+                
+                // Clear existing rows (except example)
+                const existingRows = document.querySelectorAll('#tableBody tr:not(.example-row)');
+                existingRows.forEach(row => row.remove());
+                
+                // Add saved rows
+                data.forEach(rowData => {
+                    addPhase();
+                    const lastRow = document.querySelector('#tableBody tr:last-child');
+                    const cells = lastRow.querySelectorAll('textarea, .date-input');
+                    
+                    cells[0].value = rowData.fase || '';
+                    cells[1].value = rowData.actividad || '';
+                    cells[2].value = rowData.responsable || '';
+                    cells[3].value = rowData.entregable || '';
+                    cells[4].value = rowData.fechaInicio || '';
+                    cells[5].value = rowData.fechaFin || '';
+                    
+                    // Auto-resize textareas
+                    cells.forEach(cell => {
+                        if (cell.tagName === 'TEXTAREA') {
+                            cell.style.height = 'auto';
+                            cell.style.height = Math.max(60, cell.scrollHeight) + 'px';
+                        }
+                    });
+                });
+                
+                updateStats();
+                updateTimeline();
+            }
+        }
+
+        function clearAll() {
+            if (confirm('¿Estás seguro de que quieres limpiar todas las fases?')) {
+                const rows = document.querySelectorAll('#tableBody tr:not(.example-row)');
+                rows.forEach(row => {
+                    row.style.transition = 'all 0.3s ease';
+                    row.style.transform = 'scale(0.95)';
+                    row.style.opacity = '0';
+                    
+                    setTimeout(() => row.remove(), 300);
+                });
+                
+                setTimeout(() => {
+                    phaseCounter = 1;
+                    updateStats();
+                    updateTimeline();
+                    showNotification('Todas las fases han sido eliminadas', 'info');
+                }, 400);
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 30px;
+                background: ${type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' : 
+                           type === 'error' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 
+                           'linear-gradient(135deg, #3b82f6, #1d4ed8)'};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+                z-index: 10000;
+                font-weight: 500;
+                transform: translateX(400px);
+                transition: transform 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+            setTimeout(() => {
+                notification.style.transform = 'translateX(400px)';
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 3000);
+        }
+
+        // Initialize
+        window.onload = function() {
+            loadData();
+            updateStats();
+            updateTimeline();
+            
+            // Auto-save every 30 seconds
+            setInterval(() => {
+                const hasContent = document.querySelectorAll('#tableBody tr:not(.example-row)').length > 0;
+                if (hasContent) {
+                    saveData();
+                }
+            }, 30000);
+        };
+
+        // Prevent data loss
+        window.addEventListener('beforeunload', function(e) {
+            const hasContent = document.querySelectorAll('#tableBody tr:not(.example-row)').length > 0;
+            if (hasContent) {
+                saveData();
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97eaae98a0d16e2c',t:'MTc1Nzc5ODM1OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

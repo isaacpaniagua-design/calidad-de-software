@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Anexo 3: Formato de Análisis de Brechas (Gap Analysis)</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap");
+      @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css");
+
+      @media print {
+        body {
+          margin: 0;
+        }
+        .no-print {
+          display: none;
+        }
+        .page-break {
+          page-break-before: always;
+        }
+        .sidebar {
+          display: none;
+        }
+        .main-content {
+          margin-left: 0;
+        }
+        .table-container {
+          overflow: visible;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        --dark-gradient: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        --glass-bg: rgba(255, 255, 255, 0.25);
+        --glass-border: rgba(255, 255, 255, 0.18);
+      }
+
+      body {
+        font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, sans-serif;
+        line-height: 1.6;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(
+          135deg,
+          #667eea 0%,
+          #764ba2 50%,
+          #f093fb 100%
+        );
+        background-size: 400% 400%;
+        animation: gradientShift 15s ease infinite;
+        min-height: 100vh;
+        color: #2d3748;
+        overflow-x: hidden;
+      }
+
+      @keyframes gradientShift {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 280px;
+        height: 100vh;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border-right: 1px solid var(--glass-border);
+        padding: 30px 20px;
+        z-index: 1000;
+        overflow-y: auto;
+      }
+
+      .sidebar-header {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .sidebar-logo {
+        width: 60px;
+        height: 60px;
+        background: var(--primary-gradient);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 15px;
+        font-size: 24px;
+        color: white;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+      }
+
+      .sidebar-title {
+        color: white;
+        font-size: 18px;
+        font-weight: 600;
+        margin: 0;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .nav-menu {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .nav-item {
+        margin-bottom: 8px;
+      }
+
+      .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .nav-link:hover,
+      .nav-link.active {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateX(5px);
+      }
+
+      .nav-link i {
+        margin-right: 10px;
+        width: 20px;
+        text-align: center;
+      }
+
+      .stats-section {
+        margin-top: 30px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .stats-title {
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 12px;
+      }
+
+      .stat-badge {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 4px 8px;
+        border-radius: 10px;
+        font-weight: 600;
+      }
+
+      .main-content {
+        margin-left: 280px;
+        padding: 30px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border-radius: 25px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+        border: 1px solid var(--glass-border);
+        overflow: hidden;
+        position: relative;
+      }
+
+      .container::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.5),
+          transparent
+        );
+      }
+
+      .header {
+        background: linear-gradient(
+          135deg,
+          #667eea 0%,
+          #764ba2 50%,
+          #f093fb 100%
+        );
+        color: white;
+        text-align: center;
+        padding: 60px 40px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(
+            circle at 20% 80%,
+            rgba(120, 119, 198, 0.3) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 80% 20%,
+            rgba(255, 119, 198, 0.3) 0%,
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 40% 40%,
+            rgba(120, 219, 255, 0.2) 0%,
+            transparent 50%
+          );
+        animation: float 15s ease-in-out infinite;
+      }
+
+      .header::after {
+        content: "";
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(
+          45deg,
+          #ff6b6b,
+          #4ecdc4,
+          #45b7d1,
+          #96ceb4,
+          #ffeaa7
+        );
+        background-size: 400% 400%;
+        animation: gradientBorder 4s ease infinite;
+        z-index: -1;
+        border-radius: 25px;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px) rotate(0deg);
+        }
+        33% {
+          transform: translateY(-10px) rotate(120deg);
+        }
+        66% {
+          transform: translateY(5px) rotate(240deg);
+        }
+      }
+
+      @keyframes gradientBorder {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      .header-content {
+        position: relative;
+        z-index: 2;
+      }
+
+      .header-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 36px;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      .header h1 {
+        font-size: 42px;
+        font-weight: 800;
+        margin: 0;
+        position: relative;
+        z-index: 2;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        background: linear-gradient(45deg, #fff, #f0f0f0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: textShine 3s ease-in-out infinite;
+      }
+
+      @keyframes textShine {
+        0%,
+        100% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+      }
+
+      .header .subtitle {
+        font-size: 18px;
+        margin-top: 10px;
+        opacity: 0.95;
+        font-weight: 500;
+        position: relative;
+        z-index: 2;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      }
+
+      .header-badges {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 25px;
+        flex-wrap: wrap;
+      }
+
+      .badge {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .content {
+        padding: 30px;
+      }
+
+      .info-box {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 1px solid #0ea5e9;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 30px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .info-box::before {
+        content: "📊";
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        font-size: 60px;
+        opacity: 0.1;
+        transform: rotate(15deg);
+      }
+
+      .info-box h3 {
+        color: #0369a1;
+        margin: 0 0 15px 0;
+        font-size: 18px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .info-box p {
+        margin: 8px 0;
+        color: #0c4a6e;
+      }
+
+      .controls {
+        position: fixed;
+        top: 30px;
+        right: 30px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        padding: 25px;
+        border-radius: 20px;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        border: 1px solid var(--glass-border);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .controls-title {
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        text-align: center;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .btn {
+        background: var(--primary-gradient);
+        color: white;
+        border: none;
+        padding: 14px 20px;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        font-family: "Poppins", sans-serif;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        position: relative;
+        overflow: hidden;
+        min-width: 140px;
+      }
+
+      .btn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+
+      .btn:hover::before {
+        left: 100%;
+      }
+
+      .btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+
+      .btn:active {
+        transform: translateY(-1px) scale(1.02);
+      }
+
+      .btn-secondary {
+        background: var(--secondary-gradient);
+        box-shadow: 0 6px 20px rgba(240, 147, 251, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+
+      .btn-secondary:hover {
+        box-shadow: 0 12px 35px rgba(240, 147, 251, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+
+      .btn-success {
+        background: var(--success-gradient);
+        box-shadow: 0 6px 20px rgba(79, 172, 254, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+
+      .btn-success:hover {
+        box-shadow: 0 12px 35px rgba(79, 172, 254, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+
+      .btn-danger {
+        background: var(--danger-gradient);
+        box-shadow: 0 6px 20px rgba(250, 112, 154, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+
+      .btn-danger:hover {
+        box-shadow: 0 12px 35px rgba(250, 112, 154, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+
+      .btn i {
+        font-size: 16px;
+      }
+
+      .table-section {
+        margin-top: 30px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        border: 1px solid var(--glass-border);
+      }
+
+      .table-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px 30px;
+        font-weight: 700;
+        font-size: 20px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .table-header::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        animation: shimmer 3s infinite;
+      }
+
+      @keyframes shimmer {
+        0% {
+          left: -100%;
+        }
+        100% {
+          left: 100%;
+        }
+      }
+
+      .table-icon {
+        width: 45px;
+        height: 45px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .table-container {
+        overflow-x: auto;
+        background: #fafafa;
+      }
+
+      .gap-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+        min-width: 1200px;
+      }
+
+      .gap-table th {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        padding: 15px 12px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 13px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .gap-table th:last-child {
+        border-right: none;
+      }
+
+      .gap-table td {
+        padding: 0;
+        border-bottom: 1px solid #e5e7eb;
+        border-right: 1px solid #e5e7eb;
+        vertical-align: top;
+        position: relative;
+      }
+
+      .gap-table td:last-child {
+        border-right: none;
+      }
+
+      .gap-table tr:hover {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+      }
+
+      .cell-input {
+        width: 100%;
+        border: none;
+        padding: 12px;
+        font-family: "Poppins", sans-serif;
+        font-size: 13px;
+        line-height: 1.4;
+        background: transparent;
+        resize: none;
+        min-height: 60px;
+        transition: all 0.3s ease;
+      }
+
+      .cell-input:focus {
+        outline: none;
+        background: rgba(102, 126, 234, 0.05);
+        box-shadow: inset 0 0 0 2px rgba(102, 126, 234, 0.2);
+      }
+
+      .cell-select {
+        width: 100%;
+        border: none;
+        padding: 12px;
+        font-family: "Poppins", sans-serif;
+        font-size: 13px;
+        background: transparent;
+        cursor: pointer;
+        min-height: 60px;
+      }
+
+      .cell-select:focus {
+        outline: none;
+        background: rgba(102, 126, 234, 0.05);
+        box-shadow: inset 0 0 0 2px rgba(102, 126, 234, 0.2);
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .status-completo {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+      }
+
+      .status-parcial {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+      }
+
+      .status-no-implementado {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+      }
+
+      .priority-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .priority-alta {
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+      }
+
+      .priority-media {
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+      }
+
+      .priority-baja {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+      }
+
+      .add-row-btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        font-family: "Poppins", sans-serif;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .add-row-btn:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        transform: translateY(-2px);
+      }
+
+      .delete-row-btn {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        width: 25px;
+        height: 25px;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 12px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+      }
+
+      .gap-table tr:hover .delete-row-btn {
+        display: flex;
+      }
+
+      .delete-row-btn:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+      }
+
+      .footer {
+        margin-top: 50px;
+        text-align: center;
+        color: #64748b;
+        font-size: 14px;
+        padding: 30px;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-top: 1px solid #e2e8f0;
+        font-weight: 500;
+      }
+
+      .example-row {
+        background: linear-gradient(
+          135deg,
+          #fef3c7 0%,
+          #fde68a 100%
+        ) !important;
+      }
+
+      .example-row td {
+        border-bottom: 2px solid #f59e0b;
+      }
+
+      .example-label {
+        position: absolute;
+        top: -10px;
+        left: 10px;
+        background: linear-gradient(135deg, #f59e0b, #d97706);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 10px;
+        font-size: 10px;
+        font-weight: 600;
+        z-index: 5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="sidebar no-print">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">
+          <i class="fas fa-chart-gap"></i>
+        </div>
+        <h3 class="sidebar-title">Análisis de Brechas</h3>
+      </div>
+
+      <nav>
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <a href="#info" class="nav-link">
+              <i class="fas fa-info-circle"></i>
+              Información
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#table" class="nav-link">
+              <i class="fas fa-table"></i>
+              Tabla de Brechas
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#actions" class="nav-link">
+              <i class="fas fa-tasks"></i>
+              Acciones
+            </a>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="stats-section">
+        <div class="stats-title">
+          <i class="fas fa-chart-pie"></i>
+          Estadísticas
+        </div>
+        <div class="stat-item">
+          <span>Total Brechas:</span>
+          <span class="stat-badge" id="totalGaps">1</span>
+        </div>
+        <div class="stat-item">
+          <span>Alta Prioridad:</span>
+          <span class="stat-badge" id="highPriority">1</span>
+        </div>
+        <div class="stat-item">
+          <span>No Implementado:</span>
+          <span class="stat-badge" id="notImplemented">1</span>
+        </div>
+        <div class="stat-item">
+          <span>Completado:</span>
+          <span class="stat-badge" id="completed">0%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls no-print">
+      <div class="controls-title">Acciones</div>
+      <button class="btn" onclick="window.print()">
+        <i class="fas fa-print"></i>
+        Imprimir
+      </button>
+      <button class="btn btn-secondary" onclick="saveData()">
+        <i class="fas fa-save"></i>
+        Guardar
+      </button>
+      <button class="btn btn-success" onclick="addRow()">
+        <i class="fas fa-plus"></i>
+        Agregar Fila
+      </button>
+      <button class="btn btn-danger" onclick="clearAll()">
+        <i class="fas fa-trash"></i>
+        Limpiar
+      </button>
+    </div>
+
+    <div class="main-content">
+      <div class="container">
+        <div class="header">
+          <div class="header-content">
+            <div class="header-icon">
+              <i class="fas fa-search-plus"></i>
+            </div>
+            <h1>Anexo 3: Formato de Análisis de Brechas</h1>
+            <div class="subtitle">(Gap Analysis)</div>
+            <div class="header-badges">
+              <div class="badge">
+                <i class="fas fa-calendar"></i>
+                Semana 13 - Sesión 37
+              </div>
+              <div class="badge">
+                <i class="fas fa-chart-gap"></i>
+                Gap Analysis
+              </div>
+              <div class="badge">
+                <i class="fas fa-clipboard-check"></i>
+                Diagnóstico
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content">
+          <div class="info-box" id="info">
+            <h3>📊 Instrucciones para el Alumno</h3>
+            <p>
+              <strong>Cuándo presentarlo:</strong> Semana 13, Sesión 37 (Gap
+              Analysis)
+            </p>
+            <p>
+              <strong>Nota:</strong> Este formato es un entregable clave para
+              identificar las diferencias entre el estado actual de la
+              organización y un modelo de referencia (ISO, CMMI, MoProSoft,
+              etc.). Cada brecha debe acompañarse de una acción recomendada.
+            </p>
+            <p>
+              <strong>Instrucción:</strong> Complete la siguiente tabla con la
+              información del diagnóstico de su empresa caso.
+            </p>
+          </div>
+
+          <div class="table-section" id="table">
+            <div class="table-header">
+              <div class="table-icon">
+                <i class="fas fa-table"></i>
+              </div>
+              <div>Matriz de Análisis de Brechas</div>
+            </div>
+            <div class="table-container">
+              <table class="gap-table" id="gapTable">
+                <thead>
+                  <tr>
+                    <th style="width: 15%">Área / Práctica del Modelo</th>
+                    <th style="width: 18%">Descripción Esperada</th>
+                    <th style="width: 18%">Evidencia Actual</th>
+                    <th style="width: 12%">Estado</th>
+                    <th style="width: 18%">Brecha Identificada</th>
+                    <th style="width: 18%">Acción Recomendada</th>
+                    <th style="width: 8%">Prioridad</th>
+                  </tr>
+                </thead>
+                <tbody id="tableBody">
+                  <tr class="example-row">
+                    <td style="position: relative">
+                      <div class="example-label">EJEMPLO</div>
+                      <textarea class="cell-input" readonly>
+REQM – Gestión de requisitos</textarea
+                      >
+                    </td>
+                    <td>
+                      <textarea class="cell-input" readonly>
+Mantener trazabilidad de requisitos</textarea
+                      >
+                    </td>
+                    <td>
+                      <textarea class="cell-input" readonly>
+Requisitos en correos sin control</textarea
+                      >
+                    </td>
+                    <td>
+                      <select class="cell-select" disabled>
+                        <option value="Parcial" selected>🟡 Parcial</option>
+                      </select>
+                    </td>
+                    <td>
+                      <textarea class="cell-input" readonly>
+No existe matriz de trazabilidad</textarea
+                      >
+                    </td>
+                    <td>
+                      <textarea class="cell-input" readonly>
+Crear plantilla y capacitar al equipo</textarea
+                      >
+                    </td>
+                    <td>
+                      <select class="cell-select" disabled>
+                        <option value="Alta" selected>🔴 Alta</option>
+                      </select>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <button class="add-row-btn" onclick="addRow()">
+                <i class="fas fa-plus"></i>
+                Agregar Nueva Brecha
+              </button>
+            </div>
+          </div>
+
+          <div class="info-box" style="margin-top: 30px">
+            <h3>💡 Guía para Completar el Análisis</h3>
+            <p>
+              <strong>Área/Práctica:</strong> Especifica el área del modelo de
+              referencia (ej: REQM, PP, PMC, etc.)
+            </p>
+            <p>
+              <strong>Descripción Esperada:</strong> Qué debería estar
+              implementado según el modelo
+            </p>
+            <p>
+              <strong>Evidencia Actual:</strong> Qué existe actualmente en la
+              organización
+            </p>
+            <p>
+              <strong>Estado:</strong> Completo (✅), Parcial (🟡), No
+              Implementado (🔴)
+            </p>
+            <p><strong>Brecha:</strong> Diferencia específica identificada</p>
+            <p>
+              <strong>Acción:</strong> Qué se debe hacer para cerrar la brecha
+            </p>
+            <p><strong>Prioridad:</strong> Alta (🔴), Media (🟡), Baja (🟢)</p>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>Formato de Análisis de Brechas - Gap Analysis | Anexo 3 de 5</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let rowCounter = 1;
+
+      function addRow() {
+        const tableBody = document.getElementById("tableBody");
+        const newRow = document.createElement("tr");
+        newRow.innerHTML = `
+                <td style="position: relative;">
+                    <button class="delete-row-btn" onclick="deleteRow(this)" title="Eliminar fila">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <textarea class="cell-input" placeholder="Ej: PP - Planificación del Proyecto"></textarea>
+                </td>
+                <td>
+                    <textarea class="cell-input" placeholder="Describe qué debería estar implementado..."></textarea>
+                </td>
+                <td>
+                    <textarea class="cell-input" placeholder="Describe la situación actual..."></textarea>
+                </td>
+                <td>
+                    <select class="cell-select">
+                        <option value="">Seleccionar estado...</option>
+                        <option value="Completo">✅ Completo</option>
+                        <option value="Parcial">🟡 Parcial</option>
+                        <option value="No Implementado">🔴 No Implementado</option>
+                    </select>
+                </td>
+                <td>
+                    <textarea class="cell-input" placeholder="Describe la brecha identificada..."></textarea>
+                </td>
+                <td>
+                    <textarea class="cell-input" placeholder="Describe la acción recomendada..."></textarea>
+                </td>
+                <td>
+                    <select class="cell-select">
+                        <option value="">Seleccionar prioridad...</option>
+                        <option value="Alta">🔴 Alta</option>
+                        <option value="Media">🟡 Media</option>
+                        <option value="Baja">🟢 Baja</option>
+                    </select>
+                </td>
+            `;
+
+        tableBody.appendChild(newRow);
+        rowCounter++;
+        updateStats();
+
+        // Auto-resize textareas
+        const textareas = newRow.querySelectorAll(".cell-input");
+        textareas.forEach((textarea) => {
+          textarea.addEventListener("input", function () {
+            this.style.height = "auto";
+            this.style.height = Math.max(60, this.scrollHeight) + "px";
+            updateStats();
+          });
+        });
+
+        // Update stats on select change
+        const selects = newRow.querySelectorAll(".cell-select");
+        selects.forEach((select) => {
+          select.addEventListener("change", updateStats);
+        });
+
+        showNotification("Nueva fila agregada correctamente", "success");
+      }
+
+      function deleteRow(button) {
+        if (confirm("¿Estás seguro de que quieres eliminar esta fila?")) {
+          const row = button.closest("tr");
+          row.style.transition = "all 0.3s ease";
+          row.style.transform = "scale(0.95)";
+          row.style.opacity = "0";
+
+          setTimeout(() => {
+            row.remove();
+            updateStats();
+            showNotification("Fila eliminada correctamente", "info");
+          }, 300);
+        }
+      }
+
+      function updateStats() {
+        const rows = document.querySelectorAll(
+          "#tableBody tr:not(.example-row)"
+        );
+        const totalGaps = rows.length;
+
+        let highPriority = 0;
+        let notImplemented = 0;
+        let completed = 0;
+
+        rows.forEach((row) => {
+          const prioritySelect = row.querySelector("td:nth-child(7) select");
+          const statusSelect = row.querySelector("td:nth-child(4) select");
+
+          if (prioritySelect && prioritySelect.value === "Alta") {
+            highPriority++;
+          }
+
+          if (statusSelect) {
+            if (statusSelect.value === "No Implementado") {
+              notImplemented++;
+            } else if (statusSelect.value === "Completo") {
+              completed++;
+            }
+          }
+        });
+
+        const completedPercentage =
+          totalGaps > 0 ? Math.round((completed / totalGaps) * 100) : 0;
+
+        document.getElementById("totalGaps").textContent = totalGaps + 1; // +1 for example row
+        document.getElementById("highPriority").textContent = highPriority + 1; // +1 for example
+        document.getElementById("notImplemented").textContent = notImplemented;
+        document.getElementById("completed").textContent =
+          completedPercentage + "%";
+      }
+
+      function saveData() {
+        const rows = document.querySelectorAll(
+          "#tableBody tr:not(.example-row)"
+        );
+        const data = [];
+
+        rows.forEach((row) => {
+          const cells = row.querySelectorAll("textarea, select");
+          const rowData = {
+            area: cells[0].value,
+            descripcion: cells[1].value,
+            evidencia: cells[2].value,
+            estado: cells[3].value,
+            brecha: cells[4].value,
+            accion: cells[5].value,
+            prioridad: cells[6].value,
+          };
+          data.push(rowData);
+        });
+
+        localStorage.setItem("gapAnalysisData", JSON.stringify(data));
+        showNotification("Datos guardados correctamente", "success");
+      }
+
+      function loadData() {
+        const saved = localStorage.getItem("gapAnalysisData");
+        if (saved) {
+          const data = JSON.parse(saved);
+
+          // Clear existing rows (except example)
+          const existingRows = document.querySelectorAll(
+            "#tableBody tr:not(.example-row)"
+          );
+          existingRows.forEach((row) => row.remove());
+
+          // Add saved rows
+          data.forEach((rowData) => {
+            addRow();
+            const lastRow = document.querySelector("#tableBody tr:last-child");
+            const cells = lastRow.querySelectorAll("textarea, select");
+
+            cells[0].value = rowData.area || "";
+            cells[1].value = rowData.descripcion || "";
+            cells[2].value = rowData.evidencia || "";
+            cells[3].value = rowData.estado || "";
+            cells[4].value = rowData.brecha || "";
+            cells[5].value = rowData.accion || "";
+            cells[6].value = rowData.prioridad || "";
+
+            // Auto-resize textareas
+            cells.forEach((cell) => {
+              if (cell.tagName === "TEXTAREA") {
+                cell.style.height = "auto";
+                cell.style.height = Math.max(60, cell.scrollHeight) + "px";
+              }
+            });
+          });
+
+          updateStats();
+        }
+      }
+
+      function clearAll() {
+        if (confirm("¿Estás seguro de que quieres limpiar todas las filas?")) {
+          const rows = document.querySelectorAll(
+            "#tableBody tr:not(.example-row)"
+          );
+          rows.forEach((row) => {
+            row.style.transition = "all 0.3s ease";
+            row.style.transform = "scale(0.95)";
+            row.style.opacity = "0";
+
+            setTimeout(() => row.remove(), 300);
+          });
+
+          setTimeout(() => {
+            updateStats();
+            showNotification("Todas las filas han sido eliminadas", "info");
+          }, 400);
+        }
+      }
+
+      function showNotification(message, type = "info") {
+        const notification = document.createElement("div");
+        notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 30px;
+                background: ${
+                  type === "success"
+                    ? "linear-gradient(135deg, #10b981, #059669)"
+                    : type === "error"
+                    ? "linear-gradient(135deg, #ef4444, #dc2626)"
+                    : "linear-gradient(135deg, #3b82f6, #1d4ed8)"
+                };
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+                z-index: 10000;
+                font-weight: 500;
+                transform: translateX(400px);
+                transition: transform 0.3s ease;
+            `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => (notification.style.transform = "translateX(0)"), 100);
+        setTimeout(() => {
+          notification.style.transform = "translateX(400px)";
+          setTimeout(() => document.body.removeChild(notification), 300);
+        }, 3000);
+      }
+
+      // Initialize
+      window.onload = function () {
+        loadData();
+        updateStats();
+
+        // Auto-save every 30 seconds
+        setInterval(() => {
+          const hasContent =
+            document.querySelectorAll("#tableBody tr:not(.example-row)")
+              .length > 0;
+          if (hasContent) {
+            saveData();
+          }
+        }, 30000);
+      };
+
+      // Prevent data loss
+      window.addEventListener("beforeunload", function (e) {
+        const hasContent =
+          document.querySelectorAll("#tableBody tr:not(.example-row)").length >
+          0;
+        if (hasContent) {
+          saveData();
+        }
+      });
+    </script>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97ea7fbd7197da81',t:'MTc1Nzc5NjQzOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  </body>
+</html>

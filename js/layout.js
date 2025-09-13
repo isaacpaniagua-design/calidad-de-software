@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!hasLayoutCss) {
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href="./layout.css"; // si lo mueves a /css, cámbialo a 'css/layout.css'
+    link.href = "./layout.css"; // si lo mueves a /css, cámbialo a 'css/layout.css'
     document.head.appendChild(link);
   }
   // No forzar color de fondo aquí. Se hereda de layout.css
@@ -48,7 +48,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Adjust body padding-top to navbar height (override CSS fallback)
   const setPad = () => {
     const h = nav?.offsetHeight || 70;
-    document.body.style.setProperty("padding-top", h + "px", "important");
   };
   setPad();
   window.addEventListener("resize", setPad);

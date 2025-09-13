@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anexo 1: Formato de Plan de Pruebas (IEEE 829)</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+        
+        @media print {
+            body { margin: 0; }
+            .no-print { display: none; }
+            .page-break { page-break-before: always; }
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; }
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            --dark-gradient: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.18);
+        }
+        
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            color: #2d3748;
+            overflow-x: hidden;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--glass-border);
+            padding: 30px 20px;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .sidebar-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .sidebar-logo {
+            width: 60px;
+            height: 60px;
+            background: var(--primary-gradient);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+        }
+        
+        .sidebar-title {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .nav-item {
+            margin-bottom: 8px;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            transform: translateX(5px);
+        }
+        
+        .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .progress-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .progress-title {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .progress-bar-container {
+            background: rgba(255,255,255,0.2);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--success-gradient);
+            width: 0%;
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+        
+        .progress-text {
+            color: rgba(255,255,255,0.8);
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        .main-content {
+            margin-left: 280px;
+            padding: 30px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            color: white;
+            text-align: center;
+            padding: 60px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
+            animation: float 15s ease-in-out infinite;
+        }
+        
+        .header::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
+            background-size: 400% 400%;
+            animation: gradientBorder 4s ease infinite;
+            z-index: -1;
+            border-radius: 25px;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            33% { transform: translateY(-10px) rotate(120deg); }
+            66% { transform: translateY(5px) rotate(240deg); }
+        }
+        
+        @keyframes gradientBorder {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .header-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 36px;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.3);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .header h1 {
+            font-size: 42px;
+            font-weight: 800;
+            margin: 0;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #fff, #f0f0f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: textShine 3s ease-in-out infinite;
+        }
+        
+        @keyframes textShine {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .header .subtitle {
+            font-size: 18px;
+            margin-top: 10px;
+            opacity: 0.95;
+            font-weight: 500;
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .header-badges {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+        
+        .badge {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1px solid #0ea5e9;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .info-box::before {
+            content: '📋';
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            font-size: 60px;
+            opacity: 0.1;
+            transform: rotate(15deg);
+        }
+        
+        .info-box h3 {
+            color: #0369a1;
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-box p {
+            margin: 8px 0;
+            color: #0c4a6e;
+        }
+        
+        .section {
+            margin-bottom: 35px;
+            border-radius: 20px;
+            overflow: hidden;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        
+        .section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .section:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+        
+        .section:hover::before {
+            opacity: 1;
+        }
+        
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px 30px;
+            font-weight: 700;
+            font-size: 18px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .section-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 3s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .section-icon {
+            width: 45px;
+            height: 45px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .section-content {
+            padding: 25px;
+            background: #fafafa;
+        }
+        
+        .description {
+            background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+            border: 1px solid #10b981;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            font-style: italic;
+            color: #065f46;
+            position: relative;
+            font-weight: 500;
+        }
+        
+        .description::before {
+            content: '💡';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 20px;
+        }
+        
+        .input-area {
+            width: 100%;
+            min-height: 120px;
+            padding: 20px;
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 15px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 15px;
+            line-height: 1.7;
+            resize: vertical;
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                inset 0 2px 10px rgba(0,0,0,0.05),
+                0 4px 20px rgba(0,0,0,0.08);
+            position: relative;
+        }
+        
+        .input-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border-radius: 15px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .input-area:focus {
+            outline: none;
+            border-color: rgba(102, 126, 234, 0.5);
+            background: rgba(255,255,255,0.95);
+            box-shadow: 
+                0 0 0 4px rgba(102, 126, 234, 0.1),
+                inset 0 2px 10px rgba(0,0,0,0.05),
+                0 8px 40px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px) scale(1.01);
+        }
+        
+        .input-area:focus::before {
+            opacity: 1;
+        }
+        
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .input-label {
+            position: absolute;
+            top: -12px;
+            left: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 10;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .input-area:focus + .input-label,
+        .input-area:not(:placeholder-shown) + .input-label {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .input-area::placeholder {
+            color: #9ca3af;
+            font-style: italic;
+        }
+        
+        .example {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 1px solid #f59e0b;
+            padding: 12px 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            font-size: 13px;
+            position: relative;
+        }
+        
+        .example::before {
+            content: '✨';
+            margin-right: 8px;
+        }
+        
+        .example strong {
+            color: #92400e;
+            font-weight: 600;
+        }
+        
+        .controls {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 
+                0 15px 50px rgba(0,0,0,0.2),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+            border: 1px solid var(--glass-border);
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .controls-title {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .btn {
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 6px 20px rgba(102, 126, 234, 0.3),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            min-width: 140px;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 
+                0 12px 35px rgba(102, 126, 234, 0.4),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(-1px) scale(1.02);
+        }
+        
+        .btn-secondary {
+            background: var(--secondary-gradient);
+            box-shadow: 
+                0 6px 20px rgba(240, 147, 251, 0.3),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+        
+        .btn-secondary:hover {
+            box-shadow: 
+                0 12px 35px rgba(240, 147, 251, 0.4),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        
+        .btn-danger {
+            background: var(--danger-gradient);
+            box-shadow: 
+                0 6px 20px rgba(250, 112, 154, 0.3),
+                inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+        
+        .btn-danger:hover {
+            box-shadow: 
+                0 12px 35px rgba(250, 112, 154, 0.4),
+                inset 0 1px 0 rgba(255,255,255,0.3);
+        }
+        
+        .btn i {
+            font-size: 16px;
+        }
+        
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            color: #64748b;
+            font-size: 14px;
+            padding: 30px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-top: 1px solid #e2e8f0;
+            font-weight: 500;
+        }
+        
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
+            z-index: 9999;
+            transition: width 0.3s ease;
+        }
+        
+        .section-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            margin-right: 10px;
+            font-weight: 700;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar no-print">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <i class="fas fa-clipboard-check"></i>
+            </div>
+            <h3 class="sidebar-title">Plan de Pruebas</h3>
+        </div>
+        
+        <nav>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#section1" class="nav-link">
+                        <i class="fas fa-tag"></i>
+                        Identificador
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#section2" class="nav-link">
+                        <i class="fas fa-info-circle"></i>
+                        Introducción
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#section3" class="nav-link">
+                        <i class="fas fa-check-circle"></i>
+                        A Probar
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#section4" class="nav-link">
+                        <i class="fas fa-times-circle"></i>
+                        NO Probar
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#section5" class="nav-link">
+                        <i class="fas fa-bullseye"></i>
+                        Enfoque
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#section6" class="nav-link">
+                        <i class="fas fa-balance-scale"></i>
+                        Criterios
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#section7" class="nav-link">
+                        <i class="fas fa-pause-circle"></i>
+                        Suspensión
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#section8" class="nav-link">
+                        <i class="fas fa-file-alt"></i>
+                        Entregables
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#section9" class="nav-link">
+                        <i class="fas fa-server"></i>
+                        Entorno
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#section10" class="nav-link">
+                        <i class="fas fa-calendar-alt"></i>
+                        Cronograma
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="progress-section">
+            <div class="progress-title">
+                <i class="fas fa-chart-line"></i>
+                Progreso
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progressBarFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">0% completado</div>
+        </div>
+    </div>
+    
+    <div class="controls no-print">
+        <div class="controls-title">Acciones</div>
+        <button class="btn" onclick="window.print()">
+            <i class="fas fa-print"></i>
+            Imprimir
+        </button>
+        <button class="btn btn-secondary" onclick="saveData()">
+            <i class="fas fa-save"></i>
+            Guardar
+        </button>
+        <button class="btn btn-danger" onclick="clearAll()">
+            <i class="fas fa-trash"></i>
+            Limpiar
+        </button>
+    </div>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <h1>Anexo 1: Formato de Plan de Pruebas</h1>
+                    <div class="subtitle">(Basado en IEEE 829)</div>
+                    <div class="header-badges">
+                        <div class="badge">
+                            <i class="fas fa-calendar"></i>
+                            Semana 3 - Sesión 8
+                        </div>
+                        <div class="badge">
+                            <i class="fas fa-users"></i>
+                            Proyecto de Equipo
+                        </div>
+                        <div class="badge">
+                            <i class="fas fa-award"></i>
+                            IEEE 829
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        <div class="content">
+            <div class="info-box">
+                <h3>📋 Instrucciones para el Alumno</h3>
+                <p><strong>Cuándo presentarlo:</strong> Semana 3, Sesión 8 (El Plan de SQA)</p>
+                <p><strong>Nota:</strong> Este formato es el principal entregable de la planificación de las actividades de Control de Calidad (QC) dentro de un Plan de SQA. Debe llenarse con base en el proyecto de equipo.</p>
+            </div>
+
+            <div class="section" id="section1">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-tag"></i>
+                    </div>
+                    <div>
+                        <div class="section-number">1</div>
+                        Identificador del Plan de Pruebas
+                    </div>
+                </div>
+                <div class="section-content">
+                    <div class="description">
+                        <i class="fas fa-lightbulb"></i>
+                        Escribe un código único para identificar este plan, indicando nombre del proyecto y versión.
+                    </div>
+                    <div class="example">
+                        <i class="fas fa-star"></i>
+                        <strong>Ejemplo:</strong> PP-PROYECTO_X-V1.0
+                    </div>
+                    <div class="input-wrapper">
+                        <textarea class="input-area" id="section1Input" placeholder="Ingresa el identificador del plan de pruebas aquí..."></textarea>
+                        <div class="input-label">Identificador</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-number">2</span>
+                    Introducción y Referencias
+                </div>
+                <div class="section-content">
+                    <div class="description">
+                        Breve descripción del proyecto y alcance del plan. Lista de documentos de referencia (requisitos, diseño, manuales, estándares).
+                    </div>
+                    <textarea class="input-area" id="section2" placeholder="Describe el proyecto, su alcance y lista los documentos de referencia..."></textarea>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-number">3</span>
+                    Características a Probar
+                </div>
+                <div class="section-content">
+                    <div class="description">
+                        Lista de funcionalidades o módulos a probar.
+                    </div>
+                    <div class="example">
+                        <strong>Ejemplo:</strong> Módulo de Login, Registro de Usuarios, Carrito de Compras.
+                    </div>
+                    <textarea class="input-area" id="section3" placeholder="Lista las funcionalidades o módulos que serán probados..."></textarea>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-number">4</span>
+                    Características a NO Probar
+                </div>
+                <div class="section-content">
+                    <div class="description">
+                        Indicar explícitamente lo que queda fuera de este plan y el motivo.
+                    </div>
+                    <div class="example">
+                        <strong>Ejemplo:</strong> Pruebas de carga, Módulo de administración.
+                    </div>
+                    <textarea class="input-area" id="section4" placeholder="Especifica qué no se probará y por qué..."></textarea>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-number">5</span>
+                    Enfoque de la Prueba
+                </div>
+                <div class="section-content">
+                    <div class="description">
+                        Descripción de la estrategia general de pruebas.
+                    </div>
+                    <div class="example">
+                        <strong>Ejemplo:</strong> Se realizarán pruebas funcionales de caja negra para cada historia de usuario, seguidas de pruebas de regresión automatizadas.
+                    </div>
+                    <textarea class="input-area" id="section5" placeholder="Describe la estrategia general de pruebas..."></textarea>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-number">6</span>
+                    Criterios de Pasa/Falla
+                </div>
+                <div class="section-content">
+                    <div class="description">
+                        Definir claramente qué significa que una prueba pase o falle.
+                    </div>
+                    <div class="example">
+                        <strong>Ejemplo:</strong> Un caso pasa si el resultado actual coincide con el esperado. Falla en cualquier otro caso.
+                    </div>
+                    <textarea class="input-area" id="section6" placeholder="Define los criterios para determinar si una prueba pasa o falla..."></textarea>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-number">7</span>
+                    Criterios de Suspensión y Reanudación
+                </div>
+                <div class="section-content">
+                    <div class="description">
+                        ¿Cuándo se detienen las pruebas? ¿Qué condiciones deben cumplirse para retomarlas?
+                    </div>
+                    <div class="example">
+                        <strong>Ejemplo:</strong> Si se encuentra un defecto bloqueante en el módulo de Login, las pruebas se suspenden. Se reanudan cuando dicho defecto sea corregido y verificado en una nueva build.
+                    </div>
+                    <textarea class="input-area" id="section7" placeholder="Especifica cuándo suspender y reanudar las pruebas..."></textarea>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-number">8</span>
+                    Entregables de la Prueba
+                </div>
+                <div class="section-content">
+                    <div class="description">
+                        Documentos a generar durante y después de la ejecución: Plan de Pruebas, Casos de Prueba, Reportes de Defectos, Reporte Final de Pruebas.
+                    </div>
+                    <textarea class="input-area" id="section8" placeholder="Lista los documentos y entregables que se generarán..."></textarea>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-number">9</span>
+                    Entorno de Pruebas
+                </div>
+                <div class="section-content">
+                    <div class="description">
+                        Describir hardware, software, herramientas y datos necesarios.
+                    </div>
+                    <div class="example">
+                        <strong>Ejemplo:</strong> Servidor de pruebas con Windows Server 2019, Base de Datos SQL Server, Navegadores Chrome y Firefox.
+                    </div>
+                    <textarea class="input-area" id="section9" placeholder="Describe el entorno de pruebas necesario..."></textarea>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">
+                    <span class="section-number">10</span>
+                    Cronograma y Recursos
+                </div>
+                <div class="section-content">
+                    <div class="description">
+                        Indicar hitos clave (inicio, ejecución, cierre de pruebas). Roles y responsabilidades (ej. QA Tester, Líder de Pruebas, Desarrollador).
+                    </div>
+                    <textarea class="input-area" id="section10" placeholder="Define el cronograma, hitos y asignación de recursos..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Formato de Plan de Pruebas - IEEE 829 | Anexo 1 de 5</p>
+        </div>
+    </div>
+
+    <script>
+        // Función para limpiar todos los campos con animación
+        function clearAll() {
+            if (confirm('¿Estás seguro de que quieres limpiar todos los campos?')) {
+                for (let i = 1; i <= 10; i++) {
+                    const field = document.getElementById('section' + i);
+                    field.style.transition = 'all 0.3s ease';
+                    field.style.transform = 'scale(0.95)';
+                    field.style.opacity = '0.5';
+                    
+                    setTimeout(() => {
+                        field.value = '';
+                        field.style.transform = 'scale(1)';
+                        field.style.opacity = '1';
+                    }, 150);
+                }
+                updateProgress();
+                showNotification('Todos los campos han sido limpiados', 'info');
+            }
+        }
+
+        // Función para guardar datos en localStorage
+        function saveData() {
+            const data = {};
+            for (let i = 1; i <= 10; i++) {
+                data['section' + i] = document.getElementById('section' + i).value;
+            }
+            localStorage.setItem('planPruebas', JSON.stringify(data));
+            showNotification('Datos guardados correctamente', 'success');
+        }
+
+        // Función para cargar datos guardados
+        function loadData() {
+            const saved = localStorage.getItem('planPruebas');
+            if (saved) {
+                const data = JSON.parse(saved);
+                for (let i = 1; i <= 10; i++) {
+                    if (data['section' + i]) {
+                        document.getElementById('section' + i).value = data['section' + i];
+                    }
+                }
+                updateProgress();
+            }
+        }
+
+        // Función para mostrar notificaciones
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 30px;
+                background: ${type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' : 
+                           type === 'error' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 
+                           'linear-gradient(135deg, #3b82f6, #1d4ed8)'};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 10px;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+                z-index: 10000;
+                font-weight: 500;
+                transform: translateX(400px);
+                transition: transform 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+            setTimeout(() => {
+                notification.style.transform = 'translateX(400px)';
+                setTimeout(() => document.body.removeChild(notification), 300);
+            }, 3000);
+        }
+
+        // Función para actualizar la barra de progreso
+        function updateProgress() {
+            let completed = 0;
+            for (let i = 1; i <= 10; i++) {
+                const field = document.getElementById('section' + i + 'Input');
+                if (field && field.value.trim().length > 0) {
+                    completed++;
+                }
+            }
+            const percentage = (completed / 10) * 100;
+            const progressBar = document.getElementById('progressBarFill');
+            const progressText = document.getElementById('progressText');
+            
+            if (progressBar) {
+                progressBar.style.width = percentage + '%';
+            }
+            if (progressText) {
+                progressText.textContent = Math.round(percentage) + '% completado';
+            }
+            
+            // Actualizar navegación activa
+            updateActiveNavigation();
+        }
+        
+        // Función para actualizar navegación activa
+        function updateActiveNavigation() {
+            const sections = document.querySelectorAll('.section');
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            let activeSection = null;
+            const scrollPosition = window.scrollY + 200;
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.offsetHeight;
+                
+                if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
+                    activeSection = section.id;
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + activeSection) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        // Función para añadir efectos de escritura
+        function addTypingEffects() {
+            const textareas = document.querySelectorAll('.input-area');
+            textareas.forEach(textarea => {
+                textarea.addEventListener('input', function() {
+                    updateProgress();
+                    this.style.height = 'auto';
+                    this.style.height = Math.max(100, this.scrollHeight) + 'px';
+                });
+
+                textarea.addEventListener('focus', function() {
+                    this.parentElement.parentElement.style.transform = 'scale(1.02)';
+                    this.parentElement.parentElement.style.zIndex = '10';
+                });
+
+                textarea.addEventListener('blur', function() {
+                    this.parentElement.parentElement.style.transform = 'scale(1)';
+                    this.parentElement.parentElement.style.zIndex = '1';
+                });
+            });
+        }
+
+        // Cargar datos al iniciar la página
+        window.onload = function() {
+            loadData();
+            addTypingEffects();
+            updateProgress();
+        };
+
+        // Auto-guardar cada 30 segundos
+        setInterval(() => {
+            const hasContent = Array.from({length: 10}, (_, i) => 
+                document.getElementById('section' + (i + 1)).value.trim()
+            ).some(value => value.length > 0);
+            
+            if (hasContent) {
+                saveData();
+            }
+        }, 30000);
+
+        // Prevenir pérdida de datos al cerrar
+        window.addEventListener('beforeunload', function(e) {
+            const hasUnsavedContent = Array.from({length: 10}, (_, i) => 
+                document.getElementById('section' + (i + 1)).value.trim()
+            ).some(value => value.length > 0);
+            
+            if (hasUnsavedContent) {
+                saveData();
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97ea6668b2988c16',t:'MTc1Nzc5NTQwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
