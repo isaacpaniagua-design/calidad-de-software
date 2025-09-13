@@ -23,7 +23,14 @@
       vertical-align: middle;
     }
 
-    /* Estilos de accesos rápidos */
+    /* Oculta todo lo marcado para docente cuando la vista estudiante está activa */
+    html[data-student] .only-teacher {
+      display: none !important;
+    }
+    html[data-student] .only-teacher-inline {
+      visibility: hidden !important;
+    }
+
     .accesos-rapidos ul {
       display: flex;
       flex-wrap: wrap;
@@ -63,17 +70,23 @@
           </div>
           <!-- Controles visibles para todos -->
           <div class="flex flex-col md:items-end gap-2">
-            <div class="flex flex-wrap gap-2">
-              <button
-                id="btn-vista-estudiante"
-                type="button"
-                aria-pressed="false"
-                class="px-4 py-2 rounded-full font-semibold bg-sky-600 text-white hover:bg-sky-700 shadow-sm transition"
-              >
-                Vista estudiante
-              </button>
-            </div>
-            <nav aria-label="Accesos rápidos" class="accesos-rapidos">
+            <div class="flex flex-wrap gap-2"></div>
+          </div>
+
+          <!-- Controles solo para profesor -->
+          <div id="roleToggle" class="hidden">
+            <div class="flex flex-wrap gap-2 md:justify-end"></div>
+            <button
+              id="btnTeacher"
+              class="px-4 py-2 rounded-full font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200"
+            >
+              👨‍🏫 Profesor
+            </button>
+            <nav
+              aria-label="Accesos rápidos"
+              class="accesos-rapidos"
+              style="margin-top: 0.5rem"
+            >
               <ul>
                 <li><a href="1planpruebas.html">1) Plan de pruebas</a></li>
                 <li><a href="2registrosbugs.html">2) Registros de bugs</a></li>
@@ -82,16 +95,6 @@
                 <li><a href="5finalintegrado.html">5) Final integrado</a></li>
               </ul>
             </nav>
-          </div>
-
-          <!-- Controles solo para profesor -->
-          <div id="roleToggle" class="hidden">
-            <button
-              id="btnTeacher"
-              class="px-4 py-2 rounded-full font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200"
-            >
-              👨‍🏫 Profesor
-            </button>
           </div>
         </div>
 
@@ -123,7 +126,7 @@
         </div>
 
         <!-- Teacher upload -->
-        <div id="teacherArea" class="hidden mt-6">
+        <div id="teacherArea" class="hidden mt-6 only-teacher">
           <div class="rounded-xl border border-gray-200 p-4 bg-gray-50">
             <h3 class="text-lg font-bold text-gray-800 mb-3">Subir material</h3>
             <form id="materialForm" class="grid md:grid-cols-2 gap-4">
