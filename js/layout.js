@@ -20,7 +20,6 @@ document.addEventListener("DOMContentLoaded", () => {
           <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
           <a class="qs-btn" href="Foro.html">Foro</a>
           <a class="qs-btn" href="paneldocente.html">Panel</a>
-          <a class="qs-btn" href="roadmap.html">Roadmap</a>
         </nav>
       </div>`;
 
