@@ -1,15 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Asegura CSS compartido. Usa ./layout.css en raíz (GitHub Pages).
+  // Asegura CSS compartido (ruta estándar /css)
   const hasLayoutCss = Array.from(
     document.querySelectorAll('link[rel="stylesheet"]')
   ).some((l) => (l.getAttribute("href") || "").includes("layout.css"));
   if (!hasLayoutCss) {
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href="./layout.css"; // si lo mueves a /css, cámbialo a 'css/layout.css'
+    link.href = "css/layout.css";
     document.head.appendChild(link);
   }
-  // No forzar color de fondo aquí. Se hereda de layout.css
 
   // Build shared nav
   const navHtml = `
@@ -24,55 +23,56 @@ document.addEventListener("DOMContentLoaded", () => {
           <a class="qs-btn" href="roadmap.html">Roadmap</a>
         </nav>
       </div>`;
-  // Marcar pestaña activa por pathname
-  const current = location.pathname.split("/").pop() || "index.html";
-  document.querySelectorAll(".qs-tabs a.qs-btn").forEach((a) => {
-    const href = (a.getAttribute("href") || "").trim();
-    if (href && href.endsWith(current)) {
-      a.setAttribute("aria-current", "page");
-    } else {
-      a.removeAttribute("aria-current");
-    }
-  });
 
-  let nav = document.querySelector(".qs-nav");
-  if (nav) {
-    nav.innerHTML = navHtml;
-  } else {
-    nav = document.createElement("div");
-    nav.className = "qs-nav";
-    nav.innerHTML = navHtml;
-    document.body.prepend(nav);
+  let navEl = document.querySelector(".qs-nav, [data-role='main-nav']");
+  if (!navEl) {
+    navEl = document.createElement("div");
+    navEl.className = "qs-nav";
+    document.body.prepend(navEl);
   }
+  navEl.setAttribute("data-role", "main-nav");
+  navEl.innerHTML = navHtml;
 
-  // Adjust body padding-top to navbar height (override CSS fallback)
-  const setPad = () => {
-    const h = nav?.offsetHeight || 70;
-    document.body.style.setProperty("padding-top", h + "px", "important");
-  };
-  setPad();
-  window.addEventListener("resize", setPad);
-
-  // Shared footer with automatic year
-  const year = new Date().getFullYear();
-  const footerHtml = `<div class="footer-content">© ${year} Plataforma QS - Calidad de Software | Isaac Paniagua</div>`;
-  let footer = document.querySelector("footer.footer");
-  if (footer) {
-    footer.innerHTML = footerHtml;
-  } else {
-    footer = document.createElement("footer");
-    footer.className = "footer";
-    footer.innerHTML = footerHtml;
-    document.body.appendChild(footer);
-  }
-
-  // Mark active tab
+  // Marca pestaña activa
   const path = (
     location.pathname.split("/").pop() || "index.html"
   ).toLowerCase();
-  document.querySelectorAll(".qs-tabs a.qs-btn").forEach((a) => {
+  navEl.querySelectorAll(".qs-tabs a.qs-btn").forEach((a) => {
     const href = (a.getAttribute("href") || "").toLowerCase();
     if (href === path) a.setAttribute("aria-current", "page");
+    else a.removeAttribute("aria-current");
   });
-  // Remove the erroneous catch block
+
+  // Padding-top via CSS var (sin tocar contenido)
+  const pickNav = () =>
+    document.querySelector('[data-role="main-nav"], .qs-nav, nav');
+  const setPad = () => {
+    const el = pickNav();
+    const h = el ? el.getBoundingClientRect().height : 64;
+    const safe = Math.min(Math.max(Math.round(h), 56), 96);
+    document.documentElement.style.setProperty("--nav-h", safe + "px");
+    // limpia overrides antiguos
+    document.body.style.removeProperty("padding-top");
+    if (el) {
+      el.style.marginTop = "0";
+      el.style.marginBottom = "0";
+    }
+  };
+  setPad();
+  addEventListener("resize", setPad);
+  if (window.ResizeObserver) {
+    const obEl = pickNav();
+    if (obEl) new ResizeObserver(setPad).observe(obEl);
+  }
+
+  // Shared footer con año automático
+  const year = new Date().getFullYear();
+  const footerHtml = `<div class="footer-content">© ${year} Plataforma QS - Calidad de Software | Isaac Paniagua</div>`;
+  let footer = document.querySelector("footer.footer");
+  if (!footer) {
+    footer = document.createElement("footer");
+    footer.className = "footer";
+    document.body.appendChild(footer);
+  }
+  footer.innerHTML = footerHtml;
 });

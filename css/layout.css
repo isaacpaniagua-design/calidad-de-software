@@ -1,22 +1,35 @@
 /* Global background and layout overrides */
 :root {
-  --nav-h: 72px;
+  --nav-h: 64px;
   --footer-bg: #4b2e83;
   --footer-fg: #ffffff;
   --footer-bd: #a78bfa33;
+  --anchor-offset: calc(var(--nav-h) + 8px);
 }
 
 html,
 body {
+  margin: 0;
   height: 100%;
 }
 
 body {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   min-height: 100vh !important;
+  display: flex;
+  flex-direction: column;
   padding-top: var(--nav-h) !important; /* espacio para NAV fijo */
 }
 
+/* Evita que anclas/IDs queden ocultos bajo el NAV */
+html {
+  scroll-padding-top: var(--nav-h);
+}
+[id] {
+  scroll-margin-top: var(--anchor-offset);
+}
+
+/* Si existiera un navbar bootstrap */
 nav.navbar {
   position: fixed;
   top: 0;
@@ -127,7 +140,6 @@ nav.navbar {
 }
 
 /* Footer (shared) */
-
 .footer-content {
   max-width: 1200px;
   margin: 0 auto;
@@ -136,14 +148,13 @@ nav.navbar {
   transition: all 0.3s ease;
   cursor: default;
 }
-
 .footer {
-  position: static; /* no fijo */
+  position: static;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 56px;
-  margin-top: 24px;
+  margin-top: auto; /* sticky footer sin hueco inferior */
   padding: 10px 16px;
   background: #4b2e83; /* contraste con #764ba2 */
   color: #fff;
@@ -152,13 +163,12 @@ nav.navbar {
   letter-spacing: 0.1px;
   border-top: 1px solid #a78bfa33;
 }
-
 .footer a {
   color: #e9d5ff;
   text-decoration: none;
   font-weight: 700;
 }
 .footer a:hover {
-  color: #ffffff;
+  color: #fff;
   text-decoration: underline;
 }
