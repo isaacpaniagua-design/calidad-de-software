@@ -4,10 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Materiales - Calidad de Software</title>
+
+    <!-- Tailwind CDN (UI) -->
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Tu layout global -->
     <link rel="stylesheet" href="css/layout.css" />
+
     <style>
-      /* Modo estudiante */
+      /* Modo estudiante vs docente */
       html[data-student] .only-teacher {
         display: none !important;
       }
@@ -60,6 +65,7 @@
             </h1>
             <p class="text-gray-600">Recursos compartidos por el profesor</p>
           </div>
+
           <!-- Controles visibles para todos -->
           <div class="flex flex-col md:items-end gap-2">
             <div class="flex flex-wrap gap-2">
@@ -86,7 +92,6 @@
 
           <!-- Controles solo para profesor -->
           <div id="roleToggle" class="hidden">
-            <div class="flex flex-wrap gap-2 md:justify-end"></div>
             <button
               id="btnTeacher"
               class="px-4 py-2 rounded-full font-semibold bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -123,7 +128,7 @@
           </div>
         </div>
 
-        <!-- Teacher upload -->
+        <!-- Área docente: se oculta en modo estudiante -->
         <div id="teacherArea" class="hidden mt-6 only-teacher">
           <div class="rounded-xl border border-gray-200 p-4 bg-gray-50">
             <h3 class="text-lg font-bold text-gray-800 mb-3">Subir material</h3>
@@ -209,10 +214,14 @@
                 </div>
               </div>
             </form>
+            <p class="text-sm text-gray-500 mt-2">
+              Nota: si adjuntas archivo, se subirá a Google Drive vía Apps
+              Script y se registrará el enlace.
+            </p>
           </div>
         </div>
 
-        <!-- Search + filters -->
+        <!-- Buscador + filtros -->
         <div class="mt-6 grid md:grid-cols-2 gap-4">
           <div class="relative">
             <span class="absolute left-3 top-2.5">🔎</span>
@@ -256,7 +265,7 @@
           </div>
         </div>
 
-        <!-- Grid -->
+        <!-- Grid de materiales -->
         <div
           id="materialsGrid"
           class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
@@ -286,8 +295,6 @@
         onAuth,
         signInWithGooglePotros,
         signOutCurrent,
-        uploadMaterial,
-        uploadMaterialToDrive,
         addMaterialLink,
         subscribeMaterials,
         deleteMaterialById,
@@ -296,24 +303,60 @@
       import {
         allowedEmailDomain,
         allowedTeacherEmails,
-        useStorage,
       } from "./js/firebase-config.js";
 
-      const signInBtn = document.getElementById("signInMaterials");
-      const userInfo = document.getElementById("userInfoMaterials");
-      const userName = document.getElementById("userNameMaterials");
-      const userPhoto = document.getElementById("userPhotoMaterials");
-      const signOutBtn = document.getElementById("signOutMaterials");
+      // URL de tu Web App de Apps Script (Deploy → Web app)
+      const APPS_SCRIPT_URL =
+        "https://script.google.com/macros/s/AKfycbyTQcJy3VkAx_tVqXpihcxYufAxPVzsxATa_51sskK8vuUTJTvZJZWvbjjw725kBTba/exec";
 
+      // ======= Helpers =======
+      async function uploadViaAppsScript({
+        file,
+        title,
+        description,
+        category,
+      }) {
+        const fd = new FormData();
+        fd.append("action", "uploadMaterial");
+        fd.append("title", title || file?.name || "");
+        fd.append("description", description || "");
+        fd.append("category", category || "others");
+        if (file) fd.append("file", file, file.name);
+
+        const res = await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          body: fd,
+          mode: "cors",
+        });
+        if (!res.ok) {
+          let detail = "";
+          try {
+            detail = JSON.stringify(await res.json());
+          } catch {}
+          throw new Error(
+            `Apps Script ${res.status}: ${detail || res.statusText}`
+          );
+        }
+        // Esperado: {id, webViewLink, webContentLink}
+        return await res.json();
+      }
+
+      // Render
+      const grid = document.getElementById("materialsGrid");
       const teacherArea = document.getElementById("teacherArea");
       const roleToggle = document.getElementById("roleToggle");
       const btnTeacher = document.getElementById("btnTeacher");
-      const grid = document.getElementById("materialsGrid");
+      const signInBtn = document.getElementById("signInMaterials");
+      const signOutBtn = document.getElementById("signOutMaterials");
+      const userInfo = document.getElementById("userInfoMaterials");
+      const userName = document.getElementById("userNameMaterials");
+      const userPhoto = document.getElementById("userPhotoMaterials");
 
       let isTeacher = false;
       let currentCategory = "all";
       let unsubscribe = null;
 
+      // Auth
       signInBtn?.addEventListener("click", async () => {
         try {
           await signInWithGooglePotros();
@@ -324,6 +367,19 @@
       signOutBtn?.addEventListener("click", async () => {
         await signOutCurrent();
       });
+
+      function iconFor(item) {
+        const ext = (
+          (item.path || "").split(".").pop() ||
+          (item.url || "").split(".").pop() ||
+          ""
+        ).toLowerCase();
+        if (ext === "pdf") return "📕";
+        if (["doc", "docx"].includes(ext)) return "📘";
+        if (["xls", "xlsx"].includes(ext)) return "📗";
+        if (["ppt", "pptx"].includes(ext)) return "📙";
+        return "📄";
+      }
 
       function renderItems(items) {
         const term = (
@@ -340,17 +396,7 @@
           const d = (item.description || "").toLowerCase();
           if (term && !t.includes(term) && !d.includes(term)) continue;
 
-          const ext = (
-            (item.path || "").split(".").pop() ||
-            (item.url || "").split(".").pop() ||
-            ""
-          ).toLowerCase();
-          let emoji = "📄";
-          if (ext === "pdf") emoji = "📕";
-          else if (["doc", "docx"].includes(ext)) emoji = "📘";
-          else if (["xls", "xlsx"].includes(ext)) emoji = "📗";
-          else if (["ppt", "pptx"].includes(ext)) emoji = "📙";
-
+          const emoji = iconFor(item);
           const dateStr =
             item.createdAt && item.createdAt.toDate
               ? item.createdAt.toDate().toLocaleDateString("es-MX")
@@ -419,6 +465,7 @@
         unsubscribe = subscribeMaterials((items) => renderItems(items));
       }
 
+      // Estado por usuario
       onAuth((user) => {
         const isPotros = !!user?.email
           ?.toLowerCase()
@@ -448,9 +495,14 @@
           btnTeacher?.classList.add("bg-indigo-600", "text-white");
         }
 
+        // Oculta el botón "Vista estudiante" a no-docentes
+        const v = document.getElementById("btn-vista-estudiante");
+        v?.classList.toggle("hidden", !isTeacher);
+
         watchMaterials();
       });
 
+      // Buscar y filtrar
       document
         .getElementById("searchInput")
         ?.addEventListener("input", watchMaterials);
@@ -466,7 +518,7 @@
         })
       );
 
-      // Upload handler
+      // Subida: Apps Script + registro en Firestore
       const form = document.getElementById("materialForm");
       form?.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -493,25 +545,26 @@
         fill.style.width = "0%";
 
         try {
-          if (useStorage && file) {
-            await uploadMaterial({
+          let finalUrl = url;
+          if (file) {
+            // 1) Subir a Drive con Apps Script
+            const r = await uploadViaAppsScript({
               file,
               title,
-              category,
               description,
-              onProgress: (p) => (fill.style.width = Math.round(p) + "%"),
-            });
-          } else if (file) {
-            await uploadMaterialToDrive({
-              file,
-              title,
               category,
-              description,
-              onProgress: (p) => (fill.style.width = Math.round(p) + "%"),
             });
-          } else {
-            await addMaterialLink({ title, category, description, url });
+            finalUrl = r.webContentLink || r.webViewLink || finalUrl;
+            fill.style.width = "100%";
           }
+          // 2) Registrar en Firestore para que aparezca en el grid
+          await addMaterialLink({
+            title,
+            category,
+            description,
+            url: finalUrl,
+          });
+
           toast("Material agregado");
           form.reset();
         } catch (e) {
@@ -523,7 +576,7 @@
       });
     </script>
 
-    <!-- Toggle Vista estudiante -->
+    <!-- Toggle Vista estudiante persistente -->
     <script>
       (function () {
         const KEY = "vistaEstudiante";
@@ -550,6 +603,7 @@
       })();
     </script>
 
+    <!-- Tu layout JS global -->
     <script defer src="js/layout.js"></script>
   </body>
 </html>
