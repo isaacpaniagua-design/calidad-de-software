@@ -6,55 +6,47 @@
     <title>Materiales - Calidad de Software</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="css/layout.css" />
+    <style>
+      /* Modo estudiante */
+      html[data-student] .only-teacher {
+        display: none !important;
+      }
+      html:not([data-student]) .only-student {
+        display: none !important;
+      }
+
+      /* Botón Vista estudiante */
+      #btn-vista-estudiante {
+        margin-left: 0.75rem;
+        vertical-align: middle;
+      }
+
+      /* Chips de accesos */
+      .accesos-rapidos ul {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin: 0.5rem 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .accesos-rapidos a {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        border-radius: 9999px;
+        border: 1px solid #c7d2fe;
+        background: #eef2ff;
+        color: #3730a3;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-decoration: none;
+      }
+      .accesos-rapidos a:hover {
+        background: #e0e7ff;
+      }
+    </style>
   </head>
-  <style>
-    /* Oculta bloques del docente al activar vista estudiante */
-    html[data-student] .only-teacher {
-      display: none !important;
-    }
-    /* Opcional: contenidos solo para estudiante si los usas */
-    html:not([data-student]) .only-student {
-      display: none !important;
-    }
-
-    /* Ajuste rápido del botón junto al título */
-    #btn-vista-estudiante {
-      margin-left: 0.75rem;
-      vertical-align: middle;
-    }
-
-    /* Oculta todo lo marcado para docente cuando la vista estudiante está activa */
-    html[data-student] .only-teacher {
-      display: none !important;
-    }
-    html[data-student] .only-teacher-inline {
-      visibility: hidden !important;
-    }
-
-    .accesos-rapidos ul {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin: 0.5rem 0 0;
-      padding: 0;
-      list-style: none;
-    }
-    .accesos-rapidos a {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.5rem 0.75rem;
-      border-radius: 9999px;
-      border: 1px solid #c7d2fe;
-      background: #eef2ff;
-      color: #3730a3;
-      font-weight: 600;
-      font-size: 0.9rem;
-      text-decoration: none;
-    }
-    .accesos-rapidos a:hover {
-      background: #e0e7ff;
-    }
-  </style>
 
   <body>
     <div class="max-w-6xl mx-auto px-4 py-8">
@@ -70,7 +62,26 @@
           </div>
           <!-- Controles visibles para todos -->
           <div class="flex flex-col md:items-end gap-2">
-            <div class="flex flex-wrap gap-2"></div>
+            <div class="flex flex-wrap gap-2">
+              <button
+                id="btn-vista-estudiante"
+                type="button"
+                aria-pressed="false"
+                class="px-4 py-2 rounded-full font-semibold bg-sky-600 text-white hover:bg-sky-700 shadow-sm transition"
+              >
+                Vista estudiante
+              </button>
+            </div>
+            <!-- Accesos rápidos visibles para todos -->
+            <nav aria-label="Accesos rápidos" class="accesos-rapidos">
+              <ul>
+                <li><a href="1planpruebas.html">1) Plan de pruebas</a></li>
+                <li><a href="2registrosbugs.html">2) Registros de bugs</a></li>
+                <li><a href="3formatogap.html">3) Formato GAP</a></li>
+                <li><a href="4roadmap.html">4) Roadmap</a></li>
+                <li><a href="5finalintegrado.html">5) Final integrado</a></li>
+              </ul>
+            </nav>
           </div>
 
           <!-- Controles solo para profesor -->
@@ -82,19 +93,6 @@
             >
               👨‍🏫 Profesor
             </button>
-            <nav
-              aria-label="Accesos rápidos"
-              class="accesos-rapidos"
-              style="margin-top: 0.5rem"
-            >
-              <ul>
-                <li><a href="1planpruebas.html">1) Plan de pruebas</a></li>
-                <li><a href="2registrosbugs.html">2) Registros de bugs</a></li>
-                <li><a href="3formatogap.html">3) Formato GAP</a></li>
-                <li><a href="4roadmap.html">4) Roadmap</a></li>
-                <li><a href="5finalintegrado.html">5) Final integrado</a></li>
-              </ul>
-            </nav>
           </div>
         </div>
 
@@ -141,6 +139,7 @@
                   placeholder="Ej: Presentación Sesión 1"
                 />
               </div>
+
               <div>
                 <label class="block text-sm font-semibold text-gray-700"
                   >Categoría</label
@@ -155,6 +154,18 @@
                   <option value="references">🔖 Referencias</option>
                 </select>
               </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700"
+                  >Archivo (opcional)</label
+                >
+                <input
+                  id="fileInput"
+                  type="file"
+                  class="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                />
+              </div>
+
               <div class="md:col-span-2">
                 <label class="block text-sm font-semibold text-gray-700"
                   >Descripción</label
@@ -166,6 +177,7 @@
                   placeholder="Breve descripción del material"
                 ></textarea>
               </div>
+
               <div class="md:col-span-2">
                 <label class="block text-sm font-semibold text-gray-700"
                   >Enlace externo (Drive u otro)</label
@@ -177,6 +189,7 @@
                   placeholder="https://drive.google.com/... o https://..."
                 />
               </div>
+
               <div class="md:col-span-2 flex items-center gap-3">
                 <button
                   type="submit"
@@ -256,7 +269,6 @@
       id="toast"
       class="fixed top-4 right-4 bg-white shadow-2xl border-l-4 border-emerald-600 rounded-lg px-4 py-3 hidden"
     ></div>
-
     <script>
       function toast(msg, type) {
         const el = document.getElementById("toast");
@@ -268,6 +280,7 @@
       }
     </script>
 
+    <!-- Lógica principal -->
     <script type="module">
       import {
         onAuth,
@@ -291,6 +304,7 @@
       const userName = document.getElementById("userNameMaterials");
       const userPhoto = document.getElementById("userPhotoMaterials");
       const signOutBtn = document.getElementById("signOutMaterials");
+
       const teacherArea = document.getElementById("teacherArea");
       const roleToggle = document.getElementById("roleToggle");
       const btnTeacher = document.getElementById("btnTeacher");
@@ -341,6 +355,7 @@
             item.createdAt && item.createdAt.toDate
               ? item.createdAt.toDate().toLocaleDateString("es-MX")
               : "";
+
           const card = document.createElement("div");
           card.className =
             "bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-col";
@@ -352,13 +367,13 @@
                 <div class="font-bold text-gray-900 leading-tight">${
                   item.title || ""
                 }</div>
-                <div class="text-sm text-gray-500">${
-                  dateStr ? "📅 " + dateStr : ""
-                } ${
+                <div class="text-sm text-gray-500">
+                  ${dateStr ? "📅 " + dateStr : ""} ${
             typeof item.downloads === "number"
               ? " • ⬇️ " + item.downloads + " descargas"
               : ""
-          }</div>
+          }
+                </div>
               </div>
             </div>
             <div class="text-gray-700 text-sm mb-3 line-clamp-3">${
@@ -371,7 +386,8 @@
                   ? '<button class="px-3 py-1.5 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700">🗑️ Eliminar</button>'
                   : ""
               }
-            </div>`;
+            </div>
+          `;
           const [btnDl, btnDel] = card.querySelectorAll("button");
           btnDl?.addEventListener("click", async () => {
             try {
@@ -426,7 +442,6 @@
           signInBtn?.classList.remove("hidden");
         }
 
-        // Toggle UI
         teacherArea.classList.toggle("hidden", !isTeacher);
         roleToggle.classList.toggle("hidden", !isTeacher);
         if (isTeacher) {
@@ -462,6 +477,7 @@
           .value.trim();
         const file = document.getElementById("fileInput").files[0];
         const url = (document.getElementById("materialUrl").value || "").trim();
+
         if (!title) {
           toast("Proporciona el título", "error");
           return;
@@ -483,9 +499,7 @@
               title,
               category,
               description,
-              onProgress: (p) => {
-                fill.style.width = Math.round(p) + "%";
-              },
+              onProgress: (p) => (fill.style.width = Math.round(p) + "%"),
             });
           } else if (file) {
             await uploadMaterialToDrive({
@@ -493,9 +507,7 @@
               title,
               category,
               description,
-              onProgress: (p) => {
-                fill.style.width = Math.round(p) + "%";
-              },
+              onProgress: (p) => (fill.style.width = Math.round(p) + "%"),
             });
           } else {
             await addMaterialLink({ title, category, description, url });
@@ -511,6 +523,7 @@
       });
     </script>
 
+    <!-- Toggle Vista estudiante -->
     <script>
       (function () {
         const KEY = "vistaEstudiante";
