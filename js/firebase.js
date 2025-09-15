@@ -436,21 +436,25 @@ export async function fetchGradesByDateRange(startISO, endISO) {
 // Collection: forum_topics (doc fields: title, category, content, authorName, authorEmail, createdAt, updatedAt)
 // Subcollection per topic: forum_topics/{topicId}/replies (doc fields: text, authorName, authorEmail, createdAt)
 
-export function subscribeForumTopics(cb) {
+export function subscribeForumTopics(cb, onError) {
   const db = getDb();
   const qy = query(
     collection(db, 'forum_topics'),
     orderBy('updatedAt', 'desc'),
     orderBy('createdAt', 'desc')
   );
-  return onSnapshot(qy, (snap) => {
-    const items = [];
-    snap.forEach(docSnap => {
-      const d = docSnap.data();
-      items.push({ id: docSnap.id, ...d });
-    });
-    cb(items);
-  });
+  return onSnapshot(
+    qy,
+    (snap) => {
+      const items = [];
+      snap.forEach(docSnap => {
+        const d = docSnap.data();
+        items.push({ id: docSnap.id, ...d });
+      });
+      cb(items);
+    },
+    (err) => { if (onError) try { onError(err); } catch(_) {} }
+  );
 }
 
 export async function createForumTopic({ title, category, content, authorName, authorEmail }) {

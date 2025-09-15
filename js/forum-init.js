@@ -83,7 +83,19 @@ onAuth(async user => {
   if (unsubscribeTopics) { try{ unsubscribeTopics(); } catch(_){} unsubscribeTopics = null; }
   if (user && isPotros) {
     renderLoading();
-    unsubscribeTopics = subscribeForumTopics((items) => { topicsCache = items; renderTopics(items); });
+    unsubscribeTopics = subscribeForumTopics(
+      (items) => { topicsCache = items; renderTopics(items); showDebug('Temas cargados', 'ok'); },
+      (err) => {
+        const code = (err && (err.code||err.message||'')).toString();
+        if (/permission-denied/i.test(code)) {
+          showDebug('Permisos insuficientes. Verifica teachers/{uid} y reglas.', 'warn');
+        } else if (/failed-precondition|index/i.test(code)) {
+          showDebug('Se requiere índice compuesto (updatedAt, createdAt). Crea el índice en Firestore.', 'warn');
+        } else {
+          showDebug('Error suscripción temas: ' + code, 'error');
+        }
+      }
+    );
   } else {
     renderSignedOutState();
   }
@@ -135,6 +147,37 @@ function renderTopics(items){
   });
 }
 
+// Debug banner
+function ensureDebugBanner(){
+  let bar = document.getElementById('forum-debug');
+  if (bar) return bar;
+  bar = document.createElement('div');
+  bar.id = 'forum-debug';
+  bar.style.position = 'fixed';
+  bar.style.right = '10px';
+  bar.style.bottom = '10px';
+  bar.style.zIndex = '10000';
+  bar.style.maxWidth = '320px';
+  bar.style.background = 'rgba(17,24,39,.95)';
+  bar.style.color = '#fff';
+  bar.style.padding = '8px 10px';
+  bar.style.borderRadius = '8px';
+  bar.style.fontSize = '12px';
+  bar.style.boxShadow = '0 6px 18px rgba(0,0,0,.25)';
+  bar.style.display = 'none';
+  document.body.appendChild(bar);
+  return bar;
+}
+
+function showDebug(msg, level){
+  const bar = ensureDebugBanner();
+  bar.textContent = (level ? '['+level+'] ' : '') + (msg||'');
+  bar.style.display = 'block';
+  if (level === 'ok') {
+    setTimeout(() => { try { bar.style.display = 'none'; } catch(_){} }, 3000);
+  }
+}
+
 // Create topic for teacher
 window.createTopic = async function(){
   if (!currentUser) { alert('Inicia sesión con tu cuenta @potros'); return; }
@@ -147,6 +190,7 @@ window.createTopic = async function(){
     await createForumTopic({ title, category, content, authorName: currentUser.displayName || null, authorEmail: currentUser.email });
     if (el('topicTitle')) el('topicTitle').value = '';
     if (el('topicContent')) el('topicContent').value = '';
+    showDebug('Tema creado', 'ok');
   } catch(e){ alert(e.message || e); }
 }
 
