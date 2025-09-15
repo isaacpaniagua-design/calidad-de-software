@@ -49,7 +49,7 @@
          box-shadow:0 8px 32px rgba(0,0,0,.10)}
   .qs-nav .wrap{max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;gap:16px;align-items:center;justify-content:space-between}
   .qs-brand{display:flex;gap:12px;align-items:center;color:#1f2937;font-weight:800;font-size:1.2rem;text-decoration:none}
-  .qs-brand::before{content:"ðŸŽ“";font-size:1.3rem}
+  .qs-brand::before{content:"🎓";font-size:1.3rem}
   .qs-tabs{display:flex;gap:10px;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap}
   .qs-btn{border:0;padding:10px 16px;border-radius:22px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;
          font-weight:600;font-size:.9rem;transition:all .25s ease;border:2px solid transparent;flex:0 0 auto}
@@ -64,13 +64,13 @@
 <div class="qs-nav" data-role="main-nav">
   <div class="wrap">
     <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
-    <nav class="qs-tabs" aria-label="NavegaciÃ³n">
+    <nav class="qs-tabs" aria-label="Navegación">
       <a class="qs-btn" href="materiales.html">Materiales</a>
       <a class="qs-btn" href="asistencia.html">Asistencia</a>
       <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
       <a class="qs-btn" href="Foro.html">Foro</a>
       <a class="qs-btn" href="paneldocente.html">Panel</a>
-      
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
       
     </nav>
   </div>
@@ -94,13 +94,13 @@
                     </svg>
                 </div>
                 <h1 class="text-4xl font-bold text-gray-800 mb-2">Registro de Asistencia</h1>
-                <p class="text-gray-600 text-lg">Instituto TecnolÃ³gico de Sonora</p>
+                <p class="text-gray-600 text-lg">Instituto Tecnológico de Sonora</p>
                 <div class="mt-4 flex items-center justify-center space-x-4 text-sm text-gray-500">
                     <div id="currentDate" class="font-medium"></div>
-                    <span>â€¢</span>
+                    <span>•</span>
                     <div id="currentTime"></div>
                 </div>
-                <div id="authArea" class="mt-6 flex items-center justify-center gap-3">
+                <div id="authArea" class="mt-6 flex items-center justify-center gap-3 student-only">
                   <button id="signInBtn" class="bg-gradient-to-r from-emerald-600 to-green-600 text-white px-5 py-2 rounded-full hover:from-emerald-700 hover:to-green-700 transition-all duration-200 font-semibold">
                     Acceder con cuenta @potros
                   </button>
@@ -114,7 +114,7 @@
                 <div id="classBanner" class="mt-4 hidden">
                   <div class="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800 text-sm font-semibold shadow-sm">
                     <span class="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
-                    Clase activa ahora: 18:00 - 19:00 (Lun/MiÃ©/Vie)
+                    Clase activa ahora: 18:00 - 19:00 (Lun/Mié/Vie)
                   </div>
                 </div>
             </div>
@@ -132,13 +132,13 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"></path>
                             </svg>
                         </div>
-                        <p class="text-gray-600 mb-8">Haz clic en el botÃ³n para registrar tu asistencia del dÃ­a de hoy</p>
+                        <p class="text-gray-600 mb-8">Haz clic en el botón para registrar tu asistencia del día de hoy</p>
                     </div>
                     
                     <button 
                         id="attendanceBtn"
                         onclick="registerAttendance()"
-                        class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-xl text-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                        class="student-only w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-xl text-xl transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
                     >
                         <span class="flex items-center justify-center">
                             <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -149,85 +149,58 @@
                     </button>
                     
                     <p class="text-sm text-gray-500 mt-4">
-                        * Se validarÃ¡ automÃ¡ticamente con tu cuenta @potros.itson.edu.mx
+                        * Se validará automáticamente con tu cuenta @potros.itson.edu.mx
                     </p>
                 </div>
             </div>
 
-                        <div class="flex flex-col gap-8">
-                <div>
-                    <div id="attendanceRoleLegend" class="text-sm text-gray-500 mb-3"></div>
-                    <p class="hidden md:block text-sm text-gray-500">Usa la tarjeta principal para registrar tu asistencia. En esta columna solo se muestran tus registros, filtros y exportaciones.</p>
+            <!-- Registered Attendance List -->
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-8 py-6 border-b">
+                    <div class="flex items-center justify-between gap-4 flex-wrap">
+                        <h2 class="text-2xl font-bold text-gray-800">Asistencias Registradas</h2>
+                        <div class="flex items-center gap-3 flex-wrap justify-end teacher-only">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                                <span id="attendanceCount" class="text-lg font-semibold text-gray-700">0 registrados</span>
+                            </div>
+                            <div class="flex items-center gap-2 teacher-only">
+                              <button id="exportAttendanceCsvBtn" class="px-3 py-1 rounded-md bg-white border text-gray-700 hover:bg-gray-50 text-sm">Exportar CSV</button>
+                              <button id="exportAttendancePdfBtn" class="px-3 py-1 rounded-md bg-white border text-gray-700 hover:bg-gray-50 text-sm">Reporte PDF</button>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm teacher-only">
+                              <label>Desde</label>
+                              <input type="date" id="attStartDate" class="border rounded-md px-2 py-1">
+                              <label>Hasta</label>
+                              <input type="date" id="attEndDate" class="border rounded-md px-2 py-1">
+                              <button id="exportAttendanceRangeCsvBtn" class="px-3 py-1 rounded-md bg-white border text-gray-700 hover:bg-gray-50">CSV Rango</button>
+                              <button id="exportAttendanceRangePdfBtn" class="px-3 py-1 rounded-md bg-white border text-gray-700 hover:bg-gray-50">PDF Rango</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <!-- Historial de Pase de Lista (por rango rÃ¡pido) -->
-                <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6 border-b text-white">
-                        <div class="flex items-center justify-between gap-4 flex-wrap">
-                            <h2 class="text-2xl font-bold">Historial de Pase de Lista</h2>
-                            <span id="historyRoleBadge" class="ml-2 inline-block px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-700"></span>
-                            <div class="flex items-center gap-2">
-                                <button id="hist7Btn" class="px-3 py-1 rounded-md bg-white/20 hover:bg-white/30 text-white">Ãšltimos 7 dÃ­as</button>
-                                <button id="hist30Btn" class="px-3 py-1 rounded-md bg-white/20 hover:bg-white/30 text-white">Ãšltimos 30 dÃ­as</button>
-                            </div>
-                        </div>
+                
+                <div class="p-6">
+                    <div class="mb-4 flex gap-2 items-center text-sm">
+                        <input id="attFilterText" class="border rounded-md px-2 py-1 flex-1" placeholder="Filtrar por nombre o email..." />
+                        <select id="attFilterType" class="border rounded-md px-2 py-1">
+                            <option value="all">Todos</option>
+                            <option value="student">Estudiantes</option>
+                            <option value="teacher">Docentes</option>
+                        </select>
                     </div>
-                    <div class="p-6">
-                        <div id="historyResults" class="overflow-auto">
-                            <div class="text-gray-500">Selecciona un rango rÃ¡pido para ver el historial.</div>
+                    <div id="noAttendance" class="text-center py-12">
+                        <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.196-2.196M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.196-2.196M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
                         </div>
+                        <p class="text-gray-500">Aún no hay asistencias registradas</p>
+                        <p class="text-sm text-gray-400 mt-2">Las asistencias aparecerán aquí en tiempo real</p>
                     </div>
-                </div>
-
-                <!-- Registered Attendance List -->
-                <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-                    <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-8 py-6 border-b">
-                        <div class="flex items-center justify-between gap-4 flex-wrap">
-                            <h2 class="text-2xl font-bold text-gray-800">Asistencias Registradas</h2>
-                            <span id="registeredRoleBadge" class="ml-2 inline-block px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-700"></span>
-                            <div class="flex items-center gap-3 flex-wrap justify-end">
-                                <div class="flex items-center space-x-2">
-                                    <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                                    <span id="attendanceCount" class="text-lg font-semibold text-gray-700">0 registrados</span>
-                                </div>
-                                <div class="flex items-center gap-2 teacher-only">
-                                    <button id="exportAttendanceCsvBtn" class="px-3 py-1 rounded-md bg-white border text-gray-700 hover:bg-gray-50 text-sm">Exportar CSV</button>
-                                    <button id="exportAttendancePdfBtn" class="px-3 py-1 rounded-md bg-white border text-gray-700 hover:bg-gray-50 text-sm">Reporte PDF</button>
-                                </div>
-                                <div class="flex items-center gap-2 text-sm teacher-only">
-                                    <label>Desde</label>
-                                    <input type="date" id="attStartDate" class="border rounded-md px-2 py-1">
-                                    <label>Hasta</label>
-                                    <input type="date" id="attEndDate" class="border rounded-md px-2 py-1">
-                                    <button id="exportAttendanceRangeCsvBtn" class="px-3 py-1 rounded-md bg-white border text-gray-700 hover:bg-gray-50">CSV Rango</button>
-                                    <button id="exportAttendanceRangePdfBtn" class="px-3 py-1 rounded-md bg-white border text-gray-700 hover:bg-gray-50">PDF Rango</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="p-6">
-                        <div class="mb-4 flex gap-2 items-center text-sm">
-                            <input id="attFilterText" class="border rounded-md px-2 py-1 flex-1" placeholder="Filtrar por nombre o email..." />
-                            <select id="attFilterType" class="border rounded-md px-2 py-1">
-                                <option value="all">Todos</option>
-                                <option value="student">Estudiantes</option>
-                                <option value="teacher">Docentes</option>
-                            </select>
-                        </div>
-                        <div id="noAttendance" class="text-center py-12">
-                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.196-2.196M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.196-2.196M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                                </svg>
-                            </div>
-                            <p class="text-gray-500">AÃºn no hay asistencias registradas</p>
-                            <p class="text-sm text-gray-400 mt-2">Las asistencias aparecerÃ¡n aquÃ­ en tiempo real</p>
-                        </div>
-
-                        <div id="attendanceList" class="space-y-3 max-h-96 overflow-y-auto">
-                            <!-- Registered attendances will appear here -->
-                        </div>
+                    
+                    <div id="attendanceList" class="space-y-3 max-h-96 overflow-y-auto">
+                        <!-- Registered attendances will appear here -->
                     </div>
                 </div>
             </div>
@@ -241,7 +214,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-900 mb-3">Â¡Asistencia Registrada!</h3>
+                <h3 class="text-2xl font-bold text-gray-900 mb-3">¡Asistencia Registrada!</h3>
                 <p id="successMessage" class="text-gray-600 mb-2 text-lg"></p>
                 <p id="successTimestamp" class="text-sm text-gray-500 mb-8"></p>
                 <button onclick="closeSuccessModal()" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 font-semibold">
@@ -265,30 +238,28 @@
             {id: "248997", name: "Le Blohic Garay, Mario Enrique", email: "mario.leblohic248997@potros.itson.edu.mx", type: "student"},
             {id: "249012", name: "Lopez Guerrero, Luis Carlos", email: "luis.lopez249012@potros.itson.edu.mx", type: "student"},
             {id: "248990", name: "Maldonado Montoya, Jose Gabriel", email: "jose.maldonado248990@potros.itson.edu.mx", type: "student"},
-            {id: "217812", name: "MartÃ­nez Soto, Dainiz RaÃ­", email: "dainiz.martinez217812@potros.itson.edu.mx", type: "student"},
+            {id: "217812", name: "Martínez Soto, Dainiz Raí", email: "dainiz.martinez217812@potros.itson.edu.mx", type: "student"},
             {id: "244321", name: "Nevescanin Moreno, Angel Stipe", email: "angel.nevescanin244321@potros.itson.edu.mx", type: "student"},
             {id: "244477", name: "Osuna Aguilera, Erik David", email: "erik.osuna244477@potros.itson.edu.mx", type: "student"},
             {id: "244711", name: "Palacios Cardenas, Jorge Eduardo", email: "jorge.palacios244711@potros.itson.edu.mx", type: "student"},
             {id: "244569", name: "Preciado Ruiz, Juan Carlos", email: "juan.preciado244569@potros.itson.edu.mx", type: "student"},
             {id: "244373", name: "Reyes Galaz, Jose Abelardo", email: "jose.reyes244373@potros.itson.edu.mx", type: "student"},
             {id: "240691", name: "Rivas Quintana, Emmanuel", email: "emmanuel.rivas240691@potros.itson.edu.mx", type: "student"},
-            {id: "244266", name: "Rocha Aguilar, VÃ­ctor Emmanuel", email: "victor.rocha244266@potros.itson.edu.mx", type: "student"},
+            {id: "244266", name: "Rocha Aguilar, Víctor Emmanuel", email: "victor.rocha244266@potros.itson.edu.mx", type: "student"},
             {id: "244312", name: "Rodriguez Alvarado, Jose Agustin", email: "jose.rodriguez244312@potros.itson.edu.mx", type: "student"},
             {id: "244621", name: "Soto Carrazco, Francisco Javier", email: "francisco.soto244621@potros.itson.edu.mx", type: "student"},
-            {id: "244689", name: "Villegas Sosa, RamsÃ©s Mauricio", email: "ramses.villegas244689@potros.itson.edu.mx", type: "student"},
+            {id: "244689", name: "Villegas Sosa, Ramsés Mauricio", email: "ramses.villegas244689@potros.itson.edu.mx", type: "student"},
             {id: "244679", name: "Viveros Zavala, Angel Gael", email: "angel.viveros244679@potros.itson.edu.mx", type: "student"},
-            {id: "244378", name: "MartÃ­nez Santacruz, Yolanda", email: "yolanda.martinez244378@potros.itson.edu.mx", type: "student"},
-            {id: "99645", name: "Isaac NoÃ© Paniagua Ruiz", email: "isaac.paniagua@potros.itson.edu.mx", type: "teacher"}
+            {id: "244378", name: "Martínez Santacruz, Yolanda", email: "yolanda.martinez244378@potros.itson.edu.mx", type: "student"},
+            {id: "99645", name: "Paniagua Ruiz, Isaac Noé", email: "isaac.paniagua@potros.itson.edu.mx", type: "teacher"}
         ];
-        // Exponer roster para el mÃ³dulo Firebase (consulta window.students)
-        window.students = students;
 
         let registeredAttendances = [];
-        // Configura aquÃ­ tu horario de clase (hora local), formato HH:MM de 24h
-        // Lunes(1), MiÃ©rcoles(3), Viernes(5), de 18:00 a 19:00
+        // Configura aquí tu horario de clase (hora local), formato HH:MM de 24h
+        // Lunes(1), Miércoles(3), Viernes(5), de 18:00 a 19:00
         const classWindow = { start: '18:00', end: '19:00' };
 
-        // Permitir que otros scripts (Firebase mÃ³dulo) actualicen la misma referencia
+        // Permitir que otros scripts (Firebase módulo) actualicen la misma referencia
         window.setRegisteredAttendances = function(items) { registeredAttendances = items || []; };
 
         function updateDateTime() {
@@ -322,7 +293,7 @@
             // Check if already registered
             const alreadyRegistered = registeredAttendances.find(att => att.email === randomStudent.email);
             if (alreadyRegistered) {
-                alert('Ya tienes tu asistencia registrada para el dÃ­a de hoy.');
+                alert('Ya tienes tu asistencia registrada para el día de hoy.');
                 return;
             }
 
@@ -439,7 +410,7 @@
             }
         }
 
-        // Toast de confirmaciÃ³n
+        // Toast de confirmación
         function showAttendanceToast(message) {
             let toast = document.getElementById('attendanceToast');
             if (!toast) {
@@ -461,14 +432,14 @@
             }, 3000);
         }
 
-        // Verifica si AHORA estÃ¡ dentro de los dÃ­as/fechas y ventana horaria
+        // Verifica si AHORA está dentro de los días/fechas y ventana horaria
         function isClassActiveNow() {
             const now = new Date();
-            // Rango de fechas del semestre (ajustado al aÃ±o actual)
+            // Rango de fechas del semestre (ajustado al año actual)
             const start = new Date(now.getFullYear(), 7, 25, 0, 0, 0, 0); // 25 Ago
             const end = new Date(now.getFullYear(), 11, 12, 23, 59, 59, 999); // 12 Dic
             if (!(now >= start && now <= end)) return false;
-            // DÃ­as lunes(1), miÃ©rcoles(3), viernes(5)
+            // Días lunes(1), miércoles(3), viernes(5)
             const allowedDays = [1,3,5];
             if (!allowedDays.includes(now.getDay())) return false;
             // Ventana horaria
@@ -523,7 +494,7 @@
             
             const alreadyRegistered = registeredAttendances.find(att => att.email === userEmail);
             if (alreadyRegistered) {
-                throw new Error('Ya tienes tu asistencia registrada para el dÃ­a de hoy');
+                throw new Error('Ya tienes tu asistencia registrada para el día de hoy');
             }
 
             const now = new Date();
@@ -543,7 +514,7 @@
     </script>
 
     <script type="module">
-      import { initFirebase, onAuth, signInWithGooglePotros, signOutCurrent, saveTodayAttendance, subscribeTodayAttendance, fetchAttendancesByDateRange, isTeacherEmail, isTeacherByDoc, subscribeTodayAttendanceByUser, fetchAttendancesByDateRangeByUser } from './js/firebase.js';
+      import { initFirebase, onAuth, signInWithGooglePotros, signOutCurrent, saveTodayAttendance, subscribeTodayAttendance, fetchAttendancesByDateRange } from './js/firebase.js';
       import { allowedEmailDomain } from './js/firebase-config.js';
 
       initFirebase();
@@ -554,7 +525,6 @@
       const userName = document.getElementById('userName');
       const userPhoto = document.getElementById('userPhoto');
       const attendanceBtn = document.getElementById('attendanceBtn');
-      const testRegistrarEmail = 'isaac.paniagua@potros.itson.edu.mx';
 
       function setAttendanceEnabled(enabled) {
         if (!attendanceBtn) return;
@@ -570,7 +540,7 @@
           try {
             await signInWithGooglePotros();
           } catch (e) {
-            alert(e.message || 'No se pudo iniciar sesiÃ³n');
+            alert(e.message || 'No se pudo iniciar sesión');
           }
         });
       }
@@ -584,10 +554,6 @@
       let unsubscribeAttendance = null;
       onAuth(async (user) => {
         if (user && user.email?.toLowerCase().endsWith(`@${allowedEmailDomain}`)) {
-          // Detectar docente
-          let teacher = false;
-          try { if (user.uid) teacher = await isTeacherByDoc(user.uid); } catch(_) {}
-          if (!teacher) teacher = isTeacherEmail(user.email);
           userName.textContent = user.displayName || user.email;
           if (user.photoURL) {
             userPhoto.src = user.photoURL;
@@ -598,30 +564,21 @@
           userInfo.classList.remove('hidden');
           if (signInBtn) signInBtn.classList.add('hidden');
           const active = (typeof window.isClassActiveNow === 'function' ? window.isClassActiveNow() : true);
-          // Solo el correo de prueba puede registrar asistencia (ignora horario)
-          const canRegister = (user.email.toLowerCase() === testRegistrarEmail);
-          setAttendanceEnabled(canRegister);
+          setAttendanceEnabled(active);
           const banner = document.getElementById('classBanner');
           if (banner) banner.classList.toggle('hidden', !active);
 
-          // Actualiza el estado del botÃ³n segÃºn horario (cada minuto)
+          // Actualiza el estado del botón según horario (cada minuto)
           try { window.clearInterval(window.__classActiveTimer); } catch(_) {}
           window.__classActiveTimer = window.setInterval(() => {
             const activeNow = (typeof window.isClassActiveNow === 'function' ? window.isClassActiveNow() : true);
-            const canRegisterNow = (user.email.toLowerCase() === testRegistrarEmail);
-            setAttendanceEnabled(canRegisterNow);
+            setAttendanceEnabled(activeNow);
             const banner = document.getElementById('classBanner');
             if (banner) banner.classList.toggle('hidden', !activeNow);
           }, 60000);
 
           if (unsubscribeAttendance) unsubscribeAttendance();
-          // Leyenda por rol
-          try {
-            const legend = document.getElementById('attendanceRoleLegend');
-            if (legend) legend.textContent = teacher ? 'Viendo: todos los registros' : 'Viendo: solo tus registros';
-          } catch(_){ }
-          const emailLower = (user.email||'').toLowerCase();
-          unsubscribeAttendance = (teacher ? subscribeTodayAttendance : (cb => subscribeTodayAttendanceByUser(emailLower, cb)) )((items) => {
+          unsubscribeAttendance = subscribeTodayAttendance((items) => {
             if (typeof window.setRegisteredAttendances === 'function') {
               window.setRegisteredAttendances(items);
             } else {
@@ -630,14 +587,6 @@
             if (typeof window.updateAttendanceList === 'function') window.updateAttendanceList();
             if (typeof window.updateAttendanceCount === 'function') window.updateAttendanceCount();
           });
-          // Mostrar/ocultar elementos de docente
-          document.querySelectorAll('.teacher-only').forEach(el => el.style.display = teacher ? '' : 'none');
-          // Badges de rol en tÃ­tulos
-          try {
-            const setBadge = (el, isT) => { if(!el) return; el.textContent = isT ? 'Docente' : 'Alumno'; el.className = 'ml-2 inline-block px-2 py-0.5 rounded-full text-xs ' + (isT ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'); };
-            setBadge(document.getElementById('historyRoleBadge'), teacher);
-            setBadge(document.getElementById('registeredRoleBadge'), teacher);
-          } catch(_) {}
         } else {
           userInfo.classList.add('hidden');
           if (signInBtn) signInBtn.classList.remove('hidden');
@@ -647,36 +596,21 @@
           if (typeof window.updateAttendanceList === 'function') window.updateAttendanceList();
           if (typeof window.updateAttendanceCount === 'function') window.updateAttendanceCount();
           if (unsubscribeAttendance) { unsubscribeAttendance(); unsubscribeAttendance = null; }
-          try {
-            const legend = document.getElementById('attendanceRoleLegend');
-            if (legend) legend.textContent = '';
-          } catch(_){ }
-          document.querySelectorAll('.teacher-only').forEach(el => el.style.display = 'none');
-          try {
-            const clearBadge = (id) => { const el = document.getElementById(id); if (el) { el.textContent = ''; el.className = 'ml-2 inline-block px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-700'; } };
-            clearBadge('historyRoleBadge');
-            clearBadge('registeredRoleBadge');
-          } catch(_) {}
         }
       });
 
       window.registerAttendance = async function registerAttendance() {
+        if (typeof window.isClassActiveNow === 'function' && !window.isClassActiveNow()) {
+          alert('La asistencia solo puede registrarse Lun/Mié/Vie entre 18:00 y 19:00, del 25 de agosto al 12 de diciembre.');
+          return;
+        }
         const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js');
         const user = getAuth().currentUser;
         if (!user) {
-          alert('Primero inicia sesiÃ³n con tu cuenta @' + allowedEmailDomain);
+          alert('Primero inicia sesión con tu cuenta @' + allowedEmailDomain);
           return;
         }
         const email = user.email.toLowerCase();
-        // Bypass de horario solo para el correo de prueba; otros respetan ventana
-        if (email !== testRegistrarEmail && (typeof window.isClassActiveNow === 'function') && !window.isClassActiveNow()) {
-          alert('La asistencia solo puede registrarse Lun/MiÃ©/Vie entre 18:00 y 19:00, del 25 de agosto al 12 de diciembre.');
-          return;
-        }
-        if (email !== testRegistrarEmail) {
-          alert('Temporalmente, solo el docente puede registrar asistencia como prueba.');
-          return;
-        }
         if (!email.endsWith(`@${allowedEmailDomain}`)) {
           alert('Solo se permite acceder con cuenta @' + allowedEmailDomain);
           return;
@@ -684,7 +618,7 @@
         const roster = window.students || [];
         const found = roster.find(s => (s.email || '').toLowerCase() === email);
         if (!found) {
-          alert('Tu correo no estÃ¡ en la lista del curso. Contacta al docente.');
+          alert('Tu correo no está en la lista del curso. Contacta al docente.');
           return;
         }
         try {
@@ -699,7 +633,7 @@
             window.showSuccessModal({ name: found.name, type: found.type }, when);
           }
           if (typeof window.showAttendanceToast === 'function') {
-            window.showAttendanceToast('Â¡Asistencia registrada correctamente!');
+            window.showAttendanceToast('¡Asistencia registrada correctamente!');
           }
         } catch (e) {
           alert(e.message || 'No se pudo registrar la asistencia.');
@@ -746,12 +680,12 @@
           const within = (typeof window.isWithinClassWindow === 'function') ? window.isWithinClassWindow(it.timestamp) : true;
           return `<tr><td>${idx+1}</td><td>${date}</td><td>${time}</td><td>${it.name||''}</td><td>${it.email||''}</td><td>${it.type||''}</td><td>${within?'Si':'No'}</td></tr>`;
         }).join('');
-          const htmlDaily = `<!DOCTYPE html><html data-layout="global"><head><meta charset="utf-8"><title>${title}</title>
-            <style>body{font-family:Arial,sans-serif;padding:24px} h1{font-size:18px;margin:0 0 12px} table{width:100%;border-collapse:collapse} th,td{border:1px solid #ddd;padding:6px;font-size:12px} th{background:#f3f4f6;text-align:left}</style>
-            <link rel="stylesheet" href="css/layout.css"></head><body>
-            <h1>${title}</h1>
-            <table><thead><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Nombre</th><th>Email</th><th>Tipo</th><th>EnHorario</th></tr></thead>
-            <tbody>${rows}</tbody></table>
+        const htmlDaily = `<!DOCTYPE html><html data-layout="global"><head><meta charset="utf-8"><title>${title}</title>
+          <style>body{font-family:Arial,sans-serif;padding:24px} h1{font-size:18px;margin:0 0 12px} table{width:100%;border-collapse:collapse} th,td{border:1px solid #ddd;padding:6px;font-size:12px} th{background:#f3f4f6;text-align:left}</style>
+          <link rel="stylesheet" href="css/layout.css"><body>
+          <h1>${title}</h1>
+          <table><thead><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Nombre</th><th>Email</th><th>Tipo</th><th>EnHorario</th></tr></thead>
+          <tbody>${rows}</tbody></table>
           </body></html>`;
         w.document.write(htmlDaily);
         w.document.close();
@@ -771,10 +705,8 @@
       async function exportRange(isPdf) {
         const start = startInput?.value;
         const end = endInput?.value;
-        if (!start || !end || start > end) { alert('Selecciona un rango vÃ¡lido'); return; }
-        const user = (await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js')).getAuth().currentUser;
-        const isTeacher = user ? (await (async()=>{ try{ if (user.uid && (await import('./js/firebase.js')).isTeacherByDoc) { const { isTeacherByDoc } = await import('./js/firebase.js'); return await isTeacherByDoc(user.uid); } } catch(_){ } return false; })()) || (await (async()=>{ try { const { isTeacherEmail } = await import('./js/firebase.js'); return isTeacherEmail(user?.email||''); } catch(_){ return false; } })()) : false;
-        const items = isTeacher ? await fetchAttendancesByDateRange(start, end) : await fetchAttendancesByDateRangeByUser((user?.email||'').toLowerCase(), start, end);
+        if (!start || !end || start > end) { alert('Selecciona un rango válido'); return; }
+        const items = await fetchAttendancesByDateRange(start, end);
         if (!isPdf) {
           // CSV
           const header = ['Fecha','Hora','Nombre','Email','Tipo'];
@@ -807,74 +739,23 @@
 
       document.getElementById('exportAttendanceRangeCsvBtn')?.addEventListener('click', () => exportRange(false));
       document.getElementById('exportAttendanceRangePdfBtn')?.addEventListener('click', () => exportRange(true));
-
-      // Historial rÃ¡pido (7 y 30 dÃ­as)
-      async function renderHistoryDays(days){
-        const today = new Date();
-        const end = today.toISOString().slice(0,10);
-        const startDate = new Date(today.getTime() - (days*24*60*60*1000));
-        const start = startDate.toISOString().slice(0,10);
-        const user2 = (await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js')).getAuth().currentUser;
-        const isTeacher2 = user2 ? (await (async()=>{ try{ if (user2.uid && (await import('./js/firebase.js')).isTeacherByDoc) { const { isTeacherByDoc } = await import('./js/firebase.js'); return await isTeacherByDoc(user2.uid); } } catch(_){ } return false; })()) || (await (async()=>{ try { const { isTeacherEmail } = await import('./js/firebase.js'); return isTeacherEmail(user2?.email||''); } catch(_){ return false; } })()) : false;
-        const items = isTeacher2 ? await fetchAttendancesByDateRange(start, end) : await fetchAttendancesByDateRangeByUser((user2?.email||'').toLowerCase(), start, end);
-        // Agrupar por fecha
-        const byDate = {};
-        for(const it of items){
-          const d = it.date || (it.timestamp ? it.timestamp.toISOString().slice(0,10) : '');
-          if(!byDate[d]) byDate[d] = [];
-          byDate[d].push(it);
-        }
-        const dates = Object.keys(byDate).sort();
-        const container = document.getElementById('historyResults');
-        if(!container) return;
-        if(dates.length === 0){ container.innerHTML = '<div class="text-gray-500">Sin registros en el rango seleccionado.</div>'; return; }
-        let html = '';
-        for(const d of dates){
-          const rows = byDate[d].map((it, idx) => {
-            const t = it.timestamp ? new Date(it.timestamp).toLocaleTimeString('es-MX',{hour12:false}) : '';
-            const name = (it.name||'');
-            const email = (it.email||'');
-            const type = (it.type||'');
-            return `<tr><td class="px-2 py-1 text-sm text-gray-600">${idx+1}</td><td class="px-2 py-1">${t}</td><td class="px-2 py-1">${name}</td><td class="px-2 py-1 text-gray-600">${email}</td><td class="px-2 py-1">${type}</td></tr>`;
-          }).join('');
-          html += `
-            <div class="mb-6">
-              <div class="font-semibold text-gray-800 mb-2">${d} <span class="text-sm text-gray-500">(${byDate[d].length} registros)</span></div>
-              <div class="border rounded-md overflow-hidden">
-                <table class="w-full text-sm">
-                  <thead class="bg-gray-50">
-                    <tr><th class="px-2 py-1 text-left">#</th><th class="px-2 py-1 text-left">Hora</th><th class="px-2 py-1 text-left">Nombre</th><th class="px-2 py-1 text-left">Email</th><th class="px-2 py-1 text-left">Tipo</th></tr>
-                  </thead>
-                  <tbody>${rows}</tbody>
-                </table>
-              </div>
-            </div>`;
-        }
-        container.innerHTML = html;
-      }
-      document.getElementById('hist7Btn')?.addEventListener('click', () => renderHistoryDays(7));
-      document.getElementById('hist30Btn')?.addEventListener('click', () => renderHistoryDays(30));
     </script>
 
 <footer class="footer">
-  <div class="footer-content">Â© 2024 Â· Plataforma QS - Calidad de Software | Isaac Paniagua</div>
+  <div class="footer-content">© 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua</div>
 </footer>
 <script>
-// Visibilidad por rol local (sin layout global)
+// Aplicar visibilidad por rol local (sin layout)
 document.addEventListener('DOMContentLoaded', function(){
   try{
     var rol = (localStorage.getItem('qs_role')||'estudiante').toLowerCase();
-    document.querySelectorAll('.teacher-only,.docente-only').forEach(function(el){ el.style.display = (rol==='docente') ? '' : 'none'; });
-    document.querySelectorAll('.student-only,.estudiante-only').forEach(function(el){ el.style.display = (rol==='estudiante') ? '' : 'none'; });
+    document.querySelectorAll('.teacher-only, .docente-only').forEach(function(el){ el.style.display = (rol==='docente') ? '' : 'none'; });
+    document.querySelectorAll('.student-only, .estudiante-only').forEach(function(el){ el.style.display = (rol==='estudiante') ? '' : 'none'; });
   }catch(e){}
 });
 </script>
 <script defer src="js/back-home.js"></script>
-  <script defer src="js/nav-inject.js"></script>
-  </body>
-
-
-
+</body>
 </html>
 
 
