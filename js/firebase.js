@@ -463,8 +463,8 @@ export async function createForumTopic({ title, category, content, authorName, a
     authorName: authorName || null,
     authorEmail: (authorEmail || null)?.toLowerCase?.() || null,
     createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),\r
-    repliesCount: 0\r
+    updatedAt: serverTimestamp(),
+    repliesCount: 0
   });
   return { id: docRef.id };
 }
