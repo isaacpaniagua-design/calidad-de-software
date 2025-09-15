@@ -1,4 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import { getFirestore, collection, doc, setDoc, addDoc, getDoc, getDocs, deleteDoc, updateDoc, onSnapshot, query, where, orderBy, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
@@ -59,7 +59,7 @@ export async function signInWithGooglePotros() {
   } catch (e) {
     if (e?.code === 'auth/unauthorized-domain') {
       const host = (typeof location !== 'undefined' ? location.hostname : '(desconocido)');
-      throw new Error(`Dominio no autorizado en Firebase Auth (${host}). Agrega este hostname en Firebase Console → Authentication → Settings → Authorized domains.`);
+      throw new Error(`Dominio no autorizado en Firebase Auth (${host}). Agrega este hostname en Firebase Console â†’ Authentication â†’ Settings â†’ Authorized domains.`);
     }
     throw e;
   }
@@ -137,12 +137,12 @@ function todayKey() {
 export async function saveTodayAttendance({ uid, name, email, type }) {
   const db = getDb();
   const date = todayKey();
-  const attendanceId = `${date}_${uid}`; // evita duplicados por día-usuario
+  const attendanceId = `${date}_${uid}`; // evita duplicados por dÃ­a-usuario
   const ref = doc(collection(db, 'attendances'), attendanceId);
 
   const existing = await getDoc(ref);
   if (existing.exists()) {
-    throw new Error('Ya tienes tu asistencia registrada para el día de hoy');
+    throw new Error('Ya tienes tu asistencia registrada para el dÃ­a de hoy');
   }
 
   await setDoc(ref, {
@@ -246,7 +246,7 @@ export async function updateStudentGradePartial(studentId, path, value) {
 // ====== Materiales (Storage + Firestore) ======
 export async function uploadMaterial({ file, title, category, description, ownerEmail, onProgress }) {
   if (!useStorage) {
-    throw new Error('Firebase Storage está deshabilitado. Usa addMaterialLink con un URL.');
+    throw new Error('Firebase Storage estÃ¡ deshabilitado. Usa addMaterialLink con un URL.');
   }
   const st = getStorageInstance();
   const db = getDb();
@@ -438,7 +438,11 @@ export async function fetchGradesByDateRange(startISO, endISO) {
 
 export function subscribeForumTopics(cb) {
   const db = getDb();
-  const qy = query(collection(db, 'forum_topics'), orderBy('createdAt', 'desc'));
+  const qy = query(
+    collection(db, 'forum_topics'),
+    orderBy('updatedAt', 'desc'),
+    orderBy('createdAt', 'desc')
+  );
   return onSnapshot(qy, (snap) => {
     const items = [];
     snap.forEach(docSnap => {
@@ -459,7 +463,8 @@ export async function createForumTopic({ title, category, content, authorName, a
     authorName: authorName || null,
     authorEmail: (authorEmail || null)?.toLowerCase?.() || null,
     createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
+    updatedAt: serverTimestamp(),\r
+    repliesCount: 0\r
   });
   return { id: docRef.id };
 }
@@ -511,4 +516,21 @@ export async function addForumReply(topicId, { text, authorName, authorEmail }) 
     authorEmail: (authorEmail || null)?.toLowerCase?.() || null,
     createdAt: serverTimestamp()
   });
+  try {
+    const topicRef = doc(collection(db, 'forum_topics'), topicId);
+    await updateDoc(topicRef, { repliesCount: increment(1), updatedAt: serverTimestamp() });
+  } catch(_) {}
 }
+
+export async function deleteForumReply(topicId, replyId) {
+  const db = getDb();
+  if (!topicId || !replyId) throw new Error('topicId y replyId requeridos');
+  const ref = doc(collection(db, 'forum_topics', topicId, 'replies'), replyId);
+  await deleteDoc(ref);
+  try {
+    const topicRef = doc(collection(db, 'forum_topics'), topicId);
+    await updateDoc(topicRef, { repliesCount: increment(-1), updatedAt: serverTimestamp() });
+  } catch(_) {}
+}
+
+

@@ -1,4 +1,4 @@
-import { initFirebase, onAuth, getAuthInstance, signInWithGooglePotros, signOutCurrent, isTeacherEmail, isTeacherByDoc, ensureTeacherDocForUser, subscribeForumTopics, createForumTopic, subscribeForumReplies, addForumReply, updateForumTopic, deleteForumTopic } from './firebase.js';
+import { initFirebase, onAuth, getAuthInstance, signInWithGooglePotros, signOutCurrent, isTeacherEmail, isTeacherByDoc, ensureTeacherDocForUser, subscribeForumTopics, createForumTopic, subscribeForumReplies, addForumReply, updateForumTopic, deleteForumTopic, deleteForumReply } from './firebase.js';
 
 initFirebase();
 
@@ -7,6 +7,7 @@ let isTeacher = false;
 let topicsCache = [];
 let currentTopicId = null;
 let unsubscribeReplies = null;
+let unsubscribeTopics = null;
 
 const el = (id) => document.getElementById(id);
 
@@ -23,10 +24,43 @@ function formatWhen(ts){
   } catch(_) { return ''; }
 }
 
+function timeAgo(dateLike){
+  const d = dateLike?.toDate ? dateLike.toDate() : (dateLike instanceof Date ? dateLike : null);
+  const now = new Date();
+  const ms = d ? (now - d) : 0;
+  const mins = Math.max(0, Math.floor(ms / 60000));
+  if (mins < 1) return 'hace un momento';
+  if (mins === 1) return 'hace 1 minuto';
+  if (mins < 60) return `hace ${mins} minutos`;
+  const hrs = Math.floor(mins/60);
+  if (hrs === 1) return 'hace 1 hora';
+  if (hrs < 24) return `hace ${hrs} horas`;
+  const days = Math.floor(hrs/24);
+  if (days === 1) return 'hace 1 día';
+  return `hace ${days} días`;
+}
+
+function renderLoading(){
+  if (!topicsList) return;
+  topicsList.innerHTML = '';
+  const div = document.createElement('div');
+  div.className = 'p-6 text-gray-500';
+  div.textContent = 'Cargando temas…';
+  topicsList.appendChild(div);
+}
+
+function renderSignedOutState(){
+  if (!topicsList) return;
+  topicsList.innerHTML = '';
+  const div = document.createElement('div');
+  div.className = 'p-6 text-gray-500';
+  div.textContent = 'Inicia sesión con tu cuenta @potros.itson.edu.mx para ver los temas.';
+  topicsList.appendChild(div);
+}
+
 onAuth(async user => {
   currentUser = user || null;
   const email = user?.email || '';
-  // Prefer teachers collection (server-authoritative), fallback to frontend list
   isTeacher = false;
   if (user?.uid) {
     try { isTeacher = await isTeacherByDoc(user.uid); } catch(_) {}
@@ -34,7 +68,6 @@ onAuth(async user => {
   if (!isTeacher) {
     isTeacher = isTeacherEmail(email);
   }
-  // Auto-provision teacher marker for designated teacher
   if (!isTeacher && user?.uid && isTeacherEmail(email)) {
     try {
       const ok = await ensureTeacherDocForUser({ uid: user.uid, email, displayName: user.displayName });
@@ -44,7 +77,16 @@ onAuth(async user => {
   if (userRoleEl) userRoleEl.textContent = user ? (isTeacher ? 'Docente' : 'Estudiante') : 'No autenticado';
   if (userNameEl) userNameEl.textContent = user?.displayName || (user?.email || '-') || '-';
   if (adminPanel) adminPanel.style.display = (user && isTeacher) ? 'block' : 'none';
-  if (authBtn) authBtn.textContent = user ? 'Cerrar sesion' : 'Iniciar sesion';
+  if (authBtn) authBtn.textContent = user ? 'Cerrar sesión' : 'Iniciar sesión';
+
+  const isPotros = !!email && /@potros\.itson\.edu\.mx$/i.test(email);
+  if (unsubscribeTopics) { try{ unsubscribeTopics(); } catch(_){} unsubscribeTopics = null; }
+  if (user && isPotros) {
+    renderLoading();
+    unsubscribeTopics = subscribeForumTopics((items) => { topicsCache = items; renderTopics(items); });
+  } else {
+    renderSignedOutState();
+  }
 });
 
 if (authBtn) authBtn.addEventListener('click', async () => {
@@ -54,12 +96,6 @@ if (authBtn) authBtn.addEventListener('click', async () => {
   } else {
     try { await signInWithGooglePotros(); } catch(e){ alert(e.message || e); }
   }
-});
-
-// Subscribe topics and render
-subscribeForumTopics((items) => {
-  topicsCache = items;
-  renderTopics(items);
 });
 
 function renderTopics(items){
@@ -76,17 +112,20 @@ function renderTopics(items){
     const row = document.createElement('div');
     row.className = 'p-6 hover:bg-gray-50 transition-colors cursor-pointer';
     row.addEventListener('click', () => window.openTopic(t.id));
+    const replies = Number.isFinite(t.repliesCount) ? t.repliesCount : (t.repliesCount || 0);
+    const rel = timeAgo(t.updatedAt || t.createdAt);
     row.innerHTML = `
       <div class="flex items-start justify-between">
         <div class="flex-1">
           <div class="flex items-center space-x-3 mb-2">
             <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">${t.category || 'General'}</span>
-            <span class="text-xs text-gray-500">${formatWhen(t.createdAt) || ''}</span>
+            <span class="text-xs text-gray-500">${rel}</span>
           </div>
           <h3 class="text-lg font-semibold text-gray-800 mb-2">${t.title || ''}</h3>
           <p class="text-gray-600 text-sm mb-3 line-clamp-2">${t.content || ''}</p>
           <div class="flex items-center space-x-4 text-sm text-gray-500">
             <span>👤 ${t.authorName || t.authorEmail || 'Desconocido'}</span>
+            <span>💬 ${replies} respuestas</span>
           </div>
         </div>
         <div class="ml-4"><div class="w-3 h-3 bg-green-400 rounded-full"></div></div>
@@ -98,12 +137,12 @@ function renderTopics(items){
 
 // Create topic for teacher
 window.createTopic = async function(){
-  if (!currentUser) { alert('Inicia sesion con tu cuenta @potros'); return; }
+  if (!currentUser) { alert('Inicia sesión con tu cuenta @potros'); return; }
   if (!isTeacher) { alert('Solo el docente puede crear temas'); return; }
   const title = el('topicTitle')?.value?.trim();
   const category = el('topicCategory')?.value;
   const content = el('topicContent')?.value?.trim();
-  if (!title || !content){ alert('Completa titulo y contenido'); return; }
+  if (!title || !content){ alert('Completa título y contenido'); return; }
   try{
     await createForumTopic({ title, category, content, authorName: currentUser.displayName || null, authorEmail: currentUser.email });
     if (el('topicTitle')) el('topicTitle').value = '';
@@ -164,8 +203,17 @@ window.openTopic = function(topicId){
   if (modalTitle) modalTitle.textContent = t.title || '';
   if (modalCategory) modalCategory.textContent = t.category || 'General';
   if (modalContent) modalContent.textContent = t.content || '';
+  // Update meta row (category, author, time)
+  if (modalCategory && modalCategory.parentElement) {
+    const author = t.authorName || t.authorEmail || 'Desconocido';
+    const when = timeAgo(t.updatedAt || t.createdAt);
+    modalCategory.parentElement.innerHTML = `
+      <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium" id="modalCategory">${t.category || 'General'}</span>
+      <span class="text-sm text-gray-600">${author}</span>
+      <span class="text-xs text-gray-500">Actualizado ${when}</span>
+    `;
+  }
 
-  // teacher controls
   const { editBtn, delBtn } = ensureHeaderControls();
   if (currentUser && isTeacher) {
     if (editBtn) editBtn.classList.remove('hidden');
@@ -197,7 +245,6 @@ window.openTopic = function(topicId){
   };
   btnCancel.onclick = () => area.classList.add('hidden');
 
-  // replies
   if (typeof unsubscribeReplies === 'function') unsubscribeReplies();
   if (responsesList) responsesList.innerHTML = '';
   unsubscribeReplies = subscribeForumReplies(topicId, (items) => {
@@ -206,13 +253,24 @@ window.openTopic = function(topicId){
     items.forEach(r => {
       const div = document.createElement('div');
       div.className = 'border-l-4 border-green-400 pl-4 py-2';
+      const canDel = !!currentUser && (isTeacher || ((r.authorEmail||'').toLowerCase() === (currentUser.email||'').toLowerCase()));
+      const delBtn = canDel ? '<button data-role="del-reply" class="text-xs text-red-600 hover:text-red-700 ml-2">Eliminar</button>' : '';
       div.innerHTML = `
         <div class="flex items-center space-x-2 mb-2">
           <span class="font-medium text-gray-800">${r.authorName || r.authorEmail || 'Anónimo'}</span>
-          <span class="text-xs text-gray-500">${formatWhen(r.createdAt)}</span>
+          <span class="text-xs text-gray-500">${timeAgo(r.createdAt)}</span>
+          ${delBtn}
         </div>
         <p class="text-gray-700">${r.text || ''}</p>
       `;
+      if (canDel) {
+        const btn = div.querySelector('[data-role="del-reply"]');
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (!confirm('¿Eliminar esta respuesta?')) return;
+          try { await deleteForumReply(topicId, r.id); } catch(e){ alert(e.message || e); }
+        });
+      }
       responsesList.appendChild(div);
     });
   });
@@ -226,7 +284,7 @@ window.closeTopic = function(){
 }
 
 window.addResponse = async function(){
-  if (!currentUser) { alert('Inicia sesion para responder'); return; }
+  if (!currentUser) { alert('Inicia sesión para responder'); return; }
   const txt = responseText?.value?.trim();
   if (!txt) { alert('Escribe tu respuesta'); return; }
   try{
