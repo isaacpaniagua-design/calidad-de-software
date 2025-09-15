@@ -583,8 +583,8 @@
           userInfo.classList.remove('hidden');
           if (signInBtn) signInBtn.classList.add('hidden');
           const active = (typeof window.isClassActiveNow === 'function' ? window.isClassActiveNow() : true);
-          // Solo el correo de prueba puede registrar asistencia temporalmente
-          const canRegister = active && (user.email.toLowerCase() === testRegistrarEmail);
+          // Solo el correo de prueba puede registrar asistencia (ignora horario)
+          const canRegister = (user.email.toLowerCase() === testRegistrarEmail);
           setAttendanceEnabled(canRegister);
           const banner = document.getElementById('classBanner');
           if (banner) banner.classList.toggle('hidden', !active);
@@ -593,7 +593,7 @@
           try { window.clearInterval(window.__classActiveTimer); } catch(_) {}
           window.__classActiveTimer = window.setInterval(() => {
             const activeNow = (typeof window.isClassActiveNow === 'function' ? window.isClassActiveNow() : true);
-            const canRegisterNow = activeNow && (user.email.toLowerCase() === testRegistrarEmail);
+            const canRegisterNow = (user.email.toLowerCase() === testRegistrarEmail);
             setAttendanceEnabled(canRegisterNow);
             const banner = document.getElementById('classBanner');
             if (banner) banner.classList.toggle('hidden', !activeNow);
@@ -622,10 +622,6 @@
       });
 
       window.registerAttendance = async function registerAttendance() {
-        if (typeof window.isClassActiveNow === 'function' && !window.isClassActiveNow()) {
-          alert('La asistencia solo puede registrarse Lun/Mié/Vie entre 18:00 y 19:00, del 25 de agosto al 12 de diciembre.');
-          return;
-        }
         const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js');
         const user = getAuth().currentUser;
         if (!user) {
@@ -633,6 +629,11 @@
           return;
         }
         const email = user.email.toLowerCase();
+        // Bypass de horario solo para el correo de prueba; otros respetan ventana
+        if (email !== testRegistrarEmail && (typeof window.isClassActiveNow === 'function') && !window.isClassActiveNow()) {
+          alert('La asistencia solo puede registrarse Lun/Mié/Vie entre 18:00 y 19:00, del 25 de agosto al 12 de diciembre.');
+          return;
+        }
         if (email !== testRegistrarEmail) {
           alert('Temporalmente, solo el docente puede registrar asistencia como prueba.');
           return;
