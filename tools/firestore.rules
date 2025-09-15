@@ -1,0 +1,51 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isPotros() {
+      return isSignedIn() && request.auth.token.email.matches('.*@potros\\.itson\\.edu\\.mx$');
+    }
+    // Mark teachers by creating a doc at /teachers/{uid}
+    function isTeacher() {
+      return isPotros() && exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
+    }
+
+    // Mark teachers collection access
+    match /teachers/{uid} {
+      // Allow get to let the client check its status
+      allow get: if isPotros();
+      // Allow the designated teacher to create their own marker doc
+      allow create: if isPotros()
+        && request.auth.token.email == 'isaac.paniagua@potros.itson.edu.mx'
+        && request.auth.uid == uid;
+      // Lock updates/deletes from client
+      allow update, delete: if false;
+    }
+
+    // Forum rules
+    match /forum_topics/{topicId} {
+      allow read: if isPotros();
+      allow create: if isTeacher()
+        && request.resource.data.title is string
+        && request.resource.data.content is string
+        && request.resource.data.authorEmail == request.auth.token.email
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+      allow update, delete: if isTeacher();
+
+      // Replies subcollection
+      match /replies/{replyId} {
+        allow read: if isPotros();
+        allow create: if isPotros()
+          && request.resource.data.text is string
+          && request.resource.data.authorEmail == request.auth.token.email
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if isTeacher() || (isPotros() && resource.data.authorEmail == request.auth.token.email);
+      }
+    }
+
+    // NOTE: Merge these forum rules into your existing rules if you already have them.
+  }
+}

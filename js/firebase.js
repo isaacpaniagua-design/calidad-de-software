@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/fireba
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import { getFirestore, collection, doc, setDoc, addDoc, getDoc, getDocs, deleteDoc, updateDoc, onSnapshot, query, where, orderBy, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
-import { firebaseConfig, allowedEmailDomain, useStorage, driveFolderId } from './firebase-config.js';
+import { firebaseConfig, allowedEmailDomain, useStorage, driveFolderId, allowedTeacherEmails } from './firebase-config.js';
 
 let app;
 let auth;
@@ -87,6 +87,42 @@ export async function signOutCurrent() {
 export function onAuth(cb) {
   const auth = getAuthInstance();
   return onAuthStateChanged(auth, cb);
+}
+
+// ====== Roles ======
+export function isTeacherEmail(email) {
+  if (!email) return false;
+  const em = (email || '').toLowerCase().trim();
+  return Array.isArray(allowedTeacherEmails) && allowedTeacherEmails.map(e => (e || '').toLowerCase().trim()).includes(em);
+}
+
+export async function isTeacherByDoc(uid) {
+  if (!uid) return false;
+  const db = getDb();
+  try {
+    const ref = doc(collection(db, 'teachers'), uid);
+    const snap = await getDoc(ref);
+    return !!snap.exists();
+  } catch(_) { return false; }
+}
+
+export async function ensureTeacherDocForUser({ uid, email, displayName }) {
+  if (!uid || !email) return false;
+  const lower = (email||'').toLowerCase();
+  if (!isTeacherEmail(lower)) return false;
+  const db = getDb();
+  const ref = doc(collection(db, 'teachers'), uid);
+  try {
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      await setDoc(ref, {
+        email: lower,
+        name: displayName || null,
+        createdAt: serverTimestamp()
+      });
+    }
+    return true;
+  } catch(_) { return false; }
 }
 
 function todayKey() {
@@ -394,4 +430,85 @@ export async function fetchGradesByDateRange(startISO, endISO) {
     items.push({ id: docSnap.id, ...d });
   });
   return items;
+}
+
+// ====== Foro (Topics + Replies) ======
+// Collection: forum_topics (doc fields: title, category, content, authorName, authorEmail, createdAt, updatedAt)
+// Subcollection per topic: forum_topics/{topicId}/replies (doc fields: text, authorName, authorEmail, createdAt)
+
+export function subscribeForumTopics(cb) {
+  const db = getDb();
+  const qy = query(collection(db, 'forum_topics'), orderBy('createdAt', 'desc'));
+  return onSnapshot(qy, (snap) => {
+    const items = [];
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      items.push({ id: docSnap.id, ...d });
+    });
+    cb(items);
+  });
+}
+
+export async function createForumTopic({ title, category, content, authorName, authorEmail }) {
+  const db = getDb();
+  if (!title || !content) throw new Error('Título y contenido son requeridos');
+  const docRef = await addDoc(collection(db, 'forum_topics'), {
+    title,
+    category: category || 'General',
+    content,
+    authorName: authorName || null,
+    authorEmail: (authorEmail || null)?.toLowerCase?.() || null,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  });
+  return { id: docRef.id };
+}
+
+export async function updateForumTopic(topicId, updates) {
+  const db = getDb();
+  const ref = doc(collection(db, 'forum_topics'), topicId);
+  const payload = { ...updates, updatedAt: serverTimestamp() };
+  await updateDoc(ref, payload);
+}
+
+export async function deleteForumTopic(topicId) {
+  const db = getDb();
+  // Delete replies first (best-effort)
+  try {
+    const repliesCol = collection(db, 'forum_topics', topicId, 'replies');
+    const snap = await getDocs(repliesCol);
+    const dels = [];
+    snap.forEach(r => dels.push(deleteDoc(r.ref)));
+    await Promise.allSettled(dels);
+  } catch(_) {}
+  // Then delete topic
+  const ref = doc(collection(db, 'forum_topics'), topicId);
+  await deleteDoc(ref);
+}
+
+export function subscribeForumReplies(topicId, cb) {
+  const db = getDb();
+  const repliesCol = collection(db, 'forum_topics', topicId, 'replies');
+  const qy = query(repliesCol, orderBy('createdAt', 'asc'));
+  return onSnapshot(qy, (snap) => {
+    const items = [];
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      items.push({ id: docSnap.id, ...d });
+    });
+    cb(items);
+  });
+}
+
+export async function addForumReply(topicId, { text, authorName, authorEmail }) {
+  const db = getDb();
+  if (!topicId) throw new Error('topicId requerido');
+  if (!text || !text.trim()) throw new Error('Texto requerido');
+  const repliesCol = collection(db, 'forum_topics', topicId, 'replies');
+  await addDoc(repliesCol, {
+    text: text.trim(),
+    authorName: authorName || null,
+    authorEmail: (authorEmail || null)?.toLowerCase?.() || null,
+    createdAt: serverTimestamp()
+  });
 }
