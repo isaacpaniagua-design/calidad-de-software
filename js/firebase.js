@@ -515,7 +515,7 @@ export async function createForumTopic({ title, category, content, authorName, a
     category: category || 'General',
     content,
     authorName: authorName || null,
-    authorEmail: (authorEmail || null)?.toLowerCase?.() || null,
+    authorEmail: authorEmail || null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     repliesCount: 0
@@ -567,7 +567,7 @@ export async function addForumReply(topicId, { text, authorName, authorEmail }) 
   await addDoc(repliesCol, {
     text: text.trim(),
     authorName: authorName || null,
-    authorEmail: (authorEmail || null)?.toLowerCase?.() || null,
+    authorEmail: authorEmail || null,
     createdAt: serverTimestamp()
   });
   try {
