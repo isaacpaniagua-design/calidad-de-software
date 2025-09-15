@@ -181,11 +181,61 @@ export function subscribeTodayAttendance(cb) {
   });
 }
 
+export function subscribeTodayAttendanceByUser(email, cb) {
+  const db = getDb();
+  const date = todayKey();
+  const q = query(
+    collection(db, 'attendances'),
+    where('date', '==', date),
+    where('email', '==', (email||'').toLowerCase()),
+    orderBy('timestamp', 'desc')
+  );
+  return onSnapshot(q, (snap) => {
+    const items = [];
+    snap.forEach(docSnap => {
+      const data = docSnap.data();
+      items.push({
+        id: docSnap.id,
+        name: data.name,
+        email: data.email,
+        type: data.type,
+        timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date()
+      });
+    });
+    cb(items);
+  });
+}
+
 export async function fetchAttendancesByDateRange(startDateStr, endDateStr) {
   const db = getDb();
   // startDateStr, endDateStr expected in 'YYYY-MM-DD'
   const qy = query(
     collection(db, 'attendances'),
+    where('date', '>=', startDateStr),
+    where('date', '<=', endDateStr),
+    orderBy('date', 'asc')
+  );
+  const snap = await (await import("https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js")).getDocs(qy);
+  const items = [];
+  snap.forEach(docSnap => {
+    const data = docSnap.data();
+    items.push({
+      id: docSnap.id,
+      name: data.name,
+      email: data.email,
+      type: data.type,
+      date: data.date,
+      timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date()
+    });
+  });
+  return items;
+}
+
+export async function fetchAttendancesByDateRangeByUser(email, startDateStr, endDateStr) {
+  const db = getDb();
+  const qy = query(
+    collection(db, 'attendances'),
+    where('email', '==', (email||'').toLowerCase()),
     where('date', '>=', startDateStr),
     where('date', '<=', endDateStr),
     orderBy('date', 'asc')

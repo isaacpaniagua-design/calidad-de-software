@@ -154,11 +154,14 @@
                 </div>
             </div>
 
+            <div id=" attendanceRoleLegend\ class=\text-sm text-gray-500 mt-6 mb-2\></div>
+            <div class=" grid md:grid-cols-3 gap-6 items-stretch\>`n <!-- Tarjeta Registrar (desktop) -->`n <div class=hidden md:flex bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden p-6 flex-col justify-between h-full>`n <div>`n <h2 class=text-xl font-bold text-gray-800 mb-3>Registrar Asistencia</h2>`n <p class=text-gray-600 text-sm mb-6>Registra tu pase de lista del día de hoy.</p>`n </div>`n <button onclick=registerAttendance() class=w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 shadow>Registrar Asistencia</button>`n </div>
             <!-- Historial de Pase de Lista (por rango rápido) -->
             <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden mt-8">
                 <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6 border-b text-white">
                     <div class="flex items-center justify-between gap-4 flex-wrap">
                         <h2 class="text-2xl font-bold">Historial de Pase de Lista</h2>
+                        <span id="historyRoleBadge" class="ml-2 inline-block px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-700"></span>
                         <div class="flex items-center gap-2">
                             <button id="hist7Btn" class="px-3 py-1 rounded-md bg-white/20 hover:bg-white/30 text-white">Últimos 7 días</button>
                             <button id="hist30Btn" class="px-3 py-1 rounded-md bg-white/20 hover:bg-white/30 text-white">Últimos 30 días</button>
@@ -177,6 +180,7 @@
                 <div class="bg-gradient-to-r from-gray-50 to-gray-100 px-8 py-6 border-b">
                     <div class="flex items-center justify-between gap-4 flex-wrap">
                         <h2 class="text-2xl font-bold text-gray-800">Asistencias Registradas</h2>
+                        <span id="registeredRoleBadge" class="ml-2 inline-block px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-700"></span>
                         <div class="flex items-center gap-3 flex-wrap justify-end">
                             <div class="flex items-center space-x-2">
                                 <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
@@ -224,6 +228,7 @@
             </div>
         </div>
 
+            </div>
         <!-- Success Modal -->
         <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
             <div class="bg-white rounded-2xl p-8 max-w-md mx-4 text-center shadow-2xl">
@@ -534,7 +539,7 @@
     </script>
 
     <script type="module">
-      import { initFirebase, onAuth, signInWithGooglePotros, signOutCurrent, saveTodayAttendance, subscribeTodayAttendance, fetchAttendancesByDateRange } from './js/firebase.js';
+      import { initFirebase, onAuth, signInWithGooglePotros, signOutCurrent, saveTodayAttendance, subscribeTodayAttendance, fetchAttendancesByDateRange, isTeacherEmail, isTeacherByDoc, subscribeTodayAttendanceByUser, fetchAttendancesByDateRangeByUser } from './js/firebase.js';
       import { allowedEmailDomain } from './js/firebase-config.js';
 
       initFirebase();
@@ -575,6 +580,10 @@
       let unsubscribeAttendance = null;
       onAuth(async (user) => {
         if (user && user.email?.toLowerCase().endsWith(`@${allowedEmailDomain}`)) {
+          // Detectar docente
+          let teacher = false;
+          try { if (user.uid) teacher = await isTeacherByDoc(user.uid); } catch(_) {}
+          if (!teacher) teacher = isTeacherEmail(user.email);
           userName.textContent = user.displayName || user.email;
           if (user.photoURL) {
             userPhoto.src = user.photoURL;
@@ -602,7 +611,13 @@
           }, 60000);
 
           if (unsubscribeAttendance) unsubscribeAttendance();
-          unsubscribeAttendance = subscribeTodayAttendance((items) => {
+          // Leyenda por rol
+          try {
+            const legend = document.getElementById('attendanceRoleLegend');
+            if (legend) legend.textContent = teacher ? 'Viendo: todos los registros' : 'Viendo: solo tus registros';
+          } catch(_){ }
+          const emailLower = (user.email||'').toLowerCase();
+          unsubscribeAttendance = (teacher ? subscribeTodayAttendance : (cb => subscribeTodayAttendanceByUser(emailLower, cb)) )((items) => {
             if (typeof window.setRegisteredAttendances === 'function') {
               window.setRegisteredAttendances(items);
             } else {
@@ -611,6 +626,14 @@
             if (typeof window.updateAttendanceList === 'function') window.updateAttendanceList();
             if (typeof window.updateAttendanceCount === 'function') window.updateAttendanceCount();
           });
+          // Mostrar/ocultar elementos de docente
+          document.querySelectorAll('.teacher-only').forEach(el => el.style.display = teacher ? '' : 'none');
+          // Badges de rol en títulos
+          try {
+            const setBadge = (el, isT) => { if(!el) return; el.textContent = isT ? 'Docente' : 'Alumno'; el.className = 'ml-2 inline-block px-2 py-0.5 rounded-full text-xs ' + (isT ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'); };
+            setBadge(document.getElementById('historyRoleBadge'), teacher);
+            setBadge(document.getElementById('registeredRoleBadge'), teacher);
+          } catch(_) {}
         } else {
           userInfo.classList.add('hidden');
           if (signInBtn) signInBtn.classList.remove('hidden');
@@ -620,6 +643,16 @@
           if (typeof window.updateAttendanceList === 'function') window.updateAttendanceList();
           if (typeof window.updateAttendanceCount === 'function') window.updateAttendanceCount();
           if (unsubscribeAttendance) { unsubscribeAttendance(); unsubscribeAttendance = null; }
+          try {
+            const legend = document.getElementById('attendanceRoleLegend');
+            if (legend) legend.textContent = '';
+          } catch(_){ }
+          document.querySelectorAll('.teacher-only').forEach(el => el.style.display = 'none');
+          try {
+            const clearBadge = (id) => { const el = document.getElementById(id); if (el) { el.textContent = ''; el.className = 'ml-2 inline-block px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-700'; } };
+            clearBadge('historyRoleBadge');
+            clearBadge('registeredRoleBadge');
+          } catch(_) {}
         }
       });
 
@@ -735,7 +768,9 @@
         const start = startInput?.value;
         const end = endInput?.value;
         if (!start || !end || start > end) { alert('Selecciona un rango válido'); return; }
-        const items = await fetchAttendancesByDateRange(start, end);
+        const user = (await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js')).getAuth().currentUser;
+        const isTeacher = user ? (await (async()=>{ try{ if (user.uid && (await import('./js/firebase.js')).isTeacherByDoc) { const { isTeacherByDoc } = await import('./js/firebase.js'); return await isTeacherByDoc(user.uid); } } catch(_){ } return false; })()) || (await (async()=>{ try { const { isTeacherEmail } = await import('./js/firebase.js'); return isTeacherEmail(user?.email||''); } catch(_){ return false; } })()) : false;
+        const items = isTeacher ? await fetchAttendancesByDateRange(start, end) : await fetchAttendancesByDateRangeByUser((user?.email||'').toLowerCase(), start, end);
         if (!isPdf) {
           // CSV
           const header = ['Fecha','Hora','Nombre','Email','Tipo'];
@@ -775,7 +810,9 @@
         const end = today.toISOString().slice(0,10);
         const startDate = new Date(today.getTime() - (days*24*60*60*1000));
         const start = startDate.toISOString().slice(0,10);
-        const items = await fetchAttendancesByDateRange(start, end);
+        const user2 = (await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js')).getAuth().currentUser;
+        const isTeacher2 = user2 ? (await (async()=>{ try{ if (user2.uid && (await import('./js/firebase.js')).isTeacherByDoc) { const { isTeacherByDoc } = await import('./js/firebase.js'); return await isTeacherByDoc(user2.uid); } } catch(_){ } return false; })()) || (await (async()=>{ try { const { isTeacherEmail } = await import('./js/firebase.js'); return isTeacherEmail(user2?.email||''); } catch(_){ return false; } })()) : false;
+        const items = isTeacher2 ? await fetchAttendancesByDateRange(start, end) : await fetchAttendancesByDateRangeByUser((user2?.email||'').toLowerCase(), start, end);
         // Agrupar por fecha
         const byDate = {};
         for(const it of items){
