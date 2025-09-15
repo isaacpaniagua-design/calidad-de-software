@@ -1,515 +1,1609 @@
 <!DOCTYPE html>
-<html lang="es" data-layout="global">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sesión 18 - Herramientas y Tendencias</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CMMI Nivel 3: Presentación por Diapositivas</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #333;
+        overflow: hidden;
+      }
+
+      .presentation-wrapper {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .slide-container {
+        width: 100%;
+        max-width: 100vw;
+        height: 100vh;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .slide {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: white;
+        border-radius: 0;
+        padding: 60px;
+        box-shadow: none;
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow-y: auto;
+      }
+
+      .slide.active {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .slide.prev {
+        transform: translateX(-100%);
+      }
+
+      .slide-title {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 40px 50px;
+        border-radius: 0;
+        margin: -60px -60px 50px -60px;
+        font-size: 48px;
+        font-weight: bold;
+        text-align: center;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .process-area-header {
+        background: linear-gradient(135deg, #4facfe, #00f2fe);
+        color: white;
+        padding: 35px 40px;
+        border-radius: 0;
+        margin: -60px -60px 40px -60px;
+        font-size: 42px;
+        font-weight: bold;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .purpose-box {
+        background: #f8f9ff;
+        border-left: 8px solid #667eea;
+        padding: 35px;
+        margin: 35px 0;
+        border-radius: 15px;
+        font-style: italic;
+        font-size: 24px;
+        line-height: 1.7;
+      }
+
+      .comparison-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        margin: 50px 0;
+      }
+
+      .before-after {
+        padding: 40px;
+        border-radius: 20px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        min-height: 450px;
+      }
+
+      .before {
+        background: linear-gradient(135deg, #ff9a9e, #fecfef);
+        border: 3px solid #ff6b6b;
+      }
+
+      .after {
+        background: linear-gradient(135deg, #a8edea, #fed6e3);
+        border: 3px solid #51cf66;
+      }
+
+      .before-after:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .section-header {
+        font-size: 32px;
+        font-weight: bold;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+      }
+
+      .icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+      }
+
+      .before .icon {
+        background: #ff6b6b;
+        color: white;
+      }
+
+      .after .icon {
+        background: #51cf66;
+        color: white;
+      }
+
+      .point {
+        margin: 25px 0;
+        padding: 25px;
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 15px;
+        line-height: 1.8;
+        font-size: 20px;
+      }
+
+      .intro-text {
+        font-size: 28px;
+        line-height: 1.8;
+        text-align: center;
+        margin: 50px 0;
+        color: #555;
+      }
+
+      .highlight {
+        background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+
+      .interactive-demo {
+        background: #f8f9ff;
+        border: 3px dashed #667eea;
+        border-radius: 20px;
+        padding: 40px;
+        margin: 40px 0;
+        text-align: center;
+      }
+
+      .demo-button {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 20px 40px;
+        border-radius: 30px;
+        font-size: 20px;
+        cursor: pointer;
+        margin: 15px;
+        transition: all 0.3s ease;
+        font-weight: 600;
+      }
+
+      .demo-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      .progress-bar {
+        background: #e9ecef;
+        height: 10px;
+        border-radius: 5px;
+        margin: 20px 0;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        height: 100%;
+        width: 0%;
+        transition: width 2s ease;
+        border-radius: 5px;
+      }
+
+      .navigation {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 15px;
+        z-index: 1000;
+      }
+
+      .nav-button {
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        padding: 15px 25px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        color: #667eea;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .nav-button:hover {
+        background: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .nav-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .slide-counter {
+        position: fixed;
+        top: 30px;
+        right: 30px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: bold;
+        color: #667eea;
+        backdrop-filter: blur(10px);
+        z-index: 1000;
+      }
+
+      .slide-indicators {
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 1000;
+      }
+
+      .indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .indicator.active {
+        background: white;
+        transform: scale(1.3);
+      }
+
+      @media (max-width: 768px) {
         .slide {
-            display: none;
-            animation: slideIn 0.5s ease-in-out;
+          padding: 30px;
         }
-        
-        .slide.active {
-            display: block;
+
+        .comparison-container {
+          grid-template-columns: 1fr;
+          gap: 25px;
         }
-        
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
+
+        .slide-title,
+        .process-area-header {
+          margin: -30px -30px 25px -30px;
+          font-size: 32px;
+          padding: 25px;
         }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+
+        .slide-container {
+          width: 100%;
+          height: 100vh;
         }
-        
-        .pulse-animation {
-            animation: pulse 2s infinite;
+
+        .section-header {
+          font-size: 24px;
         }
-        
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+        .point {
+          font-size: 18px;
+          padding: 20px;
         }
-        
-        .tool-card {
-            transition: all 0.3s ease;
-            cursor: pointer;
+
+        .intro-text {
+          font-size: 22px;
         }
-        
-        .tool-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-        
-        .metric-item {
-            transition: all 0.3s ease;
-        }
-        
-        .metric-item:hover {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-        }
-        
-        .trend-card {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            transition: all 0.3s ease;
-        }
-        
-        .trend-card:hover {
-            transform: scale(1.02);
-        }
-        
-        .debate-timer {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #e53e3e;
-        }
-        
-        .progress-bar {
-            transition: width 0.3s ease;
-        }
+      }
     </style>
-<link rel="stylesheet" href="css/layout.css">
-<body class="bg-gray-50 min-h-screen">
+  </head>
+  <body>
+    <div class="presentation-wrapper">
+      <div class="slide-container">
+        <!-- Slide 1: Título -->
+        <div class="slide active">
+          <div class="slide-title">
+            🏛️ CMMI Nivel 3: "Así Hacemos las Cosas Aquí"
+          </div>
+          <div class="intro-text">
+            <strong>El gran salto:</strong> De la gestión por proyecto a la
+            estandarización organizacional.<br /><br />
+            <span class="highlight"
+              >El conocimiento ya no vive solo en la cabeza de los líderes de
+              proyecto</span
+            >
+          </div>
 
-<style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
-</style>
-<div class="qs-nav" data-role="main-nav">
-  <div class="wrap">
-    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
-    <nav class="qs-tabs" aria-label="Navegación">
-      <a class="qs-btn" href="materiales.html">Materiales</a>
-      <a class="qs-btn" href="asistencia.html">Asistencia</a>
-      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
-      <a class="qs-btn" href="Foro.html">Foro</a>
-      <a class="qs-btn" href="paneldocente.html">Panel</a>
-      <a class="qs-btn" href="roadmap.html">Roadmap</a>
-      
-\1
-  </div>
-</div>
-<script>
-(function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
-  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
-  });
-})();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
-</script>
+          <div class="interactive-demo">
+            <h3>📚 Fuente Principal</h3>
+            <p>
+              "CMMI® para Desarrollo, Versión 1.3" - Software Engineering
+              Institute
+            </p>
 
-
-    <!-- Navigation -->
-    <div class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50 px-6 py-4">
-        <div class="flex justify-between items-center max-w-6xl mx-auto">
-            <div class="flex items-center space-x-4">
-                <h1 class="text-xl font-bold text-gray-800">Sesión 18 - Herramientas y Tendencias</h1>
-                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                    Diapositiva <span id="currentSlide">1</span> de 5
-                </span>
+            <div
+              style="
+                background: #fff3cd;
+                padding: 20px;
+                border-radius: 15px;
+                margin: 20px 0;
+                border-left: 5px solid #ffc107;
+              "
+            >
+              <h4 style="color: #856404; margin-bottom: 10px">
+                💡 Recordatorio del Nivel 2:
+              </h4>
+              <p style="font-style: italic; line-height: 1.6; color: #856404">
+                "En el Nivel 2, aprendimos a apagar incendios de forma
+                controlada dentro de cada proyecto. Cada proyecto tenía su
+                propio plan, sus propias reglas. Funcionaba, pero si teníamos 10
+                proyectos, teníamos 10 formas distintas de hacer las cosas. El
+                Nivel 3 busca resolver ese caos organizado."
+              </p>
             </div>
-            <div class="flex space-x-2">
-                <button onclick="previousSlide()" id="prevBtn" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
-                    ← Anterior
-                </button>
-                <button onclick="nextSlide()" id="nextBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                    Siguiente →
-                </button>
-            </div>
+
+            <button class="demo-button" onclick="showEvolution()">
+              Ver Evolución Organizacional
+            </button>
+            <div id="evolutionContent" style="margin-top: 20px"></div>
+          </div>
         </div>
-        <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
-            <div id="progressBar" class="progress-bar bg-blue-600 h-2 rounded-full" style="width: 20%"></div>
+
+        <!-- Slide 2: El Salto Conceptual -->
+        <div class="slide">
+          <div class="slide-title">
+            🚀 De la Autonomía del Proyecto a la Sinergia Organizacional
+          </div>
+
+          <div class="comparison-container">
+            <div class="before-after before" onclick="highlightSection(this)">
+              <div class="section-header">
+                <div class="icon">2️⃣</div>
+                Nivel 2: Gestionado (PROYECTO)
+              </div>
+              <div class="point">
+                <strong>Cómo funciona:</strong> Cada equipo define sus propios
+                procesos basándose en CMMI. El Proyecto A gestiona requisitos "a
+                su manera", el Proyecto B "a la suya".
+              </div>
+              <div class="point">
+                <strong>🍔 Analogía:</strong> Una franquicia donde cada sucursal
+                sigue reglas generales ("vender hamburguesas"), pero cada una
+                tiene su propia receta secreta.
+              </div>
+              <div class="point">
+                <strong>Resultado:</strong> Funciona, pero hay duplicación de
+                esfuerzos y conocimiento fragmentado.
+              </div>
+            </div>
+
+            <div class="before-after after" onclick="highlightSection(this)">
+              <div class="section-header">
+                <div class="icon">3️⃣</div>
+                Nivel 3: Definido (ORGANIZACIÓN)
+              </div>
+              <div class="point">
+                <strong>Cómo funciona:</strong> La organización mantiene una
+                "Biblioteca de Activos de Proceso" (PAL). Los proyectos toman
+                procesos estándar y los adaptan (tailoring) según necesidades
+                específicas.
+              </div>
+              <div class="point">
+                <strong>🍟 Analogía:</strong> McDonald's - UNA receta estándar
+                global para la Big Mac. Cada sucursal la sigue, adaptando solo
+                detalles menores (altitud, clima local).
+              </div>
+              <div class="point">
+                <strong>Mejora Organizacional:</strong> Cuando un proyecto
+                mejora el proceso, esa mejora beneficia a todos los proyectos
+                futuros.
+              </div>
+            </div>
+          </div>
+
+          <div class="interactive-demo">
+            <h3>🧬 La PAL es el "ADN" de la Organización</h3>
+            <p>
+              El conocimiento está documentado, es compartido y mejora
+              continuamente a nivel organizacional.
+            </p>
+            <button class="demo-button" onclick="showPALDemo()">
+              Explorar Biblioteca de Procesos
+            </button>
+            <div id="palDemo" style="margin-top: 15px"></div>
+          </div>
         </div>
-    </div>
 
-    <!-- Slides Container -->
-    <div class="pt-24 pb-8 px-6">
-        <div class="max-w-6xl mx-auto">
-            
-            <!-- Slide 1: Título -->
-            <div class="slide active" id="slide1">
-                <div class="gradient-bg rounded-3xl p-12 text-center text-white min-h-[600px] flex flex-col justify-center items-center">
-                    <div class="pulse-animation">
-                        <div class="text-8xl mb-8">📱</div>
-                    </div>
-                    <h1 class="text-6xl font-bold mb-6 leading-tight">
-                        Toolkit para<br>
-                        <span class="text-yellow-300">Pruebas Móviles</span>
-                    </h1>
-                    <p class="text-xl opacity-90 max-w-2xl">
-                        Herramientas esenciales y tendencias actuales en testing móvil
-                    </p>
-                    <div class="mt-8 flex items-center space-x-4 text-lg">
-                        <span class="bg-white bg-opacity-20 px-4 py-2 rounded-full">Sesión 18</span>
-                        <span class="bg-white bg-opacity-20 px-4 py-2 rounded-full">Testing Móvil</span>
-                    </div>
+        <!-- Slide 3: RD y TS -->
+        <div class="slide">
+          <div class="slide-title">🔧 Construyendo el Producto: RD y TS</div>
+
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 25px;
+              margin: 30px 0;
+            "
+          >
+            <div
+              class="process-area-card"
+              style="
+                background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+                padding: 25px;
+                border-radius: 15px;
+                border: 3px solid #2196f3;
+              "
+            >
+              <div class="section-header">
+                <div class="icon" style="background: #2196f3; color: white">
+                  📋
                 </div>
+                RD - Requirements Development
+              </div>
+
+              <div
+                class="purpose-box"
+                style="background: rgba(255, 255, 255, 0.7); margin: 15px 0"
+              >
+                <strong>Propósito:</strong> Producir y analizar los requisitos
+                del cliente, del producto y de los componentes. Es el
+                <strong>"QUÉ"</strong> profundo del sistema.
+              </div>
+
+              <div class="point">
+                <strong>🎯 Elicitación:</strong> Obtener y extraer requisitos de
+                todas las fuentes (stakeholders, documentos, sistemas
+                existentes).
+              </div>
+              <div class="point">
+                <strong>🔍 Análisis:</strong> Entender, negociar, priorizar y
+                resolver conflictos. ¿Son factibles? ¿Son claros? ¿Son
+                completos?
+              </div>
+              <div class="point">
+                <strong>✅ Validación:</strong> Asegurar con stakeholders que
+                los requisitos documentados representan realmente sus
+                necesidades.
+              </div>
             </div>
 
-            <!-- Slide 2: Herramientas clave -->
-            <div class="slide" id="slide2">
-                <div class="bg-white rounded-3xl p-12 min-h-[600px]">
-                    <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">
-                        🛠️ Herramientas Clave
-                    </h2>
-                    
-                    <div class="grid md:grid-cols-3 gap-8">
-                        <!-- Appium -->
-                        <div class="tool-card bg-gradient-to-br from-green-400 to-green-600 rounded-2xl p-8 text-white">
-                            <div class="text-4xl mb-4">🤖</div>
-                            <h3 class="text-2xl font-bold mb-4">Appium</h3>
-                            <p class="text-lg opacity-90 mb-4">Framework open source multiplataforma</p>
-                            <div class="bg-white bg-opacity-20 rounded-lg p-3">
-                                <p class="text-sm">✓ iOS y Android</p>
-                                <p class="text-sm">✓ Múltiples lenguajes</p>
-                                <p class="text-sm">✓ Apps nativas e híbridas</p>
-                            </div>
-                        </div>
-
-                        <!-- Espresso & XCUITest -->
-                        <div class="tool-card bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl p-8 text-white">
-                            <div class="text-4xl mb-4">⚡</div>
-                            <h3 class="text-2xl font-bold mb-4">Automatización Nativa</h3>
-                            <p class="text-lg opacity-90 mb-4">Espresso (Android) y XCUITest (iOS)</p>
-                            <div class="bg-white bg-opacity-20 rounded-lg p-3">
-                                <p class="text-sm">✓ Rendimiento óptimo</p>
-                                <p class="text-sm">✓ Integración profunda</p>
-                                <p class="text-sm">✓ APIs nativas</p>
-                            </div>
-                        </div>
-
-                        <!-- Cloud Testing -->
-                        <div class="tool-card bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl p-8 text-white">
-                            <div class="text-4xl mb-4">☁️</div>
-                            <h3 class="text-2xl font-bold mb-4">Testing en la Nube</h3>
-                            <p class="text-lg opacity-90 mb-4">BrowserStack / Sauce Labs</p>
-                            <div class="bg-white bg-opacity-20 rounded-lg p-3">
-                                <p class="text-sm">✓ Miles de dispositivos</p>
-                                <p class="text-sm">✓ Sin hardware físico</p>
-                                <p class="text-sm">✓ Escalabilidad</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-8 text-center">
-                        <p class="text-gray-600 italic">Fuente: Sommerville, Cap. 24</p>
-                    </div>
+            <div
+              class="process-area-card"
+              style="
+                background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+                padding: 25px;
+                border-radius: 15px;
+                border: 3px solid #9c27b0;
+              "
+            >
+              <div class="section-header">
+                <div class="icon" style="background: #9c27b0; color: white">
+                  ⚙️
                 </div>
+                TS - Technical Solution
+              </div>
+
+              <div
+                class="purpose-box"
+                style="background: rgba(255, 255, 255, 0.7); margin: 15px 0"
+              >
+                <strong>Propósito:</strong> Diseñar, desarrollar e implementar
+                soluciones a los requisitos. Es el <strong>"CÓMO"</strong> se va
+                a construir el producto.
+              </div>
+
+              <div class="point">
+                <strong>🎨 Seleccionar Diseños:</strong> Evaluar diferentes
+                arquitecturas o tecnologías. ¿SQL o NoSQL? ¿Monolito o
+                microservicios?
+              </div>
+              <div class="point">
+                <strong>🏗️ Diseño Detallado:</strong> Diseñar la arquitectura,
+                las interfaces entre componentes y los componentes mismos.
+              </div>
+              <div class="point">
+                <strong>💻 Implementación:</strong> Construir los componentes
+                (codificación) y realizar pruebas unitarias.
+              </div>
             </div>
+          </div>
 
-            <!-- Slide 3: Métricas específicas -->
-            <div class="slide" id="slide3">
-                <div class="bg-white rounded-3xl p-12 min-h-[600px]">
-                    <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">
-                        📊 Métricas Específicas en Móviles
-                    </h2>
-                    
-                    <div class="grid md:grid-cols-2 gap-6">
-                        <div class="metric-item bg-red-50 border-l-4 border-red-500 rounded-lg p-6">
-                            <div class="flex items-center mb-3">
-                                <span class="text-3xl mr-3">💥</span>
-                                <h3 class="text-xl font-bold text-gray-800">Crash Rate</h3>
-                            </div>
-                            <p class="text-gray-600 mb-2">Porcentaje de sesiones con fallo</p>
-                            <div class="bg-red-100 rounded-lg p-3">
-                                <p class="text-sm text-red-800">Meta: < 1% de las sesiones</p>
-                            </div>
-                        </div>
+          <div
+            style="
+              background: #fff3cd;
+              padding: 25px;
+              border-radius: 15px;
+              margin: 25px 0;
+              border-left: 5px solid #ffc107;
+            "
+          >
+            <h3 style="color: #856404; margin-bottom: 15px">
+              💬 El Diálogo Continuo RD ↔ TS
+            </h3>
+            <p style="line-height: 1.7; color: #856404; font-style: italic">
+              "Piensen en RD y TS como un diálogo continuo. RD define
+              'necesitamos un sistema que soporte 1 millón de usuarios
+              simultáneos'. TS responde 'ok, para eso, necesitaremos esta
+              arquitectura de microservicios y esta base de datos'. Si TS dice
+              que algo no es factible, debe negociarlo de vuelta con RD y el
+              cliente."
+            </p>
+          </div>
 
-                        <div class="metric-item bg-blue-50 border-l-4 border-blue-500 rounded-lg p-6">
-                            <div class="flex items-center mb-3">
-                                <span class="text-3xl mr-3">⚡</span>
-                                <h3 class="text-xl font-bold text-gray-800">Time to First Interaction</h3>
-                            </div>
-                            <p class="text-gray-600 mb-2">TTFI - Tiempo hasta primera interacción</p>
-                            <div class="bg-blue-100 rounded-lg p-3">
-                                <p class="text-sm text-blue-800">Meta: < 3 segundos</p>
-                            </div>
-                        </div>
-
-                        <div class="metric-item bg-green-50 border-l-4 border-green-500 rounded-lg p-6">
-                            <div class="flex items-center mb-3">
-                                <span class="text-3xl mr-3">🔋</span>
-                                <h3 class="text-xl font-bold text-gray-800">Consumo de Batería</h3>
-                            </div>
-                            <p class="text-gray-600 mb-2">Porcentaje por hora de uso</p>
-                            <div class="bg-green-100 rounded-lg p-3">
-                                <p class="text-sm text-green-800">Meta: < 5% por hora</p>
-                            </div>
-                        </div>
-
-                        <div class="metric-item bg-purple-50 border-l-4 border-purple-500 rounded-lg p-6">
-                            <div class="flex items-center mb-3">
-                                <span class="text-3xl mr-3">📡</span>
-                                <h3 class="text-xl font-bold text-gray-800">Latencia de Red</h3>
-                            </div>
-                            <p class="text-gray-600 mb-2">Tiempo de respuesta promedio</p>
-                            <div class="bg-purple-100 rounded-lg p-3">
-                                <p class="text-sm text-purple-800">Meta: < 200ms</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-8 bg-gray-100 rounded-xl p-6">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-3">💡 Tip Importante</h4>
-                        <p class="text-gray-600">Estas métricas deben monitorearse continuamente en producción, no solo durante las pruebas.</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 4: Tendencias actuales -->
-            <div class="slide" id="slide4">
-                <div class="bg-white rounded-3xl p-12 min-h-[600px]">
-                    <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">
-                        🚀 Tendencias Actuales
-                    </h2>
-                    
-                    <div class="space-y-6">
-                        <div class="trend-card rounded-2xl p-8 text-white">
-                            <div class="flex items-center mb-4">
-                                <span class="text-4xl mr-4">📱</span>
-                                <h3 class="text-2xl font-bold">Testing de Apps Híbridas y PWA</h3>
-                            </div>
-                            <p class="text-lg opacity-90 mb-4">Progressive Web Apps y aplicaciones híbridas requieren estrategias específicas</p>
-                            <div class="flex flex-wrap gap-2">
-                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">React Native</span>
-                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">Flutter</span>
-                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">PWA</span>
-                            </div>
-                        </div>
-
-                        <div class="bg-gradient-to-r from-orange-400 to-pink-400 rounded-2xl p-8 text-white">
-                            <div class="flex items-center mb-4">
-                                <span class="text-4xl mr-4">🔄</span>
-                                <h3 class="text-2xl font-bold">Integración de Testing en CI/CD</h3>
-                            </div>
-                            <p class="text-lg opacity-90 mb-4">Automatización completa del pipeline de testing móvil</p>
-                            <div class="flex flex-wrap gap-2">
-                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">Jenkins</span>
-                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">GitHub Actions</span>
-                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">Azure DevOps</span>
-                            </div>
-                        </div>
-
-                        <div class="bg-gradient-to-r from-teal-400 to-blue-500 rounded-2xl p-8 text-white">
-                            <div class="flex items-center mb-4">
-                                <span class="text-4xl mr-4">⌚</span>
-                                <h3 class="text-2xl font-bold">Pruebas en IoT y Wearables</h3>
-                            </div>
-                            <p class="text-lg opacity-90 mb-4">Expansión hacia dispositivos conectados y wearables</p>
-                            <div class="flex flex-wrap gap-2">
-                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">Apple Watch</span>
-                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">Wear OS</span>
-                                <span class="bg-white bg-opacity-20 px-3 py-1 rounded-full text-sm">IoT Devices</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 5: Actividad - Debate -->
-            <div class="slide" id="slide5">
-                <div class="bg-white rounded-3xl p-12 min-h-[600px]">
-                    <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">
-                        💬 Actividad - Debate Guiado
-                    </h2>
-                    
-                    <div class="bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl p-8 text-white mb-8">
-                        <div class="text-center mb-6">
-                            <div class="text-6xl mb-4">🤔</div>
-                            <h3 class="text-2xl font-bold mb-4">Pregunta para Debate</h3>
-                        </div>
-                        <div class="bg-white bg-opacity-20 rounded-xl p-6">
-                            <p class="text-xl text-center leading-relaxed">
-                                "¿Son suficientes los emuladores para asegurar calidad móvil o siempre se deben usar dispositivos reales?"
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="grid md:grid-cols-2 gap-8 mb-8">
-                        <div class="bg-green-50 border-2 border-green-200 rounded-xl p-6">
-                            <h4 class="text-xl font-bold text-green-800 mb-4 flex items-center">
-                                <span class="mr-2">✅</span> Pro Emuladores
-                            </h4>
-                            <ul class="space-y-2 text-green-700">
-                                <li>• Costo-efectivos</li>
-                                <li>• Fácil configuración</li>
-                                <li>• Múltiples configuraciones</li>
-                                <li>• Integración CI/CD</li>
-                            </ul>
-                        </div>
-
-                        <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
-                            <h4 class="text-xl font-bold text-blue-800 mb-4 flex items-center">
-                                <span class="mr-2">📱</span> Pro Dispositivos Reales
-                            </h4>
-                            <ul class="space-y-2 text-blue-700">
-                                <li>• Rendimiento real</li>
-                                <li>• Sensores físicos</li>
-                                <li>• Condiciones reales de red</li>
-                                <li>• Experiencia de usuario real</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="text-center">
-                        <div class="bg-gray-100 rounded-xl p-6 inline-block">
-                            <p class="text-gray-600 mb-2">Tiempo de debate:</p>
-                            <div class="debate-timer" id="timer">15:00</div>
-                            <button onclick="startTimer()" id="timerBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg mt-4 transition-colors">
-                                Iniciar Timer
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+          <div class="interactive-demo">
+            <h3>🔄 Simulador: Del Requisito al Código</h3>
+            <p>Observa cómo fluye el trabajo desde RD hasta TS:</p>
+            <button class="demo-button" onclick="simulateRDtoTS()">
+              Simular Flujo RD → TS
+            </button>
+            <div
+              id="rdtsFlow"
+              style="margin-top: 15px; min-height: 100px"
+            ></div>
+          </div>
         </div>
+
+        <!-- Slide 4: VER y VAL -->
+        <div class="slide">
+          <div class="slide-title">
+            🔍 Asegurando la Calidad: Verificación y Validación
+          </div>
+
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 25px;
+              margin: 30px 0;
+            "
+          >
+            <div
+              class="process-area-card"
+              style="
+                background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+                padding: 25px;
+                border-radius: 15px;
+                border: 3px solid #4caf50;
+              "
+            >
+              <div class="section-header">
+                <div class="icon" style="background: #4caf50; color: white">
+                  🔍
+                </div>
+                VER - Verification
+              </div>
+
+              <div
+                class="purpose-box"
+                style="background: rgba(255, 255, 255, 0.7); margin: 15px 0"
+              >
+                <strong>Pregunta Clave:</strong> "¿Construimos el producto
+                correctamente?"<br /><br />
+                <strong>Definición CMMI:</strong> Confirmación de que los
+                productos de trabajo reflejan adecuadamente los requisitos que
+                se han especificado para ellos.
+              </div>
+
+              <div class="point">
+                <strong>🔧 Revisión de Código:</strong> ¿El código sigue los
+                estándares de codificación de la empresa?
+              </div>
+              <div class="point">
+                <strong>🧪 Pruebas Unitarias:</strong> ¿La función calcularIVA()
+                devuelve precio * 0.16 como dice su especificación?
+              </div>
+              <div class="point">
+                <strong>📐 Revisión de Diseño:</strong> ¿El diagrama de
+                arquitectura incluye todos los componentes definidos en
+                requisitos?
+              </div>
+            </div>
+
+            <div
+              class="process-area-card"
+              style="
+                background: linear-gradient(135deg, #fff3e0, #ffcc02);
+                padding: 25px;
+                border-radius: 15px;
+                border: 3px solid #ff9800;
+              "
+            >
+              <div class="section-header">
+                <div class="icon" style="background: #ff9800; color: white">
+                  ✅
+                </div>
+                VAL - Validation
+              </div>
+
+              <div
+                class="purpose-box"
+                style="background: rgba(255, 255, 255, 0.7); margin: 15px 0"
+              >
+                <strong>Pregunta Clave:</strong> "¿Construimos el producto
+                correcto?"<br /><br />
+                <strong>Definición CMMI:</strong> Confirmación de que el
+                producto o servicio, tal y como se ha proporcionado, cumplirá su
+                uso deseado.
+              </div>
+
+              <div class="point">
+                <strong>👤 Pruebas UAT:</strong> Un usuario final utiliza el
+                sistema para realizar una tarea real (ej. "intenta comprar un
+                producto").
+              </div>
+              <div class="point">
+                <strong>🚀 Pruebas Beta:</strong> Liberar el producto a un grupo
+                de usuarios reales para que lo usen en su día a día y den
+                retroalimentación.
+              </div>
+              <div class="point">
+                <strong>🎯 Pruebas de Usabilidad:</strong> Observar a un usuario
+                interactuando con la interfaz para ver si es intuitiva y
+                eficiente.
+              </div>
+            </div>
+          </div>
+
+          <div
+            style="
+              background: #e3f2fd;
+              padding: 25px;
+              border-radius: 15px;
+              margin: 25px 0;
+              border-left: 5px solid #2196f3;
+            "
+          >
+            <h3 style="color: #1565c0; margin-bottom: 15px">
+              🎯 Dos Caras de la Misma Moneda
+            </h3>
+            <p style="line-height: 1.7; color: #1565c0; font-style: italic">
+              "La Verificación es estática y mira hacia adentro (código vs.
+              estándar). La Validación es dinámica y mira hacia afuera (producto
+              vs. usuario). Son dos caras de la misma moneda de la calidad."
+            </p>
+          </div>
+
+          <div class="interactive-demo">
+            <h3>⚖️ Comparador VER vs VAL</h3>
+            <p>Explora las diferencias entre estos dos enfoques de calidad:</p>
+            <button class="demo-button" onclick="showVerVsVal()">
+              Comparar Enfoques
+            </button>
+            <div id="verValComparison" style="margin-top: 15px"></div>
+          </div>
+        </div>
+
+        <!-- Slide 5: Actividad VER vs VAL -->
+        <div class="slide">
+          <div class="slide-title">
+            🎯 Actividad: ¿Verificación o Validación?
+          </div>
+
+          <div
+            style="
+              background: #f8f9ff;
+              padding: 25px;
+              border-radius: 15px;
+              margin: 25px 0;
+            "
+          >
+            <h3 style="color: #667eea; text-align: center; margin-bottom: 20px">
+              📝 Escenarios para Analizar (15 min)
+            </h3>
+
+            <div style="display: grid; gap: 20px; margin: 20px 0">
+              <div
+                class="scenario-card"
+                style="
+                  background: white;
+                  padding: 20px;
+                  border-radius: 12px;
+                  border-left: 5px solid #2196f3;
+                  cursor: pointer;
+                "
+                onclick="revealAnswer(1)"
+              >
+                <h4 style="color: #2196f3; margin-bottom: 10px">
+                  🔬 Escenario 1:
+                </h4>
+                <p style="line-height: 1.6; margin-bottom: 15px">
+                  "Un equipo construye un formulario de registro. Una prueba
+                  automatizada llena los campos, da clic en 'Guardar' y
+                  comprueba que se insertó una nueva fila en la tabla Usuarios
+                  de la base de datos con los datos correctos."
+                </p>
+                <div
+                  style="
+                    background: #e3f2fd;
+                    padding: 15px;
+                    border-radius: 8px;
+                    margin: 10px 0;
+                  "
+                >
+                  <strong>❓ ¿Esto es Verificación o Validación?</strong>
+                </div>
+                <div
+                  id="answer1"
+                  style="
+                    display: none;
+                    background: #c8e6c9;
+                    padding: 15px;
+                    border-radius: 8px;
+                    margin-top: 10px;
+                  "
+                >
+                  <strong>✅ Respuesta: VERIFICACIÓN</strong><br />
+                  Estamos comprobando que el componente cumple su especificación
+                  técnica ("al guardar, se debe insertar en la BD").
+                </div>
+              </div>
+
+              <div
+                class="scenario-card"
+                style="
+                  background: white;
+                  padding: 20px;
+                  border-radius: 12px;
+                  border-left: 5px solid #ff9800;
+                  cursor: pointer;
+                "
+                onclick="revealAnswer(2)"
+              >
+                <h4 style="color: #ff9800; margin-bottom: 10px">
+                  👤 Escenario 2:
+                </h4>
+                <p style="line-height: 1.6; margin-bottom: 15px">
+                  "Se le pide a un usuario final que intente registrarse en el
+                  mismo formulario. El usuario se tarda 5 minutos y se frustra
+                  porque el campo 'Fecha de Nacimiento' es un campo de texto
+                  libre en lugar de un calendario, y no sabe si poner
+                  '10/05/1990' o '10 de Mayo de 1990'."
+                </p>
+                <div
+                  style="
+                    background: #fff3e0;
+                    padding: 15px;
+                    border-radius: 8px;
+                    margin: 10px 0;
+                  "
+                >
+                  <strong>❓ ¿Esto es Verificación o Validación?</strong>
+                </div>
+                <div
+                  id="answer2"
+                  style="
+                    display: none;
+                    background: #ffcc02;
+                    padding: 15px;
+                    border-radius: 8px;
+                    margin-top: 10px;
+                    color: #333;
+                  "
+                >
+                  <strong>✅ Respuesta: VALIDACIÓN</strong><br />
+                  El formulario puede funcionar técnicamente a la perfección
+                  (pasa la verificación), pero no cumple el uso deseado del
+                  cliente de forma eficiente y sin frustración.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="interactive-demo">
+            <h3>🤔 Pregunta para Debatir</h3>
+            <div
+              style="
+                background: #fff3cd;
+                padding: 20px;
+                border-radius: 12px;
+                margin: 20px 0;
+                border-left: 5px solid #ffc107;
+              "
+            >
+              <p
+                style="
+                  font-size: 18px;
+                  line-height: 1.6;
+                  color: #856404;
+                  margin-bottom: 15px;
+                "
+              >
+                <strong
+                  >"¿Puede un producto de software pasar el 100% de sus pruebas
+                  de Verificación y aun así ser un completo fracaso en la
+                  Validación? Den un ejemplo."</strong
+                >
+              </p>
+              <button class="demo-button" onclick="showZuneExample()">
+                Ver Ejemplo: El Caso Zune
+              </button>
+              <div id="zuneExample" style="margin-top: 15px"></div>
+            </div>
+
+            <div style="text-align: center; margin: 25px 0">
+              <button class="demo-button" onclick="generateScenario()">
+                Generar Nuevo Escenario
+              </button>
+              <button class="demo-button" onclick="startDiscussion()">
+                Iniciar Discusión Grupal
+              </button>
+            </div>
+            <div id="newScenario" style="margin-top: 15px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Controls -->
+      <div class="slide-counter"><span id="currentSlide">1</span> / 5</div>
+
+      <div class="slide-indicators">
+        <div class="indicator active" onclick="goToSlide(0)"></div>
+        <div class="indicator" onclick="goToSlide(1)"></div>
+        <div class="indicator" onclick="goToSlide(2)"></div>
+        <div class="indicator" onclick="goToSlide(3)"></div>
+        <div class="indicator" onclick="goToSlide(4)"></div>
+      </div>
+
+      <div class="navigation">
+        <button class="nav-button" id="prevBtn" onclick="previousSlide()">
+          ← Anterior
+        </button>
+        <button class="nav-button" id="nextBtn" onclick="nextSlide()">
+          Siguiente →
+        </button>
+      </div>
     </div>
 
     <script>
-        let currentSlideIndex = 0;
-        const totalSlides = 5;
-        let timerInterval;
-        let timeLeft = 15 * 60; // 15 minutes in seconds
+      let currentSlideIndex = 0;
+      const slides = document.querySelectorAll(".slide");
+      const indicators = document.querySelectorAll(".indicator");
+      const totalSlides = slides.length;
 
-        function showSlide(index) {
-            // Hide all slides
-            document.querySelectorAll('.slide').forEach(slide => {
-                slide.classList.remove('active');
-            });
-            
-            // Show current slide
-            document.getElementById(`slide${index + 1}`).classList.add('active');
-            
-            // Update navigation
-            document.getElementById('currentSlide').textContent = index + 1;
-            document.getElementById('prevBtn').disabled = index === 0;
-            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
-            
-            // Update progress bar
-            const progress = ((index + 1) / totalSlides) * 100;
-            document.getElementById('progressBar').style.width = progress + '%';
-            
-            // Update button states
-            if (index === 0) {
-                document.getElementById('prevBtn').classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                document.getElementById('prevBtn').classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-            
-            if (index === totalSlides - 1) {
-                document.getElementById('nextBtn').classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                document.getElementById('nextBtn').classList.remove('opacity-50', 'cursor-not-allowed');
-            }
+      function updateSlideDisplay() {
+        slides.forEach((slide, index) => {
+          slide.classList.remove("active", "prev");
+          if (index === currentSlideIndex) {
+            slide.classList.add("active");
+            // Auto scroll to top when changing slides
+            setTimeout(() => {
+              slide.scrollTop = 0;
+            }, 100);
+          } else if (index < currentSlideIndex) {
+            slide.classList.add("prev");
+          }
+        });
+
+        indicators.forEach((indicator, index) => {
+          indicator.classList.toggle("active", index === currentSlideIndex);
+        });
+
+        document.getElementById("currentSlide").textContent =
+          currentSlideIndex + 1;
+        document.getElementById("prevBtn").disabled = currentSlideIndex === 0;
+        document.getElementById("nextBtn").disabled =
+          currentSlideIndex === totalSlides - 1;
+      }
+
+      function nextSlide() {
+        if (currentSlideIndex < totalSlides - 1) {
+          currentSlideIndex++;
+          updateSlideDisplay();
         }
+      }
 
-        function nextSlide() {
-            if (currentSlideIndex < totalSlides - 1) {
-                currentSlideIndex++;
-                showSlide(currentSlideIndex);
-            }
+      function previousSlide() {
+        if (currentSlideIndex > 0) {
+          currentSlideIndex--;
+          updateSlideDisplay();
         }
+      }
 
-        function previousSlide() {
-            if (currentSlideIndex > 0) {
-                currentSlideIndex--;
-                showSlide(currentSlideIndex);
-            }
+      function goToSlide(index) {
+        currentSlideIndex = index;
+        updateSlideDisplay();
+      }
+
+      // Keyboard navigation
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === " ") {
+          e.preventDefault();
+          nextSlide();
+        } else if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          previousSlide();
         }
+      });
 
-        function startTimer() {
-            const timerBtn = document.getElementById('timerBtn');
-            const timerDisplay = document.getElementById('timer');
-            
-            if (timerInterval) {
-                clearInterval(timerInterval);
-                timerBtn.textContent = 'Iniciar Timer';
-                timerBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
-                timerBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                timeLeft = 15 * 60;
-                timerDisplay.textContent = '15:00';
-                return;
-            }
-            
-            timerBtn.textContent = 'Detener Timer';
-            timerBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-            timerBtn.classList.add('bg-red-600', 'hover:bg-red-700');
-            
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                
-                const minutes = Math.floor(timeLeft / 60);
-                const seconds = timeLeft % 60;
-                
-                timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    timerInterval = null;
-                    timerBtn.textContent = 'Tiempo Terminado!';
-                    timerBtn.classList.add('bg-gray-600');
-                    timerDisplay.textContent = '00:00';
-                    timerDisplay.classList.add('text-red-600');
+      // Timer functionality
+      let timerInterval;
+      let timeLeft = 20 * 60; // 20 minutes in seconds
+
+      function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+
+        timerInterval = setInterval(() => {
+          timeLeft--;
+          updateTimerDisplay();
+
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            document.getElementById("timer").innerHTML =
+              "⏰ ¡Tiempo terminado!";
+            document.getElementById("timer").style.color = "#dc3545";
+            alert(
+              "⏰ ¡Se acabó el tiempo! Es hora de presentar los resultados."
+            );
+          }
+        }, 1000);
+      }
+
+      function resetTimer() {
+        clearInterval(timerInterval);
+        timeLeft = 20 * 60;
+        updateTimerDisplay();
+        document.getElementById("timer").style.color = "#667eea";
+      }
+
+      function updateTimerDisplay() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        document.getElementById("timer").innerHTML = `${minutes
+          .toString()
+          .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+      }
+
+      // Interactive functions for Level 3
+      function showEvolution() {
+        const evolutionContent = document.getElementById("evolutionContent");
+
+        evolutionContent.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px;">
+                    <div style="background: linear-gradient(135deg, #ff9a9e, #fecfef); padding: 20px; border-radius: 15px; text-align: center; transform: translateY(0); transition: all 0.3s ease;">
+                        <div style="font-size: 32px; margin-bottom: 10px;">🔥</div>
+                        <h4>Nivel 1: Caótico</h4>
+                        <p style="font-size: 14px;">Cada proyecto es único</p>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #a8edea, #fed6e3); padding: 20px; border-radius: 15px; text-align: center; transform: translateY(0); transition: all 0.3s ease;">
+                        <div style="font-size: 32px; margin-bottom: 10px;">📊</div>
+                        <h4>Nivel 2: Gestionado</h4>
+                        <p style="font-size: 14px;">Proyectos controlados individualmente</p>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #ffecd2, #fcb69f); padding: 20px; border-radius: 15px; text-align: center; transform: translateY(-10px); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                        <div style="font-size: 32px; margin-bottom: 10px;">🏛️</div>
+                        <h4>Nivel 3: Definido</h4>
+                        <p style="font-size: 14px; font-weight: bold; color: #d63031;">¡Estandarización organizacional!</p>
+                    </div>
+                </div>
+                <p style="text-align: center; margin-top: 20px; font-style: italic; color: #667eea;">
+                    ✨ Se trata de definir UNA forma de trabajar para toda la organización ✨
+                </p>
+            `;
+      }
+
+      function showPALDemo() {
+        const palDemo = document.getElementById("palDemo");
+
+        palDemo.innerHTML = `
+                <div style="background: white; border: 2px solid #667eea; border-radius: 15px; padding: 20px;">
+                    <h4 style="color: #667eea; text-align: center; margin-bottom: 15px;">📚 Biblioteca de Activos de Proceso (PAL)</h4>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                        <div style="background: #f8f9ff; padding: 15px; border-radius: 10px; border-left: 4px solid #2196f3;">
+                            <strong>📋 Proceso Estándar de Requisitos</strong>
+                            <p style="font-size: 14px; margin-top: 8px;">Plantillas, checklists, técnicas de elicitación</p>
+                        </div>
+                        <div style="background: #f8f9ff; padding: 15px; border-radius: 10px; border-left: 4px solid #9c27b0;">
+                            <strong>⚙️ Proceso Estándar de Diseño</strong>
+                            <p style="font-size: 14px; margin-top: 8px;">Patrones arquitectónicos, guías de codificación</p>
+                        </div>
+                        <div style="background: #f8f9ff; padding: 15px; border-radius: 10px; border-left: 4px solid #4caf50;">
+                            <strong>🧪 Proceso Estándar de Pruebas</strong>
+                            <p style="font-size: 14px; margin-top: 8px;">Estrategias, casos de prueba, criterios de aceptación</p>
+                        </div>
+                        <div style="background: #f8f9ff; padding: 15px; border-radius: 10px; border-left: 4px solid #ff9800;">
+                            <strong>📊 Métricas Organizacionales</strong>
+                            <p style="font-size: 14px; margin-top: 8px;">KPIs, dashboards, reportes estándar</p>
+                        </div>
+                    </div>
+                    <p style="text-align: center; margin-top: 15px; font-style: italic; color: #666;">
+                        Los proyectos adaptan estos procesos según sus necesidades específicas (tailoring)
+                    </p>
+                </div>
+            `;
+      }
+
+      function simulateRDtoTS() {
+        const rdtsFlow = document.getElementById("rdtsFlow");
+
+        const steps = [
+          {
+            phase: "RD",
+            icon: "🎯",
+            text: 'Elicitación: "El usuario quiere pagar con tarjeta"',
+            color: "#2196f3",
+          },
+          {
+            phase: "RD",
+            icon: "🔍",
+            text: 'Análisis: "¿Qué tipos de tarjeta? ¿Seguridad requerida?"',
+            color: "#2196f3",
+          },
+          {
+            phase: "RD",
+            icon: "✅",
+            text: 'Validación: "Cliente confirma: Visa, MC, seguridad PCI"',
+            color: "#2196f3",
+          },
+          {
+            phase: "TS",
+            icon: "🎨",
+            text: 'Diseño: "API Gateway + Stripe + Validación frontend"',
+            color: "#9c27b0",
+          },
+          {
+            phase: "TS",
+            icon: "🏗️",
+            text: 'Arquitectura: "Microservicio de pagos independiente"',
+            color: "#9c27b0",
+          },
+          {
+            phase: "TS",
+            icon: "💻",
+            text: 'Implementación: "Código + pruebas unitarias"',
+            color: "#9c27b0",
+          },
+        ];
+
+        rdtsFlow.innerHTML =
+          '<div style="text-align: center; color: #667eea; font-weight: bold;">Iniciando simulación...</div>';
+
+        setTimeout(() => {
+          let flowHTML = '<div style="display: grid; gap: 10px;">';
+
+          steps.forEach((step, index) => {
+            flowHTML += `
+                        <div style="display: flex; align-items: center; padding: 10px; background: ${
+                          step.color
+                        }20; 
+                                    border-left: 4px solid ${
+                                      step.color
+                                    }; border-radius: 8px; opacity: 0; 
+                                    animation: slideIn 0.5s ease forwards; animation-delay: ${
+                                      index * 0.3
+                                    }s;">
+                            <div style="font-size: 24px; margin-right: 15px;">${
+                              step.icon
+                            }</div>
+                            <div>
+                                <strong style="color: ${step.color};">${
+              step.phase
+            }:</strong> ${step.text}
+                            </div>
+                        </div>
+                    `;
+          });
+
+          flowHTML += "</div>";
+          rdtsFlow.innerHTML = flowHTML;
+        }, 500);
+      }
+
+      function highlightSection(element) {
+        document.querySelectorAll(".before-after").forEach((el) => {
+          el.style.transform = "translateY(0px)";
+          el.style.boxShadow = "none";
+        });
+
+        element.style.transform = "translateY(-8px)";
+        element.style.boxShadow = "0 20px 40px rgba(0,0,0,0.3)";
+
+        element.style.animation = "pulse 0.6s ease-in-out";
+        setTimeout(() => {
+          element.style.animation = "";
+        }, 600);
+      }
+
+      function simulateTracking(level) {
+        const result = document.getElementById("trackingResult");
+
+        if (level === "before") {
+          result.innerHTML =
+            '🤷‍♂️ "Ehh... casi terminado... creo que vamos bien..."';
+          result.style.color = "#ff6b6b";
+        } else {
+          result.innerHTML =
+            "📊 Progreso: 67% | Presupuesto: 72% usado | Riesgo: Medio | ETA: 2 semanas";
+          result.style.color = "#51cf66";
+        }
+      }
+
+      function showSummary() {
+        const summaryContent = document.getElementById("summaryContent");
+
+        summaryContent.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px;">
+                    <div style="background: linear-gradient(135deg, #ff9a9e, #fecfef); padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 24px;">📋</div>
+                        <strong>REQM</strong><br>
+                        Requisitos Controlados
+                    </div>
+                    <div style="background: linear-gradient(135deg, #a8edea, #fed6e3); padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 24px;">📊</div>
+                        <strong>PP</strong><br>
+                        Planificación Formal
+                    </div>
+                    <div style="background: linear-gradient(135deg, #ffecd2, #fcb69f); padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 24px;">📈</div>
+                        <strong>PMC</strong><br>
+                        Seguimiento Activo
+                    </div>
+                    <div style="background: linear-gradient(135deg, #d299c2, #fef9d7); padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 24px;">🔍</div>
+                        <strong>PPQA</strong><br>
+                        Calidad Asegurada
+                    </div>
+                </div>
+                <p style="text-align: center; margin-top: 20px; font-style: italic; color: #667eea;">
+                    ✨ Resultado: Proyectos predecibles que cumplen sus promesas ✨
+                </p>
+            `;
+      }
+
+      // Example generator for team activity
+      const examples = {
+        reqm: [
+          "📋 Matriz de Trazabilidad en Excel: Conecta 'Login con Google' → Caso de Uso CU-001 → Prueba TC-001",
+          "📋 Documento de Cambios: Solicitud #15 'Agregar filtro vegetariano' - Impacto: +8 horas, +$1200",
+          "📋 Baseline de Requisitos v2.1: 45 requisitos aprobados, 3 pendientes de validación del cliente",
+        ],
+        pp: [
+          "📊 Cronograma en Jira: Sprint 1-6, 120 story points, entrega 15/dic, dependencia crítica: API de pagos",
+          "📊 Plan de Riesgos: R-001 'Retraso API externa' - Probabilidad: Media, Impacto: Alto, Mitigación: Mock service",
+          "📊 Estimación por Planning Poker: Módulo de pedidos = 34 story points, equipo de 5 desarrolladores",
+        ],
+        pmc: [
+          "📈 Minuta Semanal 12/nov: Sprint 2 - 67% completado, bloqueador resuelto, decisión: priorizar checkout",
+          "📈 Dashboard Burndown: 23 de 34 story points completados, tendencia: entrega a tiempo",
+          "📈 Reporte de Estado: Presupuesto 72% usado, cronograma en verde, 2 riesgos activos monitoreados",
+        ],
+        ppqa: [
+          "🔍 Auditoría QA Sem-47: Hallazgo - Falta documentar 3 casos de prueba en TestRail según estándar",
+          "🔍 Checklist de Revisión: Code review completado 85%, falta peer review en módulo de notificaciones",
+          "🔍 Reporte de Calidad: 12 defectos encontrados, 8 corregidos, cobertura de pruebas: 78%",
+        ],
+      };
+
+      function generateExample() {
+        const areas = Object.keys(examples);
+        const randomArea = areas[Math.floor(Math.random() * areas.length)];
+        const randomExample =
+          examples[randomArea][
+            Math.floor(Math.random() * examples[randomArea].length)
+          ];
+
+        const areaNames = {
+          reqm: "REQM - Gestión de Requisitos",
+          pp: "PP - Planificación de Proyectos",
+          pmc: "PMC - Seguimiento y Control",
+          ppqa: "PPQA - Aseguramiento de Calidad",
+        };
+
+        document.getElementById("exampleContent").innerHTML = `
+                <div style="text-align: center;">
+                    <h4 style="color: #667eea; margin-bottom: 10px;">${areaNames[randomArea]}</h4>
+                    <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+                        ${randomExample}
+                    </div>
+                    <p style="margin-top: 10px; font-size: 14px; color: #666; font-style: italic;">
+                        💡 Adapta este ejemplo a tu contexto específico del proyecto de delivery
+                    </p>
+                </div>
+            `;
+      }
+
+      function showPresentationMode() {
+        const content = `
+                <div style="text-align: center; padding: 40px;">
+                    <h2 style="color: #667eea; margin-bottom: 30px;">🎤 Presentación de Equipos</h2>
                     
-                    // Reset after 3 seconds
-                    setTimeout(() => {
-                        timeLeft = 15 * 60;
-                        timerDisplay.textContent = '15:00';
-                        timerDisplay.classList.remove('text-red-600');
-                        timerBtn.textContent = 'Iniciar Timer';
-                        timerBtn.classList.remove('bg-gray-600', 'bg-red-600', 'hover:bg-red-700');
-                        timerBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
-                    }, 3000);
-                }
-            }, 1000);
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 30px 0;">
+                        <div style="background: #fff3cd; padding: 20px; border-radius: 15px; border: 3px solid #ffc107;">
+                            <h3>👥 Equipo 1</h3>
+                            <button class="demo-button" onclick="startPresentation(1)">Iniciar Presentación</button>
+                        </div>
+                        <div style="background: #d4edda; padding: 20px; border-radius: 15px; border: 3px solid #28a745;">
+                            <h3>👥 Equipo 2</h3>
+                            <button class="demo-button" onclick="startPresentation(2)">Iniciar Presentación</button>
+                        </div>
+                        <div style="background: #cce5ff; padding: 20px; border-radius: 15px; border: 3px solid #007bff;">
+                            <h3>👥 Equipo 3</h3>
+                            <button class="demo-button" onclick="startPresentation(3)">Iniciar Presentación</button>
+                        </div>
+                        <div style="background: #f8d7da; padding: 20px; border-radius: 15px; border: 3px solid #dc3545;">
+                            <h3>👥 Equipo 4</h3>
+                            <button class="demo-button" onclick="startPresentation(4)">Iniciar Presentación</button>
+                        </div>
+                    </div>
+
+                    <div style="background: #f8f9ff; padding: 25px; border-radius: 15px; margin: 30px 0;">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">📋 Formato de Presentación (5 min por equipo)</h3>
+                        <ol style="text-align: left; max-width: 600px; margin: 0 auto; line-height: 1.8;">
+                            <li><strong>REQM:</strong> Mostrar su artefacto/evidencia (1 min)</li>
+                            <li><strong>PP:</strong> Explicar su ejemplo de planificación (1 min)</li>
+                            <li><strong>PMC:</strong> Demostrar su método de seguimiento (1 min)</li>
+                            <li><strong>PPQA:</strong> Presentar su enfoque de calidad (1 min)</li>
+                            <li><strong>Q&A:</strong> Preguntas del grupo (1 min)</li>
+                        </ol>
+                    </div>
+
+                    <div id="presentationTimer" style="font-size: 32px; font-weight: bold; color: #667eea; margin: 20px 0;">
+                        5:00
+                    </div>
+                </div>
+            `;
+
+        // Create modal overlay
+        const modal = document.createElement("div");
+        modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.8); z-index: 2000; display: flex; 
+                align-items: center; justify-content: center;
+            `;
+
+        const modalContent = document.createElement("div");
+        modalContent.style.cssText = `
+                background: white; border-radius: 20px; max-width: 90%; max-height: 90%; 
+                overflow-y: auto; position: relative;
+            `;
+        modalContent.innerHTML =
+          content +
+          `
+                <button onclick="this.closest('.modal').remove()" 
+                        style="position: absolute; top: 15px; right: 20px; background: #dc3545; 
+                               color: white; border: none; border-radius: 50%; width: 35px; height: 35px; 
+                               cursor: pointer; font-size: 18px;">×</button>
+            `;
+
+        modal.className = "modal";
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+      }
+
+      let presentationTimer;
+      let presentationTimeLeft = 5 * 60; // 5 minutes
+
+      function startPresentation(teamNumber) {
+        if (presentationTimer) clearInterval(presentationTimer);
+        presentationTimeLeft = 5 * 60;
+
+        presentationTimer = setInterval(() => {
+          presentationTimeLeft--;
+          updatePresentationTimer();
+
+          if (presentationTimeLeft <= 0) {
+            clearInterval(presentationTimer);
+            document.getElementById("presentationTimer").innerHTML =
+              "⏰ ¡Tiempo!";
+            document.getElementById("presentationTimer").style.color =
+              "#dc3545";
+            alert(`⏰ ¡Tiempo terminado para el Equipo ${teamNumber}!`);
+          }
+        }, 1000);
+      }
+
+      function updatePresentationTimer() {
+        const minutes = Math.floor(presentationTimeLeft / 60);
+        const seconds = presentationTimeLeft % 60;
+        const timerElement = document.getElementById("presentationTimer");
+        if (timerElement) {
+          timerElement.innerHTML = `${minutes}:${seconds
+            .toString()
+            .padStart(2, "0")}`;
         }
+      }
 
-        // Keyboard navigation
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === ' ') {
-                e.preventDefault();
-                nextSlide();
-            } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                previousSlide();
+      // Interactive functions for VER vs VAL slides
+      function showVerVsVal() {
+        const verValComparison = document.getElementById("verValComparison");
+
+        verValComparison.innerHTML = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                    <div style="background: linear-gradient(135deg, #e8f5e8, #c8e6c9); padding: 20px; border-radius: 15px; border: 3px solid #4caf50;">
+                        <h4 style="color: #2e7d32; text-align: center; margin-bottom: 15px;">🔍 VERIFICACIÓN</h4>
+                        <div style="background: rgba(255,255,255,0.7); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                            <strong>Enfoque:</strong> Interno, estático
+                        </div>
+                        <div style="background: rgba(255,255,255,0.7); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                            <strong>Compara:</strong> Artefacto vs. Especificación
+                        </div>
+                        <div style="background: rgba(255,255,255,0.7); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                            <strong>Pregunta:</strong> "¿Está bien hecho?"
+                        </div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #fff3e0, #ffcc02); padding: 20px; border-radius: 15px; border: 3px solid #ff9800;">
+                        <h4 style="color: #e65100; text-align: center; margin-bottom: 15px;">✅ VALIDACIÓN</h4>
+                        <div style="background: rgba(255,255,255,0.7); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                            <strong>Enfoque:</strong> Externo, dinámico
+                        </div>
+                        <div style="background: rgba(255,255,255,0.7); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                            <strong>Compara:</strong> Producto vs. Necesidad del Usuario
+                        </div>
+                        <div style="background: rgba(255,255,255,0.7); padding: 15px; border-radius: 10px; margin: 10px 0;">
+                            <strong>Pregunta:</strong> "¿Es lo que necesitan?"
+                        </div>
+                    </div>
+                </div>
+                <p style="text-align: center; margin-top: 20px; font-style: italic; color: #667eea;">
+                    💡 Ambos son necesarios para asegurar la calidad completa del producto
+                </p>
+            `;
+      }
+
+      function revealAnswer(scenarioNumber) {
+        const answer = document.getElementById(`answer${scenarioNumber}`);
+        if (answer.style.display === "none") {
+          answer.style.display = "block";
+          answer.style.animation = "slideIn 0.5s ease forwards";
+        }
+      }
+
+      function showZuneExample() {
+        const zuneExample = document.getElementById("zuneExample");
+
+        zuneExample.innerHTML = `
+                <div style="background: white; border: 2px solid #ffc107; border-radius: 15px; padding: 20px; margin-top: 15px;">
+                    <h4 style="color: #856404; text-align: center; margin-bottom: 15px;">📱 El Caso Microsoft Zune</h4>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div style="background: #c8e6c9; padding: 15px; border-radius: 10px;">
+                            <h5 style="color: #2e7d32; margin-bottom: 10px;">✅ VERIFICACIÓN: EXITOSA</h5>
+                            <ul style="font-size: 14px; line-height: 1.6; color: #2e7d32;">
+                                <li>Reproducía música perfectamente</li>
+                                <li>Interfaz funcionaba según especificaciones</li>
+                                <li>Cumplía todos los requisitos técnicos</li>
+                                <li>Pasaba todas las pruebas de calidad</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #ffcdd2; padding: 15px; border-radius: 10px;">
+                            <h5 style="color: #c62828; margin-bottom: 10px;">❌ VALIDACIÓN: FRACASO</h5>
+                            <ul style="font-size: 14px; line-height: 1.6; color: #c62828;">
+                                <li>No resolvía la necesidad del mercado</li>
+                                <li>Ecosistema pobre vs. iTunes</li>
+                                <li>Experiencia de usuario inferior</li>
+                                <li>No era "adecuado para el uso" real</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <p style="text-align: center; margin-top: 15px; font-style: italic; color: #856404;">
+                        <strong>Conclusión:</strong> Construyeron el producto correctamente, pero no era el producto correcto.
+                    </p>
+                </div>
+            `;
+      }
+
+      const verValScenarios = [
+        {
+          title: "Sistema de Backup Automático",
+          description:
+            "Un sistema programa backups cada noche a las 2 AM y verifica que los archivos se copien sin errores de integridad.",
+          type: "verification",
+          explanation:
+            "Verifica que el proceso técnico funcione según especificaciones.",
+        },
+        {
+          title: "App de Delivery - Tiempo de Entrega",
+          description:
+            "Los usuarios se quejan de que la app muestra 'entrega en 30 min' pero siempre tarda 45-60 minutos.",
+          type: "validation",
+          explanation:
+            "El cálculo puede ser técnicamente correcto, pero no cumple las expectativas reales del usuario.",
+        },
+        {
+          title: "Prueba de Carga de Base de Datos",
+          description:
+            "Se ejecutan 1000 consultas simultáneas y se mide que el tiempo de respuesta promedio es menor a 200ms.",
+          type: "verification",
+          explanation:
+            "Verifica que el rendimiento cumple con los requisitos técnicos especificados.",
+        },
+        {
+          title: "Interfaz de Configuración Compleja",
+          description:
+            "Los usuarios abandonan el proceso de configuración inicial porque tiene 47 campos obligatorios en una sola pantalla.",
+          type: "validation",
+          explanation:
+            "Técnicamente funciona, pero no es adecuado para el uso real del usuario.",
+        },
+      ];
+
+      function generateScenario() {
+        const newScenario = document.getElementById("newScenario");
+        const randomScenario =
+          verValScenarios[Math.floor(Math.random() * verValScenarios.length)];
+
+        newScenario.innerHTML = `
+                <div style="background: white; border: 2px solid #667eea; border-radius: 15px; padding: 20px;">
+                    <h4 style="color: #667eea; margin-bottom: 15px;">🎲 Nuevo Escenario: ${randomScenario.title}</h4>
+                    <p style="line-height: 1.6; margin-bottom: 15px; font-size: 16px;">
+                        ${randomScenario.description}
+                    </p>
+                    <div style="background: #f8f9ff; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                        <strong>❓ ¿Es esto Verificación o Validación?</strong>
+                    </div>
+                    <button class="demo-button" onclick="showScenarioAnswer('${randomScenario.type}', '${randomScenario.explanation}')">
+                        Revelar Respuesta
+                    </button>
+                    <div id="scenarioAnswer" style="margin-top: 15px;"></div>
+                </div>
+            `;
+      }
+
+      function showScenarioAnswer(type, explanation) {
+        const scenarioAnswer = document.getElementById("scenarioAnswer");
+        const isVerification = type === "verification";
+
+        scenarioAnswer.innerHTML = `
+                <div style="background: ${
+                  isVerification ? "#c8e6c9" : "#ffcc02"
+                }; padding: 15px; border-radius: 8px; ${
+          isVerification ? "" : "color: #333;"
+        }">
+                    <strong>✅ Respuesta: ${
+                      isVerification ? "VERIFICACIÓN" : "VALIDACIÓN"
+                    }</strong><br>
+                    ${explanation}
+                </div>
+            `;
+        scenarioAnswer.style.animation = "slideIn 0.5s ease forwards";
+      }
+
+      function startDiscussion() {
+        const newScenario = document.getElementById("newScenario");
+
+        newScenario.innerHTML = `
+                <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border-radius: 15px; padding: 25px; text-align: center;">
+                    <h3 style="margin-bottom: 20px;">🗣️ Discusión Grupal Iniciada</h3>
+                    <p style="font-size: 18px; line-height: 1.6; margin-bottom: 20px;">
+                        Compartan ejemplos de sus propias experiencias donde un producto:
+                    </p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+                        <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px;">
+                            <strong>✅ Pasó la Verificación</strong><br>
+                            <small>Funcionaba técnicamente bien</small>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px;">
+                            <strong>❌ Falló la Validación</strong><br>
+                            <small>No satisfizo a los usuarios</small>
+                        </div>
+                    </div>
+                    <div id="discussionTimer" style="font-size: 24px; font-weight: bold; margin-top: 20px;">15:00</div>
+                </div>
+            `;
+
+        startDiscussionTimer();
+      }
+
+      let discussionTimer;
+      let discussionTimeLeft = 15 * 60; // 15 minutes
+
+      function startDiscussionTimer() {
+        if (discussionTimer) clearInterval(discussionTimer);
+        discussionTimeLeft = 15 * 60;
+
+        discussionTimer = setInterval(() => {
+          discussionTimeLeft--;
+          updateDiscussionTimer();
+
+          if (discussionTimeLeft <= 0) {
+            clearInterval(discussionTimer);
+            document.getElementById("discussionTimer").innerHTML =
+              "⏰ ¡Tiempo de discusión terminado!";
+          }
+        }, 1000);
+      }
+
+      function updateDiscussionTimer() {
+        const minutes = Math.floor(discussionTimeLeft / 60);
+        const seconds = discussionTimeLeft % 60;
+        const timerElement = document.getElementById("discussionTimer");
+        if (timerElement) {
+          timerElement.innerHTML = `${minutes}:${seconds
+            .toString()
+            .padStart(2, "0")}`;
+        }
+      }
+
+      // Add CSS for animations
+      const style = document.createElement("style");
+      style.textContent = `
+            @keyframes pulse {
+                0% { transform: translateY(-8px) scale(1); }
+                50% { transform: translateY(-8px) scale(1.05); }
+                100% { transform: translateY(-8px) scale(1); }
             }
-        });
+            @keyframes slideIn {
+                0% { opacity: 0; transform: translateX(-20px); }
+                100% { opacity: 1; transform: translateX(0); }
+            }
+            .scenario-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+                transition: all 0.3s ease;
+            }
+        `;
+      document.head.appendChild(style);
 
-        // Initialize
-        showSlide(0);
-
-        // Add click animations to tool cards
-        document.querySelectorAll('.tool-card').forEach(card => {
-            card.addEventListener('click', () => {
-                card.style.transform = 'scale(0.95)';
-                setTimeout(() => {
-                    card.style.transform = '';
-                }, 150);
-            });
-        });
+      // Initialize
+      updateSlideDisplay();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a70bd1717d6719',t:'MTc1NzA4OTE0NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script defer src="js/layout.js"></script>
-</body>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97f4055ed284c4e7',t:'MTc1Nzg5NjI4NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  </body>
 </html>

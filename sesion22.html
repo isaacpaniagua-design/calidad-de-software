@@ -1,897 +1,741 @@
 <!DOCTYPE html>
-<html lang="es" data-layout="global">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sesión 22 - Conceptos Fundamentales</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MoProSoft: Calidad Hecha en México</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(
+          135deg,
+          #00c851 0%,
+          #007e33 50%,
+          #c41e3a 100%
+        );
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #333;
+      }
+
+      .presentation-container {
+        max-width: 1200px;
+        width: 95%;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+      }
+
+      .slide {
+        display: none;
+        padding: 60px;
+        min-height: 700px;
+        animation: slideIn 0.5s ease-out;
+      }
+
+      .slide.active {
+        display: block;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(30px);
         }
-        
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .slide h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 20px;
+        line-height: 1.2;
+      }
+
+      .slide h2 {
+        font-size: 2.2rem;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 30px;
+      }
+
+      .subtitle {
+        font-size: 1.4rem;
+        color: #718096;
+        margin-bottom: 40px;
+        font-style: italic;
+        line-height: 1.4;
+      }
+
+      .source {
+        background: #f7fafc;
+        padding: 20px;
+        border-left: 4px solid #00c851;
+        margin: 30px 0;
+        border-radius: 8px;
+      }
+
+      .navigation {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 60px;
+        background: #f8f9fa;
+        border-top: 1px solid #e2e8f0;
+      }
+
+      .nav-button {
+        background: #00c851;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .nav-button:hover {
+        background: #007e33;
+        transform: translateY(-2px);
+      }
+
+      .nav-button:disabled {
+        background: #cbd5e0;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .slide-counter {
+        background: #00c851;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+      }
+
+      .teacher-notes {
+        background: #e6fffa;
+        border: 2px solid #00c851;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 30px 0;
+      }
+
+      .teacher-notes h4 {
+        color: #007e33;
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+      }
+
+      .teacher-notes p {
+        color: #2d3748;
+        line-height: 1.6;
+      }
+
+      .highlight {
+        background: linear-gradient(120deg, #c6f6d5 0%, #fed7d7 100%);
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+        border-left: 4px solid #00c851;
+      }
+
+      .mexican-flag {
+        display: flex;
+        height: 8px;
+        margin: 20px 0;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .flag-green {
+        flex: 1;
+        background: #00c851;
+      }
+
+      .flag-white {
+        flex: 1;
+        background: white;
+        border: 1px solid #e2e8f0;
+      }
+
+      .flag-red {
+        flex: 1;
+        background: #c41e3a;
+      }
+
+      .origin-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        margin: 30px 0;
+      }
+
+      .origin-card {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 15px;
+        padding: 25px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      }
+
+      .origin-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      }
+
+      .origin-card.developers {
+        border-color: #00c851;
+        background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+      }
+
+      .origin-card.problem {
+        border-color: #c41e3a;
+        background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+      }
+
+      .origin-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+        color: #2d3748;
+      }
+
+      .developer-list {
+        list-style: none;
+        padding: 0;
+      }
+
+      .developer-list li {
+        background: rgba(0, 200, 81, 0.1);
+        margin: 10px 0;
+        padding: 12px 15px;
+        border-radius: 8px;
+        border-left: 3px solid #00c851;
+      }
+
+      .problem-list {
+        list-style: none;
+        padding: 0;
+      }
+
+      .problem-list li {
+        background: rgba(196, 30, 58, 0.1);
+        margin: 10px 0;
+        padding: 12px 15px;
+        border-radius: 8px;
+        border-left: 3px solid #c41e3a;
+      }
+
+      .objective-box {
+        background: linear-gradient(135deg, #00c851 0%, #007e33 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin: 30px 0;
+        text-align: center;
+      }
+
+      .objective-box h3 {
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+      }
+
+      .objective-box p {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        font-style: italic;
+      }
+
+      .categories-container {
+        margin: 30px 0;
+      }
+
+      .category-card {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 25px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .category-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 5px;
+      }
+
+      .category-card.direction::before {
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .category-card.management::before {
+        background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
+      }
+
+      .category-card.operation::before {
+        background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+      }
+
+      .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .category-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+      }
+
+      .category-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: white;
+        font-weight: bold;
+      }
+
+      .direction .category-icon {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .management .category-icon {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      }
+
+      .operation .category-icon {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      }
+
+      .category-title {
+        flex: 1;
+      }
+
+      .category-title h3 {
+        font-size: 1.6rem;
+        color: #2d3748;
+        margin-bottom: 5px;
+      }
+
+      .category-title .category-subtitle {
+        color: #718096;
+        font-style: italic;
+      }
+
+      .category-content {
+        margin-left: 75px;
+      }
+
+      .category-focus {
+        background: #f7fafc;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+        border-left: 4px solid #00c851;
+      }
+
+      .category-focus strong {
+        color: #2d3748;
+      }
+
+      .process-list {
+        margin: 15px 0;
+      }
+
+      .process-item {
+        background: rgba(0, 200, 81, 0.05);
+        padding: 10px 15px;
+        margin: 8px 0;
+        border-radius: 6px;
+        border-left: 3px solid #00c851;
+      }
+
+      .analogy-box {
+        background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        margin: 15px 0;
+        font-style: italic;
+      }
+
+      .analogy-box strong {
+        font-style: normal;
+      }
+
+      @media (max-width: 768px) {
         .slide {
-            display: none;
-            animation: slideIn 0.5s ease-in-out;
+          padding: 30px;
         }
-        
-        .slide.active {
-            display: block;
+
+        .slide h1 {
+          font-size: 2.2rem;
         }
-        
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
+
+        .slide h2 {
+          font-size: 1.8rem;
         }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+
+        .origin-grid {
+          grid-template-columns: 1fr;
+          gap: 20px;
         }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
+
+        .navigation {
+          padding: 15px 30px;
         }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+
+        .category-content {
+          margin-left: 0;
+          margin-top: 20px;
         }
-        
-        @keyframes wiggle {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(-3deg); }
-            75% { transform: rotate(3deg); }
+
+        .category-header {
+          flex-direction: column;
+          text-align: center;
         }
-        
-        .float-animation {
-            animation: float 3s ease-in-out infinite;
+
+        .comparison-table-container {
+          font-size: 0.85rem;
         }
-        
-        .bounce-animation {
-            animation: bounce 2s infinite;
+
+        .comparison-table th,
+        .comparison-table td {
+          padding: 12px 8px;
         }
-        
-        .pulse-animation {
-            animation: pulse 2s infinite;
+
+        .conclusion-grid {
+          grid-template-columns: 1fr;
+          gap: 15px;
         }
-        
-        .wiggle-animation {
-            animation: wiggle 1s ease-in-out infinite;
-        }
-        
-        .slide-bg-1 {
-            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .slide-bg-1::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-            animation: float 30s linear infinite;
-        }
-        
-        .slide-bg-2 {
-            background: linear-gradient(135deg, #4834d4 0%, #686de0 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .slide-bg-2::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04' fill-rule='evenodd'%3E%3Cpath d='M20 20c0-16.569-13.431-30-30-30C-26.569-10-40 3.431-40 20s13.431 30 30 30c16.569 0 30-13.431 30-30zM0 40c0-11.046-8.954-20-20-20s-20 8.954-20 20 8.954 20 20 20 20-8.954 20-20z'/%3E%3C/g%3E%3C/svg%3E");
-        }
-        
-        .slide-bg-3 {
-            background: linear-gradient(135deg, #00d2d3 0%, #54a0ff 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .slide-bg-3::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
-        }
-        
-        .slide-bg-4 {
-            background: linear-gradient(135deg, #5f27cd 0%, #341f97 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .slide-bg-4::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M50 50c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10zM10 10c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10zm60 60c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        }
-        
-        .slide-bg-5 {
-            background: linear-gradient(135deg, #ff9ff3 0%, #f368e0 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .slide-bg-5::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpolygon points='50 0 60 40 100 50 60 60 50 100 40 60 0 50 40 40'/%3E%3C/g%3E%3C/svg%3E");
-        }
-        
-        .concept-card {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .concept-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-        
-        .importance-card {
-            transition: all 0.3s ease;
-        }
-        
-        .importance-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.15);
-        }
-        
-        .lifecycle-step {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .lifecycle-step:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .lifecycle-step.active {
-            transform: scale(1.1);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-        }
-        
-        .cost-bar {
-            transition: all 0.5s ease;
-        }
-        
-        .discussion-option {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .discussion-option:hover {
-            transform: scale(1.02);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .discussion-option.selected {
-            transform: scale(1.05);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-        }
-        
-        .progress-bar {
-            transition: width 0.3s ease;
-        }
-        
-        .timer-display {
-            font-family: 'Courier New', monospace;
-            font-size: 2rem;
-            font-weight: bold;
-        }
+      }
     </style>
-<link rel="stylesheet" href="css/layout.css">
-<body class="bg-gray-50 min-h-screen">
-
-<style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
-</style>
-<div class="qs-nav" data-role="main-nav">
-  <div class="wrap">
-    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
-    <nav class="qs-tabs" aria-label="Navegación">
-      <a class="qs-btn" href="materiales.html">Materiales</a>
-      <a class="qs-btn" href="asistencia.html">Asistencia</a>
-      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
-      <a class="qs-btn" href="Foro.html">Foro</a>
-      <a class="qs-btn" href="paneldocente.html">Panel</a>
-      <a class="qs-btn" href="roadmap.html">Roadmap</a>
-      
-\1
-  </div>
-</div>
-<script>
-(function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
-  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
-  });
-})();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
-</script>
-
-
-    <!-- Navigation -->
-    <div class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50 px-6 py-4">
-        <div class="flex justify-between items-center max-w-6xl mx-auto">
-            <div class="flex items-center space-x-4">
-                <h1 class="text-xl font-bold text-gray-800">Sesión 22 - Conceptos Fundamentales</h1>
-                <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
-                    Diapositiva <span id="currentSlide">1</span> de 5
-                </span>
-            </div>
-            <div class="flex space-x-2">
-                <button onclick="previousSlide()" id="prevBtn" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
-                    ← Anterior
-                </button>
-                <button onclick="nextSlide()" id="nextBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
-                    Siguiente →
-                </button>
-            </div>
+  </head>
+  <body>
+    <div class="presentation-container">
+      <!-- Slide 1: Título -->
+      <div class="slide active">
+        <h1>MoProSoft: Calidad Hecha en México</h1>
+        <div class="mexican-flag">
+          <div class="flag-green"></div>
+          <div class="flag-white"></div>
+          <div class="flag-red"></div>
         </div>
-        <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
-            <div id="progressBar" class="progress-bar bg-red-600 h-2 rounded-full" style="width: 20%"></div>
+        <p class="subtitle">
+          Un modelo de procesos diseñado para la realidad de la industria de
+          software mexicana.
+        </p>
+
+        <div class="source">
+          <strong>📚 Fuente Principal:</strong> "Modelo de Procesos para la
+          Industria de Software MoProSoft", Versión 1.3.
         </div>
-    </div>
 
-    <!-- Slides Container -->
-    <div class="pt-24 pb-8 px-6">
-        <div class="max-w-6xl mx-auto">
-            
-            <!-- Slide 1: Título -->
-            <div class="slide active" id="slide1">
-                <div class="slide-bg-1 rounded-3xl p-12 text-center text-white min-h-[600px] flex flex-col justify-center items-center relative z-10">
-                    <div class="flex items-center justify-center mb-8">
-                        <div class="wiggle-animation text-6xl mr-4">🐛</div>
-                        <div class="bounce-animation text-6xl">⚠️</div>
-                        <div class="float-animation text-6xl ml-4">🔧</div>
-                    </div>
-                    <h1 class="text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
-                        <span class="pulse-animation">Defectos:</span><br>
-                        <span class="text-yellow-300">Inevitables pero</span><br>
-                        <span class="text-green-300">Gestionables</span>
-                    </h1>
-                    <p class="text-xl opacity-90 max-w-3xl mb-8">
-                        Comprendiendo la naturaleza de los defectos y su gestión efectiva en el desarrollo de software
-                    </p>
-                    <div class="flex items-center space-x-4 text-lg">
-                        <span class="bg-white bg-opacity-20 px-4 py-2 rounded-full">Sesión 22</span>
-                        <span class="bg-white bg-opacity-20 px-4 py-2 rounded-full">Defectos</span>
-                        <span class="bg-white bg-opacity-20 px-4 py-2 rounded-full">Gestión</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 2: ¿Qué es un defecto? -->
-            <div class="slide" id="slide2">
-                <div class="slide-bg-2 rounded-3xl p-12 min-h-[600px] relative z-10">
-                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
-                        🔍 ¿Qué es un Defecto?
-                    </h2>
-                    
-                    <div class="grid md:grid-cols-3 gap-6 mb-8">
-                        <!-- Error -->
-                        <div class="concept-card bg-gradient-to-br from-red-400 to-red-600 rounded-2xl p-8 text-white">
-                            <div class="text-center mb-6">
-                                <div class="text-6xl mb-4">👤</div>
-                                <h3 class="text-2xl font-bold mb-2">ERROR</h3>
-                                <p class="text-sm opacity-90">Acción Humana</p>
-                            </div>
-                            <p class="text-lg mb-4 opacity-90 text-center">
-                                Acción humana incorrecta
-                            </p>
-                            <div class="bg-white bg-opacity-20 rounded-lg p-4">
-                                <h4 class="font-semibold mb-2">Ejemplo:</h4>
-                                <p class="text-sm">
-                                    Un desarrollador escribe mal una condición en el código
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Defecto -->
-                        <div class="concept-card bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl p-8 text-white">
-                            <div class="text-center mb-6">
-                                <div class="text-6xl mb-4">🐛</div>
-                                <h3 class="text-2xl font-bold mb-2">DEFECTO</h3>
-                                <p class="text-sm opacity-90">Bug en el Software</p>
-                            </div>
-                            <p class="text-lg mb-4 opacity-90 text-center">
-                                Representación en el software del error
-                            </p>
-                            <div class="bg-white bg-opacity-20 rounded-lg p-4">
-                                <h4 class="font-semibold mb-2">Ejemplo:</h4>
-                                <p class="text-sm">
-                                    La condición incorrecta está presente en el código fuente
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Fallo -->
-                        <div class="concept-card bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl p-8 text-white">
-                            <div class="text-center mb-6">
-                                <div class="text-6xl mb-4">💥</div>
-                                <h3 class="text-2xl font-bold mb-2">FALLO</h3>
-                                <p class="text-sm opacity-90">Comportamiento Inesperado</p>
-                            </div>
-                            <p class="text-lg mb-4 opacity-90 text-center">
-                                Ejecución de un defecto que causa comportamiento inesperado
-                            </p>
-                            <div class="bg-white bg-opacity-20 rounded-lg p-4">
-                                <h4 class="font-semibold mb-2">Ejemplo:</h4>
-                                <p class="text-sm">
-                                    La aplicación se cierra inesperadamente al ejecutar esa condición
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white bg-opacity-90 rounded-xl p-6">
-                        <div class="flex items-center justify-center mb-4">
-                            <div class="text-4xl mr-4">📚</div>
-                            <div>
-                                <h4 class="text-lg font-semibold text-gray-800">Fuente</h4>
-                                <p class="text-gray-600">Mahfuz, Capítulo 7</p>
-                            </div>
-                        </div>
-                        <div class="text-center">
-                            <div class="inline-flex items-center bg-blue-100 text-blue-800 px-4 py-2 rounded-full">
-                                <span class="mr-2">💡</span>
-                                <span class="font-medium">Error → Defecto → Fallo: La cadena de eventos</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 3: Importancia de la gestión de defectos -->
-            <div class="slide" id="slide3">
-                <div class="slide-bg-3 rounded-3xl p-12 min-h-[600px] relative z-10">
-                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
-                        📈 Importancia de la Gestión de Defectos
-                    </h2>
-                    
-                    <div class="grid md:grid-cols-2 gap-8 mb-8">
-                        <!-- Cost Chart -->
-                        <div class="bg-white bg-opacity-90 rounded-2xl p-8">
-                            <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
-                                💰 Costo de Corrección por Fase
-                            </h3>
-                            <div class="space-y-4">
-                                <div class="flex items-center">
-                                    <div class="w-24 text-sm font-medium text-gray-700">Requisitos</div>
-                                    <div class="flex-1 bg-gray-200 rounded-full h-6 mx-3">
-                                        <div class="cost-bar bg-green-500 h-6 rounded-full flex items-center justify-end pr-2" style="width: 10%">
-                                            <span class="text-xs text-white font-bold">1x</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="w-24 text-sm font-medium text-gray-700">Diseño</div>
-                                    <div class="flex-1 bg-gray-200 rounded-full h-6 mx-3">
-                                        <div class="cost-bar bg-yellow-500 h-6 rounded-full flex items-center justify-end pr-2" style="width: 25%">
-                                            <span class="text-xs text-white font-bold">5x</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="w-24 text-sm font-medium text-gray-700">Desarrollo</div>
-                                    <div class="flex-1 bg-gray-200 rounded-full h-6 mx-3">
-                                        <div class="cost-bar bg-orange-500 h-6 rounded-full flex items-center justify-end pr-2" style="width: 50%">
-                                            <span class="text-xs text-white font-bold">10x</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="w-24 text-sm font-medium text-gray-700">Pruebas</div>
-                                    <div class="flex-1 bg-gray-200 rounded-full h-6 mx-3">
-                                        <div class="cost-bar bg-red-500 h-6 rounded-full flex items-center justify-end pr-2" style="width: 75%">
-                                            <span class="text-xs text-white font-bold">15x</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex items-center">
-                                    <div class="w-24 text-sm font-medium text-gray-700">Producción</div>
-                                    <div class="flex-1 bg-gray-200 rounded-full h-6 mx-3">
-                                        <div class="cost-bar bg-red-700 h-6 rounded-full flex items-center justify-end pr-2" style="width: 100%">
-                                            <span class="text-xs text-white font-bold">100x</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Benefits -->
-                        <div class="space-y-6">
-                            <div class="importance-card bg-gradient-to-r from-green-500 to-green-600 rounded-2xl p-6 text-white">
-                                <div class="flex items-center mb-4">
-                                    <div class="text-4xl mr-4">⏰</div>
-                                    <div>
-                                        <h3 class="text-xl font-bold">Detección Temprana</h3>
-                                        <p class="text-sm opacity-90">Menor costo de corrección</p>
-                                    </div>
-                                </div>
-                                <p class="text-sm opacity-90">
-                                    Encontrar defectos en fases tempranas reduce significativamente el costo y esfuerzo de corrección
-                                </p>
-                            </div>
-
-                            <div class="importance-card bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
-                                <div class="flex items-center mb-4">
-                                    <div class="text-4xl mr-4">🎯</div>
-                                    <div>
-                                        <h3 class="text-xl font-bold">Priorización</h3>
-                                        <p class="text-sm opacity-90">Según impacto y severidad</p>
-                                    </div>
-                                </div>
-                                <p class="text-sm opacity-90">
-                                    Permite clasificar y atender defectos según su criticidad e impacto en el negocio
-                                </p>
-                            </div>
-
-                            <div class="importance-card bg-gradient-to-r from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
-                                <div class="flex items-center mb-4">
-                                    <div class="text-4xl mr-4">💬</div>
-                                    <div>
-                                        <h3 class="text-xl font-bold">Comunicación</h3>
-                                        <p class="text-sm opacity-90">Entre QA, desarrollo y negocio</p>
-                                    </div>
-                                </div>
-                                <p class="text-sm opacity-90">
-                                    Facilita la comunicación efectiva entre todos los stakeholders del proyecto
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white bg-opacity-90 rounded-xl p-6">
-                        <div class="text-center">
-                            <div class="inline-flex items-center bg-red-100 text-red-800 px-6 py-3 rounded-full text-lg font-semibold">
-                                <span class="mr-2">🚨</span>
-                                <span>La gestión temprana de defectos puede ahorrar hasta 100x el costo</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 4: Ciclo de Vida de un Defecto -->
-            <div class="slide" id="slide4">
-                <div class="slide-bg-4 rounded-3xl p-12 min-h-[600px] relative z-10">
-                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
-                        🔄 Ciclo de Vida de un Defecto
-                    </h2>
-                    
-                    <div class="grid md:grid-cols-4 gap-4 mb-8">
-                        <!-- Step 1: Identificación -->
-                        <div class="lifecycle-step bg-gradient-to-br from-red-400 to-red-600 rounded-2xl p-6 text-white text-center" onclick="highlightStep(1)">
-                            <div class="text-4xl mb-3">🔍</div>
-                            <h3 class="text-lg font-bold mb-2">1. Identificación</h3>
-                            <p class="text-sm opacity-90">Detección del problema</p>
-                        </div>
-
-                        <!-- Step 2: Registro -->
-                        <div class="lifecycle-step bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl p-6 text-white text-center" onclick="highlightStep(2)">
-                            <div class="text-4xl mb-3">📝</div>
-                            <h3 class="text-lg font-bold mb-2">2. Registro</h3>
-                            <p class="text-sm opacity-90">Documentación formal</p>
-                        </div>
-
-                        <!-- Step 3: Clasificación -->
-                        <div class="lifecycle-step bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl p-6 text-white text-center" onclick="highlightStep(3)">
-                            <div class="text-4xl mb-3">🏷️</div>
-                            <h3 class="text-lg font-bold mb-2">3. Clasificación</h3>
-                            <p class="text-sm opacity-90">Prioridad/Severidad</p>
-                        </div>
-
-                        <!-- Step 4: Asignación -->
-                        <div class="lifecycle-step bg-gradient-to-br from-green-400 to-green-600 rounded-2xl p-6 text-white text-center" onclick="highlightStep(4)">
-                            <div class="text-4xl mb-3">👤</div>
-                            <h3 class="text-lg font-bold mb-2">4. Asignación</h3>
-                            <p class="text-sm opacity-90">Al desarrollador</p>
-                        </div>
-
-                        <!-- Step 5: Resolución -->
-                        <div class="lifecycle-step bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl p-6 text-white text-center" onclick="highlightStep(5)">
-                            <div class="text-4xl mb-3">🔧</div>
-                            <h3 class="text-lg font-bold mb-2">5. Resolución</h3>
-                            <p class="text-sm opacity-90">Corrección del código</p>
-                        </div>
-
-                        <!-- Step 6: Verificación -->
-                        <div class="lifecycle-step bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl p-6 text-white text-center" onclick="highlightStep(6)">
-                            <div class="text-4xl mb-3">✅</div>
-                            <h3 class="text-lg font-bold mb-2">6. Verificación</h3>
-                            <p class="text-sm opacity-90">Prueba de la solución</p>
-                        </div>
-
-                        <!-- Step 7: Cierre -->
-                        <div class="lifecycle-step bg-gradient-to-br from-teal-400 to-teal-600 rounded-2xl p-6 text-white text-center" onclick="highlightStep(7)">
-                            <div class="text-4xl mb-3">🏁</div>
-                            <h3 class="text-lg font-bold mb-2">7. Cierre</h3>
-                            <p class="text-sm opacity-90">Finalización oficial</p>
-                        </div>
-
-                        <!-- Flow indicator -->
-                        <div class="bg-gradient-to-r from-indigo-400 to-indigo-600 rounded-2xl p-6 text-white text-center">
-                            <div class="text-4xl mb-3">🔄</div>
-                            <h3 class="text-lg font-bold mb-2">Proceso</h3>
-                            <p class="text-sm opacity-90">Continuo y cíclico</p>
-                        </div>
-                    </div>
-
-                    <div class="bg-white bg-opacity-90 rounded-xl p-6 mb-6">
-                        <div id="stepDetails" class="text-center">
-                            <h4 class="text-xl font-bold text-gray-800 mb-3">
-                                <span class="mr-2">🔄</span> Proceso Completo del Ciclo de Vida
-                            </h4>
-                            <p class="text-gray-600">
-                                Haz clic en cualquier paso para ver los detalles específicos de esa fase
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="bg-white bg-opacity-90 rounded-xl p-6">
-                        <div class="flex items-center justify-center">
-                            <div class="text-4xl mr-4">📚</div>
-                            <div>
-                                <h4 class="text-lg font-semibold text-gray-800">Fuente</h4>
-                                <p class="text-gray-600">Pressman, Capítulo 15</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 5: Actividad - Discusión -->
-            <div class="slide" id="slide5">
-                <div class="slide-bg-5 rounded-3xl p-12 min-h-[600px] relative z-10">
-                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
-                        💬 Actividad - Discusión (10 min)
-                    </h2>
-                    
-                    <div class="grid md:grid-cols-2 gap-8 mb-8">
-                        <!-- Question -->
-                        <div class="bg-white bg-opacity-90 rounded-2xl p-8">
-                            <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
-                                🤔 Pregunta para Discusión
-                            </h3>
-                            <div class="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-6 mb-6">
-                                <p class="text-lg text-gray-800 font-medium text-center leading-relaxed">
-                                    ¿Cuál creen que es más costoso: encontrar un defecto en 
-                                    <span class="font-bold text-purple-600">requisitos</span>, en 
-                                    <span class="font-bold text-blue-600">pruebas</span> o en 
-                                    <span class="font-bold text-red-600">producción</span>?
-                                </p>
-                                <p class="text-center text-gray-600 mt-4 font-medium">
-                                    ¿Por qué?
-                                </p>
-                            </div>
-                            
-                            <!-- Timer -->
-                            <div class="text-center">
-                                <div class="bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl p-4 text-white">
-                                    <div class="text-sm font-medium mb-2">Tiempo Restante</div>
-                                    <div id="timer" class="timer-display">10:00</div>
-                                    <button onclick="startTimer()" id="timerBtn" class="mt-3 bg-white text-purple-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-                                        ▶️ Iniciar Timer
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Cost Comparison -->
-                        <div class="bg-white bg-opacity-90 rounded-2xl p-8">
-                            <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
-                                💰 Comparación de Costos
-                            </h3>
-                            
-                            <div class="space-y-4 mb-6">
-                                <div class="discussion-option bg-gradient-to-r from-green-400 to-green-500 rounded-xl p-4 text-white" onclick="selectOption('requisitos')">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center">
-                                            <div class="text-2xl mr-3">📋</div>
-                                            <div>
-                                                <h4 class="font-bold">Requisitos</h4>
-                                                <p class="text-sm opacity-90">Fase inicial</p>
-                                            </div>
-                                        </div>
-                                        <div class="text-2xl font-bold">1x</div>
-                                    </div>
-                                </div>
-
-                                <div class="discussion-option bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl p-4 text-white" onclick="selectOption('pruebas')">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center">
-                                            <div class="text-2xl mr-3">🧪</div>
-                                            <div>
-                                                <h4 class="font-bold">Pruebas</h4>
-                                                <p class="text-sm opacity-90">Pre-producción</p>
-                                            </div>
-                                        </div>
-                                        <div class="text-2xl font-bold">15x</div>
-                                    </div>
-                                </div>
-
-                                <div class="discussion-option bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-4 text-white" onclick="selectOption('produccion')">
-                                    <div class="flex items-center justify-between">
-                                        <div class="flex items-center">
-                                            <div class="text-2xl mr-3">🚀</div>
-                                            <div>
-                                                <h4 class="font-bold">Producción</h4>
-                                                <p class="text-sm opacity-90">En vivo</p>
-                                            </div>
-                                        </div>
-                                        <div class="text-2xl font-bold">100x</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="selectionFeedback" class="text-center text-gray-600 italic">
-                                Haz clic en una opción para ver el análisis
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white bg-opacity-90 rounded-xl p-6">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-3 flex items-center justify-center">
-                            <span class="mr-2">💡</span> Puntos Clave para la Discusión
-                        </h4>
-                        <div class="grid md:grid-cols-3 gap-4 text-gray-700">
-                            <div class="text-center">
-                                <div class="text-2xl mb-2">⏰</div>
-                                <p class="text-sm font-medium">Tiempo de detección</p>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-2xl mb-2">👥</div>
-                                <p class="text-sm font-medium">Impacto en usuarios</p>
-                            </div>
-                            <div class="text-center">
-                                <div class="text-2xl mb-2">🔧</div>
-                                <p class="text-sm font-medium">Complejidad de corrección</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+        <div class="teacher-notes">
+          <h4>📝 Notas para el docente:</h4>
+          <p>
+            Inicia la sesión haciendo un puente con los modelos anteriores:
+            "Hemos estudiado CMMI e ISO, modelos robustos, internacionales, pero
+            a veces percibidos como complejos y costosos de implementar,
+            especialmente para empresas que recién comienzan. ¿Qué pasaría si
+            quisiéramos un modelo más ligero, más ágil y que hablara nuestro
+            idioma? De esa necesidad nació MoProSoft."
+          </p>
         </div>
+      </div>
+
+      <!-- Slide 2: Origen y Objetivos -->
+      <div class="slide">
+        <h2>¿Por qué un Modelo Mexicano?</h2>
+
+        <div class="origin-grid">
+          <div class="origin-card developers">
+            <h3>🏛️ Desarrollado por:</h3>
+            <ul class="developer-list">
+              <li><strong>La Secretaría de Economía de México</strong></li>
+              <li>
+                <strong
+                  >La Asociación Mexicana para la Calidad en Ingeniería de
+                  Software (AMCIS)</strong
+                >
+              </li>
+              <li>
+                <strong>Miembros de la academia y la industria</strong> de
+                software del país
+              </li>
+            </ul>
+          </div>
+
+          <div class="origin-card problem">
+            <h3>⚠️ El Problema a Resolver (Contexto ~2002):</h3>
+            <ul class="problem-list">
+              <li>
+                La industria de software en México estaba creciendo, pero era
+                muy <strong>heterogénea</strong>
+              </li>
+              <li>
+                Muchas empresas eran
+                <strong>Pequeñas y Medianas (PYMES)</strong>
+              </li>
+              <li>
+                Los modelos como CMMI eran vistos como demasiado
+                <strong>"pesados", caros y complejos</strong> para una empresa
+                de 10 o 20 ingenieros
+              </li>
+              <li>
+                Se necesitaba un <strong>estándar nacional</strong> para elevar
+                la capacidad y competitividad de la industria local
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="objective-box">
+          <h3>🎯 Objetivo Principal de MoProSoft:</h3>
+          <p>
+            "Proveer a las organizaciones de la industria de software mexicana
+            un modelo de procesos <strong>accesible y práctico</strong> que les
+            permita mejorar su calidad, aumentar su productividad y ser más
+            competitivas a nivel nacional e internacional."
+          </p>
+        </div>
+
+        <div class="teacher-notes">
+          <h4>📝 Puntos a desarrollar:</h4>
+          <p>
+            "MoProSoft no busca reemplazar a CMMI, sino ser una puerta de
+            entrada a la mejora de procesos. Es un 'primer gran paso' para que
+            las PYMES dejen de operar de forma caótica (como en CMMI Nivel 1) y
+            adopten un conjunto de prácticas estandarizadas y eficientes."
+          </p>
+        </div>
+      </div>
+
+      <!-- Slide 3: Estructura del Modelo -->
+      <div class="slide">
+        <h1>Una Estructura Sencilla y Funcional</h1>
+        <p class="subtitle">Las Tres Categorías de MoProSoft</p>
+
+        <div class="highlight" style="margin-bottom: 30px">
+          <strong>Concepto:</strong> MoProSoft organiza sus procesos en tres
+          categorías jerárquicas que reflejan la estructura de una empresa real.
+          Es más fácil de entender que la agrupación por niveles de CMMI.
+        </div>
+
+        <div class="categories-container">
+          <div class="category-card direction">
+            <div class="category-header">
+              <div class="category-icon">DIR</div>
+              <div class="category-title">
+                <h3>1. Categoría de Alta Dirección (DIR)</h3>
+                <div class="category-subtitle">
+                  La estrategia del negocio. ¿Hacia dónde va la empresa?
+                </div>
+              </div>
+            </div>
+            <div class="category-content">
+              <div class="category-focus">
+                <strong>Proceso Clave:</strong> Gestión de Negocio. Incluye la
+                planificación estratégica, la definición de objetivos, la
+                gestión financiera y la inteligencia de mercado.
+              </div>
+              <div class="analogy-box">
+                <strong>Analogía:</strong> Es el "cerebro" de la organización,
+                el que define la visión y la dirección.
+              </div>
+            </div>
+          </div>
+
+          <div class="category-card management">
+            <div class="category-header">
+              <div class="category-icon">GER</div>
+              <div class="category-title">
+                <h3>2. Categoría de Gerencia (GER)</h3>
+                <div class="category-subtitle">
+                  La táctica. ¿Cómo administramos nuestros recursos para
+                  alcanzar la estrategia?
+                </div>
+              </div>
+            </div>
+            <div class="category-content">
+              <div class="category-focus">
+                <strong>Procesos Clave:</strong>
+              </div>
+              <div class="process-list">
+                <div class="process-item">
+                  <strong>Gestión de Procesos:</strong> Definir, mejorar y
+                  desplegar los procesos de la organización.
+                </div>
+                <div class="process-item">
+                  <strong>Gestión de Proyectos:</strong> Planificar, ejecutar y
+                  controlar los proyectos individuales.
+                </div>
+                <div class="process-item">
+                  <strong>Gestión de Recursos:</strong> Administrar al personal
+                  (capacitación, evaluación), la infraestructura (hardware,
+                  software) y el ambiente de trabajo.
+                </div>
+              </div>
+              <div class="analogy-box">
+                <strong>Analogía:</strong> Es el "sistema nervioso", que
+                coordina y gestiona los recursos para que el cuerpo se mueva de
+                forma eficiente.
+              </div>
+            </div>
+          </div>
+
+          <div class="category-card operation">
+            <div class="category-header">
+              <div class="category-icon">OPE</div>
+              <div class="category-title">
+                <h3>3. Categoría de Operación (OPE)</h3>
+                <div class="category-subtitle">
+                  La ejecución. El "hacer el trabajo" del día a día.
+                </div>
+              </div>
+            </div>
+            <div class="category-content">
+              <div class="category-focus">
+                <strong>Proceso Clave:</strong> Desarrollo y Mantenimiento de
+                Software. Cubre todo el ciclo de vida: desde el análisis de
+                requisitos, diseño, construcción y pruebas, hasta la entrega y
+                el mantenimiento del software.
+              </div>
+              <div class="analogy-box">
+                <strong>Analogía:</strong> Son los "brazos y piernas" de la
+                organización, los que construyen el producto.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="teacher-notes">
+          <h4>📝 Puntos a desarrollar:</h4>
+          <p>
+            "Esta estructura es muy intuitiva. Si eres el dueño de la empresa,
+            te enfocas en la categoría DIR. Si eres un gerente de proyecto, tu
+            mundo es la categoría GER. Y si eres un desarrollador o un tester,
+            tus actividades diarias están descritas en la categoría OPE. Es un
+            modelo que habla el idioma de los roles de una empresa."
+          </p>
+        </div>
+      </div>
+
+      <div class="navigation">
+        <button class="nav-button" id="prevBtn" onclick="changeSlide(-1)">
+          ← Anterior
+        </button>
+        <div class="slide-counter">
+          <span id="currentSlide">1</span> / <span id="totalSlides">4</span>
+        </div>
+        <button class="nav-button" id="nextBtn" onclick="changeSlide(1)">
+          Siguiente →
+        </button>
+      </div>
     </div>
 
     <script>
-        let currentSlideIndex = 0;
-        const totalSlides = 5;
-        let timerInterval;
-        let timeLeft = 600; // 10 minutes in seconds
-        let timerRunning = false;
+      let currentSlideIndex = 0;
+      const slides = document.querySelectorAll(".slide");
+      const totalSlides = slides.length;
 
-        function showSlide(index) {
-            // Hide all slides
-            document.querySelectorAll('.slide').forEach(slide => {
-                slide.classList.remove('active');
-            });
-            
-            // Show current slide
-            document.getElementById(`slide${index + 1}`).classList.add('active');
-            
-            // Update navigation
-            document.getElementById('currentSlide').textContent = index + 1;
-            document.getElementById('prevBtn').disabled = index === 0;
-            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
-            
-            // Update progress bar
-            const progress = ((index + 1) / totalSlides) * 100;
-            document.getElementById('progressBar').style.width = progress + '%';
-            
-            // Update button states
-            if (index === 0) {
-                document.getElementById('prevBtn').classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                document.getElementById('prevBtn').classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-            
-            if (index === totalSlides - 1) {
-                document.getElementById('nextBtn').classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                document.getElementById('nextBtn').classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-        }
+      document.getElementById("totalSlides").textContent = totalSlides;
 
-        function nextSlide() {
-            if (currentSlideIndex < totalSlides - 1) {
-                currentSlideIndex++;
-                showSlide(currentSlideIndex);
-            }
-        }
+      function showSlide(index) {
+        slides.forEach((slide) => slide.classList.remove("active"));
+        slides[index].classList.add("active");
 
-        function previousSlide() {
-            if (currentSlideIndex > 0) {
-                currentSlideIndex--;
-                showSlide(currentSlideIndex);
-            }
-        }
+        document.getElementById("currentSlide").textContent = index + 1;
+        document.getElementById("prevBtn").disabled = index === 0;
+        document.getElementById("nextBtn").disabled = index === totalSlides - 1;
 
-        function highlightStep(stepNumber) {
-            // Remove active class from all steps
-            document.querySelectorAll('.lifecycle-step').forEach(step => {
-                step.classList.remove('active');
-            });
-            
-            // Add active class to clicked step
-            document.querySelectorAll('.lifecycle-step')[stepNumber - 1].classList.add('active');
-            
-            // Update step details
-            const stepDetails = {
-                1: {
-                    title: "1. Identificación",
-                    description: "El defecto es detectado por un tester, usuario o desarrollador durante la ejecución del software."
-                },
-                2: {
-                    title: "2. Registro",
-                    description: "Se documenta formalmente el defecto en el sistema de gestión, incluyendo pasos para reproducir, evidencias y contexto."
-                },
-                3: {
-                    title: "3. Clasificación",
-                    description: "Se asigna prioridad (urgencia) y severidad (impacto) al defecto para determinar el orden de atención."
-                },
-                4: {
-                    title: "4. Asignación",
-                    description: "El defecto se asigna al desarrollador o equipo responsable de la corrección según el área afectada."
-                },
-                5: {
-                    title: "5. Resolución",
-                    description: "El desarrollador analiza, corrige el código y marca el defecto como resuelto con los cambios realizados."
-                },
-                6: {
-                    title: "6. Verificación",
-                    description: "El tester verifica que la corrección funciona correctamente y no introduce nuevos problemas."
-                },
-                7: {
-                    title: "7. Cierre",
-                    description: "Una vez verificada la corrección, el defecto se cierra oficialmente y se actualiza su estado final."
-                }
-            };
-            
-            const details = stepDetails[stepNumber];
-            document.getElementById('stepDetails').innerHTML = `
-                <h4 class="text-xl font-bold text-gray-800 mb-3">
-                    <span class="mr-2">🎯</span> ${details.title}
-                </h4>
-                <p class="text-gray-600">${details.description}</p>
-            `;
-        }
-
-        function startTimer() {
-            const timerBtn = document.getElementById('timerBtn');
-            
-            if (timerRunning) {
-                // Stop timer
-                clearInterval(timerInterval);
-                timerRunning = false;
-                timerBtn.innerHTML = '▶️ Iniciar Timer';
-                timerBtn.classList.remove('bg-red-500');
-                timerBtn.classList.add('bg-white');
-                return;
-            }
-            
-            // Start timer
-            timerRunning = true;
-            timerBtn.innerHTML = '⏹️ Detener Timer';
-            timerBtn.classList.remove('bg-white');
-            timerBtn.classList.add('bg-red-500', 'text-white');
-            
-            timerInterval = setInterval(() => {
-                if (timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    timerRunning = false;
-                    timerBtn.innerHTML = '🔔 ¡Tiempo!';
-                    timerBtn.classList.add('bg-yellow-500');
-                    return;
-                }
-                
-                timeLeft--;
-                const minutes = Math.floor(timeLeft / 60);
-                const seconds = timeLeft % 60;
-                document.getElementById('timer').textContent = 
-                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-            }, 1000);
-        }
-
-        function selectOption(option) {
-            // Remove selected class from all options
-            document.querySelectorAll('.discussion-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
-            
-            // Add selected class to clicked option
-            event.currentTarget.classList.add('selected');
-            
-            // Update feedback
-            const feedback = {
-                'requisitos': {
-                    text: "¡Correcto! Los defectos en requisitos son los menos costosos de corregir (1x). Detectar problemas en esta fase temprana evita que se propaguen a todo el desarrollo.",
-                    color: "text-green-600"
-                },
-                'pruebas': {
-                    text: "Los defectos en pruebas cuestan 15x más que en requisitos. Aunque es mejor que producción, ya requiere cambios en código desarrollado y nuevas pruebas.",
-                    color: "text-orange-600"
-                },
-                'produccion': {
-                    text: "¡Los más costosos! Los defectos en producción cuestan 100x más. Afectan usuarios reales, requieren hotfixes urgentes y pueden dañar la reputación.",
-                    color: "text-red-600"
-                }
-            };
-            
-            const selectedFeedback = feedback[option];
-            document.getElementById('selectionFeedback').innerHTML = `
-                <div class="${selectedFeedback.color} font-medium">
-                    ${selectedFeedback.text}
-                </div>
-            `;
-        }
-
-        // Keyboard navigation
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === ' ') {
-                e.preventDefault();
-                nextSlide();
-            } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                previousSlide();
-            }
+        // Scroll to top smoothly when changing slides
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
         });
+      }
 
-        // Initialize
-        showSlide(0);
+      function changeSlide(direction) {
+        const newIndex = currentSlideIndex + direction;
+        if (newIndex >= 0 && newIndex < totalSlides) {
+          currentSlideIndex = newIndex;
+          showSlide(currentSlideIndex);
+        }
+      }
 
-        // Add click effects to interactive elements
-        document.querySelectorAll('.concept-card, .importance-card, .discussion-option').forEach(element => {
-            element.addEventListener('click', () => {
-                element.style.transform = 'scale(0.98)';
-                setTimeout(() => {
-                    element.style.transform = '';
-                }, 150);
-            });
-        });
+      // Keyboard navigation
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowLeft") changeSlide(-1);
+        if (e.key === "ArrowRight") changeSlide(1);
+      });
+
+      // Initialize
+      showSlide(0);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a868c210dbcdb0',t:'MTc1NzEwMzQzNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script defer src="js/layout.js"></script>
-</body>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97f43f4076e59d92',t:'MTc1Nzg5ODY1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  </body>
 </html>

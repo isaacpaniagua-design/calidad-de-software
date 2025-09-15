@@ -1,1289 +1,1677 @@
 <!DOCTYPE html>
-<html lang="es" data-layout="global">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sesión 30 - CMMI y MoProSoft</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+      }
+
+      .slide {
+        display: none;
+        animation: slideIn 0.5s ease-in-out;
+      }
+
+      .slide.active {
+        display: block;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(20px);
         }
-        
-        .slide {
-            display: none;
-            animation: slideIn 0.5s ease-in-out;
+        to {
+          opacity: 1;
+          transform: translateX(0);
         }
-        
-        .slide.active {
-            display: block;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
         }
-        
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
+        50% {
+          transform: translateY(-10px);
         }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
         }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+        50% {
+          transform: scale(1.05);
         }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
+      }
+
+      @keyframes bounce {
+        0%,
+        20%,
+        50%,
+        80%,
+        100% {
+          transform: translateY(0);
         }
-        
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        40% {
+          transform: translateY(-10px);
         }
-        
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
+        60% {
+          transform: translateY(-5px);
         }
-        
-        @keyframes typewriter {
-            from { width: 0; }
-            to { width: 100%; }
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
         }
-        
-        @keyframes shimmer {
-            0% { background-position: -200px 0; }
-            100% { background-position: calc(200px + 100%) 0; }
+        to {
+          transform: rotate(360deg);
         }
-        
-        @keyframes levelUp {
-            0% { transform: translateY(0) scale(1); }
-            50% { transform: translateY(-20px) scale(1.1); }
-            100% { transform: translateY(0) scale(1); }
+      }
+
+      @keyframes glow {
+        0%,
+        100% {
+          box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
         }
-        
-        .float-animation {
-            animation: float 3s ease-in-out infinite;
+        50% {
+          box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
         }
-        
-        .pulse-animation {
-            animation: pulse 2s infinite;
+      }
+
+      @keyframes typewriter {
+        from {
+          width: 0;
         }
-        
-        .bounce-animation {
-            animation: bounce 2s infinite;
+        to {
+          width: 100%;
         }
-        
-        .rotate-animation {
-            animation: rotate 4s linear infinite;
+      }
+
+      @keyframes shimmer {
+        0% {
+          background-position: -200px 0;
         }
-        
-        .glow-animation {
-            animation: glow 2s infinite;
+        100% {
+          background-position: calc(200px + 100%) 0;
         }
-        
-        .typewriter {
-            overflow: hidden;
-            white-space: nowrap;
-            animation: typewriter 3s steps(40, end);
+      }
+
+      @keyframes levelUp {
+        0% {
+          transform: translateY(0) scale(1);
         }
-        
-        .shimmer {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200px 100%;
-            animation: shimmer 2s infinite;
+        50% {
+          transform: translateY(-20px) scale(1.1);
         }
-        
-        .level-up {
-            animation: levelUp 1s ease-in-out;
+        100% {
+          transform: translateY(0) scale(1);
         }
-        
-        .slide-bg-1 {
-            background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
-        }
-        
-        .slide-bg-2 {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-        }
-        
-        .slide-bg-3 {
-            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-        }
-        
-        .slide-bg-4 {
-            background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
-        }
-        
-        .slide-bg-5 {
-            background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
-        }
-        
-        .maturity-level {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .maturity-level:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-        }
-        
-        .process-card {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .process-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-        }
-        
-        .comparison-card {
-            transition: all 0.3s ease;
-        }
-        
-        .comparison-card:hover {
-            transform: scale(1.02);
-        }
-        
-        .debate-option {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .debate-option:hover {
-            transform: scale(1.02);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-        }
-        
-        .debate-option.selected {
-            transform: scale(1.05);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-        }
-        
-        .maturity-pyramid {
-            position: relative;
-            width: 100%;
-            height: 300px;
-        }
-        
-        .pyramid-level {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .pyramid-level:hover {
-            transform: translateX(-50%) scale(1.05);
-            z-index: 10;
-        }
-        
-        .level-1 { bottom: 0; width: 90%; height: 60px; }
-        .level-2 { bottom: 60px; width: 75%; height: 60px; }
-        .level-3 { bottom: 120px; width: 60%; height: 60px; }
-        .level-4 { bottom: 180px; width: 45%; height: 60px; }
-        .level-5 { bottom: 240px; width: 30%; height: 60px; }
-        
-        .mexican-flag {
-            background: linear-gradient(to right, #006847 33%, #ffffff 33%, #ffffff 66%, #ce1126 66%);
-        }
-        
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        
-        .progress-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 1s ease;
-        }
+      }
+
+      .float-animation {
+        animation: float 3s ease-in-out infinite;
+      }
+
+      .pulse-animation {
+        animation: pulse 2s infinite;
+      }
+
+      .bounce-animation {
+        animation: bounce 2s infinite;
+      }
+
+      .rotate-animation {
+        animation: rotate 4s linear infinite;
+      }
+
+      .glow-animation {
+        animation: glow 2s infinite;
+      }
+
+      .typewriter {
+        overflow: hidden;
+        white-space: nowrap;
+        animation: typewriter 3s steps(40, end);
+      }
+
+      .shimmer {
+        background: linear-gradient(
+          90deg,
+          #f0f0f0 25%,
+          #e0e0e0 50%,
+          #f0f0f0 75%
+        );
+        background-size: 200px 100%;
+        animation: shimmer 2s infinite;
+      }
+
+      .level-up {
+        animation: levelUp 1s ease-in-out;
+      }
+
+      .slide-bg-1 {
+        background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%);
+      }
+
+      .slide-bg-2 {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+      }
+
+      .slide-bg-3 {
+        background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      }
+
+      .slide-bg-4 {
+        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+      }
+
+      .slide-bg-5 {
+        background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+      }
+
+      .maturity-level {
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .maturity-level:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      }
+
+      .process-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .process-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .comparison-card {
+        transition: all 0.3s ease;
+      }
+
+      .comparison-card:hover {
+        transform: scale(1.02);
+      }
+
+      .debate-option {
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .debate-option:hover {
+        transform: scale(1.02);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      }
+
+      .debate-option.selected {
+        transform: scale(1.05);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .maturity-pyramid {
+        position: relative;
+        width: 100%;
+        height: 300px;
+      }
+
+      .pyramid-level {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .pyramid-level:hover {
+        transform: translateX(-50%) scale(1.05);
+        z-index: 10;
+      }
+
+      .level-1 {
+        bottom: 0;
+        width: 90%;
+        height: 60px;
+      }
+      .level-2 {
+        bottom: 60px;
+        width: 75%;
+        height: 60px;
+      }
+      .level-3 {
+        bottom: 120px;
+        width: 60%;
+        height: 60px;
+      }
+      .level-4 {
+        bottom: 180px;
+        width: 45%;
+        height: 60px;
+      }
+      .level-5 {
+        bottom: 240px;
+        width: 30%;
+        height: 60px;
+      }
+
+      .mexican-flag {
+        background: linear-gradient(
+          to right,
+          #006847 33%,
+          #ffffff 33%,
+          #ffffff 66%,
+          #ce1126 66%
+        );
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 1s ease;
+      }
     </style>
-<link rel="stylesheet" href="css/layout.css">
-<body class="bg-gray-50 min-h-screen">
-
-<style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
-</style>
-<div class="qs-nav" data-role="main-nav">
-  <div class="wrap">
-    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
-    <nav class="qs-tabs" aria-label="Navegación">
-      <a class="qs-btn" href="materiales.html">Materiales</a>
-      <a class="qs-btn" href="asistencia.html">Asistencia</a>
-      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
-      <a class="qs-btn" href="Foro.html">Foro</a>
-      <a class="qs-btn" href="paneldocente.html">Panel</a>
-      <a class="qs-btn" href="roadmap.html">Roadmap</a>
-      
-\1
-  </div>
-</div>
-<script>
-(function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
-  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
-  });
-})();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
-</script>
-
-
+  </head>
+  <body class="bg-gray-50 min-h-screen">
     <!-- Navigation -->
     <div class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50 px-6 py-4">
-        <div class="flex justify-between items-center max-w-6xl mx-auto">
-            <div class="flex items-center space-x-4">
-                <h1 class="text-xl font-bold text-gray-800">Sesión 30 - CMMI y MoProSoft</h1>
-                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                    Diapositiva <span id="currentSlide">1</span> de 5
-                </span>
-            </div>
-            <div class="flex space-x-2">
-                <button onclick="previousSlide()" id="prevBtn" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
-                    ← Anterior
-                </button>
-                <button onclick="nextSlide()" id="nextBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                    Siguiente →
-                </button>
-            </div>
+      <div class="flex justify-between items-center max-w-6xl mx-auto">
+        <div class="flex items-center space-x-4">
+          <h1 class="text-xl font-bold text-gray-800">
+            Sesión 30 - CMMI y MoProSoft
+          </h1>
+          <span
+            class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
+          >
+            Diapositiva <span id="currentSlide">1</span> de 5
+          </span>
         </div>
-        <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
-            <div id="progressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 20%"></div>
+        <div class="flex space-x-2">
+          <button
+            onclick="previousSlide()"
+            id="prevBtn"
+            class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors"
+          >
+            ← Anterior
+          </button>
+          <button
+            onclick="nextSlide()"
+            id="nextBtn"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            Siguiente →
+          </button>
         </div>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+        <div
+          id="progressBar"
+          class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+          style="width: 20%"
+        ></div>
+      </div>
     </div>
 
     <!-- Slides Container -->
     <div class="pt-24 pb-8 px-6">
-        <div class="max-w-6xl mx-auto">
-            
-            <!-- Slide 1: Título -->
-            <div class="slide active" id="slide1">
-                <div class="slide-bg-1 rounded-3xl p-12 text-center text-white min-h-[600px] flex flex-col justify-center items-center">
-                    <!-- Maturity Models Icons Animation -->
-                    <div class="flex items-center justify-center mb-8">
-                        <div class="text-6xl mr-6 float-animation">📊</div>
-                        <div class="text-6xl mx-4 pulse-animation">🏆</div>
-                        <div class="text-6xl mx-4 bounce-animation">🇲🇽</div>
-                        <div class="text-6xl mx-4 rotate-animation">⚙️</div>
-                        <div class="text-6xl ml-6 glow-animation">🚀</div>
-                    </div>
-                    
-                    <h1 class="text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
-                        <span class="text-blue-300">CMMI</span><br>
-                        <span class="text-white pulse-animation">y</span><br>
-                        <span class="text-green-300">MoProSoft</span>
-                    </h1>
-                    
-                    <h2 class="text-3xl font-semibold mb-8 text-blue-200">
-                        Modelos de Madurez y el Estándar Mexicano
-                    </h2>
-                    
-                    <!-- Maturity Stats -->
-                    <div class="grid grid-cols-4 gap-6 max-w-4xl mb-8">
-                        <div class="bg-white bg-opacity-10 rounded-lg p-4 maturity-level">
-                            <div class="text-3xl mb-2">🌍</div>
-                            <div class="text-sm opacity-80">CMMI</div>
-                            <div class="text-2xl font-bold text-blue-300">Global</div>
-                        </div>
-                        <div class="bg-white bg-opacity-10 rounded-lg p-4 maturity-level">
-                            <div class="text-3xl mb-2">🇲🇽</div>
-                            <div class="text-sm opacity-80">MoProSoft</div>
-                            <div class="text-2xl font-bold text-green-300">Nacional</div>
-                        </div>
-                        <div class="bg-white bg-opacity-10 rounded-lg p-4 maturity-level">
-                            <div class="text-3xl mb-2">📈</div>
-                            <div class="text-sm opacity-80">Niveles</div>
-                            <div class="text-2xl font-bold text-yellow-300">5 Etapas</div>
-                        </div>
-                        <div class="bg-white bg-opacity-10 rounded-lg p-4 maturity-level">
-                            <div class="text-3xl mb-2">🏢</div>
-                            <div class="text-sm opacity-80">Enfoque</div>
-                            <div class="text-2xl font-bold text-red-300">PyMEs</div>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-white bg-opacity-20 rounded-2xl p-6 max-w-3xl">
-                        <p class="text-xl font-medium text-blue-200 mb-2 typewriter">
-                            "La madurez de procesos es el camino hacia la excelencia"
-                        </p>
-                        <p class="text-lg opacity-90">
-                            Marcos de trabajo para mejorar la capacidad organizacional
-                        </p>
-                    </div>
-                </div>
+      <div class="max-w-6xl mx-auto">
+        <!-- Slide 1: Título -->
+        <div class="slide active" id="slide1">
+          <div
+            class="slide-bg-1 rounded-3xl p-12 text-center text-white min-h-[600px] flex flex-col justify-center items-center"
+          >
+            <!-- Maturity Models Icons Animation -->
+            <div class="flex items-center justify-center mb-8">
+              <div class="text-6xl mr-6 float-animation">📊</div>
+              <div class="text-6xl mx-4 pulse-animation">🏆</div>
+              <div class="text-6xl mx-4 bounce-animation">🇲🇽</div>
+              <div class="text-6xl mx-4 rotate-animation">⚙️</div>
+              <div class="text-6xl ml-6 glow-animation">🚀</div>
             </div>
 
-            <!-- Slide 2: CMMI -->
-            <div class="slide" id="slide2">
-                <div class="slide-bg-2 rounded-3xl p-12 min-h-[600px]">
-                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
-                        🏆 CMMI - Capability Maturity Model Integration
-                    </h2>
-                    
-                    <!-- CMMI Introduction -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
-                        <div class="text-center mb-6">
-                            <div class="text-6xl mb-4 pulse-animation">📊</div>
-                            <h3 class="text-3xl font-bold text-green-800">5 Niveles de Madurez</h3>
-                            <p class="text-lg text-gray-600 mt-2">
-                                Guía a las organizaciones hacia procesos predecibles y de mejora continua
-                            </p>
-                        </div>
-                    </div>
+            <h1 class="text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
+              <span class="text-blue-300">CMMI</span><br />
+              <span class="text-white pulse-animation">y</span><br />
+              <span class="text-green-300">MoProSoft</span>
+            </h1>
 
-                    <!-- CMMI Pyramid -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
-                        <div class="maturity-pyramid">
-                            <!-- Level 5: Optimizing -->
-                            <div class="pyramid-level level-5 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg flex items-center justify-center text-white font-bold shadow-lg" onclick="showLevelDetails(5)">
-                                <div class="text-center">
-                                    <div class="text-2xl mb-1">🚀</div>
-                                    <div class="text-sm">Nivel 5: Optimización</div>
-                                </div>
-                            </div>
-                            
-                            <!-- Level 4: Quantitatively Managed -->
-                            <div class="pyramid-level level-4 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center text-white font-bold shadow-lg" onclick="showLevelDetails(4)">
-                                <div class="text-center">
-                                    <div class="text-2xl mb-1">📊</div>
-                                    <div class="text-sm">Nivel 4: Cuantitativamente Gestionado</div>
-                                </div>
-                            </div>
-                            
-                            <!-- Level 3: Defined -->
-                            <div class="pyramid-level level-3 bg-gradient-to-r from-green-600 to-green-700 rounded-lg flex items-center justify-center text-white font-bold shadow-lg" onclick="showLevelDetails(3)">
-                                <div class="text-center">
-                                    <div class="text-2xl mb-1">📋</div>
-                                    <div class="text-sm">Nivel 3: Definido</div>
-                                </div>
-                            </div>
-                            
-                            <!-- Level 2: Managed -->
-                            <div class="pyramid-level level-2 bg-gradient-to-r from-yellow-600 to-yellow-700 rounded-lg flex items-center justify-center text-white font-bold shadow-lg" onclick="showLevelDetails(2)">
-                                <div class="text-center">
-                                    <div class="text-2xl mb-1">⚙️</div>
-                                    <div class="text-sm">Nivel 2: Gestionado</div>
-                                </div>
-                            </div>
-                            
-                            <!-- Level 1: Initial -->
-                            <div class="pyramid-level level-1 bg-gradient-to-r from-red-600 to-red-700 rounded-lg flex items-center justify-center text-white font-bold shadow-lg" onclick="showLevelDetails(1)">
-                                <div class="text-center">
-                                    <div class="text-2xl mb-1">🌱</div>
-                                    <div class="text-sm">Nivel 1: Inicial</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <h2 class="text-3xl font-semibold mb-8 text-blue-200">
+              Modelos de Madurez y el Estándar Mexicano
+            </h2>
 
-                    <!-- Level Details -->
-                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                        <!-- Level 1: Initial -->
-                        <div class="maturity-level bg-white bg-opacity-90 rounded-2xl p-6" onclick="animateLevel(1)">
-                            <div class="text-center mb-4">
-                                <div class="text-4xl mb-3 bounce-animation">🌱</div>
-                                <h3 class="text-lg font-bold text-red-600 mb-2">Nivel 1: Inicial</h3>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <div class="bg-red-50 rounded-lg p-3">
-                                    <h4 class="font-semibold text-red-800 text-sm mb-1">Características:</h4>
-                                    <ul class="text-xs text-red-600 space-y-1">
-                                        <li>• Procesos impredecibles</li>
-                                        <li>• Reactivo y caótico</li>
-                                        <li>• Éxito depende de individuos</li>
-                                        <li>• Sin procesos definidos</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="progress-bar">
-                                    <div class="progress-fill bg-red-500" style="width: 20%"></div>
-                                </div>
-                                <div class="text-center text-xs text-gray-600">Madurez: Básica</div>
-                            </div>
-                        </div>
-
-                        <!-- Level 2: Managed -->
-                        <div class="maturity-level bg-white bg-opacity-90 rounded-2xl p-6" onclick="animateLevel(2)">
-                            <div class="text-center mb-4">
-                                <div class="text-4xl mb-3 pulse-animation">⚙️</div>
-                                <h3 class="text-lg font-bold text-yellow-600 mb-2">Nivel 2: Gestionado</h3>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <div class="bg-yellow-50 rounded-lg p-3">
-                                    <h4 class="font-semibold text-yellow-800 text-sm mb-1">Características:</h4>
-                                    <ul class="text-xs text-yellow-600 space-y-1">
-                                        <li>• Procesos planificados</li>
-                                        <li>• Gestión de requisitos</li>
-                                        <li>• Planificación de proyectos</li>
-                                        <li>• Seguimiento y control</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="progress-bar">
-                                    <div class="progress-fill bg-yellow-500" style="width: 40%"></div>
-                                </div>
-                                <div class="text-center text-xs text-gray-600">Madurez: Disciplinada</div>
-                            </div>
-                        </div>
-
-                        <!-- Level 3: Defined -->
-                        <div class="maturity-level bg-white bg-opacity-90 rounded-2xl p-6" onclick="animateLevel(3)">
-                            <div class="text-center mb-4">
-                                <div class="text-4xl mb-3 rotate-animation">📋</div>
-                                <h3 class="text-lg font-bold text-green-600 mb-2">Nivel 3: Definido</h3>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <div class="bg-green-50 rounded-lg p-3">
-                                    <h4 class="font-semibold text-green-800 text-sm mb-1">Características:</h4>
-                                    <ul class="text-xs text-green-600 space-y-1">
-                                        <li>• Procesos estándar</li>
-                                        <li>• Desarrollo organizacional</li>
-                                        <li>• Gestión integrada</li>
-                                        <li>• Formación y capacitación</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="progress-bar">
-                                    <div class="progress-fill bg-green-500" style="width: 60%"></div>
-                                </div>
-                                <div class="text-center text-xs text-gray-600">Madurez: Estándar</div>
-                            </div>
-                        </div>
-
-                        <!-- Level 4: Quantitatively Managed -->
-                        <div class="maturity-level bg-white bg-opacity-90 rounded-2xl p-6" onclick="animateLevel(4)">
-                            <div class="text-center mb-4">
-                                <div class="text-4xl mb-3 glow-animation">📊</div>
-                                <h3 class="text-lg font-bold text-blue-600 mb-2">Nivel 4: Cuantitativamente Gestionado</h3>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <div class="bg-blue-50 rounded-lg p-3">
-                                    <h4 class="font-semibold text-blue-800 text-sm mb-1">Características:</h4>
-                                    <ul class="text-xs text-blue-600 space-y-1">
-                                        <li>• Procesos medibles</li>
-                                        <li>• Control estadístico</li>
-                                        <li>• Gestión cuantitativa</li>
-                                        <li>• Rendimiento predecible</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="progress-bar">
-                                    <div class="progress-fill bg-blue-500" style="width: 80%"></div>
-                                </div>
-                                <div class="text-center text-xs text-gray-600">Madurez: Predecible</div>
-                            </div>
-                        </div>
-
-                        <!-- Level 5: Optimizing -->
-                        <div class="maturity-level bg-white bg-opacity-90 rounded-2xl p-6" onclick="animateLevel(5)">
-                            <div class="text-center mb-4">
-                                <div class="text-4xl mb-3 bounce-animation">🚀</div>
-                                <h3 class="text-lg font-bold text-purple-600 mb-2">Nivel 5: Optimización</h3>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <div class="bg-purple-50 rounded-lg p-3">
-                                    <h4 class="font-semibold text-purple-800 text-sm mb-1">Características:</h4>
-                                    <ul class="text-xs text-purple-600 space-y-1">
-                                        <li>• Mejora continua</li>
-                                        <li>• Innovación organizacional</li>
-                                        <li>• Análisis causal</li>
-                                        <li>• Resolución proactiva</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="progress-bar">
-                                    <div class="progress-fill bg-purple-500" style="width: 100%"></div>
-                                </div>
-                                <div class="text-center text-xs text-gray-600">Madurez: Optimizada</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- CMMI Benefits -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-6">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">
-                            🎯 Objetivo de CMMI
-                        </h3>
-                        
-                        <div class="grid md:grid-cols-3 gap-6">
-                            <div class="bg-green-50 rounded-lg p-4 text-center">
-                                <div class="text-3xl mb-2">📈</div>
-                                <h4 class="font-bold text-green-700 mb-2">Procesos Predecibles</h4>
-                                <p class="text-sm text-green-600">Resultados consistentes y confiables</p>
-                            </div>
-                            
-                            <div class="bg-blue-50 rounded-lg p-4 text-center">
-                                <div class="text-3xl mb-2">🔄</div>
-                                <h4 class="font-bold text-blue-700 mb-2">Mejora Continua</h4>
-                                <p class="text-sm text-blue-600">Evolución constante de capacidades</p>
-                            </div>
-                            
-                            <div class="bg-purple-50 rounded-lg p-4 text-center">
-                                <div class="text-3xl mb-2">🏆</div>
-                                <h4 class="font-bold text-purple-700 mb-2">Excelencia Organizacional</h4>
-                                <p class="text-sm text-purple-600">Competitividad y calidad superior</p>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-6 text-center">
-                            <span class="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium">
-                                Fuente: CMMI v1.3 - Capability Maturity Model Integration
-                            </span>
-                        </div>
-                    </div>
-                </div>
+            <!-- Maturity Stats -->
+            <div class="grid grid-cols-4 gap-6 max-w-4xl mb-8">
+              <div class="bg-white bg-opacity-10 rounded-lg p-4 maturity-level">
+                <div class="text-3xl mb-2">🌍</div>
+                <div class="text-sm opacity-80">CMMI</div>
+                <div class="text-2xl font-bold text-blue-300">Global</div>
+              </div>
+              <div class="bg-white bg-opacity-10 rounded-lg p-4 maturity-level">
+                <div class="text-3xl mb-2">🇲🇽</div>
+                <div class="text-sm opacity-80">MoProSoft</div>
+                <div class="text-2xl font-bold text-green-300">Nacional</div>
+              </div>
+              <div class="bg-white bg-opacity-10 rounded-lg p-4 maturity-level">
+                <div class="text-3xl mb-2">📈</div>
+                <div class="text-sm opacity-80">Niveles</div>
+                <div class="text-2xl font-bold text-yellow-300">5 Etapas</div>
+              </div>
+              <div class="bg-white bg-opacity-10 rounded-lg p-4 maturity-level">
+                <div class="text-3xl mb-2">🏢</div>
+                <div class="text-sm opacity-80">Enfoque</div>
+                <div class="text-2xl font-bold text-red-300">PyMEs</div>
+              </div>
             </div>
 
-            <!-- Slide 3: MoProSoft -->
-            <div class="slide" id="slide3">
-                <div class="slide-bg-3 rounded-3xl p-12 min-h-[600px]">
-                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
-                        🇲🇽 MoProSoft - Modelo de Procesos para la Industria de Software en México
-                    </h2>
-                    
-                    <!-- MoProSoft Introduction -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
-                        <div class="text-center mb-6">
-                            <div class="flex justify-center items-center mb-4">
-                                <div class="text-6xl mr-4 pulse-animation">🇲🇽</div>
-                                <div class="mexican-flag w-16 h-12 rounded-lg shadow-lg"></div>
-                            </div>
-                            <h3 class="text-3xl font-bold text-red-800">Estándar Nacional NMX-I-059/NYCE</h3>
-                            <p class="text-lg text-gray-600 mt-2">
-                                Enfoque en procesos de dirección, operación y soporte
-                            </p>
-                        </div>
-                        
-                        <div class="bg-red-50 rounded-2xl p-6">
-                            <h4 class="text-xl font-bold text-red-800 mb-4 text-center">Objetivo Principal</h4>
-                            <div class="text-center">
-                                <div class="text-4xl mb-4 bounce-animation">🏢</div>
-                                <p class="text-lg text-red-700 font-semibold">
-                                    Profesionalizar a las PyMEs mexicanas de software
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- MoProSoft Process Categories -->
-                    <div class="grid md:grid-cols-3 gap-8 mb-8">
-                        <!-- Direction Processes -->
-                        <div class="process-card bg-white bg-opacity-90 rounded-2xl p-6" onclick="showProcessDetails('direction')">
-                            <div class="text-center mb-6">
-                                <div class="text-5xl mb-4 rotate-animation">🎯</div>
-                                <h3 class="text-2xl font-bold text-blue-600 mb-4">Procesos de Dirección</h3>
-                            </div>
-                            
-                            <div class="space-y-4">
-                                <div class="bg-blue-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-blue-800 mb-2">Gestión de Negocio (GN):</h4>
-                                    <ul class="text-sm text-blue-600 space-y-1">
-                                        <li>• Planificación estratégica</li>
-                                        <li>• Gestión de la organización</li>
-                                        <li>• Mejora de procesos</li>
-                                        <li>• Gestión de recursos</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-white rounded-lg p-4 border border-blue-200">
-                                    <h5 class="font-semibold text-blue-700 mb-2">Propósito:</h5>
-                                    <p class="text-sm text-blue-600">
-                                        Establecer la razón de ser de la organización, sus objetivos y las condiciones para lograrlos
-                                    </p>
-                                </div>
-                                
-                                <div class="text-center">
-                                    <div class="inline-flex items-center bg-blue-100 rounded-full px-4 py-2">
-                                        <span class="text-blue-800 font-semibold">Nivel Estratégico</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Operation Processes -->
-                        <div class="process-card bg-white bg-opacity-90 rounded-2xl p-6" onclick="showProcessDetails('operation')">
-                            <div class="text-center mb-6">
-                                <div class="text-5xl mb-4 glow-animation">⚙️</div>
-                                <h3 class="text-2xl font-bold text-green-600 mb-4">Procesos de Operación</h3>
-                            </div>
-                            
-                            <div class="space-y-4">
-                                <div class="bg-green-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-green-800 mb-2">Gestión de Proyectos (GP):</h4>
-                                    <ul class="text-sm text-green-600 space-y-1">
-                                        <li>• Planificación del proyecto</li>
-                                        <li>• Realización del proyecto</li>
-                                        <li>• Evaluación y control</li>
-                                        <li>• Cierre del proyecto</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-green-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-green-800 mb-2">Desarrollo de Software (DS):</h4>
-                                    <ul class="text-sm text-green-600 space-y-1">
-                                        <li>• Inicio del desarrollo</li>
-                                        <li>• Análisis y diseño</li>
-                                        <li>• Construcción</li>
-                                        <li>• Integración y pruebas</li>
-                                        <li>• Cierre del desarrollo</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="text-center">
-                                    <div class="inline-flex items-center bg-green-100 rounded-full px-4 py-2">
-                                        <span class="text-green-800 font-semibold">Nivel Táctico</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Support Processes -->
-                        <div class="process-card bg-white bg-opacity-90 rounded-2xl p-6" onclick="showProcessDetails('support')">
-                            <div class="text-center mb-6">
-                                <div class="text-5xl mb-4 pulse-animation">🛠️</div>
-                                <h3 class="text-2xl font-bold text-purple-600 mb-4">Procesos de Soporte</h3>
-                            </div>
-                            
-                            <div class="space-y-4">
-                                <div class="bg-purple-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-purple-800 mb-2">Gestión de Recursos (GR):</h4>
-                                    <ul class="text-sm text-purple-600 space-y-1">
-                                        <li>• Recursos humanos</li>
-                                        <li>• Bienes, servicios e infraestructura</li>
-                                        <li>• Conocimiento de la organización</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-purple-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-purple-800 mb-2">Gestión de Repositorio (GRE):</h4>
-                                    <ul class="text-sm text-purple-600 space-y-1">
-                                        <li>• Gestión de configuración</li>
-                                        <li>• Gestión de versiones</li>
-                                        <li>• Respaldo y recuperación</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-purple-50 rounded-lg p-4">
-                                    <h4 class="font-semibold text-purple-800 mb-2">Verificación y Validación (VV):</h4>
-                                    <ul class="text-sm text-purple-600 space-y-1">
-                                        <li>• Preparación de VV</li>
-                                        <li>• Realización de VV</li>
-                                        <li>• Evaluación de VV</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="text-center">
-                                    <div class="inline-flex items-center bg-purple-100 rounded-full px-4 py-2">
-                                        <span class="text-purple-800 font-semibold">Nivel Operativo</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- MoProSoft Benefits for SMEs -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-6">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">
-                            🏢 Beneficios para PyMEs Mexicanas
-                        </h3>
-                        
-                        <div class="grid md:grid-cols-2 gap-6">
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                <h4 class="font-bold text-gray-700 mb-3">✅ Ventajas Específicas:</h4>
-                                <div class="space-y-2 text-sm text-gray-600">
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-green-500">•</span>
-                                        <span>Adaptado a la realidad mexicana</span>
-                                    </div>
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-green-500">•</span>
-                                        <span>Menor costo de implementación</span>
-                                    </div>
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-green-500">•</span>
-                                        <span>Enfoque en PyMEs (2-50 empleados)</span>
-                                    </div>
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-green-500">•</span>
-                                        <span>Certificación nacional reconocida</span>
-                                    </div>
-                                    <div class="flex items-center space-x-2">
-                                        <span class="text-green-500">•</span>
-                                        <span>Soporte en español</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                <h4 class="font-bold text-gray-700 mb-3">📊 Estadísticas de Adopción:</h4>
-                                <div class="space-y-3">
-                                    <div>
-                                        <div class="flex justify-between text-sm mb-1">
-                                            <span>Empresas certificadas:</span>
-                                            <span class="font-semibold text-blue-600">200+</span>
-                                        </div>
-                                        <div class="progress-bar">
-                                            <div class="progress-fill bg-blue-500" style="width: 75%"></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="flex justify-between text-sm mb-1">
-                                            <span>Mejora en calidad:</span>
-                                            <span class="font-semibold text-green-600">40%</span>
-                                        </div>
-                                        <div class="progress-bar">
-                                            <div class="progress-fill bg-green-500" style="width: 40%"></div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <div class="flex justify-between text-sm mb-1">
-                                            <span>Reducción de costos:</span>
-                                            <span class="font-semibold text-red-600">25%</span>
-                                        </div>
-                                        <div class="progress-bar">
-                                            <div class="progress-fill bg-red-500" style="width: 25%"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-6 text-center">
-                            <span class="bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-medium">
-                                Fuente: MoProSoft - Modelo de Procesos para la Industria de Software
-                            </span>
-                        </div>
-                    </div>
-                </div>
+            <div class="bg-white bg-opacity-20 rounded-2xl p-6 max-w-3xl">
+              <p class="text-xl font-medium text-blue-200 mb-2 typewriter">
+                "La madurez de procesos es el camino hacia la excelencia"
+              </p>
+              <p class="text-lg opacity-90">
+                Marcos de trabajo para mejorar la capacidad organizacional
+              </p>
             </div>
-
-            <!-- Slide 4: Comparación Rápida -->
-            <div class="slide" id="slide4">
-                <div class="slide-bg-4 rounded-3xl p-12 min-h-[600px]">
-                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
-                        ⚖️ Comparación Rápida: CMMI vs MoProSoft
-                    </h2>
-                    
-                    <!-- Comparison Overview -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
-                        <div class="text-center mb-6">
-                            <div class="flex justify-center items-center space-x-8 mb-4">
-                                <div class="text-center">
-                                    <div class="text-6xl mb-2 pulse-animation">🌍</div>
-                                    <h3 class="text-2xl font-bold text-blue-600">CMMI</h3>
-                                </div>
-                                <div class="text-4xl text-purple-600">VS</div>
-                                <div class="text-center">
-                                    <div class="text-6xl mb-2 bounce-animation">🇲🇽</div>
-                                    <h3 class="text-2xl font-bold text-red-600">MoProSoft</h3>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Detailed Comparison -->
-                    <div class="grid md:grid-cols-2 gap-8 mb-8">
-                        <!-- CMMI Card -->
-                        <div class="comparison-card bg-white bg-opacity-90 rounded-2xl p-6">
-                            <div class="text-center mb-6">
-                                <div class="text-5xl mb-4 glow-animation">🌍</div>
-                                <h3 class="text-2xl font-bold text-blue-600 mb-2">CMMI</h3>
-                                <p class="text-sm text-gray-600">Internacional, más complejo y costoso</p>
-                            </div>
-                            
-                            <div class="space-y-4">
-                                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
-                                    <h4 class="font-semibold text-blue-800 mb-2">🎯 Alcance:</h4>
-                                    <ul class="text-sm text-blue-600 space-y-1">
-                                        <li>• Estándar internacional</li>
-                                        <li>• Empresas grandes y medianas</li>
-                                        <li>• Múltiples industrias</li>
-                                        <li>• Enfoque en madurez organizacional</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
-                                    <h4 class="font-semibold text-blue-800 mb-2">💰 Costos:</h4>
-                                    <ul class="text-sm text-blue-600 space-y-1">
-                                        <li>• Implementación: $50,000 - $200,000 USD</li>
-                                        <li>• Evaluación: $15,000 - $50,000 USD</li>
-                                        <li>• Consultores especializados</li>
-                                        <li>• Tiempo: 12-24 meses</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
-                                    <h4 class="font-semibold text-blue-800 mb-2">✅ Ventajas:</h4>
-                                    <ul class="text-sm text-blue-600 space-y-1">
-                                        <li>• Reconocimiento mundial</li>
-                                        <li>• Modelo maduro y probado</li>
-                                        <li>• Mejora significativa en procesos</li>
-                                        <li>• Ventaja competitiva global</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
-                                    <h4 class="font-semibold text-red-800 mb-2">❌ Desventajas:</h4>
-                                    <ul class="text-sm text-red-600 space-y-1">
-                                        <li>• Alto costo de implementación</li>
-                                        <li>• Complejidad para PyMEs</li>
-                                        <li>• Requiere recursos especializados</li>
-                                        <li>• Proceso largo y demandante</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- MoProSoft Card -->
-                        <div class="comparison-card bg-white bg-opacity-90 rounded-2xl p-6">
-                            <div class="text-center mb-6">
-                                <div class="text-5xl mb-4 rotate-animation">🇲🇽</div>
-                                <h3 class="text-2xl font-bold text-red-600 mb-2">MoProSoft</h3>
-                                <p class="text-sm text-gray-600">Adaptado a la realidad mexicana, más accesible</p>
-                            </div>
-                            
-                            <div class="space-y-4">
-                                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
-                                    <h4 class="font-semibold text-red-800 mb-2">🎯 Alcance:</h4>
-                                    <ul class="text-sm text-red-600 space-y-1">
-                                        <li>• Estándar nacional mexicano</li>
-                                        <li>• PyMEs (2-50 empleados)</li>
-                                        <li>• Industria de software</li>
-                                        <li>• Enfoque en profesionalización</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
-                                    <h4 class="font-semibold text-red-800 mb-2">💰 Costos:</h4>
-                                    <ul class="text-sm text-red-600 space-y-1">
-                                        <li>• Implementación: $10,000 - $30,000 MXN</li>
-                                        <li>• Evaluación: $15,000 - $25,000 MXN</li>
-                                        <li>• Consultores locales</li>
-                                        <li>• Tiempo: 6-12 meses</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
-                                    <h4 class="font-semibold text-green-800 mb-2">✅ Ventajas:</h4>
-                                    <ul class="text-sm text-green-600 space-y-1">
-                                        <li>• Costo accesible para PyMEs</li>
-                                        <li>• Adaptado al contexto mexicano</li>
-                                        <li>• Implementación más rápida</li>
-                                        <li>• Soporte gubernamental</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4">
-                                    <h4 class="font-semibold text-orange-800 mb-2">❌ Desventajas:</h4>
-                                    <ul class="text-sm text-orange-600 space-y-1">
-                                        <li>• Reconocimiento limitado internacionalmente</li>
-                                        <li>• Menor madurez del modelo</li>
-                                        <li>• Enfoque específico a México</li>
-                                        <li>• Menos casos de éxito documentados</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Quick Comparison Table -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-6">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">
-                            📊 Comparación Rápida
-                        </h3>
-                        
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-sm">
-                                <thead>
-                                    <tr class="bg-gray-100">
-                                        <th class="text-left p-3 font-semibold">Criterio</th>
-                                        <th class="text-center p-3 font-semibold text-blue-600">CMMI</th>
-                                        <th class="text-center p-3 font-semibold text-red-600">MoProSoft</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200">
-                                    <tr>
-                                        <td class="p-3 font-medium">Alcance</td>
-                                        <td class="p-3 text-center">🌍 Internacional</td>
-                                        <td class="p-3 text-center">🇲🇽 Nacional</td>
-                                    </tr>
-                                    <tr class="bg-gray-50">
-                                        <td class="p-3 font-medium">Tamaño de empresa</td>
-                                        <td class="p-3 text-center">🏢 Grande/Mediana</td>
-                                        <td class="p-3 text-center">🏪 PyME</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="p-3 font-medium">Costo</td>
-                                        <td class="p-3 text-center">💰 Alto</td>
-                                        <td class="p-3 text-center">💵 Accesible</td>
-                                    </tr>
-                                    <tr class="bg-gray-50">
-                                        <td class="p-3 font-medium">Tiempo implementación</td>
-                                        <td class="p-3 text-center">⏰ 12-24 meses</td>
-                                        <td class="p-3 text-center">⏱️ 6-12 meses</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="p-3 font-medium">Complejidad</td>
-                                        <td class="p-3 text-center">🔴 Alta</td>
-                                        <td class="p-3 text-center">🟡 Media</td>
-                                    </tr>
-                                    <tr class="bg-gray-50">
-                                        <td class="p-3 font-medium">Reconocimiento</td>
-                                        <td class="p-3 text-center">🌟 Mundial</td>
-                                        <td class="p-3 text-center">🏆 Nacional</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 5: Actividad - Debate guiado -->
-            <div class="slide" id="slide5">
-                <div class="slide-bg-5 rounded-3xl p-12 min-h-[600px]">
-                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
-                        💬 Actividad - Debate Guiado (15 min)
-                    </h2>
-                    
-                    <!-- Debate Question -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
-                        <div class="text-center mb-6">
-                            <div class="text-6xl mb-4 pulse-animation">🤔</div>
-                            <h3 class="text-3xl font-bold text-orange-800">Pregunta del Debate</h3>
-                        </div>
-                        
-                        <div class="bg-orange-50 rounded-2xl p-6 text-center mb-6">
-                            <h4 class="text-2xl font-bold text-gray-800 mb-4">
-                                "¿Qué conviene más a una startup mexicana: certificar en CMMI o en MoProSoft?"
-                            </h4>
-                            <p class="text-lg text-gray-600">
-                                Considera factores como costo, tiempo, beneficios y contexto empresarial
-                            </p>
-                        </div>
-                        
-                        <!-- Timer -->
-                        <div class="text-center">
-                            <div id="debateTimer" class="text-4xl font-bold text-orange-600 mb-4">15:00</div>
-                            <button onclick="startDebateTimer()" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg transition-colors">
-                                🚀 Iniciar Debate
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Debate Options -->
-                    <div class="grid md:grid-cols-2 gap-8 mb-8">
-                        <!-- Team CMMI -->
-                        <div class="debate-option bg-white bg-opacity-90 rounded-2xl p-6" onclick="selectDebateOption('cmmi')" id="cmmiBand">
-                            <div class="text-center mb-6">
-                                <div class="text-5xl mb-4 glow-animation">🌍</div>
-                                <h3 class="text-2xl font-bold text-blue-600 mb-4">Equipo CMMI</h3>
-                                <div class="bg-blue-100 rounded-full px-4 py-2 inline-block">
-                                    <span class="text-blue-800 font-semibold">Argumentos a favor de CMMI</span>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-4">
-                                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
-                                    <h4 class="font-semibold text-blue-800 mb-2">💪 Argumentos Fuertes:</h4>
-                                    <ul class="text-sm text-blue-600 space-y-1">
-                                        <li>• Reconocimiento internacional para expansión</li>
-                                        <li>• Acceso a mercados globales</li>
-                                        <li>• Modelo probado y maduro</li>
-                                        <li>• Mejora significativa en procesos</li>
-                                        <li>• Ventaja competitiva a largo plazo</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
-                                    <h4 class="font-semibold text-blue-800 mb-2">🎯 Escenarios Ideales:</h4>
-                                    <ul class="text-sm text-blue-600 space-y-1">
-                                        <li>• Startup con ambiciones internacionales</li>
-                                        <li>• Clientes corporativos que requieren CMMI</li>
-                                        <li>• Acceso a capital de inversión</li>
-                                        <li>• Equipo técnico experimentado</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-white rounded-lg p-4 border border-blue-200">
-                                    <h5 class="font-semibold text-blue-700 mb-2">📊 Contraargumentos:</h5>
-                                    <p class="text-sm text-blue-600">
-                                        "Aunque el costo inicial es alto, el ROI a largo plazo justifica la inversión para startups con visión global"
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Team MoProSoft -->
-                        <div class="debate-option bg-white bg-opacity-90 rounded-2xl p-6" onclick="selectDebateOption('moprosoft')" id="moprosoftBand">
-                            <div class="text-center mb-6">
-                                <div class="text-5xl mb-4 bounce-animation">🇲🇽</div>
-                                <h3 class="text-2xl font-bold text-red-600 mb-4">Equipo MoProSoft</h3>
-                                <div class="bg-red-100 rounded-full px-4 py-2 inline-block">
-                                    <span class="text-red-800 font-semibold">Argumentos a favor de MoProSoft</span>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-4">
-                                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
-                                    <h4 class="font-semibold text-red-800 mb-2">💪 Argumentos Fuertes:</h4>
-                                    <ul class="text-sm text-red-600 space-y-1">
-                                        <li>• Costo accesible para startups</li>
-                                        <li>• Adaptado al contexto mexicano</li>
-                                        <li>• Implementación más rápida</li>
-                                        <li>• Soporte gubernamental y incentivos</li>
-                                        <li>• Enfoque específico en PyMEs</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
-                                    <h4 class="font-semibold text-red-800 mb-2">🎯 Escenarios Ideales:</h4>
-                                    <ul class="text-sm text-red-600 space-y-1">
-                                        <li>• Startup enfocada en mercado nacional</li>
-                                        <li>• Recursos limitados de capital</li>
-                                        <li>• Necesidad de certificación rápida</li>
-                                        <li>• Equipo pequeño y ágil</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-white rounded-lg p-4 border border-red-200">
-                                    <h5 class="font-semibold text-red-700 mb-2">📊 Contraargumentos:</h5>
-                                    <p class="text-sm text-red-600">
-                                        "MoProSoft puede ser un primer paso hacia CMMI, permitiendo madurar gradualmente sin comprometer la supervivencia de la startup"
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Debate Structure -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-6">
-                        <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">
-                            📋 Estructura del Debate
-                        </h3>
-                        
-                        <div class="grid md:grid-cols-4 gap-4">
-                            <div class="bg-blue-50 rounded-lg p-4 text-center">
-                                <div class="text-2xl mb-2">1️⃣</div>
-                                <h4 class="font-semibold text-blue-700 mb-1">Presentación</h4>
-                                <p class="text-xs text-blue-600">Cada equipo presenta su posición (3 min)</p>
-                            </div>
-                            
-                            <div class="bg-green-50 rounded-lg p-4 text-center">
-                                <div class="text-2xl mb-2">2️⃣</div>
-                                <h4 class="font-semibold text-green-700 mb-1">Argumentación</h4>
-                                <p class="text-xs text-green-600">Desarrollo de argumentos principales (4 min)</p>
-                            </div>
-                            
-                            <div class="bg-yellow-50 rounded-lg p-4 text-center">
-                                <div class="text-2xl mb-2">3️⃣</div>
-                                <h4 class="font-semibold text-yellow-700 mb-1">Contraargumentos</h4>
-                                <p class="text-xs text-yellow-600">Refutación de argumentos contrarios (4 min)</p>
-                            </div>
-                            
-                            <div class="bg-purple-50 rounded-lg p-4 text-center">
-                                <div class="text-2xl mb-2">4️⃣</div>
-                                <h4 class="font-semibold text-purple-700 mb-1">Conclusión</h4>
-                                <p class="text-xs text-purple-600">Síntesis y recomendación final (4 min)</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Evaluation Criteria -->
-                        <div class="mt-6 bg-gray-50 rounded-lg p-4">
-                            <h4 class="font-bold text-gray-700 mb-3 text-center">🏆 Criterios de Evaluación:</h4>
-                            <div class="grid md:grid-cols-3 gap-4 text-sm">
-                                <div class="text-center">
-                                    <div class="font-semibold text-gray-700">Solidez de Argumentos</div>
-                                    <div class="text-gray-600">Evidencia y lógica</div>
-                                </div>
-                                <div class="text-center">
-                                    <div class="font-semibold text-gray-700">Conocimiento Técnico</div>
-                                    <div class="text-gray-600">Comprensión de modelos</div>
-                                </div>
-                                <div class="text-center">
-                                    <div class="font-semibold text-gray-700">Aplicabilidad Práctica</div>
-                                    <div class="text-gray-600">Relevancia para startups</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+          </div>
         </div>
+
+        <!-- Slide 2: CMMI -->
+        <div class="slide" id="slide2">
+          <div class="slide-bg-2 rounded-3xl p-12 min-h-[600px]">
+            <h2
+              class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg"
+            >
+              🏆 CMMI - Capability Maturity Model Integration
+            </h2>
+
+            <!-- CMMI Introduction -->
+            <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
+              <div class="text-center mb-6">
+                <div class="text-6xl mb-4 pulse-animation">📊</div>
+                <h3 class="text-3xl font-bold text-green-800">
+                  5 Niveles de Madurez
+                </h3>
+                <p class="text-lg text-gray-600 mt-2">
+                  Guía a las organizaciones hacia procesos predecibles y de
+                  mejora continua
+                </p>
+              </div>
+            </div>
+
+            <!-- CMMI Pyramid -->
+            <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
+              <div class="maturity-pyramid">
+                <!-- Level 5: Optimizing -->
+                <div
+                  class="pyramid-level level-5 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg flex items-center justify-center text-white font-bold shadow-lg"
+                  onclick="showLevelDetails(5)"
+                >
+                  <div class="text-center">
+                    <div class="text-2xl mb-1">🚀</div>
+                    <div class="text-sm">Nivel 5: Optimización</div>
+                  </div>
+                </div>
+
+                <!-- Level 4: Quantitatively Managed -->
+                <div
+                  class="pyramid-level level-4 bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg flex items-center justify-center text-white font-bold shadow-lg"
+                  onclick="showLevelDetails(4)"
+                >
+                  <div class="text-center">
+                    <div class="text-2xl mb-1">📊</div>
+                    <div class="text-sm">
+                      Nivel 4: Cuantitativamente Gestionado
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Level 3: Defined -->
+                <div
+                  class="pyramid-level level-3 bg-gradient-to-r from-green-600 to-green-700 rounded-lg flex items-center justify-center text-white font-bold shadow-lg"
+                  onclick="showLevelDetails(3)"
+                >
+                  <div class="text-center">
+                    <div class="text-2xl mb-1">📋</div>
+                    <div class="text-sm">Nivel 3: Definido</div>
+                  </div>
+                </div>
+
+                <!-- Level 2: Managed -->
+                <div
+                  class="pyramid-level level-2 bg-gradient-to-r from-yellow-600 to-yellow-700 rounded-lg flex items-center justify-center text-white font-bold shadow-lg"
+                  onclick="showLevelDetails(2)"
+                >
+                  <div class="text-center">
+                    <div class="text-2xl mb-1">⚙️</div>
+                    <div class="text-sm">Nivel 2: Gestionado</div>
+                  </div>
+                </div>
+
+                <!-- Level 1: Initial -->
+                <div
+                  class="pyramid-level level-1 bg-gradient-to-r from-red-600 to-red-700 rounded-lg flex items-center justify-center text-white font-bold shadow-lg"
+                  onclick="showLevelDetails(1)"
+                >
+                  <div class="text-center">
+                    <div class="text-2xl mb-1">🌱</div>
+                    <div class="text-sm">Nivel 1: Inicial</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Level Details -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <!-- Level 1: Initial -->
+              <div
+                class="maturity-level bg-white bg-opacity-90 rounded-2xl p-6"
+                onclick="animateLevel(1)"
+              >
+                <div class="text-center mb-4">
+                  <div class="text-4xl mb-3 bounce-animation">🌱</div>
+                  <h3 class="text-lg font-bold text-red-600 mb-2">
+                    Nivel 1: Inicial
+                  </h3>
+                </div>
+
+                <div class="space-y-3">
+                  <div class="bg-red-50 rounded-lg p-3">
+                    <h4 class="font-semibold text-red-800 text-sm mb-1">
+                      Características:
+                    </h4>
+                    <ul class="text-xs text-red-600 space-y-1">
+                      <li>• Procesos impredecibles</li>
+                      <li>• Reactivo y caótico</li>
+                      <li>• Éxito depende de individuos</li>
+                      <li>• Sin procesos definidos</li>
+                    </ul>
+                  </div>
+
+                  <div class="progress-bar">
+                    <div
+                      class="progress-fill bg-red-500"
+                      style="width: 20%"
+                    ></div>
+                  </div>
+                  <div class="text-center text-xs text-gray-600">
+                    Madurez: Básica
+                  </div>
+                </div>
+              </div>
+
+              <!-- Level 2: Managed -->
+              <div
+                class="maturity-level bg-white bg-opacity-90 rounded-2xl p-6"
+                onclick="animateLevel(2)"
+              >
+                <div class="text-center mb-4">
+                  <div class="text-4xl mb-3 pulse-animation">⚙️</div>
+                  <h3 class="text-lg font-bold text-yellow-600 mb-2">
+                    Nivel 2: Gestionado
+                  </h3>
+                </div>
+
+                <div class="space-y-3">
+                  <div class="bg-yellow-50 rounded-lg p-3">
+                    <h4 class="font-semibold text-yellow-800 text-sm mb-1">
+                      Características:
+                    </h4>
+                    <ul class="text-xs text-yellow-600 space-y-1">
+                      <li>• Procesos planificados</li>
+                      <li>• Gestión de requisitos</li>
+                      <li>• Planificación de proyectos</li>
+                      <li>• Seguimiento y control</li>
+                    </ul>
+                  </div>
+
+                  <div class="progress-bar">
+                    <div
+                      class="progress-fill bg-yellow-500"
+                      style="width: 40%"
+                    ></div>
+                  </div>
+                  <div class="text-center text-xs text-gray-600">
+                    Madurez: Disciplinada
+                  </div>
+                </div>
+              </div>
+
+              <!-- Level 3: Defined -->
+              <div
+                class="maturity-level bg-white bg-opacity-90 rounded-2xl p-6"
+                onclick="animateLevel(3)"
+              >
+                <div class="text-center mb-4">
+                  <div class="text-4xl mb-3 rotate-animation">📋</div>
+                  <h3 class="text-lg font-bold text-green-600 mb-2">
+                    Nivel 3: Definido
+                  </h3>
+                </div>
+
+                <div class="space-y-3">
+                  <div class="bg-green-50 rounded-lg p-3">
+                    <h4 class="font-semibold text-green-800 text-sm mb-1">
+                      Características:
+                    </h4>
+                    <ul class="text-xs text-green-600 space-y-1">
+                      <li>• Procesos estándar</li>
+                      <li>• Desarrollo organizacional</li>
+                      <li>• Gestión integrada</li>
+                      <li>• Formación y capacitación</li>
+                    </ul>
+                  </div>
+
+                  <div class="progress-bar">
+                    <div
+                      class="progress-fill bg-green-500"
+                      style="width: 60%"
+                    ></div>
+                  </div>
+                  <div class="text-center text-xs text-gray-600">
+                    Madurez: Estándar
+                  </div>
+                </div>
+              </div>
+
+              <!-- Level 4: Quantitatively Managed -->
+              <div
+                class="maturity-level bg-white bg-opacity-90 rounded-2xl p-6"
+                onclick="animateLevel(4)"
+              >
+                <div class="text-center mb-4">
+                  <div class="text-4xl mb-3 glow-animation">📊</div>
+                  <h3 class="text-lg font-bold text-blue-600 mb-2">
+                    Nivel 4: Cuantitativamente Gestionado
+                  </h3>
+                </div>
+
+                <div class="space-y-3">
+                  <div class="bg-blue-50 rounded-lg p-3">
+                    <h4 class="font-semibold text-blue-800 text-sm mb-1">
+                      Características:
+                    </h4>
+                    <ul class="text-xs text-blue-600 space-y-1">
+                      <li>• Procesos medibles</li>
+                      <li>• Control estadístico</li>
+                      <li>• Gestión cuantitativa</li>
+                      <li>• Rendimiento predecible</li>
+                    </ul>
+                  </div>
+
+                  <div class="progress-bar">
+                    <div
+                      class="progress-fill bg-blue-500"
+                      style="width: 80%"
+                    ></div>
+                  </div>
+                  <div class="text-center text-xs text-gray-600">
+                    Madurez: Predecible
+                  </div>
+                </div>
+              </div>
+
+              <!-- Level 5: Optimizing -->
+              <div
+                class="maturity-level bg-white bg-opacity-90 rounded-2xl p-6"
+                onclick="animateLevel(5)"
+              >
+                <div class="text-center mb-4">
+                  <div class="text-4xl mb-3 bounce-animation">🚀</div>
+                  <h3 class="text-lg font-bold text-purple-600 mb-2">
+                    Nivel 5: Optimización
+                  </h3>
+                </div>
+
+                <div class="space-y-3">
+                  <div class="bg-purple-50 rounded-lg p-3">
+                    <h4 class="font-semibold text-purple-800 text-sm mb-1">
+                      Características:
+                    </h4>
+                    <ul class="text-xs text-purple-600 space-y-1">
+                      <li>• Mejora continua</li>
+                      <li>• Innovación organizacional</li>
+                      <li>• Análisis causal</li>
+                      <li>• Resolución proactiva</li>
+                    </ul>
+                  </div>
+
+                  <div class="progress-bar">
+                    <div
+                      class="progress-fill bg-purple-500"
+                      style="width: 100%"
+                    ></div>
+                  </div>
+                  <div class="text-center text-xs text-gray-600">
+                    Madurez: Optimizada
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CMMI Benefits -->
+            <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+              <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">
+                🎯 Objetivo de CMMI
+              </h3>
+
+              <div class="grid md:grid-cols-3 gap-6">
+                <div class="bg-green-50 rounded-lg p-4 text-center">
+                  <div class="text-3xl mb-2">📈</div>
+                  <h4 class="font-bold text-green-700 mb-2">
+                    Procesos Predecibles
+                  </h4>
+                  <p class="text-sm text-green-600">
+                    Resultados consistentes y confiables
+                  </p>
+                </div>
+
+                <div class="bg-blue-50 rounded-lg p-4 text-center">
+                  <div class="text-3xl mb-2">🔄</div>
+                  <h4 class="font-bold text-blue-700 mb-2">Mejora Continua</h4>
+                  <p class="text-sm text-blue-600">
+                    Evolución constante de capacidades
+                  </p>
+                </div>
+
+                <div class="bg-purple-50 rounded-lg p-4 text-center">
+                  <div class="text-3xl mb-2">🏆</div>
+                  <h4 class="font-bold text-purple-700 mb-2">
+                    Excelencia Organizacional
+                  </h4>
+                  <p class="text-sm text-purple-600">
+                    Competitividad y calidad superior
+                  </p>
+                </div>
+              </div>
+
+              <div class="mt-6 text-center">
+                <span
+                  class="bg-green-100 text-green-700 px-4 py-2 rounded-full text-sm font-medium"
+                >
+                  Fuente: CMMI v1.3 - Capability Maturity Model Integration
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 3: MoProSoft -->
+        <div class="slide" id="slide3">
+          <div class="slide-bg-3 rounded-3xl p-12 min-h-[600px]">
+            <h2
+              class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg"
+            >
+              🇲🇽 MoProSoft - Modelo de Procesos para la Industria de Software en
+              México
+            </h2>
+
+            <!-- MoProSoft Introduction -->
+            <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
+              <div class="text-center mb-6">
+                <div class="flex justify-center items-center mb-4">
+                  <div class="text-6xl mr-4 pulse-animation">🇲🇽</div>
+                  <div
+                    class="mexican-flag w-16 h-12 rounded-lg shadow-lg"
+                  ></div>
+                </div>
+                <h3 class="text-3xl font-bold text-red-800">
+                  Estándar Nacional NMX-I-059/NYCE
+                </h3>
+                <p class="text-lg text-gray-600 mt-2">
+                  Enfoque en procesos de dirección, operación y soporte
+                </p>
+              </div>
+
+              <div class="bg-red-50 rounded-2xl p-6">
+                <h4 class="text-xl font-bold text-red-800 mb-4 text-center">
+                  Objetivo Principal
+                </h4>
+                <div class="text-center">
+                  <div class="text-4xl mb-4 bounce-animation">🏢</div>
+                  <p class="text-lg text-red-700 font-semibold">
+                    Profesionalizar a las PyMEs mexicanas de software
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- MoProSoft Process Categories -->
+            <div class="grid md:grid-cols-3 gap-8 mb-8">
+              <!-- Direction Processes -->
+              <div
+                class="process-card bg-white bg-opacity-90 rounded-2xl p-6"
+                onclick="showProcessDetails('direction')"
+              >
+                <div class="text-center mb-6">
+                  <div class="text-5xl mb-4 rotate-animation">🎯</div>
+                  <h3 class="text-2xl font-bold text-blue-600 mb-4">
+                    Procesos de Dirección
+                  </h3>
+                </div>
+
+                <div class="space-y-4">
+                  <div class="bg-blue-50 rounded-lg p-4">
+                    <h4 class="font-semibold text-blue-800 mb-2">
+                      Gestión de Negocio (GN):
+                    </h4>
+                    <ul class="text-sm text-blue-600 space-y-1">
+                      <li>• Planificación estratégica</li>
+                      <li>• Gestión de la organización</li>
+                      <li>• Mejora de procesos</li>
+                      <li>• Gestión de recursos</li>
+                    </ul>
+                  </div>
+
+                  <div class="bg-white rounded-lg p-4 border border-blue-200">
+                    <h5 class="font-semibold text-blue-700 mb-2">Propósito:</h5>
+                    <p class="text-sm text-blue-600">
+                      Establecer la razón de ser de la organización, sus
+                      objetivos y las condiciones para lograrlos
+                    </p>
+                  </div>
+
+                  <div class="text-center">
+                    <div
+                      class="inline-flex items-center bg-blue-100 rounded-full px-4 py-2"
+                    >
+                      <span class="text-blue-800 font-semibold"
+                        >Nivel Estratégico</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Operation Processes -->
+              <div
+                class="process-card bg-white bg-opacity-90 rounded-2xl p-6"
+                onclick="showProcessDetails('operation')"
+              >
+                <div class="text-center mb-6">
+                  <div class="text-5xl mb-4 glow-animation">⚙️</div>
+                  <h3 class="text-2xl font-bold text-green-600 mb-4">
+                    Procesos de Operación
+                  </h3>
+                </div>
+
+                <div class="space-y-4">
+                  <div class="bg-green-50 rounded-lg p-4">
+                    <h4 class="font-semibold text-green-800 mb-2">
+                      Gestión de Proyectos (GP):
+                    </h4>
+                    <ul class="text-sm text-green-600 space-y-1">
+                      <li>• Planificación del proyecto</li>
+                      <li>• Realización del proyecto</li>
+                      <li>• Evaluación y control</li>
+                      <li>• Cierre del proyecto</li>
+                    </ul>
+                  </div>
+
+                  <div class="bg-green-50 rounded-lg p-4">
+                    <h4 class="font-semibold text-green-800 mb-2">
+                      Desarrollo de Software (DS):
+                    </h4>
+                    <ul class="text-sm text-green-600 space-y-1">
+                      <li>• Inicio del desarrollo</li>
+                      <li>• Análisis y diseño</li>
+                      <li>• Construcción</li>
+                      <li>• Integración y pruebas</li>
+                      <li>• Cierre del desarrollo</li>
+                    </ul>
+                  </div>
+
+                  <div class="text-center">
+                    <div
+                      class="inline-flex items-center bg-green-100 rounded-full px-4 py-2"
+                    >
+                      <span class="text-green-800 font-semibold"
+                        >Nivel Táctico</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Support Processes -->
+              <div
+                class="process-card bg-white bg-opacity-90 rounded-2xl p-6"
+                onclick="showProcessDetails('support')"
+              >
+                <div class="text-center mb-6">
+                  <div class="text-5xl mb-4 pulse-animation">🛠️</div>
+                  <h3 class="text-2xl font-bold text-purple-600 mb-4">
+                    Procesos de Soporte
+                  </h3>
+                </div>
+
+                <div class="space-y-4">
+                  <div class="bg-purple-50 rounded-lg p-4">
+                    <h4 class="font-semibold text-purple-800 mb-2">
+                      Gestión de Recursos (GR):
+                    </h4>
+                    <ul class="text-sm text-purple-600 space-y-1">
+                      <li>• Recursos humanos</li>
+                      <li>• Bienes, servicios e infraestructura</li>
+                      <li>• Conocimiento de la organización</li>
+                    </ul>
+                  </div>
+
+                  <div class="bg-purple-50 rounded-lg p-4">
+                    <h4 class="font-semibold text-purple-800 mb-2">
+                      Gestión de Repositorio (GRE):
+                    </h4>
+                    <ul class="text-sm text-purple-600 space-y-1">
+                      <li>• Gestión de configuración</li>
+                      <li>• Gestión de versiones</li>
+                      <li>• Respaldo y recuperación</li>
+                    </ul>
+                  </div>
+
+                  <div class="bg-purple-50 rounded-lg p-4">
+                    <h4 class="font-semibold text-purple-800 mb-2">
+                      Verificación y Validación (VV):
+                    </h4>
+                    <ul class="text-sm text-purple-600 space-y-1">
+                      <li>• Preparación de VV</li>
+                      <li>• Realización de VV</li>
+                      <li>• Evaluación de VV</li>
+                    </ul>
+                  </div>
+
+                  <div class="text-center">
+                    <div
+                      class="inline-flex items-center bg-purple-100 rounded-full px-4 py-2"
+                    >
+                      <span class="text-purple-800 font-semibold"
+                        >Nivel Operativo</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- MoProSoft Benefits for SMEs -->
+            <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+              <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">
+                🏢 Beneficios para PyMEs Mexicanas
+              </h3>
+
+              <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <h4 class="font-bold text-gray-700 mb-3">
+                    ✅ Ventajas Específicas:
+                  </h4>
+                  <div class="space-y-2 text-sm text-gray-600">
+                    <div class="flex items-center space-x-2">
+                      <span class="text-green-500">•</span>
+                      <span>Adaptado a la realidad mexicana</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <span class="text-green-500">•</span>
+                      <span>Menor costo de implementación</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <span class="text-green-500">•</span>
+                      <span>Enfoque en PyMEs (2-50 empleados)</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <span class="text-green-500">•</span>
+                      <span>Certificación nacional reconocida</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <span class="text-green-500">•</span>
+                      <span>Soporte en español</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="bg-gray-50 rounded-lg p-4">
+                  <h4 class="font-bold text-gray-700 mb-3">
+                    📊 Estadísticas de Adopción:
+                  </h4>
+                  <div class="space-y-3">
+                    <div>
+                      <div class="flex justify-between text-sm mb-1">
+                        <span>Empresas certificadas:</span>
+                        <span class="font-semibold text-blue-600">200+</span>
+                      </div>
+                      <div class="progress-bar">
+                        <div
+                          class="progress-fill bg-blue-500"
+                          style="width: 75%"
+                        ></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="flex justify-between text-sm mb-1">
+                        <span>Mejora en calidad:</span>
+                        <span class="font-semibold text-green-600">40%</span>
+                      </div>
+                      <div class="progress-bar">
+                        <div
+                          class="progress-fill bg-green-500"
+                          style="width: 40%"
+                        ></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="flex justify-between text-sm mb-1">
+                        <span>Reducción de costos:</span>
+                        <span class="font-semibold text-red-600">25%</span>
+                      </div>
+                      <div class="progress-bar">
+                        <div
+                          class="progress-fill bg-red-500"
+                          style="width: 25%"
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-6 text-center">
+                <span
+                  class="bg-red-100 text-red-700 px-4 py-2 rounded-full text-sm font-medium"
+                >
+                  Fuente: MoProSoft - Modelo de Procesos para la Industria de
+                  Software
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 4: Comparación Rápida -->
+        <div class="slide" id="slide4">
+          <div class="slide-bg-4 rounded-3xl p-12 min-h-[600px]">
+            <h2
+              class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg"
+            >
+              ⚖️ Comparación Rápida: CMMI vs MoProSoft
+            </h2>
+
+            <!-- Comparison Overview -->
+            <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
+              <div class="text-center mb-6">
+                <div class="flex justify-center items-center space-x-8 mb-4">
+                  <div class="text-center">
+                    <div class="text-6xl mb-2 pulse-animation">🌍</div>
+                    <h3 class="text-2xl font-bold text-blue-600">CMMI</h3>
+                  </div>
+                  <div class="text-4xl text-purple-600">VS</div>
+                  <div class="text-center">
+                    <div class="text-6xl mb-2 bounce-animation">🇲🇽</div>
+                    <h3 class="text-2xl font-bold text-red-600">MoProSoft</h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detailed Comparison -->
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+              <!-- CMMI Card -->
+              <div
+                class="comparison-card bg-white bg-opacity-90 rounded-2xl p-6"
+              >
+                <div class="text-center mb-6">
+                  <div class="text-5xl mb-4 glow-animation">🌍</div>
+                  <h3 class="text-2xl font-bold text-blue-600 mb-2">CMMI</h3>
+                  <p class="text-sm text-gray-600">
+                    Internacional, más complejo y costoso
+                  </p>
+                </div>
+
+                <div class="space-y-4">
+                  <div
+                    class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-semibold text-blue-800 mb-2">
+                      🎯 Alcance:
+                    </h4>
+                    <ul class="text-sm text-blue-600 space-y-1">
+                      <li>• Estándar internacional</li>
+                      <li>• Empresas grandes y medianas</li>
+                      <li>• Múltiples industrias</li>
+                      <li>• Enfoque en madurez organizacional</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-semibold text-blue-800 mb-2">💰 Costos:</h4>
+                    <ul class="text-sm text-blue-600 space-y-1">
+                      <li>• Implementación: $50,000 - $200,000 USD</li>
+                      <li>• Evaluación: $15,000 - $50,000 USD</li>
+                      <li>• Consultores especializados</li>
+                      <li>• Tiempo: 12-24 meses</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-semibold text-blue-800 mb-2">
+                      ✅ Ventajas:
+                    </h4>
+                    <ul class="text-sm text-blue-600 space-y-1">
+                      <li>• Reconocimiento mundial</li>
+                      <li>• Modelo maduro y probado</li>
+                      <li>• Mejora significativa en procesos</li>
+                      <li>• Ventaja competitiva global</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-semibold text-red-800 mb-2">
+                      ❌ Desventajas:
+                    </h4>
+                    <ul class="text-sm text-red-600 space-y-1">
+                      <li>• Alto costo de implementación</li>
+                      <li>• Complejidad para PyMEs</li>
+                      <li>• Requiere recursos especializados</li>
+                      <li>• Proceso largo y demandante</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- MoProSoft Card -->
+              <div
+                class="comparison-card bg-white bg-opacity-90 rounded-2xl p-6"
+              >
+                <div class="text-center mb-6">
+                  <div class="text-5xl mb-4 rotate-animation">🇲🇽</div>
+                  <h3 class="text-2xl font-bold text-red-600 mb-2">
+                    MoProSoft
+                  </h3>
+                  <p class="text-sm text-gray-600">
+                    Adaptado a la realidad mexicana, más accesible
+                  </p>
+                </div>
+
+                <div class="space-y-4">
+                  <div
+                    class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-semibold text-red-800 mb-2">🎯 Alcance:</h4>
+                    <ul class="text-sm text-red-600 space-y-1">
+                      <li>• Estándar nacional mexicano</li>
+                      <li>• PyMEs (2-50 empleados)</li>
+                      <li>• Industria de software</li>
+                      <li>• Enfoque en profesionalización</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-semibold text-red-800 mb-2">💰 Costos:</h4>
+                    <ul class="text-sm text-red-600 space-y-1">
+                      <li>• Implementación: $10,000 - $30,000 MXN</li>
+                      <li>• Evaluación: $15,000 - $25,000 MXN</li>
+                      <li>• Consultores locales</li>
+                      <li>• Tiempo: 6-12 meses</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-semibold text-green-800 mb-2">
+                      ✅ Ventajas:
+                    </h4>
+                    <ul class="text-sm text-green-600 space-y-1">
+                      <li>• Costo accesible para PyMEs</li>
+                      <li>• Adaptado al contexto mexicano</li>
+                      <li>• Implementación más rápida</li>
+                      <li>• Soporte gubernamental</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    class="bg-orange-50 border-l-4 border-orange-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-semibold text-orange-800 mb-2">
+                      ❌ Desventajas:
+                    </h4>
+                    <ul class="text-sm text-orange-600 space-y-1">
+                      <li>• Reconocimiento limitado internacionalmente</li>
+                      <li>• Menor madurez del modelo</li>
+                      <li>• Enfoque específico a México</li>
+                      <li>• Menos casos de éxito documentados</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Comparison Table -->
+            <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+              <h3 class="text-2xl font-bold text-gray-800 mb-4 text-center">
+                📊 Comparación Rápida
+              </h3>
+
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="bg-gray-100">
+                      <th class="text-left p-3 font-semibold">Criterio</th>
+                      <th class="text-center p-3 font-semibold text-blue-600">
+                        CMMI
+                      </th>
+                      <th class="text-center p-3 font-semibold text-red-600">
+                        MoProSoft
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200">
+                    <tr>
+                      <td class="p-3 font-medium">Alcance</td>
+                      <td class="p-3 text-center">🌍 Internacional</td>
+                      <td class="p-3 text-center">🇲🇽 Nacional</td>
+                    </tr>
+                    <tr class="bg-gray-50">
+                      <td class="p-3 font-medium">Tamaño de empresa</td>
+                      <td class="p-3 text-center">🏢 Grande/Mediana</td>
+                      <td class="p-3 text-center">🏪 PyME</td>
+                    </tr>
+                    <tr>
+                      <td class="p-3 font-medium">Costo</td>
+                      <td class="p-3 text-center">💰 Alto</td>
+                      <td class="p-3 text-center">💵 Accesible</td>
+                    </tr>
+                    <tr class="bg-gray-50">
+                      <td class="p-3 font-medium">Tiempo implementación</td>
+                      <td class="p-3 text-center">⏰ 12-24 meses</td>
+                      <td class="p-3 text-center">⏱️ 6-12 meses</td>
+                    </tr>
+                    <tr>
+                      <td class="p-3 font-medium">Complejidad</td>
+                      <td class="p-3 text-center">🔴 Alta</td>
+                      <td class="p-3 text-center">🟡 Media</td>
+                    </tr>
+                    <tr class="bg-gray-50">
+                      <td class="p-3 font-medium">Reconocimiento</td>
+                      <td class="p-3 text-center">🌟 Mundial</td>
+                      <td class="p-3 text-center">🏆 Nacional</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 5: Actividad - Debate guiado -->
+        <div class="slide" id="slide5">
+          <div class="slide-bg-5 rounded-3xl p-12 min-h-[600px]">
+            <h2
+              class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg"
+            >
+              💬 Actividad - Debate Guiado (15 min)
+            </h2>
+
+            <!-- Debate Question -->
+            <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
+              <div class="text-center mb-6">
+                <div class="text-6xl mb-4 pulse-animation">🤔</div>
+                <h3 class="text-3xl font-bold text-orange-800">
+                  Pregunta del Debate
+                </h3>
+              </div>
+
+              <div class="bg-orange-50 rounded-2xl p-6 text-center mb-6">
+                <h4 class="text-2xl font-bold text-gray-800 mb-4">
+                  "¿Qué conviene más a una startup mexicana: certificar en CMMI
+                  o en MoProSoft?"
+                </h4>
+                <p class="text-lg text-gray-600">
+                  Considera factores como costo, tiempo, beneficios y contexto
+                  empresarial
+                </p>
+              </div>
+
+              <!-- Timer -->
+              <div class="text-center">
+                <div
+                  id="debateTimer"
+                  class="text-4xl font-bold text-orange-600 mb-4"
+                >
+                  15:00
+                </div>
+                <button
+                  onclick="startDebateTimer()"
+                  class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg transition-colors"
+                >
+                  🚀 Iniciar Debate
+                </button>
+              </div>
+            </div>
+
+            <!-- Debate Options -->
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+              <!-- Team CMMI -->
+              <div
+                class="debate-option bg-white bg-opacity-90 rounded-2xl p-6"
+                onclick="selectDebateOption('cmmi')"
+                id="cmmiBand"
+              >
+                <div class="text-center mb-6">
+                  <div class="text-5xl mb-4 glow-animation">🌍</div>
+                  <h3 class="text-2xl font-bold text-blue-600 mb-4">
+                    Equipo CMMI
+                  </h3>
+                  <div class="bg-blue-100 rounded-full px-4 py-2 inline-block">
+                    <span class="text-blue-800 font-semibold"
+                      >Argumentos a favor de CMMI</span
+                    >
+                  </div>
+                </div>
+
+                <div class="space-y-4">
+                  <div
+                    class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-semibold text-blue-800 mb-2">
+                      💪 Argumentos Fuertes:
+                    </h4>
+                    <ul class="text-sm text-blue-600 space-y-1">
+                      <li>• Reconocimiento internacional para expansión</li>
+                      <li>• Acceso a mercados globales</li>
+                      <li>• Modelo probado y maduro</li>
+                      <li>• Mejora significativa en procesos</li>
+                      <li>• Ventaja competitiva a largo plazo</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-semibold text-blue-800 mb-2">
+                      🎯 Escenarios Ideales:
+                    </h4>
+                    <ul class="text-sm text-blue-600 space-y-1">
+                      <li>• Startup con ambiciones internacionales</li>
+                      <li>• Clientes corporativos que requieren CMMI</li>
+                      <li>• Acceso a capital de inversión</li>
+                      <li>• Equipo técnico experimentado</li>
+                    </ul>
+                  </div>
+
+                  <div class="bg-white rounded-lg p-4 border border-blue-200">
+                    <h5 class="font-semibold text-blue-700 mb-2">
+                      📊 Contraargumentos:
+                    </h5>
+                    <p class="text-sm text-blue-600">
+                      "Aunque el costo inicial es alto, el ROI a largo plazo
+                      justifica la inversión para startups con visión global"
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Team MoProSoft -->
+              <div
+                class="debate-option bg-white bg-opacity-90 rounded-2xl p-6"
+                onclick="selectDebateOption('moprosoft')"
+                id="moprosoftBand"
+              >
+                <div class="text-center mb-6">
+                  <div class="text-5xl mb-4 bounce-animation">🇲🇽</div>
+                  <h3 class="text-2xl font-bold text-red-600 mb-4">
+                    Equipo MoProSoft
+                  </h3>
+                  <div class="bg-red-100 rounded-full px-4 py-2 inline-block">
+                    <span class="text-red-800 font-semibold"
+                      >Argumentos a favor de MoProSoft</span
+                    >
+                  </div>
+                </div>
+
+                <div class="space-y-4">
+                  <div
+                    class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-semibold text-red-800 mb-2">
+                      💪 Argumentos Fuertes:
+                    </h4>
+                    <ul class="text-sm text-red-600 space-y-1">
+                      <li>• Costo accesible para startups</li>
+                      <li>• Adaptado al contexto mexicano</li>
+                      <li>• Implementación más rápida</li>
+                      <li>• Soporte gubernamental y incentivos</li>
+                      <li>• Enfoque específico en PyMEs</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-semibold text-red-800 mb-2">
+                      🎯 Escenarios Ideales:
+                    </h4>
+                    <ul class="text-sm text-red-600 space-y-1">
+                      <li>• Startup enfocada en mercado nacional</li>
+                      <li>• Recursos limitados de capital</li>
+                      <li>• Necesidad de certificación rápida</li>
+                      <li>• Equipo pequeño y ágil</li>
+                    </ul>
+                  </div>
+
+                  <div class="bg-white rounded-lg p-4 border border-red-200">
+                    <h5 class="font-semibold text-red-700 mb-2">
+                      📊 Contraargumentos:
+                    </h5>
+                    <p class="text-sm text-red-600">
+                      "MoProSoft puede ser un primer paso hacia CMMI,
+                      permitiendo madurar gradualmente sin comprometer la
+                      supervivencia de la startup"
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Debate Structure -->
+            <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+              <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">
+                📋 Estructura del Debate
+              </h3>
+
+              <div class="grid md:grid-cols-4 gap-4">
+                <div class="bg-blue-50 rounded-lg p-4 text-center">
+                  <div class="text-2xl mb-2">1️⃣</div>
+                  <h4 class="font-semibold text-blue-700 mb-1">Presentación</h4>
+                  <p class="text-xs text-blue-600">
+                    Cada equipo presenta su posición (3 min)
+                  </p>
+                </div>
+
+                <div class="bg-green-50 rounded-lg p-4 text-center">
+                  <div class="text-2xl mb-2">2️⃣</div>
+                  <h4 class="font-semibold text-green-700 mb-1">
+                    Argumentación
+                  </h4>
+                  <p class="text-xs text-green-600">
+                    Desarrollo de argumentos principales (4 min)
+                  </p>
+                </div>
+
+                <div class="bg-yellow-50 rounded-lg p-4 text-center">
+                  <div class="text-2xl mb-2">3️⃣</div>
+                  <h4 class="font-semibold text-yellow-700 mb-1">
+                    Contraargumentos
+                  </h4>
+                  <p class="text-xs text-yellow-600">
+                    Refutación de argumentos contrarios (4 min)
+                  </p>
+                </div>
+
+                <div class="bg-purple-50 rounded-lg p-4 text-center">
+                  <div class="text-2xl mb-2">4️⃣</div>
+                  <h4 class="font-semibold text-purple-700 mb-1">Conclusión</h4>
+                  <p class="text-xs text-purple-600">
+                    Síntesis y recomendación final (4 min)
+                  </p>
+                </div>
+              </div>
+
+              <!-- Evaluation Criteria -->
+              <div class="mt-6 bg-gray-50 rounded-lg p-4">
+                <h4 class="font-bold text-gray-700 mb-3 text-center">
+                  🏆 Criterios de Evaluación:
+                </h4>
+                <div class="grid md:grid-cols-3 gap-4 text-sm">
+                  <div class="text-center">
+                    <div class="font-semibold text-gray-700">
+                      Solidez de Argumentos
+                    </div>
+                    <div class="text-gray-600">Evidencia y lógica</div>
+                  </div>
+                  <div class="text-center">
+                    <div class="font-semibold text-gray-700">
+                      Conocimiento Técnico
+                    </div>
+                    <div class="text-gray-600">Comprensión de modelos</div>
+                  </div>
+                  <div class="text-center">
+                    <div class="font-semibold text-gray-700">
+                      Aplicabilidad Práctica
+                    </div>
+                    <div class="text-gray-600">Relevancia para startups</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
-        let currentSlideIndex = 0;
-        const totalSlides = 5;
-        let debateTimerInterval = null;
-        let debateTimeLeft = 900; // 15 minutes in seconds
-        let selectedDebateOption = null;
+      let currentSlideIndex = 0;
+      const totalSlides = 5;
+      let debateTimerInterval = null;
+      let debateTimeLeft = 900; // 15 minutes in seconds
+      let selectedDebateOption = null;
 
-        function showSlide(index) {
-            document.querySelectorAll('.slide').forEach(slide => {
-                slide.classList.remove('active');
-            });
-            
-            document.getElementById(`slide${index + 1}`).classList.add('active');
-            
-            document.getElementById('currentSlide').textContent = index + 1;
-            document.getElementById('prevBtn').disabled = index === 0;
-            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
-            
-            const progress = ((index + 1) / totalSlides) * 100;
-            document.getElementById('progressBar').style.width = progress + '%';
-            
-            if (index === 0) {
-                document.getElementById('prevBtn').classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                document.getElementById('prevBtn').classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-            
-            if (index === totalSlides - 1) {
-                document.getElementById('nextBtn').classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                document.getElementById('nextBtn').classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-        }
-
-        function nextSlide() {
-            if (currentSlideIndex < totalSlides - 1) {
-                currentSlideIndex++;
-                showSlide(currentSlideIndex);
-            }
-        }
-
-        function previousSlide() {
-            if (currentSlideIndex > 0) {
-                currentSlideIndex--;
-                showSlide(currentSlideIndex);
-            }
-        }
-
-        function showLevelDetails(level) {
-            const levelDetails = {
-                1: "Nivel 1 - Inicial: Los procesos son impredecibles, reactivos y caóticos. El éxito depende de la competencia y heroísmo de las personas en la organización.",
-                2: "Nivel 2 - Gestionado: Los procesos son planificados y ejecutados de acuerdo con políticas. Los proyectos tienen planes documentados.",
-                3: "Nivel 3 - Definido: Los procesos están bien caracterizados y entendidos, y se describen en estándares, procedimientos, herramientas y métodos.",
-                4: "Nivel 4 - Cuantitativamente Gestionado: La organización y los proyectos establecen objetivos cuantitativos para la calidad y el rendimiento de los procesos.",
-                5: "Nivel 5 - Optimización: La organización mejora continuamente sus procesos basándose en una comprensión cuantitativa de sus objetivos de negocio."
-            };
-            
-            alert(levelDetails[level] || "Detalles no disponibles para este nivel.");
-        }
-
-        function animateLevel(level) {
-            const levelElement = event.currentTarget;
-            levelElement.classList.add('level-up');
-            
-            setTimeout(() => {
-                levelElement.classList.remove('level-up');
-            }, 1000);
-        }
-
-        function showProcessDetails(processType) {
-            const processDetails = {
-                direction: "Procesos de Dirección: Establecen la razón de ser de la organización, sus objetivos y las condiciones para lograrlos, para lo cual se consideran las necesidades de los clientes, así como la evaluación de los resultados para la mejora de la organización.",
-                operation: "Procesos de Operación: Abordan los procesos directamente relacionados con la realización de proyectos de desarrollo y mantenimiento de software. Incluye la gestión de proyectos específicos y el desarrollo técnico del software.",
-                support: "Procesos de Soporte: Apoyan a los procesos de la categoría de Operación, proporcionando recursos e infraestructura necesaria. Incluyen la gestión de recursos, repositorio y verificación y validación."
-            };
-            
-            alert(processDetails[processType] || "Detalles no disponibles para este proceso.");
-        }
-
-        function selectDebateOption(option) {
-            // Remove previous selection
-            document.querySelectorAll('.debate-option').forEach(el => {
-                el.classList.remove('selected');
-            });
-            
-            // Add selection to clicked option
-            const selectedElement = document.getElementById(option === 'cmmi' ? 'cmmiBand' : 'moprosoftBand');
-            selectedElement.classList.add('selected');
-            
-            selectedDebateOption = option;
-            
-            const messages = {
-                cmmi: "¡Excelente elección! El equipo CMMI defenderá los beneficios del reconocimiento internacional y la madurez organizacional.",
-                moprosoft: "¡Muy bien! El equipo MoProSoft argumentará las ventajas de la accesibilidad y adaptación al contexto mexicano."
-            };
-            
-            setTimeout(() => {
-                alert(messages[option]);
-            }, 300);
-        }
-
-        function startDebateTimer() {
-            if (debateTimerInterval) {
-                clearInterval(debateTimerInterval);
-            }
-            
-            debateTimeLeft = 900; // Reset to 15 minutes
-            
-            debateTimerInterval = setInterval(() => {
-                debateTimeLeft--;
-                
-                const minutes = Math.floor(debateTimeLeft / 60);
-                const seconds = debateTimeLeft % 60;
-                
-                document.getElementById('debateTimer').textContent = 
-                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                
-                // Change color as time runs out
-                const timerElement = document.getElementById('debateTimer');
-                if (debateTimeLeft <= 300) { // Last 5 minutes
-                    timerElement.classList.remove('text-orange-600');
-                    timerElement.classList.add('text-red-600');
-                } else if (debateTimeLeft <= 600) { // Last 10 minutes
-                    timerElement.classList.remove('text-orange-600');
-                    timerElement.classList.add('text-yellow-600');
-                }
-                
-                if (debateTimeLeft <= 0) {
-                    clearInterval(debateTimerInterval);
-                    alert('¡Tiempo de debate terminado! Procedan con las conclusiones finales y la votación.');
-                }
-            }, 1000);
-        }
-
-        // Initialize
-        showSlide(0);
-
-        // Keyboard navigation
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight') nextSlide();
-            if (e.key === 'ArrowLeft') previousSlide();
+      function showSlide(index) {
+        document.querySelectorAll(".slide").forEach((slide) => {
+          slide.classList.remove("active");
         });
+
+        document.getElementById(`slide${index + 1}`).classList.add("active");
+
+        document.getElementById("currentSlide").textContent = index + 1;
+        document.getElementById("prevBtn").disabled = index === 0;
+        document.getElementById("nextBtn").disabled = index === totalSlides - 1;
+
+        const progress = ((index + 1) / totalSlides) * 100;
+        document.getElementById("progressBar").style.width = progress + "%";
+
+        if (index === 0) {
+          document
+            .getElementById("prevBtn")
+            .classList.add("opacity-50", "cursor-not-allowed");
+        } else {
+          document
+            .getElementById("prevBtn")
+            .classList.remove("opacity-50", "cursor-not-allowed");
+        }
+
+        if (index === totalSlides - 1) {
+          document
+            .getElementById("nextBtn")
+            .classList.add("opacity-50", "cursor-not-allowed");
+        } else {
+          document
+            .getElementById("nextBtn")
+            .classList.remove("opacity-50", "cursor-not-allowed");
+        }
+      }
+
+      function nextSlide() {
+        if (currentSlideIndex < totalSlides - 1) {
+          currentSlideIndex++;
+          showSlide(currentSlideIndex);
+        }
+      }
+
+      function previousSlide() {
+        if (currentSlideIndex > 0) {
+          currentSlideIndex--;
+          showSlide(currentSlideIndex);
+        }
+      }
+
+      function showLevelDetails(level) {
+        const levelDetails = {
+          1: "Nivel 1 - Inicial: Los procesos son impredecibles, reactivos y caóticos. El éxito depende de la competencia y heroísmo de las personas en la organización.",
+          2: "Nivel 2 - Gestionado: Los procesos son planificados y ejecutados de acuerdo con políticas. Los proyectos tienen planes documentados.",
+          3: "Nivel 3 - Definido: Los procesos están bien caracterizados y entendidos, y se describen en estándares, procedimientos, herramientas y métodos.",
+          4: "Nivel 4 - Cuantitativamente Gestionado: La organización y los proyectos establecen objetivos cuantitativos para la calidad y el rendimiento de los procesos.",
+          5: "Nivel 5 - Optimización: La organización mejora continuamente sus procesos basándose en una comprensión cuantitativa de sus objetivos de negocio.",
+        };
+
+        alert(
+          levelDetails[level] || "Detalles no disponibles para este nivel."
+        );
+      }
+
+      function animateLevel(level) {
+        const levelElement = event.currentTarget;
+        levelElement.classList.add("level-up");
+
+        setTimeout(() => {
+          levelElement.classList.remove("level-up");
+        }, 1000);
+      }
+
+      function showProcessDetails(processType) {
+        const processDetails = {
+          direction:
+            "Procesos de Dirección: Establecen la razón de ser de la organización, sus objetivos y las condiciones para lograrlos, para lo cual se consideran las necesidades de los clientes, así como la evaluación de los resultados para la mejora de la organización.",
+          operation:
+            "Procesos de Operación: Abordan los procesos directamente relacionados con la realización de proyectos de desarrollo y mantenimiento de software. Incluye la gestión de proyectos específicos y el desarrollo técnico del software.",
+          support:
+            "Procesos de Soporte: Apoyan a los procesos de la categoría de Operación, proporcionando recursos e infraestructura necesaria. Incluyen la gestión de recursos, repositorio y verificación y validación.",
+        };
+
+        alert(
+          processDetails[processType] ||
+            "Detalles no disponibles para este proceso."
+        );
+      }
+
+      function selectDebateOption(option) {
+        // Remove previous selection
+        document.querySelectorAll(".debate-option").forEach((el) => {
+          el.classList.remove("selected");
+        });
+
+        // Add selection to clicked option
+        const selectedElement = document.getElementById(
+          option === "cmmi" ? "cmmiBand" : "moprosoftBand"
+        );
+        selectedElement.classList.add("selected");
+
+        selectedDebateOption = option;
+
+        const messages = {
+          cmmi: "¡Excelente elección! El equipo CMMI defenderá los beneficios del reconocimiento internacional y la madurez organizacional.",
+          moprosoft:
+            "¡Muy bien! El equipo MoProSoft argumentará las ventajas de la accesibilidad y adaptación al contexto mexicano.",
+        };
+
+        setTimeout(() => {
+          alert(messages[option]);
+        }, 300);
+      }
+
+      function startDebateTimer() {
+        if (debateTimerInterval) {
+          clearInterval(debateTimerInterval);
+        }
+
+        debateTimeLeft = 900; // Reset to 15 minutes
+
+        debateTimerInterval = setInterval(() => {
+          debateTimeLeft--;
+
+          const minutes = Math.floor(debateTimeLeft / 60);
+          const seconds = debateTimeLeft % 60;
+
+          document.getElementById("debateTimer").textContent = `${minutes
+            .toString()
+            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+
+          // Change color as time runs out
+          const timerElement = document.getElementById("debateTimer");
+          if (debateTimeLeft <= 300) {
+            // Last 5 minutes
+            timerElement.classList.remove("text-orange-600");
+            timerElement.classList.add("text-red-600");
+          } else if (debateTimeLeft <= 600) {
+            // Last 10 minutes
+            timerElement.classList.remove("text-orange-600");
+            timerElement.classList.add("text-yellow-600");
+          }
+
+          if (debateTimeLeft <= 0) {
+            clearInterval(debateTimerInterval);
+            alert(
+              "¡Tiempo de debate terminado! Procedan con las conclusiones finales y la votación."
+            );
+          }
+        }, 1000);
+      }
+
+      // Initialize
+      showSlide(0);
+
+      // Keyboard navigation
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight") nextSlide();
+        if (e.key === "ArrowLeft") previousSlide();
+      });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a86e11a2becdb0',t:'MTc1NzEwMzY1NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script defer src="js/layout.js"></script>
-</body>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97f38490c1e70fb3',t:'MTc1Nzg5MTAwOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  </body>
 </html>

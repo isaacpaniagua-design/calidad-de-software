@@ -1,1503 +1,2116 @@
 <!DOCTYPE html>
-<html lang="es" data-layout="global">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sesión 32 - Los Gurús de la Calidad</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
+      body {
+        font-family: "Inter", sans-serif;
+      }
+
+      .slide {
+        display: none;
+        animation: slideIn 0.5s ease-in-out;
+      }
+
+      .slide.active {
+        display: block;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(20px);
         }
-        
-        .slide {
-            display: none;
-            animation: slideIn 0.5s ease-in-out;
+        to {
+          opacity: 1;
+          transform: translateX(0);
         }
-        
-        .slide.active {
-            display: block;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
         }
-        
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
+        50% {
+          transform: translateY(-10px);
         }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
         }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+        50% {
+          transform: scale(1.05);
         }
-        
-        @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-            40% { transform: translateY(-10px); }
-            60% { transform: translateY(-5px); }
+      }
+
+      @keyframes bounce {
+        0%,
+        20%,
+        50%,
+        80%,
+        100% {
+          transform: translateY(0);
         }
-        
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+        40% {
+          transform: translateY(-10px);
         }
-        
-        @keyframes glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-            50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.6); }
+        60% {
+          transform: translateY(-5px);
         }
-        
-        @keyframes typewriter {
-            from { width: 0; }
-            to { width: 100%; }
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
         }
-        
-        @keyframes shimmer {
-            0% { background-position: -200px 0; }
-            100% { background-position: calc(200px + 100%) 0; }
+        to {
+          transform: rotate(360deg);
         }
-        
-        @keyframes heartbeat {
-            0%, 100% { transform: scale(1); }
-            25% { transform: scale(1.1); }
-            50% { transform: scale(1); }
-            75% { transform: scale(1.05); }
+      }
+
+      @keyframes glow {
+        0%,
+        100% {
+          box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
         }
-        
-        @keyframes wave {
-            0%, 100% { transform: rotate(0deg); }
-            25% { transform: rotate(5deg); }
-            75% { transform: rotate(-5deg); }
+        50% {
+          box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
         }
-        
-        @keyframes pdca-rotate {
-            0% { transform: rotate(0deg); }
-            25% { transform: rotate(90deg); }
-            50% { transform: rotate(180deg); }
-            75% { transform: rotate(270deg); }
-            100% { transform: rotate(360deg); }
+      }
+
+      @keyframes typewriter {
+        from {
+          width: 0;
         }
-        
-        @keyframes fishbone-draw {
-            0% { stroke-dashoffset: 1000; }
-            100% { stroke-dashoffset: 0; }
+        to {
+          width: 100%;
         }
-        
-        .float-animation {
-            animation: float 3s ease-in-out infinite;
+      }
+
+      @keyframes shimmer {
+        0% {
+          background-position: -200px 0;
         }
-        
-        .pulse-animation {
-            animation: pulse 2s infinite;
+        100% {
+          background-position: calc(200px + 100%) 0;
         }
-        
-        .bounce-animation {
-            animation: bounce 2s infinite;
+      }
+
+      @keyframes heartbeat {
+        0%,
+        100% {
+          transform: scale(1);
         }
-        
-        .rotate-animation {
-            animation: rotate 4s linear infinite;
+        25% {
+          transform: scale(1.1);
         }
-        
-        .glow-animation {
-            animation: glow 2s infinite;
+        50% {
+          transform: scale(1);
         }
-        
-        .typewriter {
-            overflow: hidden;
-            white-space: nowrap;
-            animation: typewriter 3s steps(40, end);
+        75% {
+          transform: scale(1.05);
         }
-        
-        .shimmer {
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200px 100%;
-            animation: shimmer 2s infinite;
+      }
+
+      @keyframes wave {
+        0%,
+        100% {
+          transform: rotate(0deg);
         }
-        
-        .heartbeat-animation {
-            animation: heartbeat 2s infinite;
+        25% {
+          transform: rotate(5deg);
         }
-        
-        .wave-animation {
-            animation: wave 2s ease-in-out infinite;
+        75% {
+          transform: rotate(-5deg);
         }
-        
-        .pdca-animation {
-            animation: pdca-rotate 8s linear infinite;
+      }
+
+      @keyframes pdca-rotate {
+        0% {
+          transform: rotate(0deg);
         }
-        
-        .fishbone-line {
-            stroke-dasharray: 1000;
-            stroke-dashoffset: 1000;
-            animation: fishbone-draw 3s ease-in-out forwards;
+        25% {
+          transform: rotate(90deg);
         }
-        
-        .slide-bg-1 {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        50% {
+          transform: rotate(180deg);
         }
-        
-        .slide-bg-2 {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        75% {
+          transform: rotate(270deg);
         }
-        
-        .slide-bg-3 {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        100% {
+          transform: rotate(360deg);
         }
-        
-        .slide-bg-4 {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      }
+
+      @keyframes fishbone-draw {
+        0% {
+          stroke-dashoffset: 1000;
         }
-        
-        .slide-bg-5 {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        100% {
+          stroke-dashoffset: 0;
         }
-        
-        .slide-bg-6 {
-            background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-        }
-        
-        .guru-card {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .guru-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
-        }
-        
-        .principle-item {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .principle-item:hover {
-            transform: translateX(5px);
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
-        .trilogy-step {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .trilogy-step:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-        }
-        
-        .zero-defects-counter {
-            font-family: 'Courier New', monospace;
-            font-weight: bold;
-        }
-        
-        .fishbone-diagram {
-            transition: all 0.3s ease;
-        }
-        
-        .fishbone-diagram:hover {
-            transform: scale(1.02);
-        }
-        
-        .brainstorm-idea {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .brainstorm-idea:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-        
-        .guru-timeline {
-            position: relative;
-        }
-        
-        .guru-timeline::before {
-            content: '';
-            position: absolute;
-            left: 50%;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: linear-gradient(to bottom, #667eea, #764ba2);
-            transform: translateX(-50%);
-        }
-        
-        .timeline-item {
-            position: relative;
-            margin-bottom: 2rem;
-        }
-        
-        .timeline-item::before {
-            content: '';
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            width: 20px;
-            height: 20px;
-            background: white;
-            border: 4px solid #667eea;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10;
-        }
-        
-        .pdca-wheel {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            position: relative;
-            margin: 0 auto;
-            background: conic-gradient(from 0deg, #ef4444 0deg 90deg, #f59e0b 90deg 180deg, #10b981 180deg 270deg, #3b82f6 270deg 360deg);
-        }
-        
-        .pdca-center {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80px;
-            height: 80px;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: #374151;
-        }
-        
-        .pdca-label {
-            position: absolute;
-            font-weight: bold;
-            color: white;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-        }
-        
-        .trilogy-flow {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 2rem;
-        }
-        
-        .trilogy-arrow {
-            font-size: 2rem;
-            color: #3b82f6;
-            animation: pulse 2s infinite;
-        }
-        
-        .zero-defects-display {
-            font-size: 4rem;
-            font-weight: bold;
-            color: #ef4444;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            animation: glow 2s infinite;
-        }
-        
-        .brainstorm-timer {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #10b981;
-        }
-        
-        .idea-bubble {
-            position: relative;
-            background: white;
-            border-radius: 20px;
-            padding: 1rem;
-            margin: 0.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .idea-bubble::before {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 20px;
-            width: 0;
-            height: 0;
-            border-left: 10px solid transparent;
-            border-right: 10px solid transparent;
-            border-top: 10px solid white;
-        }
-        
-        .guru-portrait {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            color: white;
-            margin: 0 auto 1rem;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-        }
+      }
+
+      .float-animation {
+        animation: float 3s ease-in-out infinite;
+      }
+
+      .pulse-animation {
+        animation: pulse 2s infinite;
+      }
+
+      .bounce-animation {
+        animation: bounce 2s infinite;
+      }
+
+      .rotate-animation {
+        animation: rotate 4s linear infinite;
+      }
+
+      .glow-animation {
+        animation: glow 2s infinite;
+      }
+
+      .typewriter {
+        overflow: hidden;
+        white-space: nowrap;
+        animation: typewriter 3s steps(40, end);
+      }
+
+      .shimmer {
+        background: linear-gradient(
+          90deg,
+          #f0f0f0 25%,
+          #e0e0e0 50%,
+          #f0f0f0 75%
+        );
+        background-size: 200px 100%;
+        animation: shimmer 2s infinite;
+      }
+
+      .heartbeat-animation {
+        animation: heartbeat 2s infinite;
+      }
+
+      .wave-animation {
+        animation: wave 2s ease-in-out infinite;
+      }
+
+      .pdca-animation {
+        animation: pdca-rotate 8s linear infinite;
+      }
+
+      .fishbone-line {
+        stroke-dasharray: 1000;
+        stroke-dashoffset: 1000;
+        animation: fishbone-draw 3s ease-in-out forwards;
+      }
+
+      .slide-bg-1 {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+
+      .slide-bg-2 {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      }
+
+      .slide-bg-3 {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      }
+
+      .slide-bg-4 {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+      }
+
+      .slide-bg-5 {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+      }
+
+      .slide-bg-6 {
+        background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      }
+
+      .guru-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .guru-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+      }
+
+      .principle-item {
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .principle-item:hover {
+        transform: translateX(5px);
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .trilogy-step {
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .trilogy-step:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .zero-defects-counter {
+        font-family: "Courier New", monospace;
+        font-weight: bold;
+      }
+
+      .fishbone-diagram {
+        transition: all 0.3s ease;
+      }
+
+      .fishbone-diagram:hover {
+        transform: scale(1.02);
+      }
+
+      .brainstorm-idea {
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .brainstorm-idea:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+
+      .guru-timeline {
+        position: relative;
+      }
+
+      .guru-timeline::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(to bottom, #667eea, #764ba2);
+        transform: translateX(-50%);
+      }
+
+      .timeline-item {
+        position: relative;
+        margin-bottom: 2rem;
+      }
+
+      .timeline-item::before {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 20px;
+        height: 20px;
+        background: white;
+        border: 4px solid #667eea;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 10;
+      }
+
+      .pdca-wheel {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        position: relative;
+        margin: 0 auto;
+        background: conic-gradient(
+          from 0deg,
+          #ef4444 0deg 90deg,
+          #f59e0b 90deg 180deg,
+          #10b981 180deg 270deg,
+          #3b82f6 270deg 360deg
+        );
+      }
+
+      .pdca-center {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 80px;
+        height: 80px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: #374151;
+      }
+
+      .pdca-label {
+        position: absolute;
+        font-weight: bold;
+        color: white;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+      }
+
+      .trilogy-flow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 2rem;
+      }
+
+      .trilogy-arrow {
+        font-size: 2rem;
+        color: #3b82f6;
+        animation: pulse 2s infinite;
+      }
+
+      .zero-defects-display {
+        font-size: 4rem;
+        font-weight: bold;
+        color: #ef4444;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        animation: glow 2s infinite;
+      }
+
+      .brainstorm-timer {
+        font-size: 3rem;
+        font-weight: bold;
+        color: #10b981;
+      }
+
+      .idea-bubble {
+        position: relative;
+        background: white;
+        border-radius: 20px;
+        padding: 1rem;
+        margin: 0.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .idea-bubble::before {
+        content: "";
+        position: absolute;
+        bottom: -10px;
+        left: 20px;
+        width: 0;
+        height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-top: 10px solid white;
+      }
+
+      .guru-portrait {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: white;
+        margin: 0 auto 1rem;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      }
     </style>
-<link rel="stylesheet" href="css/layout.css">
-<body class="bg-gray-50 min-h-screen">
-
-<style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
-</style>
-<div class="qs-nav" data-role="main-nav">
-  <div class="wrap">
-    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
-    <nav class="qs-tabs" aria-label="Navegación">
-      <a class="qs-btn" href="materiales.html">Materiales</a>
-      <a class="qs-btn" href="asistencia.html">Asistencia</a>
-      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
-      <a class="qs-btn" href="Foro.html">Foro</a>
-      <a class="qs-btn" href="paneldocente.html">Panel</a>
-      <a class="qs-btn" href="roadmap.html">Roadmap</a>
-      
-\1
-  </div>
-</div>
-<script>
-(function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
-  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
-  });
-})();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
-</script>
-
-
+  </head>
+  <body class="bg-gray-50 min-h-screen">
     <!-- Navigation -->
     <div class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50 px-6 py-4">
-        <div class="flex justify-between items-center max-w-6xl mx-auto">
-            <div class="flex items-center space-x-4">
-                <h1 class="text-xl font-bold text-gray-800">Sesión 32 - Los Gurús de la Calidad</h1>
-                <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
-                    Diapositiva <span id="currentSlide">1</span> de 6
-                </span>
-            </div>
-            <div class="flex space-x-2">
-                <button onclick="previousSlide()" id="prevBtn" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
-                    ← Anterior
-                </button>
-                <button onclick="nextSlide()" id="nextBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
-                    Siguiente →
-                </button>
-            </div>
+      <div class="flex justify-between items-center max-w-6xl mx-auto">
+        <div class="flex items-center space-x-4">
+          <h1 class="text-xl font-bold text-gray-800">
+            Sesión 32 - Los Gurús de la Calidad
+          </h1>
+          <span
+            class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium"
+          >
+            Diapositiva <span id="currentSlide">1</span> de 6
+          </span>
         </div>
-        <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
-            <div id="progressBar" class="bg-purple-600 h-2 rounded-full transition-all duration-300" style="width: 16.67%"></div>
+        <div class="flex space-x-2">
+          <button
+            onclick="previousSlide()"
+            id="prevBtn"
+            class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors"
+          >
+            ← Anterior
+          </button>
+          <button
+            onclick="nextSlide()"
+            id="nextBtn"
+            class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            Siguiente →
+          </button>
         </div>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
+        <div
+          id="progressBar"
+          class="bg-purple-600 h-2 rounded-full transition-all duration-300"
+          style="width: 16.67%"
+        ></div>
+      </div>
     </div>
 
     <!-- Slides Container -->
     <div class="pt-24 pb-8 px-6">
-        <div class="max-w-6xl mx-auto">
-            
-            <!-- Slide 1: Título -->
-            <div class="slide active" id="slide1">
-                <div class="slide-bg-1 rounded-3xl p-12 text-center text-white min-h-[600px] flex flex-col justify-center items-center">
-                    <!-- Quality Gurus Icons -->
-                    <div class="flex items-center justify-center mb-8">
-                        <div class="text-6xl mr-6 heartbeat-animation">🧠</div>
-                        <div class="text-6xl mx-4 pulse-animation">📚</div>
-                        <div class="text-6xl mx-4 bounce-animation">🏆</div>
-                        <div class="text-6xl mx-4 wave-animation">💡</div>
-                        <div class="text-6xl ml-6 glow-animation">⭐</div>
-                    </div>
-                    
-                    <h1 class="text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
-                        <span class="text-purple-300">Los Pilares del</span><br>
-                        <span class="text-yellow-300 pulse-animation">Pensamiento</span><br>
-                        <span class="text-blue-300">en Calidad</span>
-                    </h1>
-                    
-                    <h2 class="text-3xl font-semibold mb-8 text-purple-200">
-                        Los Gurús que Revolucionaron la Calidad
-                    </h2>
-                    
-                    <!-- Gurus Timeline Preview -->
-                    <div class="grid grid-cols-4 gap-6 max-w-4xl mb-8">
-                        <div class="guru-card bg-white bg-opacity-10 rounded-lg p-4">
-                            <div class="text-4xl mb-2">🔄</div>
-                            <div class="text-lg font-bold text-blue-300">Deming</div>
-                            <div class="text-sm opacity-80">PDCA & 14 Principios</div>
-                        </div>
-                        <div class="guru-card bg-white bg-opacity-10 rounded-lg p-4">
-                            <div class="text-4xl mb-2">🎯</div>
-                            <div class="text-lg font-bold text-green-300">Juran</div>
-                            <div class="text-sm opacity-80">Trilogía de la Calidad</div>
-                        </div>
-                        <div class="guru-card bg-white bg-opacity-10 rounded-lg p-4">
-                            <div class="text-4xl mb-2">🎪</div>
-                            <div class="text-lg font-bold text-yellow-300">Crosby</div>
-                            <div class="text-sm opacity-80">Cero Defectos</div>
-                        </div>
-                        <div class="guru-card bg-white bg-opacity-10 rounded-lg p-4">
-                            <div class="text-4xl mb-2">🐟</div>
-                            <div class="text-lg font-bold text-pink-300">Ishikawa</div>
-                            <div class="text-sm opacity-80">Causa-Efecto</div>
-                        </div>
-                    </div>
-                    
-                    <!-- Impact Stats -->
-                    <div class="bg-white bg-opacity-20 rounded-2xl p-6 max-w-4xl">
-                        <h3 class="text-2xl font-bold mb-4">🌟 Impacto Global</h3>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                            <div>
-                                <div class="text-3xl font-bold text-yellow-300">4</div>
-                                <div class="text-sm opacity-90">Gurús Principales</div>
-                            </div>
-                            <div>
-                                <div class="text-3xl font-bold text-blue-300">50+</div>
-                                <div class="text-sm opacity-90">Años de Influencia</div>
-                            </div>
-                            <div>
-                                <div class="text-3xl font-bold text-green-300">∞</div>
-                                <div class="text-sm opacity-90">Organizaciones Impactadas</div>
-                            </div>
-                            <div>
-                                <div class="text-3xl font-bold text-pink-300">100%</div>
-                                <div class="text-sm opacity-90">Relevancia Actual</div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-8 bg-white bg-opacity-20 rounded-2xl p-6 max-w-3xl">
-                        <p class="text-xl font-medium text-purple-200 mb-2 typewriter">
-                            "Los gigantes sobre cuyos hombros se construyó la calidad moderna"
-                        </p>
-                        <p class="text-lg opacity-90">
-                            Explorando las filosofías que transformaron industrias enteras
-                        </p>
-                    </div>
-                </div>
+      <div class="max-w-6xl mx-auto">
+        <!-- Slide 1: Título -->
+        <div class="slide active" id="slide1">
+          <div
+            class="slide-bg-1 rounded-3xl p-12 text-center text-white min-h-[600px] flex flex-col justify-center items-center"
+          >
+            <!-- Quality Gurus Icons -->
+            <div class="flex items-center justify-center mb-8">
+              <div class="text-6xl mr-6 heartbeat-animation">🧠</div>
+              <div class="text-6xl mx-4 pulse-animation">📚</div>
+              <div class="text-6xl mx-4 bounce-animation">🏆</div>
+              <div class="text-6xl mx-4 wave-animation">💡</div>
+              <div class="text-6xl ml-6 glow-animation">⭐</div>
             </div>
 
-            <!-- Slide 2: Deming -->
-            <div class="slide" id="slide2">
-                <div class="slide-bg-2 rounded-3xl p-12 min-h-[600px]">
-                    <div class="text-center mb-8">
-                        <div class="guru-portrait">
-                            🔄
-                        </div>
-                        <h2 class="text-4xl font-bold text-white mb-4 drop-shadow-lg">
-                            W. Edwards Deming
-                        </h2>
-                        <div class="bg-white bg-opacity-20 rounded-full px-6 py-2 inline-block">
-                            <span class="text-white font-semibold">"El Padre de la Calidad Moderna"</span>
-                        </div>
-                    </div>
-                    
-                    <!-- PDCA Cycle -->
-                    <div class="grid md:grid-cols-2 gap-8 mb-8">
-                        <div class="bg-white bg-opacity-90 rounded-2xl p-6">
-                            <h3 class="text-2xl font-bold text-pink-600 mb-6 text-center">
-                                🔄 Ciclo PDCA
-                            </h3>
-                            
-                            <div class="relative mb-6">
-                                <div class="pdca-wheel pdca-animation">
-                                    <div class="pdca-center">PDCA</div>
-                                    <div class="pdca-label" style="top: 10px; left: 50%; transform: translateX(-50%);">
-                                        <span class="bg-red-500 px-2 py-1 rounded text-xs">PLAN</span>
-                                    </div>
-                                    <div class="pdca-label" style="top: 50%; right: 10px; transform: translateY(-50%);">
-                                        <span class="bg-yellow-500 px-2 py-1 rounded text-xs">DO</span>
-                                    </div>
-                                    <div class="pdca-label" style="bottom: 10px; left: 50%; transform: translateX(-50%);">
-                                        <span class="bg-green-500 px-2 py-1 rounded text-xs">CHECK</span>
-                                    </div>
-                                    <div class="pdca-label" style="top: 50%; left: 10px; transform: translateY(-50%);">
-                                        <span class="bg-blue-500 px-2 py-1 rounded text-xs">ACT</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded">
-                                    <h4 class="font-bold text-red-700">📋 PLAN (Planificar)</h4>
-                                    <p class="text-sm text-red-600">Identificar problemas y planificar mejoras</p>
-                                </div>
-                                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded">
-                                    <h4 class="font-bold text-yellow-700">⚡ DO (Hacer)</h4>
-                                    <p class="text-sm text-yellow-600">Implementar el plan en pequeña escala</p>
-                                </div>
-                                <div class="bg-green-50 border-l-4 border-green-500 p-3 rounded">
-                                    <h4 class="font-bold text-green-700">🔍 CHECK (Verificar)</h4>
-                                    <p class="text-sm text-green-600">Evaluar resultados y aprender</p>
-                                </div>
-                                <div class="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
-                                    <h4 class="font-bold text-blue-700">🚀 ACT (Actuar)</h4>
-                                    <p class="text-sm text-blue-600">Estandarizar o ajustar según resultados</p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- 14 Principles -->
-                        <div class="bg-white bg-opacity-90 rounded-2xl p-6">
-                            <h3 class="text-2xl font-bold text-pink-600 mb-6 text-center">
-                                📜 14 Principios de Gestión
-                            </h3>
-                            
-                            <div class="space-y-2 max-h-96 overflow-y-auto">
-                                <div class="principle-item p-3 rounded-lg border border-pink-200 hover:bg-pink-50" onclick="showPrincipleDetail(1)">
-                                    <div class="flex items-center">
-                                        <span class="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3">1</span>
-                                        <span class="text-sm font-medium">Constancia en el propósito</span>
-                                    </div>
-                                </div>
-                                <div class="principle-item p-3 rounded-lg border border-pink-200 hover:bg-pink-50" onclick="showPrincipleDetail(2)">
-                                    <div class="flex items-center">
-                                        <span class="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3">2</span>
-                                        <span class="text-sm font-medium">Adoptar nueva filosofía</span>
-                                    </div>
-                                </div>
-                                <div class="principle-item p-3 rounded-lg border border-pink-200 hover:bg-pink-50" onclick="showPrincipleDetail(3)">
-                                    <div class="flex items-center">
-                                        <span class="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3">3</span>
-                                        <span class="text-sm font-medium">Dejar de depender de la inspección</span>
-                                    </div>
-                                </div>
-                                <div class="principle-item p-3 rounded-lg border border-pink-200 hover:bg-pink-50" onclick="showPrincipleDetail(4)">
-                                    <div class="flex items-center">
-                                        <span class="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3">4</span>
-                                        <span class="text-sm font-medium">Acabar con la práctica de comprar basándose únicamente en el precio</span>
-                                    </div>
-                                </div>
-                                <div class="principle-item p-3 rounded-lg border border-pink-200 hover:bg-pink-50" onclick="showPrincipleDetail(5)">
-                                    <div class="flex items-center">
-                                        <span class="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3">5</span>
-                                        <span class="text-sm font-medium">Mejorar constantemente el sistema</span>
-                                    </div>
-                                </div>
-                                <div class="principle-item p-3 rounded-lg border border-pink-200 hover:bg-pink-50" onclick="showPrincipleDetail(6)">
-                                    <div class="flex items-center">
-                                        <span class="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3">6</span>
-                                        <span class="text-sm font-medium">Instituir la capacitación en el trabajo</span>
-                                    </div>
-                                </div>
-                                <div class="principle-item p-3 rounded-lg border border-pink-200 hover:bg-pink-50" onclick="showPrincipleDetail(7)">
-                                    <div class="flex items-center">
-                                        <span class="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3">7</span>
-                                        <span class="text-sm font-medium">Instituir el liderazgo</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="mt-4 text-center">
-                                <button onclick="showAllPrinciples()" class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
-                                    Ver todos los 14 principios
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Key Focus Areas -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-6">
-                        <h3 class="text-2xl font-bold text-pink-600 mb-6 text-center">
-                            🎯 Enfoque Principal de Deming
-                        </h3>
-                        
-                        <div class="grid md:grid-cols-3 gap-6">
-                            <div class="text-center">
-                                <div class="text-4xl mb-3 pulse-animation">👑</div>
-                                <h4 class="text-lg font-bold text-gray-800 mb-2">Liderazgo</h4>
-                                <p class="text-sm text-gray-600">
-                                    Los líderes deben crear un ambiente donde la calidad pueda florecer
-                                </p>
-                                <div class="mt-3 bg-pink-100 rounded-lg p-2">
-                                    <span class="text-xs text-pink-700 font-medium">
-                                        "El liderazgo es la clave del cambio"
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div class="text-center">
-                                <div class="text-4xl mb-3 rotate-animation">🔄</div>
-                                <h4 class="text-lg font-bold text-gray-800 mb-2">Mejora Continua</h4>
-                                <p class="text-sm text-gray-600">
-                                    La mejora debe ser un proceso constante, no un evento único
-                                </p>
-                                <div class="mt-3 bg-blue-100 rounded-lg p-2">
-                                    <span class="text-xs text-blue-700 font-medium">
-                                        "La mejora no tiene fin"
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <div class="text-center">
-                                <div class="text-4xl mb-3 glow-animation">📊</div>
-                                <h4 class="text-lg font-bold text-gray-800 mb-2">Enfoque Estadístico</h4>
-                                <p class="text-sm text-gray-600">
-                                    Las decisiones deben basarse en datos y análisis estadístico
-                                </p>
-                                <div class="mt-3 bg-green-100 rounded-lg p-2">
-                                    <span class="text-xs text-green-700 font-medium">
-                                        "En Dios confiamos, los demás traigan datos"
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-6 text-center">
-                            <div class="bg-gradient-to-r from-pink-100 to-purple-100 rounded-2xl p-4">
-                                <h4 class="font-bold text-gray-800 mb-2">💡 Legado de Deming</h4>
-                                <p class="text-sm text-gray-600">
-                                    Transformó la industria japonesa post-guerra y revolucionó la gestión de calidad mundial. 
-                                    Su enfoque sistémico sigue siendo fundamental en la gestión moderna.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <h1 class="text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
+              <span class="text-purple-300">Los Pilares del</span><br />
+              <span class="text-yellow-300 pulse-animation">Pensamiento</span
+              ><br />
+              <span class="text-blue-300">en Calidad</span>
+            </h1>
+
+            <h2 class="text-3xl font-semibold mb-8 text-purple-200">
+              Los Gurús que Revolucionaron la Calidad
+            </h2>
+
+            <!-- Gurus Timeline Preview -->
+            <div class="grid grid-cols-4 gap-6 max-w-4xl mb-8">
+              <div class="guru-card bg-white bg-opacity-10 rounded-lg p-4">
+                <div class="text-4xl mb-2">🔄</div>
+                <div class="text-lg font-bold text-blue-300">Deming</div>
+                <div class="text-sm opacity-80">PDCA & 14 Principios</div>
+              </div>
+              <div class="guru-card bg-white bg-opacity-10 rounded-lg p-4">
+                <div class="text-4xl mb-2">🎯</div>
+                <div class="text-lg font-bold text-green-300">Juran</div>
+                <div class="text-sm opacity-80">Trilogía de la Calidad</div>
+              </div>
+              <div class="guru-card bg-white bg-opacity-10 rounded-lg p-4">
+                <div class="text-4xl mb-2">🎪</div>
+                <div class="text-lg font-bold text-yellow-300">Crosby</div>
+                <div class="text-sm opacity-80">Cero Defectos</div>
+              </div>
+              <div class="guru-card bg-white bg-opacity-10 rounded-lg p-4">
+                <div class="text-4xl mb-2">🐟</div>
+                <div class="text-lg font-bold text-pink-300">Ishikawa</div>
+                <div class="text-sm opacity-80">Causa-Efecto</div>
+              </div>
             </div>
 
-            <!-- Slide 3: Juran -->
-            <div class="slide" id="slide3">
-                <div class="slide-bg-3 rounded-3xl p-12 min-h-[600px]">
-                    <div class="text-center mb-8">
-                        <div class="guru-portrait">
-                            🎯
-                        </div>
-                        <h2 class="text-4xl font-bold text-white mb-4 drop-shadow-lg">
-                            Joseph M. Juran
-                        </h2>
-                        <div class="bg-white bg-opacity-20 rounded-full px-6 py-2 inline-block">
-                            <span class="text-white font-semibold">"El Arquitecto de la Calidad"</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Quality Definition -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
-                        <div class="text-center mb-6">
-                            <div class="text-6xl mb-4 heartbeat-animation">💎</div>
-                            <h3 class="text-3xl font-bold text-blue-800">Definición de Calidad</h3>
-                        </div>
-                        
-                        <div class="bg-blue-50 rounded-2xl p-6 text-center">
-                            <h4 class="text-2xl font-bold text-gray-800 mb-4">
-                                "La calidad es adecuación al uso"
-                            </h4>
-                            <p class="text-lg text-gray-600 mb-4">
-                                La calidad se define por qué tan bien un producto o servicio satisface las necesidades del usuario
-                            </p>
-                            
-                            <div class="grid md:grid-cols-2 gap-6 mt-6">
-                                <div class="bg-white rounded-lg p-4 border border-blue-200">
-                                    <h5 class="font-bold text-blue-700 mb-2">🎯 Características de Calidad:</h5>
-                                    <ul class="text-sm text-blue-600 space-y-1 text-left">
-                                        <li>• Funcionalidad</li>
-                                        <li>• Confiabilidad</li>
-                                        <li>• Usabilidad</li>
-                                        <li>• Estética</li>
-                                        <li>• Percepción</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-white rounded-lg p-4 border border-blue-200">
-                                    <h5 class="font-bold text-blue-700 mb-2">⚖️ Costos de Calidad:</h5>
-                                    <ul class="text-sm text-blue-600 space-y-1 text-left">
-                                        <li>• Prevención</li>
-                                        <li>• Evaluación</li>
-                                        <li>• Fallas internas</li>
-                                        <li>• Fallas externas</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Juran Trilogy -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8">
-                        <h3 class="text-2xl font-bold text-blue-600 mb-6 text-center">
-                            🏛️ Trilogía de Juran
-                        </h3>
-                        
-                        <div class="trilogy-flow mb-8">
-                            <div class="trilogy-step bg-gradient-to-br from-green-100 to-green-200 rounded-2xl p-6 text-center max-w-xs" onclick="showTrilogyDetail('planning')">
-                                <div class="text-4xl mb-3 bounce-animation">📋</div>
-                                <h4 class="text-xl font-bold text-green-700 mb-2">Planificación</h4>
-                                <p class="text-sm text-green-600 mb-3">
-                                    Establecer objetivos de calidad y desarrollar planes para alcanzarlos
-                                </p>
-                                <div class="bg-white rounded-lg p-3">
-                                    <h5 class="font-semibold text-green-700 text-xs mb-1">Actividades clave:</h5>
-                                    <ul class="text-xs text-green-600 space-y-1">
-                                        <li>• Identificar clientes</li>
-                                        <li>• Determinar necesidades</li>
-                                        <li>• Desarrollar productos</li>
-                                        <li>• Establecer procesos</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            
-                            <div class="trilogy-arrow">➡️</div>
-                            
-                            <div class="trilogy-step bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl p-6 text-center max-w-xs" onclick="showTrilogyDetail('control')">
-                                <div class="text-4xl mb-3 pulse-animation">🎛️</div>
-                                <h4 class="text-xl font-bold text-blue-700 mb-2">Control</h4>
-                                <p class="text-sm text-blue-600 mb-3">
-                                    Mantener los procesos en estado de control estadístico
-                                </p>
-                                <div class="bg-white rounded-lg p-3">
-                                    <h5 class="font-semibold text-blue-700 text-xs mb-1">Actividades clave:</h5>
-                                    <ul class="text-xs text-blue-600 space-y-1">
-                                        <li>• Evaluar desempeño</li>
-                                        <li>• Comparar con objetivos</li>
-                                        <li>• Actuar sobre diferencias</li>
-                                        <li>• Mantener estabilidad</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            
-                            <div class="trilogy-arrow">➡️</div>
-                            
-                            <div class="trilogy-step bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl p-6 text-center max-w-xs" onclick="showTrilogyDetail('improvement')">
-                                <div class="text-4xl mb-3 glow-animation">📈</div>
-                                <h4 class="text-xl font-bold text-purple-700 mb-2">Mejora</h4>
-                                <p class="text-sm text-purple-600 mb-3">
-                                    Elevar el desempeño a niveles sin precedentes
-                                </p>
-                                <div class="bg-white rounded-lg p-3">
-                                    <h5 class="font-semibold text-purple-700 text-xs mb-1">Actividades clave:</h5>
-                                    <ul class="text-xs text-purple-600 space-y-1">
-                                        <li>• Establecer infraestructura</li>
-                                        <li>• Identificar proyectos</li>
-                                        <li>• Formar equipos</li>
-                                        <li>• Proporcionar recursos</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Trilogy Integration -->
-                        <div class="bg-gradient-to-r from-blue-50 via-green-50 to-purple-50 rounded-2xl p-6">
-                            <h4 class="text-xl font-bold text-gray-800 mb-4 text-center">🔗 Integración de la Trilogía</h4>
-                            
-                            <div class="grid md:grid-cols-3 gap-4 mb-4">
-                                <div class="text-center">
-                                    <div class="bg-white rounded-lg p-3 shadow-sm">
-                                        <div class="text-2xl mb-2">🎯</div>
-                                        <div class="text-sm font-semibold text-gray-700">Enfoque Sistémico</div>
-                                        <div class="text-xs text-gray-600">Los tres procesos trabajan juntos</div>
-                                    </div>
-                                </div>
-                                
-                                <div class="text-center">
-                                    <div class="bg-white rounded-lg p-3 shadow-sm">
-                                        <div class="text-2xl mb-2">⚖️</div>
-                                        <div class="text-sm font-semibold text-gray-700">Balance</div>
-                                        <div class="text-xs text-gray-600">Equilibrio entre estabilidad y mejora</div>
-                                    </div>
-                                </div>
-                                
-                                <div class="text-center">
-                                    <div class="bg-white rounded-lg p-3 shadow-sm">
-                                        <div class="text-2xl mb-2">🔄</div>
-                                        <div class="text-sm font-semibold text-gray-700">Ciclo Continuo</div>
-                                        <div class="text-xs text-gray-600">Proceso iterativo y permanente</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="text-center">
-                                <div class="bg-white rounded-full px-6 py-3 inline-block shadow-sm">
-                                    <span class="text-lg font-bold text-gray-800">
-                                        💡 "La calidad no sucede por accidente, debe ser planificada"
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+            <!-- Impact Stats -->
+            <div class="bg-white bg-opacity-20 rounded-2xl p-6 max-w-4xl">
+              <h3 class="text-2xl font-bold mb-4">🌟 Impacto Global</h3>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div>
+                  <div class="text-3xl font-bold text-yellow-300">4</div>
+                  <div class="text-sm opacity-90">Gurús Principales</div>
                 </div>
+                <div>
+                  <div class="text-3xl font-bold text-blue-300">50+</div>
+                  <div class="text-sm opacity-90">Años de Influencia</div>
+                </div>
+                <div>
+                  <div class="text-3xl font-bold text-green-300">∞</div>
+                  <div class="text-sm opacity-90">
+                    Organizaciones Impactadas
+                  </div>
+                </div>
+                <div>
+                  <div class="text-3xl font-bold text-pink-300">100%</div>
+                  <div class="text-sm opacity-90">Relevancia Actual</div>
+                </div>
+              </div>
             </div>
 
-            <!-- Slide 4: Crosby -->
-            <div class="slide" id="slide4">
-                <div class="slide-bg-4 rounded-3xl p-12 min-h-[600px]">
-                    <div class="text-center mb-8">
-                        <div class="guru-portrait">
-                            🎪
-                        </div>
-                        <h2 class="text-4xl font-bold text-white mb-4 drop-shadow-lg">
-                            Philip B. Crosby
-                        </h2>
-                        <div class="bg-white bg-opacity-20 rounded-full px-6 py-2 inline-block">
-                            <span class="text-white font-semibold">"El Evangelista del Cero Defectos"</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Zero Defects Philosophy -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
-                        <div class="text-center mb-6">
-                            <div class="zero-defects-display">0</div>
-                            <h3 class="text-3xl font-bold text-green-800 mb-4">Filosofía "Cero Defectos"</h3>
-                        </div>
-                        
-                        <div class="grid md:grid-cols-2 gap-8">
-                            <div class="space-y-4">
-                                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
-                                    <h4 class="font-bold text-green-800 mb-2">🎯 Principio Fundamental:</h4>
-                                    <p class="text-sm text-green-600 mb-3">
-                                        "Hacer las cosas bien desde la primera vez"
-                                    </p>
-                                    <ul class="text-sm text-green-600 space-y-1">
-                                        <li>• No hay niveles aceptables de defectos</li>
-                                        <li>• La perfección es alcanzable</li>
-                                        <li>• Los errores son prevenibles</li>
-                                        <li>• La calidad es gratis</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
-                                    <h4 class="font-bold text-red-800 mb-2">❌ Lo que rechaza Crosby:</h4>
-                                    <ul class="text-sm text-red-600 space-y-1">
-                                        <li>• "Niveles aceptables de calidad"</li>
-                                        <li>• "Los errores son humanos"</li>
-                                        <li>• "La calidad cuesta dinero"</li>
-                                        <li>• "Algunos defectos son inevitables"</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-4">
-                                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4">
-                                    <h4 class="font-bold text-blue-800 mb-2">💰 Economía del Cero Defectos:</h4>
-                                    <div class="space-y-3">
-                                        <div class="bg-white rounded-lg p-3">
-                                            <div class="flex justify-between items-center mb-2">
-                                                <span class="text-sm font-medium">Costo de Prevención:</span>
-                                                <span class="text-green-600 font-bold">$1</span>
-                                            </div>
-                                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                                <div class="bg-green-500 h-2 rounded-full" style="width: 10%"></div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="bg-white rounded-lg p-3">
-                                            <div class="flex justify-between items-center mb-2">
-                                                <span class="text-sm font-medium">Costo de Corrección:</span>
-                                                <span class="text-red-600 font-bold">$10</span>
-                                            </div>
-                                            <div class="w-full bg-gray-200 rounded-full h-2">
-                                                <div class="bg-red-500 h-2 rounded-full" style="width: 100%"></div>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="text-center mt-3">
-                                            <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium">
-                                                ROI: 1000% en prevención
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-4">
-                                    <h4 class="font-bold text-purple-800 mb-2">🏆 Beneficios del Cero Defectos:</h4>
-                                    <ul class="text-sm text-purple-600 space-y-1">
-                                        <li>• Reducción drástica de costos</li>
-                                        <li>• Mayor satisfacción del cliente</li>
-                                        <li>• Mejora de la moral del equipo</li>
-                                        <li>• Ventaja competitiva sostenible</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Quality Definition and Prevention -->
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <div class="bg-white bg-opacity-90 rounded-2xl p-6">
-                            <h3 class="text-2xl font-bold text-green-600 mb-6 text-center">
-                                📏 Definición de Calidad
-                            </h3>
-                            
-                            <div class="bg-green-50 rounded-2xl p-6 text-center mb-6">
-                                <h4 class="text-xl font-bold text-gray-800 mb-4">
-                                    "Calidad = Cumplimiento de Requisitos"
-                                </h4>
-                                <p class="text-sm text-gray-600 mb-4">
-                                    La calidad no es subjetiva, es objetiva y medible
-                                </p>
-                            </div>
-                            
-                            <div class="space-y-4">
-                                <div class="bg-white border border-green-200 rounded-lg p-4">
-                                    <h5 class="font-bold text-green-700 mb-2">✅ Requisitos claros:</h5>
-                                    <ul class="text-sm text-green-600 space-y-1">
-                                        <li>• Específicos y medibles</li>
-                                        <li>• Acordados por todas las partes</li>
-                                        <li>• Documentados formalmente</li>
-                                        <li>• Verificables objetivamente</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-white border border-green-200 rounded-lg p-4">
-                                    <h5 class="font-bold text-green-700 mb-2">🎯 Ventajas del enfoque:</h5>
-                                    <ul class="text-sm text-green-600 space-y-1">
-                                        <li>• Elimina ambigüedad</li>
-                                        <li>• Facilita la medición</li>
-                                        <li>• Permite mejora objetiva</li>
-                                        <li>• Reduce conflictos</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white bg-opacity-90 rounded-2xl p-6">
-                            <h3 class="text-2xl font-bold text-green-600 mb-6 text-center">
-                                🛡️ Prevención > Inspección
-                            </h3>
-                            
-                            <div class="space-y-4">
-                                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4">
-                                    <h4 class="font-bold text-green-800 mb-2">🚀 Enfoque Preventivo:</h4>
-                                    <ul class="text-sm text-green-600 space-y-1">
-                                        <li>• Diseño robusto desde el inicio</li>
-                                        <li>• Capacitación exhaustiva</li>
-                                        <li>• Procesos a prueba de errores</li>
-                                        <li>• Cultura de responsabilidad</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
-                                    <h4 class="font-bold text-red-800 mb-2">❌ Problemas de la Inspección:</h4>
-                                    <ul class="text-sm text-red-600 space-y-1">
-                                        <li>• Detecta problemas tarde</li>
-                                        <li>• Costo elevado de corrección</li>
-                                        <li>• No previene recurrencia</li>
-                                        <li>• Crea dependencia externa</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-blue-50 rounded-lg p-4 text-center">
-                                    <div class="text-3xl mb-2">⚡</div>
-                                    <h5 class="font-bold text-blue-700 mb-2">Impacto en Software:</h5>
-                                    <p class="text-sm text-blue-600">
-                                        Code reviews, testing automatizado, y estándares de codificación 
-                                        previenen bugs mejor que debugging posterior
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="mt-8 bg-white bg-opacity-20 rounded-2xl p-6 max-w-3xl">
+              <p class="text-xl font-medium text-purple-200 mb-2 typewriter">
+                "Los gigantes sobre cuyos hombros se construyó la calidad
+                moderna"
+              </p>
+              <p class="text-lg opacity-90">
+                Explorando las filosofías que transformaron industrias enteras
+              </p>
             </div>
-
-            <!-- Slide 5: Ishikawa -->
-            <div class="slide" id="slide5">
-                <div class="slide-bg-5 rounded-3xl p-12 min-h-[600px]">
-                    <div class="text-center mb-8">
-                        <div class="guru-portrait">
-                            🐟
-                        </div>
-                        <h2 class="text-4xl font-bold text-white mb-4 drop-shadow-lg">
-                            Kaoru Ishikawa
-                        </h2>
-                        <div class="bg-white bg-opacity-20 rounded-full px-6 py-2 inline-block">
-                            <span class="text-white font-semibold">"El Maestro del Análisis Causal"</span>
-                        </div>
-                    </div>
-                    
-                    <!-- Fishbone Diagram -->
-                    <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
-                        <h3 class="text-2xl font-bold text-pink-600 mb-6 text-center">
-                            🐟 Diagrama Causa-Efecto (Espina de Pescado)
-                        </h3>
-                        
-                        <div class="fishbone-diagram bg-gray-50 rounded-2xl p-8 mb-6">
-                            <svg width="100%" height="300" viewBox="0 0 800 300" class="overflow-visible">
-                                <!-- Main spine -->
-                                <line x1="50" y1="150" x2="700" y2="150" stroke="#374151" stroke-width="4" class="fishbone-line"/>
-                                
-                                <!-- Head (Problem) -->
-                                <rect x="700" y="120" width="80" height="60" fill="#ef4444" rx="10"/>
-                                <text x="740" y="140" text-anchor="middle" fill="white" font-size="12" font-weight="bold">PROBLEMA</text>
-                                <text x="740" y="155" text-anchor="middle" fill="white" font-size="10">Bug en</text>
-                                <text x="740" y="168" text-anchor="middle" fill="white" font-size="10">Software</text>
-                                
-                                <!-- Upper bones -->
-                                <line x1="150" y1="150" x2="200" y2="100" stroke="#6b7280" stroke-width="2" class="fishbone-line" style="animation-delay: 0.5s"/>
-                                <line x1="300" y1="150" x2="350" y2="100" stroke="#6b7280" stroke-width="2" class="fishbone-line" style="animation-delay: 1s"/>
-                                <line x1="450" y1="150" x2="500" y2="100" stroke="#6b7280" stroke-width="2" class="fishbone-line" style="animation-delay: 1.5s"/>
-                                
-                                <!-- Lower bones -->
-                                <line x1="150" y1="150" x2="200" y2="200" stroke="#6b7280" stroke-width="2" class="fishbone-line" style="animation-delay: 2s"/>
-                                <line x1="300" y1="150" x2="350" y2="200" stroke="#6b7280" stroke-width="2" class="fishbone-line" style="animation-delay: 2.5s"/>
-                                <line x1="450" y1="150" x2="500" y2="200" stroke="#6b7280" stroke-width="2" class="fishbone-line" style="animation-delay: 3s"/>
-                                
-                                <!-- Category labels -->
-                                <rect x="160" y="70" width="80" height="25" fill="#3b82f6" rx="5"/>
-                                <text x="200" y="87" text-anchor="middle" fill="white" font-size="11" font-weight="bold">PERSONAS</text>
-                                
-                                <rect x="310" y="70" width="80" height="25" fill="#10b981" rx="5"/>
-                                <text x="350" y="87" text-anchor="middle" fill="white" font-size="11" font-weight="bold">PROCESOS</text>
-                                
-                                <rect x="460" y="70" width="80" height="25" fill="#f59e0b" rx="5"/>
-                                <text x="500" y="87" text-anchor="middle" fill="white" font-size="11" font-weight="bold">TECNOLOGÍA</text>
-                                
-                                <rect x="160" y="205" width="80" height="25" fill="#8b5cf6" rx="5"/>
-                                <text x="200" y="222" text-anchor="middle" fill="white" font-size="11" font-weight="bold">MÉTODOS</text>
-                                
-                                <rect x="310" y="205" width="80" height="25" fill="#ef4444" rx="5"/>
-                                <text x="350" y="222" text-anchor="middle" fill="white" font-size="11" font-weight="bold">MATERIALES</text>
-                                
-                                <rect x="460" y="205" width="80" height="25" fill="#06b6d4" rx="5"/>
-                                <text x="500" y="222" text-anchor="middle" fill="white" font-size="11" font-weight="bold">AMBIENTE</text>
-                            </svg>
-                        </div>
-                        
-                        <div class="grid md:grid-cols-3 gap-6">
-                            <div class="space-y-3">
-                                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-3">
-                                    <h4 class="font-bold text-blue-700 text-sm mb-2">👥 PERSONAS</h4>
-                                    <ul class="text-xs text-blue-600 space-y-1">
-                                        <li>• Falta de capacitación</li>
-                                        <li>• Experiencia insuficiente</li>
-                                        <li>• Comunicación deficiente</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-3">
-                                    <h4 class="font-bold text-purple-700 text-sm mb-2">📋 MÉTODOS</h4>
-                                    <ul class="text-xs text-purple-600 space-y-1">
-                                        <li>• Procesos inadecuados</li>
-                                        <li>• Falta de estándares</li>
-                                        <li>• Metodología incorrecta</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <div class="bg-green-50 border-l-4 border-green-500 rounded-lg p-3">
-                                    <h4 class="font-bold text-green-700 text-sm mb-2">⚙️ PROCESOS</h4>
-                                    <ul class="text-xs text-green-600 space-y-1">
-                                        <li>• Testing insuficiente</li>
-                                        <li>• Code review deficiente</li>
-                                        <li>• Integración problemática</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-3">
-                                    <h4 class="font-bold text-red-700 text-sm mb-2">📦 MATERIALES</h4>
-                                    <ul class="text-xs text-red-600 space-y-1">
-                                        <li>• Librerías desactualizadas</li>
-                                        <li>• Datos de prueba incorrectos</li>
-                                        <li>• Documentación obsoleta</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-3">
-                                <div class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-3">
-                                    <h4 class="font-bold text-yellow-700 text-sm mb-2">💻 TECNOLOGÍA</h4>
-                                    <ul class="text-xs text-yellow-600 space-y-1">
-                                        <li>• Herramientas inadecuadas</li>
-                                        <li>• Configuración incorrecta</li>
-                                        <li>• Versiones incompatibles</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-cyan-50 border-l-4 border-cyan-500 rounded-lg p-3">
-                                    <h4 class="font-bold text-cyan-700 text-sm mb-2">🌍 AMBIENTE</h4>
-                                    <ul class="text-xs text-cyan-600 space-y-1">
-                                        <li>• Presión de tiempo</li>
-                                        <li>• Ambiente de trabajo</li>
-                                        <li>• Cultura organizacional</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Key Contributions -->
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <div class="bg-white bg-opacity-90 rounded-2xl p-6">
-                            <h3 class="text-2xl font-bold text-pink-600 mb-6 text-center">
-                                👥 Calidad Involucra a Todos
-                            </h3>
-                            
-                            <div class="space-y-4">
-                                <div class="bg-pink-50 border-l-4 border-pink-500 rounded-lg p-4">
-                                    <h4 class="font-bold text-pink-800 mb-2">🌟 Filosofía Participativa:</h4>
-                                    <p class="text-sm text-pink-600 mb-3">
-                                        "La calidad es responsabilidad de todos, no solo del departamento de calidad"
-                                    </p>
-                                    <ul class="text-sm text-pink-600 space-y-1">
-                                        <li>• Círculos de calidad</li>
-                                        <li>• Participación activa de trabajadores</li>
-                                        <li>• Mejora desde la base</li>
-                                        <li>• Conocimiento colectivo</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-white border border-pink-200 rounded-lg p-4">
-                                    <h5 class="font-bold text-pink-700 mb-2">🎯 Beneficios del enfoque:</h5>
-                                    <ul class="text-sm text-pink-600 space-y-1">
-                                        <li>• Mayor compromiso del equipo</li>
-                                        <li>• Soluciones más creativas</li>
-                                        <li>• Conocimiento del proceso real</li>
-                                        <li>• Cultura de mejora continua</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-gradient-to-r from-pink-100 to-purple-100 rounded-lg p-3 text-center">
-                                    <div class="text-2xl mb-1">🤝</div>
-                                    <div class="text-sm font-semibold text-pink-700">Empoderamiento del equipo</div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-white bg-opacity-90 rounded-2xl p-6">
-                            <h3 class="text-2xl font-bold text-pink-600 mb-6 text-center">
-                                🇯🇵 Control de Calidad Total en Japón
-                            </h3>
-                            
-                            <div class="space-y-4">
-                                <div class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4">
-                                    <h4 class="font-bold text-red-800 mb-2">🏭 Transformación Industrial:</h4>
-                                    <p class="text-sm text-red-600 mb-3">
-                                        Ishikawa lideró la transformación de la calidad japonesa post-guerra
-                                    </p>
-                                    <ul class="text-sm text-red-600 space-y-1">
-                                        <li>• Adaptación de métodos occidentales</li>
-                                        <li>• Integración con cultura japonesa</li>
-                                        <li>• Enfoque en educación masiva</li>
-                                        <li>• Herramientas simples y efectivas</li>
-                                    </ul>
-                                </div>
-                                
-                                <div class="bg-white border border-red-200 rounded-lg p-4">
-                                    <h5 class="font-bold text-red-700 mb-2">📊 Herramientas de Calidad:</h5>
-                                    <div class="grid grid-cols-2 gap-2 text-xs">
-                                        <div class="bg-red-100 rounded p-2 text-center">
-                                            <div class="font-semibold">Diagrama de Pareto</div>
-                                        </div>
-                                        <div class="bg-blue-100 rounded p-2 text-center">
-                                            <div class="font-semibold">Histogramas</div>
-                                        </div>
-                                        <div class="bg-green-100 rounded p-2 text-center">
-                                            <div class="font-semibold">Gráficos de Control</div>
-                                        </div>
-                                        <div class="bg-yellow-100 rounded p-2 text-center">
-                                            <div class="font-semibold">Diagramas de Dispersión</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="bg-gradient-to-r from-red-100 to-orange-100 rounded-lg p-3 text-center">
-                                    <div class="text-2xl mb-1">🎌</div>
-                                    <div class="text-sm font-semibold text-red-700">Legado: "Made in Japan" = Calidad</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Slide 6: Actividad - Lluvia de ideas -->
-            <div class="slide" id="slide6">
-                <div class="slide-bg-6 rounded-3xl p-12 min-h-[600px]">
-                    <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">
-                        💡 Actividad - Lluvia de Ideas (15 min)
-                    </h2>
-                    
-                    <!-- Question -->
-                    <div class="bg-white rounded-2xl p-8 mb-8 shadow-lg">
-                        <div class="text-center mb-6">
-                            <div class="text-6xl mb-4 pulse-animation">🤔</div>
-                            <h3 class="text-3xl font-bold text-gray-800">Pregunta Central</h3>
-                        </div>
-                        
-                        <div class="bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl p-6 text-center mb-6">
-                            <h4 class="text-2xl font-bold text-gray-800 mb-4">
-                                "¿Cuál de estos enfoques creen que aplica mejor al software y por qué?"
-                            </h4>
-                            <p class="text-lg text-gray-600">
-                                Considera las características únicas del desarrollo de software
-                            </p>
-                        </div>
-                        
-                        <!-- Timer -->
-                        <div class="text-center">
-                            <div id="brainstormTimer" class="brainstorm-timer mb-4">15:00</div>
-                            <button onclick="startBrainstormTimer()" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors">
-                                🚀 Iniciar Lluvia de Ideas
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Guru Options for Analysis -->
-                    <div class="grid md:grid-cols-2 gap-8 mb-8">
-                        <div class="space-y-4">
-                            <!-- Deming for Software -->
-                            <div class="brainstorm-idea bg-white rounded-2xl p-6 shadow-lg" onclick="selectGuruApproach('deming')">
-                                <div class="flex items-center mb-4">
-                                    <div class="text-4xl mr-4">🔄</div>
-                                    <div>
-                                        <h3 class="text-xl font-bold text-blue-600">Deming para Software</h3>
-                                        <p class="text-sm text-gray-600">Ciclo PDCA y mejora continua</p>
-                                    </div>
-                                </div>
-                                
-                                <div class="space-y-3">
-                                    <div class="bg-blue-50 rounded-lg p-3">
-                                        <h4 class="font-semibold text-blue-700 text-sm mb-2">✅ Fortalezas en Software:</h4>
-                                        <ul class="text-xs text-blue-600 space-y-1">
-                                            <li>• Iteraciones naturales (sprints, releases)</li>
-                                            <li>• Cultura de mejora continua en DevOps</li>
-                                            <li>• Métricas y análisis estadístico</li>
-                                            <li>• Liderazgo técnico y transformación</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <div class="bg-white border border-blue-200 rounded-lg p-3">
-                                        <h5 class="font-semibold text-blue-700 text-xs mb-1">🎯 Aplicaciones:</h5>
-                                        <p class="text-xs text-blue-600">
-                                            Metodologías ágiles, CI/CD, retrospectivas, métricas de código
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Juran for Software -->
-                            <div class="brainstorm-idea bg-white rounded-2xl p-6 shadow-lg" onclick="selectGuruApproach('juran')">
-                                <div class="flex items-center mb-4">
-                                    <div class="text-4xl mr-4">🎯</div>
-                                    <div>
-                                        <h3 class="text-xl font-bold text-cyan-600">Juran para Software</h3>
-                                        <p class="text-sm text-gray-600">Adecuación al uso y trilogía</p>
-                                    </div>
-                                </div>
-                                
-                                <div class="space-y-3">
-                                    <div class="bg-cyan-50 rounded-lg p-3">
-                                        <h4 class="font-semibold text-cyan-700 text-sm mb-2">✅ Fortalezas en Software:</h4>
-                                        <ul class="text-xs text-cyan-600 space-y-1">
-                                            <li>• Enfoque en experiencia de usuario</li>
-                                            <li>• Planificación estructurada de proyectos</li>
-                                            <li>• Control de calidad en cada fase</li>
-                                            <li>• Mejora basada en feedback del usuario</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <div class="bg-white border border-cyan-200 rounded-lg p-3">
-                                        <h5 class="font-semibold text-cyan-700 text-xs mb-1">🎯 Aplicaciones:</h5>
-                                        <p class="text-xs text-cyan-600">
-                                            UX/UI design, product management, testing de usabilidad
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="space-y-4">
-                            <!-- Crosby for Software -->
-                            <div class="brainstorm-idea bg-white rounded-2xl p-6 shadow-lg" onclick="selectGuruApproach('crosby')">
-                                <div class="flex items-center mb-4">
-                                    <div class="text-4xl mr-4">🎪</div>
-                                    <div>
-                                        <h3 class="text-xl font-bold text-green-600">Crosby para Software</h3>
-                                        <p class="text-sm text-gray-600">Cero defectos y prevención</p>
-                                    </div>
-                                </div>
-                                
-                                <div class="space-y-3">
-                                    <div class="bg-green-50 rounded-lg p-3">
-                                        <h4 class="font-semibold text-green-700 text-sm mb-2">✅ Fortalezas en Software:</h4>
-                                        <ul class="text-xs text-green-600 space-y-1">
-                                            <li>• Testing automatizado exhaustivo</li>
-                                            <li>• Code reviews y pair programming</li>
-                                            <li>• Estándares de codificación estrictos</li>
-                                            <li>• Cultura de "hacer bien desde el inicio"</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <div class="bg-white border border-green-200 rounded-lg p-3">
-                                        <h5 class="font-semibold text-green-700 text-xs mb-1">🎯 Aplicaciones:</h5>
-                                        <p class="text-xs text-green-600">
-                                            TDD, BDD, static analysis, formal verification
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Ishikawa for Software -->
-                            <div class="brainstorm-idea bg-white rounded-2xl p-6 shadow-lg" onclick="selectGuruApproach('ishikawa')">
-                                <div class="flex items-center mb-4">
-                                    <div class="text-4xl mr-4">🐟</div>
-                                    <div>
-                                        <h3 class="text-xl font-bold text-pink-600">Ishikawa para Software</h3>
-                                        <p class="text-sm text-gray-600">Análisis causal y participación</p>
-                                    </div>
-                                </div>
-                                
-                                <div class="space-y-3">
-                                    <div class="bg-pink-50 rounded-lg p-3">
-                                        <h4 class="font-semibold text-pink-700 text-sm mb-2">✅ Fortalezas en Software:</h4>
-                                        <ul class="text-xs text-pink-600 space-y-1">
-                                            <li>• Root cause analysis de bugs</li>
-                                            <li>• Equipos multidisciplinarios</li>
-                                            <li>• Post-mortems estructurados</li>
-                                            <li>• Cultura colaborativa de calidad</li>
-                                        </ul>
-                                    </div>
-                                    
-                                    <div class="bg-white border border-pink-200 rounded-lg p-3">
-                                        <h5 class="font-semibold text-pink-700 text-xs mb-1">🎯 Aplicaciones:</h5>
-                                        <p class="text-xs text-pink-600">
-                                            Debugging sistemático, incident analysis, team retrospectives
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Ideas Collection Area -->
-                    <div class="bg-white rounded-2xl p-6 shadow-lg">
-                        <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">
-                            💭 Área de Ideas Colectivas
-                        </h3>
-                        
-                        <div class="grid md:grid-cols-2 gap-6">
-                            <div>
-                                <h4 class="font-semibold text-gray-700 mb-3">🏆 Argumentos a Favor:</h4>
-                                <div id="prosArea" class="space-y-2 min-h-32 bg-green-50 rounded-lg p-4">
-                                    <div class="idea-bubble">
-                                        <p class="text-sm text-green-700">
-                                            <strong>Ejemplo:</strong> "Deming funciona bien porque el software es iterativo por naturaleza"
-                                        </p>
-                                    </div>
-                                </div>
-                                
-                                <div class="mt-3">
-                                    <input type="text" id="proInput" placeholder="Añadir argumento a favor..." 
-                                           class="w-full px-3 py-2 border border-green-300 rounded-lg text-sm">
-                                    <button onclick="addIdea('pros')" class="mt-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
-                                        ➕ Añadir
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div>
-                                <h4 class="font-semibold text-gray-700 mb-3">⚠️ Desafíos o Limitaciones:</h4>
-                                <div id="consArea" class="space-y-2 min-h-32 bg-red-50 rounded-lg p-4">
-                                    <div class="idea-bubble">
-                                        <p class="text-sm text-red-700">
-                                            <strong>Ejemplo:</strong> "Cero defectos puede ser poco realista en software complejo"
-                                        </p>
-                                    </div>
-                                </div>
-                                
-                                <div class="mt-3">
-                                    <input type="text" id="conInput" placeholder="Añadir desafío o limitación..." 
-                                           class="w-full px-3 py-2 border border-red-300 rounded-lg text-sm">
-                                    <button onclick="addIdea('cons')" class="mt-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition-colors">
-                                        ➕ Añadir
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Synthesis Question -->
-                        <div class="mt-6 bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg p-4">
-                            <h4 class="font-bold text-gray-700 mb-2 text-center">🤔 Pregunta de Síntesis:</h4>
-                            <p class="text-center text-gray-600 text-sm">
-                                "¿Sería más efectivo combinar elementos de diferentes gurús para el desarrollo de software moderno?"
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+          </div>
         </div>
+
+        <!-- Slide 2: Deming -->
+        <div class="slide" id="slide2">
+          <div class="slide-bg-2 rounded-3xl p-12 min-h-[600px]">
+            <div class="text-center mb-8">
+              <div class="guru-portrait">🔄</div>
+              <h2 class="text-4xl font-bold text-white mb-4 drop-shadow-lg">
+                W. Edwards Deming
+              </h2>
+              <div
+                class="bg-white bg-opacity-20 rounded-full px-6 py-2 inline-block"
+              >
+                <span class="text-white font-semibold"
+                  >"El Padre de la Calidad Moderna"</span
+                >
+              </div>
+            </div>
+
+            <!-- PDCA Cycle -->
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+              <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                <h3 class="text-2xl font-bold text-pink-600 mb-6 text-center">
+                  🔄 Ciclo PDCA
+                </h3>
+
+                <div class="relative mb-6">
+                  <div class="pdca-wheel pdca-animation">
+                    <div class="pdca-center">PDCA</div>
+                    <div
+                      class="pdca-label"
+                      style="top: 10px; left: 50%; transform: translateX(-50%)"
+                    >
+                      <span class="bg-red-500 px-2 py-1 rounded text-xs"
+                        >PLAN</span
+                      >
+                    </div>
+                    <div
+                      class="pdca-label"
+                      style="top: 50%; right: 10px; transform: translateY(-50%)"
+                    >
+                      <span class="bg-yellow-500 px-2 py-1 rounded text-xs"
+                        >DO</span
+                      >
+                    </div>
+                    <div
+                      class="pdca-label"
+                      style="
+                        bottom: 10px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                      "
+                    >
+                      <span class="bg-green-500 px-2 py-1 rounded text-xs"
+                        >CHECK</span
+                      >
+                    </div>
+                    <div
+                      class="pdca-label"
+                      style="top: 50%; left: 10px; transform: translateY(-50%)"
+                    >
+                      <span class="bg-blue-500 px-2 py-1 rounded text-xs"
+                        >ACT</span
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <div class="space-y-3">
+                  <div class="bg-red-50 border-l-4 border-red-500 p-3 rounded">
+                    <h4 class="font-bold text-red-700">📋 PLAN (Planificar)</h4>
+                    <p class="text-sm text-red-600">
+                      Identificar problemas y planificar mejoras
+                    </p>
+                  </div>
+                  <div
+                    class="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded"
+                  >
+                    <h4 class="font-bold text-yellow-700">⚡ DO (Hacer)</h4>
+                    <p class="text-sm text-yellow-600">
+                      Implementar el plan en pequeña escala
+                    </p>
+                  </div>
+                  <div
+                    class="bg-green-50 border-l-4 border-green-500 p-3 rounded"
+                  >
+                    <h4 class="font-bold text-green-700">
+                      🔍 CHECK (Verificar)
+                    </h4>
+                    <p class="text-sm text-green-600">
+                      Evaluar resultados y aprender
+                    </p>
+                  </div>
+                  <div
+                    class="bg-blue-50 border-l-4 border-blue-500 p-3 rounded"
+                  >
+                    <h4 class="font-bold text-blue-700">🚀 ACT (Actuar)</h4>
+                    <p class="text-sm text-blue-600">
+                      Estandarizar o ajustar según resultados
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 14 Principles -->
+              <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                <h3 class="text-2xl font-bold text-pink-600 mb-6 text-center">
+                  📜 14 Principios de Gestión
+                </h3>
+
+                <div class="space-y-2 max-h-96 overflow-y-auto">
+                  <div
+                    class="principle-item p-3 rounded-lg border border-pink-200 hover:bg-pink-50"
+                    onclick="showPrincipleDetail(1)"
+                  >
+                    <div class="flex items-center">
+                      <span
+                        class="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3"
+                        >1</span
+                      >
+                      <span class="text-sm font-medium"
+                        >Constancia en el propósito</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="principle-item p-3 rounded-lg border border-pink-200 hover:bg-pink-50"
+                    onclick="showPrincipleDetail(2)"
+                  >
+                    <div class="flex items-center">
+                      <span
+                        class="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3"
+                        >2</span
+                      >
+                      <span class="text-sm font-medium"
+                        >Adoptar nueva filosofía</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="principle-item p-3 rounded-lg border border-pink-200 hover:bg-pink-50"
+                    onclick="showPrincipleDetail(3)"
+                  >
+                    <div class="flex items-center">
+                      <span
+                        class="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3"
+                        >3</span
+                      >
+                      <span class="text-sm font-medium"
+                        >Dejar de depender de la inspección</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="principle-item p-3 rounded-lg border border-pink-200 hover:bg-pink-50"
+                    onclick="showPrincipleDetail(4)"
+                  >
+                    <div class="flex items-center">
+                      <span
+                        class="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3"
+                        >4</span
+                      >
+                      <span class="text-sm font-medium"
+                        >Acabar con la práctica de comprar basándose únicamente
+                        en el precio</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="principle-item p-3 rounded-lg border border-pink-200 hover:bg-pink-50"
+                    onclick="showPrincipleDetail(5)"
+                  >
+                    <div class="flex items-center">
+                      <span
+                        class="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3"
+                        >5</span
+                      >
+                      <span class="text-sm font-medium"
+                        >Mejorar constantemente el sistema</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="principle-item p-3 rounded-lg border border-pink-200 hover:bg-pink-50"
+                    onclick="showPrincipleDetail(6)"
+                  >
+                    <div class="flex items-center">
+                      <span
+                        class="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3"
+                        >6</span
+                      >
+                      <span class="text-sm font-medium"
+                        >Instituir la capacitación en el trabajo</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="principle-item p-3 rounded-lg border border-pink-200 hover:bg-pink-50"
+                    onclick="showPrincipleDetail(7)"
+                  >
+                    <div class="flex items-center">
+                      <span
+                        class="bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mr-3"
+                        >7</span
+                      >
+                      <span class="text-sm font-medium"
+                        >Instituir el liderazgo</span
+                      >
+                    </div>
+                  </div>
+                </div>
+
+                <div class="mt-4 text-center">
+                  <button
+                    onclick="showAllPrinciples()"
+                    class="bg-pink-500 hover:bg-pink-600 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                  >
+                    Ver todos los 14 principios
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Key Focus Areas -->
+            <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+              <h3 class="text-2xl font-bold text-pink-600 mb-6 text-center">
+                🎯 Enfoque Principal de Deming
+              </h3>
+
+              <div class="grid md:grid-cols-3 gap-6">
+                <div class="text-center">
+                  <div class="text-4xl mb-3 pulse-animation">👑</div>
+                  <h4 class="text-lg font-bold text-gray-800 mb-2">
+                    Liderazgo
+                  </h4>
+                  <p class="text-sm text-gray-600">
+                    Los líderes deben crear un ambiente donde la calidad pueda
+                    florecer
+                  </p>
+                  <div class="mt-3 bg-pink-100 rounded-lg p-2">
+                    <span class="text-xs text-pink-700 font-medium">
+                      "El liderazgo es la clave del cambio"
+                    </span>
+                  </div>
+                </div>
+
+                <div class="text-center">
+                  <div class="text-4xl mb-3 rotate-animation">🔄</div>
+                  <h4 class="text-lg font-bold text-gray-800 mb-2">
+                    Mejora Continua
+                  </h4>
+                  <p class="text-sm text-gray-600">
+                    La mejora debe ser un proceso constante, no un evento único
+                  </p>
+                  <div class="mt-3 bg-blue-100 rounded-lg p-2">
+                    <span class="text-xs text-blue-700 font-medium">
+                      "La mejora no tiene fin"
+                    </span>
+                  </div>
+                </div>
+
+                <div class="text-center">
+                  <div class="text-4xl mb-3 glow-animation">📊</div>
+                  <h4 class="text-lg font-bold text-gray-800 mb-2">
+                    Enfoque Estadístico
+                  </h4>
+                  <p class="text-sm text-gray-600">
+                    Las decisiones deben basarse en datos y análisis estadístico
+                  </p>
+                  <div class="mt-3 bg-green-100 rounded-lg p-2">
+                    <span class="text-xs text-green-700 font-medium">
+                      "En Dios confiamos, los demás traigan datos"
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-6 text-center">
+                <div
+                  class="bg-gradient-to-r from-pink-100 to-purple-100 rounded-2xl p-4"
+                >
+                  <h4 class="font-bold text-gray-800 mb-2">
+                    💡 Legado de Deming
+                  </h4>
+                  <p class="text-sm text-gray-600">
+                    Transformó la industria japonesa post-guerra y revolucionó
+                    la gestión de calidad mundial. Su enfoque sistémico sigue
+                    siendo fundamental en la gestión moderna.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 3: Juran -->
+        <div class="slide" id="slide3">
+          <div class="slide-bg-3 rounded-3xl p-12 min-h-[600px]">
+            <div class="text-center mb-8">
+              <div class="guru-portrait">🎯</div>
+              <h2 class="text-4xl font-bold text-white mb-4 drop-shadow-lg">
+                Joseph M. Juran
+              </h2>
+              <div
+                class="bg-white bg-opacity-20 rounded-full px-6 py-2 inline-block"
+              >
+                <span class="text-white font-semibold"
+                  >"El Arquitecto de la Calidad"</span
+                >
+              </div>
+            </div>
+
+            <!-- Quality Definition -->
+            <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
+              <div class="text-center mb-6">
+                <div class="text-6xl mb-4 heartbeat-animation">💎</div>
+                <h3 class="text-3xl font-bold text-blue-800">
+                  Definición de Calidad
+                </h3>
+              </div>
+
+              <div class="bg-blue-50 rounded-2xl p-6 text-center">
+                <h4 class="text-2xl font-bold text-gray-800 mb-4">
+                  "La calidad es adecuación al uso"
+                </h4>
+                <p class="text-lg text-gray-600 mb-4">
+                  La calidad se define por qué tan bien un producto o servicio
+                  satisface las necesidades del usuario
+                </p>
+
+                <div class="grid md:grid-cols-2 gap-6 mt-6">
+                  <div class="bg-white rounded-lg p-4 border border-blue-200">
+                    <h5 class="font-bold text-blue-700 mb-2">
+                      🎯 Características de Calidad:
+                    </h5>
+                    <ul class="text-sm text-blue-600 space-y-1 text-left">
+                      <li>• Funcionalidad</li>
+                      <li>• Confiabilidad</li>
+                      <li>• Usabilidad</li>
+                      <li>• Estética</li>
+                      <li>• Percepción</li>
+                    </ul>
+                  </div>
+
+                  <div class="bg-white rounded-lg p-4 border border-blue-200">
+                    <h5 class="font-bold text-blue-700 mb-2">
+                      ⚖️ Costos de Calidad:
+                    </h5>
+                    <ul class="text-sm text-blue-600 space-y-1 text-left">
+                      <li>• Prevención</li>
+                      <li>• Evaluación</li>
+                      <li>• Fallas internas</li>
+                      <li>• Fallas externas</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Juran Trilogy -->
+            <div class="bg-white bg-opacity-90 rounded-2xl p-8">
+              <h3 class="text-2xl font-bold text-blue-600 mb-6 text-center">
+                🏛️ Trilogía de Juran
+              </h3>
+
+              <div class="trilogy-flow mb-8">
+                <div
+                  class="trilogy-step bg-gradient-to-br from-green-100 to-green-200 rounded-2xl p-6 text-center max-w-xs"
+                  onclick="showTrilogyDetail('planning')"
+                >
+                  <div class="text-4xl mb-3 bounce-animation">📋</div>
+                  <h4 class="text-xl font-bold text-green-700 mb-2">
+                    Planificación
+                  </h4>
+                  <p class="text-sm text-green-600 mb-3">
+                    Establecer objetivos de calidad y desarrollar planes para
+                    alcanzarlos
+                  </p>
+                  <div class="bg-white rounded-lg p-3">
+                    <h5 class="font-semibold text-green-700 text-xs mb-1">
+                      Actividades clave:
+                    </h5>
+                    <ul class="text-xs text-green-600 space-y-1">
+                      <li>• Identificar clientes</li>
+                      <li>• Determinar necesidades</li>
+                      <li>• Desarrollar productos</li>
+                      <li>• Establecer procesos</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="trilogy-arrow">➡️</div>
+
+                <div
+                  class="trilogy-step bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl p-6 text-center max-w-xs"
+                  onclick="showTrilogyDetail('control')"
+                >
+                  <div class="text-4xl mb-3 pulse-animation">🎛️</div>
+                  <h4 class="text-xl font-bold text-blue-700 mb-2">Control</h4>
+                  <p class="text-sm text-blue-600 mb-3">
+                    Mantener los procesos en estado de control estadístico
+                  </p>
+                  <div class="bg-white rounded-lg p-3">
+                    <h5 class="font-semibold text-blue-700 text-xs mb-1">
+                      Actividades clave:
+                    </h5>
+                    <ul class="text-xs text-blue-600 space-y-1">
+                      <li>• Evaluar desempeño</li>
+                      <li>• Comparar con objetivos</li>
+                      <li>• Actuar sobre diferencias</li>
+                      <li>• Mantener estabilidad</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="trilogy-arrow">➡️</div>
+
+                <div
+                  class="trilogy-step bg-gradient-to-br from-purple-100 to-purple-200 rounded-2xl p-6 text-center max-w-xs"
+                  onclick="showTrilogyDetail('improvement')"
+                >
+                  <div class="text-4xl mb-3 glow-animation">📈</div>
+                  <h4 class="text-xl font-bold text-purple-700 mb-2">Mejora</h4>
+                  <p class="text-sm text-purple-600 mb-3">
+                    Elevar el desempeño a niveles sin precedentes
+                  </p>
+                  <div class="bg-white rounded-lg p-3">
+                    <h5 class="font-semibold text-purple-700 text-xs mb-1">
+                      Actividades clave:
+                    </h5>
+                    <ul class="text-xs text-purple-600 space-y-1">
+                      <li>• Establecer infraestructura</li>
+                      <li>• Identificar proyectos</li>
+                      <li>• Formar equipos</li>
+                      <li>• Proporcionar recursos</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Trilogy Integration -->
+              <div
+                class="bg-gradient-to-r from-blue-50 via-green-50 to-purple-50 rounded-2xl p-6"
+              >
+                <h4 class="text-xl font-bold text-gray-800 mb-4 text-center">
+                  🔗 Integración de la Trilogía
+                </h4>
+
+                <div class="grid md:grid-cols-3 gap-4 mb-4">
+                  <div class="text-center">
+                    <div class="bg-white rounded-lg p-3 shadow-sm">
+                      <div class="text-2xl mb-2">🎯</div>
+                      <div class="text-sm font-semibold text-gray-700">
+                        Enfoque Sistémico
+                      </div>
+                      <div class="text-xs text-gray-600">
+                        Los tres procesos trabajan juntos
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="text-center">
+                    <div class="bg-white rounded-lg p-3 shadow-sm">
+                      <div class="text-2xl mb-2">⚖️</div>
+                      <div class="text-sm font-semibold text-gray-700">
+                        Balance
+                      </div>
+                      <div class="text-xs text-gray-600">
+                        Equilibrio entre estabilidad y mejora
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="text-center">
+                    <div class="bg-white rounded-lg p-3 shadow-sm">
+                      <div class="text-2xl mb-2">🔄</div>
+                      <div class="text-sm font-semibold text-gray-700">
+                        Ciclo Continuo
+                      </div>
+                      <div class="text-xs text-gray-600">
+                        Proceso iterativo y permanente
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="text-center">
+                  <div
+                    class="bg-white rounded-full px-6 py-3 inline-block shadow-sm"
+                  >
+                    <span class="text-lg font-bold text-gray-800">
+                      💡 "La calidad no sucede por accidente, debe ser
+                      planificada"
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 4: Crosby -->
+        <div class="slide" id="slide4">
+          <div class="slide-bg-4 rounded-3xl p-12 min-h-[600px]">
+            <div class="text-center mb-8">
+              <div class="guru-portrait">🎪</div>
+              <h2 class="text-4xl font-bold text-white mb-4 drop-shadow-lg">
+                Philip B. Crosby
+              </h2>
+              <div
+                class="bg-white bg-opacity-20 rounded-full px-6 py-2 inline-block"
+              >
+                <span class="text-white font-semibold"
+                  >"El Evangelista del Cero Defectos"</span
+                >
+              </div>
+            </div>
+
+            <!-- Zero Defects Philosophy -->
+            <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
+              <div class="text-center mb-6">
+                <div class="zero-defects-display">0</div>
+                <h3 class="text-3xl font-bold text-green-800 mb-4">
+                  Filosofía "Cero Defectos"
+                </h3>
+              </div>
+
+              <div class="grid md:grid-cols-2 gap-8">
+                <div class="space-y-4">
+                  <div
+                    class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-bold text-green-800 mb-2">
+                      🎯 Principio Fundamental:
+                    </h4>
+                    <p class="text-sm text-green-600 mb-3">
+                      "Hacer las cosas bien desde la primera vez"
+                    </p>
+                    <ul class="text-sm text-green-600 space-y-1">
+                      <li>• No hay niveles aceptables de defectos</li>
+                      <li>• La perfección es alcanzable</li>
+                      <li>• Los errores son prevenibles</li>
+                      <li>• La calidad es gratis</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-bold text-red-800 mb-2">
+                      ❌ Lo que rechaza Crosby:
+                    </h4>
+                    <ul class="text-sm text-red-600 space-y-1">
+                      <li>• "Niveles aceptables de calidad"</li>
+                      <li>• "Los errores son humanos"</li>
+                      <li>• "La calidad cuesta dinero"</li>
+                      <li>• "Algunos defectos son inevitables"</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="space-y-4">
+                  <div
+                    class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-bold text-blue-800 mb-2">
+                      💰 Economía del Cero Defectos:
+                    </h4>
+                    <div class="space-y-3">
+                      <div class="bg-white rounded-lg p-3">
+                        <div class="flex justify-between items-center mb-2">
+                          <span class="text-sm font-medium"
+                            >Costo de Prevención:</span
+                          >
+                          <span class="text-green-600 font-bold">$1</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            class="bg-green-500 h-2 rounded-full"
+                            style="width: 10%"
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div class="bg-white rounded-lg p-3">
+                        <div class="flex justify-between items-center mb-2">
+                          <span class="text-sm font-medium"
+                            >Costo de Corrección:</span
+                          >
+                          <span class="text-red-600 font-bold">$10</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            class="bg-red-500 h-2 rounded-full"
+                            style="width: 100%"
+                          ></div>
+                        </div>
+                      </div>
+
+                      <div class="text-center mt-3">
+                        <span
+                          class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-medium"
+                        >
+                          ROI: 1000% en prevención
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-bold text-purple-800 mb-2">
+                      🏆 Beneficios del Cero Defectos:
+                    </h4>
+                    <ul class="text-sm text-purple-600 space-y-1">
+                      <li>• Reducción drástica de costos</li>
+                      <li>• Mayor satisfacción del cliente</li>
+                      <li>• Mejora de la moral del equipo</li>
+                      <li>• Ventaja competitiva sostenible</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quality Definition and Prevention -->
+            <div class="grid md:grid-cols-2 gap-8">
+              <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                <h3 class="text-2xl font-bold text-green-600 mb-6 text-center">
+                  📏 Definición de Calidad
+                </h3>
+
+                <div class="bg-green-50 rounded-2xl p-6 text-center mb-6">
+                  <h4 class="text-xl font-bold text-gray-800 mb-4">
+                    "Calidad = Cumplimiento de Requisitos"
+                  </h4>
+                  <p class="text-sm text-gray-600 mb-4">
+                    La calidad no es subjetiva, es objetiva y medible
+                  </p>
+                </div>
+
+                <div class="space-y-4">
+                  <div class="bg-white border border-green-200 rounded-lg p-4">
+                    <h5 class="font-bold text-green-700 mb-2">
+                      ✅ Requisitos claros:
+                    </h5>
+                    <ul class="text-sm text-green-600 space-y-1">
+                      <li>• Específicos y medibles</li>
+                      <li>• Acordados por todas las partes</li>
+                      <li>• Documentados formalmente</li>
+                      <li>• Verificables objetivamente</li>
+                    </ul>
+                  </div>
+
+                  <div class="bg-white border border-green-200 rounded-lg p-4">
+                    <h5 class="font-bold text-green-700 mb-2">
+                      🎯 Ventajas del enfoque:
+                    </h5>
+                    <ul class="text-sm text-green-600 space-y-1">
+                      <li>• Elimina ambigüedad</li>
+                      <li>• Facilita la medición</li>
+                      <li>• Permite mejora objetiva</li>
+                      <li>• Reduce conflictos</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                <h3 class="text-2xl font-bold text-green-600 mb-6 text-center">
+                  🛡️ Prevención > Inspección
+                </h3>
+
+                <div class="space-y-4">
+                  <div
+                    class="bg-green-50 border-l-4 border-green-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-bold text-green-800 mb-2">
+                      🚀 Enfoque Preventivo:
+                    </h4>
+                    <ul class="text-sm text-green-600 space-y-1">
+                      <li>• Diseño robusto desde el inicio</li>
+                      <li>• Capacitación exhaustiva</li>
+                      <li>• Procesos a prueba de errores</li>
+                      <li>• Cultura de responsabilidad</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-bold text-red-800 mb-2">
+                      ❌ Problemas de la Inspección:
+                    </h4>
+                    <ul class="text-sm text-red-600 space-y-1">
+                      <li>• Detecta problemas tarde</li>
+                      <li>• Costo elevado de corrección</li>
+                      <li>• No previene recurrencia</li>
+                      <li>• Crea dependencia externa</li>
+                    </ul>
+                  </div>
+
+                  <div class="bg-blue-50 rounded-lg p-4 text-center">
+                    <div class="text-3xl mb-2">⚡</div>
+                    <h5 class="font-bold text-blue-700 mb-2">
+                      Impacto en Software:
+                    </h5>
+                    <p class="text-sm text-blue-600">
+                      Code reviews, testing automatizado, y estándares de
+                      codificación previenen bugs mejor que debugging posterior
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 5: Ishikawa -->
+        <div class="slide" id="slide5">
+          <div class="slide-bg-5 rounded-3xl p-12 min-h-[600px]">
+            <div class="text-center mb-8">
+              <div class="guru-portrait">🐟</div>
+              <h2 class="text-4xl font-bold text-white mb-4 drop-shadow-lg">
+                Kaoru Ishikawa
+              </h2>
+              <div
+                class="bg-white bg-opacity-20 rounded-full px-6 py-2 inline-block"
+              >
+                <span class="text-white font-semibold"
+                  >"El Maestro del Análisis Causal"</span
+                >
+              </div>
+            </div>
+
+            <!-- Fishbone Diagram -->
+            <div class="bg-white bg-opacity-90 rounded-2xl p-8 mb-8">
+              <h3 class="text-2xl font-bold text-pink-600 mb-6 text-center">
+                🐟 Diagrama Causa-Efecto (Espina de Pescado)
+              </h3>
+
+              <div class="fishbone-diagram bg-gray-50 rounded-2xl p-8 mb-6">
+                <svg
+                  width="100%"
+                  height="300"
+                  viewBox="0 0 800 300"
+                  class="overflow-visible"
+                >
+                  <!-- Main spine -->
+                  <line
+                    x1="50"
+                    y1="150"
+                    x2="700"
+                    y2="150"
+                    stroke="#374151"
+                    stroke-width="4"
+                    class="fishbone-line"
+                  />
+
+                  <!-- Head (Problem) -->
+                  <rect
+                    x="700"
+                    y="120"
+                    width="80"
+                    height="60"
+                    fill="#ef4444"
+                    rx="10"
+                  />
+                  <text
+                    x="740"
+                    y="140"
+                    text-anchor="middle"
+                    fill="white"
+                    font-size="12"
+                    font-weight="bold"
+                  >
+                    PROBLEMA
+                  </text>
+                  <text
+                    x="740"
+                    y="155"
+                    text-anchor="middle"
+                    fill="white"
+                    font-size="10"
+                  >
+                    Bug en
+                  </text>
+                  <text
+                    x="740"
+                    y="168"
+                    text-anchor="middle"
+                    fill="white"
+                    font-size="10"
+                  >
+                    Software
+                  </text>
+
+                  <!-- Upper bones -->
+                  <line
+                    x1="150"
+                    y1="150"
+                    x2="200"
+                    y2="100"
+                    stroke="#6b7280"
+                    stroke-width="2"
+                    class="fishbone-line"
+                    style="animation-delay: 0.5s"
+                  />
+                  <line
+                    x1="300"
+                    y1="150"
+                    x2="350"
+                    y2="100"
+                    stroke="#6b7280"
+                    stroke-width="2"
+                    class="fishbone-line"
+                    style="animation-delay: 1s"
+                  />
+                  <line
+                    x1="450"
+                    y1="150"
+                    x2="500"
+                    y2="100"
+                    stroke="#6b7280"
+                    stroke-width="2"
+                    class="fishbone-line"
+                    style="animation-delay: 1.5s"
+                  />
+
+                  <!-- Lower bones -->
+                  <line
+                    x1="150"
+                    y1="150"
+                    x2="200"
+                    y2="200"
+                    stroke="#6b7280"
+                    stroke-width="2"
+                    class="fishbone-line"
+                    style="animation-delay: 2s"
+                  />
+                  <line
+                    x1="300"
+                    y1="150"
+                    x2="350"
+                    y2="200"
+                    stroke="#6b7280"
+                    stroke-width="2"
+                    class="fishbone-line"
+                    style="animation-delay: 2.5s"
+                  />
+                  <line
+                    x1="450"
+                    y1="150"
+                    x2="500"
+                    y2="200"
+                    stroke="#6b7280"
+                    stroke-width="2"
+                    class="fishbone-line"
+                    style="animation-delay: 3s"
+                  />
+
+                  <!-- Category labels -->
+                  <rect
+                    x="160"
+                    y="70"
+                    width="80"
+                    height="25"
+                    fill="#3b82f6"
+                    rx="5"
+                  />
+                  <text
+                    x="200"
+                    y="87"
+                    text-anchor="middle"
+                    fill="white"
+                    font-size="11"
+                    font-weight="bold"
+                  >
+                    PERSONAS
+                  </text>
+
+                  <rect
+                    x="310"
+                    y="70"
+                    width="80"
+                    height="25"
+                    fill="#10b981"
+                    rx="5"
+                  />
+                  <text
+                    x="350"
+                    y="87"
+                    text-anchor="middle"
+                    fill="white"
+                    font-size="11"
+                    font-weight="bold"
+                  >
+                    PROCESOS
+                  </text>
+
+                  <rect
+                    x="460"
+                    y="70"
+                    width="80"
+                    height="25"
+                    fill="#f59e0b"
+                    rx="5"
+                  />
+                  <text
+                    x="500"
+                    y="87"
+                    text-anchor="middle"
+                    fill="white"
+                    font-size="11"
+                    font-weight="bold"
+                  >
+                    TECNOLOGÍA
+                  </text>
+
+                  <rect
+                    x="160"
+                    y="205"
+                    width="80"
+                    height="25"
+                    fill="#8b5cf6"
+                    rx="5"
+                  />
+                  <text
+                    x="200"
+                    y="222"
+                    text-anchor="middle"
+                    fill="white"
+                    font-size="11"
+                    font-weight="bold"
+                  >
+                    MÉTODOS
+                  </text>
+
+                  <rect
+                    x="310"
+                    y="205"
+                    width="80"
+                    height="25"
+                    fill="#ef4444"
+                    rx="5"
+                  />
+                  <text
+                    x="350"
+                    y="222"
+                    text-anchor="middle"
+                    fill="white"
+                    font-size="11"
+                    font-weight="bold"
+                  >
+                    MATERIALES
+                  </text>
+
+                  <rect
+                    x="460"
+                    y="205"
+                    width="80"
+                    height="25"
+                    fill="#06b6d4"
+                    rx="5"
+                  />
+                  <text
+                    x="500"
+                    y="222"
+                    text-anchor="middle"
+                    fill="white"
+                    font-size="11"
+                    font-weight="bold"
+                  >
+                    AMBIENTE
+                  </text>
+                </svg>
+              </div>
+
+              <div class="grid md:grid-cols-3 gap-6">
+                <div class="space-y-3">
+                  <div
+                    class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-3"
+                  >
+                    <h4 class="font-bold text-blue-700 text-sm mb-2">
+                      👥 PERSONAS
+                    </h4>
+                    <ul class="text-xs text-blue-600 space-y-1">
+                      <li>• Falta de capacitación</li>
+                      <li>• Experiencia insuficiente</li>
+                      <li>• Comunicación deficiente</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    class="bg-purple-50 border-l-4 border-purple-500 rounded-lg p-3"
+                  >
+                    <h4 class="font-bold text-purple-700 text-sm mb-2">
+                      📋 MÉTODOS
+                    </h4>
+                    <ul class="text-xs text-purple-600 space-y-1">
+                      <li>• Procesos inadecuados</li>
+                      <li>• Falta de estándares</li>
+                      <li>• Metodología incorrecta</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="space-y-3">
+                  <div
+                    class="bg-green-50 border-l-4 border-green-500 rounded-lg p-3"
+                  >
+                    <h4 class="font-bold text-green-700 text-sm mb-2">
+                      ⚙️ PROCESOS
+                    </h4>
+                    <ul class="text-xs text-green-600 space-y-1">
+                      <li>• Testing insuficiente</li>
+                      <li>• Code review deficiente</li>
+                      <li>• Integración problemática</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    class="bg-red-50 border-l-4 border-red-500 rounded-lg p-3"
+                  >
+                    <h4 class="font-bold text-red-700 text-sm mb-2">
+                      📦 MATERIALES
+                    </h4>
+                    <ul class="text-xs text-red-600 space-y-1">
+                      <li>• Librerías desactualizadas</li>
+                      <li>• Datos de prueba incorrectos</li>
+                      <li>• Documentación obsoleta</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div class="space-y-3">
+                  <div
+                    class="bg-yellow-50 border-l-4 border-yellow-500 rounded-lg p-3"
+                  >
+                    <h4 class="font-bold text-yellow-700 text-sm mb-2">
+                      💻 TECNOLOGÍA
+                    </h4>
+                    <ul class="text-xs text-yellow-600 space-y-1">
+                      <li>• Herramientas inadecuadas</li>
+                      <li>• Configuración incorrecta</li>
+                      <li>• Versiones incompatibles</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    class="bg-cyan-50 border-l-4 border-cyan-500 rounded-lg p-3"
+                  >
+                    <h4 class="font-bold text-cyan-700 text-sm mb-2">
+                      🌍 AMBIENTE
+                    </h4>
+                    <ul class="text-xs text-cyan-600 space-y-1">
+                      <li>• Presión de tiempo</li>
+                      <li>• Ambiente de trabajo</li>
+                      <li>• Cultura organizacional</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Key Contributions -->
+            <div class="grid md:grid-cols-2 gap-8">
+              <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                <h3 class="text-2xl font-bold text-pink-600 mb-6 text-center">
+                  👥 Calidad Involucra a Todos
+                </h3>
+
+                <div class="space-y-4">
+                  <div
+                    class="bg-pink-50 border-l-4 border-pink-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-bold text-pink-800 mb-2">
+                      🌟 Filosofía Participativa:
+                    </h4>
+                    <p class="text-sm text-pink-600 mb-3">
+                      "La calidad es responsabilidad de todos, no solo del
+                      departamento de calidad"
+                    </p>
+                    <ul class="text-sm text-pink-600 space-y-1">
+                      <li>• Círculos de calidad</li>
+                      <li>• Participación activa de trabajadores</li>
+                      <li>• Mejora desde la base</li>
+                      <li>• Conocimiento colectivo</li>
+                    </ul>
+                  </div>
+
+                  <div class="bg-white border border-pink-200 rounded-lg p-4">
+                    <h5 class="font-bold text-pink-700 mb-2">
+                      🎯 Beneficios del enfoque:
+                    </h5>
+                    <ul class="text-sm text-pink-600 space-y-1">
+                      <li>• Mayor compromiso del equipo</li>
+                      <li>• Soluciones más creativas</li>
+                      <li>• Conocimiento del proceso real</li>
+                      <li>• Cultura de mejora continua</li>
+                    </ul>
+                  </div>
+
+                  <div
+                    class="bg-gradient-to-r from-pink-100 to-purple-100 rounded-lg p-3 text-center"
+                  >
+                    <div class="text-2xl mb-1">🤝</div>
+                    <div class="text-sm font-semibold text-pink-700">
+                      Empoderamiento del equipo
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white bg-opacity-90 rounded-2xl p-6">
+                <h3 class="text-2xl font-bold text-pink-600 mb-6 text-center">
+                  🇯🇵 Control de Calidad Total en Japón
+                </h3>
+
+                <div class="space-y-4">
+                  <div
+                    class="bg-red-50 border-l-4 border-red-500 rounded-lg p-4"
+                  >
+                    <h4 class="font-bold text-red-800 mb-2">
+                      🏭 Transformación Industrial:
+                    </h4>
+                    <p class="text-sm text-red-600 mb-3">
+                      Ishikawa lideró la transformación de la calidad japonesa
+                      post-guerra
+                    </p>
+                    <ul class="text-sm text-red-600 space-y-1">
+                      <li>• Adaptación de métodos occidentales</li>
+                      <li>• Integración con cultura japonesa</li>
+                      <li>• Enfoque en educación masiva</li>
+                      <li>• Herramientas simples y efectivas</li>
+                    </ul>
+                  </div>
+
+                  <div class="bg-white border border-red-200 rounded-lg p-4">
+                    <h5 class="font-bold text-red-700 mb-2">
+                      📊 Herramientas de Calidad:
+                    </h5>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                      <div class="bg-red-100 rounded p-2 text-center">
+                        <div class="font-semibold">Diagrama de Pareto</div>
+                      </div>
+                      <div class="bg-blue-100 rounded p-2 text-center">
+                        <div class="font-semibold">Histogramas</div>
+                      </div>
+                      <div class="bg-green-100 rounded p-2 text-center">
+                        <div class="font-semibold">Gráficos de Control</div>
+                      </div>
+                      <div class="bg-yellow-100 rounded p-2 text-center">
+                        <div class="font-semibold">Diagramas de Dispersión</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    class="bg-gradient-to-r from-red-100 to-orange-100 rounded-lg p-3 text-center"
+                  >
+                    <div class="text-2xl mb-1">🎌</div>
+                    <div class="text-sm font-semibold text-red-700">
+                      Legado: "Made in Japan" = Calidad
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide 6: Actividad - Lluvia de ideas -->
+        <div class="slide" id="slide6">
+          <div class="slide-bg-6 rounded-3xl p-12 min-h-[600px]">
+            <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center">
+              💡 Actividad - Lluvia de Ideas (15 min)
+            </h2>
+
+            <!-- Question -->
+            <div class="bg-white rounded-2xl p-8 mb-8 shadow-lg">
+              <div class="text-center mb-6">
+                <div class="text-6xl mb-4 pulse-animation">🤔</div>
+                <h3 class="text-3xl font-bold text-gray-800">
+                  Pregunta Central
+                </h3>
+              </div>
+
+              <div
+                class="bg-gradient-to-r from-purple-100 to-pink-100 rounded-2xl p-6 text-center mb-6"
+              >
+                <h4 class="text-2xl font-bold text-gray-800 mb-4">
+                  "¿Cuál de estos enfoques creen que aplica mejor al software y
+                  por qué?"
+                </h4>
+                <p class="text-lg text-gray-600">
+                  Considera las características únicas del desarrollo de
+                  software
+                </p>
+              </div>
+
+              <!-- Timer -->
+              <div class="text-center">
+                <div id="brainstormTimer" class="brainstorm-timer mb-4">
+                  15:00
+                </div>
+                <button
+                  onclick="startBrainstormTimer()"
+                  class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors"
+                >
+                  🚀 Iniciar Lluvia de Ideas
+                </button>
+              </div>
+            </div>
+
+            <!-- Guru Options for Analysis -->
+            <div class="grid md:grid-cols-2 gap-8 mb-8">
+              <div class="space-y-4">
+                <!-- Deming for Software -->
+                <div
+                  class="brainstorm-idea bg-white rounded-2xl p-6 shadow-lg"
+                  onclick="selectGuruApproach('deming')"
+                >
+                  <div class="flex items-center mb-4">
+                    <div class="text-4xl mr-4">🔄</div>
+                    <div>
+                      <h3 class="text-xl font-bold text-blue-600">
+                        Deming para Software
+                      </h3>
+                      <p class="text-sm text-gray-600">
+                        Ciclo PDCA y mejora continua
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="space-y-3">
+                    <div class="bg-blue-50 rounded-lg p-3">
+                      <h4 class="font-semibold text-blue-700 text-sm mb-2">
+                        ✅ Fortalezas en Software:
+                      </h4>
+                      <ul class="text-xs text-blue-600 space-y-1">
+                        <li>• Iteraciones naturales (sprints, releases)</li>
+                        <li>• Cultura de mejora continua en DevOps</li>
+                        <li>• Métricas y análisis estadístico</li>
+                        <li>• Liderazgo técnico y transformación</li>
+                      </ul>
+                    </div>
+
+                    <div class="bg-white border border-blue-200 rounded-lg p-3">
+                      <h5 class="font-semibold text-blue-700 text-xs mb-1">
+                        🎯 Aplicaciones:
+                      </h5>
+                      <p class="text-xs text-blue-600">
+                        Metodologías ágiles, CI/CD, retrospectivas, métricas de
+                        código
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Juran for Software -->
+                <div
+                  class="brainstorm-idea bg-white rounded-2xl p-6 shadow-lg"
+                  onclick="selectGuruApproach('juran')"
+                >
+                  <div class="flex items-center mb-4">
+                    <div class="text-4xl mr-4">🎯</div>
+                    <div>
+                      <h3 class="text-xl font-bold text-cyan-600">
+                        Juran para Software
+                      </h3>
+                      <p class="text-sm text-gray-600">
+                        Adecuación al uso y trilogía
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="space-y-3">
+                    <div class="bg-cyan-50 rounded-lg p-3">
+                      <h4 class="font-semibold text-cyan-700 text-sm mb-2">
+                        ✅ Fortalezas en Software:
+                      </h4>
+                      <ul class="text-xs text-cyan-600 space-y-1">
+                        <li>• Enfoque en experiencia de usuario</li>
+                        <li>• Planificación estructurada de proyectos</li>
+                        <li>• Control de calidad en cada fase</li>
+                        <li>• Mejora basada en feedback del usuario</li>
+                      </ul>
+                    </div>
+
+                    <div class="bg-white border border-cyan-200 rounded-lg p-3">
+                      <h5 class="font-semibold text-cyan-700 text-xs mb-1">
+                        🎯 Aplicaciones:
+                      </h5>
+                      <p class="text-xs text-cyan-600">
+                        UX/UI design, product management, testing de usabilidad
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <!-- Crosby for Software -->
+                <div
+                  class="brainstorm-idea bg-white rounded-2xl p-6 shadow-lg"
+                  onclick="selectGuruApproach('crosby')"
+                >
+                  <div class="flex items-center mb-4">
+                    <div class="text-4xl mr-4">🎪</div>
+                    <div>
+                      <h3 class="text-xl font-bold text-green-600">
+                        Crosby para Software
+                      </h3>
+                      <p class="text-sm text-gray-600">
+                        Cero defectos y prevención
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="space-y-3">
+                    <div class="bg-green-50 rounded-lg p-3">
+                      <h4 class="font-semibold text-green-700 text-sm mb-2">
+                        ✅ Fortalezas en Software:
+                      </h4>
+                      <ul class="text-xs text-green-600 space-y-1">
+                        <li>• Testing automatizado exhaustivo</li>
+                        <li>• Code reviews y pair programming</li>
+                        <li>• Estándares de codificación estrictos</li>
+                        <li>• Cultura de "hacer bien desde el inicio"</li>
+                      </ul>
+                    </div>
+
+                    <div
+                      class="bg-white border border-green-200 rounded-lg p-3"
+                    >
+                      <h5 class="font-semibold text-green-700 text-xs mb-1">
+                        🎯 Aplicaciones:
+                      </h5>
+                      <p class="text-xs text-green-600">
+                        TDD, BDD, static analysis, formal verification
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Ishikawa for Software -->
+                <div
+                  class="brainstorm-idea bg-white rounded-2xl p-6 shadow-lg"
+                  onclick="selectGuruApproach('ishikawa')"
+                >
+                  <div class="flex items-center mb-4">
+                    <div class="text-4xl mr-4">🐟</div>
+                    <div>
+                      <h3 class="text-xl font-bold text-pink-600">
+                        Ishikawa para Software
+                      </h3>
+                      <p class="text-sm text-gray-600">
+                        Análisis causal y participación
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="space-y-3">
+                    <div class="bg-pink-50 rounded-lg p-3">
+                      <h4 class="font-semibold text-pink-700 text-sm mb-2">
+                        ✅ Fortalezas en Software:
+                      </h4>
+                      <ul class="text-xs text-pink-600 space-y-1">
+                        <li>• Root cause analysis de bugs</li>
+                        <li>• Equipos multidisciplinarios</li>
+                        <li>• Post-mortems estructurados</li>
+                        <li>• Cultura colaborativa de calidad</li>
+                      </ul>
+                    </div>
+
+                    <div class="bg-white border border-pink-200 rounded-lg p-3">
+                      <h5 class="font-semibold text-pink-700 text-xs mb-1">
+                        🎯 Aplicaciones:
+                      </h5>
+                      <p class="text-xs text-pink-600">
+                        Debugging sistemático, incident analysis, team
+                        retrospectives
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ideas Collection Area -->
+            <div class="bg-white rounded-2xl p-6 shadow-lg">
+              <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">
+                💭 Área de Ideas Colectivas
+              </h3>
+
+              <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 class="font-semibold text-gray-700 mb-3">
+                    🏆 Argumentos a Favor:
+                  </h4>
+                  <div
+                    id="prosArea"
+                    class="space-y-2 min-h-32 bg-green-50 rounded-lg p-4"
+                  >
+                    <div class="idea-bubble">
+                      <p class="text-sm text-green-700">
+                        <strong>Ejemplo:</strong> "Deming funciona bien porque
+                        el software es iterativo por naturaleza"
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="mt-3">
+                    <input
+                      type="text"
+                      id="proInput"
+                      placeholder="Añadir argumento a favor..."
+                      class="w-full px-3 py-2 border border-green-300 rounded-lg text-sm"
+                    />
+                    <button
+                      onclick="addIdea('pros')"
+                      class="mt-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                    >
+                      ➕ Añadir
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 class="font-semibold text-gray-700 mb-3">
+                    ⚠️ Desafíos o Limitaciones:
+                  </h4>
+                  <div
+                    id="consArea"
+                    class="space-y-2 min-h-32 bg-red-50 rounded-lg p-4"
+                  >
+                    <div class="idea-bubble">
+                      <p class="text-sm text-red-700">
+                        <strong>Ejemplo:</strong> "Cero defectos puede ser poco
+                        realista en software complejo"
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="mt-3">
+                    <input
+                      type="text"
+                      id="conInput"
+                      placeholder="Añadir desafío o limitación..."
+                      class="w-full px-3 py-2 border border-red-300 rounded-lg text-sm"
+                    />
+                    <button
+                      onclick="addIdea('cons')"
+                      class="mt-2 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                    >
+                      ➕ Añadir
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Synthesis Question -->
+              <div
+                class="mt-6 bg-gradient-to-r from-purple-100 to-blue-100 rounded-lg p-4"
+              >
+                <h4 class="font-bold text-gray-700 mb-2 text-center">
+                  🤔 Pregunta de Síntesis:
+                </h4>
+                <p class="text-center text-gray-600 text-sm">
+                  "¿Sería más efectivo combinar elementos de diferentes gurús
+                  para el desarrollo de software moderno?"
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script>
-        let currentSlideIndex = 0;
-        const totalSlides = 6;
-        let brainstormTimerInterval = null;
-        let brainstormTimeLeft = 900; // 15 minutes in seconds
-        let selectedGuruApproach = null;
+      let currentSlideIndex = 0;
+      const totalSlides = 6;
+      let brainstormTimerInterval = null;
+      let brainstormTimeLeft = 900; // 15 minutes in seconds
+      let selectedGuruApproach = null;
 
-        function showSlide(index) {
-            document.querySelectorAll('.slide').forEach(slide => {
-                slide.classList.remove('active');
-            });
-            
-            document.getElementById(`slide${index + 1}`).classList.add('active');
-            
-            document.getElementById('currentSlide').textContent = index + 1;
-            document.getElementById('prevBtn').disabled = index === 0;
-            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
-            
-            const progress = ((index + 1) / totalSlides) * 100;
-            document.getElementById('progressBar').style.width = progress + '%';
-            
-            if (index === 0) {
-                document.getElementById('prevBtn').classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                document.getElementById('prevBtn').classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-            
-            if (index === totalSlides - 1) {
-                document.getElementById('nextBtn').classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                document.getElementById('nextBtn').classList.remove('opacity-50', 'cursor-not-allowed');
-            }
+      function showSlide(index) {
+        document.querySelectorAll(".slide").forEach((slide) => {
+          slide.classList.remove("active");
+        });
+
+        document.getElementById(`slide${index + 1}`).classList.add("active");
+
+        document.getElementById("currentSlide").textContent = index + 1;
+        document.getElementById("prevBtn").disabled = index === 0;
+        document.getElementById("nextBtn").disabled = index === totalSlides - 1;
+
+        const progress = ((index + 1) / totalSlides) * 100;
+        document.getElementById("progressBar").style.width = progress + "%";
+
+        if (index === 0) {
+          document
+            .getElementById("prevBtn")
+            .classList.add("opacity-50", "cursor-not-allowed");
+        } else {
+          document
+            .getElementById("prevBtn")
+            .classList.remove("opacity-50", "cursor-not-allowed");
         }
 
-        function nextSlide() {
-            if (currentSlideIndex < totalSlides - 1) {
-                currentSlideIndex++;
-                showSlide(currentSlideIndex);
-            }
+        if (index === totalSlides - 1) {
+          document
+            .getElementById("nextBtn")
+            .classList.add("opacity-50", "cursor-not-allowed");
+        } else {
+          document
+            .getElementById("nextBtn")
+            .classList.remove("opacity-50", "cursor-not-allowed");
         }
+      }
 
-        function previousSlide() {
-            if (currentSlideIndex > 0) {
-                currentSlideIndex--;
-                showSlide(currentSlideIndex);
-            }
+      function nextSlide() {
+        if (currentSlideIndex < totalSlides - 1) {
+          currentSlideIndex++;
+          showSlide(currentSlideIndex);
         }
+      }
 
-        function showPrincipleDetail(number) {
-            const principles = {
-                1: "Constancia en el propósito: Crear constancia en el propósito de mejorar el producto y el servicio, con el objetivo de llegar a ser competitivos y mantenerse en el negocio.",
-                2: "Adoptar nueva filosofía: Adoptar la nueva filosofía. Nos encontramos en una nueva era económica. Los directivos occidentales deben despertar al desafío.",
-                3: "Dejar de depender de la inspección: Dejar de depender de la inspección para lograr la calidad. Eliminar la necesidad de la inspección en masa, incorporando la calidad dentro del producto en primer lugar.",
-                4: "Acabar con la práctica de comprar basándose únicamente en el precio: Acabar con la práctica de hacer negocios sobre la base del precio solamente. En lugar de ello, minimizar el coste total.",
-                5: "Mejorar constantemente el sistema: Mejorar constantemente y siempre el sistema de producción y servicio, para mejorar la calidad y la productividad.",
-                6: "Instituir la capacitación en el trabajo: Instituir la capacitación en el trabajo.",
-                7: "Instituir el liderazgo: Instituir el liderazgo. El objetivo de la supervisión debería consistir en ayudar a las personas y a las máquinas y aparatos para que hagan un trabajo mejor."
-            };
-            
-            alert(principles[number] || "Principio no disponible.");
+      function previousSlide() {
+        if (currentSlideIndex > 0) {
+          currentSlideIndex--;
+          showSlide(currentSlideIndex);
         }
+      }
 
-        function showAllPrinciples() {
-            const principlesModal = document.createElement('div');
-            principlesModal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
-            principlesModal.innerHTML = `
+      function showPrincipleDetail(number) {
+        const principles = {
+          1: "Constancia en el propósito: Crear constancia en el propósito de mejorar el producto y el servicio, con el objetivo de llegar a ser competitivos y mantenerse en el negocio.",
+          2: "Adoptar nueva filosofía: Adoptar la nueva filosofía. Nos encontramos en una nueva era económica. Los directivos occidentales deben despertar al desafío.",
+          3: "Dejar de depender de la inspección: Dejar de depender de la inspección para lograr la calidad. Eliminar la necesidad de la inspección en masa, incorporando la calidad dentro del producto en primer lugar.",
+          4: "Acabar con la práctica de comprar basándose únicamente en el precio: Acabar con la práctica de hacer negocios sobre la base del precio solamente. En lugar de ello, minimizar el coste total.",
+          5: "Mejorar constantemente el sistema: Mejorar constantemente y siempre el sistema de producción y servicio, para mejorar la calidad y la productividad.",
+          6: "Instituir la capacitación en el trabajo: Instituir la capacitación en el trabajo.",
+          7: "Instituir el liderazgo: Instituir el liderazgo. El objetivo de la supervisión debería consistir en ayudar a las personas y a las máquinas y aparatos para que hagan un trabajo mejor.",
+        };
+
+        alert(principles[number] || "Principio no disponible.");
+      }
+
+      function showAllPrinciples() {
+        const principlesModal = document.createElement("div");
+        principlesModal.className =
+          "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4";
+        principlesModal.innerHTML = `
                 <div class="bg-white rounded-2xl p-8 max-w-4xl max-h-96 overflow-y-auto shadow-2xl">
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-2xl font-bold text-pink-600">📜 Los 14 Principios de Deming</h3>
@@ -1578,133 +2191,180 @@ if (!google.script.run){
                     </div>
                 </div>
             `;
-            
-            document.body.appendChild(principlesModal);
-            
-            // Close modal when clicking outside
-            principlesModal.addEventListener('click', (e) => {
-                if (e.target === principlesModal) {
-                    principlesModal.remove();
-                }
-            });
+
+        document.body.appendChild(principlesModal);
+
+        // Close modal when clicking outside
+        principlesModal.addEventListener("click", (e) => {
+          if (e.target === principlesModal) {
+            principlesModal.remove();
+          }
+        });
+      }
+
+      function showTrilogyDetail(phase) {
+        const details = {
+          planning:
+            "Planificación de la Calidad: Establecer objetivos de calidad, identificar clientes y sus necesidades, desarrollar productos que respondan a esas necesidades, y establecer procesos capaces de producir esos productos bajo condiciones operativas.",
+          control:
+            "Control de la Calidad: Evaluar el desempeño real de la calidad, comparar el desempeño real con los objetivos de calidad, y actuar sobre las diferencias.",
+          improvement:
+            "Mejora de la Calidad: Establecer la infraestructura necesaria, identificar proyectos específicos de mejora, establecer equipos de proyecto, y proporcionar a los equipos los recursos, la capacitación y la motivación necesarios.",
+        };
+
+        alert(details[phase] || "Detalles no disponibles.");
+      }
+
+      function selectGuruApproach(guru) {
+        // Remove previous selection
+        document.querySelectorAll(".brainstorm-idea").forEach((el) => {
+          el.classList.remove("ring-4", "ring-blue-300");
+        });
+
+        // Add selection to clicked approach
+        event.currentTarget.classList.add("ring-4", "ring-blue-300");
+
+        selectedGuruApproach = guru;
+
+        const messages = {
+          deming:
+            "¡Excelente elección! El enfoque de Deming con PDCA se alinea perfectamente con las metodologías ágiles y la mejora continua en software.",
+          juran:
+            "¡Muy bien! El enfoque de Juran en 'adecuación al uso' es fundamental para el desarrollo centrado en el usuario.",
+          crosby:
+            "¡Interesante! El enfoque de 'cero defectos' de Crosby puede ser muy efectivo con testing automatizado y prácticas de código limpio.",
+          ishikawa:
+            "¡Genial! Las herramientas de análisis causal de Ishikawa son perfectas para debugging y post-mortems en software.",
+        };
+
+        setTimeout(() => {
+          alert(messages[guru]);
+        }, 300);
+      }
+
+      function startBrainstormTimer() {
+        if (brainstormTimerInterval) {
+          clearInterval(brainstormTimerInterval);
         }
 
-        function showTrilogyDetail(phase) {
-            const details = {
-                planning: "Planificación de la Calidad: Establecer objetivos de calidad, identificar clientes y sus necesidades, desarrollar productos que respondan a esas necesidades, y establecer procesos capaces de producir esos productos bajo condiciones operativas.",
-                control: "Control de la Calidad: Evaluar el desempeño real de la calidad, comparar el desempeño real con los objetivos de calidad, y actuar sobre las diferencias.",
-                improvement: "Mejora de la Calidad: Establecer la infraestructura necesaria, identificar proyectos específicos de mejora, establecer equipos de proyecto, y proporcionar a los equipos los recursos, la capacitación y la motivación necesarios."
-            };
-            
-            alert(details[phase] || "Detalles no disponibles.");
-        }
+        brainstormTimeLeft = 900; // Reset to 15 minutes
 
-        function selectGuruApproach(guru) {
-            // Remove previous selection
-            document.querySelectorAll('.brainstorm-idea').forEach(el => {
-                el.classList.remove('ring-4', 'ring-blue-300');
-            });
-            
-            // Add selection to clicked approach
-            event.currentTarget.classList.add('ring-4', 'ring-blue-300');
-            
-            selectedGuruApproach = guru;
-            
-            const messages = {
-                deming: "¡Excelente elección! El enfoque de Deming con PDCA se alinea perfectamente con las metodologías ágiles y la mejora continua en software.",
-                juran: "¡Muy bien! El enfoque de Juran en 'adecuación al uso' es fundamental para el desarrollo centrado en el usuario.",
-                crosby: "¡Interesante! El enfoque de 'cero defectos' de Crosby puede ser muy efectivo con testing automatizado y prácticas de código limpio.",
-                ishikawa: "¡Genial! Las herramientas de análisis causal de Ishikawa son perfectas para debugging y post-mortems en software."
-            };
-            
-            setTimeout(() => {
-                alert(messages[guru]);
-            }, 300);
-        }
+        brainstormTimerInterval = setInterval(() => {
+          brainstormTimeLeft--;
 
-        function startBrainstormTimer() {
-            if (brainstormTimerInterval) {
-                clearInterval(brainstormTimerInterval);
-            }
-            
-            brainstormTimeLeft = 900; // Reset to 15 minutes
-            
-            brainstormTimerInterval = setInterval(() => {
-                brainstormTimeLeft--;
-                
-                const minutes = Math.floor(brainstormTimeLeft / 60);
-                const seconds = brainstormTimeLeft % 60;
-                
-                document.getElementById('brainstormTimer').textContent = 
-                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                
-                // Change color as time runs out
-                const timerElement = document.getElementById('brainstormTimer');
-                if (brainstormTimeLeft <= 300) { // Last 5 minutes
-                    timerElement.classList.remove('text-green-600');
-                    timerElement.classList.add('text-red-600');
-                } else if (brainstormTimeLeft <= 600) { // Last 10 minutes
-                    timerElement.classList.remove('text-green-600');
-                    timerElement.classList.add('text-yellow-600');
-                }
-                
-                if (brainstormTimeLeft <= 0) {
-                    clearInterval(brainstormTimerInterval);
-                    alert('¡Tiempo de lluvia de ideas terminado! Procedan con la síntesis y discusión de las ideas generadas.');
-                }
-            }, 1000);
-        }
+          const minutes = Math.floor(brainstormTimeLeft / 60);
+          const seconds = brainstormTimeLeft % 60;
 
-        function addIdea(type) {
-            const inputId = type === 'pros' ? 'proInput' : 'conInput';
-            const areaId = type === 'pros' ? 'prosArea' : 'consArea';
-            const input = document.getElementById(inputId);
-            const area = document.getElementById(areaId);
-            
-            if (input.value.trim()) {
-                const ideaBubble = document.createElement('div');
-                ideaBubble.className = 'idea-bubble';
-                ideaBubble.innerHTML = `
-                    <p class="text-sm ${type === 'pros' ? 'text-green-700' : 'text-red-700'}">
+          document.getElementById("brainstormTimer").textContent = `${minutes
+            .toString()
+            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+
+          // Change color as time runs out
+          const timerElement = document.getElementById("brainstormTimer");
+          if (brainstormTimeLeft <= 300) {
+            // Last 5 minutes
+            timerElement.classList.remove("text-green-600");
+            timerElement.classList.add("text-red-600");
+          } else if (brainstormTimeLeft <= 600) {
+            // Last 10 minutes
+            timerElement.classList.remove("text-green-600");
+            timerElement.classList.add("text-yellow-600");
+          }
+
+          if (brainstormTimeLeft <= 0) {
+            clearInterval(brainstormTimerInterval);
+            alert(
+              "¡Tiempo de lluvia de ideas terminado! Procedan con la síntesis y discusión de las ideas generadas."
+            );
+          }
+        }, 1000);
+      }
+
+      function addIdea(type) {
+        const inputId = type === "pros" ? "proInput" : "conInput";
+        const areaId = type === "pros" ? "prosArea" : "consArea";
+        const input = document.getElementById(inputId);
+        const area = document.getElementById(areaId);
+
+        if (input.value.trim()) {
+          const ideaBubble = document.createElement("div");
+          ideaBubble.className = "idea-bubble";
+          ideaBubble.innerHTML = `
+                    <p class="text-sm ${
+                      type === "pros" ? "text-green-700" : "text-red-700"
+                    }">
                         ${input.value.trim()}
                     </p>
                 `;
-                
-                area.appendChild(ideaBubble);
-                input.value = '';
-                
-                // Add animation
-                ideaBubble.style.opacity = '0';
-                ideaBubble.style.transform = 'translateY(10px)';
-                setTimeout(() => {
-                    ideaBubble.style.transition = 'all 0.3s ease';
-                    ideaBubble.style.opacity = '1';
-                    ideaBubble.style.transform = 'translateY(0)';
-                }, 10);
-            }
+
+          area.appendChild(ideaBubble);
+          input.value = "";
+
+          // Add animation
+          ideaBubble.style.opacity = "0";
+          ideaBubble.style.transform = "translateY(10px)";
+          setTimeout(() => {
+            ideaBubble.style.transition = "all 0.3s ease";
+            ideaBubble.style.opacity = "1";
+            ideaBubble.style.transform = "translateY(0)";
+          }, 10);
         }
+      }
 
-        // Initialize
-        showSlide(0);
+      // Initialize
+      showSlide(0);
 
-        // Keyboard navigation
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight') nextSlide();
-            if (e.key === 'ArrowLeft') previousSlide();
-        });
+      // Keyboard navigation
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight") nextSlide();
+        if (e.key === "ArrowLeft") previousSlide();
+      });
 
-        // Enter key for adding ideas
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                if (e.target.id === 'proInput') {
-                    addIdea('pros');
-                } else if (e.target.id === 'conInput') {
-                    addIdea('cons');
-                }
-            }
-        });
+      // Enter key for adding ideas
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          if (e.target.id === "proInput") {
+            addIdea("pros");
+          } else if (e.target.id === "conInput") {
+            addIdea("cons");
+          }
+        }
+      });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a86eff2203cdb0',t:'MTc1NzEwMzY5Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script defer src="js/layout.js"></script>
-</body>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97f38553d0ec0fb3',t:'MTc1Nzg5MTAzOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  </body>
 </html>

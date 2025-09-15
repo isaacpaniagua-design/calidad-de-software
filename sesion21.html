@@ -1,895 +1,936 @@
 <!DOCTYPE html>
-<html lang="es" data-layout="global">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sesión 21 - Herramientas y Tendencias</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Más Allá del Producto: Calidad en Uso</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #333;
+      }
+
+      .presentation-container {
+        max-width: 1200px;
+        width: 95%;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .slide {
+        display: none;
+        padding: 60px;
+        min-height: 700px;
+        animation: slideIn 0.5s ease-out;
+      }
+
+      .slide.active {
+        display: block;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(30px);
         }
-        
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      .slide h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 20px;
+        line-height: 1.2;
+      }
+
+      .slide h2 {
+        font-size: 2.2rem;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 30px;
+      }
+
+      .subtitle {
+        font-size: 1.4rem;
+        color: #718096;
+        margin-bottom: 40px;
+        font-style: italic;
+        line-height: 1.4;
+      }
+
+      .source {
+        background: #f7fafc;
+        padding: 20px;
+        border-left: 4px solid #667eea;
+        margin: 30px 0;
+        border-radius: 8px;
+      }
+
+      .comparison-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+        margin: 40px 0;
+      }
+
+      .comparison-card {
+        background: #f8f9fa;
+        padding: 30px;
+        border-radius: 15px;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+      }
+
+      .comparison-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      }
+
+      .comparison-card.product {
+        border-color: #f56565;
+        background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+      }
+
+      .comparison-card.usage {
+        border-color: #48bb78;
+        background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+      }
+
+      .comparison-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+        color: #2d3748;
+      }
+
+      .comparison-item {
+        margin-bottom: 15px;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .comparison-item:last-child {
+        border-bottom: none;
+      }
+
+      .comparison-item strong {
+        color: #2d3748;
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .analogy-box {
+        background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 15px;
+        margin: 30px 0;
+      }
+
+      .analogy-box h3 {
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+      }
+
+      .navigation {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 60px;
+        background: #f8f9fa;
+        border-top: 1px solid #e2e8f0;
+      }
+
+      .nav-button {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+      }
+
+      .nav-button:hover {
+        background: #5a67d8;
+        transform: translateY(-2px);
+      }
+
+      .nav-button:disabled {
+        background: #cbd5e0;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .slide-counter {
+        background: #667eea;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+      }
+
+      .teacher-notes {
+        background: #e6fffa;
+        border: 2px solid #38b2ac;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 30px 0;
+      }
+
+      .teacher-notes h4 {
+        color: #2c7a7b;
+        margin-bottom: 10px;
+        font-size: 1.1rem;
+      }
+
+      .teacher-notes p {
+        color: #2d3748;
+        line-height: 1.6;
+      }
+
+      .highlight {
+        background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+        padding: 20px;
+        border-radius: 10px;
+        margin: 20px 0;
+        border-left: 4px solid #667eea;
+      }
+
+      .dimensions-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+        margin: 30px 0;
+      }
+
+      .dimension-card {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 15px;
+        padding: 25px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      }
+
+      .dimension-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      }
+
+      .dimension-card.effectiveness {
+        border-color: #48bb78;
+        background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+      }
+
+      .dimension-card.efficiency {
+        border-color: #ed8936;
+        background: linear-gradient(135deg, #fffaf0 0%, #fbd38d 100%);
+      }
+
+      .dimension-card.satisfaction {
+        border-color: #9f7aea;
+        background: linear-gradient(135deg, #faf5ff 0%, #e9d8fd 100%);
+      }
+
+      .dimension-card.risk {
+        border-color: #f56565;
+        background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+      }
+
+      .dimension-card.context {
+        border-color: #38b2ac;
+        background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+      }
+
+      .dimension-card h3 {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+        color: #2d3748;
+      }
+
+      .dimension-content {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #4a5568;
+      }
+
+      .dimension-content ul {
+        margin: 10px 0;
+        padding-left: 20px;
+      }
+
+      .dimension-content li {
+        margin-bottom: 5px;
+      }
+
+      .connections-container {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+        margin: 30px 0;
+      }
+
+      .connection-item {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 15px;
+        padding: 25px;
+        transition: all 0.3s ease;
+      }
+
+      .connection-item:hover {
+        transform: translateX(10px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      }
+
+      .connection-header,
+      .connection-result {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin: 10px 0;
+      }
+
+      .if-badge,
+      .then-badge {
+        background: #667eea;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        min-width: 80px;
+        text-align: center;
+      }
+
+      .then-badge {
+        background: #48bb78;
+      }
+
+      .connection-text {
+        flex: 1;
+        font-size: 1rem;
+        line-height: 1.5;
+        color: #4a5568;
+      }
+
+      .connection-arrow {
+        text-align: center;
+        font-size: 2rem;
+        color: #667eea;
+        margin: 10px 0;
+      }
+
+      .case-study {
+        background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+        border: 2px solid #f56565;
+        border-radius: 15px;
+        padding: 30px;
+        margin: 30px 0;
+      }
+
+      .case-study h3 {
+        color: #c53030;
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+      }
+
+      .case-content p {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: #2d3748;
+        margin-bottom: 20px;
+      }
+
+      .case-twist {
+        background: rgba(245, 101, 101, 0.1);
+        border: 2px solid #f56565;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+      }
+
+      .case-twist p {
+        margin: 0;
+        font-weight: 600;
+        color: #c53030;
+      }
+
+      .discussion-questions {
+        margin: 40px 0;
+      }
+
+      .discussion-questions h3 {
+        font-size: 1.8rem;
+        color: #2d3748;
+        margin-bottom: 25px;
+      }
+
+      .question-card {
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+      }
+
+      .question-card:hover {
+        transform: translateX(10px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border-color: #667eea;
+      }
+
+      .question-number {
+        background: #667eea;
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+      }
+
+      .question-text {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        color: #4a5568;
+      }
+
+      @media (max-width: 768px) {
         .slide {
-            display: none;
-            animation: slideIn 0.5s ease-in-out;
+          padding: 30px;
         }
-        
-        .slide.active {
-            display: block;
+
+        .slide h1 {
+          font-size: 2.2rem;
         }
-        
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(20px); }
-            to { opacity: 1; transform: translateX(0); }
+
+        .slide h2 {
+          font-size: 1.8rem;
         }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
+
+        .comparison-grid,
+        .dimensions-grid {
+          grid-template-columns: 1fr;
+          gap: 20px;
         }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+
+        .navigation {
+          padding: 15px 30px;
         }
-        
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+
+        .connection-header,
+        .connection-result {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
         }
-        
-        .float-animation {
-            animation: float 3s ease-in-out infinite;
+
+        .if-badge,
+        .then-badge {
+          align-self: flex-start;
         }
-        
-        .pulse-animation {
-            animation: pulse 2s infinite;
+
+        .question-card {
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 15px;
         }
-        
-        .rotate-animation {
-            animation: rotate 20s linear infinite;
+
+        .question-number {
+          align-self: center;
         }
-        
-        .slide-bg-1 {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .slide-bg-1::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-            animation: float 30s linear infinite;
-        }
-        
-        .slide-bg-2 {
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .slide-bg-2::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04' fill-rule='evenodd'%3E%3Cpath d='M20 20c0-16.569-13.431-30-30-30C-26.569-10-40 3.431-40 20s13.431 30 30 30c16.569 0 30-13.431 30-30zM0 40c0-11.046-8.954-20-20-20s-20 8.954-20 20 8.954 20 20 20 20-8.954 20-20z'/%3E%3C/g%3E%3C/svg%3E");
-        }
-        
-        .slide-bg-3 {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .slide-bg-3::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E");
-        }
-        
-        .slide-bg-4 {
-            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .slide-bg-4::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M50 50c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10zM10 10c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10zm60 60c0-5.5-4.5-10-10-10s-10 4.5-10 10 4.5 10 10 10 10-4.5 10-10z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        }
-        
-        .slide-bg-5 {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .slide-bg-5::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpolygon points='50 0 60 40 100 50 60 60 50 100 40 60 0 50 40 40'/%3E%3C/g%3E%3C/svg%3E");
-        }
-        
-        .tool-card {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .tool-card:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
-        
-        .trend-card {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-        
-        .trend-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.15);
-        }
-        
-        .devops-card {
-            transition: all 0.3s ease;
-        }
-        
-        .devops-card:hover {
-            transform: scale(1.05);
-        }
-        
-        .code-editor {
-            background: #1e1e1e;
-            border-radius: 8px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        
-        .code-line {
-            padding: 2px 16px;
-            border-left: 3px solid transparent;
-        }
-        
-        .code-line.highlight {
-            background: rgba(255, 255, 0, 0.1);
-            border-left-color: #ffd700;
-        }
-        
-        .progress-bar {
-            transition: width 0.3s ease;
-        }
-        
-        .demo-button {
-            transition: all 0.3s ease;
-        }
-        
-        .demo-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-        }
+      }
     </style>
-<link rel="stylesheet" href="css/layout.css">
-<body class="bg-gray-50 min-h-screen">
+  </head>
+  <body>
+    <div class="presentation-container">
+      <!-- Slide 1: Título -->
+      <div class="slide active">
+        <h1>Más Allá del Producto: Calidad en Uso</h1>
+        <p class="subtitle">
+          ¿De qué sirve un software "perfecto" si nadie puede o quiere usarlo?
+        </p>
 
-<style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
-</style>
-<div class="qs-nav" data-role="main-nav">
-  <div class="wrap">
-    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
-    <nav class="qs-tabs" aria-label="Navegación">
-      <a class="qs-btn" href="materiales.html">Materiales</a>
-      <a class="qs-btn" href="asistencia.html">Asistencia</a>
-      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
-      <a class="qs-btn" href="Foro.html">Foro</a>
-      <a class="qs-btn" href="paneldocente.html">Panel</a>
-      <a class="qs-btn" href="roadmap.html">Roadmap</a>
-      
-\1
-  </div>
-</div>
-<script>
-(function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
-  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
-  });
-})();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
-</script>
-
-
-    <!-- Navigation -->
-    <div class="fixed top-0 left-0 right-0 bg-white shadow-lg z-50 px-6 py-4">
-        <div class="flex justify-between items-center max-w-6xl mx-auto">
-            <div class="flex items-center space-x-4">
-                <h1 class="text-xl font-bold text-gray-800">Sesión 21 - Herramientas y Tendencias</h1>
-                <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
-                    Diapositiva <span id="currentSlide">1</span> de 5
-                </span>
-            </div>
-            <div class="flex space-x-2">
-                <button onclick="previousSlide()" id="prevBtn" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors">
-                    ← Anterior
-                </button>
-                <button onclick="nextSlide()" id="nextBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors">
-                    Siguiente →
-                </button>
-            </div>
+        <div class="source">
+          <strong>📚 Fuente Principal:</strong> Estándar "ISO/IEC 25010:2011
+          (SQuaRE)"
         </div>
-        <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
-            <div id="progressBar" class="progress-bar bg-purple-600 h-2 rounded-full" style="width: 20%"></div>
+
+        <div class="teacher-notes">
+          <h4>📝 Notas para el docente:</h4>
+          <p>
+            Inicia la sesión conectando con la clase anterior: "En la última
+            sesión, desglosamos el software en 8 características de calidad de
+            producto, como fiabilidad y rendimiento. Esas son las que nosotros,
+            como ingenieros, medimos. Pero hay una pregunta final y más
+            importante: ¿le sirve todo esto al usuario final en su vida real?
+            Hoy daremos el último paso y veremos la calidad desde la única
+            perspectiva que realmente importa: la del usuario."
+          </p>
         </div>
-    </div>
+      </div>
 
-    <!-- Slides Container -->
-    <div class="pt-24 pb-8 px-6">
-        <div class="max-w-6xl mx-auto">
-            
-            <!-- Slide 1: Título -->
-            <div class="slide active" id="slide1">
-                <div class="slide-bg-1 rounded-3xl p-12 text-center text-white min-h-[600px] flex flex-col justify-center items-center relative z-10">
-                    <div class="flex items-center justify-center mb-8">
-                        <div class="float-animation text-6xl mr-4">🛠️</div>
-                        <div class="rotate-animation text-6xl">⚙️</div>
-                        <div class="float-animation text-6xl ml-4" style="animation-delay: -1s;">🚀</div>
-                    </div>
-                    <h1 class="text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
-                        <span class="pulse-animation">El Arsenal del</span><br>
-                        <span class="text-yellow-300">Tester Automatizado</span>
-                    </h1>
-                    <p class="text-xl opacity-90 max-w-3xl mb-8">
-                        Herramientas modernas y tendencias que están transformando el testing
-                    </p>
-                    <div class="flex items-center space-x-4 text-lg">
-                        <span class="bg-white bg-opacity-20 px-4 py-2 rounded-full">Sesión 21</span>
-                        <span class="bg-white bg-opacity-20 px-4 py-2 rounded-full">Herramientas</span>
-                        <span class="bg-white bg-opacity-20 px-4 py-2 rounded-full">Tendencias</span>
-                    </div>
-                </div>
+      <!-- Slide 2: El Cambio de Perspectiva -->
+      <div class="slide">
+        <h2>El Cambio de Perspectiva</h2>
+        <h1>De la Calidad del Producto a la Calidad en Uso</h1>
+
+        <div class="comparison-grid">
+          <div class="comparison-card product">
+            <h3>🔧 Calidad de Producto</h3>
+            <p style="font-style: italic; margin-bottom: 20px">
+              (Lo que vimos)
+            </p>
+
+            <div class="comparison-item">
+              <strong>Perspectiva:</strong>
+              Interna, del desarrollador y del sistema
             </div>
 
-            <!-- Slide 2: Herramientas populares -->
-            <div class="slide" id="slide2">
-                <div class="slide-bg-2 rounded-3xl p-12 min-h-[600px] relative z-10">
-                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
-                        🔧 Herramientas Populares
-                    </h2>
-                    
-                    <div class="grid md:grid-cols-2 gap-6 mb-8">
-                        <!-- Selenium -->
-                        <div class="tool-card bg-gradient-to-br from-orange-400 to-red-500 rounded-2xl p-8 text-white">
-                            <div class="flex items-center mb-4">
-                                <div class="text-5xl mr-4">🌐</div>
-                                <div>
-                                    <h3 class="text-2xl font-bold">Selenium</h3>
-                                    <p class="text-sm opacity-90">Web Testing</p>
-                                </div>
-                            </div>
-                            <p class="text-lg mb-4 opacity-90">
-                                Pruebas web automatizadas multiplataforma
-                            </p>
-                            <div class="bg-white bg-opacity-20 rounded-lg p-3">
-                                <div class="flex items-center text-sm">
-                                    <span class="mr-2">✅</span>
-                                    <span>Soporte multi-navegador</span>
-                                </div>
-                                <div class="flex items-center text-sm mt-1">
-                                    <span class="mr-2">✅</span>
-                                    <span>Múltiples lenguajes</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Unit Testing Frameworks -->
-                        <div class="tool-card bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl p-8 text-white">
-                            <div class="flex items-center mb-4">
-                                <div class="text-5xl mr-4">⚡</div>
-                                <div>
-                                    <h3 class="text-2xl font-bold">Unit Testing</h3>
-                                    <p class="text-sm opacity-90">Frameworks</p>
-                                </div>
-                            </div>
-                            <p class="text-lg mb-4 opacity-90">
-                                JUnit / TestNG / PyTest
-                            </p>
-                            <div class="bg-white bg-opacity-20 rounded-lg p-3">
-                                <div class="flex items-center text-sm">
-                                    <span class="mr-2">🔥</span>
-                                    <span>Rápidos y confiables</span>
-                                </div>
-                                <div class="flex items-center text-sm mt-1">
-                                    <span class="mr-2">📊</span>
-                                    <span>Reportes detallados</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Appium -->
-                        <div class="tool-card bg-gradient-to-br from-purple-400 to-pink-500 rounded-2xl p-8 text-white">
-                            <div class="flex items-center mb-4">
-                                <div class="text-5xl mr-4">📱</div>
-                                <div>
-                                    <h3 class="text-2xl font-bold">Appium</h3>
-                                    <p class="text-sm opacity-90">Mobile Testing</p>
-                                </div>
-                            </div>
-                            <p class="text-lg mb-4 opacity-90">
-                                Pruebas móviles iOS y Android
-                            </p>
-                            <div class="bg-white bg-opacity-20 rounded-lg p-3">
-                                <div class="flex items-center text-sm">
-                                    <span class="mr-2">📲</span>
-                                    <span>Apps nativas e híbridas</span>
-                                </div>
-                                <div class="flex items-center text-sm mt-1">
-                                    <span class="mr-2">🔄</span>
-                                    <span>Cross-platform</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Cypress -->
-                        <div class="tool-card bg-gradient-to-br from-teal-400 to-blue-600 rounded-2xl p-8 text-white">
-                            <div class="flex items-center mb-4">
-                                <div class="text-5xl mr-4">🎯</div>
-                                <div>
-                                    <h3 class="text-2xl font-bold">Cypress</h3>
-                                    <p class="text-sm opacity-90">Modern E2E</p>
-                                </div>
-                            </div>
-                            <p class="text-lg mb-4 opacity-90">
-                                Pruebas end-to-end modernas
-                            </p>
-                            <div class="bg-white bg-opacity-20 rounded-lg p-3">
-                                <div class="flex items-center text-sm">
-                                    <span class="mr-2">⚡</span>
-                                    <span>Ejecución en tiempo real</span>
-                                </div>
-                                <div class="flex items-center text-sm mt-1">
-                                    <span class="mr-2">🎥</span>
-                                    <span>Screenshots y videos</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white bg-opacity-90 rounded-xl p-6">
-                        <div class="flex items-center justify-center">
-                            <span class="text-gray-600 italic">Fuente: Mahfuz</span>
-                        </div>
-                    </div>
-                </div>
+            <div class="comparison-item">
+              <strong>Pregunta:</strong>
+              ¿Qué tan bien está construido el software?
             </div>
 
-            <!-- Slide 3: Integración en DevOps y CI/CD -->
-            <div class="slide" id="slide3">
-                <div class="slide-bg-3 rounded-3xl p-12 min-h-[600px] relative z-10">
-                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
-                        🔄 Integración en DevOps y CI/CD
-                    </h2>
-                    
-                    <div class="mb-8">
-                        <div class="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-8 text-white mb-6">
-                            <h3 class="text-2xl font-bold mb-4 text-center">Pipeline de Entrega Continua</h3>
-                            <div class="flex items-center justify-between">
-                                <div class="text-center">
-                                    <div class="text-4xl mb-2">💻</div>
-                                    <p class="text-sm">Desarrollo</p>
-                                </div>
-                                <div class="text-2xl">→</div>
-                                <div class="text-center">
-                                    <div class="text-4xl mb-2">🧪</div>
-                                    <p class="text-sm">Testing</p>
-                                </div>
-                                <div class="text-2xl">→</div>
-                                <div class="text-center">
-                                    <div class="text-4xl mb-2">🚀</div>
-                                    <p class="text-sm">Deploy</p>
-                                </div>
-                                <div class="text-2xl">→</div>
-                                <div class="text-center">
-                                    <div class="text-4xl mb-2">📊</div>
-                                    <p class="text-sm">Monitor</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid md:grid-cols-3 gap-6 mb-8">
-                        <!-- Jenkins -->
-                        <div class="devops-card bg-gradient-to-br from-red-400 to-red-600 rounded-2xl p-6 text-white text-center">
-                            <div class="text-5xl mb-4">🏗️</div>
-                            <h3 class="text-xl font-bold mb-2">Jenkins</h3>
-                            <p class="text-sm opacity-90">Automatización de builds y despliegues</p>
-                            <div class="mt-4 bg-white bg-opacity-20 rounded-lg p-2">
-                                <p class="text-xs">Open Source • Plugins • Escalable</p>
-                            </div>
-                        </div>
-
-                        <!-- GitHub Actions -->
-                        <div class="devops-card bg-gradient-to-br from-gray-700 to-gray-900 rounded-2xl p-6 text-white text-center">
-                            <div class="text-5xl mb-4">🐙</div>
-                            <h3 class="text-xl font-bold mb-2">GitHub Actions</h3>
-                            <p class="text-sm opacity-90">CI/CD integrado con repositorios</p>
-                            <div class="mt-4 bg-white bg-opacity-20 rounded-lg p-2">
-                                <p class="text-xs">YAML • Workflows • Marketplace</p>
-                            </div>
-                        </div>
-
-                        <!-- GitLab CI -->
-                        <div class="devops-card bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl p-6 text-white text-center">
-                            <div class="text-5xl mb-4">🦊</div>
-                            <h3 class="text-xl font-bold mb-2">GitLab CI</h3>
-                            <p class="text-sm opacity-90">Pipeline como código integrado</p>
-                            <div class="mt-4 bg-white bg-opacity-20 rounded-lg p-2">
-                                <p class="text-xs">Docker • Kubernetes • Auto DevOps</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="bg-white bg-opacity-90 rounded-xl p-6">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                            <span class="mr-2">🎯</span> Beneficios Clave
-                        </h4>
-                        <div class="grid md:grid-cols-2 gap-4 text-gray-700">
-                            <div class="flex items-center">
-                                <span class="mr-2">✅</span>
-                                <span>Detección temprana de errores</span>
-                            </div>
-                            <div class="flex items-center">
-                                <span class="mr-2">✅</span>
-                                <span>Despliegues más seguros</span>
-                            </div>
-                            <div class="flex items-center">
-                                <span class="mr-2">✅</span>
-                                <span>Feedback rápido al equipo</span>
-                            </div>
-                            <div class="flex items-center">
-                                <span class="mr-2">✅</span>
-                                <span>Reducción de trabajo manual</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="comparison-item">
+              <strong>Se mide en:</strong>
+              El entorno de desarrollo y pruebas
             </div>
 
-            <!-- Slide 4: Tendencias actuales -->
-            <div class="slide" id="slide4">
-                <div class="slide-bg-4 rounded-3xl p-12 min-h-[600px] relative z-10">
-                    <h2 class="text-4xl font-bold text-gray-800 mb-8 text-center drop-shadow-lg">
-                        🚀 Tendencias Actuales
-                    </h2>
-                    
-                    <div class="space-y-6">
-                        <!-- IA y Machine Learning -->
-                        <div class="trend-card bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-8 text-white">
-                            <div class="flex items-center mb-4">
-                                <div class="text-5xl mr-6">🤖</div>
-                                <div>
-                                    <h3 class="text-2xl font-bold mb-2">Automatización con IA y Machine Learning</h3>
-                                    <p class="text-lg opacity-90">
-                                        Algoritmos inteligentes que aprenden patrones de fallas y optimizan las pruebas
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="grid md:grid-cols-3 gap-4 mt-6">
-                                <div class="bg-white bg-opacity-20 rounded-lg p-3 text-center">
-                                    <div class="text-2xl mb-1">🎯</div>
-                                    <p class="text-sm">Auto-generación de casos</p>
-                                </div>
-                                <div class="bg-white bg-opacity-20 rounded-lg p-3 text-center">
-                                    <div class="text-2xl mb-1">🔍</div>
-                                    <p class="text-sm">Detección de anomalías</p>
-                                </div>
-                                <div class="bg-white bg-opacity-20 rounded-lg p-3 text-center">
-                                    <div class="text-2xl mb-1">📈</div>
-                                    <p class="text-sm">Predicción de riesgos</p>
-                                </div>
-                            </div>
-                        </div>
+            <div class="comparison-item">
+              <strong>Ejemplo:</strong>
+              El código tiene una baja complejidad ciclomática, el tiempo de
+              respuesta es de 200ms en el servidor de pruebas
+            </div>
+          </div>
 
-                        <!-- TestOps -->
-                        <div class="trend-card bg-gradient-to-r from-blue-500 to-teal-500 rounded-2xl p-8 text-white">
-                            <div class="flex items-center mb-4">
-                                <div class="text-5xl mr-6">⚙️</div>
-                                <div>
-                                    <h3 class="text-2xl font-bold mb-2">TestOps: Pruebas como Disciplina Continua</h3>
-                                    <p class="text-lg opacity-90">
-                                        Enfoque sistemático que integra testing en todas las fases del desarrollo
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="grid md:grid-cols-3 gap-4 mt-6">
-                                <div class="bg-white bg-opacity-20 rounded-lg p-3 text-center">
-                                    <div class="text-2xl mb-1">📊</div>
-                                    <p class="text-sm">Métricas continuas</p>
-                                </div>
-                                <div class="bg-white bg-opacity-20 rounded-lg p-3 text-center">
-                                    <div class="text-2xl mb-1">🔄</div>
-                                    <p class="text-sm">Feedback loops</p>
-                                </div>
-                                <div class="bg-white bg-opacity-20 rounded-lg p-3 text-center">
-                                    <div class="text-2xl mb-1">🎯</div>
-                                    <p class="text-sm">Optimización constante</p>
-                                </div>
-                            </div>
-                        </div>
+          <div class="comparison-card usage">
+            <h3>👤 Calidad en Uso</h3>
+            <p style="font-style: italic; margin-bottom: 20px">
+              (Lo que veremos hoy)
+            </p>
 
-                        <!-- Shift-Left Testing -->
-                        <div class="trend-card bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl p-8 text-white">
-                            <div class="flex items-center mb-4">
-                                <div class="text-5xl mr-6">⬅️</div>
-                                <div>
-                                    <h3 class="text-2xl font-bold mb-2">Shift-Left Testing</h3>
-                                    <p class="text-lg opacity-90">
-                                        Pruebas automatizadas desde las fases más tempranas del desarrollo
-                                    </p>
-                                </div>
-                            </div>
-                            <div class="grid md:grid-cols-4 gap-3 mt-6">
-                                <div class="bg-white bg-opacity-20 rounded-lg p-3 text-center">
-                                    <div class="text-xl mb-1">📝</div>
-                                    <p class="text-xs">Requisitos</p>
-                                </div>
-                                <div class="bg-white bg-opacity-20 rounded-lg p-3 text-center">
-                                    <div class="text-xl mb-1">🎨</div>
-                                    <p class="text-xs">Diseño</p>
-                                </div>
-                                <div class="bg-white bg-opacity-20 rounded-lg p-3 text-center">
-                                    <div class="text-xl mb-1">💻</div>
-                                    <p class="text-xs">Desarrollo</p>
-                                </div>
-                                <div class="bg-white bg-opacity-20 rounded-lg p-3 text-center">
-                                    <div class="text-xl mb-1">🧪</div>
-                                    <p class="text-xs">Testing</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="comparison-item">
+              <strong>Perspectiva:</strong>
+              Externa, del usuario final en su contexto real
             </div>
 
-            <!-- Slide 5: Demo guiada -->
-            <div class="slide" id="slide5">
-                <div class="slide-bg-5 rounded-3xl p-12 min-h-[600px] relative z-10">
-                    <h2 class="text-4xl font-bold text-white mb-8 text-center drop-shadow-lg">
-                        👨‍💻 Actividad - Demo Guiada
-                    </h2>
-                    
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <!-- Demo Description -->
-                        <div class="bg-white bg-opacity-90 rounded-2xl p-8">
-                            <h3 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-                                <span class="mr-3">🎯</span> Demo: Automatización de Login
-                            </h3>
-                            
-                            <div class="space-y-4 mb-6">
-                                <div class="flex items-center p-3 bg-blue-50 rounded-lg">
-                                    <span class="text-2xl mr-3">1️⃣</span>
-                                    <span class="text-gray-700">Configuración del entorno</span>
-                                </div>
-                                <div class="flex items-center p-3 bg-green-50 rounded-lg">
-                                    <span class="text-2xl mr-3">2️⃣</span>
-                                    <span class="text-gray-700">Localización de elementos</span>
-                                </div>
-                                <div class="flex items-center p-3 bg-yellow-50 rounded-lg">
-                                    <span class="text-2xl mr-3">3️⃣</span>
-                                    <span class="text-gray-700">Interacción con formularios</span>
-                                </div>
-                                <div class="flex items-center p-3 bg-purple-50 rounded-lg">
-                                    <span class="text-2xl mr-3">4️⃣</span>
-                                    <span class="text-gray-700">Validación de resultados</span>
-                                </div>
-                            </div>
-
-                            <div class="text-center">
-                                <button onclick="startDemo()" id="demoBtn" class="demo-button bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl text-lg font-semibold">
-                                    🚀 Iniciar Demo
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Code Example -->
-                        <div class="bg-white bg-opacity-90 rounded-2xl p-6">
-                            <div class="flex items-center justify-between mb-4">
-                                <h4 class="text-lg font-bold text-gray-800">Ejemplo: Selenium WebDriver</h4>
-                                <div class="flex space-x-2">
-                                    <button onclick="showSelenium()" id="seleniumBtn" class="px-3 py-1 bg-orange-500 text-white rounded text-sm">Selenium</button>
-                                    <button onclick="showCypress()" id="cypressBtn" class="px-3 py-1 bg-gray-300 text-gray-700 rounded text-sm">Cypress</button>
-                                </div>
-                            </div>
-                            
-                            <div class="code-editor" id="codeEditor">
-                                <div class="code-line text-green-400">// Selenium WebDriver - Java</div>
-                                <div class="code-line text-blue-400">import org.openqa.selenium.*;</div>
-                                <div class="code-line text-blue-400">import org.openqa.selenium.chrome.*;</div>
-                                <div class="code-line"></div>
-                                <div class="code-line text-yellow-400">public class LoginTest {</div>
-                                <div class="code-line text-white">  WebDriver driver = new ChromeDriver();</div>
-                                <div class="code-line"></div>
-                                <div class="code-line text-purple-400">  @Test</div>
-                                <div class="code-line text-yellow-400">  public void testLogin() {</div>
-                                <div class="code-line text-white">    driver.get("https://example.com/login");</div>
-                                <div class="code-line"></div>
-                                <div class="code-line highlight text-white">    driver.findElement(By.id("username"))</div>
-                                <div class="code-line highlight text-white">          .sendKeys("usuario@test.com");</div>
-                                <div class="code-line"></div>
-                                <div class="code-line highlight text-white">    driver.findElement(By.id("password"))</div>
-                                <div class="code-line highlight text-white">          .sendKeys("password123");</div>
-                                <div class="code-line"></div>
-                                <div class="code-line highlight text-white">    driver.findElement(By.id("loginBtn"))</div>
-                                <div class="code-line highlight text-white">          .click();</div>
-                                <div class="code-line"></div>
-                                <div class="code-line text-cyan-400">    // Validar resultado</div>
-                                <div class="code-line text-white">    String welcomeMsg = driver</div>
-                                <div class="code-line text-white">      .findElement(By.id("welcome"))</div>
-                                <div class="code-line text-white">      .getText();</div>
-                                <div class="code-line"></div>
-                                <div class="code-line text-white">    assert(welcomeMsg.contains("Bienvenido"));</div>
-                                <div class="code-line text-yellow-400">  }</div>
-                                <div class="code-line text-yellow-400">}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mt-8 bg-white bg-opacity-90 rounded-xl p-6">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                            <span class="mr-2">👀</span> Observaciones Clave
-                        </h4>
-                        <div class="grid md:grid-cols-2 gap-4 text-gray-700">
-                            <div class="flex items-center">
-                                <span class="mr-2">🎯</span>
-                                <span>Localización precisa de elementos</span>
-                            </div>
-                            <div class="flex items-center">
-                                <span class="mr-2">⚡</span>
-                                <span>Interacciones realistas</span>
-                            </div>
-                            <div class="flex items-center">
-                                <span class="mr-2">✅</span>
-                                <span>Validaciones claras</span>
-                            </div>
-                            <div class="flex items-center">
-                                <span class="mr-2">🔄</span>
-                                <span>Manejo de esperas</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="comparison-item">
+              <strong>Pregunta:</strong>
+              ¿Qué tan bien le permite el software al usuario alcanzar sus
+              metas?
             </div>
 
+            <div class="comparison-item">
+              <strong>Se mide en:</strong>
+              El entorno operativo real del usuario (su oficina, su casa, en la
+              calle con su móvil)
+            </div>
+
+            <div class="comparison-item">
+              <strong>Ejemplo:</strong>
+              Un contador puede completar el reporte de impuestos trimestral en
+              2 horas en lugar de 2 días
+            </div>
+          </div>
         </div>
+
+        <div class="analogy-box">
+          <h3>🏎️ Analogía del Coche de Carreras</h3>
+          <p>
+            Un coche de Fórmula 1 tiene una
+            <strong>calidad de producto excepcional</strong> (rendimiento,
+            fiabilidad, ingeniería de punta). Pero si intentas usarlo para ir al
+            supermercado, su
+            <strong>calidad en uso es terrible</strong> (incómodo, difícil de
+            manejar, no tiene maletero). <em>El contexto lo es todo.</em>
+          </p>
+        </div>
+
+        <div class="highlight">
+          <strong>💡 Punto clave:</strong> "La Calidad en Uso es la consecuencia
+          de una buena Calidad de Producto. Es el resultado final. Podemos tener
+          un software técnicamente brillante que sea un fracaso total si no
+          consideramos el contexto y las metas reales del usuario."
+        </div>
+      </div>
+
+      <!-- Slide 3: Modelo de Calidad en Uso -->
+      <div class="slide">
+        <h1>Las 5 Dimensiones de la Experiencia del Usuario</h1>
+        <p class="subtitle">Modelo de Calidad en Uso (ISO/IEC 25010)</p>
+
+        <div class="highlight" style="margin-bottom: 30px">
+          <strong>Concepto:</strong> Mide el resultado de la interacción de un
+          usuario con un sistema para alcanzar metas específicas en un contexto
+          de uso determinado.
+        </div>
+
+        <div class="dimensions-grid">
+          <div class="dimension-card effectiveness">
+            <h3>🎯 1. Eficacia (Effectiveness)</h3>
+            <div class="dimension-content">
+              <strong>Pregunta Clave:</strong> ¿Los usuarios pueden lograr sus
+              objetivos con precisión y completitud? <br /><br />
+              <strong>Ejemplo:</strong> En una app de e-commerce, ¿el usuario
+              puede encontrar el producto que busca y completar la compra con
+              éxito? Si abandona el carrito porque no encuentra cómo pagar, la
+              eficacia es baja.
+            </div>
+          </div>
+
+          <div class="dimension-card efficiency">
+            <h3>⚡ 2. Eficiencia (Efficiency)</h3>
+            <div class="dimension-content">
+              <strong>Pregunta Clave:</strong> ¿Cuánto esfuerzo (tiempo,
+              recursos, pasos) necesita el usuario para lograr sus objetivos?
+              <br /><br />
+              <strong>Ejemplo:</strong> Si para realizar una transferencia
+              bancaria un usuario necesita hacer 15 clics y llenar 10 campos, la
+              eficiencia es baja. Si lo puede hacer en 3 clics, es alta.
+            </div>
+          </div>
+
+          <div class="dimension-card satisfaction">
+            <h3>😊 3. Satisfacción (Satisfaction)</h3>
+            <div class="dimension-content">
+              <strong>Pregunta Clave:</strong> ¿Qué tan agradable y
+              satisfactoria es la experiencia para el usuario? <br /><br />
+              <strong>Definición:</strong> Es la respuesta subjetiva del usuario
+              al interactuar con el sistema. Incluye la utilidad percibida, la
+              confianza, el placer y la comodidad. <br /><br />
+              <strong>Ejemplo:</strong> Una app puede ser eficaz y eficiente,
+              pero si su diseño es feo o la experiencia es frustrante, la
+              satisfacción será baja. Piensen en la diferencia entre una app de
+              gobierno y una app como Duolingo.
+            </div>
+          </div>
+
+          <div class="dimension-card risk">
+            <h3>🛡️ 4. Libre de Riesgo (Freedom from Risk)</h3>
+            <div class="dimension-content">
+              <strong>Pregunta Clave:</strong> ¿El sistema mitiga los riesgos
+              potenciales para el usuario, sus datos o el negocio? <br /><br />
+              <strong>Sub-características:</strong>
+              <ul>
+                <li>Mitigación de Riesgo Económico</li>
+                <li>Mitigación de Riesgo de Salud y Seguridad</li>
+                <li>Mitigación de Riesgo Ambiental</li>
+                <li>Mitigación de Riesgo Social</li>
+              </ul>
+              <br />
+              <strong>Ejemplo:</strong> ¿Un software de trading tiene mecanismos
+              para prevenir que un usuario pierda todo su dinero por un error de
+              clic?
+            </div>
+          </div>
+
+          <div class="dimension-card context">
+            <h3>🌍 5. Cobertura de Contexto (Context Coverage)</h3>
+            <div class="dimension-content">
+              <strong>Pregunta Clave:</strong> ¿El sistema es eficaz, eficiente,
+              satisfactorio y libre de riesgo en todos los contextos de uso
+              especificados? <br /><br />
+              <strong>Definición:</strong> Es la validación de que la calidad se
+              mantiene en diferentes escenarios. <br /><br />
+              <strong>Ejemplo:</strong> Una app de mapas debe funcionar bien
+              (tener buena calidad en uso) tanto si la usas en un coche con
+              buena señal 4G como si vas a pie por el centro de la ciudad con
+              una señal intermitente.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 4: Conectando los Modelos -->
+      <div class="slide">
+        <h1>¿Cómo la Calidad Interna Impacta la Experiencia Externa?</h1>
+        <p class="subtitle">Conectando los Modelos: Producto → Uso</p>
+
+        <div class="connections-container">
+          <div class="connection-item">
+            <div class="connection-header">
+              <span class="if-badge">SI</span>
+              <span class="connection-text"
+                >mejoramos la <strong>Usabilidad</strong> (Calidad de
+                Producto)...</span
+              >
+            </div>
+            <div class="connection-arrow">↓</div>
+            <div class="connection-result">
+              <span class="then-badge">ENTONCES</span>
+              <span class="connection-text"
+                >impactamos positivamente la
+                <strong
+                  >Eficacia, Eficiencia y, sobre todo, la Satisfacción</strong
+                >
+                (Calidad en Uso).</span
+              >
+            </div>
+          </div>
+
+          <div class="connection-item">
+            <div class="connection-header">
+              <span class="if-badge">SI</span>
+              <span class="connection-text"
+                >mejoramos la <strong>Eficiencia de Desempeño</strong> (Calidad
+                de Producto)...</span
+              >
+            </div>
+            <div class="connection-arrow">↓</div>
+            <div class="connection-result">
+              <span class="then-badge">ENTONCES</span>
+              <span class="connection-text"
+                >impactamos positivamente la
+                <strong>Eficiencia del usuario</strong> (menos tiempo de espera)
+                y su <strong>Satisfacción</strong> (menos frustración) (Calidad
+                en Uso).</span
+              >
+            </div>
+          </div>
+
+          <div class="connection-item">
+            <div class="connection-header">
+              <span class="if-badge">SI</span>
+              <span class="connection-text"
+                >mejoramos la
+                <strong>Fiabilidad y la Seguridad</strong> (Calidad de
+                Producto)...</span
+              >
+            </div>
+            <div class="connection-arrow">↓</div>
+            <div class="connection-result">
+              <span class="then-badge">ENTONCES</span>
+              <span class="connection-text"
+                >impactamos positivamente la característica
+                <strong>Libre de Riesgo</strong> y la
+                <strong>Confianza</strong> (parte de la Satisfacción) (Calidad
+                en Uso).</span
+              >
+            </div>
+          </div>
+
+          <div class="connection-item">
+            <div class="connection-header">
+              <span class="if-badge">SI</span>
+              <span class="connection-text"
+                >mejoramos la <strong>Mantenibilidad</strong> (Calidad de
+                Producto)...</span
+              >
+            </div>
+            <div class="connection-arrow">↓</div>
+            <div class="connection-result">
+              <span class="then-badge">ENTONCES</span>
+              <span class="connection-text"
+                >podemos corregir errores más rápido, lo que mejora la
+                <strong>Eficacia y Disponibilidad</strong> para el usuario
+                (Calidad en Uso).</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="highlight" style="margin-top: 40px">
+          <strong>💡 La conexión más importante del curso:</strong> "Nuestro
+          trabajo como ingenieros en las 8 características del producto no es un
+          fin en sí mismo. Lo hacemos para que el usuario, al final de la
+          cadena, tenga una experiencia de alta calidad en su contexto. La
+          Calidad de Producto es el medio, la Calidad en Uso es el fin."
+        </div>
+      </div>
+
+      <!-- Slide 5: Discusión Final -->
+      <div class="slide">
+        <h1>¿Técnicamente Perfecto, Prácticamente Inútil?</h1>
+        <p class="subtitle">Discusión Final - El Juicio del Usuario (15 min)</p>
+
+        <div class="case-study">
+          <h3>📋 Caso de Estudio</h3>
+          <div class="case-content">
+            <p>
+              Una empresa desarrolla un nuevo
+              <strong>sistema de gestión de proyectos</strong>. Es técnicamente
+              impecable: pasa todas las pruebas unitarias (Fiabilidad), es
+              increíblemente rápido (Rendimiento), el código es modular y fácil
+              de mantener (Mantenibilidad) y es muy seguro (Seguridad). Su
+              <strong>Calidad de Producto es altísima</strong>.
+            </p>
+
+            <div class="case-twist">
+              <p>
+                Se lanza a los empleados. Seis meses después,
+                <strong>nadie lo usa</strong>. La gente prefiere seguir usando
+                sus viejas hojas de cálculo de Excel.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="discussion-questions">
+          <h3>🤔 Preguntas para la clase:</h3>
+
+          <div class="question-card">
+            <div class="question-number">1</div>
+            <div class="question-text">
+              ¿Qué características de <strong>Calidad en Uso</strong> creen que
+              fallaron en este nuevo sistema?
+            </div>
+          </div>
+
+          <div class="question-card">
+            <div class="question-number">2</div>
+            <div class="question-text">
+              ¿Qué características de
+              <strong>Calidad de Producto</strong> (probablemente del área de
+              Usabilidad) se descuidaron durante el desarrollo y llevaron a este
+              fracaso?
+            </div>
+          </div>
+
+          <div class="question-card">
+            <div class="question-number">3</div>
+            <div class="question-text">
+              ¿Cómo podría un enfoque en la
+              <strong>Calidad en Uso</strong> desde el principio del proyecto
+              haber evitado este resultado?
+            </div>
+          </div>
+        </div>
+
+        <div class="teacher-notes">
+          <h4>📝 Puntos a desarrollar:</h4>
+          <p>
+            Guiar la discusión para que los alumnos concluyan que probablemente
+            la <strong>Satisfacción</strong> fue nula, la
+            <strong>Eficiencia</strong> era menor que la del método antiguo (era
+            más lento para ellos hacer su trabajo), y la
+            <strong>Eficacia</strong> era baja porque el sistema no se adaptaba
+            a su forma real de trabajar. Esto se debió a una falta de atención a
+            la <strong>Usabilidad</strong> (Aprendizaje, Operabilidad) durante
+            el desarrollo. La solución habría sido involucrar a los usuarios
+            finales desde el principio (prototipos, pruebas de usabilidad,
+            etc.).
+          </p>
+        </div>
+      </div>
+
+      <div class="navigation">
+        <button class="nav-button" id="prevBtn" onclick="changeSlide(-1)">
+          ← Anterior
+        </button>
+        <div class="slide-counter">
+          <span id="currentSlide">1</span> / <span id="totalSlides">5</span>
+        </div>
+        <button class="nav-button" id="nextBtn" onclick="changeSlide(1)">
+          Siguiente →
+        </button>
+      </div>
     </div>
 
     <script>
-        let currentSlideIndex = 0;
-        const totalSlides = 5;
-        let demoRunning = false;
+      let currentSlideIndex = 0;
+      const slides = document.querySelectorAll(".slide");
+      const totalSlides = slides.length;
 
-        function showSlide(index) {
-            // Hide all slides
-            document.querySelectorAll('.slide').forEach(slide => {
-                slide.classList.remove('active');
-            });
-            
-            // Show current slide
-            document.getElementById(`slide${index + 1}`).classList.add('active');
-            
-            // Update navigation
-            document.getElementById('currentSlide').textContent = index + 1;
-            document.getElementById('prevBtn').disabled = index === 0;
-            document.getElementById('nextBtn').disabled = index === totalSlides - 1;
-            
-            // Update progress bar
-            const progress = ((index + 1) / totalSlides) * 100;
-            document.getElementById('progressBar').style.width = progress + '%';
-            
-            // Update button states
-            if (index === 0) {
-                document.getElementById('prevBtn').classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                document.getElementById('prevBtn').classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-            
-            if (index === totalSlides - 1) {
-                document.getElementById('nextBtn').classList.add('opacity-50', 'cursor-not-allowed');
-            } else {
-                document.getElementById('nextBtn').classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-        }
+      document.getElementById("totalSlides").textContent = totalSlides;
 
-        function nextSlide() {
-            if (currentSlideIndex < totalSlides - 1) {
-                currentSlideIndex++;
-                showSlide(currentSlideIndex);
-            }
-        }
+      function showSlide(index) {
+        slides.forEach((slide) => slide.classList.remove("active"));
+        slides[index].classList.add("active");
 
-        function previousSlide() {
-            if (currentSlideIndex > 0) {
-                currentSlideIndex--;
-                showSlide(currentSlideIndex);
-            }
-        }
+        document.getElementById("currentSlide").textContent = index + 1;
+        document.getElementById("prevBtn").disabled = index === 0;
+        document.getElementById("nextBtn").disabled = index === totalSlides - 1;
 
-        function startDemo() {
-            const demoBtn = document.getElementById('demoBtn');
-            
-            if (demoRunning) {
-                demoRunning = false;
-                demoBtn.innerHTML = '🚀 Iniciar Demo';
-                demoBtn.classList.remove('bg-red-600');
-                demoBtn.classList.add('bg-gradient-to-r', 'from-blue-600', 'to-purple-600');
-                
-                // Reset highlights
-                document.querySelectorAll('.code-line.highlight').forEach(line => {
-                    line.style.backgroundColor = 'rgba(255, 255, 0, 0.1)';
-                });
-                return;
-            }
-            
-            demoRunning = true;
-            demoBtn.innerHTML = '⏹️ Detener Demo';
-            demoBtn.classList.remove('bg-gradient-to-r', 'from-blue-600', 'to-purple-600');
-            demoBtn.classList.add('bg-red-600');
-            
-            // Simulate step-by-step execution
-            const highlightLines = document.querySelectorAll('.code-line.highlight');
-            let currentLine = 0;
-            
-            const interval = setInterval(() => {
-                if (!demoRunning || currentLine >= highlightLines.length) {
-                    clearInterval(interval);
-                    if (demoRunning) {
-                        demoBtn.innerHTML = '✅ Demo Completado';
-                        setTimeout(() => {
-                            if (demoRunning) {
-                                startDemo(); // Reset
-                            }
-                        }, 2000);
-                    }
-                    return;
-                }
-                
-                // Reset previous highlights
-                highlightLines.forEach(line => {
-                    line.style.backgroundColor = 'rgba(255, 255, 0, 0.1)';
-                });
-                
-                // Highlight current line
-                highlightLines[currentLine].style.backgroundColor = 'rgba(0, 255, 0, 0.3)';
-                currentLine++;
-            }, 1500);
-        }
-
-        function showSelenium() {
-            document.getElementById('seleniumBtn').classList.remove('bg-gray-300', 'text-gray-700');
-            document.getElementById('seleniumBtn').classList.add('bg-orange-500', 'text-white');
-            document.getElementById('cypressBtn').classList.remove('bg-teal-500', 'text-white');
-            document.getElementById('cypressBtn').classList.add('bg-gray-300', 'text-gray-700');
-            
-            document.getElementById('codeEditor').innerHTML = `
-                <div class="code-line text-green-400">// Selenium WebDriver - Java</div>
-                <div class="code-line text-blue-400">import org.openqa.selenium.*;</div>
-                <div class="code-line text-blue-400">import org.openqa.selenium.chrome.*;</div>
-                <div class="code-line"></div>
-                <div class="code-line text-yellow-400">public class LoginTest {</div>
-                <div class="code-line text-white">  WebDriver driver = new ChromeDriver();</div>
-                <div class="code-line"></div>
-                <div class="code-line text-purple-400">  @Test</div>
-                <div class="code-line text-yellow-400">  public void testLogin() {</div>
-                <div class="code-line text-white">    driver.get("https://example.com/login");</div>
-                <div class="code-line"></div>
-                <div class="code-line highlight text-white">    driver.findElement(By.id("username"))</div>
-                <div class="code-line highlight text-white">          .sendKeys("usuario@test.com");</div>
-                <div class="code-line"></div>
-                <div class="code-line highlight text-white">    driver.findElement(By.id("password"))</div>
-                <div class="code-line highlight text-white">          .sendKeys("password123");</div>
-                <div class="code-line"></div>
-                <div class="code-line highlight text-white">    driver.findElement(By.id("loginBtn"))</div>
-                <div class="code-line highlight text-white">          .click();</div>
-                <div class="code-line"></div>
-                <div class="code-line text-cyan-400">    // Validar resultado</div>
-                <div class="code-line text-white">    String welcomeMsg = driver</div>
-                <div class="code-line text-white">      .findElement(By.id("welcome"))</div>
-                <div class="code-line text-white">      .getText();</div>
-                <div class="code-line"></div>
-                <div class="code-line text-white">    assert(welcomeMsg.contains("Bienvenido"));</div>
-                <div class="code-line text-yellow-400">  }</div>
-                <div class="code-line text-yellow-400">}</div>
-            `;
-        }
-
-        function showCypress() {
-            document.getElementById('cypressBtn').classList.remove('bg-gray-300', 'text-gray-700');
-            document.getElementById('cypressBtn').classList.add('bg-teal-500', 'text-white');
-            document.getElementById('seleniumBtn').classList.remove('bg-orange-500', 'text-white');
-            document.getElementById('seleniumBtn').classList.add('bg-gray-300', 'text-gray-700');
-            
-            document.getElementById('codeEditor').innerHTML = `
-                <div class="code-line text-green-400">// Cypress - JavaScript</div>
-                <div class="code-line text-blue-400">describe('Login Test', () => {</div>
-                <div class="code-line text-yellow-400">  it('should login successfully', () => {</div>
-                <div class="code-line text-white">    cy.visit('https://example.com/login');</div>
-                <div class="code-line"></div>
-                <div class="code-line highlight text-white">    cy.get('#username')</div>
-                <div class="code-line highlight text-white">      .type('usuario@test.com');</div>
-                <div class="code-line"></div>
-                <div class="code-line highlight text-white">    cy.get('#password')</div>
-                <div class="code-line highlight text-white">      .type('password123');</div>
-                <div class="code-line"></div>
-                <div class="code-line highlight text-white">    cy.get('#loginBtn')</div>
-                <div class="code-line highlight text-white">      .click();</div>
-                <div class="code-line"></div>
-                <div class="code-line text-cyan-400">    // Validar resultado</div>
-                <div class="code-line text-white">    cy.get('#welcome')</div>
-                <div class="code-line text-white">      .should('contain', 'Bienvenido');</div>
-                <div class="code-line text-yellow-400">  });</div>
-                <div class="code-line text-blue-400">});</div>
-            `;
-        }
-
-        // Keyboard navigation
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === ' ') {
-                e.preventDefault();
-                nextSlide();
-            } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                previousSlide();
-            }
+        // Scroll to top smoothly when changing slides
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth",
         });
+      }
 
-        // Initialize
-        showSlide(0);
+      function changeSlide(direction) {
+        const newIndex = currentSlideIndex + direction;
+        if (newIndex >= 0 && newIndex < totalSlides) {
+          currentSlideIndex = newIndex;
+          showSlide(currentSlideIndex);
+        }
+      }
 
-        // Add hover effects to interactive elements
-        document.querySelectorAll('.tool-card, .trend-card, .devops-card').forEach(element => {
-            element.addEventListener('click', () => {
-                element.style.transform = 'scale(0.98)';
-                setTimeout(() => {
-                    element.style.transform = '';
-                }, 150);
-            });
-        });
+      // Keyboard navigation
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "ArrowLeft") changeSlide(-1);
+        if (e.key === "ArrowRight") changeSlide(1);
+      });
+
+      // Initialize
+      showSlide(0);
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a867f5e3efcdb0',t:'MTc1NzEwMzQwNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script defer src="js/layout.js"></script>
-</body>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97f433f813e111f1',t:'MTc1Nzg5ODE5Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  </body>
 </html>

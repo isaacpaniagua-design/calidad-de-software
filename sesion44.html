@@ -1,1157 +1,1556 @@
 <!DOCTYPE html>
-<html lang="es" data-layout="global">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>🎤 Sesión 44: Presentaciones por Equipo (Día 2)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        
-        .slide {
-            min-height: 100vh;
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
-            padding-top: 6rem;
-            opacity: 0;
-            transform: translateX(50px);
-            transition: all 0.5s ease;
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+      body {
+        font-family: "Inter", sans-serif;
+      }
+
+      .slide {
+        min-height: 100vh;
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+        padding-top: 6rem;
+        opacity: 0;
+        transform: translateX(50px);
+        transition: all 0.5s ease;
+      }
+
+      .slide.active {
+        display: flex;
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .team-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border-left: 6px solid;
+        transition: all 0.3s ease;
+        opacity: 0;
+        transform: translateY(30px);
+        animation: slideInUp 0.6s ease forwards;
+        margin: 1rem 0;
+      }
+
+      .team-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+      }
+
+      .team-govware {
+        border-left-color: #8b5cf6;
+      }
+
+      .agenda-item {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid;
+        margin: 1rem 0;
+        opacity: 0;
+        transform: translateX(-30px);
+        animation: slideInLeft 0.6s ease forwards;
+      }
+
+      .agenda-item:nth-child(1) {
+        border-left-color: #10b981;
+        animation-delay: 0.1s;
+      }
+      .agenda-item:nth-child(2) {
+        border-left-color: #3b82f6;
+        animation-delay: 0.2s;
+      }
+
+      .debate-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        margin: 1rem 0;
+        transition: all 0.3s ease;
+      }
+
+      .debate-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .iso-card {
+        border-left: 6px solid #f59e0b;
+      }
+      .cmmi-card {
+        border-left: 6px solid #3b82f6;
+      }
+
+      .timer-display {
+        font-size: 4rem;
+        font-weight: bold;
+        text-align: center;
+        margin: 2rem 0;
+        padding: 2rem;
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .timer-normal {
+        color: #10b981;
+      }
+      .timer-warning {
+        color: #f59e0b;
+      }
+      .timer-danger {
+        color: #ef4444;
+      }
+
+      .vote-button {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-align: center;
+      }
+
+      .vote-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .vote-button.selected {
+        border-color: #3b82f6;
+        background: #eff6ff;
+      }
+
+      .feedback-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 2rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        margin: 1rem 0;
+        opacity: 0;
+        transform: translateY(30px);
+        animation: slideInUp 0.6s ease forwards;
+      }
+
+      .feedback-card:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      .feedback-card:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      .practice-item {
+        background: #f0fdf4;
+        border-left: 4px solid #10b981;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin: 0.5rem 0;
+      }
+
+      .improvement-item {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin: 0.5rem 0;
+      }
+
+      .notification {
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        background: white;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        border-left: 4px solid;
+        z-index: 1000;
+        transform: translateX(400px);
+        transition: transform 0.3s ease;
+      }
+
+      .notification.show {
+        transform: translateX(0);
+      }
+
+      .notification-success {
+        border-left-color: #10b981;
+      }
+      .notification-warning {
+        border-left-color: #f59e0b;
+      }
+      .notification-danger {
+        border-left-color: #ef4444;
+      }
+
+      @keyframes slideInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
         }
-        
-        .slide.active {
-            display: flex;
-            opacity: 1;
-            transform: translateX(0);
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
-        
-        .team-card {
-            background: white;
-            border-radius: 1rem;
-            padding: 2rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            border-left: 6px solid;
-            transition: all 0.3s ease;
-            opacity: 0;
-            transform: translateY(30px);
-            animation: slideInUp 0.6s ease forwards;
-            margin: 1rem 0;
+      }
+
+      @keyframes slideInLeft {
+        from {
+          opacity: 0;
+          transform: translateX(-30px);
         }
-        
-        .team-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        to {
+          opacity: 1;
+          transform: translateX(0);
         }
-        
-        .team-govware { border-left-color: #8b5cf6; }
-        
-        .agenda-item {
-            background: white;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid;
-            margin: 1rem 0;
-            opacity: 0;
-            transform: translateX(-30px);
-            animation: slideInLeft 0.6s ease forwards;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
         }
-        
-        .agenda-item:nth-child(1) { border-left-color: #10b981; animation-delay: 0.1s; }
-        .agenda-item:nth-child(2) { border-left-color: #3b82f6; animation-delay: 0.2s; }
-        
-        .debate-card {
-            background: white;
-            border-radius: 1rem;
-            padding: 2rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            margin: 1rem 0;
-            transition: all 0.3s ease;
+        50% {
+          transform: scale(1.05);
         }
-        
-        .debate-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .pulse-animation {
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0px);
         }
-        
-        .iso-card { border-left: 6px solid #f59e0b; }
-        .cmmi-card { border-left: 6px solid #3b82f6; }
-        
-        .timer-display {
-            font-size: 4rem;
-            font-weight: bold;
-            text-align: center;
-            margin: 2rem 0;
-            padding: 2rem;
-            background: white;
-            border-radius: 1rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        50% {
+          transform: translateY(-10px);
         }
-        
-        .timer-normal { color: #10b981; }
-        .timer-warning { color: #f59e0b; }
-        .timer-danger { color: #ef4444; }
-        
-        .vote-button {
-            background: white;
-            border: 2px solid #e5e7eb;
-            border-radius: 1rem;
-            padding: 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-        }
-        
-        .vote-button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.15);
-        }
-        
-        .vote-button.selected {
-            border-color: #3b82f6;
-            background: #eff6ff;
-        }
-        
-        .feedback-card {
-            background: white;
-            border-radius: 1rem;
-            padding: 2rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-            margin: 1rem 0;
-            opacity: 0;
-            transform: translateY(30px);
-            animation: slideInUp 0.6s ease forwards;
-        }
-        
-        .feedback-card:nth-child(1) { animation-delay: 0.1s; }
-        .feedback-card:nth-child(2) { animation-delay: 0.2s; }
-        
-        .practice-item {
-            background: #f0fdf4;
-            border-left: 4px solid #10b981;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin: 0.5rem 0;
-        }
-        
-        .improvement-item {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin: 0.5rem 0;
-        }
-        
-        .notification {
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            background: white;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            border-left: 4px solid;
-            z-index: 1000;
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
-        }
-        
-        .notification.show {
-            transform: translateX(0);
-        }
-        
-        .notification-success { border-left-color: #10b981; }
-        .notification-warning { border-left-color: #f59e0b; }
-        .notification-danger { border-left-color: #ef4444; }
-        
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes slideInLeft {
-            from {
-                opacity: 0;
-                transform: translateX(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        .pulse-animation {
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        .float-animation {
-            animation: float 3s ease-in-out infinite;
-        }
-        
-        .comparison-table {
-            background: white;
-            border-radius: 1rem;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .comparison-table th {
-            background: #f8fafc;
-            padding: 1rem;
-            font-weight: bold;
-            text-align: left;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        
-        .comparison-table td {
-            padding: 1rem;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .comparison-table tr:hover {
-            background: #f8fafc;
-        }
+      }
+
+      .float-animation {
+        animation: float 3s ease-in-out infinite;
+      }
+
+      .comparison-table {
+        background: white;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .comparison-table th {
+        background: #f8fafc;
+        padding: 1rem;
+        font-weight: bold;
+        text-align: left;
+        border-bottom: 2px solid #e5e7eb;
+      }
+
+      .comparison-table td {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .comparison-table tr:hover {
+        background: #f8fafc;
+      }
     </style>
-<link rel="stylesheet" href="css/layout.css">
-<body class="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
-
-<style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
-</style>
-<div class="qs-nav" data-role="main-nav">
-  <div class="wrap">
-    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
-    <nav class="qs-tabs" aria-label="Navegación">
-      <a class="qs-btn" href="materiales.html">Materiales</a>
-      <a class="qs-btn" href="asistencia.html">Asistencia</a>
-      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
-      <a class="qs-btn" href="Foro.html">Foro</a>
-      <a class="qs-btn" href="paneldocente.html">Panel</a>
-      <a class="qs-btn" href="roadmap.html">Roadmap</a>
-      
-\1
-  </div>
-</div>
-<script>
-(function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
-  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
-  });
-})();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
-</script>
-
-
+  </head>
+  <body class="bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
     <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-lg z-50">
-        <div class="max-w-7xl mx-auto px-6 py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-4">
-                    <h1 class="text-xl font-bold text-gray-800">🎤 Sesión 44: Presentaciones por Equipo (Día 2)</h1>
-                    <span class="text-sm text-gray-600" id="slide-counter">1 / 5</span>
-                </div>
-                <div class="flex space-x-2">
-                    <button onclick="previousSlide()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                        ← Anterior
-                    </button>
-                    <button onclick="nextSlide()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
-                        Siguiente →
-                    </button>
-                </div>
-            </div>
+    <nav
+      class="fixed top-0 left-0 right-0 bg-white/90 backdrop-blur-sm shadow-lg z-50"
+    >
+      <div class="max-w-7xl mx-auto px-6 py-4">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center space-x-4">
+            <h1 class="text-xl font-bold text-gray-800">
+              🎤 Sesión 44: Presentaciones por Equipo (Día 2)
+            </h1>
+            <span class="text-sm text-gray-600" id="slide-counter">1 / 5</span>
+          </div>
+          <div class="flex space-x-2">
+            <button
+              onclick="previousSlide()"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              ← Anterior
+            </button>
+            <button
+              onclick="nextSlide()"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              Siguiente →
+            </button>
+          </div>
         </div>
-      
-</nav>
+      </div>
+    </nav>
 
     <!-- Slide 1: Título -->
     <div class="slide active" id="slide-1">
-        <div class="text-center max-w-5xl mx-auto">
-            <div class="mb-8">
-                <div class="text-8xl mb-6 float-animation">🎤</div>
-                <h1 class="text-6xl font-bold text-gray-800 mb-4">Presentaciones Finales</h1>
-                <h2 class="text-4xl font-bold text-purple-600 mb-8">Día 2</h2>
-                <div class="text-2xl text-gray-600 font-medium">Sesión 44 - Continuación y Debate</div>
-            </div>
-            
-            <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl">
-                <div class="grid md:grid-cols-3 gap-6">
-                    <div class="text-center pulse-animation">
-                        <div class="text-4xl mb-4">🏢</div>
-                        <h3 class="font-bold text-green-600 text-lg mb-2">Equipo 1</h3>
-                        <p class="text-gray-600 text-sm">Innovatech</p>
-                        <p class="text-xs text-gray-500 mt-1">✅ Presentado</p>
-                    </div>
-                    <div class="text-center pulse-animation" style="animation-delay: 0.2s">
-                        <div class="text-4xl mb-4">🏛️</div>
-                        <h3 class="font-bold text-blue-600 text-lg mb-2">Equipo 2</h3>
-                        <p class="text-gray-600 text-sm">Legacy Corp</p>
-                        <p class="text-xs text-gray-500 mt-1">✅ Presentado</p>
-                    </div>
-                    <div class="text-center pulse-animation" style="animation-delay: 0.4s">
-                        <div class="text-4xl mb-4">🏛️</div>
-                        <h3 class="font-bold text-purple-600 text-lg mb-2">Equipo 3</h3>
-                        <p class="text-gray-600 text-sm">GovWare Solutions</p>
-                        <p class="text-xs text-purple-500 mt-1">🎯 Hoy presenta</p>
-                    </div>
-                </div>
-                
-                <div class="mt-8 bg-purple-50 rounded-xl p-6">
-                    <h3 class="text-xl font-bold text-purple-800 mb-4">🎯 Enfoque del Día 2</h3>
-                    <div class="grid md:grid-cols-2 gap-4">
-                        <div class="text-center">
-                            <div class="text-3xl mb-2">💬</div>
-                            <h4 class="font-semibold text-purple-700">Debate Guiado</h4>
-                            <p class="text-sm text-purple-600">ISO 9001 vs CMMI para GovWare</p>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-3xl mb-2">📊</div>
-                            <h4 class="font-semibold text-purple-700">Retroalimentación</h4>
-                            <p class="text-sm text-purple-600">Buenas prácticas y mejoras</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="mt-8">
-                <p class="text-lg text-gray-700 italic">
-                    "Completando el ciclo de presentaciones con análisis crítico y aprendizaje colectivo"
-                </p>
-            </div>
+      <div class="text-center max-w-5xl mx-auto">
+        <div class="mb-8">
+          <div class="text-8xl mb-6 float-animation">🎤</div>
+          <h1 class="text-6xl font-bold text-gray-800 mb-4">
+            Presentaciones Finales
+          </h1>
+          <h2 class="text-4xl font-bold text-purple-600 mb-8">Día 2</h2>
+          <div class="text-2xl text-gray-600 font-medium">
+            Sesión 44 - Continuación y Debate
+          </div>
         </div>
+
+        <div class="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl">
+          <div class="grid md:grid-cols-3 gap-6">
+            <div class="text-center pulse-animation">
+              <div class="text-4xl mb-4">🏢</div>
+              <h3 class="font-bold text-green-600 text-lg mb-2">Equipo 1</h3>
+              <p class="text-gray-600 text-sm">Innovatech</p>
+              <p class="text-xs text-gray-500 mt-1">✅ Presentado</p>
+            </div>
+            <div
+              class="text-center pulse-animation"
+              style="animation-delay: 0.2s"
+            >
+              <div class="text-4xl mb-4">🏛️</div>
+              <h3 class="font-bold text-blue-600 text-lg mb-2">Equipo 2</h3>
+              <p class="text-gray-600 text-sm">Legacy Corp</p>
+              <p class="text-xs text-gray-500 mt-1">✅ Presentado</p>
+            </div>
+            <div
+              class="text-center pulse-animation"
+              style="animation-delay: 0.4s"
+            >
+              <div class="text-4xl mb-4">🏛️</div>
+              <h3 class="font-bold text-purple-600 text-lg mb-2">Equipo 3</h3>
+              <p class="text-gray-600 text-sm">GovWare Solutions</p>
+              <p class="text-xs text-purple-500 mt-1">🎯 Hoy presenta</p>
+            </div>
+          </div>
+
+          <div class="mt-8 bg-purple-50 rounded-xl p-6">
+            <h3 class="text-xl font-bold text-purple-800 mb-4">
+              🎯 Enfoque del Día 2
+            </h3>
+            <div class="grid md:grid-cols-2 gap-4">
+              <div class="text-center">
+                <div class="text-3xl mb-2">💬</div>
+                <h4 class="font-semibold text-purple-700">Debate Guiado</h4>
+                <p class="text-sm text-purple-600">
+                  ISO 9001 vs CMMI para GovWare
+                </p>
+              </div>
+              <div class="text-center">
+                <div class="text-3xl mb-2">📊</div>
+                <h4 class="font-semibold text-purple-700">Retroalimentación</h4>
+                <p class="text-sm text-purple-600">
+                  Buenas prácticas y mejoras
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8">
+          <p class="text-lg text-gray-700 italic">
+            "Completando el ciclo de presentaciones con análisis crítico y
+            aprendizaje colectivo"
+          </p>
+        </div>
+      </div>
     </div>
 
     <!-- Slide 2: Agenda -->
     <div class="slide" id="slide-2">
-        <div class="max-w-5xl mx-auto">
-            <div class="text-center mb-12">
-                <h1 class="text-5xl font-bold text-gray-800 mb-4">📅 Agenda del Día 2</h1>
-                <div class="w-24 h-1 bg-blue-600 mx-auto mb-8"></div>
-                <p class="text-xl text-gray-600">Estructura de la sesión final</p>
-            </div>
-            
-            <div class="space-y-6">
-                <div class="agenda-item">
-                    <div class="flex items-center space-x-6">
-                        <div class="text-5xl">🎤</div>
-                        <div class="flex-1">
-                            <h3 class="text-2xl font-bold text-green-600 mb-2">Continuación de exposiciones</h3>
-                            <p class="text-gray-700 mb-3">Presentación del Equipo 3: GovWare Solutions</p>
-                            <div class="bg-green-50 p-4 rounded-lg">
-                                <div class="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <h4 class="font-semibold text-green-800 mb-2">🏛️ Contexto especial:</h4>
-                                        <ul class="text-sm text-green-700 space-y-1">
-                                            <li>• Empresa de software gubernamental</li>
-                                            <li>• Necesidad de certificación para licitaciones</li>
-                                            <li>• Dilema estratégico: ISO vs CMMI</li>
-                                            <li>• Presión de tiempo y recursos</li>
-                                        </ul>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold text-green-800 mb-2">🎯 Objetivos de la presentación:</h4>
-                                        <ul class="text-sm text-green-700 space-y-1">
-                                            <li>• Justificar la elección del modelo</li>
-                                            <li>• Demostrar viabilidad económica</li>
-                                            <li>• Mostrar roadmap realista</li>
-                                            <li>• Preparar para el debate</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="agenda-item">
-                    <div class="flex items-center space-x-6">
-                        <div class="text-5xl">💬</div>
-                        <div class="flex-1">
-                            <h3 class="text-2xl font-bold text-blue-600 mb-2">Retroalimentación colectiva</h3>
-                            <p class="text-gray-700 mb-3">Análisis conjunto de todas las presentaciones</p>
-                            <div class="bg-blue-50 p-4 rounded-lg">
-                                <div class="grid md:grid-cols-2 gap-4">
-                                    <div>
-                                        <h4 class="font-semibold text-blue-800 mb-2">✅ Buenas prácticas identificadas:</h4>
-                                        <ul class="text-sm text-blue-700 space-y-1">
-                                            <li>• Metodologías de diagnóstico efectivas</li>
-                                            <li>• Justificaciones sólidas de modelos</li>
-                                            <li>• Herramientas de análisis útiles</li>
-                                            <li>• Estrategias de implementación</li>
-                                        </ul>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-semibold text-blue-800 mb-2">🔧 Áreas de mejora:</h4>
-                                        <ul class="text-sm text-blue-700 space-y-1">
-                                            <li>• Aspectos técnicos a reforzar</li>
-                                            <li>• Presentación y comunicación</li>
-                                            <li>• Análisis de riesgos</li>
-                                            <li>• Métricas y seguimiento</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="mt-8 bg-white rounded-2xl p-6 shadow-xl">
-                <h3 class="text-xl font-bold text-center text-gray-800 mb-4">⏱️ Cronograma de la Sesión</h3>
-                <div class="grid md:grid-cols-4 gap-4">
-                    <div class="text-center p-4 bg-green-50 rounded-lg">
-                        <div class="text-2xl mb-2">🎤</div>
-                        <div class="font-semibold text-green-800">0-20 min</div>
-                        <div class="text-sm text-green-600">Presentación GovWare</div>
-                    </div>
-                    <div class="text-center p-4 bg-orange-50 rounded-lg">
-                        <div class="text-2xl mb-2">💬</div>
-                        <div class="font-semibold text-orange-800">20-35 min</div>
-                        <div class="text-sm text-orange-600">Debate ISO vs CMMI</div>
-                    </div>
-                    <div class="text-center p-4 bg-blue-50 rounded-lg">
-                        <div class="text-2xl mb-2">📊</div>
-                        <div class="font-semibold text-blue-800">35-50 min</div>
-                        <div class="text-sm text-blue-600">Retroalimentación</div>
-                    </div>
-                    <div class="text-center p-4 bg-purple-50 rounded-lg">
-                        <div class="text-2xl mb-2">🎯</div>
-                        <div class="font-semibold text-purple-800">50-60 min</div>
-                        <div class="text-sm text-purple-600">Cierre y síntesis</div>
-                    </div>
-                </div>
-            </div>
+      <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-12">
+          <h1 class="text-5xl font-bold text-gray-800 mb-4">
+            📅 Agenda del Día 2
+          </h1>
+          <div class="w-24 h-1 bg-blue-600 mx-auto mb-8"></div>
+          <p class="text-xl text-gray-600">Estructura de la sesión final</p>
         </div>
+
+        <div class="space-y-6">
+          <div class="agenda-item">
+            <div class="flex items-center space-x-6">
+              <div class="text-5xl">🎤</div>
+              <div class="flex-1">
+                <h3 class="text-2xl font-bold text-green-600 mb-2">
+                  Continuación de exposiciones
+                </h3>
+                <p class="text-gray-700 mb-3">
+                  Presentación del Equipo 3: GovWare Solutions
+                </p>
+                <div class="bg-green-50 p-4 rounded-lg">
+                  <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 class="font-semibold text-green-800 mb-2">
+                        🏛️ Contexto especial:
+                      </h4>
+                      <ul class="text-sm text-green-700 space-y-1">
+                        <li>• Empresa de software gubernamental</li>
+                        <li>• Necesidad de certificación para licitaciones</li>
+                        <li>• Dilema estratégico: ISO vs CMMI</li>
+                        <li>• Presión de tiempo y recursos</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-green-800 mb-2">
+                        🎯 Objetivos de la presentación:
+                      </h4>
+                      <ul class="text-sm text-green-700 space-y-1">
+                        <li>• Justificar la elección del modelo</li>
+                        <li>• Demostrar viabilidad económica</li>
+                        <li>• Mostrar roadmap realista</li>
+                        <li>• Preparar para el debate</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="agenda-item">
+            <div class="flex items-center space-x-6">
+              <div class="text-5xl">💬</div>
+              <div class="flex-1">
+                <h3 class="text-2xl font-bold text-blue-600 mb-2">
+                  Retroalimentación colectiva
+                </h3>
+                <p class="text-gray-700 mb-3">
+                  Análisis conjunto de todas las presentaciones
+                </p>
+                <div class="bg-blue-50 p-4 rounded-lg">
+                  <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 class="font-semibold text-blue-800 mb-2">
+                        ✅ Buenas prácticas identificadas:
+                      </h4>
+                      <ul class="text-sm text-blue-700 space-y-1">
+                        <li>• Metodologías de diagnóstico efectivas</li>
+                        <li>• Justificaciones sólidas de modelos</li>
+                        <li>• Herramientas de análisis útiles</li>
+                        <li>• Estrategias de implementación</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 class="font-semibold text-blue-800 mb-2">
+                        🔧 Áreas de mejora:
+                      </h4>
+                      <ul class="text-sm text-blue-700 space-y-1">
+                        <li>• Aspectos técnicos a reforzar</li>
+                        <li>• Presentación y comunicación</li>
+                        <li>• Análisis de riesgos</li>
+                        <li>• Métricas y seguimiento</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8 bg-white rounded-2xl p-6 shadow-xl">
+          <h3 class="text-xl font-bold text-center text-gray-800 mb-4">
+            ⏱️ Cronograma de la Sesión
+          </h3>
+          <div class="grid md:grid-cols-4 gap-4">
+            <div class="text-center p-4 bg-green-50 rounded-lg">
+              <div class="text-2xl mb-2">🎤</div>
+              <div class="font-semibold text-green-800">0-20 min</div>
+              <div class="text-sm text-green-600">Presentación GovWare</div>
+            </div>
+            <div class="text-center p-4 bg-orange-50 rounded-lg">
+              <div class="text-2xl mb-2">💬</div>
+              <div class="font-semibold text-orange-800">20-35 min</div>
+              <div class="text-sm text-orange-600">Debate ISO vs CMMI</div>
+            </div>
+            <div class="text-center p-4 bg-blue-50 rounded-lg">
+              <div class="text-2xl mb-2">📊</div>
+              <div class="font-semibold text-blue-800">35-50 min</div>
+              <div class="text-sm text-blue-600">Retroalimentación</div>
+            </div>
+            <div class="text-center p-4 bg-purple-50 rounded-lg">
+              <div class="text-2xl mb-2">🎯</div>
+              <div class="font-semibold text-purple-800">50-60 min</div>
+              <div class="text-sm text-purple-600">Cierre y síntesis</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Slide 3: Equipo 3 - GovWare Solutions -->
     <div class="slide" id="slide-3">
-        <div class="max-w-6xl mx-auto">
-            <div class="text-center mb-12">
-                <h1 class="text-5xl font-bold text-gray-800 mb-4">🏛️ Equipo 3: GovWare Solutions</h1>
-                <div class="w-24 h-1 bg-purple-600 mx-auto mb-8"></div>
-                <p class="text-xl text-gray-600">Certificación para licitaciones gubernamentales</p>
-            </div>
-            
-            <div class="team-card team-govware">
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div>
-                        <div class="flex items-center mb-6">
-                            <div class="text-5xl mr-4">🔍</div>
-                            <div>
-                                <h3 class="text-2xl font-bold text-purple-600">Diagnóstico Específico</h3>
-                                <p class="text-gray-600">Necesidades del sector gubernamental</p>
-                            </div>
-                        </div>
-                        
-                        <div class="space-y-4">
-                            <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-500">
-                                <h4 class="font-semibold text-red-800 mb-2">🚨 Situación Crítica:</h4>
-                                <ul class="text-sm text-red-700 space-y-1">
-                                    <li>• <strong>Requisito obligatorio:</strong> Certificación para licitaciones</li>
-                                    <li>• <strong>Competencia intensa:</strong> Empresas ya certificadas</li>
-                                    <li>• <strong>Tiempo limitado:</strong> Próximas licitaciones importantes</li>
-                                    <li>• <strong>Recursos ajustados:</strong> Presupuesto específico</li>
-                                </ul>
-                            </div>
-                            
-                            <div class="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-500">
-                                <h4 class="font-semibold text-yellow-800 mb-2">⚠️ Desafíos Adicionales:</h4>
-                                <ul class="text-sm text-yellow-700 space-y-1">
-                                    <li>• Procesos actuales no documentados</li>
-                                    <li>• Equipo sin experiencia en certificaciones</li>
-                                    <li>• Necesidad de credibilidad inmediata</li>
-                                    <li>• Presión de stakeholders</li>
-                                </ul>
-                            </div>
-                            
-                            <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
-                                <h4 class="font-semibold text-blue-800 mb-2">🎯 Oportunidades:</h4>
-                                <ul class="text-sm text-blue-700 space-y-1">
-                                    <li>• Mercado gubernamental estable</li>
-                                    <li>• Contratos de largo plazo</li>
-                                    <li>• Diferenciación competitiva</li>
-                                    <li>• Crecimiento sostenible</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <div class="flex items-center mb-6">
-                            <div class="text-5xl mr-4">⚖️</div>
-                            <div>
-                                <h3 class="text-2xl font-bold text-purple-600">Dilema Estratégico</h3>
-                                <p class="text-gray-600">ISO 9001 vs CMMI Nivel 3</p>
-                            </div>
-                        </div>
-                        
-                        <div class="space-y-4">
-                            <div class="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500">
-                                <h4 class="font-semibold text-orange-800 mb-2">🏆 Opción A: ISO 9001</h4>
-                                <div class="grid grid-cols-2 gap-2 text-sm">
-                                    <div>
-                                        <p class="font-medium text-green-700 mb-1">✅ Ventajas:</p>
-                                        <ul class="text-green-600 space-y-1">
-                                            <li>• Reconocimiento universal</li>
-                                            <li>• Implementación más rápida</li>
-                                            <li>• Costo menor</li>
-                                            <li>• Amplia aceptación</li>
-                                        </ul>
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-red-700 mb-1">❌ Desventajas:</p>
-                                        <ul class="text-red-600 space-y-1">
-                                            <li>• Menos específico para TI</li>
-                                            <li>• Menor diferenciación</li>
-                                            <li>• Enfoque más general</li>
-                                            <li>• Menos prestigio técnico</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500">
-                                <h4 class="font-semibold text-blue-800 mb-2">🎯 Opción B: CMMI Nivel 3</h4>
-                                <div class="grid grid-cols-2 gap-2 text-sm">
-                                    <div>
-                                        <p class="font-medium text-green-700 mb-1">✅ Ventajas:</p>
-                                        <ul class="text-green-600 space-y-1">
-                                            <li>• Específico para desarrollo</li>
-                                            <li>• Mayor prestigio técnico</li>
-                                            <li>• Diferenciación clara</li>
-                                            <li>• Procesos más maduros</li>
-                                        </ul>
-                                    </div>
-                                    <div>
-                                        <p class="font-medium text-red-700 mb-1">❌ Desventajas:</p>
-                                        <ul class="text-red-600 space-y-1">
-                                            <li>• Implementación más larga</li>
-                                            <li>• Costo más elevado</li>
-                                            <li>• Mayor complejidad</li>
-                                            <li>• Recursos especializados</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Tabla comparativa -->
-                <div class="mt-8">
-                    <h4 class="text-xl font-bold text-gray-800 mb-4 text-center">📊 Comparación Detallada</h4>
-                    <div class="comparison-table">
-                        <table class="w-full">
-                            <thead>
-                                <tr>
-                                    <th class="text-gray-800">Criterio</th>
-                                    <th class="text-orange-600">ISO 9001</th>
-                                    <th class="text-blue-600">CMMI Nivel 3</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="font-semibold">⏱️ Tiempo de implementación</td>
-                                    <td class="text-green-600">6-9 meses</td>
-                                    <td class="text-yellow-600">12-18 meses</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-semibold">💰 Costo estimado</td>
-                                    <td class="text-green-600">$50,000 - $80,000</td>
-                                    <td class="text-yellow-600">$120,000 - $200,000</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-semibold">🎯 Especificidad para TI</td>
-                                    <td class="text-yellow-600">Media</td>
-                                    <td class="text-green-600">Alta</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-semibold">🏆 Reconocimiento gubernamental</td>
-                                    <td class="text-green-600">Universal</td>
-                                    <td class="text-green-600">Técnico especializado</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-semibold">📈 ROI esperado</td>
-                                    <td class="text-green-600">Rápido (6-12 meses)</td>
-                                    <td class="text-yellow-600">Medio (12-24 meses)</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-12">
+          <h1 class="text-5xl font-bold text-gray-800 mb-4">
+            🏛️ Equipo 3: GovWare Solutions
+          </h1>
+          <div class="w-24 h-1 bg-purple-600 mx-auto mb-8"></div>
+          <p class="text-xl text-gray-600">
+            Certificación para licitaciones gubernamentales
+          </p>
         </div>
+
+        <div class="team-card team-govware">
+          <div class="grid md:grid-cols-2 gap-8">
+            <div>
+              <div class="flex items-center mb-6">
+                <div class="text-5xl mr-4">🔍</div>
+                <div>
+                  <h3 class="text-2xl font-bold text-purple-600">
+                    Diagnóstico Específico
+                  </h3>
+                  <p class="text-gray-600">
+                    Necesidades del sector gubernamental
+                  </p>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <div class="bg-red-50 p-4 rounded-lg border-l-4 border-red-500">
+                  <h4 class="font-semibold text-red-800 mb-2">
+                    🚨 Situación Crítica:
+                  </h4>
+                  <ul class="text-sm text-red-700 space-y-1">
+                    <li>
+                      • <strong>Requisito obligatorio:</strong> Certificación
+                      para licitaciones
+                    </li>
+                    <li>
+                      • <strong>Competencia intensa:</strong> Empresas ya
+                      certificadas
+                    </li>
+                    <li>
+                      • <strong>Tiempo limitado:</strong> Próximas licitaciones
+                      importantes
+                    </li>
+                    <li>
+                      • <strong>Recursos ajustados:</strong> Presupuesto
+                      específico
+                    </li>
+                  </ul>
+                </div>
+
+                <div
+                  class="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-500"
+                >
+                  <h4 class="font-semibold text-yellow-800 mb-2">
+                    ⚠️ Desafíos Adicionales:
+                  </h4>
+                  <ul class="text-sm text-yellow-700 space-y-1">
+                    <li>• Procesos actuales no documentados</li>
+                    <li>• Equipo sin experiencia en certificaciones</li>
+                    <li>• Necesidad de credibilidad inmediata</li>
+                    <li>• Presión de stakeholders</li>
+                  </ul>
+                </div>
+
+                <div
+                  class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500"
+                >
+                  <h4 class="font-semibold text-blue-800 mb-2">
+                    🎯 Oportunidades:
+                  </h4>
+                  <ul class="text-sm text-blue-700 space-y-1">
+                    <li>• Mercado gubernamental estable</li>
+                    <li>• Contratos de largo plazo</li>
+                    <li>• Diferenciación competitiva</li>
+                    <li>• Crecimiento sostenible</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex items-center mb-6">
+                <div class="text-5xl mr-4">⚖️</div>
+                <div>
+                  <h3 class="text-2xl font-bold text-purple-600">
+                    Dilema Estratégico
+                  </h3>
+                  <p class="text-gray-600">ISO 9001 vs CMMI Nivel 3</p>
+                </div>
+              </div>
+
+              <div class="space-y-4">
+                <div
+                  class="bg-orange-50 p-4 rounded-lg border-l-4 border-orange-500"
+                >
+                  <h4 class="font-semibold text-orange-800 mb-2">
+                    🏆 Opción A: ISO 9001
+                  </h4>
+                  <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p class="font-medium text-green-700 mb-1">
+                        ✅ Ventajas:
+                      </p>
+                      <ul class="text-green-600 space-y-1">
+                        <li>• Reconocimiento universal</li>
+                        <li>• Implementación más rápida</li>
+                        <li>• Costo menor</li>
+                        <li>• Amplia aceptación</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <p class="font-medium text-red-700 mb-1">
+                        ❌ Desventajas:
+                      </p>
+                      <ul class="text-red-600 space-y-1">
+                        <li>• Menos específico para TI</li>
+                        <li>• Menor diferenciación</li>
+                        <li>• Enfoque más general</li>
+                        <li>• Menos prestigio técnico</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  class="bg-blue-50 p-4 rounded-lg border-l-4 border-blue-500"
+                >
+                  <h4 class="font-semibold text-blue-800 mb-2">
+                    🎯 Opción B: CMMI Nivel 3
+                  </h4>
+                  <div class="grid grid-cols-2 gap-2 text-sm">
+                    <div>
+                      <p class="font-medium text-green-700 mb-1">
+                        ✅ Ventajas:
+                      </p>
+                      <ul class="text-green-600 space-y-1">
+                        <li>• Específico para desarrollo</li>
+                        <li>• Mayor prestigio técnico</li>
+                        <li>• Diferenciación clara</li>
+                        <li>• Procesos más maduros</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <p class="font-medium text-red-700 mb-1">
+                        ❌ Desventajas:
+                      </p>
+                      <ul class="text-red-600 space-y-1">
+                        <li>• Implementación más larga</li>
+                        <li>• Costo más elevado</li>
+                        <li>• Mayor complejidad</li>
+                        <li>• Recursos especializados</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabla comparativa -->
+          <div class="mt-8">
+            <h4 class="text-xl font-bold text-gray-800 mb-4 text-center">
+              📊 Comparación Detallada
+            </h4>
+            <div class="comparison-table">
+              <table class="w-full">
+                <thead>
+                  <tr>
+                    <th class="text-gray-800">Criterio</th>
+                    <th class="text-orange-600">ISO 9001</th>
+                    <th class="text-blue-600">CMMI Nivel 3</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="font-semibold">⏱️ Tiempo de implementación</td>
+                    <td class="text-green-600">6-9 meses</td>
+                    <td class="text-yellow-600">12-18 meses</td>
+                  </tr>
+                  <tr>
+                    <td class="font-semibold">💰 Costo estimado</td>
+                    <td class="text-green-600">$50,000 - $80,000</td>
+                    <td class="text-yellow-600">$120,000 - $200,000</td>
+                  </tr>
+                  <tr>
+                    <td class="font-semibold">🎯 Especificidad para TI</td>
+                    <td class="text-yellow-600">Media</td>
+                    <td class="text-green-600">Alta</td>
+                  </tr>
+                  <tr>
+                    <td class="font-semibold">
+                      🏆 Reconocimiento gubernamental
+                    </td>
+                    <td class="text-green-600">Universal</td>
+                    <td class="text-green-600">Técnico especializado</td>
+                  </tr>
+                  <tr>
+                    <td class="font-semibold">📈 ROI esperado</td>
+                    <td class="text-green-600">Rápido (6-12 meses)</td>
+                    <td class="text-yellow-600">Medio (12-24 meses)</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Slide 4: Debate guiado -->
     <div class="slide" id="slide-4">
-        <div class="max-w-6xl mx-auto">
-            <div class="text-center mb-12">
-                <h1 class="text-5xl font-bold text-gray-800 mb-4">💬 Actividad: Debate Guiado</h1>
-                <div class="w-24 h-1 bg-orange-600 mx-auto mb-8"></div>
-                <p class="text-xl text-gray-600">¿Qué modelo es más conveniente para GovWare?</p>
-            </div>
-            
-            <!-- Timer del debate -->
-            <div class="text-center mb-8">
-                <h3 class="text-2xl font-bold text-gray-800 mb-4">⏱️ Timer del Debate</h3>
-                <div class="timer-display timer-normal" id="debate-timer">15:00</div>
-                <div class="space-x-4">
-                    <button onclick="startDebateTimer()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg text-lg">
-                        ▶️ Iniciar Debate
-                    </button>
-                    <button onclick="pauseDebateTimer()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg text-lg">
-                        ⏸️ Pausar
-                    </button>
-                    <button onclick="resetDebateTimer()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg text-lg">
-                        🔄 Reset
-                    </button>
-                </div>
-            </div>
-            
-            <div class="grid md:grid-cols-2 gap-8">
-                <!-- Argumentos pro-ISO -->
-                <div class="debate-card iso-card">
-                    <div class="text-center mb-6">
-                        <div class="text-5xl mb-4">🏆</div>
-                        <h3 class="text-2xl font-bold text-orange-600">Equipo Pro-ISO 9001</h3>
-                        <p class="text-gray-600">Argumentos a favor de ISO 9001</p>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <div class="bg-orange-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-orange-800 mb-2">🚀 Velocidad de implementación</h4>
-                            <p class="text-sm text-orange-700">ISO 9001 puede implementarse en 6-9 meses, permitiendo participar en licitaciones más rápidamente.</p>
-                        </div>
-                        
-                        <div class="bg-orange-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-orange-800 mb-2">💰 Costo-efectividad</h4>
-                            <p class="text-sm text-orange-700">Menor inversión inicial y ROI más rápido, ideal para empresas con recursos limitados.</p>
-                        </div>
-                        
-                        <div class="bg-orange-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-orange-800 mb-2">🌍 Reconocimiento universal</h4>
-                            <p class="text-sm text-orange-700">Aceptado globalmente, abre puertas no solo en el sector gubernamental sino también privado.</p>
-                        </div>
-                        
-                        <div class="bg-orange-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-orange-800 mb-2">⚡ Menor riesgo</h4>
-                            <p class="text-sm text-orange-700">Proceso más predecible y con mayor tasa de éxito en la certificación.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6">
-                        <h4 class="font-semibold text-orange-800 mb-3">💭 Agregar argumento:</h4>
-                        <textarea id="iso-argument" class="w-full p-3 border-2 border-orange-300 rounded-lg" rows="2" placeholder="Nuevo argumento pro-ISO..."></textarea>
-                        <button onclick="addArgument('iso')" class="mt-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg">
-                            ➕ Agregar
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Argumentos pro-CMMI -->
-                <div class="debate-card cmmi-card">
-                    <div class="text-center mb-6">
-                        <div class="text-5xl mb-4">🎯</div>
-                        <h3 class="text-2xl font-bold text-blue-600">Equipo Pro-CMMI</h3>
-                        <p class="text-gray-600">Argumentos a favor de CMMI Nivel 3</p>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <div class="bg-blue-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-blue-800 mb-2">🔧 Especialización técnica</h4>
-                            <p class="text-sm text-blue-700">CMMI está específicamente diseñado para desarrollo de software, más relevante para GovWare.</p>
-                        </div>
-                        
-                        <div class="bg-blue-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-blue-800 mb-2">🏆 Diferenciación competitiva</h4>
-                            <p class="text-sm text-blue-700">Pocas empresas tienen CMMI Nivel 3, proporcionando ventaja significativa en licitaciones.</p>
-                        </div>
-                        
-                        <div class="bg-blue-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-blue-800 mb-2">📈 Madurez organizacional</h4>
-                            <p class="text-sm text-blue-700">Procesos más robustos y predecibles, mejor calidad de productos finales.</p>
-                        </div>
-                        
-                        <div class="bg-blue-50 p-4 rounded-lg">
-                            <h4 class="font-semibold text-blue-800 mb-2">💎 Prestigio técnico</h4>
-                            <p class="text-sm text-blue-700">Mayor credibilidad técnica ante clientes gubernamentales sofisticados.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6">
-                        <h4 class="font-semibold text-blue-800 mb-3">💭 Agregar argumento:</h4>
-                        <textarea id="cmmi-argument" class="w-full p-3 border-2 border-blue-300 rounded-lg" rows="2" placeholder="Nuevo argumento pro-CMMI..."></textarea>
-                        <button onclick="addArgument('cmmi')" class="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
-                            ➕ Agregar
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Votación -->
-            <div class="mt-12 bg-white rounded-2xl p-8 shadow-xl">
-                <h3 class="text-2xl font-bold text-center text-gray-800 mb-6">🗳️ Votación Final</h3>
-                <p class="text-center text-gray-600 mb-8">Después del debate, ¿cuál recomendarías para GovWare?</p>
-                
-                <div class="grid md:grid-cols-2 gap-6">
-                    <div class="vote-button" onclick="vote('iso')" id="vote-iso">
-                        <div class="text-4xl mb-4">🏆</div>
-                        <h4 class="text-xl font-bold text-orange-600 mb-2">ISO 9001</h4>
-                        <p class="text-sm text-gray-600">Rápido, económico, universal</p>
-                        <div class="mt-4">
-                            <div class="text-2xl font-bold text-orange-600" id="iso-votes">0 votos</div>
-                        </div>
-                    </div>
-                    
-                    <div class="vote-button" onclick="vote('cmmi')" id="vote-cmmi">
-                        <div class="text-4xl mb-4">🎯</div>
-                        <h4 class="text-xl font-bold text-blue-600 mb-2">CMMI Nivel 3</h4>
-                        <p class="text-sm text-gray-600">Especializado, diferenciador, técnico</p>
-                        <div class="mt-4">
-                            <div class="text-2xl font-bold text-blue-600" id="cmmi-votes">0 votos</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mt-8 text-center">
-                    <button onclick="resetVotes()" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg">
-                        🔄 Reiniciar Votación
-                    </button>
-                </div>
-            </div>
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-12">
+          <h1 class="text-5xl font-bold text-gray-800 mb-4">
+            💬 Actividad: Debate Guiado
+          </h1>
+          <div class="w-24 h-1 bg-orange-600 mx-auto mb-8"></div>
+          <p class="text-xl text-gray-600">
+            ¿Qué modelo es más conveniente para GovWare?
+          </p>
         </div>
+
+        <!-- Timer del debate -->
+        <div class="text-center mb-8">
+          <h3 class="text-2xl font-bold text-gray-800 mb-4">
+            ⏱️ Timer del Debate
+          </h3>
+          <div class="timer-display timer-normal" id="debate-timer">15:00</div>
+          <div class="space-x-4">
+            <button
+              onclick="startDebateTimer()"
+              class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg text-lg"
+            >
+              ▶️ Iniciar Debate
+            </button>
+            <button
+              onclick="pauseDebateTimer()"
+              class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg text-lg"
+            >
+              ⏸️ Pausar
+            </button>
+            <button
+              onclick="resetDebateTimer()"
+              class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg text-lg"
+            >
+              🔄 Reset
+            </button>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+          <!-- Argumentos pro-ISO -->
+          <div class="debate-card iso-card">
+            <div class="text-center mb-6">
+              <div class="text-5xl mb-4">🏆</div>
+              <h3 class="text-2xl font-bold text-orange-600">
+                Equipo Pro-ISO 9001
+              </h3>
+              <p class="text-gray-600">Argumentos a favor de ISO 9001</p>
+            </div>
+
+            <div class="space-y-4">
+              <div class="bg-orange-50 p-4 rounded-lg">
+                <h4 class="font-semibold text-orange-800 mb-2">
+                  🚀 Velocidad de implementación
+                </h4>
+                <p class="text-sm text-orange-700">
+                  ISO 9001 puede implementarse en 6-9 meses, permitiendo
+                  participar en licitaciones más rápidamente.
+                </p>
+              </div>
+
+              <div class="bg-orange-50 p-4 rounded-lg">
+                <h4 class="font-semibold text-orange-800 mb-2">
+                  💰 Costo-efectividad
+                </h4>
+                <p class="text-sm text-orange-700">
+                  Menor inversión inicial y ROI más rápido, ideal para empresas
+                  con recursos limitados.
+                </p>
+              </div>
+
+              <div class="bg-orange-50 p-4 rounded-lg">
+                <h4 class="font-semibold text-orange-800 mb-2">
+                  🌍 Reconocimiento universal
+                </h4>
+                <p class="text-sm text-orange-700">
+                  Aceptado globalmente, abre puertas no solo en el sector
+                  gubernamental sino también privado.
+                </p>
+              </div>
+
+              <div class="bg-orange-50 p-4 rounded-lg">
+                <h4 class="font-semibold text-orange-800 mb-2">
+                  ⚡ Menor riesgo
+                </h4>
+                <p class="text-sm text-orange-700">
+                  Proceso más predecible y con mayor tasa de éxito en la
+                  certificación.
+                </p>
+              </div>
+            </div>
+
+            <div class="mt-6">
+              <h4 class="font-semibold text-orange-800 mb-3">
+                💭 Agregar argumento:
+              </h4>
+              <textarea
+                id="iso-argument"
+                class="w-full p-3 border-2 border-orange-300 rounded-lg"
+                rows="2"
+                placeholder="Nuevo argumento pro-ISO..."
+              ></textarea>
+              <button
+                onclick="addArgument('iso')"
+                class="mt-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg"
+              >
+                ➕ Agregar
+              </button>
+            </div>
+          </div>
+
+          <!-- Argumentos pro-CMMI -->
+          <div class="debate-card cmmi-card">
+            <div class="text-center mb-6">
+              <div class="text-5xl mb-4">🎯</div>
+              <h3 class="text-2xl font-bold text-blue-600">Equipo Pro-CMMI</h3>
+              <p class="text-gray-600">Argumentos a favor de CMMI Nivel 3</p>
+            </div>
+
+            <div class="space-y-4">
+              <div class="bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-semibold text-blue-800 mb-2">
+                  🔧 Especialización técnica
+                </h4>
+                <p class="text-sm text-blue-700">
+                  CMMI está específicamente diseñado para desarrollo de
+                  software, más relevante para GovWare.
+                </p>
+              </div>
+
+              <div class="bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-semibold text-blue-800 mb-2">
+                  🏆 Diferenciación competitiva
+                </h4>
+                <p class="text-sm text-blue-700">
+                  Pocas empresas tienen CMMI Nivel 3, proporcionando ventaja
+                  significativa en licitaciones.
+                </p>
+              </div>
+
+              <div class="bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-semibold text-blue-800 mb-2">
+                  📈 Madurez organizacional
+                </h4>
+                <p class="text-sm text-blue-700">
+                  Procesos más robustos y predecibles, mejor calidad de
+                  productos finales.
+                </p>
+              </div>
+
+              <div class="bg-blue-50 p-4 rounded-lg">
+                <h4 class="font-semibold text-blue-800 mb-2">
+                  💎 Prestigio técnico
+                </h4>
+                <p class="text-sm text-blue-700">
+                  Mayor credibilidad técnica ante clientes gubernamentales
+                  sofisticados.
+                </p>
+              </div>
+            </div>
+
+            <div class="mt-6">
+              <h4 class="font-semibold text-blue-800 mb-3">
+                💭 Agregar argumento:
+              </h4>
+              <textarea
+                id="cmmi-argument"
+                class="w-full p-3 border-2 border-blue-300 rounded-lg"
+                rows="2"
+                placeholder="Nuevo argumento pro-CMMI..."
+              ></textarea>
+              <button
+                onclick="addArgument('cmmi')"
+                class="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+              >
+                ➕ Agregar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Votación -->
+        <div class="mt-12 bg-white rounded-2xl p-8 shadow-xl">
+          <h3 class="text-2xl font-bold text-center text-gray-800 mb-6">
+            🗳️ Votación Final
+          </h3>
+          <p class="text-center text-gray-600 mb-8">
+            Después del debate, ¿cuál recomendarías para GovWare?
+          </p>
+
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="vote-button" onclick="vote('iso')" id="vote-iso">
+              <div class="text-4xl mb-4">🏆</div>
+              <h4 class="text-xl font-bold text-orange-600 mb-2">ISO 9001</h4>
+              <p class="text-sm text-gray-600">Rápido, económico, universal</p>
+              <div class="mt-4">
+                <div class="text-2xl font-bold text-orange-600" id="iso-votes">
+                  0 votos
+                </div>
+              </div>
+            </div>
+
+            <div class="vote-button" onclick="vote('cmmi')" id="vote-cmmi">
+              <div class="text-4xl mb-4">🎯</div>
+              <h4 class="text-xl font-bold text-blue-600 mb-2">CMMI Nivel 3</h4>
+              <p class="text-sm text-gray-600">
+                Especializado, diferenciador, técnico
+              </p>
+              <div class="mt-4">
+                <div class="text-2xl font-bold text-blue-600" id="cmmi-votes">
+                  0 votos
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8 text-center">
+            <button
+              onclick="resetVotes()"
+              class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg"
+            >
+              🔄 Reiniciar Votación
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Slide 5: Retroalimentación parcial -->
     <div class="slide" id="slide-5">
-        <div class="max-w-6xl mx-auto">
-            <div class="text-center mb-12">
-                <h1 class="text-5xl font-bold text-gray-800 mb-4">📊 Retroalimentación Parcial</h1>
-                <div class="w-24 h-1 bg-green-600 mx-auto mb-8"></div>
-                <p class="text-xl text-gray-600">Análisis de las presentaciones y aprendizajes</p>
-            </div>
-            
-            <div class="grid md:grid-cols-2 gap-8">
-                <!-- Buenas prácticas -->
-                <div class="feedback-card">
-                    <div class="text-center mb-6">
-                        <div class="text-5xl mb-4">✅</div>
-                        <h3 class="text-2xl font-bold text-green-600">Buenas Prácticas Detectadas</h3>
-                        <p class="text-gray-600">Aspectos destacados en las presentaciones</p>
-                    </div>
-                    
-                    <div class="space-y-3">
-                        <div class="practice-item">
-                            <h4 class="font-semibold text-green-800 mb-2">🔍 Diagnósticos Estructurados</h4>
-                            <p class="text-sm text-green-700">Uso de metodologías claras para identificar problemas y oportunidades de mejora.</p>
-                        </div>
-                        
-                        <div class="practice-item">
-                            <h4 class="font-semibold text-green-800 mb-2">📊 Análisis Comparativo</h4>
-                            <p class="text-sm text-green-700">Evaluación objetiva de múltiples modelos antes de la selección final.</p>
-                        </div>
-                        
-                        <div class="practice-item">
-                            <h4 class="font-semibold text-green-800 mb-2">💰 Justificación Económica</h4>
-                            <p class="text-sm text-green-700">Análisis costo-beneficio detallado con ROI proyectado.</p>
-                        </div>
-                        
-                        <div class="practice-item">
-                            <h4 class="font-semibold text-green-800 mb-2">🗺️ Roadmaps Realistas</h4>
-                            <p class="text-sm text-green-700">Planes de implementación con hitos claros y cronogramas factibles.</p>
-                        </div>
-                        
-                        <div class="practice-item">
-                            <h4 class="font-semibold text-green-800 mb-2">👥 Gestión del Cambio</h4>
-                            <p class="text-sm text-green-700">Consideración del factor humano y estrategias de adopción.</p>
-                        </div>
-                        
-                        <div class="practice-item">
-                            <h4 class="font-semibold text-green-800 mb-2">📈 Métricas Específicas</h4>
-                            <p class="text-sm text-green-700">Definición de KPIs medibles para evaluar el éxito de la implementación.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6">
-                        <h4 class="font-semibold text-green-800 mb-3">💡 Agregar buena práctica observada:</h4>
-                        <textarea id="good-practice" class="w-full p-3 border-2 border-green-300 rounded-lg" rows="2" placeholder="Describe una buena práctica que observaste..."></textarea>
-                        <button onclick="addPractice('good')" class="mt-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
-                            ➕ Agregar
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Áreas de mejora -->
-                <div class="feedback-card">
-                    <div class="text-center mb-6">
-                        <div class="text-5xl mb-4">🔧</div>
-                        <h3 class="text-2xl font-bold text-orange-600">Áreas a Mejorar</h3>
-                        <p class="text-gray-600">Oportunidades de crecimiento identificadas</p>
-                    </div>
-                    
-                    <div class="space-y-3">
-                        <div class="improvement-item">
-                            <h4 class="font-semibold text-orange-800 mb-2">📋 Análisis de Riesgos</h4>
-                            <p class="text-sm text-orange-700">Profundizar en identificación y mitigación de riesgos potenciales.</p>
-                        </div>
-                        
-                        <div class="improvement-item">
-                            <h4 class="font-semibold text-orange-800 mb-2">🎯 Especificidad Técnica</h4>
-                            <p class="text-sm text-orange-700">Mayor detalle en aspectos técnicos específicos de cada modelo.</p>
-                        </div>
-                        
-                        <div class="improvement-item">
-                            <h4 class="font-semibold text-orange-800 mb-2">📊 Presentación Visual</h4>
-                            <p class="text-sm text-orange-700">Uso más efectivo de gráficos y elementos visuales para comunicar ideas.</p>
-                        </div>
-                        
-                        <div class="improvement-item">
-                            <h4 class="font-semibold text-orange-800 mb-2">⏱️ Gestión del Tiempo</h4>
-                            <p class="text-sm text-orange-700">Mejor distribución del tiempo entre secciones de la presentación.</p>
-                        </div>
-                        
-                        <div class="improvement-item">
-                            <h4 class="font-semibold text-orange-800 mb-2">🔄 Planes de Contingencia</h4>
-                            <p class="text-sm text-orange-700">Desarrollo de escenarios alternativos y planes B.</p>
-                        </div>
-                        
-                        <div class="improvement-item">
-                            <h4 class="font-semibold text-orange-800 mb-2">📚 Referencias y Casos</h4>
-                            <p class="text-sm text-orange-700">Inclusión de más casos de estudio y referencias del sector.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-6">
-                        <h4 class="font-semibold text-orange-800 mb-3">🔧 Agregar área de mejora:</h4>
-                        <textarea id="improvement-area" class="w-full p-3 border-2 border-orange-300 rounded-lg" rows="2" placeholder="Describe un área que podría mejorarse..."></textarea>
-                        <button onclick="addPractice('improvement')" class="mt-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg">
-                            ➕ Agregar
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Resumen consolidado -->
-            <div class="mt-12 bg-white rounded-2xl p-8 shadow-xl">
-                <h3 class="text-2xl font-bold text-center text-gray-800 mb-6">📈 Resumen Consolidado</h3>
-                
-                <div class="grid md:grid-cols-3 gap-6">
-                    <div class="text-center p-6 bg-green-50 rounded-xl">
-                        <div class="text-4xl mb-4">🏢</div>
-                        <h4 class="text-xl font-bold text-green-600 mb-2">Innovatech Startup</h4>
-                        <p class="text-sm text-gray-600 mb-3">MoProSoft para PyMEs</p>
-                        <div class="space-y-2">
-                            <div class="text-lg font-bold text-green-600">Fortalezas:</div>
-                            <ul class="text-xs text-green-700 space-y-1">
-                                <li>• Diagnóstico claro</li>
-                                <li>• Justificación sólida</li>
-                                <li>• Enfoque práctico</li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <div class="text-center p-6 bg-blue-50 rounded-xl">
-                        <div class="text-4xl mb-4">🏛️</div>
-                        <h4 class="text-xl font-bold text-blue-600 mb-2">Legacy Corp</h4>
-                        <p class="text-sm text-gray-600 mb-3">CMMI Nivel 3</p>
-                        <div class="space-y-2">
-                            <div class="text-lg font-bold text-blue-600">Fortalezas:</div>
-                            <ul class="text-xs text-blue-700 space-y-1">
-                                <li>• Análisis organizacional</li>
-                                <li>• Roadmap detallado</li>
-                                <li>• Gestión del cambio</li>
-                            </ul>
-                        </div>
-                    </div>
-                    
-                    <div class="text-center p-6 bg-purple-50 rounded-xl">
-                        <div class="text-4xl mb-4">🏛️</div>
-                        <h4 class="text-xl font-bold text-purple-600 mb-2">GovWare Solutions</h4>
-                        <p class="text-sm text-gray-600 mb-3">ISO vs CMMI</p>
-                        <div class="space-y-2">
-                            <div class="text-lg font-bold text-purple-600">Fortalezas:</div>
-                            <ul class="text-xs text-purple-700 space-y-1">
-                                <li>• Análisis comparativo</li>
-                                <li>• Contexto específico</li>
-                                <li>• Debate estructurado</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mt-8 text-center">
-                    <h4 class="text-lg font-bold text-gray-800 mb-4">🎯 Principales Aprendizajes</h4>
-                    <div class="bg-gray-50 p-6 rounded-xl">
-                        <ul class="text-sm text-gray-700 space-y-2">
-                            <li>• <strong>Contexto es clave:</strong> No existe una solución única para todos los casos</li>
-                            <li>• <strong>Análisis integral:</strong> Considerar aspectos técnicos, económicos y organizacionales</li>
-                            <li>• <strong>Implementación gradual:</strong> Planes realistas con hitos alcanzables</li>
-                            <li>• <strong>Factor humano:</strong> La gestión del cambio es fundamental para el éxito</li>
-                            <li>• <strong>Medición continua:</strong> Métricas claras para evaluar progreso y éxito</li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-12">
+          <h1 class="text-5xl font-bold text-gray-800 mb-4">
+            📊 Retroalimentación Parcial
+          </h1>
+          <div class="w-24 h-1 bg-green-600 mx-auto mb-8"></div>
+          <p class="text-xl text-gray-600">
+            Análisis de las presentaciones y aprendizajes
+          </p>
         </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+          <!-- Buenas prácticas -->
+          <div class="feedback-card">
+            <div class="text-center mb-6">
+              <div class="text-5xl mb-4">✅</div>
+              <h3 class="text-2xl font-bold text-green-600">
+                Buenas Prácticas Detectadas
+              </h3>
+              <p class="text-gray-600">
+                Aspectos destacados en las presentaciones
+              </p>
+            </div>
+
+            <div class="space-y-3">
+              <div class="practice-item">
+                <h4 class="font-semibold text-green-800 mb-2">
+                  🔍 Diagnósticos Estructurados
+                </h4>
+                <p class="text-sm text-green-700">
+                  Uso de metodologías claras para identificar problemas y
+                  oportunidades de mejora.
+                </p>
+              </div>
+
+              <div class="practice-item">
+                <h4 class="font-semibold text-green-800 mb-2">
+                  📊 Análisis Comparativo
+                </h4>
+                <p class="text-sm text-green-700">
+                  Evaluación objetiva de múltiples modelos antes de la selección
+                  final.
+                </p>
+              </div>
+
+              <div class="practice-item">
+                <h4 class="font-semibold text-green-800 mb-2">
+                  💰 Justificación Económica
+                </h4>
+                <p class="text-sm text-green-700">
+                  Análisis costo-beneficio detallado con ROI proyectado.
+                </p>
+              </div>
+
+              <div class="practice-item">
+                <h4 class="font-semibold text-green-800 mb-2">
+                  🗺️ Roadmaps Realistas
+                </h4>
+                <p class="text-sm text-green-700">
+                  Planes de implementación con hitos claros y cronogramas
+                  factibles.
+                </p>
+              </div>
+
+              <div class="practice-item">
+                <h4 class="font-semibold text-green-800 mb-2">
+                  👥 Gestión del Cambio
+                </h4>
+                <p class="text-sm text-green-700">
+                  Consideración del factor humano y estrategias de adopción.
+                </p>
+              </div>
+
+              <div class="practice-item">
+                <h4 class="font-semibold text-green-800 mb-2">
+                  📈 Métricas Específicas
+                </h4>
+                <p class="text-sm text-green-700">
+                  Definición de KPIs medibles para evaluar el éxito de la
+                  implementación.
+                </p>
+              </div>
+            </div>
+
+            <div class="mt-6">
+              <h4 class="font-semibold text-green-800 mb-3">
+                💡 Agregar buena práctica observada:
+              </h4>
+              <textarea
+                id="good-practice"
+                class="w-full p-3 border-2 border-green-300 rounded-lg"
+                rows="2"
+                placeholder="Describe una buena práctica que observaste..."
+              ></textarea>
+              <button
+                onclick="addPractice('good')"
+                class="mt-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+              >
+                ➕ Agregar
+              </button>
+            </div>
+          </div>
+
+          <!-- Áreas de mejora -->
+          <div class="feedback-card">
+            <div class="text-center mb-6">
+              <div class="text-5xl mb-4">🔧</div>
+              <h3 class="text-2xl font-bold text-orange-600">
+                Áreas a Mejorar
+              </h3>
+              <p class="text-gray-600">
+                Oportunidades de crecimiento identificadas
+              </p>
+            </div>
+
+            <div class="space-y-3">
+              <div class="improvement-item">
+                <h4 class="font-semibold text-orange-800 mb-2">
+                  📋 Análisis de Riesgos
+                </h4>
+                <p class="text-sm text-orange-700">
+                  Profundizar en identificación y mitigación de riesgos
+                  potenciales.
+                </p>
+              </div>
+
+              <div class="improvement-item">
+                <h4 class="font-semibold text-orange-800 mb-2">
+                  🎯 Especificidad Técnica
+                </h4>
+                <p class="text-sm text-orange-700">
+                  Mayor detalle en aspectos técnicos específicos de cada modelo.
+                </p>
+              </div>
+
+              <div class="improvement-item">
+                <h4 class="font-semibold text-orange-800 mb-2">
+                  📊 Presentación Visual
+                </h4>
+                <p class="text-sm text-orange-700">
+                  Uso más efectivo de gráficos y elementos visuales para
+                  comunicar ideas.
+                </p>
+              </div>
+
+              <div class="improvement-item">
+                <h4 class="font-semibold text-orange-800 mb-2">
+                  ⏱️ Gestión del Tiempo
+                </h4>
+                <p class="text-sm text-orange-700">
+                  Mejor distribución del tiempo entre secciones de la
+                  presentación.
+                </p>
+              </div>
+
+              <div class="improvement-item">
+                <h4 class="font-semibold text-orange-800 mb-2">
+                  🔄 Planes de Contingencia
+                </h4>
+                <p class="text-sm text-orange-700">
+                  Desarrollo de escenarios alternativos y planes B.
+                </p>
+              </div>
+
+              <div class="improvement-item">
+                <h4 class="font-semibold text-orange-800 mb-2">
+                  📚 Referencias y Casos
+                </h4>
+                <p class="text-sm text-orange-700">
+                  Inclusión de más casos de estudio y referencias del sector.
+                </p>
+              </div>
+            </div>
+
+            <div class="mt-6">
+              <h4 class="font-semibold text-orange-800 mb-3">
+                🔧 Agregar área de mejora:
+              </h4>
+              <textarea
+                id="improvement-area"
+                class="w-full p-3 border-2 border-orange-300 rounded-lg"
+                rows="2"
+                placeholder="Describe un área que podría mejorarse..."
+              ></textarea>
+              <button
+                onclick="addPractice('improvement')"
+                class="mt-2 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg"
+              >
+                ➕ Agregar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resumen consolidado -->
+        <div class="mt-12 bg-white rounded-2xl p-8 shadow-xl">
+          <h3 class="text-2xl font-bold text-center text-gray-800 mb-6">
+            📈 Resumen Consolidado
+          </h3>
+
+          <div class="grid md:grid-cols-3 gap-6">
+            <div class="text-center p-6 bg-green-50 rounded-xl">
+              <div class="text-4xl mb-4">🏢</div>
+              <h4 class="text-xl font-bold text-green-600 mb-2">
+                Innovatech Startup
+              </h4>
+              <p class="text-sm text-gray-600 mb-3">MoProSoft para PyMEs</p>
+              <div class="space-y-2">
+                <div class="text-lg font-bold text-green-600">Fortalezas:</div>
+                <ul class="text-xs text-green-700 space-y-1">
+                  <li>• Diagnóstico claro</li>
+                  <li>• Justificación sólida</li>
+                  <li>• Enfoque práctico</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="text-center p-6 bg-blue-50 rounded-xl">
+              <div class="text-4xl mb-4">🏛️</div>
+              <h4 class="text-xl font-bold text-blue-600 mb-2">Legacy Corp</h4>
+              <p class="text-sm text-gray-600 mb-3">CMMI Nivel 3</p>
+              <div class="space-y-2">
+                <div class="text-lg font-bold text-blue-600">Fortalezas:</div>
+                <ul class="text-xs text-blue-700 space-y-1">
+                  <li>• Análisis organizacional</li>
+                  <li>• Roadmap detallado</li>
+                  <li>• Gestión del cambio</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="text-center p-6 bg-purple-50 rounded-xl">
+              <div class="text-4xl mb-4">🏛️</div>
+              <h4 class="text-xl font-bold text-purple-600 mb-2">
+                GovWare Solutions
+              </h4>
+              <p class="text-sm text-gray-600 mb-3">ISO vs CMMI</p>
+              <div class="space-y-2">
+                <div class="text-lg font-bold text-purple-600">Fortalezas:</div>
+                <ul class="text-xs text-purple-700 space-y-1">
+                  <li>• Análisis comparativo</li>
+                  <li>• Contexto específico</li>
+                  <li>• Debate estructurado</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8 text-center">
+            <h4 class="text-lg font-bold text-gray-800 mb-4">
+              🎯 Principales Aprendizajes
+            </h4>
+            <div class="bg-gray-50 p-6 rounded-xl">
+              <ul class="text-sm text-gray-700 space-y-2">
+                <li>
+                  • <strong>Contexto es clave:</strong> No existe una solución
+                  única para todos los casos
+                </li>
+                <li>
+                  • <strong>Análisis integral:</strong> Considerar aspectos
+                  técnicos, económicos y organizacionales
+                </li>
+                <li>
+                  • <strong>Implementación gradual:</strong> Planes realistas
+                  con hitos alcanzables
+                </li>
+                <li>
+                  • <strong>Factor humano:</strong> La gestión del cambio es
+                  fundamental para el éxito
+                </li>
+                <li>
+                  • <strong>Medición continua:</strong> Métricas claras para
+                  evaluar progreso y éxito
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Progress Bar -->
     <div class="fixed bottom-0 left-0 right-0 h-2 bg-gray-200">
-        <div class="h-full bg-gradient-to-r from-purple-600 to-blue-600 transition-all duration-300" id="progress-bar" style="width: 20%"></div>
+      <div
+        class="h-full bg-gradient-to-r from-purple-600 to-blue-600 transition-all duration-300"
+        id="progress-bar"
+        style="width: 20%"
+      ></div>
     </div>
 
     <!-- Notification Container -->
     <div id="notification-container"></div>
 
     <script>
-        let currentSlide = 1;
-        const totalSlides = 5;
-        let debateTimer = { time: 900, interval: null, running: false }; // 15 minutes
-        let votes = { iso: 0, cmmi: 0 };
-        let hasVoted = false;
+      let currentSlide = 1;
+      const totalSlides = 5;
+      let debateTimer = { time: 900, interval: null, running: false }; // 15 minutes
+      let votes = { iso: 0, cmmi: 0 };
+      let hasVoted = false;
 
-        function updateSlideCounter() {
-            document.getElementById('slide-counter').textContent = `${currentSlide} / ${totalSlides}`;
-            document.getElementById('progress-bar').style.width = `${(currentSlide / totalSlides) * 100}%`;
+      function updateSlideCounter() {
+        document.getElementById(
+          "slide-counter"
+        ).textContent = `${currentSlide} / ${totalSlides}`;
+        document.getElementById("progress-bar").style.width = `${
+          (currentSlide / totalSlides) * 100
+        }%`;
+      }
+
+      function showSlide(slideNumber) {
+        document.querySelectorAll(".slide").forEach((slide) => {
+          slide.classList.remove("active");
+        });
+
+        const currentSlideElement = document.getElementById(
+          `slide-${slideNumber}`
+        );
+        currentSlideElement.classList.add("active");
+
+        updateSlideCounter();
+      }
+
+      function nextSlide() {
+        if (currentSlide < totalSlides) {
+          currentSlide++;
+          showSlide(currentSlide);
         }
+      }
 
-        function showSlide(slideNumber) {
-            document.querySelectorAll('.slide').forEach(slide => {
-                slide.classList.remove('active');
-            });
-            
-            const currentSlideElement = document.getElementById(`slide-${slideNumber}`);
-            currentSlideElement.classList.add('active');
-            
-            updateSlideCounter();
+      function previousSlide() {
+        if (currentSlide > 1) {
+          currentSlide--;
+          showSlide(currentSlide);
         }
+      }
 
-        function nextSlide() {
-            if (currentSlide < totalSlides) {
-                currentSlide++;
-                showSlide(currentSlide);
-            }
-        }
+      function startDebateTimer() {
+        if (debateTimer.running) return;
 
-        function previousSlide() {
-            if (currentSlide > 1) {
-                currentSlide--;
-                showSlide(currentSlide);
-            }
-        }
+        debateTimer.running = true;
+        debateTimer.interval = setInterval(() => {
+          debateTimer.time--;
+          updateDebateTimerDisplay();
 
-        function startDebateTimer() {
-            if (debateTimer.running) return;
-            
-            debateTimer.running = true;
-            debateTimer.interval = setInterval(() => {
-                debateTimer.time--;
-                updateDebateTimerDisplay();
-                
-                // Change color based on remaining time
-                const timerElement = document.getElementById('debate-timer');
-                if (debateTimer.time <= 60) { // Last minute
-                    timerElement.className = 'timer-display timer-danger';
-                } else if (debateTimer.time <= 300) { // Last 5 minutes
-                    timerElement.className = 'timer-display timer-warning';
-                }
-                
-                if (debateTimer.time <= 0) {
-                    clearInterval(debateTimer.interval);
-                    debateTimer.running = false;
-                    showNotification('⏰ ¡Tiempo del debate terminado! Procedan a la votación.', 'danger');
-                }
-            }, 1000);
-            
-            showNotification('🎤 ¡Debate iniciado! 15 minutos para discutir ISO vs CMMI.', 'success');
-        }
+          // Change color based on remaining time
+          const timerElement = document.getElementById("debate-timer");
+          if (debateTimer.time <= 60) {
+            // Last minute
+            timerElement.className = "timer-display timer-danger";
+          } else if (debateTimer.time <= 300) {
+            // Last 5 minutes
+            timerElement.className = "timer-display timer-warning";
+          }
 
-        function pauseDebateTimer() {
-            if (debateTimer.interval) {
-                clearInterval(debateTimer.interval);
-                debateTimer.running = false;
-                showNotification('⏸️ Debate pausado.', 'warning');
-            }
-        }
-
-        function resetDebateTimer() {
-            if (debateTimer.interval) {
-                clearInterval(debateTimer.interval);
-            }
-            debateTimer.time = 900; // Reset to 15 minutes
+          if (debateTimer.time <= 0) {
+            clearInterval(debateTimer.interval);
             debateTimer.running = false;
-            updateDebateTimerDisplay();
-            document.getElementById('debate-timer').className = 'timer-display timer-normal';
-            showNotification('🔄 Timer del debate reiniciado.', 'success');
+            showNotification(
+              "⏰ ¡Tiempo del debate terminado! Procedan a la votación.",
+              "danger"
+            );
+          }
+        }, 1000);
+
+        showNotification(
+          "🎤 ¡Debate iniciado! 15 minutos para discutir ISO vs CMMI.",
+          "success"
+        );
+      }
+
+      function pauseDebateTimer() {
+        if (debateTimer.interval) {
+          clearInterval(debateTimer.interval);
+          debateTimer.running = false;
+          showNotification("⏸️ Debate pausado.", "warning");
+        }
+      }
+
+      function resetDebateTimer() {
+        if (debateTimer.interval) {
+          clearInterval(debateTimer.interval);
+        }
+        debateTimer.time = 900; // Reset to 15 minutes
+        debateTimer.running = false;
+        updateDebateTimerDisplay();
+        document.getElementById("debate-timer").className =
+          "timer-display timer-normal";
+        showNotification("🔄 Timer del debate reiniciado.", "success");
+      }
+
+      function updateDebateTimerDisplay() {
+        const minutes = Math.floor(debateTimer.time / 60);
+        const seconds = debateTimer.time % 60;
+        document.getElementById(
+          "debate-timer"
+        ).textContent = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+      }
+
+      function addArgument(type) {
+        const textareaId = type === "iso" ? "iso-argument" : "cmmi-argument";
+        const textarea = document.getElementById(textareaId);
+        const argument = textarea.value.trim();
+
+        if (!argument) {
+          showNotification(
+            "⚠️ Por favor, escribe un argumento antes de agregar.",
+            "warning"
+          );
+          return;
         }
 
-        function updateDebateTimerDisplay() {
-            const minutes = Math.floor(debateTimer.time / 60);
-            const seconds = debateTimer.time % 60;
-            document.getElementById('debate-timer').textContent = 
-                `${minutes}:${seconds.toString().padStart(2, '0')}`;
-        }
-
-        function addArgument(type) {
-            const textareaId = type === 'iso' ? 'iso-argument' : 'cmmi-argument';
-            const textarea = document.getElementById(textareaId);
-            const argument = textarea.value.trim();
-            
-            if (!argument) {
-                showNotification('⚠️ Por favor, escribe un argumento antes de agregar.', 'warning');
-                return;
-            }
-            
-            const container = textarea.closest('.debate-card').querySelector('.space-y-4');
-            const newArgument = document.createElement('div');
-            newArgument.className = type === 'iso' ? 'bg-orange-50 p-4 rounded-lg' : 'bg-blue-50 p-4 rounded-lg';
-            newArgument.innerHTML = `
-                <h4 class="font-semibold ${type === 'iso' ? 'text-orange-800' : 'text-blue-800'} mb-2">💭 Argumento adicional</h4>
-                <p class="text-sm ${type === 'iso' ? 'text-orange-700' : 'text-blue-700'}">${argument}</p>
+        const container = textarea
+          .closest(".debate-card")
+          .querySelector(".space-y-4");
+        const newArgument = document.createElement("div");
+        newArgument.className =
+          type === "iso"
+            ? "bg-orange-50 p-4 rounded-lg"
+            : "bg-blue-50 p-4 rounded-lg";
+        newArgument.innerHTML = `
+                <h4 class="font-semibold ${
+                  type === "iso" ? "text-orange-800" : "text-blue-800"
+                } mb-2">💭 Argumento adicional</h4>
+                <p class="text-sm ${
+                  type === "iso" ? "text-orange-700" : "text-blue-700"
+                }">${argument}</p>
             `;
-            
-            container.appendChild(newArgument);
-            textarea.value = '';
-            
-            const modelName = type === 'iso' ? 'ISO 9001' : 'CMMI';
-            showNotification(`✅ Argumento agregado para ${modelName}.`, 'success');
+
+        container.appendChild(newArgument);
+        textarea.value = "";
+
+        const modelName = type === "iso" ? "ISO 9001" : "CMMI";
+        showNotification(`✅ Argumento agregado para ${modelName}.`, "success");
+      }
+
+      function vote(option) {
+        if (hasVoted) {
+          showNotification(
+            '⚠️ Ya has votado. Usa "Reiniciar Votación" para votar nuevamente.',
+            "warning"
+          );
+          return;
         }
 
-        function vote(option) {
-            if (hasVoted) {
-                showNotification('⚠️ Ya has votado. Usa "Reiniciar Votación" para votar nuevamente.', 'warning');
-                return;
-            }
-            
-            votes[option]++;
-            hasVoted = true;
-            
-            // Update vote display
-            document.getElementById('iso-votes').textContent = `${votes.iso} votos`;
-            document.getElementById('cmmi-votes').textContent = `${votes.cmmi} votos`;
-            
-            // Update button appearance
-            document.querySelectorAll('.vote-button').forEach(btn => btn.classList.remove('selected'));
-            document.getElementById(`vote-${option}`).classList.add('selected');
-            
-            const modelName = option === 'iso' ? 'ISO 9001' : 'CMMI Nivel 3';
-            showNotification(`🗳️ Voto registrado para ${modelName}.`, 'success');
+        votes[option]++;
+        hasVoted = true;
+
+        // Update vote display
+        document.getElementById("iso-votes").textContent = `${votes.iso} votos`;
+        document.getElementById(
+          "cmmi-votes"
+        ).textContent = `${votes.cmmi} votos`;
+
+        // Update button appearance
+        document
+          .querySelectorAll(".vote-button")
+          .forEach((btn) => btn.classList.remove("selected"));
+        document.getElementById(`vote-${option}`).classList.add("selected");
+
+        const modelName = option === "iso" ? "ISO 9001" : "CMMI Nivel 3";
+        showNotification(`🗳️ Voto registrado para ${modelName}.`, "success");
+      }
+
+      function resetVotes() {
+        votes = { iso: 0, cmmi: 0 };
+        hasVoted = false;
+
+        document.getElementById("iso-votes").textContent = "0 votos";
+        document.getElementById("cmmi-votes").textContent = "0 votos";
+        document
+          .querySelectorAll(".vote-button")
+          .forEach((btn) => btn.classList.remove("selected"));
+
+        showNotification("🔄 Votación reiniciada.", "success");
+      }
+
+      function addPractice(type) {
+        const textareaId =
+          type === "good" ? "good-practice" : "improvement-area";
+        const textarea = document.getElementById(textareaId);
+        const practice = textarea.value.trim();
+
+        if (!practice) {
+          showNotification(
+            "⚠️ Por favor, escribe una observación antes de agregar.",
+            "warning"
+          );
+          return;
         }
 
-        function resetVotes() {
-            votes = { iso: 0, cmmi: 0 };
-            hasVoted = false;
-            
-            document.getElementById('iso-votes').textContent = '0 votos';
-            document.getElementById('cmmi-votes').textContent = '0 votos';
-            document.querySelectorAll('.vote-button').forEach(btn => btn.classList.remove('selected'));
-            
-            showNotification('🔄 Votación reiniciada.', 'success');
-        }
-
-        function addPractice(type) {
-            const textareaId = type === 'good' ? 'good-practice' : 'improvement-area';
-            const textarea = document.getElementById(textareaId);
-            const practice = textarea.value.trim();
-            
-            if (!practice) {
-                showNotification('⚠️ Por favor, escribe una observación antes de agregar.', 'warning');
-                return;
-            }
-            
-            const container = textarea.closest('.feedback-card').querySelector('.space-y-3');
-            const newPractice = document.createElement('div');
-            newPractice.className = type === 'good' ? 'practice-item' : 'improvement-item';
-            newPractice.innerHTML = `
-                <h4 class="font-semibold ${type === 'good' ? 'text-green-800' : 'text-orange-800'} mb-2">💡 Observación adicional</h4>
-                <p class="text-sm ${type === 'good' ? 'text-green-700' : 'text-orange-700'}">${practice}</p>
+        const container = textarea
+          .closest(".feedback-card")
+          .querySelector(".space-y-3");
+        const newPractice = document.createElement("div");
+        newPractice.className =
+          type === "good" ? "practice-item" : "improvement-item";
+        newPractice.innerHTML = `
+                <h4 class="font-semibold ${
+                  type === "good" ? "text-green-800" : "text-orange-800"
+                } mb-2">💡 Observación adicional</h4>
+                <p class="text-sm ${
+                  type === "good" ? "text-green-700" : "text-orange-700"
+                }">${practice}</p>
             `;
-            
-            container.appendChild(newPractice);
-            textarea.value = '';
-            
-            const practiceType = type === 'good' ? 'buena práctica' : 'área de mejora';
-            showNotification(`✅ ${practiceType.charAt(0).toUpperCase() + practiceType.slice(1)} agregada.`, 'success');
-        }
 
-        function showNotification(message, type) {
-            const container = document.getElementById('notification-container');
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.innerHTML = `
+        container.appendChild(newPractice);
+        textarea.value = "";
+
+        const practiceType =
+          type === "good" ? "buena práctica" : "área de mejora";
+        showNotification(
+          `✅ ${
+            practiceType.charAt(0).toUpperCase() + practiceType.slice(1)
+          } agregada.`,
+          "success"
+        );
+      }
+
+      function showNotification(message, type) {
+        const container = document.getElementById("notification-container");
+        const notification = document.createElement("div");
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
                 <div class="flex items-center space-x-3">
                     <div class="text-lg">
-                        ${type === 'success' ? '✅' : type === 'warning' ? '⚠️' : '❌'}
+                        ${
+                          type === "success"
+                            ? "✅"
+                            : type === "warning"
+                            ? "⚠️"
+                            : "❌"
+                        }
                     </div>
                     <div class="text-sm font-medium">${message}</div>
                 </div>
             `;
-            
-            container.appendChild(notification);
-            
-            // Show notification
-            setTimeout(() => notification.classList.add('show'), 100);
-            
-            // Hide and remove notification
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => container.removeChild(notification), 300);
-            }, 4000);
+
+        container.appendChild(notification);
+
+        // Show notification
+        setTimeout(() => notification.classList.add("show"), 100);
+
+        // Hide and remove notification
+        setTimeout(() => {
+          notification.classList.remove("show");
+          setTimeout(() => container.removeChild(notification), 300);
+        }, 4000);
+      }
+
+      // Keyboard navigation
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === " ") {
+          e.preventDefault();
+          nextSlide();
+        } else if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          previousSlide();
         }
+      });
 
-        // Keyboard navigation
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' || e.key === ' ') {
-                e.preventDefault();
-                nextSlide();
-            } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                previousSlide();
-            }
-        });
+      // Initialize
+      document.addEventListener("DOMContentLoaded", () => {
+        showSlide(1);
 
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            showSlide(1);
-            
-            // Show welcome notification
-            setTimeout(() => {
-                showNotification('🎤 ¡Bienvenidos al Día 2! Listos para el debate y la retroalimentación final.', 'success');
-            }, 1000);
-        });
+        // Show welcome notification
+        setTimeout(() => {
+          showNotification(
+            "🎤 ¡Bienvenidos al Día 2! Listos para el debate y la retroalimentación final.",
+            "success"
+          );
+        }, 1000);
+      });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a87c5ae639cdb0',t:'MTc1NzEwNDI0MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script defer src="js/layout.js"></script>
-</body>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97f392f1c0547d27',t:'MTc1Nzg5MTU5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  </body>
 </html>

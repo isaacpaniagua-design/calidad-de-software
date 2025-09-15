@@ -1,967 +1,1208 @@
 <!DOCTYPE html>
-<html lang="es" data-layout="global">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sesión 17 - Estrategias de Prueba en Móviles</title>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CMMI Nivel 2: Presentación por Diapositivas</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #333;
+        overflow: hidden;
+      }
+
+      .presentation-wrapper {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .slide-container {
+        width: 90%;
+        max-width: 1000px;
+        height: 80vh;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .slide {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: white;
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        transform: translateX(100%);
+        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow-y: auto;
+      }
+
+      .slide.active {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      .slide.prev {
+        transform: translateX(-100%);
+      }
+
+      .slide-title {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 25px 30px;
+        border-radius: 15px;
+        margin: -40px -40px 30px -40px;
+        font-size: 32px;
+        font-weight: bold;
+        text-align: center;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .process-area-header {
+        background: linear-gradient(135deg, #4facfe, #00f2fe);
+        color: white;
+        padding: 20px 25px;
+        border-radius: 12px;
+        margin: -40px -40px 25px -40px;
+        font-size: 28px;
+        font-weight: bold;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .purpose-box {
+        background: #f8f9ff;
+        border-left: 5px solid #667eea;
+        padding: 25px;
+        margin: 25px 0;
+        border-radius: 10px;
+        font-style: italic;
+        font-size: 18px;
+        line-height: 1.6;
+      }
+
+      .comparison-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+        margin: 30px 0;
+      }
+
+      .before-after {
+        padding: 25px;
+        border-radius: 15px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        min-height: 300px;
+      }
+
+      .before {
+        background: linear-gradient(135deg, #ff9a9e, #fecfef);
+        border: 3px solid #ff6b6b;
+      }
+
+      .after {
+        background: linear-gradient(135deg, #a8edea, #fed6e3);
+        border: 3px solid #51cf66;
+      }
+
+      .before-after:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+      }
+
+      .section-header {
+        font-size: 22px;
+        font-weight: bold;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .icon {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+      }
+
+      .before .icon {
+        background: #ff6b6b;
+        color: white;
+      }
+
+      .after .icon {
+        background: #51cf66;
+        color: white;
+      }
+
+      .point {
+        margin: 15px 0;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.4);
+        border-radius: 10px;
+        line-height: 1.7;
+        font-size: 16px;
+      }
+
+      .intro-text {
+        font-size: 20px;
+        line-height: 1.8;
+        text-align: center;
+        margin: 30px 0;
+        color: #555;
+      }
+
+      .highlight {
+        background: linear-gradient(120deg, #a8edea 0%, #fed6e3 100%);
+        padding: 5px 10px;
+        border-radius: 6px;
+        font-weight: bold;
+      }
+
+      .interactive-demo {
+        background: #f8f9ff;
+        border: 2px dashed #667eea;
+        border-radius: 15px;
+        padding: 25px;
+        margin: 25px 0;
+        text-align: center;
+      }
+
+      .demo-button {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        border-radius: 25px;
+        font-size: 16px;
+        cursor: pointer;
+        margin: 10px;
+        transition: all 0.3s ease;
+        font-weight: 600;
+      }
+
+      .demo-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      .progress-bar {
+        background: #e9ecef;
+        height: 10px;
+        border-radius: 5px;
+        margin: 20px 0;
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        height: 100%;
+        width: 0%;
+        transition: width 2s ease;
+        border-radius: 5px;
+      }
+
+      .navigation {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 15px;
+        z-index: 1000;
+      }
+
+      .nav-button {
+        background: rgba(255, 255, 255, 0.9);
+        border: none;
+        padding: 15px 25px;
+        border-radius: 25px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: bold;
+        color: #667eea;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+      }
+
+      .nav-button:hover {
+        background: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      }
+
+      .nav-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .slide-counter {
+        position: fixed;
+        top: 30px;
+        right: 30px;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: bold;
+        color: #667eea;
+        backdrop-filter: blur(10px);
+        z-index: 1000;
+      }
+
+      .slide-indicators {
+        position: fixed;
+        bottom: 100px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 1000;
+      }
+
+      .indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .indicator.active {
+        background: white;
+        transform: scale(1.3);
+      }
+
+      @media (max-width: 768px) {
+        .slide {
+          padding: 25px;
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
+        .comparison-container {
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
+
+        .slide-title,
+        .process-area-header {
+          margin: -25px -25px 20px -25px;
+          font-size: 24px;
+          padding: 20px;
         }
 
         .slide-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(15px);
-            border-radius: 20px;
-            padding: 3rem;
-            max-width: 900px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-            position: relative;
-            min-height: 600px;
-            display: flex;
-            flex-direction: column;
+          width: 95%;
+          height: 85vh;
         }
-
-        .slide {
-            display: none;
-            flex: 1;
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        .slide.active {
-            display: flex;
-            flex-direction: column;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .slide h1 {
-            color: #2d3748;
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .slide h2 {
-            color: #2d3748;
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-
-        .slide h3 {
-            color: #4a5568;
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .subtitle {
-            font-size: 1.3rem;
-            color: #718096;
-            text-align: center;
-            font-style: italic;
-            margin-bottom: 2rem;
-        }
-
-        .quote-box {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            text-align: center;
-            margin: 2rem 0;
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
-        }
-
-        .quote-box h4 {
-            color: white;
-            font-size: 1.8rem;
-            margin-bottom: 1rem;
-        }
-
-        .quote-box p {
-            font-size: 1.2rem;
-            line-height: 1.6;
-        }
-
-        .types-container {
-            background: linear-gradient(135deg, #38a169 0%, #2f855a 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .types-container h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .types-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            margin-top: 1.5rem;
-        }
-
-        .type-card {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .type-card h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .type-card .examples {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            backdrop-filter: blur(5px);
-        }
-
-        .type-card .examples h6 {
-            color: white;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .type-card .examples p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.4;
-            font-size: 0.9rem;
-        }
-
-        .methods-container {
-            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .methods-container h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .methods-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .method-item {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .method-item h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .method-details {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .method-pros, .method-cons {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 1rem;
-            border-radius: 8px;
-            backdrop-filter: blur(5px);
-        }
-
-        .method-pros h6, .method-cons h6 {
-            color: white;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .method-pros p, .method-cons p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.4;
-            font-size: 0.9rem;
-        }
-
-        .case-study-container {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .case-study-container h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .whatsapp-header {
-            background: rgba(255, 255, 255, 0.3);
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: center;
-            margin-bottom: 1.5rem;
-            backdrop-filter: blur(10px);
-        }
-
-        .whatsapp-header h5 {
-            color: white;
-            margin-bottom: 0.5rem;
-            font-size: 1.3rem;
-        }
-
-        .whatsapp-header p {
-            color: white;
-            font-size: 1rem;
-        }
-
-        .test-scenarios {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-
-        .test-scenario {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 1.5rem;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .test-scenario h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .test-steps {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            backdrop-filter: blur(5px);
-        }
-
-        .test-steps h6 {
-            color: white;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .test-steps ol {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.4;
-            font-size: 0.9rem;
-            margin-left: 1rem;
-        }
-
-        .test-steps li {
-            margin-bottom: 0.3rem;
-        }
-
-        .expected-result {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 1rem;
-            border-radius: 8px;
-            backdrop-filter: blur(5px);
-        }
-
-        .expected-result h6 {
-            color: white;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .expected-result p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.4;
-            font-size: 0.9rem;
-        }
-
-        .activity-container {
-            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .activity-container h4 {
-            color: white;
-            margin-bottom: 1rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .activity-instructions {
-            background: rgba(255, 255, 255, 0.3);
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: center;
-            margin: 1.5rem 0;
-            backdrop-filter: blur(10px);
-        }
-
-        .activity-instructions h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.3rem;
-        }
-
-        .activity-instructions p {
-            color: white;
-            font-weight: 500;
-            font-size: 1.1rem;
-            line-height: 1.5;
-        }
-
-        .apps-selection {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin: 1.5rem 0;
-            backdrop-filter: blur(5px);
-        }
-
-        .apps-selection h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-            text-align: center;
-        }
-
-        .apps-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 1rem;
-        }
-
-        .app-option {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 1rem;
-            border-radius: 8px;
-            text-align: center;
-            backdrop-filter: blur(3px);
-        }
-
-        .app-option h6 {
-            color: white;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .app-option p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.4;
-            font-size: 0.85rem;
-        }
-
-        .template-container {
-            background: rgba(255, 255, 255, 0.15);
-            padding: 1.5rem;
-            border-radius: 12px;
-            margin: 1.5rem 0;
-            backdrop-filter: blur(5px);
-        }
-
-        .template-container h5 {
-            color: white;
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
-        }
-
-        .template-item {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            backdrop-filter: blur(3px);
-        }
-
-        .template-item h6 {
-            color: white;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .template-item p {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.4;
-            font-size: 0.9rem;
-        }
-
-        .key-points {
-            background: linear-gradient(135deg, #e53e3e 0%, #c53030 100%);
-            color: white;
-            padding: 2rem;
-            border-radius: 15px;
-            margin: 2rem 0;
-        }
-
-        .key-points h4 {
-            color: white;
-            margin-bottom: 1.5rem;
-            text-align: center;
-            font-size: 1.4rem;
-        }
-
-        .key-points ul {
-            color: rgba(255, 255, 255, 0.9);
-            line-height: 1.8;
-            font-size: 1.1rem;
-            margin-left: 1rem;
-        }
-
-        .key-points li {
-            margin-bottom: 1rem;
-        }
-
-        .key-points strong {
-            color: white;
-        }
-
-        .navigation {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 2rem;
-            padding-top: 2rem;
-            border-top: 2px solid #e2e8f0;
-        }
-
-        .slide-counter {
-            color: #718096;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .nav-btn {
-            padding: 0.8rem 1.5rem;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .nav-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .nav-btn:disabled {
-            background: #cbd5e0;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .source-note {
-            background: #fff5f5;
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid #f56565;
-            margin-top: 1.5rem;
-            font-style: italic;
-            color: #4a5568;
-        }
-
-        .highlight-box {
-            background: #fffaf0;
-            padding: 1.5rem;
-            border-radius: 12px;
-            border: 2px dashed #ed8936;
-            text-align: center;
-            margin: 2rem 0;
-        }
-
-        .highlight-box p {
-            color: #2d3748;
-            font-weight: 600;
-            font-size: 1.1rem;
-        }
-
-        @media (max-width: 768px) {
-            .slide-container {
-                padding: 2rem;
-                margin: 1rem;
-            }
-            
-            .slide h1 {
-                font-size: 2rem;
-            }
-            
-            .slide h2 {
-                font-size: 1.5rem;
-            }
-            
-            .types-grid, .test-scenarios, .method-details, .apps-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            
-            .nav-buttons {
-                flex-direction: column;
-                gap: 0.5rem;
-            }
-        }
+      }
     </style>
-<link rel="stylesheet" href="css/layout.css">
-<body>
-
-<style>
-  .qs-nav{position:sticky;top:0;z-index:50;backdrop-filter:saturate(140%) blur(6px);background:rgba(255,255,255,.85);border-bottom:1px solid #e5e7eb}
-  .qs-nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;align-items:center;justify-content:space-between;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial}
-  .qs-brand{display:flex;gap:10px;align-items:center;color:#1f2937;font-weight:600;text-decoration:none}
-  .qs-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .qs-btn{border:0;padding:8px 12px;border-radius:999px;background:#f3f4f6;color:#111827;cursor:pointer;text-decoration:none}
-  .qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;pointer-events:none}
-  @media (max-width:720px){ .qs-tabs{flex:1;justify-content:flex-end} .qs-brand span{display:none} }
-</style>
-<div class="qs-nav" data-role="main-nav">
-  <div class="wrap">
-    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
-    <nav class="qs-tabs" aria-label="Navegación">
-      <a class="qs-btn" href="materiales.html">Materiales</a>
-      <a class="qs-btn" href="asistencia.html">Asistencia</a>
-      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
-      <a class="qs-btn" href="Foro.html">Foro</a>
-      <a class="qs-btn" href="paneldocente.html">Panel</a>
-      <a class="qs-btn" href="roadmap.html">Roadmap</a>
-      
-\1
-  </div>
-</div>
-<script>
-(function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
-  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    if (a.getAttribute('href').toLowerCase() === path) a.setAttribute('aria-current','page');
-  });
-})();
-window.google = window.google || {};
-google.script = google.script || {};
-if (!google.script.run){
-  google.script.run = new Proxy({}, { get:() => ()=>({ withSuccessHandler: f=>({ withFailureHandler: g=>({ }) }) }) });
-}
-</script>
-
-
-    <div class="slide-container">
+  </head>
+  <body>
+    <div class="presentation-wrapper">
+      <div class="slide-container">
         <!-- Slide 1: Título -->
         <div class="slide active">
-            <h1>🎯 Estrategias de Prueba en Móviles</h1>
-            <div class="subtitle">Cómo probar de forma efectiva en móviles</div>
-            
-            <div class="quote-box">
-                <h4>🚀 "Estrategia antes que herramientas"</h4>
-                <p>El éxito en testing móvil no depende de tener todos los dispositivos, sino de saber qué, cómo y cuándo probar</p>
+          <div class="slide-title">
+            🏗️ CMMI Nivel 2: Poniendo la Casa en Orden
+          </div>
+          <div class="intro-text">
+            <strong>Enfoque:</strong> Disciplina básica de gestión de
+            proyectos.<br /><br />
+            <span class="highlight"
+              >El objetivo es que los proyectos cumplan sus promesas.</span
+            >
+          </div>
+
+          <div class="interactive-demo">
+            <h3>🎯 Progreso hacia la Madurez</h3>
+            <p>Observa cómo evoluciona un proyecto del caos al orden:</p>
+            <button class="demo-button" onclick="showProgress()">
+              Ver Transformación
+            </button>
+            <div class="progress-bar">
+              <div class="progress-fill" id="maturityProgress"></div>
             </div>
-            
-            <div class="highlight-box">
-                <p>🎯 <strong>Objetivo:</strong> Dominar las estrategias efectivas para testing móvil integral</p>
-            </div>
+            <p id="progressText">Nivel 1: Caótico → Nivel 2: Gestionado</p>
+          </div>
         </div>
 
-        <!-- Slide 2: Tipos de Pruebas en Móviles -->
+        <!-- Slide 2: REQM -->
         <div class="slide">
-            <h2>🧪 Tipos de Pruebas en Móviles</h2>
-            
-            <div class="types-container">
-                <h4>📋 Clasificación Específica para Móviles</h4>
-                
-                <div class="types-grid">
-                    <div class="type-card">
-                        <h5>✅ Funcionales</h5>
-                        <div class="examples">
-                            <h6>🎯 Casos Típicos</h6>
-                            <p><strong>Login:</strong> Autenticación con usuario/contraseña, biométricos<br>
-                            <strong>Navegación:</strong> Menús, tabs, gestos de swipe<br>
-                            <strong>Notificaciones:</strong> Push, locales, badges</p>
-                        </div>
-                    </div>
-                    
-                    <div class="type-card">
-                        <h5>⚡ No Funcionales</h5>
-                        <div class="examples">
-                            <h6>🎯 Casos Típicos</h6>
-                            <p><strong>Rendimiento:</strong> Tiempo de carga, fluidez de animaciones<br>
-                            <strong>Seguridad:</strong> Encriptación, permisos, almacenamiento<br>
-                            <strong>Compatibilidad:</strong> Diferentes OS, versiones, dispositivos</p>
-                        </div>
-                    </div>
-                    
-                    <div class="type-card">
-                        <h5>📡 Pruebas de Red</h5>
-                        <div class="examples">
-                            <h6>🎯 Casos Típicos</h6>
-                            <p><strong>Cambio de red:</strong> Wi-Fi ↔ Datos móviles<br>
-                            <strong>Velocidades variables:</strong> 3G, 4G, 5G, conexión lenta<br>
-                            <strong>Pérdida de conexión:</strong> Modo offline, reconexión</p>
-                        </div>
-                    </div>
-                    
-                    <div class="type-card">
-                        <h5>👆 Pruebas de Usabilidad</h5>
-                        <div class="examples">
-                            <h6>🎯 Casos Típicos</h6>
-                            <p><strong>Accesibilidad:</strong> VoiceOver, TalkBack, contraste<br>
-                            <strong>Gestos táctiles:</strong> Tap, swipe, pinch, long press<br>
-                            <strong>Orientación:</strong> Portrait/landscape, rotación</p>
-                        </div>
-                    </div>
-                </div>
+          <div class="process-area-header">📋 REQM - Gestión de Requisitos</div>
+
+          <div class="purpose-box">
+            <strong>Propósito:</strong> Gestionar los requisitos del proyecto y
+            asegurar la alineación entre esos requisitos y los planes y
+            productos del proyecto.
+          </div>
+
+          <div class="comparison-container">
+            <div class="before-after before" onclick="highlightSection(this)">
+              <div class="section-header">
+                <div class="icon">❌</div>
+                Antes (Nivel 1)
+              </div>
+              <div class="point">
+                Los requisitos cambian constantemente sin control. El cliente
+                llama, pide un cambio y el desarrollador lo implementa
+                directamente.
+              </div>
+              <div class="point">
+                Nadie sabe cuál es la última versión de la documentación. Lo que
+                está escrito no coincide con lo que se está construyendo.
+              </div>
+              <div class="point">
+                Hay una constante "fuga de alcance" (scope creep).
+              </div>
             </div>
-            
-            <div class="key-points">
-                <h4>🎯 Consideraciones Especiales</h4>
-                <ul>
-                    <li><strong>Contexto móvil:</strong> Uso en movimiento, con una mano, en diferentes ambientes</li>
-                    <li><strong>Interrupciones frecuentes:</strong> Llamadas, notificaciones, cambio de apps</li>
-                    <li><strong>Recursos limitados:</strong> Batería, memoria, almacenamiento, procesamiento</li>
-                    <li><strong>Variabilidad extrema:</strong> Dispositivos, OS, redes, condiciones de uso</li>
-                </ul>
+
+            <div class="before-after after" onclick="highlightSection(this)">
+              <div class="section-header">
+                <div class="icon">✅</div>
+                Después (Nivel 2)
+              </div>
+              <div class="point">
+                Existe un proceso formal para gestionar los cambios. Se analiza
+                el impacto de una nueva solicitud (¿cuánto más costará? ¿cuánto
+                tiempo más tomará?).
+              </div>
+              <div class="point">
+                Se obtiene la aprobación del cliente y del gerente de proyecto
+                antes de implementar un cambio.
+              </div>
+              <div class="point">
+                Se mantiene la trazabilidad: se puede rastrear un requisito
+                desde su origen, pasando por el diseño, hasta el código y las
+                pruebas que lo verifican.
+              </div>
             </div>
-            
-            <div class="source-note">
-                📚 <strong>Fuente:</strong> Mahfuz, Capítulo 3
-            </div>
+          </div>
         </div>
 
-        <!-- Slide 3: Métodos de Ejecución -->
+        <!-- Slide 3: PP -->
         <div class="slide">
-            <h2>🛠️ Métodos de Ejecución</h2>
-            
-            <div class="methods-container">
-                <h4>⚙️ Enfoques para Ejecutar Pruebas Móviles</h4>
-                
-                <div class="methods-list">
-                    <div class="method-item">
-                        <h5>📱 Pruebas Manuales en Dispositivos Reales</h5>
-                        <div class="method-details">
-                            <div class="method-pros">
-                                <h6>✅ Ventajas</h6>
-                                <p>• Experiencia real del usuario<br>
-                                • Detección de problemas de hardware<br>
-                                • Validación de gestos y sensores<br>
-                                • Comportamiento real de red</p>
-                            </div>
-                            <div class="method-cons">
-                                <h6>❌ Desventajas</h6>
-                                <p>• Costoso (muchos dispositivos)<br>
-                                • Lento para regresiones<br>
-                                • Difícil de escalar<br>
-                                • Mantenimiento de dispositivos</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="method-item">
-                        <h5>💻 Simuladores/Emuladores</h5>
-                        <div class="method-details">
-                            <div class="method-pros">
-                                <h6>✅ Ventajas</h6>
-                                <p>• Rápido y económico<br>
-                                • Fácil configuración<br>
-                                • Múltiples configuraciones<br>
-                                • Ideal para desarrollo</p>
-                            </div>
-                            <div class="method-cons">
-                                <h6>❌ Desventajas</h6>
-                                <p>• No replica hardware real<br>
-                                • Rendimiento diferente<br>
-                                • Sin sensores reales<br>
-                                • Limitaciones de red</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="method-item">
-                        <h5>🤖 Automatización</h5>
-                        <div class="method-details">
-                            <div class="method-pros">
-                                <h6>✅ Herramientas</h6>
-                                <p><strong>Appium:</strong> Cross-platform, múltiples lenguajes<br>
-                                <strong>Espresso:</strong> Android nativo, rápido<br>
-                                <strong>XCUITest:</strong> iOS nativo, integrado con Xcode</p>
-                            </div>
-                            <div class="method-cons">
-                                <h6>🎯 Cuándo Usar</h6>
-                                <p>• Pruebas de regresión<br>
-                                • Casos repetitivos<br>
-                                • Validación en múltiples dispositivos<br>
-                                • Integración continua</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+          <div class="process-area-header">
+            📊 PP - Planificación de Proyectos
+          </div>
+
+          <div class="purpose-box">
+            <strong>Propósito:</strong> Establecer y mantener planes que definan
+            las actividades del proyecto.
+          </div>
+
+          <div class="comparison-container">
+            <div class="before-after before" onclick="highlightSection(this)">
+              <div class="section-header">
+                <div class="icon">❌</div>
+                Antes (Nivel 1)
+              </div>
+              <div class="point">
+                La fecha de entrega es una suposición o una imposición sin
+                fundamento ("lo quiero para el viernes").
+              </div>
+              <div class="point">
+                No hay estimaciones formales de esfuerzo o costo. El presupuesto
+                es una conjetura.
+              </div>
+              <div class="point">
+                El proyecto arranca sin identificar los posibles riesgos.
+              </div>
             </div>
-            
-            <div class="key-points">
-                <h4>🎯 Estrategia Híbrida Recomendada</h4>
-                <ul>
-                    <li><strong>Desarrollo temprano:</strong> Simuladores para pruebas rápidas</li>
-                    <li><strong>Validación crítica:</strong> Dispositivos reales para casos importantes</li>
-                    <li><strong>Regresión:</strong> Automatización para casos repetitivos</li>
-                    <li><strong>Release:</strong> Combinación de todos los métodos</li>
-                </ul>
+
+            <div class="before-after after" onclick="highlightSection(this)">
+              <div class="section-header">
+                <div class="icon">✅</div>
+                Después (Nivel 2)
+              </div>
+              <div class="point">
+                Se estiman formalmente el tamaño, el esfuerzo, el costo y el
+                cronograma del proyecto.
+              </div>
+              <div class="point">
+                Se identifican y analizan los riesgos desde el principio,
+                creando planes para mitigarlos.
+              </div>
+              <div class="point">
+                Se crea un Plan de Proyecto documentado que es la base para
+                ejecutar y controlar el trabajo. Todos los involucrados
+                entienden y se comprometen con el plan.
+              </div>
             </div>
+          </div>
         </div>
 
-        <!-- Slide 4: Caso Práctico - WhatsApp -->
+        <!-- Slide 4: PMC -->
         <div class="slide">
-            <h2>💬 Caso Práctico: WhatsApp</h2>
-            
-            <div class="case-study-container">
-                <div class="whatsapp-header">
-                    <h5>📱 Escenario de Prueba</h5>
-                    <p>Validar el envío de mensajes de texto en diferentes condiciones de red</p>
-                </div>
-                
-                <div class="test-scenarios">
-                    <div class="test-scenario">
-                        <h5>✅ Prueba Funcional</h5>
-                        
-                        <div class="test-steps">
-                            <h6>📋 Pasos de Ejecución</h6>
-                            <ol>
-                                <li>Abrir WhatsApp</li>
-                                <li>Seleccionar un contacto</li>
-                                <li>Escribir mensaje: "Hola, ¿cómo estás?"</li>
-                                <li>Presionar botón enviar</li>
-                                <li>Verificar que aparezca ✓ (enviado)</li>
-                            </ol>
-                        </div>
-                        
-                        <div class="expected-result">
-                            <h6>🎯 Resultado Esperado</h6>
-                            <p><strong>Éxito:</strong> El mensaje se envía correctamente y aparece en el chat con el indicador de enviado (✓)</p>
-                        </div>
-                    </div>
-                    
-                    <div class="test-scenario">
-                        <h5>⚡ Prueba No Funcional</h5>
-                        
-                        <div class="test-steps">
-                            <h6>📋 Pasos de Ejecución</h6>
-                            <ol>
-                                <li>Configurar red a 3G (velocidad limitada)</li>
-                                <li>Abrir WhatsApp</li>
-                                <li>Enviar mensaje de texto</li>
-                                <li>Medir tiempo desde envío hasta ✓</li>
-                                <li>Repetir 10 veces para promedio</li>
-                            </ol>
-                        </div>
-                        
-                        <div class="expected-result">
-                            <h6>🎯 Resultado Esperado</h6>
-                            <p><strong>Métrica:</strong> El mensaje debe entregarse en menos de 2 segundos en conexión 3G estable</p>
-                        </div>
-                    </div>
-                </div>
+          <div class="process-area-header">
+            📈 PMC - Seguimiento y Control de Proyectos
+          </div>
+
+          <div class="purpose-box">
+            <strong>Propósito:</strong> Proporcionar visibilidad del progreso
+            real para que se puedan tomar acciones correctivas cuando el
+            desempeño se desvíe significativamente del plan.
+          </div>
+
+          <div class="comparison-container">
+            <div class="before-after before" onclick="highlightSection(this)">
+              <div class="section-header">
+                <div class="icon">❌</div>
+                Antes (Nivel 1)
+              </div>
+              <div class="point">
+                El estado del proyecto es un misterio. Durante semanas, la
+                respuesta a "¿cómo vamos?" es "casi terminado".
+              </div>
+              <div class="point">
+                Los problemas no se hacen visibles hasta que es demasiado tarde.
+              </div>
+              <div class="point">
+                Las decisiones se toman por intuición o pánico.
+              </div>
             </div>
-            
-            <div class="key-points">
-                <h4>📊 Análisis del Caso</h4>
-                <ul>
-                    <li><strong>Funcional valida QUÉ:</strong> El mensaje se envía correctamente</li>
-                    <li><strong>No funcional valida CÓMO:</strong> Se envía en tiempo aceptable</li>
-                    <li><strong>Condiciones reales:</strong> 3G simula conexiones lentas comunes</li>
-                    <li><strong>Métricas específicas:</strong> < 2 segundos es un SLA medible</li>
-                </ul>
+
+            <div class="before-after after" onclick="highlightSection(this)">
+              <div class="section-header">
+                <div class="icon">✅</div>
+                Después (Nivel 2)
+              </div>
+              <div class="point">
+                Se realizan reuniones de seguimiento periódicas (ej. semanales).
+              </div>
+              <div class="point">
+                Se comparan los resultados reales (esfuerzo gastado, costo real,
+                avance de las tareas) contra lo que se estableció en el plan.
+              </div>
+              <div class="point">
+                Si hay desviaciones importantes, se toman acciones correctivas
+                de manera proactiva para volver al camino correcto.
+              </div>
             </div>
-            
-            <div class="quote-box">
-                <h4>💡 Lección Clave</h4>
-                <p>"Un mensaje que se envía pero tarda 30 segundos en 3G no cumple las expectativas del usuario, aunque funcione técnicamente"</p>
-            </div>
+          </div>
+
+          <div class="interactive-demo">
+            <h3>📊 Simulador de Seguimiento</h3>
+            <p>Experimenta la diferencia en visibilidad del proyecto:</p>
+            <button class="demo-button" onclick="simulateTracking('before')">
+              Nivel 1: "¿Cómo vamos?"
+            </button>
+            <button class="demo-button" onclick="simulateTracking('after')">
+              Nivel 2: Dashboard Real
+            </button>
+            <div
+              id="trackingResult"
+              style="margin-top: 15px; font-weight: bold"
+            ></div>
+          </div>
         </div>
 
-        <!-- Slide 5: Actividad - Diseño Rápido -->
+        <!-- Slide 5: PPQA -->
         <div class="slide">
-            <h2>🎨 Actividad: Diseño Rápido</h2>
-            <div class="subtitle">Diseño de Pruebas para Apps Móviles (20 min)</div>
-            
-            <div class="activity-container">
-                <div class="activity-instructions">
-                    <h5>🎯 Instrucciones</h5>
-                    <p><strong>Cada equipo diseña 2 pruebas para una app móvil conocida:</strong><br>
-                    • 1 Prueba Funcional<br>
-                    • 1 Prueba No Funcional<br><br>
-                    <strong>Incluir:</strong> Pasos, resultado esperado, y métricas específicas</p>
-                </div>
-                
-                <div class="apps-selection">
-                    <h5>📱 Apps Disponibles para Elegir</h5>
-                    
-                    <div class="apps-grid">
-                        <div class="app-option">
-                            <h6>📸 Instagram</h6>
-                            <p>Subir foto, stories, reels, mensajes directos</p>
-                        </div>
-                        
-                        <div class="app-option">
-                            <h6>🚗 Uber</h6>
-                            <p>Solicitar viaje, pago, seguimiento en tiempo real</p>
-                        </div>
-                        
-                        <div class="app-option">
-                            <h6>🎵 TikTok</h6>
-                            <p>Ver videos, crear contenido, interacciones</p>
-                        </div>
-                        
-                        <div class="app-option">
-                            <h6>🛒 Amazon</h6>
-                            <p>Buscar productos, comprar, seguimiento de pedidos</p>
-                        </div>
-                        
-                        <div class="app-option">
-                            <h6>💰 Banco (Genérico)</h6>
-                            <p>Consultar saldo, transferir dinero, pagar servicios</p>
-                        </div>
-                        
-                        <div class="app-option">
-                            <h6>🍕 Delivery</h6>
-                            <p>Ordenar comida, pago, seguimiento de entrega</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="template-container">
-                    <h5>📋 Plantilla para Cada Prueba</h5>
-                    
-                    <div class="template-item">
-                        <h6>✅ Prueba Funcional</h6>
-                        <p><strong>Funcionalidad a probar:</strong> [Ej: Login con huella dactilar]<br>
-                        <strong>Pasos:</strong> [1. Abrir app, 2. Tocar login, 3. Usar huella...]<br>
-                        <strong>Resultado esperado:</strong> [Usuario autenticado correctamente]</p>
-                    </div>
-                    
-                    <div class="template-item">
-                        <h6>⚡ Prueba No Funcional</h6>
-                        <p><strong>Atributo a probar:</strong> [Ej: Tiempo de carga de feed]<br>
-                        <strong>Condiciones:</strong> [Ej: WiFi, 50 fotos en feed]<br>
-                        <strong>Métrica esperada:</strong> [Ej: Feed carga en < 3 segundos]</p>
-                    </div>
-                </div>
+          <div class="process-area-header">
+            🔍 PPQA - Aseguramiento de Calidad de Procesos y Productos
+          </div>
+
+          <div class="purpose-box">
+            <strong>Propósito:</strong> Proporcionar al personal y a la gerencia
+            una visión objetiva de los procesos y productos de trabajo.
+          </div>
+
+          <div class="comparison-container">
+            <div class="before-after before" onclick="highlightSection(this)">
+              <div class="section-header">
+                <div class="icon">❌</div>
+                Antes (Nivel 1)
+              </div>
+              <div class="point">
+                Se definen algunos procesos o plantillas, pero nadie sabe si el
+                equipo realmente los está usando.
+              </div>
+              <div class="point">
+                La calidad es responsabilidad de cada individuo, sin una
+                supervisión objetiva.
+              </div>
+              <div class="point">
+                La gerencia no tiene una visión clara de la salud del proyecto.
+              </div>
             </div>
-            
-            <div class="key-points">
-                <h4>⏱️ Distribución del Tiempo</h4>
-                <ul>
-                    <li><strong>5 min:</strong> Seleccionar app y dividir roles en el equipo</li>
-                    <li><strong>10 min:</strong> Diseñar ambas pruebas usando la plantilla</li>
-                    <li><strong>5 min:</strong> Presentación rápida de cada equipo (1 min por equipo)</li>
-                </ul>
+
+            <div class="before-after after" onclick="highlightSection(this)">
+              <div class="section-header">
+                <div class="icon">✅</div>
+                Después (Nivel 2)
+              </div>
+              <div class="point">
+                Una persona o grupo independiente (rol de QA) audita
+                periódicamente el proyecto.
+              </div>
+              <div class="point">
+                Se verifica que se estén siguiendo los planes, procesos y
+                estándares definidos (ej. "¿se están documentando los requisitos
+                como dijimos?").
+              </div>
+              <div class="point">
+                Se generan reportes de no conformidad que se comunican al equipo
+                y se escalan a la gerencia si no se resuelven.
+              </div>
             </div>
-            
-            <div class="highlight-box">
-                <p>🎯 <strong>Objetivo:</strong> Aplicar conceptos de testing móvil en casos reales y conocidos</p>
-            </div>
+          </div>
+
+          <div class="interactive-demo">
+            <h3>🎯 Resumen de la Transformación</h3>
+            <p>Del caos al orden: Los 4 pilares del Nivel 2</p>
+            <button class="demo-button" onclick="showSummary()">
+              Ver Resumen Interactivo
+            </button>
+            <div id="summaryContent" style="margin-top: 20px"></div>
+          </div>
         </div>
 
-        <!-- Navigation -->
-        <div class="navigation">
-            <div class="slide-counter">
-                Diapositiva <span id="currentSlide">1</span> de <span id="totalSlides">5</span>
+        <!-- Slide 6: Dinámica en Equipos -->
+        <div class="slide">
+          <div class="slide-title">👥 Dinámica en Equipos (20 min)</div>
+
+          <div style="text-align: center; margin: 20px 0">
+            <h2 style="color: #667eea; margin-bottom: 15px">
+              Aplicando el Nivel 2 a un Proyecto Real
+            </h2>
+            <div
+              style="
+                background: linear-gradient(135deg, #ffeaa7, #fab1a0);
+                padding: 20px;
+                border-radius: 15px;
+                margin: 20px 0;
+              "
+            >
+              <h3 style="margin-bottom: 15px">
+                🍕 Proyecto: App de Delivery de Comida
+              </h3>
+              <p style="font-size: 16px; line-height: 1.6">
+                <strong>Pregunta:</strong> Den un ejemplo práctico de un
+                artefacto, evidencia o actividad para cada una de las 4 áreas de
+                proceso de CMMI Nivel 2.
+              </p>
             </div>
-            <div class="nav-buttons">
-                <button class="nav-btn" onclick="previousSlide()" id="prevBtn" disabled>← Anterior</button>
-                <button class="nav-btn" onclick="nextSlide()" id="nextBtn">Siguiente →</button>
+          </div>
+
+          <div class="interactive-demo">
+            <div
+              style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+              "
+            >
+              <h3>⏱️ Cronómetro del Ejercicio</h3>
+              <div style="display: flex; gap: 10px">
+                <button class="demo-button" onclick="startTimer()">
+                  Iniciar (20 min)
+                </button>
+                <button class="demo-button" onclick="resetTimer()">
+                  Reiniciar
+                </button>
+              </div>
             </div>
+            <div
+              id="timer"
+              style="
+                font-size: 24px;
+                font-weight: bold;
+                color: #667eea;
+                text-align: center;
+                margin: 15px 0;
+              "
+            >
+              20:00
+            </div>
+          </div>
+
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 20px;
+              margin: 25px 0;
+            "
+          >
+            <div class="team-workspace">
+              <h3 style="color: #667eea; margin-bottom: 15px">
+                📝 Espacio de Trabajo del Equipo
+              </h3>
+
+              <div
+                class="process-area-card"
+                style="
+                  background: #fff3cd;
+                  border-left: 4px solid #ffc107;
+                  padding: 15px;
+                  margin: 10px 0;
+                  border-radius: 8px;
+                "
+              >
+                <strong>📋 REQM - Gestión de Requisitos</strong>
+                <textarea
+                  placeholder="Ejemplo: Matriz de trazabilidad que conecta 'pagar con tarjeta' con casos de uso y pruebas..."
+                  style="
+                    width: 100%;
+                    height: 60px;
+                    margin-top: 8px;
+                    padding: 8px;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                    resize: vertical;
+                  "
+                ></textarea>
+              </div>
+
+              <div
+                class="process-area-card"
+                style="
+                  background: #d4edda;
+                  border-left: 4px solid #28a745;
+                  padding: 15px;
+                  margin: 10px 0;
+                  border-radius: 8px;
+                "
+              >
+                <strong>📊 PP - Planificación de Proyectos</strong>
+                <textarea
+                  placeholder="Ejemplo: Cronograma en Jira con fases, tareas y dependencias del proyecto..."
+                  style="
+                    width: 100%;
+                    height: 60px;
+                    margin-top: 8px;
+                    padding: 8px;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                    resize: vertical;
+                  "
+                ></textarea>
+              </div>
+
+              <div
+                class="process-area-card"
+                style="
+                  background: #cce5ff;
+                  border-left: 4px solid #007bff;
+                  padding: 15px;
+                  margin: 10px 0;
+                  border-radius: 8px;
+                "
+              >
+                <strong>📈 PMC - Seguimiento y Control</strong>
+                <textarea
+                  placeholder="Ejemplo: Minuta semanal con % de avance y decisiones tomadas..."
+                  style="
+                    width: 100%;
+                    height: 60px;
+                    margin-top: 8px;
+                    padding: 8px;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                    resize: vertical;
+                  "
+                ></textarea>
+              </div>
+
+              <div
+                class="process-area-card"
+                style="
+                  background: #f8d7da;
+                  border-left: 4px solid #dc3545;
+                  padding: 15px;
+                  margin: 10px 0;
+                  border-radius: 8px;
+                "
+              >
+                <strong>🔍 PPQA - Aseguramiento de Calidad</strong>
+                <textarea
+                  placeholder="Ejemplo: Reporte de auditoría con hallazgos sobre el cumplimiento de procesos..."
+                  style="
+                    width: 100%;
+                    height: 60px;
+                    margin-top: 8px;
+                    padding: 8px;
+                    border: 1px solid #ddd;
+                    border-radius: 5px;
+                    resize: vertical;
+                  "
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="inspiration-panel">
+              <h3 style="color: #667eea; margin-bottom: 15px">
+                💡 Ejemplos para Inspirarse
+              </h3>
+              <button
+                class="demo-button"
+                onclick="generateExample()"
+                style="width: 100%; margin-bottom: 15px"
+              >
+                Generar Ejemplo Aleatorio
+              </button>
+
+              <div
+                id="exampleContent"
+                style="
+                  background: #f8f9ff;
+                  padding: 20px;
+                  border-radius: 10px;
+                  border: 2px dashed #667eea;
+                "
+              >
+                <p style="text-align: center; color: #666; font-style: italic">
+                  Haz clic en "Generar Ejemplo" para ver ideas específicas para
+                  cada área de proceso aplicadas al proyecto de delivery.
+                </p>
+              </div>
+
+              <div
+                style="
+                  margin-top: 20px;
+                  padding: 15px;
+                  background: #e8f5e8;
+                  border-radius: 10px;
+                "
+              >
+                <h4 style="color: #28a745; margin-bottom: 10px">
+                  📋 Instrucciones:
+                </h4>
+                <ol style="margin-left: 20px; line-height: 1.6">
+                  <li>Reúnanse en equipos</li>
+                  <li>Discutan cada área de proceso</li>
+                  <li>Definan ejemplos concretos</li>
+                  <li>Preparen presentación breve</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <div style="text-align: center; margin-top: 25px">
+            <button
+              class="demo-button"
+              onclick="showPresentationMode()"
+              style="font-size: 18px; padding: 15px 30px"
+            >
+              🎤 Modo Presentación de Equipos
+            </button>
+          </div>
         </div>
+      </div>
+
+      <!-- Navigation Controls -->
+      <div class="slide-counter"><span id="currentSlide">1</span> / 6</div>
+
+      <div class="slide-indicators">
+        <div class="indicator active" onclick="goToSlide(0)"></div>
+        <div class="indicator" onclick="goToSlide(1)"></div>
+        <div class="indicator" onclick="goToSlide(2)"></div>
+        <div class="indicator" onclick="goToSlide(3)"></div>
+        <div class="indicator" onclick="goToSlide(4)"></div>
+        <div class="indicator" onclick="goToSlide(5)"></div>
+      </div>
+
+      <div class="navigation">
+        <button class="nav-button" id="prevBtn" onclick="previousSlide()">
+          ← Anterior
+        </button>
+        <button class="nav-button" id="nextBtn" onclick="nextSlide()">
+          Siguiente →
+        </button>
+      </div>
     </div>
 
     <script>
-        let currentSlideIndex = 1;
-        const totalSlidesCount = 5;
+      let currentSlideIndex = 0;
+      const slides = document.querySelectorAll(".slide");
+      const indicators = document.querySelectorAll(".indicator");
+      const totalSlides = slides.length;
 
-        function nextSlide() {
-            if (currentSlideIndex < totalSlidesCount) {
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
-                currentSlideIndex++;
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
-                updateNavigation();
-            }
-        }
-
-        function previousSlide() {
-            if (currentSlideIndex > 1) {
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.remove('active');
-                currentSlideIndex--;
-                document.querySelectorAll('.slide')[currentSlideIndex - 1].classList.add('active');
-                updateNavigation();
-            }
-        }
-
-        function updateNavigation() {
-            document.getElementById('currentSlide').textContent = currentSlideIndex;
-            document.getElementById('totalSlides').textContent = totalSlidesCount;
-            
-            document.getElementById('prevBtn').disabled = currentSlideIndex === 1;
-            document.getElementById('nextBtn').disabled = currentSlideIndex === totalSlidesCount;
-        }
-
-        // Keyboard navigation
-        document.addEventListener('keydown', function(event) {
-            if (event.key === 'ArrowRight' || event.key === ' ') {
-                nextSlide();
-            } else if (event.key === 'ArrowLeft') {
-                previousSlide();
-            }
+      function updateSlideDisplay() {
+        slides.forEach((slide, index) => {
+          slide.classList.remove("active", "prev");
+          if (index === currentSlideIndex) {
+            slide.classList.add("active");
+          } else if (index < currentSlideIndex) {
+            slide.classList.add("prev");
+          }
         });
 
-        // Initialize
-        updateNavigation();
+        indicators.forEach((indicator, index) => {
+          indicator.classList.toggle("active", index === currentSlideIndex);
+        });
+
+        document.getElementById("currentSlide").textContent =
+          currentSlideIndex + 1;
+        document.getElementById("prevBtn").disabled = currentSlideIndex === 0;
+        document.getElementById("nextBtn").disabled =
+          currentSlideIndex === totalSlides - 1;
+      }
+
+      function nextSlide() {
+        if (currentSlideIndex < totalSlides - 1) {
+          currentSlideIndex++;
+          updateSlideDisplay();
+        }
+      }
+
+      function previousSlide() {
+        if (currentSlideIndex > 0) {
+          currentSlideIndex--;
+          updateSlideDisplay();
+        }
+      }
+
+      function goToSlide(index) {
+        currentSlideIndex = index;
+        updateSlideDisplay();
+      }
+
+      // Keyboard navigation
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowRight" || e.key === " ") {
+          e.preventDefault();
+          nextSlide();
+        } else if (e.key === "ArrowLeft") {
+          e.preventDefault();
+          previousSlide();
+        }
+      });
+
+      // Timer functionality
+      let timerInterval;
+      let timeLeft = 20 * 60; // 20 minutes in seconds
+
+      function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+
+        timerInterval = setInterval(() => {
+          timeLeft--;
+          updateTimerDisplay();
+
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            document.getElementById("timer").innerHTML =
+              "⏰ ¡Tiempo terminado!";
+            document.getElementById("timer").style.color = "#dc3545";
+            alert(
+              "⏰ ¡Se acabó el tiempo! Es hora de presentar los resultados."
+            );
+          }
+        }, 1000);
+      }
+
+      function resetTimer() {
+        clearInterval(timerInterval);
+        timeLeft = 20 * 60;
+        updateTimerDisplay();
+        document.getElementById("timer").style.color = "#667eea";
+      }
+
+      function updateTimerDisplay() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        document.getElementById("timer").innerHTML = `${minutes
+          .toString()
+          .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+      }
+
+      // Interactive functions
+      function showProgress() {
+        const progressBar = document.getElementById("maturityProgress");
+        const progressText = document.getElementById("progressText");
+
+        progressBar.style.width = "100%";
+
+        setTimeout(() => {
+          progressText.innerHTML =
+            "🎉 ¡Transformación Completa! Proyecto Gestionado y Predecible";
+          progressText.style.color = "#51cf66";
+          progressText.style.fontWeight = "bold";
+        }, 1000);
+      }
+
+      function highlightSection(element) {
+        document.querySelectorAll(".before-after").forEach((el) => {
+          el.style.transform = "translateY(0px)";
+          el.style.boxShadow = "none";
+        });
+
+        element.style.transform = "translateY(-8px)";
+        element.style.boxShadow = "0 20px 40px rgba(0,0,0,0.3)";
+
+        element.style.animation = "pulse 0.6s ease-in-out";
+        setTimeout(() => {
+          element.style.animation = "";
+        }, 600);
+      }
+
+      function simulateTracking(level) {
+        const result = document.getElementById("trackingResult");
+
+        if (level === "before") {
+          result.innerHTML =
+            '🤷‍♂️ "Ehh... casi terminado... creo que vamos bien..."';
+          result.style.color = "#ff6b6b";
+        } else {
+          result.innerHTML =
+            "📊 Progreso: 67% | Presupuesto: 72% usado | Riesgo: Medio | ETA: 2 semanas";
+          result.style.color = "#51cf66";
+        }
+      }
+
+      function showSummary() {
+        const summaryContent = document.getElementById("summaryContent");
+
+        summaryContent.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px;">
+                    <div style="background: linear-gradient(135deg, #ff9a9e, #fecfef); padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 24px;">📋</div>
+                        <strong>REQM</strong><br>
+                        Requisitos Controlados
+                    </div>
+                    <div style="background: linear-gradient(135deg, #a8edea, #fed6e3); padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 24px;">📊</div>
+                        <strong>PP</strong><br>
+                        Planificación Formal
+                    </div>
+                    <div style="background: linear-gradient(135deg, #ffecd2, #fcb69f); padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 24px;">📈</div>
+                        <strong>PMC</strong><br>
+                        Seguimiento Activo
+                    </div>
+                    <div style="background: linear-gradient(135deg, #d299c2, #fef9d7); padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 24px;">🔍</div>
+                        <strong>PPQA</strong><br>
+                        Calidad Asegurada
+                    </div>
+                </div>
+                <p style="text-align: center; margin-top: 20px; font-style: italic; color: #667eea;">
+                    ✨ Resultado: Proyectos predecibles que cumplen sus promesas ✨
+                </p>
+            `;
+      }
+
+      // Example generator for team activity
+      const examples = {
+        reqm: [
+          "📋 Matriz de Trazabilidad en Excel: Conecta 'Login con Google' → Caso de Uso CU-001 → Prueba TC-001",
+          "📋 Documento de Cambios: Solicitud #15 'Agregar filtro vegetariano' - Impacto: +8 horas, +$1200",
+          "📋 Baseline de Requisitos v2.1: 45 requisitos aprobados, 3 pendientes de validación del cliente",
+        ],
+        pp: [
+          "📊 Cronograma en Jira: Sprint 1-6, 120 story points, entrega 15/dic, dependencia crítica: API de pagos",
+          "📊 Plan de Riesgos: R-001 'Retraso API externa' - Probabilidad: Media, Impacto: Alto, Mitigación: Mock service",
+          "📊 Estimación por Planning Poker: Módulo de pedidos = 34 story points, equipo de 5 desarrolladores",
+        ],
+        pmc: [
+          "📈 Minuta Semanal 12/nov: Sprint 2 - 67% completado, bloqueador resuelto, decisión: priorizar checkout",
+          "📈 Dashboard Burndown: 23 de 34 story points completados, tendencia: entrega a tiempo",
+          "📈 Reporte de Estado: Presupuesto 72% usado, cronograma en verde, 2 riesgos activos monitoreados",
+        ],
+        ppqa: [
+          "🔍 Auditoría QA Sem-47: Hallazgo - Falta documentar 3 casos de prueba en TestRail según estándar",
+          "🔍 Checklist de Revisión: Code review completado 85%, falta peer review en módulo de notificaciones",
+          "🔍 Reporte de Calidad: 12 defectos encontrados, 8 corregidos, cobertura de pruebas: 78%",
+        ],
+      };
+
+      function generateExample() {
+        const areas = Object.keys(examples);
+        const randomArea = areas[Math.floor(Math.random() * areas.length)];
+        const randomExample =
+          examples[randomArea][
+            Math.floor(Math.random() * examples[randomArea].length)
+          ];
+
+        const areaNames = {
+          reqm: "REQM - Gestión de Requisitos",
+          pp: "PP - Planificación de Proyectos",
+          pmc: "PMC - Seguimiento y Control",
+          ppqa: "PPQA - Aseguramiento de Calidad",
+        };
+
+        document.getElementById("exampleContent").innerHTML = `
+                <div style="text-align: center;">
+                    <h4 style="color: #667eea; margin-bottom: 10px;">${areaNames[randomArea]}</h4>
+                    <div style="background: white; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+                        ${randomExample}
+                    </div>
+                    <p style="margin-top: 10px; font-size: 14px; color: #666; font-style: italic;">
+                        💡 Adapta este ejemplo a tu contexto específico del proyecto de delivery
+                    </p>
+                </div>
+            `;
+      }
+
+      function showPresentationMode() {
+        const content = `
+                <div style="text-align: center; padding: 40px;">
+                    <h2 style="color: #667eea; margin-bottom: 30px;">🎤 Presentación de Equipos</h2>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 30px 0;">
+                        <div style="background: #fff3cd; padding: 20px; border-radius: 15px; border: 3px solid #ffc107;">
+                            <h3>👥 Equipo 1</h3>
+                            <button class="demo-button" onclick="startPresentation(1)">Iniciar Presentación</button>
+                        </div>
+                        <div style="background: #d4edda; padding: 20px; border-radius: 15px; border: 3px solid #28a745;">
+                            <h3>👥 Equipo 2</h3>
+                            <button class="demo-button" onclick="startPresentation(2)">Iniciar Presentación</button>
+                        </div>
+                        <div style="background: #cce5ff; padding: 20px; border-radius: 15px; border: 3px solid #007bff;">
+                            <h3>👥 Equipo 3</h3>
+                            <button class="demo-button" onclick="startPresentation(3)">Iniciar Presentación</button>
+                        </div>
+                        <div style="background: #f8d7da; padding: 20px; border-radius: 15px; border: 3px solid #dc3545;">
+                            <h3>👥 Equipo 4</h3>
+                            <button class="demo-button" onclick="startPresentation(4)">Iniciar Presentación</button>
+                        </div>
+                    </div>
+
+                    <div style="background: #f8f9ff; padding: 25px; border-radius: 15px; margin: 30px 0;">
+                        <h3 style="color: #667eea; margin-bottom: 15px;">📋 Formato de Presentación (5 min por equipo)</h3>
+                        <ol style="text-align: left; max-width: 600px; margin: 0 auto; line-height: 1.8;">
+                            <li><strong>REQM:</strong> Mostrar su artefacto/evidencia (1 min)</li>
+                            <li><strong>PP:</strong> Explicar su ejemplo de planificación (1 min)</li>
+                            <li><strong>PMC:</strong> Demostrar su método de seguimiento (1 min)</li>
+                            <li><strong>PPQA:</strong> Presentar su enfoque de calidad (1 min)</li>
+                            <li><strong>Q&A:</strong> Preguntas del grupo (1 min)</li>
+                        </ol>
+                    </div>
+
+                    <div id="presentationTimer" style="font-size: 32px; font-weight: bold; color: #667eea; margin: 20px 0;">
+                        5:00
+                    </div>
+                </div>
+            `;
+
+        // Create modal overlay
+        const modal = document.createElement("div");
+        modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.8); z-index: 2000; display: flex; 
+                align-items: center; justify-content: center;
+            `;
+
+        const modalContent = document.createElement("div");
+        modalContent.style.cssText = `
+                background: white; border-radius: 20px; max-width: 90%; max-height: 90%; 
+                overflow-y: auto; position: relative;
+            `;
+        modalContent.innerHTML =
+          content +
+          `
+                <button onclick="this.closest('.modal').remove()" 
+                        style="position: absolute; top: 15px; right: 20px; background: #dc3545; 
+                               color: white; border: none; border-radius: 50%; width: 35px; height: 35px; 
+                               cursor: pointer; font-size: 18px;">×</button>
+            `;
+
+        modal.className = "modal";
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+      }
+
+      let presentationTimer;
+      let presentationTimeLeft = 5 * 60; // 5 minutes
+
+      function startPresentation(teamNumber) {
+        if (presentationTimer) clearInterval(presentationTimer);
+        presentationTimeLeft = 5 * 60;
+
+        presentationTimer = setInterval(() => {
+          presentationTimeLeft--;
+          updatePresentationTimer();
+
+          if (presentationTimeLeft <= 0) {
+            clearInterval(presentationTimer);
+            document.getElementById("presentationTimer").innerHTML =
+              "⏰ ¡Tiempo!";
+            document.getElementById("presentationTimer").style.color =
+              "#dc3545";
+            alert(`⏰ ¡Tiempo terminado para el Equipo ${teamNumber}!`);
+          }
+        }, 1000);
+      }
+
+      function updatePresentationTimer() {
+        const minutes = Math.floor(presentationTimeLeft / 60);
+        const seconds = presentationTimeLeft % 60;
+        const timerElement = document.getElementById("presentationTimer");
+        if (timerElement) {
+          timerElement.innerHTML = `${minutes}:${seconds
+            .toString()
+            .padStart(2, "0")}`;
+        }
+      }
+
+      // Add CSS for pulse animation
+      const style = document.createElement("style");
+      style.textContent = `
+            @keyframes pulse {
+                0% { transform: translateY(-8px) scale(1); }
+                50% { transform: translateY(-8px) scale(1.05); }
+                100% { transform: translateY(-8px) scale(1); }
+            }
+        `;
+      document.head.appendChild(style);
+
+      // Initialize
+      updateSlideDisplay();
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97a864a8076dcdb0',t:'MTc1NzEwMzI2OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
-<script defer src="js/layout.js"></script>
-</body>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97f3e9ac811778e9',t:'MTc1Nzg5NTE0OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  </body>
 </html>
