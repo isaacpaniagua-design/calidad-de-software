@@ -30,9 +30,7 @@ service cloud.firestore {
       allow create: if isTeacher()
         && request.resource.data.title is string
         && request.resource.data.content is string
-        && request.resource.data.authorEmail == request.auth.token.email
-        && request.resource.data.createdAt == request.time
-        && request.resource.data.updatedAt == request.time;
+        && request.resource.data.authorEmail == request.auth.token.email;
       allow update, delete: if isTeacher();
 
       // Replies subcollection
@@ -40,8 +38,7 @@ service cloud.firestore {
         allow read: if isPotros();
         allow create: if isPotros()
           && request.resource.data.text is string
-          && request.resource.data.authorEmail == request.auth.token.email
-          && request.resource.data.createdAt == request.time;
+          && request.resource.data.authorEmail == request.auth.token.email;
         allow update, delete: if isTeacher() || (isPotros() && resource.data.authorEmail == request.auth.token.email);
       }
     }
@@ -57,6 +54,16 @@ service cloud.firestore {
         request.resource.data.diff(resource.data).changedKeys().hasOnly(['downloads']) &&
         request.resource.data.downloads == resource.data.downloads + 1
       );
+    }
+
+    // Attendance rules
+    match /attendances/{attendanceId} {
+      allow read: if isPotros();
+      allow create: if isPotros()
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.date is string;
+      allow update, delete: if false;
     }
 
     // Grades rules
