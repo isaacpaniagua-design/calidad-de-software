@@ -46,6 +46,25 @@ service cloud.firestore {
       }
     }
 
+    // Materials rules
+    match /materials/{materialId} {
+      allow read: if isPotros();
+      // Create/update/delete reserved to teachers
+      allow create, delete: if isTeacher();
+      // Allow teachers to update; allow potros to increment downloads by +1 only
+      allow update: if isTeacher() || (
+        isPotros() &&
+        request.resource.data.diff(resource.data).changedKeys().hasOnly(['downloads']) &&
+        request.resource.data.downloads == resource.data.downloads + 1
+      );
+    }
+
+    // Grades rules
+    match /grades/{studentId} {
+      allow read: if isPotros();
+      allow create, update, delete: if isTeacher();
+    }
+
     // NOTE: Merge these forum rules into your existing rules if you already have them.
   }
 }
