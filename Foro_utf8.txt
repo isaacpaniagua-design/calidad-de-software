@@ -1,0 +1,566 @@
+﻿<!DOCTYPE html>
+<html lang="es" data-layout="global">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Foro Educativo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+      body {
+        font-family: "Inter", sans-serif;
+      }
+    </style>
+  
+<style>
+/* Compensación por nav fijo */
+body{ padding-top: 80px; }
+/* NAV Plataforma QS (fijo, una sola fila con scroll si no cabe) */
+.qs-nav{position:fixed;top:0;left:0;right:0;z-index:1000;backdrop-filter:saturate(140%) blur(18px);
+       background:rgba(255,255,255,.95);border-bottom:1px solid rgba(255,255,255,.2);
+       box-shadow:0 8px 32px rgba(0,0,0,.10)}
+.qs-nav .wrap{max-width:1200px;margin:0 auto;padding:14px 20px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:nowrap}
+.qs-brand{display:flex;gap:12px;align-items:center;color:#1f2937;font-weight:800;font-size:1.1rem;text-decoration:none;padding:6px 12px;border-radius:16px;flex:0 0 auto}
+.qs-brand::before{content:"🎓";font-size:1.3rem}
+.qs-tabs{display:flex;gap:10px;background:rgba(255,255,255,.3);padding:6px;border-radius:30px;backdrop-filter:blur(10px);
+         flex:1 1 auto;justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;scrollbar-width:thin}
+.qs-btn{border:0;padding:10px 16px;border-radius:22px;background:rgba(255,255,255,.7);color:#374151;cursor:pointer;text-decoration:none;
+       font-weight:600;font-size:.88rem;transition:all .25s ease;border:2px solid transparent;flex:0 0 auto}
+.qs-btn:hover{color:#fff;transform:translateY(-2px);box-shadow:0 8px 18px rgba(102,126,234,.35);border-color:rgba(102,126,234,.25);background:linear-gradient(135deg,#667eea,#764ba2)}
+.qs-btn[aria-current="page"]{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;box-shadow:0 6px 16px rgba(102,126,234,.45)}
+/* Footer como index */
+.footer{margin-top:60px;padding:30px 20px;text-align:center;background:rgba(255,255,255,.1);
+        backdrop-filter:blur(10px);border-top:1px solid rgba(255,255,255,.2)}
+.footer-content{max-width:1200px;margin:0 auto;color:rgba(31,41,55,.9);font-size:.95rem}
+</style>
+
+
+<style>
+/* Fuente y fondo unificados como en el resto */
+html, body { min-height: 100%; }
+body{
+  font-family:'Inter','Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  
+  padding-top:80px;
+  color:#333;
+}
+/* NAV: mantener misma tipografía y pesos */
+.qs-brand{font-weight:800;font-size:1.2rem;color:#1f2937}
+.qs-tabs .qs-btn{font-weight:600;font-size:.9rem}
+/* Footer como index */
+.footer{
+  margin-top:60px;
+  padding:30px 20px;
+  text-align:center;
+  background:rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter:blur(10px);
+  border-top:1px solid rgba(255, 255, 255, 0.2);
+}
+.footer-content{
+  max-width:1200px;
+  margin:0 auto;
+  color:rgba(255,255,255,0.8) !important;
+  font-size:0.95rem;
+  transition:all 0.3s ease;
+  cursor:default;
+}
+.footer-content:hover{ color:#fff; transform:translateY(-2px); }
+</style>
+
+<link rel="stylesheet" href="css/layout.css">
+  <body class="min-h-screen">
+
+<!-- NAV Plataforma QS -->
+<div class="qs-nav" data-role="main-nav">
+  <div class="wrap">
+    <a class="qs-brand" href="index.html"><span>Plataforma QS</span></a>
+    <nav class="qs-tabs" aria-label="Navegación">
+      <a class="qs-btn" href="materiales.html">Materiales</a>
+      <a class="qs-btn" href="asistencia.html">Asistencia</a>
+      <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+      <a class="qs-btn" href="Foro.html" aria-current="page">Foro</a>
+      <a class="qs-btn" href="paneldocente.html">Panel</a>
+      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+      
+      
+    </nav>
+  </div>
+</div>
+
+    <!-- Header -->
+    <header class="bg-white shadow-lg border-b-4 border-indigo-500">
+      <div class="max-w-6xl mx-auto px-6 py-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-2xl font-bold text-gray-800">📚 Foro Educativo</h1>
+            <p class="text-gray-600 text-sm">
+              Espacio de discusión y aprendizaje
+            </p>
+          </div>
+          <div class="flex items-center space-x-4">
+            <div class="text-right">
+              <p class="text-sm font-medium text-gray-700" id="userRole">
+                Estudiante
+              </p>
+              <p class="text-xs text-gray-500" id="userName">María González</p>
+            </div>
+            <button
+              onclick="toggleRole()"
+              class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              Cambiar Vista
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto px-6 py-8">
+      <!-- Panel de Administración (Solo Docente) -->
+      <div
+        id="adminPanel"
+        class="bg-white rounded-xl shadow-lg p-6 mb-8 border-l-4 border-green-500"
+        style="display: none"
+      >
+        <h2 class="text-xl font-bold text-gray-800 mb-4">
+          🎓 Panel de Administración
+        </h2>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Título del Tema</label
+            >
+            <input
+              type="text"
+              id="topicTitle"
+              placeholder="Ej: Introducción a la Programación"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Categoría</label
+            >
+            <select
+              id="topicCategory"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            >
+              <option>📖 Teoría</option>
+              <option>💻 Práctica</option>
+              <option>❓ Dudas</option>
+              <option>📋 Tareas</option>
+              <option>🎯 Proyectos</option>
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Contenido</label
+            >
+            <textarea
+              id="topicContent"
+              rows="4"
+              placeholder="Describe el tema de discusión..."
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            ></textarea>
+          </div>
+          <div class="md:col-span-2">
+            <button
+              onclick="createTopic()"
+              class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            >
+              ➕ Crear Nuevo Tema
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Lista de Temas -->
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+          <h2 class="text-xl font-bold text-white">💬 Temas de Discusión</h2>
+        </div>
+
+        <div id="topicsList" class="divide-y divide-gray-200">
+          <!-- Tema 1 -->
+          <div
+            class="p-6 hover:bg-gray-50 transition-colors cursor-pointer"
+            onclick="openTopic(1)"
+          >
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-center space-x-3 mb-2">
+                  <span
+                    class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
+                    >📖 Teoría</span
+                  >
+                  <span class="text-xs text-gray-500">Hace 2 horas</span>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                  Introducción a los Algoritmos
+                </h3>
+                <p class="text-gray-600 text-sm mb-3">
+                  ¿Qué son los algoritmos y por qué son importantes en
+                  programación? Discutamos los conceptos básicos...
+                </p>
+                <div class="flex items-center space-x-4 text-sm text-gray-500">
+                  <span>👨‍🏫 Prof. García</span>
+                  <span>💬 12 respuestas</span>
+                  <span>👥 8 participantes</span>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="w-3 h-3 bg-green-400 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tema 2 -->
+          <div
+            class="p-6 hover:bg-gray-50 transition-colors cursor-pointer"
+            onclick="openTopic(2)"
+          >
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-center space-x-3 mb-2">
+                  <span
+                    class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium"
+                    >💻 Práctica</span
+                  >
+                  <span class="text-xs text-gray-500">Hace 1 día</span>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                  Ejercicios de Bucles
+                </h3>
+                <p class="text-gray-600 text-sm mb-3">
+                  Practiquemos con diferentes tipos de bucles. Compartan sus
+                  soluciones y dudas...
+                </p>
+                <div class="flex items-center space-x-4 text-sm text-gray-500">
+                  <span>👨‍🏫 Prof. García</span>
+                  <span>💬 25 respuestas</span>
+                  <span>👥 15 participantes</span>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="w-3 h-3 bg-yellow-400 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tema 3 -->
+          <div
+            class="p-6 hover:bg-gray-50 transition-colors cursor-pointer"
+            onclick="openTopic(3)"
+          >
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-center space-x-3 mb-2">
+                  <span
+                    class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium"
+                    >❓ Dudas</span
+                  >
+                  <span class="text-xs text-gray-500">Hace 3 días</span>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                  Diferencia entre Variables y Constantes
+                </h3>
+                <p class="text-gray-600 text-sm mb-3">
+                  Tengo dudas sobre cuándo usar variables y cuándo constantes.
+                  ¿Pueden ayudarme?
+                </p>
+                <div class="flex items-center space-x-4 text-sm text-gray-500">
+                  <span>👨‍🎓 Ana López</span>
+                  <span>💬 8 respuestas</span>
+                  <span>👥 5 participantes</span>
+                </div>
+              </div>
+              <div class="ml-4">
+                <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Tema -->
+    <div
+      id="topicModal"
+      class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden"
+    >
+      <div class="flex items-center justify-center min-h-screen p-4">
+        <div
+          class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+        >
+          <div
+            class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4 flex justify-between items-center"
+          >
+            <h3 class="text-xl font-bold text-white" id="modalTitle">
+              Título del Tema
+            </h3>
+            <button
+              onclick="closeTopic()"
+              class="text-white hover:text-gray-200 text-2xl"
+            >
+              ×
+            </button>
+          </div>
+
+          <div class="p-6 max-h-[70vh] overflow-y-auto">
+            <!-- Contenido del tema -->
+            <div class="bg-blue-50 rounded-lg p-4 mb-6">
+              <div class="flex items-center space-x-3 mb-3">
+                <span
+                  class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
+                  id="modalCategory"
+                  >📖 Teoría</span
+                >
+                <span class="text-sm text-gray-600">👨‍🏫 Prof. García</span>
+                <span class="text-xs text-gray-500">Hace 2 horas</span>
+              </div>
+              <p class="text-gray-700" id="modalContent">
+                Contenido del tema...
+              </p>
+            </div>
+
+            <!-- Respuestas -->
+            <div id="responsesList" class="space-y-4 mb-6">
+              <div class="border-l-4 border-green-400 pl-4 py-2">
+                <div class="flex items-center space-x-2 mb-2">
+                  <span class="font-medium text-gray-800">👨‍🎓 Carlos Ruiz</span>
+                  <span class="text-xs text-gray-500">Hace 1 hora</span>
+                </div>
+                <p class="text-gray-700">
+                  Excelente explicación profesor. Me ayudó mucho a entender el
+                  concepto de complejidad algorítmica.
+                </p>
+              </div>
+
+              <div class="border-l-4 border-blue-400 pl-4 py-2">
+                <div class="flex items-center space-x-2 mb-2">
+                  <span class="font-medium text-gray-800">👩‍🎓 Laura Martín</span>
+                  <span class="text-xs text-gray-500">Hace 30 min</span>
+                </div>
+                <p class="text-gray-700">
+                  ¿Podrían dar más ejemplos de algoritmos de ordenamiento? Me
+                  gustaría practicar más.
+                </p>
+              </div>
+            </div>
+
+            <!-- Formulario de respuesta -->
+            <div class="border-t pt-4">
+              <h4 class="font-semibold text-gray-800 mb-3">
+                💭 Agregar Respuesta
+              </h4>
+              <textarea
+                id="responseText"
+                rows="3"
+                placeholder="Escribe tu respuesta..."
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-3"
+              ></textarea>
+              <button
+                onclick="addResponse()"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+              >
+                📤 Enviar Respuesta
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let isTeacher = false;
+      let currentTopicId = null;
+
+      // Datos de ejemplo
+      const topics = {
+        1: {
+          title: "Introducción a los Algoritmos",
+          category: "📖 Teoría",
+          content:
+            "¿Qué son los algoritmos y por qué son importantes en programación? Un algoritmo es una secuencia finita de instrucciones bien definidas que resuelven un problema específico. Discutamos los conceptos básicos y su importancia en el desarrollo de software.",
+          author: "Prof. García",
+          responses: [
+            {
+              author: "👨‍🎓 Carlos Ruiz",
+              text: "Excelente explicación profesor. Me ayudó mucho a entender el concepto de complejidad algorítmica.",
+              time: "Hace 1 hora",
+            },
+            {
+              author: "👩‍🎓 Laura Martín",
+              text: "¿Podrían dar más ejemplos de algoritmos de ordenamiento? Me gustaría practicar más.",
+              time: "Hace 30 min",
+            },
+          ],
+        },
+        2: {
+          title: "Ejercicios de Bucles",
+          category: "💻 Práctica",
+          content:
+            "Practiquemos con diferentes tipos de bucles (for, while, do-while). Compartan sus soluciones y dudas. Recuerden que la práctica es fundamental para dominar estos conceptos.",
+          author: "Prof. García",
+          responses: [],
+        },
+        3: {
+          title: "Diferencia entre Variables y Constantes",
+          category: "❓ Dudas",
+          content:
+            "Tengo dudas sobre cuándo usar variables y cuándo constantes. ¿Pueden ayudarme con ejemplos prácticos?",
+          author: "Ana López",
+          responses: [],
+        },
+      };
+
+      function applyForumRole() {
+        const userRole = document.getElementById("userRole");
+        const userName = document.getElementById("userName");
+        const adminPanel = document.getElementById("adminPanel");
+        if (isTeacher) {
+          if (userRole) userRole.textContent = "Docente";
+          if (userName) userName.textContent = "Prof. García";
+          if (adminPanel) adminPanel.style.display = "block";
+        } else {
+          if (userRole) userRole.textContent = "Estudiante";
+          if (userName) userName.textContent = "María González";
+          if (adminPanel) adminPanel.style.display = "none";
+        }
+      }
+
+      function toggleRole() {
+        isTeacher = !isTeacher;
+        try { localStorage.setItem('qs_role', isTeacher ? 'docente' : 'estudiante'); } catch(e) {}
+        applyForumRole();
+      }
+
+      function createTopic() {
+        const title = document.getElementById("topicTitle").value;
+        const category = document.getElementById("topicCategory").value;
+        const content = document.getElementById("topicContent").value;
+
+        if (!title || !content) {
+          alert("Por favor completa todos los campos");
+          return;
+        }
+
+        // Simular creación de tema
+        alert("✅ Tema creado exitosamente: " + title);
+
+        // Limpiar formulario
+        document.getElementById("topicTitle").value = "";
+        document.getElementById("topicContent").value = "";
+      }
+
+      function openTopic(topicId) {
+        currentTopicId = topicId;
+        const topic = topics[topicId];
+
+        document.getElementById("modalTitle").textContent = topic.title;
+        document.getElementById("modalCategory").textContent = topic.category;
+        document.getElementById("modalContent").textContent = topic.content;
+
+        // Mostrar respuestas
+        const responsesList = document.getElementById("responsesList");
+        responsesList.innerHTML = "";
+
+        topic.responses.forEach((response) => {
+          const responseDiv = document.createElement("div");
+          responseDiv.className = "border-l-4 border-green-400 pl-4 py-2";
+          responseDiv.innerHTML = `
+                    <div class="flex items-center space-x-2 mb-2">
+                        <span class="font-medium text-gray-800">${response.author}</span>
+                        <span class="text-xs text-gray-500">${response.time}</span>
+                    </div>
+                    <p class="text-gray-700">${response.text}</p>
+                `;
+          responsesList.appendChild(responseDiv);
+        });
+
+        document.getElementById("topicModal").classList.remove("hidden");
+      }
+
+      function closeTopic() {
+        document.getElementById("topicModal").classList.add("hidden");
+        document.getElementById("responseText").value = "";
+      }
+
+      function addResponse() {
+        const responseText = document.getElementById("responseText").value;
+
+        if (!responseText.trim()) {
+          alert("Por favor escribe una respuesta");
+          return;
+        }
+
+        const userName = isTeacher ? "👨‍🏫 Prof. García" : "👩‍🎓 María González";
+
+        // Agregar respuesta al tema
+        topics[currentTopicId].responses.push({
+          author: userName,
+          text: responseText,
+          time: "Ahora",
+        });
+
+        // Actualizar vista
+        openTopic(currentTopicId);
+
+        alert("✅ Respuesta enviada correctamente");
+      }
+
+      // Cerrar modal al hacer clic fuera
+      document
+        .getElementById("topicModal")
+        .addEventListener("click", function (e) {
+          if (e.target === this) {
+            closeTopic();
+          }
+        });
+    </script>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97b7f680f26bcdb0',t:'MTc1NzI2NjUyOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+  
+<!-- Pie de página -->
+<footer class="footer">
+  <div class="footer-content">© 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua</div>
+</footer>
+
+
+<script defer src="js/back-home.js"></script>
+</body>
+</html>
+

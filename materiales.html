@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
@@ -53,8 +53,6 @@
         margin-bottom: 1rem;
         text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
       }
-
-      .platform-subtitle {
         font-size: 1.5rem;
         opacity: 0.9;
         font-weight: 500;
@@ -935,7 +933,8 @@
     </div>
 
     <script>
-      let currentRole = "teacher";
+      // Rol local desde almacenamiento (UTF-8 seguro)
+      let currentRole = ((localStorage.getItem('qs_role')||'estudiante').toLowerCase()==='docente') ? 'teacher' : 'student';
       let selectedFiles = [];
 
       // Role switching
@@ -969,6 +968,9 @@
           "Vista cambiada",
           `Ahora viendo como ${role === "teacher" ? "Profesor" : "Estudiante"}`
         );
+
+        // Persistir rol local
+        try { localStorage.setItem('qs_role', role === 'teacher' ? 'docente' : 'estudiante'); } catch(e) {}
       }
 
       // File upload handling
@@ -1283,5 +1285,19 @@
         }
       })();
     </script>
-  </body>
+  <script>
+    // Persistencia de rol local (sin layout): inicializa según localStorage
+    (function(){
+      try {
+        var current = (localStorage.getItem('qs_role')||'estudiante').toLowerCase();
+        if (typeof switchRole === 'function') {
+          switchRole(current === 'docente' ? 'teacher' : 'student');
+        }
+      } catch(e){}
+    })();
+  </script>
+  <script defer src="js/back-home.js"></script>
+  <script defer src="js/nav-inject.js"></script>
+ </body>
+
 </html>

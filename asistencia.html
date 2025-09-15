@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es" data-layout="global">
 <head>
     <meta charset="UTF-8">
@@ -70,7 +70,7 @@
       <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
       <a class="qs-btn" href="Foro.html">Foro</a>
       <a class="qs-btn" href="paneldocente.html">Panel</a>
-      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+      
       
     </nav>
   </div>
@@ -151,6 +151,24 @@
                     <p class="text-sm text-gray-500 mt-4">
                         * Se validará automáticamente con tu cuenta @potros.itson.edu.mx
                     </p>
+                </div>
+            </div>
+
+            <!-- Historial de Pase de Lista (por rango rápido) -->
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden mt-8">
+                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6 border-b text-white">
+                    <div class="flex items-center justify-between gap-4 flex-wrap">
+                        <h2 class="text-2xl font-bold">Historial de Pase de Lista</h2>
+                        <div class="flex items-center gap-2">
+                            <button id="hist7Btn" class="px-3 py-1 rounded-md bg-white/20 hover:bg-white/30 text-white">Últimos 7 días</button>
+                            <button id="hist30Btn" class="px-3 py-1 rounded-md bg-white/20 hover:bg-white/30 text-white">Últimos 30 días</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div id="historyResults" class="overflow-auto">
+                        <div class="text-gray-500">Selecciona un rango rápido para ver el historial.</div>
+                    </div>
                 </div>
             </div>
 
@@ -686,7 +704,7 @@
           <h1>${title}</h1>
           <table><thead><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Nombre</th><th>Email</th><th>Tipo</th><th>EnHorario</th></tr></thead>
           <tbody>${rows}</tbody></table>
-          </body></html>`;
+            <script defer src=" js/nav-inject.js\></script>`r`n </body></html>`;
         w.document.write(htmlDaily);
         w.document.close();
         setTimeout(() => { try { w.focus(); w.print(); } catch(_){} }, 300);
@@ -739,13 +757,70 @@
 
       document.getElementById('exportAttendanceRangeCsvBtn')?.addEventListener('click', () => exportRange(false));
       document.getElementById('exportAttendanceRangePdfBtn')?.addEventListener('click', () => exportRange(true));
+
+      // Historial rápido (7 y 30 días)
+      async function renderHistoryDays(days){
+        const today = new Date();
+        const end = today.toISOString().slice(0,10);
+        const startDate = new Date(today.getTime() - (days*24*60*60*1000));
+        const start = startDate.toISOString().slice(0,10);
+        const items = await fetchAttendancesByDateRange(start, end);
+        // Agrupar por fecha
+        const byDate = {};
+        for(const it of items){
+          const d = it.date || (it.timestamp ? it.timestamp.toISOString().slice(0,10) : '');
+          if(!byDate[d]) byDate[d] = [];
+          byDate[d].push(it);
+        }
+        const dates = Object.keys(byDate).sort();
+        const container = document.getElementById('historyResults');
+        if(!container) return;
+        if(dates.length === 0){ container.innerHTML = '<div class="text-gray-500">Sin registros en el rango seleccionado.</div>'; return; }
+        let html = '';
+        for(const d of dates){
+          const rows = byDate[d].map((it, idx) => {
+            const t = it.timestamp ? new Date(it.timestamp).toLocaleTimeString('es-MX',{hour12:false}) : '';
+            const name = (it.name||'');
+            const email = (it.email||'');
+            const type = (it.type||'');
+            return `<tr><td class="px-2 py-1 text-sm text-gray-600">${idx+1}</td><td class="px-2 py-1">${t}</td><td class="px-2 py-1">${name}</td><td class="px-2 py-1 text-gray-600">${email}</td><td class="px-2 py-1">${type}</td></tr>`;
+          }).join('');
+          html += `
+            <div class="mb-6">
+              <div class="font-semibold text-gray-800 mb-2">${d} <span class="text-sm text-gray-500">(${byDate[d].length} registros)</span></div>
+              <div class="border rounded-md overflow-hidden">
+                <table class="w-full text-sm">
+                  <thead class="bg-gray-50">
+                    <tr><th class="px-2 py-1 text-left">#</th><th class="px-2 py-1 text-left">Hora</th><th class="px-2 py-1 text-left">Nombre</th><th class="px-2 py-1 text-left">Email</th><th class="px-2 py-1 text-left">Tipo</th></tr>
+                  </thead>
+                  <tbody>${rows}</tbody>
+                </table>
+              </div>
+            </div>`;
+        }
+        container.innerHTML = html;
+      }
+      document.getElementById('hist7Btn')?.addEventListener('click', () => renderHistoryDays(7));
+      document.getElementById('hist30Btn')?.addEventListener('click', () => renderHistoryDays(30));
     </script>
 
 <footer class="footer">
   <div class="footer-content">© 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua</div>
 </footer>
-<script defer src="js/layout.js"></script>
-</body>
+<script>
+// Visibilidad por rol local (sin layout global)
+document.addEventListener('DOMContentLoaded', function(){
+  try{
+    var rol = (localStorage.getItem('qs_role')||'estudiante').toLowerCase();
+    document.querySelectorAll('.teacher-only,.docente-only').forEach(function(el){ el.style.display = (rol==='docente') ? '' : 'none'; });
+    document.querySelectorAll('.student-only,.estudiante-only').forEach(function(el){ el.style.display = (rol==='estudiante') ? '' : 'none'; });
+  }catch(e){}
+});
+</script>
+<script defer src="js/back-home.js"></script>
+  <script defer src="js/nav-inject.js"></script>
+  </body>
+
+
+
 </html>
-
-

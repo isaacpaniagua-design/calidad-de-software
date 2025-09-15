@@ -1,1382 +1,703 @@
-<!DOCTYPE html>
-<html lang="es" data-layout="global">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anexo 2: Formato de Registro de Defectos (Bug Report)</title>
+﻿<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registro de Defectos - Bug Report</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-        @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
-        
-        @media print {
-            body { margin: 0; }
-            .no-print { display: none; }
-            .page-break { page-break-before: always; }
-            .sidebar { display: none; }
-            .main-content { margin-left: 0; }
-        }
-        
-        * {
-            box-sizing: border-box;
-        }
-        
-        :root {
-            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            --warning-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            --danger-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            --dark-gradient: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
-            --glass-bg: rgba(255, 255, 255, 0.25);
-            --glass-border: rgba(255, 255, 255, 0.18);
-        }
-        
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Times New Roman", serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f5f5f5;
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 250px;
+        height: 100vh;
+        background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        color: white;
+        padding: 20px;
+        z-index: 1000;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .sidebar h2 {
+        margin-bottom: 30px;
+        font-size: 1.2em;
+        text-align: center;
+        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+        padding-bottom: 15px;
+      }
+
+      .sidebar button {
+        width: 100%;
+        padding: 12px;
+        margin: 8px 0;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s ease;
+      }
+
+      .sidebar button:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-2px);
+      }
+
+      .main-content {
+        margin-left: 250px;
+        padding: 20px;
+        min-height: 100vh;
+      }
+
+      .document {
+        background: white;
+        max-width: 210mm;
+        margin: 0 auto;
+        padding: 25mm;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 30px;
+        border-bottom: 3px solid #e74c3c;
+        padding-bottom: 20px;
+      }
+
+      .header h1 {
+        color: #e74c3c;
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+
+      .header .subtitle {
+        color: #666;
+        font-size: 14px;
+        font-style: italic;
+      }
+
+      .section {
+        margin-bottom: 20px;
+        page-break-inside: avoid;
+      }
+
+      .section h2 {
+        color: #e74c3c;
+        font-size: 16px;
+        margin-bottom: 8px;
+        padding: 8px 0;
+        border-bottom: 2px solid #e0e0e0;
+      }
+
+      .section-description {
+        color: #666;
+        font-size: 12px;
+        margin-bottom: 8px;
+        font-style: italic;
+      }
+
+      .input-area {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 12px;
+        min-height: 60px;
+        background-color: #fafafa;
+        font-family: inherit;
+        font-size: 12px;
+        line-height: 1.6;
+        resize: vertical;
+        width: 100%;
+        outline: none;
+        transition: border-color 0.3s ease;
+      }
+
+      .input-area:focus {
+        border-color: #e74c3c;
+        background-color: white;
+      }
+
+      .short-input {
+        min-height: 40px;
+      }
+
+      .medium-input {
+        min-height: 80px;
+      }
+
+      .long-input {
+        min-height: 120px;
+      }
+
+      .two-column {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      .priority-severity {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 15px;
+      }
+
+      .select-field {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 12px;
+        background-color: #fafafa;
+        font-family: inherit;
+        font-size: 12px;
+        width: 100%;
+        outline: none;
+        transition: border-color 0.3s ease;
+      }
+
+      .select-field:focus {
+        border-color: #e74c3c;
+        background-color: white;
+      }
+
+      .page-break {
+        page-break-before: always;
+      }
+
+      .steps-section {
+        background: #fff5f5;
+        padding: 15px;
+        border-left: 4px solid #e74c3c;
+        margin: 10px 0;
+        border-radius: 4px;
+      }
+
+      .info-box {
+        background: #f8f9fa;
+        padding: 12px;
+        border-radius: 4px;
+        margin: 8px 0;
+        font-size: 11px;
+        color: #555;
+      }
+
+      /* Estilos para impresión */
+      @media print {
         body {
-            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-            min-height: 100vh;
-            color: #2d3748;
-            overflow-x: hidden;
+          background: white;
+          font-size: 11pt;
+          line-height: 1.4;
         }
-        
-        @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
+
         .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 280px;
-            height: 100vh;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid var(--glass-border);
-            padding: 30px 20px;
-            z-index: 1000;
-            overflow-y: auto;
+          display: none !important;
         }
-        
-        .sidebar-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .sidebar-logo {
-            width: 60px;
-            height: 60px;
-            background: var(--primary-gradient);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 15px;
-            font-size: 24px;
-            color: white;
-            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
-        }
-        
-        .sidebar-title {
-            color: white;
-            font-size: 18px;
-            font-weight: 600;
-            margin: 0;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-        
-        .nav-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .nav-item {
-            margin-bottom: 8px;
-        }
-        
-        .nav-link {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            color: rgba(255,255,255,0.8);
-            text-decoration: none;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            font-size: 14px;
-            font-weight: 500;
-        }
-        
-        .nav-link:hover, .nav-link.active {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            transform: translateX(5px);
-        }
-        
-        .nav-link i {
-            margin-right: 10px;
-            width: 20px;
-            text-align: center;
-        }
-        
-        .progress-section {
-            margin-top: 30px;
-            padding: 20px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 15px;
-            border: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .progress-title {
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        
-        .progress-bar-container {
-            background: rgba(255,255,255,0.2);
-            height: 8px;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-        
-        .progress-bar-fill {
-            height: 100%;
-            background: var(--success-gradient);
-            width: 0%;
-            transition: width 0.5s ease;
-            border-radius: 4px;
-        }
-        
-        .progress-text {
-            color: rgba(255,255,255,0.8);
-            font-size: 12px;
-            text-align: center;
-        }
-        
+
         .main-content {
-            margin-left: 280px;
-            padding: 30px;
+          margin-left: 0 !important;
+          padding: 0 !important;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border-radius: 25px;
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
-            border: 1px solid var(--glass-border);
-            overflow: hidden;
-            position: relative;
+
+        .document {
+          box-shadow: none;
+          border-radius: 0;
+          max-width: none;
+          padding: 15mm;
+          margin: 0;
         }
-        
-        .container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-            color: white;
-            text-align: center;
-            padding: 60px 40px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.2) 0%, transparent 50%);
-            animation: float 15s ease-in-out infinite;
-        }
-        
-        .header::after {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7);
-            background-size: 400% 400%;
-            animation: gradientBorder 4s ease infinite;
-            z-index: -1;
-            border-radius: 25px;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            33% { transform: translateY(-10px) rotate(120deg); }
-            66% { transform: translateY(5px) rotate(240deg); }
-        }
-        
-        @keyframes gradientBorder {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-        
-        .header-content {
-            position: relative;
-            z-index: 2;
-        }
-        
-        .header-icon {
-            width: 80px;
-            height: 80px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 36px;
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255,255,255,0.3);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            animation: pulse 2s ease-in-out infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        .header h1 {
-            font-size: 42px;
-            font-weight: 800;
-            margin: 0;
-            position: relative;
-            z-index: 2;
-            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            background: linear-gradient(45deg, #fff, #f0f0f0);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: textShine 3s ease-in-out infinite;
-        }
-        
-        @keyframes textShine {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-        
-        .header .subtitle {
-            font-size: 18px;
-            margin-top: 10px;
-            opacity: 0.95;
-            font-weight: 500;
-            position: relative;
-            z-index: 2;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-        
-        .header-badges {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 25px;
-            flex-wrap: wrap;
-        }
-        
-        .badge {
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(10px);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            border: 1px solid rgba(255,255,255,0.3);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .content {
-            padding: 30px;
-        }
-        
-        .info-box {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border: 1px solid #0ea5e9;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 30px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .info-box::before {
-            content: '📋';
-            position: absolute;
-            top: -10px;
-            right: -10px;
-            font-size: 60px;
-            opacity: 0.1;
-            transform: rotate(15deg);
-        }
-        
-        .info-box h3 {
-            color: #0369a1;
-            margin: 0 0 15px 0;
-            font-size: 18px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .info-box p {
-            margin: 8px 0;
-            color: #0c4a6e;
-        }
-        
+
         .section {
-            margin-bottom: 35px;
-            border-radius: 20px;
-            overflow: hidden;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--glass-border);
-            box-shadow: 
-                0 8px 32px rgba(0, 0, 0, 0.12),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
+          page-break-inside: avoid;
+          margin-bottom: 15px;
         }
-        
-        .section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
+
+        .page-break {
+          page-break-before: always;
         }
-        
-        .section:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 
-                0 20px 60px rgba(0, 0, 0, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
+        .input-area,
+        .select-field {
+          border: 1px solid #333;
+          background: white;
+          font-size: 10pt;
         }
-        
-        .section:hover::before {
-            opacity: 1;
+
+        .header h1 {
+          font-size: 18pt;
         }
-        
-        .section-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 25px 30px;
-            font-weight: 700;
-            font-size: 18px;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            gap: 15px;
+
+        .section h2 {
+          font-size: 14pt;
         }
-        
-        .section-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            animation: shimmer 3s infinite;
+
+        .two-column {
+          grid-template-columns: 1fr 1fr;
         }
-        
-        @keyframes shimmer {
-            0% { left: -100%; }
-            100% { left: 100%; }
+
+        .priority-severity {
+          grid-template-columns: 1fr 1fr 1fr;
         }
-        
-        .section-icon {
-            width: 45px;
-            height: 45px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.3);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        
-        .section-content {
-            padding: 25px;
-            background: #fafafa;
-        }
-        
-        .description {
-            background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
-            border: 1px solid #10b981;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 10px;
-            font-style: italic;
-            color: #065f46;
-            position: relative;
-            font-weight: 500;
-        }
-        
-        .description::before {
-            content: '💡';
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            font-size: 20px;
-        }
-        
-        .input-area {
-            width: 100%;
-            min-height: 120px;
-            padding: 20px;
-            border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 15px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 15px;
-            line-height: 1.7;
-            resize: vertical;
-            background: rgba(255,255,255,0.9);
-            backdrop-filter: blur(10px);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 
-                inset 0 2px 10px rgba(0,0,0,0.05),
-                0 4px 20px rgba(0,0,0,0.08);
-            position: relative;
-        }
-        
-        .input-area::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-            border-radius: 15px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
-        }
-        
-        .input-area:focus {
-            outline: none;
-            border-color: rgba(102, 126, 234, 0.5);
-            background: rgba(255,255,255,0.95);
-            box-shadow: 
-                0 0 0 4px rgba(102, 126, 234, 0.1),
-                inset 0 2px 10px rgba(0,0,0,0.05),
-                0 8px 40px rgba(102, 126, 234, 0.2);
-            transform: translateY(-2px) scale(1.01);
-        }
-        
-        .input-area:focus::before {
-            opacity: 1;
-        }
-        
-        .input-wrapper {
-            position: relative;
-        }
-        
-        .input-label {
-            position: absolute;
-            top: -12px;
-            left: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            z-index: 10;
-            opacity: 0;
-            transform: translateY(10px);
-            transition: all 0.3s ease;
-        }
-        
-        .input-area:focus + .input-label,
-        .input-area:not(:placeholder-shown) + .input-label {
-            opacity: 1;
-            transform: translateY(0);
-        }
-        
-        .input-area::placeholder {
-            color: #9ca3af;
-            font-style: italic;
-        }
-        
-        .example {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-            border: 1px solid #f59e0b;
-            padding: 12px 15px;
-            margin: 15px 0;
-            border-radius: 8px;
-            font-size: 13px;
-            position: relative;
-        }
-        
-        .example::before {
-            content: '✨';
-            margin-right: 8px;
-        }
-        
-        .example strong {
-            color: #92400e;
-            font-weight: 600;
-        }
-        
-        .controls {
-            position: fixed;
-            top: 30px;
-            right: 30px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            padding: 25px;
-            border-radius: 20px;
-            box-shadow: 
-                0 15px 50px rgba(0,0,0,0.2),
-                inset 0 1px 0 rgba(255,255,255,0.2);
-            border: 1px solid var(--glass-border);
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        
-        .controls-title {
-            color: white;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 10px;
-            text-align: center;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-        
-        .btn {
-            background: var(--primary-gradient);
-            color: white;
-            border: none;
-            padding: 14px 20px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: 'Poppins', sans-serif;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 
-                0 6px 20px rgba(102, 126, 234, 0.3),
-                inset 0 1px 0 rgba(255,255,255,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            position: relative;
-            overflow: hidden;
-            min-width: 140px;
-        }
-        
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transition: left 0.5s ease;
-        }
-        
-        .btn:hover::before {
-            left: 100%;
-        }
-        
-        .btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 
-                0 12px 35px rgba(102, 126, 234, 0.4),
-                inset 0 1px 0 rgba(255,255,255,0.3);
-        }
-        
-        .btn:active {
-            transform: translateY(-1px) scale(1.02);
-        }
-        
-        .btn-secondary {
-            background: var(--secondary-gradient);
-            box-shadow: 
-                0 6px 20px rgba(240, 147, 251, 0.3),
-                inset 0 1px 0 rgba(255,255,255,0.2);
-        }
-        
-        .btn-secondary:hover {
-            box-shadow: 
-                0 12px 35px rgba(240, 147, 251, 0.4),
-                inset 0 1px 0 rgba(255,255,255,0.3);
-        }
-        
-        .btn-danger {
-            background: var(--danger-gradient);
-            box-shadow: 
-                0 6px 20px rgba(250, 112, 154, 0.3),
-                inset 0 1px 0 rgba(255,255,255,0.2);
-        }
-        
-        .btn-danger:hover {
-            box-shadow: 
-                0 12px 35px rgba(250, 112, 154, 0.4),
-                inset 0 1px 0 rgba(255,255,255,0.3);
-        }
-        
-        .btn i {
-            font-size: 16px;
-        }
-        
-        .footer {
-            margin-top: 50px;
-            text-align: center;
-            color: #64748b;
-            font-size: 14px;
-            padding: 30px;
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-            border-top: 1px solid #e2e8f0;
-            font-weight: 500;
-        }
-        
-        .progress-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
-            z-index: 9999;
-            transition: width 0.3s ease;
-        }
-        
-        .section-number {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 30px;
-            height: 30px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 50%;
-            margin-right: 10px;
-            font-weight: 700;
-        }
+      }
+
+      @page {
+        size: A4;
+        margin: 15mm;
+      }
     </style>
-<link rel="stylesheet" href="css/layout.css">
-<body>
-    <div class="sidebar no-print">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <i class="fas fa-bug"></i>
-            </div>
-            <h3 class="sidebar-title">Registro de Defectos</h3>
-        </div>
-        
-        <nav>
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="#section1" class="nav-link">
-                        <i class="fas fa-hashtag"></i>
-                        ID Defecto
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#section2" class="nav-link">
-                        <i class="fas fa-heading"></i>
-                        Título
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#section3" class="nav-link">
-                        <i class="fas fa-project-diagram"></i>
-                        Proyecto/Módulo
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#section4" class="nav-link">
-                        <i class="fas fa-code-branch"></i>
-                        Build/Versión
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#section5" class="nav-link">
-                        <i class="fas fa-desktop"></i>
-                        Entorno
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#section6" class="nav-link">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        Severidad
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#section7" class="nav-link">
-                        <i class="fas fa-flag"></i>
-                        Prioridad
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#section8" class="nav-link">
-                        <i class="fas fa-tasks"></i>
-                        Estado
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#section9" class="nav-link">
-                        <i class="fas fa-user-edit"></i>
-                        Reportado por
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#section10" class="nav-link">
-                        <i class="fas fa-user-cog"></i>
-                        Asignado a
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#section11" class="nav-link">
-                        <i class="fas fa-align-left"></i>
-                        Descripción
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#section12" class="nav-link">
-                        <i class="fas fa-list-ol"></i>
-                        Pasos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#section13" class="nav-link">
-                        <i class="fas fa-times-circle"></i>
-                        Resultado Actual
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#section14" class="nav-link">
-                        <i class="fas fa-check-circle"></i>
-                        Resultado Esperado
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#section15" class="nav-link">
-                        <i class="fas fa-paperclip"></i>
-                        Archivos
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        
-        <div class="progress-section">
-            <div class="progress-title">
-                <i class="fas fa-chart-line"></i>
-                Progreso
-            </div>
-            <div class="progress-bar-container">
-                <div class="progress-bar-fill" id="progressBarFill"></div>
-            </div>
-            <div class="progress-text" id="progressText">0% completado</div>
-        </div>
-    </div>
-    
-    <div class="controls no-print">
-        <div class="controls-title">Acciones</div>
-        <button class="btn" onclick="window.print()">
-            <i class="fas fa-print"></i>
-            Imprimir
-        </button>
-        <button class="btn btn-secondary" onclick="saveData()">
-            <i class="fas fa-save"></i>
-            Guardar
-        </button>
-        <button class="btn btn-danger" onclick="clearAll()">
-            <i class="fas fa-trash"></i>
-            Limpiar
-        </button>
+  </head>
+  <body>
+    <div class="sidebar">
+      <h2>🐛 Acciones</h2>
+      <button onclick="saveForm()">💾 Guardar Progreso</button>
+      <button onclick="loadForm()">📂 Cargar Progreso</button>
+      <button onclick="clearForm()">🗑️ Limpiar Todo</button>
+      <button onclick="exportToPDF()">📄 Exportar a PDF</button>
+      <button onclick="printDocument()">🖨️ Imprimir</button>
+
+      <div
+        style="
+          margin-top: 30px;
+          padding-top: 20px;
+          border-top: 1px solid rgba(255, 255, 255, 0.3);
+        "
+      >
+        <h3 style="font-size: 14px; margin-bottom: 15px">📋 Navegación</h3>
+        <button onclick="scrollToSection('section1')">1. ID Defecto</button>
+        <button onclick="scrollToSection('section2')">2. Título</button>
+        <button onclick="scrollToSection('section3')">3. Proyecto</button>
+        <button onclick="scrollToSection('section4')">4. Build</button>
+        <button onclick="scrollToSection('section5')">5. Entorno</button>
+        <button onclick="scrollToSection('section6')">6. Clasificación</button>
+        <button onclick="scrollToSection('section9')">9. Reportado por</button>
+        <button onclick="scrollToSection('section11')">11. Descripción</button>
+        <button onclick="scrollToSection('section12')">12. Pasos</button>
+        <button onclick="scrollToSection('section13')">13. Resultados</button>
+      </div>
     </div>
 
     <div class="main-content">
-        <div class="container">
-            <div class="header">
-                <div class="header-content">
-                    <div class="header-icon">
-                        <i class="fas fa-clipboard-check"></i>
-                    </div>
-                    <h1>Anexo 2: Formato de Registro de Defectos</h1>
-                    <div class="subtitle">(Bug Report)</div>
-                    <div class="header-badges">
-                        <div class="badge">
-                            <i class="fas fa-calendar"></i>
-                            Semana 12 - Sesión 35
-                        </div>
-                        <div class="badge">
-                            <i class="fas fa-bug"></i>
-                            Gestión de Defectos
-                        </div>
-                        <div class="badge">
-                            <i class="fas fa-clipboard-list"></i>
-                            Bug Report
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        <div class="content">
-            <div class="info-box">
-                <h3>🐛 Instrucciones para el Alumno</h3>
-                <p><strong>Cuándo presentarlo:</strong> Semana 12, Sesión 35 (Gestión de Defectos)</p>
-                <p><strong>Nota:</strong> Este formato es un entregable clave para documentar los defectos encontrados durante las pruebas. Debe llenarse con claridad y precisión, con ejemplos de pasos para reproducir el problema.</p>
-            </div>
-
-            <div class="section" id="section1">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-hashtag"></i>
-                    </div>
-                    <div>
-                        <div class="section-number">1</div>
-                        ID del Defecto
-                    </div>
-                </div>
-                <div class="section-content">
-                    <div class="description">
-                        Código único que identifique el defecto.
-                    </div>
-                    <div class="example">
-                        <strong>Ejemplo:</strong> BUG-001
-                    </div>
-                    <textarea class="input-area" id="section1" placeholder="Ingresa el ID único del defecto..."></textarea>
-                </div>
-            </div>
-
-            <div class="section" id="section2">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-heading"></i>
-                    </div>
-                    <div>
-                        <div class="section-number">2</div>
-                        Título (breve y descriptivo)
-                    </div>
-                </div>
-                <div class="section-content">
-                    <div class="description">
-                        Título claro y conciso que describa el problema encontrado.
-                    </div>
-                    <div class="example">
-                        <strong>Ejemplo:</strong> El sistema permite login con contraseña vacía.
-                    </div>
-                    <textarea class="input-area" id="section2" placeholder="Escribe un título descriptivo del defecto..."></textarea>
-                </div>
-            </div>
-
-            <div class="section" id="section3">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-project-diagram"></i>
-                    </div>
-                    <div>
-                        <div class="section-number">3</div>
-                        Proyecto / Módulo
-                    </div>
-                </div>
-                <div class="section-content">
-                    <div class="description">
-                        Especifica el proyecto y módulo donde se encontró el defecto.
-                    </div>
-                    <div class="example">
-                        <strong>Ejemplo:</strong> Proyecto X / Autenticación.
-                    </div>
-                    <textarea class="input-area" id="section3" placeholder="Indica el proyecto y módulo afectado..."></textarea>
-                </div>
-            </div>
-
-            <div class="section" id="section4">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-code-branch"></i>
-                    </div>
-                    <div>
-                        <div class="section-number">4</div>
-                        Build / Versión
-                    </div>
-                </div>
-                <div class="section-content">
-                    <div class="description">
-                        Versión del software donde se detectó el defecto.
-                    </div>
-                    <div class="example">
-                        <strong>Ejemplo:</strong> v1.0.5
-                    </div>
-                    <textarea class="input-area" id="section4" placeholder="Especifica la versión o build..."></textarea>
-                </div>
-            </div>
-
-            <div class="section" id="section5">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-desktop"></i>
-                    </div>
-                    <div>
-                        <div class="section-number">5</div>
-                        Entorno
-                    </div>
-                </div>
-                <div class="section-content">
-                    <div class="description">
-                        SO, navegador, versión DB, etc.
-                    </div>
-                    <div class="example">
-                        <strong>Ejemplo:</strong> Windows 10, Chrome 120, DB MySQL 8.
-                    </div>
-                    <textarea class="input-area" id="section5" placeholder="Describe el entorno donde ocurrió el defecto..."></textarea>
-                </div>
-            </div>
-
-            <div class="section" id="section6">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div>
-                        <div class="section-number">6</div>
-                        Severidad
-                    </div>
-                </div>
-                <div class="section-content">
-                    <div class="description">
-                        Crítica, Alta, Media, Baja.
-                    </div>
-                    <div class="example">
-                        <strong>Crítica:</strong> Sistema no funciona | <strong>Alta:</strong> Funcionalidad principal afectada | <strong>Media:</strong> Funcionalidad secundaria | <strong>Baja:</strong> Cosmético
-                    </div>
-                    <select class="input-area" id="section6" style="height: auto; padding: 15px;">
-                        <option value="">Selecciona la severidad...</option>
-                        <option value="Crítica">🔴 Crítica</option>
-                        <option value="Alta">🟠 Alta</option>
-                        <option value="Media">🟡 Media</option>
-                        <option value="Baja">🟢 Baja</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="section" id="section7">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-flag"></i>
-                    </div>
-                    <div>
-                        <div class="section-number">7</div>
-                        Prioridad
-                    </div>
-                </div>
-                <div class="section-content">
-                    <div class="description">
-                        Urgente, Alta, Media, Baja.
-                    </div>
-                    <div class="example">
-                        <strong>Urgente:</strong> Resolver inmediatamente | <strong>Alta:</strong> Próximo release | <strong>Media:</strong> Planificar corrección | <strong>Baja:</strong> Cuando sea posible
-                    </div>
-                    <select class="input-area" id="section7" style="height: auto; padding: 15px;">
-                        <option value="">Selecciona la prioridad...</option>
-                        <option value="Urgente">🚨 Urgente</option>
-                        <option value="Alta">⚡ Alta</option>
-                        <option value="Media">📋 Media</option>
-                        <option value="Baja">📝 Baja</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="section" id="section8">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-tasks"></i>
-                    </div>
-                    <div>
-                        <div class="section-number">8</div>
-                        Estado
-                    </div>
-                </div>
-                <div class="section-content">
-                    <div class="description">
-                        Nuevo, Asignado, En progreso, Resuelto, Cerrado, Reabierto.
-                    </div>
-                    <select class="input-area" id="section8" style="height: auto; padding: 15px;">
-                        <option value="">Selecciona el estado...</option>
-                        <option value="Nuevo">🆕 Nuevo</option>
-                        <option value="Asignado">👤 Asignado</option>
-                        <option value="En progreso">⚙️ En progreso</option>
-                        <option value="Resuelto">✅ Resuelto</option>
-                        <option value="Cerrado">🔒 Cerrado</option>
-                        <option value="Reabierto">🔄 Reabierto</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="section" id="section9">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-user-edit"></i>
-                    </div>
-                    <div>
-                        <div class="section-number">9</div>
-                        Reportado por / Fecha
-                    </div>
-                </div>
-                <div class="section-content">
-                    <div class="description">
-                        Nombre y fecha de reporte.
-                    </div>
-                    <div class="example">
-                        <strong>Ejemplo:</strong> Juan Pérez - 15/12/2024
-                    </div>
-                    <textarea class="input-area" id="section9" placeholder="Nombre del reportador y fecha..."></textarea>
-                </div>
-            </div>
-
-            <div class="section" id="section10">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-user-cog"></i>
-                    </div>
-                    <div>
-                        <div class="section-number">10</div>
-                        Asignado a
-                    </div>
-                </div>
-                <div class="section-content">
-                    <div class="description">
-                        Nombre del desarrollador responsable.
-                    </div>
-                    <div class="example">
-                        <strong>Ejemplo:</strong> María González (Desarrollador Frontend)
-                    </div>
-                    <textarea class="input-area" id="section10" placeholder="Nombre del desarrollador asignado..."></textarea>
-                </div>
-            </div>
-
-            <div class="section" id="section11">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-align-left"></i>
-                    </div>
-                    <div>
-                        <div class="section-number">11</div>
-                        Descripción detallada
-                    </div>
-                </div>
-                <div class="section-content">
-                    <div class="description">
-                        Explicación clara del problema encontrado.
-                    </div>
-                    <textarea class="input-area" id="section11" placeholder="Describe detalladamente el problema encontrado..."></textarea>
-                </div>
-            </div>
-
-            <div class="section" id="section12">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-list-ol"></i>
-                    </div>
-                    <div>
-                        <div class="section-number">12</div>
-                        Pasos para reproducir
-                    </div>
-                </div>
-                <div class="section-content">
-                    <div class="description">
-                        Lista numerada de pasos para reproducir el defecto.
-                    </div>
-                    <div class="example">
-                        <strong>Ejemplo:</strong><br>
-                        1. Ingresar usuario válido<br>
-                        2. Dejar contraseña vacía<br>
-                        3. Hacer clic en Ingresar
-                    </div>
-                    <textarea class="input-area" id="section12" placeholder="Lista los pasos numerados para reproducir el defecto..."></textarea>
-                </div>
-            </div>
-
-            <div class="section" id="section13">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-times-circle"></i>
-                    </div>
-                    <div>
-                        <div class="section-number">13</div>
-                        Resultado actual
-                    </div>
-                </div>
-                <div class="section-content">
-                    <div class="description">
-                        Qué está ocurriendo actualmente (comportamiento incorrecto).
-                    </div>
-                    <div class="example">
-                        <strong>Ejemplo:</strong> El sistema permite el acceso.
-                    </div>
-                    <textarea class="input-area" id="section13" placeholder="Describe qué está ocurriendo actualmente..."></textarea>
-                </div>
-            </div>
-
-            <div class="section" id="section14">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div>
-                        <div class="section-number">14</div>
-                        Resultado esperado
-                    </div>
-                </div>
-                <div class="section-content">
-                    <div class="description">
-                        Qué debería ocurrir (comportamiento correcto esperado).
-                    </div>
-                    <div class="example">
-                        <strong>Ejemplo:</strong> El sistema debe mostrar mensaje 'Contraseña requerida'.
-                    </div>
-                    <textarea class="input-area" id="section14" placeholder="Describe qué debería ocurrir..."></textarea>
-                </div>
-            </div>
-
-            <div class="section" id="section15">
-                <div class="section-header">
-                    <div class="section-icon">
-                        <i class="fas fa-paperclip"></i>
-                    </div>
-                    <div>
-                        <div class="section-number">15</div>
-                        Archivos adjuntos
-                    </div>
-                </div>
-                <div class="section-content">
-                    <div class="description">
-                        Screenshots, logs, videos, etc.
-                    </div>
-                    <div class="example">
-                        <strong>Ejemplo:</strong> screenshot_login_error.png, console_log.txt, video_reproduccion.mp4
-                    </div>
-                    <textarea class="input-area" id="section15" placeholder="Lista los archivos adjuntos (screenshots, logs, videos, etc.)..."></textarea>
-                </div>
-            </div>
+      <div class="document">
+        <div class="header">
+          <h1>Anexo 2: Formato de Registro de Defectos</h1>
+          <div class="subtitle">(Bug Report)</div>
+          <div style="margin-top: 15px; font-size: 12px; color: #888">
+            <strong>Cuándo presentarlo:</strong> Semana 12, Sesión 35 (Gestión
+            de Defectos)<br />
+            <strong>Nota:</strong> Este formato es un entregable clave para
+            documentar los defectos encontrados durante las pruebas.
+          </div>
         </div>
 
-        <div class="footer">
-            <p>Formato de Registro de Defectos - Bug Report | Anexo 2 de 5</p>
+        <div class="two-column">
+          <div class="section" id="section1">
+            <h2>1. ID del Defecto</h2>
+            <div class="section-description">
+              Ejemplo: BUG-001<br />
+              Código único que identifique el defecto.
+            </div>
+            <input
+              type="text"
+              class="input-area short-input"
+              id="id_defecto"
+              placeholder="BUG-001"
+            />
+          </div>
+
+          <div class="section" id="section4">
+            <h2>4. Build / Versión</h2>
+            <div class="section-description">Ejemplo: v1.0.5</div>
+            <input
+              type="text"
+              class="input-area short-input"
+              id="build_version"
+              placeholder="v1.0.5"
+            />
+          </div>
         </div>
+
+        <div class="section" id="section2">
+          <h2>2. Título (breve y descriptivo)</h2>
+          <div class="section-description">
+            Ejemplo: El sistema permite login con contraseña vacía.
+          </div>
+          <input
+            type="text"
+            class="input-area short-input"
+            id="titulo"
+            placeholder="Describe brevemente el defecto..."
+          />
+        </div>
+
+        <div class="section" id="section3">
+          <h2>3. Proyecto / Módulo</h2>
+          <div class="section-description">
+            Ejemplo: Proyecto X / Autenticación.
+          </div>
+          <input
+            type="text"
+            class="input-area short-input"
+            id="proyecto_modulo"
+            placeholder="Nombre del proyecto / Módulo afectado"
+          />
+        </div>
+
+        <div class="section" id="section5">
+          <h2>5. Entorno</h2>
+          <div class="section-description">
+            SO, navegador, versión DB, etc.<br />
+            Ejemplo: Windows 10, Chrome 120, DB MySQL 8.
+          </div>
+          <textarea
+            class="input-area medium-input"
+            id="entorno"
+            placeholder="Describe el entorno donde se encontró el defecto..."
+          ></textarea>
+        </div>
+
+        <div class="section" id="section6">
+          <h2>6-8. Clasificación del Defecto</h2>
+          <div class="priority-severity">
+            <div>
+              <label
+                style="
+                  font-weight: bold;
+                  color: #e74c3c;
+                  display: block;
+                  margin-bottom: 5px;
+                "
+                >6. Severidad</label
+              >
+              <select class="select-field" id="severidad">
+                <option value="">Seleccionar...</option>
+                <option value="Crítica">Crítica</option>
+                <option value="Alta">Alta</option>
+                <option value="Media">Media</option>
+                <option value="Baja">Baja</option>
+              </select>
+            </div>
+            <div>
+              <label
+                style="
+                  font-weight: bold;
+                  color: #e74c3c;
+                  display: block;
+                  margin-bottom: 5px;
+                "
+                >7. Prioridad</label
+              >
+              <select class="select-field" id="prioridad">
+                <option value="">Seleccionar...</option>
+                <option value="Urgente">Urgente</option>
+                <option value="Alta">Alta</option>
+                <option value="Media">Media</option>
+                <option value="Baja">Baja</option>
+              </select>
+            </div>
+            <div>
+              <label
+                style="
+                  font-weight: bold;
+                  color: #e74c3c;
+                  display: block;
+                  margin-bottom: 5px;
+                "
+                >8. Estado</label
+              >
+              <select class="select-field" id="estado">
+                <option value="">Seleccionar...</option>
+                <option value="Nuevo">Nuevo</option>
+                <option value="Asignado">Asignado</option>
+                <option value="En progreso">En progreso</option>
+                <option value="Resuelto">Resuelto</option>
+                <option value="Cerrado">Cerrado</option>
+                <option value="Reabierto">Reabierto</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="page-break"></div>
+
+        <div class="two-column">
+          <div class="section" id="section9">
+            <h2>9. Reportado por / Fecha</h2>
+            <div class="section-description">Nombre y fecha de reporte.</div>
+            <textarea
+              class="input-area medium-input"
+              id="reportado_por"
+              placeholder="Nombre del reportador y fecha..."
+            ></textarea>
+          </div>
+
+          <div class="section" id="section10">
+            <h2>10. Asignado a</h2>
+            <div class="section-description">
+              Nombre del desarrollador responsable.
+            </div>
+            <textarea
+              class="input-area medium-input"
+              id="asignado_a"
+              placeholder="Nombre del desarrollador asignado..."
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="section" id="section11">
+          <h2>11. Descripción detallada</h2>
+          <div class="section-description">
+            Explicación clara del problema encontrado.
+          </div>
+          <textarea
+            class="input-area long-input"
+            id="descripcion"
+            placeholder="Proporciona una descripción detallada del defecto..."
+          ></textarea>
+        </div>
+
+        <div class="section" id="section12">
+          <h2>12. Pasos para reproducir</h2>
+          <div class="section-description">
+            Ejemplo:<br />
+            1. Ingresar usuario válido<br />
+            2. Dejar contraseña vacía<br />
+            3. Hacer clic en Ingresar
+          </div>
+          <div class="steps-section">
+            <textarea
+              class="input-area long-input"
+              id="pasos_reproducir"
+              placeholder="1. Primer paso...&#10;2. Segundo paso...&#10;3. Tercer paso..."
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="two-column">
+          <div class="section" id="section13">
+            <h2>13. Resultado actual</h2>
+            <div class="section-description">
+              Ejemplo: El sistema permite el acceso.
+            </div>
+            <textarea
+              class="input-area medium-input"
+              id="resultado_actual"
+              placeholder="¿Qué está ocurriendo actualmente?"
+            ></textarea>
+          </div>
+
+          <div class="section" id="section14">
+            <h2>14. Resultado esperado</h2>
+            <div class="section-description">
+              Ejemplo: El sistema debe mostrar mensaje 'Contraseña requerida'.
+            </div>
+            <textarea
+              class="input-area medium-input"
+              id="resultado_esperado"
+              placeholder="¿Qué debería ocurrir?"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="section" id="section15">
+          <h2>15. Archivos adjuntos</h2>
+          <div class="section-description">Screenshots, logs, videos, etc.</div>
+          <div class="info-box">
+            📎 <strong>Nota:</strong> Lista aquí los nombres de los archivos
+            adjuntos que acompañan este reporte (capturas de pantalla, logs,
+            videos, etc.)
+          </div>
+          <textarea
+            class="input-area medium-input"
+            id="archivos_adjuntos"
+            placeholder="Lista los archivos adjuntos: screenshot_error.png, log_sistema.txt, etc."
+          ></textarea>
+        </div>
+      </div>
     </div>
 
     <script>
-        // Función para limpiar todos los campos con animación
-        function clearAll() {
-            if (confirm('¿Estás seguro de que quieres limpiar todos los campos?')) {
-                for (let i = 1; i <= 15; i++) {
-                    const field = document.getElementById('section' + i);
-                    field.style.transition = 'all 0.3s ease';
-                    field.style.transform = 'scale(0.95)';
-                    field.style.opacity = '0.5';
-                    
-                    setTimeout(() => {
-                        field.value = '';
-                        field.style.transform = 'scale(1)';
-                        field.style.opacity = '1';
-                    }, 150);
-                }
-                updateProgress();
-                showNotification('Todos los campos han sido limpiados', 'info');
-            }
-        }
+      function scrollToSection(sectionId) {
+        document
+          .getElementById(sectionId)
+          .scrollIntoView({ behavior: "smooth" });
+      }
 
-        // Función para guardar datos en localStorage
-        function saveData() {
-            const data = {};
-            for (let i = 1; i <= 15; i++) {
-                data['section' + i] = document.getElementById('section' + i).value;
-            }
-            localStorage.setItem('registroDefectos', JSON.stringify(data));
-            showNotification('Datos guardados correctamente', 'success');
-        }
+      function saveForm() {
+        const formData = {};
 
-        // Función para cargar datos guardados
-        function loadData() {
-            const saved = localStorage.getItem('registroDefectos');
-            if (saved) {
-                const data = JSON.parse(saved);
-                for (let i = 1; i <= 15; i++) {
-                    if (data['section' + i]) {
-                        document.getElementById('section' + i).value = data['section' + i];
-                    }
-                }
-                updateProgress();
-            }
-        }
+        // Guardar inputs de texto
+        const textInputs = document.querySelectorAll('input[type="text"]');
+        textInputs.forEach((input) => {
+          formData[input.id] = input.value;
+        });
 
-        // Función para mostrar notificaciones
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed;
-                top: 100px;
-                right: 30px;
-                background: ${type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' : 
-                           type === 'error' ? 'linear-gradient(135deg, #ef4444, #dc2626)' : 
-                           'linear-gradient(135deg, #3b82f6, #1d4ed8)'};
-                color: white;
-                padding: 15px 20px;
-                border-radius: 10px;
-                box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-                z-index: 10000;
-                font-weight: 500;
-                transform: translateX(400px);
-                transition: transform 0.3s ease;
-            `;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => notification.style.transform = 'translateX(0)', 100);
-            setTimeout(() => {
-                notification.style.transform = 'translateX(400px)';
-                setTimeout(() => document.body.removeChild(notification), 300);
-            }, 3000);
-        }
+        // Guardar textareas
+        const textareas = document.querySelectorAll("textarea");
+        textareas.forEach((textarea) => {
+          formData[textarea.id] = textarea.value;
+        });
 
-        // Función para actualizar la barra de progreso
-        function updateProgress() {
-            let completed = 0;
-            for (let i = 1; i <= 15; i++) {
-                const field = document.getElementById('section' + i);
-                if (field && field.value.trim().length > 0) {
-                    completed++;
-                }
-            }
-            const percentage = (completed / 15) * 100;
-            const progressBar = document.getElementById('progressBarFill');
-            const progressText = document.getElementById('progressText');
-            
-            if (progressBar) {
-                progressBar.style.width = percentage + '%';
-            }
-            if (progressText) {
-                progressText.textContent = Math.round(percentage) + '% completado';
-            }
-            
-            // Actualizar navegación activa
-            updateActiveNavigation();
-        }
-        
-        // Función para actualizar navegación activa
-        function updateActiveNavigation() {
-            const sections = document.querySelectorAll('.section');
-            const navLinks = document.querySelectorAll('.nav-link');
-            
-            let activeSection = null;
-            const scrollPosition = window.scrollY + 200;
-            
-            sections.forEach(section => {
-                const sectionTop = section.offsetTop;
-                const sectionHeight = section.offsetHeight;
-                
-                if (scrollPosition >= sectionTop && scrollPosition < sectionTop + sectionHeight) {
-                    activeSection = section.id;
-                }
-            });
-            
-            navLinks.forEach(link => {
-                link.classList.remove('active');
-                if (link.getAttribute('href') === '#' + activeSection) {
-                    link.classList.add('active');
-                }
-            });
-        }
+        // Guardar selects
+        const selects = document.querySelectorAll("select");
+        selects.forEach((select) => {
+          formData[select.id] = select.value;
+        });
 
-        // Función para añadir efectos de escritura
-        function addTypingEffects() {
-            const textareas = document.querySelectorAll('.input-area');
-            textareas.forEach(textarea => {
-                textarea.addEventListener('input', function() {
-                    updateProgress();
-                    this.style.height = 'auto';
-                    this.style.height = Math.max(100, this.scrollHeight) + 'px';
+        const dataStr = JSON.stringify(formData);
+        const dataBlob = new Blob([dataStr], { type: "application/json" });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "registro_defectos_progreso.json";
+        link.click();
+        URL.revokeObjectURL(url);
+
+        alert("✅ Progreso guardado exitosamente");
+      }
+
+      function loadForm() {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".json";
+        input.onchange = function (e) {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              try {
+                const formData = JSON.parse(e.target.result);
+                Object.keys(formData).forEach((key) => {
+                  const element = document.getElementById(key);
+                  if (element) {
+                    element.value = formData[key];
+                  }
                 });
-
-                textarea.addEventListener('focus', function() {
-                    this.parentElement.parentElement.style.transform = 'scale(1.02)';
-                    this.parentElement.parentElement.style.zIndex = '10';
-                });
-
-                textarea.addEventListener('blur', function() {
-                    this.parentElement.parentElement.style.transform = 'scale(1)';
-                    this.parentElement.parentElement.style.zIndex = '1';
-                });
-            });
-        }
-
-        // Cargar datos al iniciar la página
-        window.onload = function() {
-            loadData();
-            addTypingEffects();
-            updateProgress();
+                alert("✅ Progreso cargado exitosamente");
+              } catch (error) {
+                alert("❌ Error al cargar el archivo");
+              }
+            };
+            reader.readAsText(file);
+          }
         };
+        input.click();
+      }
 
-        // Auto-guardar cada 30 segundos
-        setInterval(() => {
-            const hasContent = Array.from({length: 15}, (_, i) => 
-                document.getElementById('section' + (i + 1)).value.trim()
-            ).some(value => value.length > 0);
-            
-            if (hasContent) {
-                saveData();
-            }
-        }, 30000);
+      function clearForm() {
+        if (
+          confirm("¿Estás seguro de que quieres limpiar todo el formulario?")
+        ) {
+          const inputs = document.querySelectorAll("input, textarea, select");
+          inputs.forEach((input) => {
+            input.value = "";
+          });
+          alert("✅ Formulario limpiado");
+        }
+      }
 
-        // Prevenir pérdida de datos al cerrar
-        window.addEventListener('beforeunload', function(e) {
-            const hasUnsavedContent = Array.from({length: 15}, (_, i) => 
-                document.getElementById('section' + (i + 1)).value.trim()
-            ).some(value => value.length > 0);
-            
-            if (hasUnsavedContent) {
-                saveData();
-            }
+      function exportToPDF() {
+        alert(
+          '📄 Usa Ctrl+P o Cmd+P para exportar a PDF. Asegúrate de seleccionar "Guardar como PDF" en las opciones de impresión.'
+        );
+        window.print();
+      }
+
+      function printDocument() {
+        window.print();
+      }
+
+      // Auto-guardar cada 2 minutos
+      setInterval(() => {
+        const formData = {};
+        const inputs = document.querySelectorAll("input, textarea, select");
+        inputs.forEach((input) => {
+          if (input.value.trim()) {
+            formData[input.id] = input.value;
+          }
+        });
+
+        if (Object.keys(formData).length > 0) {
+          localStorage.setItem(
+            "registro_defectos_auto_save",
+            JSON.stringify(formData)
+          );
+        }
+      }, 120000);
+
+      // Cargar auto-guardado al iniciar
+      window.onload = function () {
+        const autoSave = localStorage.getItem("registro_defectos_auto_save");
+        if (autoSave) {
+          try {
+            const formData = JSON.parse(autoSave);
+            Object.keys(formData).forEach((key) => {
+              const element = document.getElementById(key);
+              if (element && !element.value) {
+                element.value = formData[key];
+              }
+            });
+          } catch (error) {
+            console.log("No se pudo cargar el auto-guardado");
+          }
+        }
+      };
+
+      // Auto-completar fecha actual en "Reportado por"
+      document
+        .getElementById("reportado_por")
+        .addEventListener("focus", function () {
+          if (!this.value) {
+            const today = new Date().toLocaleDateString("es-ES");
+            this.placeholder = `Nombre del reportador - ${today}`;
+          }
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'97ea6c2301658c16',t:'MTc1Nzc5NTYzNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97f4929a35735e03',t:'MTc1NzkwMjA2OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+    <script defer src=" js/back-home.js\></script>`r`n </body>
 </html>
+

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es" data-layout="global">
   <head>
     <meta charset="UTF-8" />
@@ -80,7 +80,7 @@ body{
       <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
       <a class="qs-btn" href="Foro.html" aria-current="page">Foro</a>
       <a class="qs-btn" href="paneldocente.html">Panel</a>
-      <a class="qs-btn" href="roadmap.html">Roadmap</a>
+      
       
       
     </nav>
@@ -414,21 +414,25 @@ body{
         },
       };
 
-      function toggleRole() {
-        isTeacher = !isTeacher;
+      function applyForumRole() {
         const userRole = document.getElementById("userRole");
         const userName = document.getElementById("userName");
         const adminPanel = document.getElementById("adminPanel");
-
         if (isTeacher) {
-          userRole.textContent = "Docente";
-          userName.textContent = "Prof. García";
-          adminPanel.style.display = "block";
+          if (userRole) userRole.textContent = "Docente";
+          if (userName) userName.textContent = "Prof. García";
+          if (adminPanel) adminPanel.style.display = "block";
         } else {
-          userRole.textContent = "Estudiante";
-          userName.textContent = "María González";
-          adminPanel.style.display = "none";
+          if (userRole) userRole.textContent = "Estudiante";
+          if (userName) userName.textContent = "María González";
+          if (adminPanel) adminPanel.style.display = "none";
         }
+      }
+
+      function toggleRole() {
+        isTeacher = !isTeacher;
+        try { localStorage.setItem('qs_role', isTeacher ? 'docente' : 'estudiante'); } catch(e) {}
+        applyForumRole();
       }
 
       function createTopic() {
@@ -550,12 +554,14 @@ body{
       })();
     </script>
   
-<!-- Pie de página -->
-<footer class="footer">
+
+
   <div class="footer-content">© 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua</div>
 </footer>
 
 
-<script defer src="js/layout.js"></script>
-</body>
+<script defer src="js/back-home.js"></script>
+<script defer src="js/nav-inject.js"></script>
+ </body>
+
 </html>
