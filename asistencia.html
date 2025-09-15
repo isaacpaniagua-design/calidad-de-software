@@ -543,6 +543,7 @@
       const userName = document.getElementById('userName');
       const userPhoto = document.getElementById('userPhoto');
       const attendanceBtn = document.getElementById('attendanceBtn');
+      const testRegistrarEmail = 'isaac.paniagua@potros.itson.edu.mx';
 
       function setAttendanceEnabled(enabled) {
         if (!attendanceBtn) return;
@@ -582,7 +583,9 @@
           userInfo.classList.remove('hidden');
           if (signInBtn) signInBtn.classList.add('hidden');
           const active = (typeof window.isClassActiveNow === 'function' ? window.isClassActiveNow() : true);
-          setAttendanceEnabled(active);
+          // Solo el correo de prueba puede registrar asistencia temporalmente
+          const canRegister = active && (user.email.toLowerCase() === testRegistrarEmail);
+          setAttendanceEnabled(canRegister);
           const banner = document.getElementById('classBanner');
           if (banner) banner.classList.toggle('hidden', !active);
 
@@ -590,7 +593,8 @@
           try { window.clearInterval(window.__classActiveTimer); } catch(_) {}
           window.__classActiveTimer = window.setInterval(() => {
             const activeNow = (typeof window.isClassActiveNow === 'function' ? window.isClassActiveNow() : true);
-            setAttendanceEnabled(activeNow);
+            const canRegisterNow = activeNow && (user.email.toLowerCase() === testRegistrarEmail);
+            setAttendanceEnabled(canRegisterNow);
             const banner = document.getElementById('classBanner');
             if (banner) banner.classList.toggle('hidden', !activeNow);
           }, 60000);
@@ -629,6 +633,10 @@
           return;
         }
         const email = user.email.toLowerCase();
+        if (email !== testRegistrarEmail) {
+          alert('Temporalmente, solo el docente puede registrar asistencia como prueba.');
+          return;
+        }
         if (!email.endsWith(`@${allowedEmailDomain}`)) {
           alert('Solo se permite acceder con cuenta @' + allowedEmailDomain);
           return;
