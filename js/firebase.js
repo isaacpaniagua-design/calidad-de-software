@@ -1,8 +1,42 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, addDoc, getDoc, getDocs, deleteDoc, updateDoc, onSnapshot, query, where, orderBy, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
-import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
-import { firebaseConfig, allowedEmailDomain, useStorage, driveFolderId, allowedTeacherEmails } from './firebase-config.js';
+﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  addDoc,
+  getDoc,
+  getDocs,
+  deleteDoc,
+  updateDoc,
+  onSnapshot,
+  query,
+  where,
+  orderBy,
+  serverTimestamp,
+  increment,
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
+import {
+  firebaseConfig,
+  allowedEmailDomain,
+  useStorage,
+  driveFolderId,
+  allowedTeacherEmails,
+} from "./firebase-config.js";
 
 let app;
 let auth;
@@ -42,7 +76,9 @@ export async function signInWithGooglePotros() {
   // Sugerencia visual del dominio (no es seguridad)
   provider.setCustomParameters({ hd: allowedEmailDomain });
   // Permiso para subir a Google Drive (archivos creados por la app)
-  try { provider.addScope('https://www.googleapis.com/auth/drive.file'); } catch(_) {}
+  try {
+    provider.addScope("https://www.googleapis.com/auth/drive.file");
+  } catch (_) {}
 
   try {
     const result = await signInWithPopup(auth, provider);
@@ -50,16 +86,24 @@ export async function signInWithGooglePotros() {
     try {
       const cred = GoogleAuthProvider.credentialFromResult(result);
       if (cred?.accessToken) driveAccessToken = cred.accessToken;
-    } catch(_) {}
-    if (!user?.email || !user.email.toLowerCase().endsWith(`@${allowedEmailDomain}`)) {
+    } catch (_) {}
+    if (
+      !user?.email ||
+      !user.email.toLowerCase().endsWith(`@${allowedEmailDomain}`)
+    ) {
       await signOut(auth);
-      throw new Error(`Solo se permite acceder con cuenta @${allowedEmailDomain}`);
+      throw new Error(
+        `Solo se permite acceder con cuenta @${allowedEmailDomain}`
+      );
     }
     return user;
   } catch (e) {
-    if (e?.code === 'auth/unauthorized-domain') {
-      const host = (typeof location !== 'undefined' ? location.hostname : '(desconocido)');
-      throw new Error(`Dominio no autorizado en Firebase Auth (${host}). Agrega este hostname en Firebase Console → Authentication → Settings → Authorized domains.`);
+    if (e?.code === "auth/unauthorized-domain") {
+      const host =
+        typeof location !== "undefined" ? location.hostname : "(desconocido)";
+      throw new Error(
+        `Dominio no autorizado en Firebase Auth (${host}). Agrega este hostname en Firebase Console → Authentication → Settings → Authorized domains.`
+      );
     }
     throw e;
   }
@@ -71,11 +115,14 @@ export async function getDriveAccessTokenInteractive() {
   const auth = getAuthInstance();
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ hd: allowedEmailDomain });
-  try { provider.addScope('https://www.googleapis.com/auth/drive.file'); } catch(_) {}
+  try {
+    provider.addScope("https://www.googleapis.com/auth/drive.file");
+  } catch (_) {}
   const result = await signInWithPopup(auth, provider);
   const cred = GoogleAuthProvider.credentialFromResult(result);
   driveAccessToken = cred?.accessToken || null;
-  if (!driveAccessToken) throw new Error('No se pudo obtener token de Google Drive');
+  if (!driveAccessToken)
+    throw new Error("No se pudo obtener token de Google Drive");
   return driveAccessToken;
 }
 
@@ -92,64 +139,77 @@ export function onAuth(cb) {
 // ====== Roles ======
 export function isTeacherEmail(email) {
   if (!email) return false;
-  const em = (email || '').toLowerCase().trim();
-  return Array.isArray(allowedTeacherEmails) && allowedTeacherEmails.map(e => (e || '').toLowerCase().trim()).includes(em);
+  const em = (email || "").toLowerCase().trim();
+  return (
+    Array.isArray(allowedTeacherEmails) &&
+    allowedTeacherEmails.map((e) => (e || "").toLowerCase().trim()).includes(em)
+  );
 }
 
 export async function isTeacherByDoc(uid) {
   if (!uid) return false;
   const db = getDb();
   try {
-    const ref = doc(collection(db, 'teachers'), uid);
+    const ref = doc(collection(db, "teachers"), uid);
     const snap = await getDoc(ref);
     return !!snap.exists();
-  } catch(_) { return false; }
+  } catch (_) {
+    return false;
+  }
 }
 
 export async function ensureTeacherDocForUser({ uid, email, displayName }) {
   if (!uid || !email) return false;
-  const lower = (email||'').toLowerCase();
+  const lower = (email || "").toLowerCase();
   if (!isTeacherEmail(lower)) return false;
   const db = getDb();
-  const ref = doc(collection(db, 'teachers'), uid);
+  const ref = doc(collection(db, "teachers"), uid);
   try {
     const snap = await getDoc(ref);
     if (!snap.exists()) {
       await setDoc(ref, {
         email: lower,
         name: displayName || null,
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
       });
     }
     return true;
-  } catch(_) { return false; }
+  } catch (_) {
+    return false;
+  }
 }
 
 function todayKey() {
   // YYYY-MM-DD en hora local
   const d = new Date();
   const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
   return `${y}-${m}-${day}`;
 }
 
-export async function saveTodayAttendance({ uid, name, email, type, manual = false }) {
+export async function saveTodayAttendance({
+  uid,
+  name,
+  email,
+  type,
+  manual = false,
+}) {
   const db = getDb();
   const authInstance = getAuthInstance();
   const currentUser = authInstance?.currentUser || null;
   const date = todayKey();
   const attendanceId = `${date}_${uid}`; // evita duplicados por dia-usuario
-  const ref = doc(collection(db, 'attendances'), attendanceId);
+  const ref = doc(collection(db, "attendances"), attendanceId);
 
   const existing = await getDoc(ref);
   if (existing.exists()) {
-    throw new Error('Ya tienes tu asistencia registrada para el dia de hoy');
+    throw new Error("Ya tienes tu asistencia registrada para el dia de hoy");
   }
 
-  const normalizedEmail = (email || '').toLowerCase();
+  const normalizedEmail = (email || "").toLowerCase();
   if (!normalizedEmail) {
-    throw new Error('Correo electronico requerido');
+    throw new Error("Correo electronico requerido");
   }
 
   const createdByUid = currentUser?.uid || uid;
@@ -159,12 +219,12 @@ export async function saveTodayAttendance({ uid, name, email, type, manual = fal
     uid,
     name,
     email: normalizedEmail,
-    type: type || 'student',
+    type: type || "student",
     date,
     manual: !!manual,
     createdByUid,
     createdByEmail,
-    timestamp: serverTimestamp()
+    timestamp: serverTimestamp(),
   });
 
   return { id: attendanceId, uid, name, email: normalizedEmail, type, date };
@@ -174,20 +234,22 @@ export function subscribeTodayAttendance(cb) {
   const db = getDb();
   const date = todayKey();
   const q = query(
-    collection(db, 'attendances'),
-    where('date', '==', date),
-    orderBy('timestamp', 'desc')
+    collection(db, "attendances"),
+    where("date", "==", date),
+    orderBy("timestamp", "desc")
   );
   return onSnapshot(q, (snap) => {
     const items = [];
-    snap.forEach(docSnap => {
+    snap.forEach((docSnap) => {
       const data = docSnap.data();
       items.push({
         id: docSnap.id,
         name: data.name,
         email: data.email,
         type: data.type,
-        timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date()
+        timestamp: data.timestamp?.toDate
+          ? data.timestamp.toDate()
+          : new Date(),
       });
     });
     cb(items);
@@ -198,21 +260,23 @@ export function subscribeTodayAttendanceByUser(email, cb) {
   const db = getDb();
   const date = todayKey();
   const q = query(
-    collection(db, 'attendances'),
-    where('date', '==', date),
-    where('email', '==', (email||'').toLowerCase()),
-    orderBy('timestamp', 'desc')
+    collection(db, "attendances"),
+    where("date", "==", date),
+    where("email", "==", (email || "").toLowerCase()),
+    orderBy("timestamp", "desc")
   );
   return onSnapshot(q, (snap) => {
     const items = [];
-    snap.forEach(docSnap => {
+    snap.forEach((docSnap) => {
       const data = docSnap.data();
       items.push({
         id: docSnap.id,
         name: data.name,
         email: data.email,
         type: data.type,
-        timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date()
+        timestamp: data.timestamp?.toDate
+          ? data.timestamp.toDate()
+          : new Date(),
       });
     });
     cb(items);
@@ -223,14 +287,18 @@ export async function fetchAttendancesByDateRange(startDateStr, endDateStr) {
   const db = getDb();
   // startDateStr, endDateStr expected in 'YYYY-MM-DD'
   const qy = query(
-    collection(db, 'attendances'),
-    where('date', '>=', startDateStr),
-    where('date', '<=', endDateStr),
-    orderBy('date', 'asc')
+    collection(db, "attendances"),
+    where("date", ">=", startDateStr),
+    where("date", "<=", endDateStr),
+    orderBy("date", "asc")
   );
-  const snap = await (await import("https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js")).getDocs(qy);
+  const snap = await (
+    await import(
+      "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js"
+    )
+  ).getDocs(qy);
   const items = [];
-  snap.forEach(docSnap => {
+  snap.forEach((docSnap) => {
     const data = docSnap.data();
     items.push({
       id: docSnap.id,
@@ -238,24 +306,32 @@ export async function fetchAttendancesByDateRange(startDateStr, endDateStr) {
       email: data.email,
       type: data.type,
       date: data.date,
-      timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date()
+      timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date(),
     });
   });
   return items;
 }
 
-export async function fetchAttendancesByDateRangeByUser(email, startDateStr, endDateStr) {
+export async function fetchAttendancesByDateRangeByUser(
+  email,
+  startDateStr,
+  endDateStr
+) {
   const db = getDb();
   const qy = query(
-    collection(db, 'attendances'),
-    where('email', '==', (email||'').toLowerCase()),
-    where('date', '>=', startDateStr),
-    where('date', '<=', endDateStr),
-    orderBy('date', 'asc')
+    collection(db, "attendances"),
+    where("email", "==", (email || "").toLowerCase()),
+    where("date", ">=", startDateStr),
+    where("date", "<=", endDateStr),
+    orderBy("date", "asc")
   );
-  const snap = await (await import("https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js")).getDocs(qy);
+  const snap = await (
+    await import(
+      "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js"
+    )
+  ).getDocs(qy);
   const items = [];
-  snap.forEach(docSnap => {
+  snap.forEach((docSnap) => {
     const data = docSnap.data();
     items.push({
       id: docSnap.id,
@@ -263,7 +339,7 @@ export async function fetchAttendancesByDateRangeByUser(email, startDateStr, end
       email: data.email,
       type: data.type,
       date: data.date,
-      timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date()
+      timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date(),
     });
   });
   return items;
@@ -272,19 +348,34 @@ export async function fetchAttendancesByDateRangeByUser(email, startDateStr, end
 // ====== Calificaciones (Grades) ======
 export function subscribeGrades(cb) {
   const db = getDb();
-  const q = query(collection(db, 'grades'), orderBy('name'));
+  const q = query(collection(db, "grades"), orderBy("name"));
   return onSnapshot(q, (snap) => {
     const items = [];
-    snap.forEach(docSnap => {
+    snap.forEach((docSnap) => {
       const d = docSnap.data();
       items.push({
         id: docSnap.id,
         name: d.name,
         email: d.email,
-        unit1: d.unit1 || { participation: 0, assignments: 0, classwork: 0, exam: 0 },
-        unit2: d.unit2 || { participation: 0, assignments: 0, classwork: 0, exam: 0 },
-        unit3: d.unit3 || { participation: 0, assignments: 0, classwork: 0, exam: 0 },
-        projectFinal: d.projectFinal ?? 0
+        unit1: d.unit1 || {
+          participation: 0,
+          assignments: 0,
+          classwork: 0,
+          exam: 0,
+        },
+        unit2: d.unit2 || {
+          participation: 0,
+          assignments: 0,
+          classwork: 0,
+          exam: 0,
+        },
+        unit3: d.unit3 || {
+          participation: 0,
+          assignments: 0,
+          classwork: 0,
+          exam: 0,
+        },
+        projectFinal: d.projectFinal ?? 0,
       });
     });
     cb(items);
@@ -293,7 +384,7 @@ export function subscribeGrades(cb) {
 
 export async function upsertStudentGrades(studentId, payload) {
   const db = getDb();
-  const ref = doc(collection(db, 'grades'), studentId);
+  const ref = doc(collection(db, "grades"), studentId);
   const existing = await getDoc(ref);
   const base = { ...payload, updatedAt: serverTimestamp() };
   if (!existing.exists()) base.createdAt = serverTimestamp();
@@ -302,89 +393,135 @@ export async function upsertStudentGrades(studentId, payload) {
 
 export async function updateStudentGradePartial(studentId, path, value) {
   const db = getDb();
-  const ref = doc(collection(db, 'grades'), studentId);
+  const ref = doc(collection(db, "grades"), studentId);
   await updateDoc(ref, { [path]: value, updatedAt: serverTimestamp() });
 }
 
 // ====== Materiales (Storage + Firestore) ======
-export async function uploadMaterial({ file, title, category, description, ownerEmail, onProgress }) {
+export async function uploadMaterial({
+  file,
+  title,
+  category,
+  description,
+  ownerEmail,
+  onProgress,
+}) {
   if (!useStorage) {
-    throw new Error('Firebase Storage está deshabilitado. Usa addMaterialLink con un URL.');
+    throw new Error(
+      "Firebase Storage está deshabilitado. Usa addMaterialLink con un URL."
+    );
   }
   const st = getStorageInstance();
   const db = getDb();
   const ts = Date.now();
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const path = `materials/${ts}_${safeName}`;
   const ref = storageRef(st, path);
 
   const task = uploadBytesResumable(ref, file);
   return new Promise((resolve, reject) => {
-    task.on('state_changed', (snap) => {
-      const progress = (snap.bytesTransferred / snap.totalBytes) * 100;
-      if (onProgress) onProgress(progress);
-    }, reject, async () => {
-      const url = await getDownloadURL(ref);
-      const auth = getAuthInstance();
-      const docRef = await addDoc(collection(db, 'materials'), {
-        title, category, description,
-        path, url,
-        ownerEmail: (ownerEmail?.toLowerCase() || auth?.currentUser?.email?.toLowerCase() || null),
-        createdAt: serverTimestamp(),
-        downloads: 0
-      });
-      resolve({ id: docRef.id, title, category, description, path, url });
-    });
+    task.on(
+      "state_changed",
+      (snap) => {
+        const progress = (snap.bytesTransferred / snap.totalBytes) * 100;
+        if (onProgress) onProgress(progress);
+      },
+      reject,
+      async () => {
+        const url = await getDownloadURL(ref);
+        const auth = getAuthInstance();
+        const docRef = await addDoc(collection(db, "materials"), {
+          title,
+          category,
+          description,
+          path,
+          url,
+          ownerEmail:
+            ownerEmail?.toLowerCase() ||
+            auth?.currentUser?.email?.toLowerCase() ||
+            null,
+          createdAt: serverTimestamp(),
+          downloads: 0,
+        });
+        resolve({ id: docRef.id, title, category, description, path, url });
+      }
+    );
   });
 }
 
-export async function addMaterialLink({ title, category, description, url, ownerEmail }) {
+export async function addMaterialLink({
+  title,
+  category,
+  description,
+  url,
+  ownerEmail,
+}) {
   const db = getDb();
   const auth = getAuthInstance();
-  const docRef = await addDoc(collection(db, 'materials'), {
-    title, category, description,
+  const docRef = await addDoc(collection(db, "materials"), {
+    title,
+    category,
+    description,
     url,
     path: null,
-    ownerEmail: (ownerEmail?.toLowerCase() || auth?.currentUser?.email?.toLowerCase() || null),
+    ownerEmail:
+      ownerEmail?.toLowerCase() ||
+      auth?.currentUser?.email?.toLowerCase() ||
+      null,
     createdAt: serverTimestamp(),
-    downloads: 0
+    downloads: 0,
   });
   return { id: docRef.id, title, category, description, url };
 }
 
-export async function uploadMaterialToDrive({ file, title, category, description, folderId = driveFolderId, onProgress }) {
-  if (!file) throw new Error('Archivo requerido');
+export async function uploadMaterialToDrive({
+  file,
+  title,
+  category,
+  description,
+  folderId = driveFolderId,
+  onProgress,
+}) {
+  if (!file) throw new Error("Archivo requerido");
   const token = await getDriveAccessTokenInteractive();
 
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
   const metadata = {
     name: safeName,
     parents: folderId ? [folderId] : undefined,
-    description: description || undefined
+    description: description || undefined,
   };
-  const boundary = '-------driveFormBoundary' + Math.random().toString(16).slice(2);
+  const boundary =
+    "-------driveFormBoundary" + Math.random().toString(16).slice(2);
   const delimiter = `--${boundary}\r\n`;
   const closeDelim = `--${boundary}--`;
 
-  const body = new Blob([
-    delimiter,
-    'Content-Type: application/json; charset=UTF-8\r\n\r\n',
-    JSON.stringify(metadata),
-    '\r\n',
-    delimiter,
-    `Content-Type: ${file.type || 'application/octet-stream'}\r\n\r\n`,
-    file,
-    '\r\n',
-    closeDelim
-  ], { type: `multipart/related; boundary=${boundary}` });
+  const body = new Blob(
+    [
+      delimiter,
+      "Content-Type: application/json; charset=UTF-8\r\n\r\n",
+      JSON.stringify(metadata),
+      "\r\n",
+      delimiter,
+      `Content-Type: ${file.type || "application/octet-stream"}\r\n\r\n`,
+      file,
+      "\r\n",
+      closeDelim,
+    ],
+    { type: `multipart/related; boundary=${boundary}` }
+  );
 
-  const uploadUrl = 'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,webContentLink';
+  const uploadUrl =
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,webContentLink";
 
   const uploadResponse = await new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', uploadUrl, true);
-    xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-    xhr.setRequestHeader('Content-Type', `multipart/related; boundary=${boundary}`);
+    xhr.open("POST", uploadUrl, true);
+    xhr.setRequestHeader("Authorization", "Bearer " + token);
+    xhr.setRequestHeader(
+      "Content-Type",
+      `multipart/related; boundary=${boundary}`
+    );
     if (xhr.upload && onProgress) {
       xhr.upload.onprogress = (evt) => {
         if (evt.lengthComputable) {
@@ -396,9 +533,17 @@ export async function uploadMaterialToDrive({ file, title, category, description
     xhr.onreadystatechange = () => {
       if (xhr.readyState === 4) {
         if (xhr.status >= 200 && xhr.status < 300) {
-          try { resolve(JSON.parse(xhr.responseText)); } catch (e) { resolve({}); }
+          try {
+            resolve(JSON.parse(xhr.responseText));
+          } catch (e) {
+            resolve({});
+          }
         } else {
-          reject(new Error('Error subiendo a Drive (' + xhr.status + '): ' + xhr.responseText));
+          reject(
+            new Error(
+              "Error subiendo a Drive (" + xhr.status + "): " + xhr.responseText
+            )
+          );
         }
       }
     };
@@ -406,41 +551,49 @@ export async function uploadMaterialToDrive({ file, title, category, description
   });
 
   const id = uploadResponse?.id;
-  let url = uploadResponse?.webViewLink || uploadResponse?.webContentLink || (id ? `https://drive.google.com/file/d/${id}/view?usp=sharing` : null);
+  let url =
+    uploadResponse?.webViewLink ||
+    uploadResponse?.webContentLink ||
+    (id ? `https://drive.google.com/file/d/${id}/view?usp=sharing` : null);
 
   // Intentar hacer el archivo accesible con enlace
   if (id) {
     try {
-      await fetch(`https://www.googleapis.com/drive/v3/files/${id}/permissions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ role: 'reader', type: 'anyone' })
-      });
-    } catch(_) {}
+      await fetch(
+        `https://www.googleapis.com/drive/v3/files/${id}/permissions`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: "Bearer " + token,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ role: "reader", type: "anyone" }),
+        }
+      );
+    } catch (_) {}
   }
 
   const db = getDb();
   const auth = getAuthInstance();
-  const docRef = await addDoc(collection(db, 'materials'), {
-    title, category, description,
+  const docRef = await addDoc(collection(db, "materials"), {
+    title,
+    category,
+    description,
     url,
     path: null,
-    ownerEmail: (auth?.currentUser?.email?.toLowerCase() || null),
+    ownerEmail: auth?.currentUser?.email?.toLowerCase() || null,
     createdAt: serverTimestamp(),
-    downloads: 0
+    downloads: 0,
   });
   return { id: docRef.id, title, category, description, url };
 }
 
 export function subscribeMaterials(cb) {
   const db = getDb();
-  const q = query(collection(db, 'materials'), orderBy('createdAt', 'desc'));
+  const q = query(collection(db, "materials"), orderBy("createdAt", "desc"));
   return onSnapshot(q, (snap) => {
     const items = [];
-    snap.forEach(docSnap => {
+    snap.forEach((docSnap) => {
       const d = docSnap.data();
       items.push({ id: docSnap.id, ...d });
     });
@@ -450,7 +603,7 @@ export function subscribeMaterials(cb) {
 
 export async function deleteMaterialById(id) {
   const db = getDb();
-  const refDoc = doc(collection(db, 'materials'), id);
+  const refDoc = doc(collection(db, "materials"), id);
   const snap = await getDoc(refDoc);
   if (snap.exists()) {
     const data = snap.data();
@@ -469,7 +622,7 @@ export async function deleteMaterialById(id) {
 
 export async function incrementMaterialDownloads(id) {
   const db = getDb();
-  const refDoc = doc(collection(db, 'materials'), id);
+  const refDoc = doc(collection(db, "materials"), id);
   await updateDoc(refDoc, { downloads: increment(1) });
 }
 
@@ -479,16 +632,16 @@ export async function fetchGradesByDateRange(startISO, endISO) {
   const start = new Date(startISO);
   const end = new Date(endISO);
   // Ensure end includes the full day
-  end.setHours(23,59,59,999);
+  end.setHours(23, 59, 59, 999);
   const qy = query(
-    collection(db, 'grades'),
-    where('updatedAt', '>=', start),
-    where('updatedAt', '<=', end),
-    orderBy('updatedAt', 'asc')
+    collection(db, "grades"),
+    where("updatedAt", ">=", start),
+    where("updatedAt", "<=", end),
+    orderBy("updatedAt", "asc")
   );
   const snap = await getDocs(qy);
   const items = [];
-  snap.forEach(docSnap => {
+  snap.forEach((docSnap) => {
     const d = docSnap.data();
     items.push({ id: docSnap.id, ...d });
   });
@@ -502,43 +655,54 @@ export async function fetchGradesByDateRange(startISO, endISO) {
 export function subscribeForumTopics(cb, onError) {
   const db = getDb();
   const qy = query(
-    collection(db, 'forum_topics'),
-    orderBy('updatedAt', 'desc'),
-    orderBy('createdAt', 'desc')
+    collection(db, "forum_topics"),
+    orderBy("updatedAt", "desc"),
+    orderBy("createdAt", "desc")
   );
   return onSnapshot(
     qy,
     (snap) => {
       const items = [];
-      snap.forEach(docSnap => {
+      snap.forEach((docSnap) => {
         const d = docSnap.data();
         items.push({ id: docSnap.id, ...d });
       });
       cb(items);
     },
-    (err) => { if (onError) try { onError(err); } catch(_) {} }
+    (err) => {
+      if (onError)
+        try {
+          onError(err);
+        } catch (_) {}
+    }
   );
 }
 
-export async function createForumTopic({ title, category, content, authorName, authorEmail }) {
+export async function createForumTopic({
+  title,
+  category,
+  content,
+  authorName,
+  authorEmail,
+}) {
   const db = getDb();
-  if (!title || !content) throw new Error('T�tulo y contenido son requeridos');
-  const docRef = await addDoc(collection(db, 'forum_topics'), {
+  if (!title || !content) throw new Error("T�tulo y contenido son requeridos");
+  const docRef = await addDoc(collection(db, "forum_topics"), {
     title,
-    category: category || 'General',
+    category: category || "General",
     content,
     authorName: authorName || null,
     authorEmail: authorEmail || null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-    repliesCount: 0
+    repliesCount: 0,
   });
   return { id: docRef.id };
 }
 
 export async function updateForumTopic(topicId, updates) {
   const db = getDb();
-  const ref = doc(collection(db, 'forum_topics'), topicId);
+  const ref = doc(collection(db, "forum_topics"), topicId);
   const payload = { ...updates, updatedAt: serverTimestamp() };
   await updateDoc(ref, payload);
 }
@@ -547,24 +711,24 @@ export async function deleteForumTopic(topicId) {
   const db = getDb();
   // Delete replies first (best-effort)
   try {
-    const repliesCol = collection(db, 'forum_topics', topicId, 'replies');
+    const repliesCol = collection(db, "forum_topics", topicId, "replies");
     const snap = await getDocs(repliesCol);
     const dels = [];
-    snap.forEach(r => dels.push(deleteDoc(r.ref)));
+    snap.forEach((r) => dels.push(deleteDoc(r.ref)));
     await Promise.allSettled(dels);
-  } catch(_) {}
+  } catch (_) {}
   // Then delete topic
-  const ref = doc(collection(db, 'forum_topics'), topicId);
+  const ref = doc(collection(db, "forum_topics"), topicId);
   await deleteDoc(ref);
 }
 
 export function subscribeForumReplies(topicId, cb) {
   const db = getDb();
-  const repliesCol = collection(db, 'forum_topics', topicId, 'replies');
-  const qy = query(repliesCol, orderBy('createdAt', 'asc'));
+  const repliesCol = collection(db, "forum_topics", topicId, "replies");
+  const qy = query(repliesCol, orderBy("createdAt", "asc"));
   return onSnapshot(qy, (snap) => {
     const items = [];
-    snap.forEach(docSnap => {
+    snap.forEach((docSnap) => {
       const d = docSnap.data();
       items.push({ id: docSnap.id, ...d });
     });
@@ -572,36 +736,39 @@ export function subscribeForumReplies(topicId, cb) {
   });
 }
 
-export async function addForumReply(topicId, { text, authorName, authorEmail }) {
+export async function addForumReply(
+  topicId,
+  { text, authorName, authorEmail }
+) {
   const db = getDb();
-  if (!topicId) throw new Error('topicId requerido');
-  if (!text || !text.trim()) throw new Error('Texto requerido');
-  const repliesCol = collection(db, 'forum_topics', topicId, 'replies');
+  if (!topicId) throw new Error("topicId requerido");
+  if (!text || !text.trim()) throw new Error("Texto requerido");
+  const repliesCol = collection(db, "forum_topics", topicId, "replies");
   await addDoc(repliesCol, {
     text: text.trim(),
     authorName: authorName || null,
     authorEmail: authorEmail || null,
-    createdAt: serverTimestamp()
+    createdAt: serverTimestamp(),
   });
   try {
-    const topicRef = doc(collection(db, 'forum_topics'), topicId);
-    await updateDoc(topicRef, { repliesCount: increment(1), updatedAt: serverTimestamp() });
-  } catch(_) {}
+    const topicRef = doc(collection(db, "forum_topics"), topicId);
+    await updateDoc(topicRef, {
+      repliesCount: increment(1),
+      updatedAt: serverTimestamp(),
+    });
+  } catch (_) {}
 }
 
 export async function deleteForumReply(topicId, replyId) {
   const db = getDb();
-  if (!topicId || !replyId) throw new Error('topicId y replyId requeridos');
-  const ref = doc(collection(db, 'forum_topics', topicId, 'replies'), replyId);
+  if (!topicId || !replyId) throw new Error("topicId y replyId requeridos");
+  const ref = doc(collection(db, "forum_topics", topicId, "replies"), replyId);
   await deleteDoc(ref);
   try {
-    const topicRef = doc(collection(db, 'forum_topics'), topicId);
-    await updateDoc(topicRef, { repliesCount: increment(-1), updatedAt: serverTimestamp() });
-  } catch(_) {}
+    const topicRef = doc(collection(db, "forum_topics"), topicId);
+    await updateDoc(topicRef, {
+      repliesCount: increment(-1),
+      updatedAt: serverTimestamp(),
+    });
+  } catch (_) {}
 }
-
-
-
-
-
-

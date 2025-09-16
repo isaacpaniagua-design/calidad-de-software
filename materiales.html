@@ -255,7 +255,8 @@
 
       .cancel-btn:hover {
         background: #4b5563;
-      }\r\n      .materials-grid {
+      }
+      \r\n .materials-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         gap: 2rem;
@@ -542,21 +543,33 @@
     </style>
   </head>
   <body>
-        <div class="main-container">
+    <div class="main-container">
       <!-- Header -->
       <div class="header">
         <div class="role-toggle">
-          <button type="button" class="role-btn active" onclick="switchRole('teacher')" id="teacherBtn">
+          <button
+            type="button"
+            class="role-btn active"
+            onclick="switchRole('teacher')"
+            id="teacherBtn"
+          >
             👩‍🏫 Profesor
           </button>
-          <button type="button" class="role-btn" onclick="switchRole('student')" id="studentBtn">
+          <button
+            type="button"
+            class="role-btn"
+            onclick="switchRole('student')"
+            id="studentBtn"
+          >
             🧑‍🎓 Estudiante
           </button>
         </div>
 
         <div class="header-content">
           <h1 class="platform-title">📚 Materiales de Curso</h1>
-          <p class="platform-subtitle">Calidad de Software · Recursos y Documentos</p>
+          <p class="platform-subtitle">
+            Calidad de Software · Recursos y Documentos
+          </p>
         </div>
       </div>
 
@@ -589,24 +602,50 @@
           </div>
 
           <!-- Upload Area -->
-          <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+          <div
+            class="upload-area"
+            onclick="document.getElementById('fileInput').click()"
+          >
             <div class="upload-icon">⬆️</div>
-            <div class="upload-text">Arrastra archivos aquí o haz clic para seleccionar</div>
-            <div class="upload-subtext">Formatos soportados: PDF, DOC(X), XLS(X), PPT(X) · Máx. 10&nbsp;MB por archivo</div>
-            <input type="file" id="fileInput" class="file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" />
+            <div class="upload-text">
+              Arrastra archivos aquí o haz clic para seleccionar
+            </div>
+            <div class="upload-subtext">
+              Formatos soportados: PDF, DOC(X), XLS(X), PPT(X) · Máx. 10&nbsp;MB
+              por archivo
+            </div>
+            <input
+              type="file"
+              id="fileInput"
+              class="file-input"
+              multiple
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+            />
           </div>
 
           <!-- Upload Form -->
           <div class="upload-form hidden" id="uploadForm">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">Detalles del material</h3>
+            <h3 class="text-xl font-bold text-gray-800 mb-4">
+              Detalles del material
+            </h3>
             <form id="materialForm">
               <div class="form-group">
-                <label class="form-label" for="materialTitle">Título del material</label>
-                <input type="text" class="form-input" id="materialTitle" placeholder="Ej: Presentación Sesión 1 - Introducción" required />
+                <label class="form-label" for="materialTitle"
+                  >Título del material</label
+                >
+                <input
+                  type="text"
+                  class="form-input"
+                  id="materialTitle"
+                  placeholder="Ej: Presentación Sesión 1 - Introducción"
+                  required
+                />
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="materialCategory">Categoría</label>
+                <label class="form-label" for="materialCategory"
+                  >Categoría</label
+                >
                 <select class="form-select" id="materialCategory" required>
                   <option value="presentations">Presentaciones</option>
                   <option value="templates">Plantillas</option>
@@ -616,13 +655,25 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="materialDescription">Descripción</label>
-                <textarea class="form-textarea" id="materialDescription" placeholder="Breve descripción del contenido y propósito del material"></textarea>
+                <label class="form-label" for="materialDescription"
+                  >Descripción</label
+                >
+                <textarea
+                  class="form-textarea"
+                  id="materialDescription"
+                  placeholder="Breve descripción del contenido y propósito del material"
+                ></textarea>
               </div>
 
               <div class="form-group">
                 <button type="submit" class="submit-btn">Subir material</button>
-                <button type="button" class="submit-btn cancel-btn" onclick="cancelUpload()">Cancelar</button>
+                <button
+                  type="button"
+                  class="submit-btn cancel-btn"
+                  onclick="cancelUpload()"
+                >
+                  Cancelar
+                </button>
               </div>
 
               <div class="progress-bar hidden" id="progressBar">
@@ -636,7 +687,12 @@
         <div id="studentView" class="hidden">
           <div class="search-bar">
             <div class="search-icon">🔍</div>
-            <input type="text" class="search-input" placeholder="Buscar materiales..." id="searchInput" />
+            <input
+              type="text"
+              class="search-input"
+              placeholder="Buscar materiales..."
+              id="searchInput"
+            />
           </div>
         </div>
 
@@ -665,13 +721,17 @@
       </div>
     </div>
 
-            <script>
+    <script>
       const API_BASE_URL = "/api/materials";
       let materialsData = [];
       let filteredCategory = "all";
       let searchTerm = "";
       let selectedFiles = [];
-      let currentRole = (localStorage.getItem("qs_role") || "estudiante").toLowerCase() === "docente" ? "teacher" : "student";
+      let currentRole =
+        (localStorage.getItem("qs_role") || "estudiante").toLowerCase() ===
+        "docente"
+          ? "teacher"
+          : "student";
 
       const elements = {
         teacherBtn: document.getElementById("teacherBtn"),
@@ -697,7 +757,7 @@
         notification: document.getElementById("notification"),
         notificationIcon: document.getElementById("notificationIcon"),
         notificationTitle: document.getElementById("notificationTitle"),
-        notificationMessage: document.getElementById("notificationMessage")
+        notificationMessage: document.getElementById("notificationMessage"),
       };
 
       initializeMaterials();
@@ -712,12 +772,18 @@
       async function loadMaterials() {
         showEmptyState("Cargando materiales...", true);
         try {
-          const response = await fetch(API_BASE_URL, { headers: { Accept: "application/json" } });
+          const response = await fetch(API_BASE_URL, {
+            headers: { Accept: "application/json" },
+          });
           if (!response.ok) {
             throw new Error(`Error ${response.status}`);
           }
           const payload = await response.json();
-          const materials = Array.isArray(payload?.materials) ? payload.materials : Array.isArray(payload) ? payload : [];
+          const materials = Array.isArray(payload?.materials)
+            ? payload.materials
+            : Array.isArray(payload)
+            ? payload
+            : [];
           materialsData = materials.map(normalizeMaterial);
           if (!materialsData.length) {
             showEmptyState("Aún no hay materiales disponibles.");
@@ -728,24 +794,38 @@
         } catch (error) {
           console.error("Error loading materials", error);
           showEmptyState("No se pudieron cargar los materiales.");
-          showNotification("error", "Error al cargar", error.message || "Intenta nuevamente más tarde");
+          showNotification(
+            "error",
+            "Error al cargar",
+            error.message || "Intenta nuevamente más tarde"
+          );
         }
       }
 
       function normalizeMaterial(material) {
         if (!material || typeof material !== "object") return {};
         return {
-          id: material.id ?? material._id ?? (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `tmp-${Date.now()}-${Math.random().toString(16).slice(2)}`),
+          id:
+            material.id ??
+            material._id ??
+            (typeof crypto !== "undefined" && crypto.randomUUID
+              ? crypto.randomUUID()
+              : `tmp-${Date.now()}-${Math.random().toString(16).slice(2)}`),
           title: material.title ?? material.name ?? "Material sin título",
           description: material.description ?? material.summary ?? "",
-          category: (material.category ?? material.type ?? "otros").toString().toLowerCase(),
-          createdAt: material.createdAt ?? material.created_at ?? material.date ?? null,
+          category: (material.category ?? material.type ?? "otros")
+            .toString()
+            .toLowerCase(),
+          createdAt:
+            material.createdAt ?? material.created_at ?? material.date ?? null,
           updatedAt: material.updatedAt ?? material.updated_at ?? null,
           downloads: Number(material.downloads ?? material.totalDownloads ?? 0),
-          extension: (material.extension ?? material.fileExtension ?? "").toString().toLowerCase(),
+          extension: (material.extension ?? material.fileExtension ?? "")
+            .toString()
+            .toLowerCase(),
           mimeType: material.mimeType ?? material.contentType ?? "",
           downloadUrl: material.downloadUrl ?? material.url ?? null,
-          size: Number(material.size ?? 0)
+          size: Number(material.size ?? 0),
         };
       }
 
@@ -817,10 +897,15 @@
 
       function renderCategoryTabs() {
         if (!elements.categoryTabs) return;
-        const categories = Array.from(new Set(materialsData.map((m) => m.category))).filter(Boolean);
+        const categories = Array.from(
+          new Set(materialsData.map((m) => m.category))
+        ).filter(Boolean);
         const allCategories = [
           { key: "all", label: "Todos" },
-          ...categories.map((key) => ({ key, label: formatCategoryLabel(key) }))
+          ...categories.map((key) => ({
+            key,
+            label: formatCategoryLabel(key),
+          })),
         ];
 
         if (!allCategories.some((cat) => cat.key === filteredCategory)) {
@@ -830,14 +915,20 @@
         elements.categoryTabs.innerHTML = allCategories
           .map(
             (category) => `
-              <div class="category-tab${filteredCategory === category.key ? " active" : ""}" data-category="${category.key}">
+              <div class="category-tab${
+                filteredCategory === category.key ? " active" : ""
+              }" data-category="${category.key}">
                 ${category.label}
               </div>
             `
           )
           .join("");
 
-        const existingOptions = new Set(Array.from(elements.categorySelect?.options || []).map((opt) => opt.value));
+        const existingOptions = new Set(
+          Array.from(elements.categorySelect?.options || []).map(
+            (opt) => opt.value
+          )
+        );
         categories.forEach((key) => {
           if (elements.categorySelect && !existingOptions.has(key)) {
             const option = document.createElement("option");
@@ -847,23 +938,36 @@
           }
         });
 
-        elements.categoryTabs.querySelectorAll(".category-tab").forEach((tab) => {
-          tab.addEventListener("click", () => {
-            filteredCategory = tab.dataset.category || "all";
-            renderMaterials();
+        elements.categoryTabs
+          .querySelectorAll(".category-tab")
+          .forEach((tab) => {
+            tab.addEventListener("click", () => {
+              filteredCategory = tab.dataset.category || "all";
+              renderMaterials();
+            });
           });
-        });
       }
 
       function renderMaterials() {
         if (!elements.materialsGrid) return;
         const matches = materialsData
           .filter((material) => {
-            const inCategory = filteredCategory === "all" || material.category === filteredCategory;
+            const inCategory =
+              filteredCategory === "all" ||
+              material.category === filteredCategory;
             if (!searchTerm) return inCategory;
-            return inCategory && `${material.title} ${material.description}`.toLowerCase().includes(searchTerm);
+            return (
+              inCategory &&
+              `${material.title} ${material.description}`
+                .toLowerCase()
+                .includes(searchTerm)
+            );
           })
-          .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
+          .sort(
+            (a, b) =>
+              new Date(b.updatedAt || b.createdAt || 0) -
+              new Date(a.updatedAt || a.createdAt || 0)
+          );
 
         if (!matches.length) {
           elements.materialsGrid.innerHTML = "";
@@ -877,16 +981,29 @@
         elements.materialsGrid.innerHTML = matches
           .map((material) => {
             const fileInfo = getFileInfo(material);
-            const downloadsLabel = formatDownloads(material.downloads, formatter);
-            const createdLabel = formatDate(material.updatedAt || material.createdAt);
-            const description = material.description ? escapeHtml(material.description) : "Sin descripción disponible.";
+            const downloadsLabel = formatDownloads(
+              material.downloads,
+              formatter
+            );
+            const createdLabel = formatDate(
+              material.updatedAt || material.createdAt
+            );
+            const description = material.description
+              ? escapeHtml(material.description)
+              : "Sin descripción disponible.";
 
             return `
-              <div class="material-card" data-category="${escapeAttr(material.category)}">
+              <div class="material-card" data-category="${escapeAttr(
+                material.category
+              )}">
                 <div class="material-header">
-                  <div class="file-icon ${fileInfo.className}">${fileInfo.label}</div>
+                  <div class="file-icon ${fileInfo.className}">${
+              fileInfo.label
+            }</div>
                   <div>
-                    <div class="material-title">${escapeHtml(material.title)}</div>
+                    <div class="material-title">${escapeHtml(
+                      material.title
+                    )}</div>
                     <div class="material-meta">
                       <span>${createdLabel}</span>
                       <span>${downloadsLabel}</span>
@@ -895,9 +1012,15 @@
                 </div>
                 <div class="material-description">${description}</div>
                 <div class="material-actions">
-                  <button class="action-btn download-btn" data-action="download" data-id="${material.id}">⬇️ Descargar</button>
-                  <button class="action-btn edit-btn teacher-only" data-action="edit" data-id="${material.id}">✏️ Editar</button>
-                  <button class="action-btn delete-btn teacher-only" data-action="delete" data-id="${material.id}">🗑️ Eliminar</button>
+                  <button class="action-btn download-btn" data-action="download" data-id="${
+                    material.id
+                  }">⬇️ Descargar</button>
+                  <button class="action-btn edit-btn teacher-only" data-action="edit" data-id="${
+                    material.id
+                  }">✏️ Editar</button>
+                  <button class="action-btn delete-btn teacher-only" data-action="delete" data-id="${
+                    material.id
+                  }">🗑️ Eliminar</button>
                 </div>
               </div>
             `;
@@ -910,8 +1033,13 @@
       function renderStats() {
         const formatter = new Intl.NumberFormat("es-MX");
         const total = materialsData.length;
-        const downloads = materialsData.reduce((sum, material) => sum + (Number(material.downloads) || 0), 0);
-        const categories = new Set(materialsData.map((material) => material.category)).size;
+        const downloads = materialsData.reduce(
+          (sum, material) => sum + (Number(material.downloads) || 0),
+          0
+        );
+        const categories = new Set(
+          materialsData.map((material) => material.category)
+        ).size;
         const latestUpdate = materialsData
           .map((material) => material.updatedAt || material.createdAt)
           .filter(Boolean)
@@ -919,12 +1047,18 @@
           .filter((date) => !Number.isNaN(date.getTime()))
           .sort((a, b) => b - a)[0];
 
-        if (elements.statTotal) elements.statTotal.textContent = formatter.format(total);
-        if (elements.statDownloads) elements.statDownloads.textContent = formatter.format(downloads);
-        if (elements.statCategories) elements.statCategories.textContent = formatter.format(categories);
+        if (elements.statTotal)
+          elements.statTotal.textContent = formatter.format(total);
+        if (elements.statDownloads)
+          elements.statDownloads.textContent = formatter.format(downloads);
+        if (elements.statCategories)
+          elements.statCategories.textContent = formatter.format(categories);
         if (elements.statUpdated) {
           elements.statUpdated.textContent = latestUpdate
-            ? new Intl.DateTimeFormat("es-MX", { dateStyle: "medium", timeStyle: "short" }).format(latestUpdate)
+            ? new Intl.DateTimeFormat("es-MX", {
+                dateStyle: "medium",
+                timeStyle: "short",
+              }).format(latestUpdate)
             : "Sin registros";
         }
       }
@@ -932,16 +1066,26 @@
       async function handleMaterialSubmit(event) {
         event.preventDefault();
         if (!selectedFiles.length) {
-          showNotification("error", "Selecciona un archivo", "Debes elegir al menos un archivo para subir");
+          showNotification(
+            "error",
+            "Selecciona un archivo",
+            "Debes elegir al menos un archivo para subir"
+          );
           return;
         }
 
         const title = document.getElementById("materialTitle").value.trim();
         const category = elements.categorySelect?.value || "otros";
-        const description = document.getElementById("materialDescription").value.trim();
+        const description = document
+          .getElementById("materialDescription")
+          .value.trim();
 
         if (!title) {
-          showNotification("error", "Título requerido", "Ingresa el nombre del material antes de subirlo");
+          showNotification(
+            "error",
+            "Título requerido",
+            "Ingresa el nombre del material antes de subirlo"
+          );
           return;
         }
 
@@ -952,17 +1096,32 @@
         formData.append("description", description);
 
         try {
-          showNotification("info", "Subiendo material", "Estamos procesando tu archivo");
+          showNotification(
+            "info",
+            "Subiendo material",
+            "Estamos procesando tu archivo"
+          );
           const createdMaterial = await uploadMaterial(formData);
           if (createdMaterial) {
-            materialsData = [normalizeMaterial(createdMaterial), ...materialsData];
+            materialsData = [
+              normalizeMaterial(createdMaterial),
+              ...materialsData,
+            ];
             renderAll();
             resetUploadWorkflow();
-            showNotification("success", "Material subido", "El material se cargó correctamente");
+            showNotification(
+              "success",
+              "Material subido",
+              "El material se cargó correctamente"
+            );
           }
         } catch (error) {
           console.error("Upload error", error);
-          showNotification("error", "No se pudo subir", error.message || "Intenta nuevamente");
+          showNotification(
+            "error",
+            "No se pudo subir",
+            error.message || "Intenta nuevamente"
+          );
         }
       }
 
@@ -984,7 +1143,9 @@
             elements.progressBar?.classList.add("hidden");
             if (xhr.status >= 200 && xhr.status < 300) {
               try {
-                const response = xhr.responseText ? JSON.parse(xhr.responseText) : {};
+                const response = xhr.responseText
+                  ? JSON.parse(xhr.responseText)
+                  : {};
                 resolve(response.material ?? response);
               } catch (parseError) {
                 resolve({});
@@ -1020,13 +1181,21 @@
       }
 
       async function downloadMaterial(id) {
-        const material = materialsData.find((item) => String(item.id) === String(id));
+        const material = materialsData.find(
+          (item) => String(item.id) === String(id)
+        );
         if (!material) {
-          showNotification("error", "Material no encontrado", "El recurso seleccionado no está disponible");
+          showNotification(
+            "error",
+            "Material no encontrado",
+            "El recurso seleccionado no está disponible"
+          );
           return;
         }
         try {
-          const targetUrl = material.downloadUrl || `${API_BASE_URL}/${encodeURIComponent(material.id)}/download`;
+          const targetUrl =
+            material.downloadUrl ||
+            `${API_BASE_URL}/${encodeURIComponent(material.id)}/download`;
           window.open(targetUrl, "_blank", "noopener");
           if (!Number.isNaN(Number(material.downloads))) {
             material.downloads = Number(material.downloads || 0) + 1;
@@ -1034,54 +1203,96 @@
           }
           showNotification("success", "Descarga iniciada", material.title);
         } catch (error) {
-          showNotification("error", "No se pudo descargar", error.message || "Intenta nuevamente");
+          showNotification(
+            "error",
+            "No se pudo descargar",
+            error.message || "Intenta nuevamente"
+          );
         }
       }
 
       async function editMaterial(id) {
         if (currentRole !== "teacher") return;
-        const material = materialsData.find((item) => String(item.id) === String(id));
+        const material = materialsData.find(
+          (item) => String(item.id) === String(id)
+        );
         if (!material) return;
         const newTitle = prompt("Editar título", material.title);
         if (newTitle === null) return;
-        const newDescription = prompt("Editar descripción", material.description || "");
+        const newDescription = prompt(
+          "Editar descripción",
+          material.description || ""
+        );
         if (newDescription === null) return;
         try {
-          const response = await fetch(`${API_BASE_URL}/${encodeURIComponent(material.id)}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ title: newTitle.trim(), description: newDescription.trim() })
-          });
+          const response = await fetch(
+            `${API_BASE_URL}/${encodeURIComponent(material.id)}`,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                title: newTitle.trim(),
+                description: newDescription.trim(),
+              }),
+            }
+          );
           if (!response.ok) {
             throw new Error(`Error ${response.status}`);
           }
           const updated = normalizeMaterial(await response.json());
-          materialsData = materialsData.map((item) => (String(item.id) === String(updated.id) ? updated : item));
+          materialsData = materialsData.map((item) =>
+            String(item.id) === String(updated.id) ? updated : item
+          );
           renderAll();
-          showNotification("success", "Material actualizado", "Los cambios se guardaron correctamente");
+          showNotification(
+            "success",
+            "Material actualizado",
+            "Los cambios se guardaron correctamente"
+          );
         } catch (error) {
           console.error("Edit error", error);
-          showNotification("error", "No se pudo actualizar", error.message || "Revisa e intenta de nuevo");
+          showNotification(
+            "error",
+            "No se pudo actualizar",
+            error.message || "Revisa e intenta de nuevo"
+          );
         }
       }
 
       async function deleteMaterial(id) {
         if (currentRole !== "teacher") return;
-        const material = materialsData.find((item) => String(item.id) === String(id));
+        const material = materialsData.find(
+          (item) => String(item.id) === String(id)
+        );
         if (!material) return;
-        const confirmed = confirm(`¿Estás seguro de eliminar "${material.title}"?`);
+        const confirmed = confirm(
+          `¿Estás seguro de eliminar "${material.title}"?`
+        );
         if (!confirmed) return;
         try {
-          const response = await fetch(`${API_BASE_URL}/${encodeURIComponent(material.id)}`, { method: "DELETE" });
+          const response = await fetch(
+            `${API_BASE_URL}/${encodeURIComponent(material.id)}`,
+            { method: "DELETE" }
+          );
           if (!response.ok && response.status !== 204) {
             throw new Error(`Error ${response.status}`);
           }
-          materialsData = materialsData.filter((item) => String(item.id) !== String(material.id));
+          materialsData = materialsData.filter(
+            (item) => String(item.id) !== String(material.id)
+          );
           renderAll();
-          showNotification("success", "Material eliminado", "El recurso se eliminó correctamente");
+          showNotification(
+            "success",
+            "Material eliminado",
+            "El recurso se eliminó correctamente"
+          );
         } catch (error) {
           console.error("Delete error", error);
-          showNotification("error", "No se pudo eliminar", error.message || "Intenta nuevamente");
+          showNotification(
+            "error",
+            "No se pudo eliminar",
+            error.message || "Intenta nuevamente"
+          );
         }
       }
 
@@ -1094,10 +1305,17 @@
         elements.studentView?.classList.toggle("hidden", role !== "student");
         applyRoleVisibility();
         try {
-          localStorage.setItem("qs_role", role === "teacher" ? "docente" : "estudiante");
+          localStorage.setItem(
+            "qs_role",
+            role === "teacher" ? "docente" : "estudiante"
+          );
         } catch (error) {}
         if (!options.silent) {
-          showNotification("success", "Vista cambiada", `Ahora ves como ${role === "teacher" ? "Profesor" : "Estudiante"}`);
+          showNotification(
+            "success",
+            "Vista cambiada",
+            `Ahora ves como ${role === "teacher" ? "Profesor" : "Estudiante"}`
+          );
         }
       }
 
@@ -1140,7 +1358,15 @@
 
       function getFileInfo(material) {
         const extension = (material.extension || "").toLowerCase();
-        const map = { pdf: "pdf", doc: "doc", docx: "doc", xls: "xls", xlsx: "xls", ppt: "ppt", pptx: "ppt" };
+        const map = {
+          pdf: "pdf",
+          doc: "doc",
+          docx: "doc",
+          xls: "xls",
+          xlsx: "xls",
+          ppt: "ppt",
+          pptx: "ppt",
+        };
         const className = map[extension] || "default";
         const label = extension ? extension.toUpperCase() : "FILE";
         return { className, label };
@@ -1156,17 +1382,23 @@
         if (!value) return "Sin fecha";
         const date = new Date(value);
         if (Number.isNaN(date.getTime())) return value;
-        return new Intl.DateTimeFormat("es-MX", { dateStyle: "medium" }).format(date);
+        return new Intl.DateTimeFormat("es-MX", { dateStyle: "medium" }).format(
+          date
+        );
       }
 
       function escapeHtml(value) {
-        return value.replace(/[&<>"']/g, (char) => ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;"
-        })[char]);
+        return value.replace(
+          /[&<>"']/g,
+          (char) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[char])
+        );
       }
 
       function escapeAttr(value) {
@@ -1177,33 +1409,8 @@
       window.cancelUpload = cancelUpload;
     </script>
     <script type="module" src="./js/role-gate.js"></script>
-    
-  
-  <script defer src="js/back-home.js"></script>
-  <script defer src="js/nav-inject.js"></script>
- </body>
 
+    <script defer src="js/back-home.js"></script>
+    <script defer src="js/nav-inject.js"></script>
+  </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
