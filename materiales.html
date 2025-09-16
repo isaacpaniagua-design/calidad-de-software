@@ -539,11 +539,11 @@
         .category-tabs {
           justify-content: center;
         }
+      }
     </style>
   </head>
   <body>
     <div class="main-container">
-      <!-- Header -->
       <div class="header">
         <div class="role-toggle">
           <button
@@ -572,11 +572,8 @@
         </div>
       </div>
 
-      <!-- Content Area -->
       <div class="content-area">
-        <!-- Teacher View -->
         <div id="teacherView">
-          <!-- Statistics -->
           <div class="stats-grid">
             <div class="stat-card">
               <div class="stat-icon">📦</div>
@@ -600,7 +597,6 @@
             </div>
           </div>
 
-          <!-- Upload Area -->
           <div
             class="upload-area"
             onclick="document.getElementById('fileInput').click()"
@@ -622,7 +618,6 @@
             />
           </div>
 
-          <!-- Upload Form -->
           <div class="upload-form hidden" id="uploadForm">
             <h3 class="text-xl font-bold text-gray-800 mb-4">
               Detalles del material
@@ -682,7 +677,6 @@
           </div>
         </div>
 
-        <!-- Student View -->
         <div id="studentView" class="hidden">
           <div class="search-bar">
             <div class="search-icon">🔍</div>
@@ -695,10 +689,8 @@
           </div>
         </div>
 
-        <!-- Category Tabs (Both Views) -->
         <div class="category-tabs" id="categoryTabs"></div>
 
-        <!-- Materials Grid -->
         <div class="materials-grid" id="materialsGrid"></div>
         <div class="empty-state hidden" id="emptyState">
           <div class="empty-icon">📂</div>
@@ -707,7 +699,6 @@
       </div>
     </div>
 
-    <!-- Notification -->
     <div class="notification" id="notification">
       <div class="flex items-center">
         <div class="text-2xl mr-3" id="notificationIcon">ℹ️</div>
@@ -721,9 +712,10 @@
     </div>
 
     <script>
-      const API_BASE_URL = "https://script.google.com/macros/s/AKfycbxr1Nlueyw4xddx2t_83RX1WSPoA9I94TFTvBC8kP8bxfzd7kszQmaDPQ5T9FYit2No/exec";
+      const API_BASE_URL =
+        "https://script.google.com/macros/s/AKfycbxr1Nlueyw4xddx2t_83RX1WSPoA9I94TFTvBC8kP8bxfzd7kszQmaDPQ5T9FYit2No/exec";
       function buildApiUrl(query) {
-        const separator = API_BASE_URL.includes('?') ? '&' : '?';
+        const separator = API_BASE_URL.includes("?") ? "&" : "?";
         return `${API_BASE_URL}${separator}${query}`;
       }
       let materialsData = [];
@@ -775,7 +767,7 @@
       async function loadMaterials() {
         showEmptyState("Cargando materiales...", true);
         try {
-          const response = await fetch(buildApiUrl('action=list'), {
+          const response = await fetch(buildApiUrl("action=list"), {
             headers: { Accept: "application/json" },
             cache: "no-store",
           });
@@ -812,6 +804,7 @@
           );
         }
       }
+
       function normalizeMaterial(material) {
         if (!material || typeof material !== "object") return {};
         return {
@@ -1071,6 +1064,8 @@
               }).format(latestUpdate)
             : "Sin registros";
         }
+      }
+
       async function handleMaterialSubmit(event) {
         event.preventDefault();
         if (!selectedFiles.length) {
@@ -1133,10 +1128,11 @@
           );
         }
       }
+
       function uploadMaterial(formData) {
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("POST", buildApiUrl('action=upload'));
+          xhr.open("POST", buildApiUrl("action=upload"));
 
           xhr.upload.addEventListener("progress", (event) => {
             if (!event.lengthComputable) return;
@@ -1187,12 +1183,15 @@
           elements.uploadArea.classList.remove("dragover");
         }
       }
+
       function cancelUpload() {
         resetUploadWorkflow();
       }
 
       async function downloadMaterial(id) {
-        const material = materialsData.find((item) => String(item.id) === String(id));
+        const material = materialsData.find(
+          (item) => String(item.id) === String(id)
+        );
         if (!material) {
           showNotification(
             "error",
@@ -1203,7 +1202,9 @@
         }
         try {
           const response = await fetch(
-            buildApiUrl(`action=download&id=${encodeURIComponent(material.id)}`),
+            buildApiUrl(
+              `action=download&id=${encodeURIComponent(material.id)}`
+            ),
             {
               headers: { Accept: "application/json" },
               cache: "no-store",
@@ -1221,7 +1222,9 @@
           const targetUrl =
             payload.downloadUrl ||
             material.downloadUrl ||
-            buildApiUrl(`action=download&id=${encodeURIComponent(material.id)}`);
+            buildApiUrl(
+              `action=download&id=${encodeURIComponent(material.id)}`
+            );
           if (payload.downloads !== undefined) {
             material.downloads = Number(payload.downloads) || 0;
           } else if (!Number.isNaN(Number(material.downloads))) {
@@ -1238,9 +1241,12 @@
           );
         }
       }
+
       async function editMaterial(id) {
         if (currentRole !== "teacher") return;
-        const material = materialsData.find((item) => String(item.id) === String(id));
+        const material = materialsData.find(
+          (item) => String(item.id) === String(id)
+        );
         if (!material) return;
         const newTitle = prompt("Editar título", material.title);
         if (newTitle === null) return;
@@ -1287,9 +1293,12 @@
           );
         }
       }
+
       async function deleteMaterial(id) {
         if (currentRole !== "teacher") return;
-        const material = materialsData.find((item) => String(item.id) === String(id));
+        const material = materialsData.find(
+          (item) => String(item.id) === String(id)
+        );
         if (!material) return;
         const confirmed = confirm(
           `¿Estás seguro de eliminar "${material.title}"?`
@@ -1336,6 +1345,7 @@
           );
         }
       }
+
       function switchRole(role, options = {}) {
         if (role !== "teacher" && role !== "student") return;
         currentRole = role;
@@ -1357,6 +1367,8 @@
             `Ahora ves como ${role === "teacher" ? "Profesor" : "Estudiante"}`
           );
         }
+      }
+
       function applyRoleVisibility() {
         document.querySelectorAll(".teacher-only").forEach((element) => {
           element.classList.toggle("hidden", currentRole !== "teacher");
@@ -1452,4 +1464,3 @@
     <script defer src="js/nav-inject.js"></script>
   </body>
 </html>
-
