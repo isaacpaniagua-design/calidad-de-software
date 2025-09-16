@@ -103,7 +103,26 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Herramientas Docente -->
+        <div class="teacher-only bg-white rounded-2xl shadow-xl p-8 border border-gray-100 mb-10" id="manualAttendanceCard">
+          <h3 class="text-2xl font-bold text-gray-800 mb-1">Registro manual para pruebas</h3>
+          <p class="text-gray-600 text-sm mb-6">Disponible solo para docentes. Permite simular asistencias o realizar correcciones sin validacion por Google.</p>
+          <div class="grid gap-4">
+            <div>
+              <label class="form-label" for="manualAttendanceSelect">Seleccionar participante</label>
+              <select id="manualAttendanceSelect" class="form-select">
+                <option value="">-- Selecciona desde la lista --</option>
+              </select>
+            </div>
+            <div class="text-sm text-gray-500">o captura un correo manual para pruebas:</div>
+            <div class="grid gap-3">
+              <input type="text" id="manualAttendanceName" class="form-input" placeholder="Nombre (opcional si está en la lista)" />
+              <input type="email" id="manualAttendanceEmail" class="form-input" placeholder="correo@potros.itson.edu.mx" />
+            </div>
+          </div>
+          <button type="button" id="manualAttendanceBtn" class="submit-btn mt-6">Registrar asistencia manual</button>
+        </div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Attendance Button Section -->
             <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
                 <div class="text-center">
@@ -510,6 +529,11 @@
       const userName = document.getElementById('userName');
       const userPhoto = document.getElementById('userPhoto');
       const attendanceBtn = document.getElementById('attendanceBtn');
+      const manualCard = document.getElementById('manualAttendanceCard');
+      const manualSelect = document.getElementById('manualAttendanceSelect');
+      const manualNameInput = document.getElementById('manualAttendanceName');
+      const manualEmailInput = document.getElementById('manualAttendanceEmail');
+      const manualBtn = document.getElementById('manualAttendanceBtn');
 
       function setAttendanceEnabled(enabled) {
         if (!attendanceBtn) return;
@@ -519,6 +543,27 @@
       }
 
       setAttendanceEnabled(false);
+
+      if (manualBtn) {
+        manualBtn.addEventListener('click', (event) => {
+          event.preventDefault();
+          manualRegisterAttendance();
+        });
+      }
+
+      if (manualSelect) {
+        manualSelect.addEventListener('change', () => {
+          const roster = Array.isArray(window.students) ? window.students : [];
+          const selected = roster.find((item) => String(item.id) === manualSelect.value);
+          if (selected) {
+            if (manualNameInput) manualNameInput.value = selected.name || '';
+            if (manualEmailInput) manualEmailInput.value = selected.email || '';
+          } else {
+            if (manualNameInput) manualNameInput.value = '';
+            if (manualEmailInput) manualEmailInput.value = '';
+          }
+        });
+      }
 
       if (signInBtn) {
         signInBtn.addEventListener('click', async () => {
@@ -548,6 +593,15 @@
           }
           userInfo.classList.remove('hidden');
           if (signInBtn) signInBtn.classList.add('hidden');
+          const rosterEntry = (Array.isArray(window.students) ? window.students : []).find((student) => (student.email || '').toLowerCase() === user.email.toLowerCase());
+          if (rosterEntry?.type === 'teacher') {
+            try { localStorage.setItem('qs_role', 'docente'); } catch (_) {}
+            if (manualCard) {
+              manualCard.classList.remove('hidden');
+              manualCard.style.display = '';
+            }
+          }
+
           const active = (typeof window.isClassActiveNow === 'function' ? window.isClassActiveNow() : true);
           setAttendanceEnabled(active);
           const banner = document.getElementById('classBanner');
@@ -576,6 +630,10 @@
           userInfo.classList.add('hidden');
           if (signInBtn) signInBtn.classList.remove('hidden');
           setAttendanceEnabled(false);
+          if (manualCard) {
+            manualCard.classList.add('hidden');
+            manualCard.style.display = 'none';
+          }
           try { window.clearInterval(window.__classActiveTimer); } catch(_) {}
           window.registeredAttendances = [];
           if (typeof window.updateAttendanceList === 'function') window.updateAttendanceList();
@@ -584,6 +642,75 @@
         }
       });
 
+      function populateManualAttendanceOptions() {
+        if (!manualSelect) return;
+        const roster = Array.isArray(window.students) ? window.students : [];
+        const options = roster
+          .filter((student) => student && student.id && student.name)
+          .map((student) => {
+            const emailLabel = student.email ? ` - ${student.email}` : '';
+            return `<option value="${student.id}">${student.name}${emailLabel}</option>`;
+          })
+          .join('');
+        manualSelect.innerHTML = '<option value="">-- Selecciona desde la lista --</option>' + options;
+      }
+
+      async function manualRegisterAttendance() {
+        if (!manualBtn) return;
+        const roster = Array.isArray(window.students) ? window.students : [];
+        const selectedId = manualSelect ? manualSelect.value : '';
+        const typedEmail = (manualEmailInput?.value || '').trim().toLowerCase();
+        const typedName = (manualNameInput?.value || '').trim();
+
+        let student = null;
+        if (selectedId) {
+          student = roster.find((item) => String(item.id) === selectedId);
+        }
+        if (!student && typedEmail) {
+          student = roster.find((item) => (item.email || '').toLowerCase() === typedEmail);
+        }
+
+        let email = (student?.email || typedEmail || '').toLowerCase();
+        if (!email) {
+          alert('Ingresa un correo valido o selecciona un integrante.');
+          return;
+        }
+
+        const name = typedName || student?.name || email;
+        const type = student?.type || 'manual';
+        const uid = student?.uid || student?.id || `manual-${Date.now()}`;
+
+        if (typeof window.isClassActiveNow === 'function' && !window.isClassActiveNow()) {
+          const proceed = confirm('La clase no esta en horario. Registrar de todas formas?');
+          if (!proceed) return;
+        }
+
+        manualBtn.disabled = true;
+        try {
+          await saveTodayAttendance({
+            uid,
+            name,
+            email,
+            type,
+            manual: true
+          });
+          const when = new Date();
+          if (typeof window.showSuccessModal === 'function') {
+            window.showSuccessModal({ name, type }, when);
+          }
+          if (typeof window.showAttendanceToast === 'function') {
+            window.showAttendanceToast('Asistencia registrada manualmente');
+          }
+          if (manualSelect) manualSelect.value = '';
+          if (manualNameInput) manualNameInput.value = '';
+          if (manualEmailInput) manualEmailInput.value = '';
+        } catch (error) {
+          console.error('Manual attendance error', error);
+          alert(error?.message || 'No se pudo registrar manualmente.');
+        } finally {
+          manualBtn.disabled = false;
+        }
+      }
       window.registerAttendance = async function registerAttendance() {
         if (typeof window.isClassActiveNow === 'function' && !window.isClassActiveNow()) {
           alert('La asistencia solo puede registrarse Lun/Mié/Vie entre 18:00 y 19:00, del 25 de agosto al 12 de diciembre.');
@@ -628,6 +755,8 @@
       if (attendanceBtn) {
         attendanceBtn.onclick = (e) => { e.preventDefault(); window.registerAttendance(); };
       }
+
+      populateManualAttendanceOptions();
 
       // Exportadores
       function formatDateTime(d) {
@@ -742,6 +871,9 @@ document.addEventListener('DOMContentLoaded', function(){
 <script defer src="js/back-home.js"></script>
 </body>
 </html>
+
+
+
 
 
 
