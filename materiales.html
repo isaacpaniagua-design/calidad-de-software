@@ -256,7 +256,7 @@
       .cancel-btn:hover {
         background: #4b5563;
       }
-       .materials-grid {
+      .materials-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         gap: 2rem;
@@ -597,24 +597,15 @@
             </div>
           </div>
 
-          <div
-            class="upload-area"
-            onclick="document.getElementById('fileInput').click()"
-          >
-            <div class="upload-icon">⬆️</div>
-            <div class="upload-text">
-              Arrastra archivos aquí o haz clic para seleccionar
-            </div>
-            <div class="upload-subtext">
-              Formatos soportados: PDF, DOC(X), XLS(X), PPT(X) · Máx. 10&nbsp;MB
-              por archivo
-            </div>
+          <div class="upload-area">
             <input
-              type="file"
-              id="fileInput"
-              class="file-input"
-              multiple
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+              type="hidden"
+              role="uploadcare-uploader"
+              data-multiple="true"
+              data-public-key="85eb5471d305dcd08e71"
+              data-tabs="file url"
+              data-preview-step="true"
+              id="uploadcare-input"
             />
           </div>
 
@@ -711,7 +702,10 @@
       </div>
     </div>
 
+    <script src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"></script>
     <script>
+      UPLOADCARE_PUBLIC_KEY = "85eb5471d305dcd08e71";
+
       const API_BASE_URL =
         "https://script.google.com/macros/s/AKfycbxr1Nlueyw4xddx2t_83RX1WSPoA9I94TFTvBC8kP8bxfzd7kszQmaDPQ5T9FYit2No/exec";
       function buildApiUrl(query) {
@@ -753,6 +747,7 @@
         notificationIcon: document.getElementById("notificationIcon"),
         notificationTitle: document.getElementById("notificationTitle"),
         notificationMessage: document.getElementById("notificationMessage"),
+        uploadcareInput: document.getElementById("uploadcare-input"),
       };
 
       initializeMaterials();
@@ -833,39 +828,20 @@
       }
 
       function wireUploadEvents() {
-        elements.fileInput?.addEventListener("change", (event) => {
-          selectedFiles = Array.from(event.target.files || []);
-          if (selectedFiles.length) {
-            elements.uploadForm.classList.remove("hidden");
-            elements.uploadArea.style.display = "none";
-          }
-        });
+        // Escucha el evento de subida de Uploadcare
+        if (elements.uploadcareInput) {
+          const uploader = uploadcare.SingleWidget(elements.uploadcareInput);
+          uploader.onUploadComplete((info) => {
+            // Una vez que el archivo se sube a Uploadcare, muestra el formulario
+            if (info && info.uuid) {
+              selectedFiles.push(info);
+              elements.uploadForm.classList.remove("hidden");
+              elements.uploadArea.style.display = "none";
+            }
+          });
+        }
 
         if (!elements.uploadArea) return;
-
-        ["dragover", "dragenter"].forEach((evt) => {
-          elements.uploadArea.addEventListener(evt, (event) => {
-            event.preventDefault();
-            elements.uploadArea.classList.add("dragover");
-          });
-        });
-
-        ["dragleave", "dragend"].forEach((evt) => {
-          elements.uploadArea.addEventListener(evt, (event) => {
-            event.preventDefault();
-            elements.uploadArea.classList.remove("dragover");
-          });
-        });
-
-        elements.uploadArea.addEventListener("drop", (event) => {
-          event.preventDefault();
-          elements.uploadArea.classList.remove("dragover");
-          selectedFiles = Array.from(event.dataTransfer?.files || []);
-          if (selectedFiles.length) {
-            elements.uploadForm.classList.remove("hidden");
-            elements.uploadArea.style.display = "none";
-          }
-        });
 
         elements.materialForm?.addEventListener("submit", handleMaterialSubmit);
       }
@@ -1092,20 +1068,20 @@
           return;
         }
 
-        const formData = new FormData();
-        selectedFiles.forEach((file) => formData.append("files", file));
-        formData.append("title", title);
-        formData.append("category", category);
-        formData.append("description", description);
-        formData.append("action", "upload");
-
         try {
           showNotification(
             "info",
             "Subiendo material",
             "Estamos procesando tu archivo"
           );
-          const createdMaterial = await uploadMaterial(formData);
+
+          const fileInfo = selectedFiles[0];
+          const createdMaterial = await saveMaterial(fileInfo, {
+            title,
+            category,
+            description,
+          });
+
           if (createdMaterial) {
             materialsData = [
               normalizeMaterial(createdMaterial),
@@ -1129,52 +1105,42 @@
         }
       }
 
-      function uploadMaterial(formData) {
-        return new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open("POST", buildApiUrl("action=upload"));
+      async function saveMaterial(fileInfo, metadata) {
+        const formData = new FormData();
+        formData.append("action", "upload");
+        formData.append("title", metadata.title);
+        formData.append("category", metadata.category);
+        formData.append("description", metadata.description);
+        formData.append("downloadUrl", fileInfo.cdnUrl);
+        formData.append("size", fileInfo.size);
+        formData.append("mimeType", fileInfo.mimeType);
 
-          xhr.upload.addEventListener("progress", (event) => {
-            if (!event.lengthComputable) return;
-            const percentage = Math.round((event.loaded / event.total) * 100);
-            elements.progressBar?.classList.remove("hidden");
-            if (elements.progressFill) {
-              elements.progressFill.style.width = `${percentage}%`;
-            }
-          });
-
-          xhr.onload = () => {
-            elements.progressBar?.classList.add("hidden");
-            if (xhr.status >= 200 && xhr.status < 300) {
-              try {
-                const response = xhr.responseText
-                  ? JSON.parse(xhr.responseText)
-                  : {};
-                if (response?.success === false) {
-                  reject(new Error(response.message || "No se pudo guardar"));
-                  return;
-                }
-                resolve(response.material ?? response);
-              } catch (parseError) {
-                resolve({});
-              }
-            } else {
-              reject(new Error(xhr.responseText || `Error ${xhr.status}`));
-            }
-          };
-
-          xhr.onerror = () => {
-            elements.progressBar?.classList.add("hidden");
-            reject(new Error("Error de red durante la carga"));
-          };
-
-          xhr.send(formData);
+        const response = await fetch(API_BASE_URL, {
+          method: "POST",
+          body: formData,
         });
+
+        if (!response.ok) {
+          throw new Error(
+            `Error de red: ${response.status} ${response.statusText}`
+          );
+        }
+
+        const result = await response.json();
+
+        if (result?.success === false) {
+          throw new Error(
+            result.message ||
+              "No se pudo guardar la información en la hoja de cálculo."
+          );
+        }
+
+        return result.material;
       }
 
       function resetUploadWorkflow() {
         selectedFiles = [];
-        if (elements.fileInput) elements.fileInput.value = "";
+        if (elements.uploadcareInput) elements.uploadcareInput.value = "";
         if (elements.materialForm) elements.materialForm.reset();
         if (elements.progressFill) elements.progressFill.style.width = "0%";
         if (elements.uploadForm) elements.uploadForm.classList.add("hidden");
