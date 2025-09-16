@@ -722,7 +722,8 @@
     </div>
 
     <script>
-      const API_BASE_URL = "https://script.google.com/macros/s/AKfycbyyiMN0_i9E2B7dZp48Se-vvsQfD5w-AjervFXFGotopGfyiSqKmpL6AzqXoL-s8BG-/exec";
+      const API_BASE_URL =
+        "https://script.google.com/macros/s/AKfycbzTuwiAouCfun0Qj7Odwc_1chfgvSg_4M9QUI2zJMlmCfuI7AyAGylbho_cqp2Qx3AR/exec";
       let materialsData = [];
       let filteredCategory = "all";
       let searchTerm = "";
@@ -781,7 +782,9 @@
           }
           const payload = await response.json();
           if (payload?.success === false) {
-            throw new Error(payload.message || "Servicio de materiales no disponible");
+            throw new Error(
+              payload.message || "Servicio de materiales no disponible"
+            );
           }
           const materials = Array.isArray(payload?.materials)
             ? payload.materials
@@ -1205,7 +1208,9 @@
         }
         try {
           const response = await fetch(
-            `${API_BASE_URL}?action=download&id=${encodeURIComponent(material.id)}`,
+            `${API_BASE_URL}?action=download&id=${encodeURIComponent(
+              material.id
+            )}`,
             {
               headers: { Accept: "application/json" },
               cache: "no-store",
@@ -1216,12 +1221,16 @@
           }
           const payload = await response.json();
           if (payload?.success === false) {
-            throw new Error(payload.message || "Servicio de materiales no disponible");
+            throw new Error(
+              payload.message || "Servicio de materiales no disponible"
+            );
           }
           const targetUrl =
             payload.downloadUrl ||
             material.downloadUrl ||
-            `https://drive.google.com/file/d/${encodeURIComponent(material.id)}/view?usp=sharing`;
+            `https://drive.google.com/file/d/${encodeURIComponent(
+              material.id
+            )}/view?usp=sharing`;
           if (payload.downloads !== undefined) {
             material.downloads = Number(payload.downloads) || 0;
           } else if (!Number.isNaN(Number(material.downloads))) {
@@ -1254,7 +1263,9 @@
         if (newDescription === null) return;
         try {
           const response = await fetch(
-            `${API_BASE_URL}?action=update&id=${encodeURIComponent(material.id)}`,
+            `${API_BASE_URL}?action=update&id=${encodeURIComponent(
+              material.id
+            )}`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -1303,7 +1314,9 @@
         if (!confirmed) return;
         try {
           const response = await fetch(
-            `${API_BASE_URL}?action=delete&id=${encodeURIComponent(material.id)}`,
+            `${API_BASE_URL}?action=delete&id=${encodeURIComponent(
+              material.id
+            )}`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -1461,9 +1474,3 @@
     <script defer src="js/nav-inject.js"></script>
   </body>
 </html>
-
-
-
-
-
-
