@@ -53,11 +53,12 @@
         margin-bottom: 1rem;
         text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
       }
+
+      .platform-subtitle {
         font-size: 1.5rem;
         opacity: 0.9;
         font-weight: 500;
       }
-
       .role-toggle {
         position: absolute;
         top: 2rem;
@@ -234,7 +235,27 @@
         color: #9ca3af;
       }
 
-      .materials-grid {
+      .empty-state {
+        border: 2px dashed #cbd5e0;
+        border-radius: 1rem;
+        padding: 3rem 2rem;
+        text-align: center;
+        color: #4a5568;
+        background: #f8fafc;
+      }
+
+      .empty-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .cancel-btn {
+        background: #6b7280;
+      }
+
+      .cancel-btn:hover {
+        background: #4b5563;
+      }\r\n      .materials-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         gap: 2rem;
@@ -521,31 +542,21 @@
     </style>
   </head>
   <body>
-    <div class="main-container">
+        <div class="main-container">
       <!-- Header -->
       <div class="header">
         <div class="role-toggle">
-          <button
-            class="role-btn active"
-            onclick="switchRole('teacher')"
-            id="teacherBtn"
-          >
-            👨‍🏫 Profesor
+          <button type="button" class="role-btn active" onclick="switchRole('teacher')" id="teacherBtn">
+            👩‍🏫 Profesor
           </button>
-          <button
-            class="role-btn"
-            onclick="switchRole('student')"
-            id="studentBtn"
-          >
-            👨‍🎓 Estudiante
+          <button type="button" class="role-btn" onclick="switchRole('student')" id="studentBtn">
+            🧑‍🎓 Estudiante
           </button>
         </div>
 
         <div class="header-content">
           <h1 class="platform-title">📚 Materiales de Curso</h1>
-          <p class="platform-subtitle">
-            Calidad de Software - Recursos y Documentos
-          </p>
+          <p class="platform-subtitle">Calidad de Software · Recursos y Documentos</p>
         </div>
       </div>
 
@@ -556,96 +567,62 @@
           <!-- Statistics -->
           <div class="stats-grid">
             <div class="stat-card">
-              <div class="stat-icon">📄</div>
-              <div class="stat-number">24</div>
-              <div class="stat-label">Total Materiales</div>
+              <div class="stat-icon">📦</div>
+              <div class="stat-number" id="statTotalMaterials">--</div>
+              <div class="stat-label">Total materiales</div>
             </div>
             <div class="stat-card">
-              <div class="stat-icon">📥</div>
-              <div class="stat-number">156</div>
+              <div class="stat-icon">⬇️</div>
+              <div class="stat-number" id="statTotalDownloads">--</div>
               <div class="stat-label">Descargas</div>
             </div>
             <div class="stat-card">
-              <div class="stat-icon">📊</div>
-              <div class="stat-number">4</div>
+              <div class="stat-icon">🗂️</div>
+              <div class="stat-number" id="statTotalCategories">--</div>
               <div class="stat-label">Categorías</div>
             </div>
             <div class="stat-card">
               <div class="stat-icon">🕒</div>
-              <div class="stat-number">Hoy</div>
-              <div class="stat-label">Última Actualización</div>
+              <div class="stat-number" id="statLastUpdated">--</div>
+              <div class="stat-label">Última actualización</div>
             </div>
           </div>
 
           <!-- Upload Area -->
-          <div
-            class="upload-area"
-            onclick="document.getElementById('fileInput').click()"
-          >
-            <div class="upload-icon">☁️</div>
-            <div class="upload-text">
-              Arrastra archivos aquí o haz clic para seleccionar
-            </div>
-            <div class="upload-subtext">
-              Formatos soportados: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX (Máx.
-              10MB)
-            </div>
-            <input
-              type="file"
-              id="fileInput"
-              class="file-input"
-              multiple
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-            />
+          <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+            <div class="upload-icon">⬆️</div>
+            <div class="upload-text">Arrastra archivos aquí o haz clic para seleccionar</div>
+            <div class="upload-subtext">Formatos soportados: PDF, DOC(X), XLS(X), PPT(X) · Máx. 10&nbsp;MB por archivo</div>
+            <input type="file" id="fileInput" class="file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" />
           </div>
 
           <!-- Upload Form -->
           <div class="upload-form hidden" id="uploadForm">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">
-              📝 Detalles del Material
-            </h3>
+            <h3 class="text-xl font-bold text-gray-800 mb-4">Detalles del material</h3>
             <form id="materialForm">
               <div class="form-group">
-                <label class="form-label">Título del Material</label>
-                <input
-                  type="text"
-                  class="form-input"
-                  id="materialTitle"
-                  placeholder="Ej: Presentación Sesión 1 - Introducción"
-                />
+                <label class="form-label" for="materialTitle">Título del material</label>
+                <input type="text" class="form-input" id="materialTitle" placeholder="Ej: Presentación Sesión 1 - Introducción" required />
               </div>
 
               <div class="form-group">
-                <label class="form-label">Categoría</label>
-                <select class="form-select" id="materialCategory">
-                  <option value="presentations">📊 Presentaciones</option>
-                  <option value="templates">📋 Plantillas</option>
-                  <option value="exercises">✏️ Ejercicios</option>
-                  <option value="references">📚 Referencias</option>
+                <label class="form-label" for="materialCategory">Categoría</label>
+                <select class="form-select" id="materialCategory" required>
+                  <option value="presentations">Presentaciones</option>
+                  <option value="templates">Plantillas</option>
+                  <option value="exercises">Ejercicios</option>
+                  <option value="references">Referencias</option>
                 </select>
               </div>
 
               <div class="form-group">
-                <label class="form-label">Descripción</label>
-                <textarea
-                  class="form-textarea"
-                  id="materialDescription"
-                  placeholder="Breve descripción del contenido y propósito del material"
-                ></textarea>
+                <label class="form-label" for="materialDescription">Descripción</label>
+                <textarea class="form-textarea" id="materialDescription" placeholder="Breve descripción del contenido y propósito del material"></textarea>
               </div>
 
               <div class="form-group">
-                <button type="submit" class="submit-btn">
-                  📤 Subir Material
-                </button>
-                <button
-                  type="button"
-                  class="submit-btn"
-                  onclick="cancelUpload()"
-                  style="background: #6b7280; margin-left: 1rem"
-                >
-                  ❌ Cancelar
-                </button>
+                <button type="submit" class="submit-btn">Subir material</button>
+                <button type="button" class="submit-btn cancel-btn" onclick="cancelUpload()">Cancelar</button>
               </div>
 
               <div class="progress-bar hidden" id="progressBar">
@@ -657,264 +634,20 @@
 
         <!-- Student View -->
         <div id="studentView" class="hidden">
-          <!-- Search Bar -->
           <div class="search-bar">
             <div class="search-icon">🔍</div>
-            <input
-              type="text"
-              class="search-input"
-              placeholder="Buscar materiales..."
-              id="searchInput"
-            />
+            <input type="text" class="search-input" placeholder="Buscar materiales..." id="searchInput" />
           </div>
         </div>
 
         <!-- Category Tabs (Both Views) -->
-        <div class="category-tabs">
-          <div class="category-tab active" data-category="all">📁 Todos</div>
-          <div class="category-tab" data-category="presentations">
-            📊 Presentaciones
-          </div>
-          <div class="category-tab" data-category="templates">
-            📋 Plantillas
-          </div>
-          <div class="category-tab" data-category="exercises">
-            ✏️ Ejercicios
-          </div>
-          <div class="category-tab" data-category="references">
-            📚 Referencias
-          </div>
-        </div>
+        <div class="category-tabs" id="categoryTabs"></div>
 
         <!-- Materials Grid -->
-        <div class="materials-grid" id="materialsGrid">
-          <!-- Sample Materials -->
-          <div class="material-card" data-category="presentations">
-            <div class="material-header">
-              <div class="file-icon pdf">📄</div>
-              <div>
-                <div class="material-title">
-                  Sesión 1: Introducción a la Calidad
-                </div>
-                <div class="material-meta">
-                  <span>📅 15 Ago 2024</span>
-                  <span>📥 23 descargas</span>
-                </div>
-              </div>
-            </div>
-            <div class="material-description">
-              Presentación introductoria que cubre los conceptos fundamentales
-              de calidad de software, definiciones clave y la importancia en el
-              desarrollo moderno.
-            </div>
-            <div class="material-actions">
-              <button
-                class="action-btn download-btn"
-                onclick="downloadFile('sesion1.pdf')"
-              >
-                📥 Descargar
-              </button>
-              <button
-                class="action-btn edit-btn teacher-only"
-                onclick="editMaterial(1)"
-              >
-                ✏️ Editar
-              </button>
-              <button
-                class="action-btn delete-btn teacher-only"
-                onclick="deleteMaterial(1)"
-              >
-                🗑️ Eliminar
-              </button>
-            </div>
-          </div>
-
-          <div class="material-card" data-category="templates">
-            <div class="material-header">
-              <div class="file-icon doc">📝</div>
-              <div>
-                <div class="material-title">Plantilla de Plan de Calidad</div>
-                <div class="material-meta">
-                  <span>📅 12 Ago 2024</span>
-                  <span>📥 18 descargas</span>
-                </div>
-              </div>
-            </div>
-            <div class="material-description">
-              Plantilla estándar para elaborar planes de calidad de software
-              siguiendo las mejores prácticas de la industria.
-            </div>
-            <div class="material-actions">
-              <button
-                class="action-btn download-btn"
-                onclick="downloadFile('plantilla-plan-calidad.docx')"
-              >
-                📥 Descargar
-              </button>
-              <button
-                class="action-btn edit-btn teacher-only"
-                onclick="editMaterial(2)"
-              >
-                ✏️ Editar
-              </button>
-              <button
-                class="action-btn delete-btn teacher-only"
-                onclick="deleteMaterial(2)"
-              >
-                🗑️ Eliminar
-              </button>
-            </div>
-          </div>
-
-          <div class="material-card" data-category="exercises">
-            <div class="material-header">
-              <div class="file-icon xls">📊</div>
-              <div>
-                <div class="material-title">
-                  Ejercicios de Métricas de Calidad
-                </div>
-                <div class="material-meta">
-                  <span>📅 10 Ago 2024</span>
-                  <span>📥 31 descargas</span>
-                </div>
-              </div>
-            </div>
-            <div class="material-description">
-              Conjunto de ejercicios prácticos para calcular y analizar
-              diferentes métricas de calidad de software con ejemplos reales.
-            </div>
-            <div class="material-actions">
-              <button
-                class="action-btn download-btn"
-                onclick="downloadFile('ejercicios-metricas.xlsx')"
-              >
-                📥 Descargar
-              </button>
-              <button
-                class="action-btn edit-btn teacher-only"
-                onclick="editMaterial(3)"
-              >
-                ✏️ Editar
-              </button>
-              <button
-                class="action-btn delete-btn teacher-only"
-                onclick="deleteMaterial(3)"
-              >
-                🗑️ Eliminar
-              </button>
-            </div>
-          </div>
-
-          <div class="material-card" data-category="references">
-            <div class="material-header">
-              <div class="file-icon pdf">📚</div>
-              <div>
-                <div class="material-title">Guía de Estándares ISO 25010</div>
-                <div class="material-meta">
-                  <span>📅 8 Ago 2024</span>
-                  <span>📥 45 descargas</span>
-                </div>
-              </div>
-            </div>
-            <div class="material-description">
-              Documento de referencia completo sobre el estándar ISO 25010 para
-              la evaluación de calidad de productos de software.
-            </div>
-            <div class="material-actions">
-              <button
-                class="action-btn download-btn"
-                onclick="downloadFile('iso-25010-guia.pdf')"
-              >
-                📥 Descargar
-              </button>
-              <button
-                class="action-btn edit-btn teacher-only"
-                onclick="editMaterial(4)"
-              >
-                ✏️ Editar
-              </button>
-              <button
-                class="action-btn delete-btn teacher-only"
-                onclick="deleteMaterial(4)"
-              >
-                🗑️ Eliminar
-              </button>
-            </div>
-          </div>
-
-          <div class="material-card" data-category="presentations">
-            <div class="material-header">
-              <div class="file-icon ppt">📊</div>
-              <div>
-                <div class="material-title">Sesión 5: Modelos de Calidad</div>
-                <div class="material-meta">
-                  <span>📅 5 Ago 2024</span>
-                  <span>📥 27 descargas</span>
-                </div>
-              </div>
-            </div>
-            <div class="material-description">
-              Presentación detallada sobre los principales modelos de calidad de
-              software: McCall, Boehm, ISO 9126 e ISO 25010.
-            </div>
-            <div class="material-actions">
-              <button
-                class="action-btn download-btn"
-                onclick="downloadFile('sesion5-modelos.pptx')"
-              >
-                📥 Descargar
-              </button>
-              <button
-                class="action-btn edit-btn teacher-only"
-                onclick="editMaterial(5)"
-              >
-                ✏️ Editar
-              </button>
-              <button
-                class="action-btn delete-btn teacher-only"
-                onclick="deleteMaterial(5)"
-              >
-                🗑️ Eliminar
-              </button>
-            </div>
-          </div>
-
-          <div class="material-card" data-category="templates">
-            <div class="material-header">
-              <div class="file-icon doc">📋</div>
-              <div>
-                <div class="material-title">Formato de Reporte de Defectos</div>
-                <div class="material-meta">
-                  <span>📅 3 Ago 2024</span>
-                  <span>📥 22 descargas</span>
-                </div>
-              </div>
-            </div>
-            <div class="material-description">
-              Plantilla estandarizada para documentar y reportar defectos
-              encontrados durante las pruebas de software.
-            </div>
-            <div class="material-actions">
-              <button
-                class="action-btn download-btn"
-                onclick="downloadFile('formato-defectos.docx')"
-              >
-                📥 Descargar
-              </button>
-              <button
-                class="action-btn edit-btn teacher-only"
-                onclick="editMaterial(6)"
-              >
-                ✏️ Editar
-              </button>
-              <button
-                class="action-btn delete-btn teacher-only"
-                onclick="deleteMaterial(6)"
-              >
-                🗑️ Eliminar
-              </button>
-            </div>
-          </div>
+        <div class="materials-grid" id="materialsGrid"></div>
+        <div class="empty-state hidden" id="emptyState">
+          <div class="empty-icon">📂</div>
+          <p class="empty-message" id="emptyMessage">Cargando materiales...</p>
         </div>
       </div>
     </div>
@@ -922,7 +655,7 @@
     <!-- Notification -->
     <div class="notification" id="notification">
       <div class="flex items-center">
-        <div class="text-2xl mr-3" id="notificationIcon">✅</div>
+        <div class="text-2xl mr-3" id="notificationIcon">ℹ️</div>
         <div>
           <div class="font-bold" id="notificationTitle">Éxito</div>
           <div class="text-sm text-gray-600" id="notificationMessage">
@@ -932,376 +665,545 @@
       </div>
     </div>
 
-    <script>
-      // Rol local desde almacenamiento (UTF-8 seguro)
-      let currentRole = ((localStorage.getItem('qs_role')||'estudiante').toLowerCase()==='docente') ? 'teacher' : 'student';
+            <script>
+      const API_BASE_URL = "/api/materials";
+      let materialsData = [];
+      let filteredCategory = "all";
+      let searchTerm = "";
       let selectedFiles = [];
+      let currentRole = (localStorage.getItem("qs_role") || "estudiante").toLowerCase() === "docente" ? "teacher" : "student";
 
-      // Role switching
-      function switchRole(role) {
-        currentRole = role;
+      const elements = {
+        teacherBtn: document.getElementById("teacherBtn"),
+        studentBtn: document.getElementById("studentBtn"),
+        teacherView: document.getElementById("teacherView"),
+        studentView: document.getElementById("studentView"),
+        uploadArea: document.querySelector(".upload-area"),
+        uploadForm: document.getElementById("uploadForm"),
+        materialForm: document.getElementById("materialForm"),
+        fileInput: document.getElementById("fileInput"),
+        progressBar: document.getElementById("progressBar"),
+        progressFill: document.getElementById("progressFill"),
+        categorySelect: document.getElementById("materialCategory"),
+        searchInput: document.getElementById("searchInput"),
+        categoryTabs: document.getElementById("categoryTabs"),
+        materialsGrid: document.getElementById("materialsGrid"),
+        emptyState: document.getElementById("emptyState"),
+        emptyMessage: document.getElementById("emptyMessage"),
+        statTotal: document.getElementById("statTotalMaterials"),
+        statDownloads: document.getElementById("statTotalDownloads"),
+        statCategories: document.getElementById("statTotalCategories"),
+        statUpdated: document.getElementById("statLastUpdated"),
+        notification: document.getElementById("notification"),
+        notificationIcon: document.getElementById("notificationIcon"),
+        notificationTitle: document.getElementById("notificationTitle"),
+        notificationMessage: document.getElementById("notificationMessage")
+      };
 
-        // Update buttons
-        document
-          .getElementById("teacherBtn")
-          .classList.toggle("active", role === "teacher");
-        document
-          .getElementById("studentBtn")
-          .classList.toggle("active", role === "student");
+      initializeMaterials();
 
-        // Update views
-        document
-          .getElementById("teacherView")
-          .classList.toggle("hidden", role !== "teacher");
-        document
-          .getElementById("studentView")
-          .classList.toggle("hidden", role !== "student");
-
-        // Update teacher-only elements
-        const teacherOnlyElements = document.querySelectorAll(".teacher-only");
-        teacherOnlyElements.forEach((element) => {
-          element.classList.toggle("hidden", role !== "teacher");
-        });
-
-        showNotification(
-          "success",
-          "Vista cambiada",
-          `Ahora viendo como ${role === "teacher" ? "Profesor" : "Estudiante"}`
-        );
-
-        // Persistir rol local
-        try { localStorage.setItem('qs_role', role === 'teacher' ? 'docente' : 'estudiante'); } catch(e) {}
+      async function initializeMaterials() {
+        wireUploadEvents();
+        wireFilters();
+        switchRole(currentRole, { silent: true });
+        await loadMaterials();
       }
 
-      // File upload handling
-      document
-        .getElementById("fileInput")
-        .addEventListener("change", function (e) {
-          selectedFiles = Array.from(e.target.files);
-          if (selectedFiles.length > 0) {
-            document.getElementById("uploadForm").classList.remove("hidden");
-            document.querySelector(".upload-area").style.display = "none";
+      async function loadMaterials() {
+        showEmptyState("Cargando materiales...", true);
+        try {
+          const response = await fetch(API_BASE_URL, { headers: { Accept: "application/json" } });
+          if (!response.ok) {
+            throw new Error(`Error ${response.status}`);
+          }
+          const payload = await response.json();
+          const materials = Array.isArray(payload?.materials) ? payload.materials : Array.isArray(payload) ? payload : [];
+          materialsData = materials.map(normalizeMaterial);
+          if (!materialsData.length) {
+            showEmptyState("Aún no hay materiales disponibles.");
+          } else {
+            hideEmptyState();
+          }
+          renderAll();
+        } catch (error) {
+          console.error("Error loading materials", error);
+          showEmptyState("No se pudieron cargar los materiales.");
+          showNotification("error", "Error al cargar", error.message || "Intenta nuevamente más tarde");
+        }
+      }
+
+      function normalizeMaterial(material) {
+        if (!material || typeof material !== "object") return {};
+        return {
+          id: material.id ?? material._id ?? (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : `tmp-${Date.now()}-${Math.random().toString(16).slice(2)}`),
+          title: material.title ?? material.name ?? "Material sin título",
+          description: material.description ?? material.summary ?? "",
+          category: (material.category ?? material.type ?? "otros").toString().toLowerCase(),
+          createdAt: material.createdAt ?? material.created_at ?? material.date ?? null,
+          updatedAt: material.updatedAt ?? material.updated_at ?? null,
+          downloads: Number(material.downloads ?? material.totalDownloads ?? 0),
+          extension: (material.extension ?? material.fileExtension ?? "").toString().toLowerCase(),
+          mimeType: material.mimeType ?? material.contentType ?? "",
+          downloadUrl: material.downloadUrl ?? material.url ?? null,
+          size: Number(material.size ?? 0)
+        };
+      }
+
+      function wireUploadEvents() {
+        elements.fileInput?.addEventListener("change", (event) => {
+          selectedFiles = Array.from(event.target.files || []);
+          if (selectedFiles.length) {
+            elements.uploadForm.classList.remove("hidden");
+            elements.uploadArea.style.display = "none";
           }
         });
 
-      // Drag and drop
-      const uploadArea = document.querySelector(".upload-area");
+        if (!elements.uploadArea) return;
 
-      uploadArea.addEventListener("dragover", function (e) {
-        e.preventDefault();
-        uploadArea.classList.add("dragover");
-      });
-
-      uploadArea.addEventListener("dragleave", function (e) {
-        e.preventDefault();
-        uploadArea.classList.remove("dragover");
-      });
-
-      uploadArea.addEventListener("drop", function (e) {
-        e.preventDefault();
-        uploadArea.classList.remove("dragover");
-
-        selectedFiles = Array.from(e.dataTransfer.files);
-        if (selectedFiles.length > 0) {
-          document.getElementById("uploadForm").classList.remove("hidden");
-          uploadArea.style.display = "none";
-        }
-      });
-
-      // Form submission
-      document
-        .getElementById("materialForm")
-        .addEventListener("submit", function (e) {
-          e.preventDefault();
-
-          const title = document.getElementById("materialTitle").value;
-          const category = document.getElementById("materialCategory").value;
-          const description = document.getElementById(
-            "materialDescription"
-          ).value;
-
-          if (!title || !description) {
-            showNotification(
-              "error",
-              "Error",
-              "Por favor completa todos los campos requeridos"
-            );
-            return;
-          }
-
-          // Simulate upload progress
-          const progressBar = document.getElementById("progressBar");
-          const progressFill = document.getElementById("progressFill");
-
-          progressBar.classList.remove("hidden");
-
-          let progress = 0;
-          const interval = setInterval(() => {
-            progress += Math.random() * 30;
-            if (progress >= 100) {
-              progress = 100;
-              clearInterval(interval);
-
-              setTimeout(() => {
-                showNotification(
-                  "success",
-                  "Material subido",
-                  `${selectedFiles.length} archivo(s) subido(s) correctamente`
-                );
-                resetUploadForm();
-
-                // Add new material to grid (simulation)
-                addMaterialToGrid(
-                  title,
-                  category,
-                  description,
-                  selectedFiles[0]
-                );
-              }, 500);
-            }
-            progressFill.style.width = progress + "%";
-          }, 200);
+        ["dragover", "dragenter"].forEach((evt) => {
+          elements.uploadArea.addEventListener(evt, (event) => {
+            event.preventDefault();
+            elements.uploadArea.classList.add("dragover");
+          });
         });
 
-      function cancelUpload() {
-        resetUploadForm();
+        ["dragleave", "dragend"].forEach((evt) => {
+          elements.uploadArea.addEventListener(evt, (event) => {
+            event.preventDefault();
+            elements.uploadArea.classList.remove("dragover");
+          });
+        });
+
+        elements.uploadArea.addEventListener("drop", (event) => {
+          event.preventDefault();
+          elements.uploadArea.classList.remove("dragover");
+          selectedFiles = Array.from(event.dataTransfer?.files || []);
+          if (selectedFiles.length) {
+            elements.uploadForm.classList.remove("hidden");
+            elements.uploadArea.style.display = "none";
+          }
+        });
+
+        elements.materialForm?.addEventListener("submit", handleMaterialSubmit);
       }
 
-      function resetUploadForm() {
-        document.getElementById("uploadForm").classList.add("hidden");
-        document.querySelector(".upload-area").style.display = "block";
-        document.getElementById("materialForm").reset();
-        document.getElementById("progressBar").classList.add("hidden");
-        document.getElementById("progressFill").style.width = "0%";
-        selectedFiles = [];
+      function wireFilters() {
+        elements.searchInput?.addEventListener("input", (event) => {
+          searchTerm = event.target.value.trim().toLowerCase();
+          renderMaterials();
+        });
+
+        elements.materialsGrid?.addEventListener("click", (event) => {
+          const actionButton = event.target.closest("[data-action]");
+          if (!actionButton) return;
+          const materialId = actionButton.dataset.id;
+          if (!materialId) return;
+          const action = actionButton.dataset.action;
+          if (action === "download") {
+            downloadMaterial(materialId);
+          } else if (action === "edit") {
+            editMaterial(materialId);
+          } else if (action === "delete") {
+            deleteMaterial(materialId);
+          }
+        });
       }
 
-      function addMaterialToGrid(title, category, description, file) {
-        const grid = document.getElementById("materialsGrid");
-        const fileExtension = file.name.split(".").pop().toLowerCase();
+      function renderAll() {
+        renderCategoryTabs();
+        renderMaterials();
+        renderStats();
+      }
 
-        let iconClass = "default";
-        let iconEmoji = "📄";
+      function renderCategoryTabs() {
+        if (!elements.categoryTabs) return;
+        const categories = Array.from(new Set(materialsData.map((m) => m.category))).filter(Boolean);
+        const allCategories = [
+          { key: "all", label: "Todos" },
+          ...categories.map((key) => ({ key, label: formatCategoryLabel(key) }))
+        ];
 
-        if (["pdf"].includes(fileExtension)) {
-          iconClass = "pdf";
-          iconEmoji = "📄";
-        } else if (["doc", "docx"].includes(fileExtension)) {
-          iconClass = "doc";
-          iconEmoji = "📝";
-        } else if (["xls", "xlsx"].includes(fileExtension)) {
-          iconClass = "xls";
-          iconEmoji = "📊";
-        } else if (["ppt", "pptx"].includes(fileExtension)) {
-          iconClass = "ppt";
-          iconEmoji = "📊";
+        if (!allCategories.some((cat) => cat.key === filteredCategory)) {
+          filteredCategory = "all";
         }
 
-        const materialCard = document.createElement("div");
-        materialCard.className = "material-card";
-        materialCard.setAttribute("data-category", category);
+        elements.categoryTabs.innerHTML = allCategories
+          .map(
+            (category) => `
+              <div class="category-tab${filteredCategory === category.key ? " active" : ""}" data-category="${category.key}">
+                ${category.label}
+              </div>
+            `
+          )
+          .join("");
 
-        materialCard.innerHTML = `
+        const existingOptions = new Set(Array.from(elements.categorySelect?.options || []).map((opt) => opt.value));
+        categories.forEach((key) => {
+          if (elements.categorySelect && !existingOptions.has(key)) {
+            const option = document.createElement("option");
+            option.value = key;
+            option.textContent = formatCategoryLabel(key);
+            elements.categorySelect.appendChild(option);
+          }
+        });
+
+        elements.categoryTabs.querySelectorAll(".category-tab").forEach((tab) => {
+          tab.addEventListener("click", () => {
+            filteredCategory = tab.dataset.category || "all";
+            renderMaterials();
+          });
+        });
+      }
+
+      function renderMaterials() {
+        if (!elements.materialsGrid) return;
+        const matches = materialsData
+          .filter((material) => {
+            const inCategory = filteredCategory === "all" || material.category === filteredCategory;
+            if (!searchTerm) return inCategory;
+            return inCategory && `${material.title} ${material.description}`.toLowerCase().includes(searchTerm);
+          })
+          .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0) - new Date(a.updatedAt || a.createdAt || 0));
+
+        if (!matches.length) {
+          elements.materialsGrid.innerHTML = "";
+          showEmptyState("No se encontraron materiales para esta vista.");
+          applyRoleVisibility();
+          return;
+        }
+
+        hideEmptyState();
+        const formatter = new Intl.NumberFormat("es-MX");
+        elements.materialsGrid.innerHTML = matches
+          .map((material) => {
+            const fileInfo = getFileInfo(material);
+            const downloadsLabel = formatDownloads(material.downloads, formatter);
+            const createdLabel = formatDate(material.updatedAt || material.createdAt);
+            const description = material.description ? escapeHtml(material.description) : "Sin descripción disponible.";
+
+            return `
+              <div class="material-card" data-category="${escapeAttr(material.category)}">
                 <div class="material-header">
-                    <div class="file-icon ${iconClass}">${iconEmoji}</div>
-                    <div>
-                        <div class="material-title">${title}</div>
-                        <div class="material-meta">
-                            <span>📅 Hoy</span>
-                            <span>📥 0 descargas</span>
-                        </div>
+                  <div class="file-icon ${fileInfo.className}">${fileInfo.label}</div>
+                  <div>
+                    <div class="material-title">${escapeHtml(material.title)}</div>
+                    <div class="material-meta">
+                      <span>${createdLabel}</span>
+                      <span>${downloadsLabel}</span>
                     </div>
+                  </div>
                 </div>
                 <div class="material-description">${description}</div>
                 <div class="material-actions">
-                    <button class="action-btn download-btn" onclick="downloadFile('${
-                      file.name
-                    }')">📥 Descargar</button>
-                    <button class="action-btn edit-btn teacher-only" onclick="editMaterial(${Date.now()})">✏️ Editar</button>
-                    <button class="action-btn delete-btn teacher-only" onclick="deleteMaterial(${Date.now()})">🗑️ Eliminar</button>
+                  <button class="action-btn download-btn" data-action="download" data-id="${material.id}">⬇️ Descargar</button>
+                  <button class="action-btn edit-btn teacher-only" data-action="edit" data-id="${material.id}">✏️ Editar</button>
+                  <button class="action-btn delete-btn teacher-only" data-action="delete" data-id="${material.id}">🗑️ Eliminar</button>
                 </div>
+              </div>
             `;
+          })
+          .join("");
 
-        grid.insertBefore(materialCard, grid.firstChild);
+        applyRoleVisibility();
+      }
 
-        // Update teacher-only visibility
-        if (currentRole !== "teacher") {
-          materialCard
-            .querySelectorAll(".teacher-only")
-            .forEach((el) => el.classList.add("hidden"));
+      function renderStats() {
+        const formatter = new Intl.NumberFormat("es-MX");
+        const total = materialsData.length;
+        const downloads = materialsData.reduce((sum, material) => sum + (Number(material.downloads) || 0), 0);
+        const categories = new Set(materialsData.map((material) => material.category)).size;
+        const latestUpdate = materialsData
+          .map((material) => material.updatedAt || material.createdAt)
+          .filter(Boolean)
+          .map((value) => new Date(value))
+          .filter((date) => !Number.isNaN(date.getTime()))
+          .sort((a, b) => b - a)[0];
+
+        if (elements.statTotal) elements.statTotal.textContent = formatter.format(total);
+        if (elements.statDownloads) elements.statDownloads.textContent = formatter.format(downloads);
+        if (elements.statCategories) elements.statCategories.textContent = formatter.format(categories);
+        if (elements.statUpdated) {
+          elements.statUpdated.textContent = latestUpdate
+            ? new Intl.DateTimeFormat("es-MX", { dateStyle: "medium", timeStyle: "short" }).format(latestUpdate)
+            : "Sin registros";
         }
       }
 
-      // Category filtering
-      document.querySelectorAll(".category-tab").forEach((tab) => {
-        tab.addEventListener("click", function () {
-          // Update active tab
-          document
-            .querySelectorAll(".category-tab")
-            .forEach((t) => t.classList.remove("active"));
-          this.classList.add("active");
+      async function handleMaterialSubmit(event) {
+        event.preventDefault();
+        if (!selectedFiles.length) {
+          showNotification("error", "Selecciona un archivo", "Debes elegir al menos un archivo para subir");
+          return;
+        }
 
-          // Filter materials
-          const category = this.getAttribute("data-category");
-          const materials = document.querySelectorAll(".material-card");
+        const title = document.getElementById("materialTitle").value.trim();
+        const category = elements.categorySelect?.value || "otros";
+        const description = document.getElementById("materialDescription").value.trim();
 
-          materials.forEach((material) => {
-            if (
-              category === "all" ||
-              material.getAttribute("data-category") === category
-            ) {
-              material.style.display = "block";
-            } else {
-              material.style.display = "none";
-            }
-          });
-        });
-      });
+        if (!title) {
+          showNotification("error", "Título requerido", "Ingresa el nombre del material antes de subirlo");
+          return;
+        }
 
-      // Search functionality
-      document
-        .getElementById("searchInput")
-        .addEventListener("input", function (e) {
-          const searchTerm = e.target.value.toLowerCase();
-          const materials = document.querySelectorAll(".material-card");
+        const formData = new FormData();
+        selectedFiles.forEach((file) => formData.append("files", file));
+        formData.append("title", title);
+        formData.append("category", category);
+        formData.append("description", description);
 
-          materials.forEach((material) => {
-            const title = material
-              .querySelector(".material-title")
-              .textContent.toLowerCase();
-            const description = material
-              .querySelector(".material-description")
-              .textContent.toLowerCase();
-
-            if (
-              title.includes(searchTerm) ||
-              description.includes(searchTerm)
-            ) {
-              material.style.display = "block";
-            } else {
-              material.style.display = "none";
-            }
-          });
-        });
-
-      // Material actions
-      function downloadFile(filename) {
-        showNotification(
-          "success",
-          "Descarga iniciada",
-          `Descargando ${filename}`
-        );
-
-        // Simulate download (in real implementation, this would trigger actual download)
-        console.log("Downloading:", filename);
-      }
-
-      function editMaterial(id) {
-        showNotification(
-          "info",
-          "Editar material",
-          `Editando material ID: ${id}`
-        );
-        // Implement edit functionality
-      }
-
-      function deleteMaterial(id) {
-        if (confirm("¿Estás seguro de que quieres eliminar este material?")) {
-          showNotification(
-            "success",
-            "Material eliminado",
-            "El material ha sido eliminado correctamente"
-          );
-          // Implement delete functionality
+        try {
+          showNotification("info", "Subiendo material", "Estamos procesando tu archivo");
+          const createdMaterial = await uploadMaterial(formData);
+          if (createdMaterial) {
+            materialsData = [normalizeMaterial(createdMaterial), ...materialsData];
+            renderAll();
+            resetUploadWorkflow();
+            showNotification("success", "Material subido", "El material se cargó correctamente");
+          }
+        } catch (error) {
+          console.error("Upload error", error);
+          showNotification("error", "No se pudo subir", error.message || "Intenta nuevamente");
         }
       }
 
-      // Notification system
+      function uploadMaterial(formData) {
+        return new Promise((resolve, reject) => {
+          const xhr = new XMLHttpRequest();
+          xhr.open("POST", API_BASE_URL);
+
+          xhr.upload.addEventListener("progress", (event) => {
+            if (!event.lengthComputable) return;
+            const percentage = Math.round((event.loaded / event.total) * 100);
+            elements.progressBar?.classList.remove("hidden");
+            if (elements.progressFill) {
+              elements.progressFill.style.width = `${percentage}%`;
+            }
+          });
+
+          xhr.onload = () => {
+            elements.progressBar?.classList.add("hidden");
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                const response = xhr.responseText ? JSON.parse(xhr.responseText) : {};
+                resolve(response.material ?? response);
+              } catch (parseError) {
+                resolve({});
+              }
+            } else {
+              reject(new Error(xhr.responseText || `Error ${xhr.status}`));
+            }
+          };
+
+          xhr.onerror = () => {
+            elements.progressBar?.classList.add("hidden");
+            reject(new Error("Error de red durante la carga"));
+          };
+
+          xhr.send(formData);
+        });
+      }
+
+      function resetUploadWorkflow() {
+        selectedFiles = [];
+        if (elements.fileInput) elements.fileInput.value = "";
+        if (elements.materialForm) elements.materialForm.reset();
+        if (elements.progressFill) elements.progressFill.style.width = "0%";
+        if (elements.uploadForm) elements.uploadForm.classList.add("hidden");
+        if (elements.uploadArea) {
+          elements.uploadArea.style.display = "";
+          elements.uploadArea.classList.remove("dragover");
+        }
+      }
+
+      function cancelUpload() {
+        resetUploadWorkflow();
+      }
+
+      async function downloadMaterial(id) {
+        const material = materialsData.find((item) => String(item.id) === String(id));
+        if (!material) {
+          showNotification("error", "Material no encontrado", "El recurso seleccionado no está disponible");
+          return;
+        }
+        try {
+          const targetUrl = material.downloadUrl || `${API_BASE_URL}/${encodeURIComponent(material.id)}/download`;
+          window.open(targetUrl, "_blank", "noopener");
+          if (!Number.isNaN(Number(material.downloads))) {
+            material.downloads = Number(material.downloads || 0) + 1;
+            renderStats();
+          }
+          showNotification("success", "Descarga iniciada", material.title);
+        } catch (error) {
+          showNotification("error", "No se pudo descargar", error.message || "Intenta nuevamente");
+        }
+      }
+
+      async function editMaterial(id) {
+        if (currentRole !== "teacher") return;
+        const material = materialsData.find((item) => String(item.id) === String(id));
+        if (!material) return;
+        const newTitle = prompt("Editar título", material.title);
+        if (newTitle === null) return;
+        const newDescription = prompt("Editar descripción", material.description || "");
+        if (newDescription === null) return;
+        try {
+          const response = await fetch(`${API_BASE_URL}/${encodeURIComponent(material.id)}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: newTitle.trim(), description: newDescription.trim() })
+          });
+          if (!response.ok) {
+            throw new Error(`Error ${response.status}`);
+          }
+          const updated = normalizeMaterial(await response.json());
+          materialsData = materialsData.map((item) => (String(item.id) === String(updated.id) ? updated : item));
+          renderAll();
+          showNotification("success", "Material actualizado", "Los cambios se guardaron correctamente");
+        } catch (error) {
+          console.error("Edit error", error);
+          showNotification("error", "No se pudo actualizar", error.message || "Revisa e intenta de nuevo");
+        }
+      }
+
+      async function deleteMaterial(id) {
+        if (currentRole !== "teacher") return;
+        const material = materialsData.find((item) => String(item.id) === String(id));
+        if (!material) return;
+        const confirmed = confirm(`¿Estás seguro de eliminar "${material.title}"?`);
+        if (!confirmed) return;
+        try {
+          const response = await fetch(`${API_BASE_URL}/${encodeURIComponent(material.id)}`, { method: "DELETE" });
+          if (!response.ok && response.status !== 204) {
+            throw new Error(`Error ${response.status}`);
+          }
+          materialsData = materialsData.filter((item) => String(item.id) !== String(material.id));
+          renderAll();
+          showNotification("success", "Material eliminado", "El recurso se eliminó correctamente");
+        } catch (error) {
+          console.error("Delete error", error);
+          showNotification("error", "No se pudo eliminar", error.message || "Intenta nuevamente");
+        }
+      }
+
+      function switchRole(role, options = {}) {
+        if (role !== "teacher" && role !== "student") return;
+        currentRole = role;
+        elements.teacherBtn?.classList.toggle("active", role === "teacher");
+        elements.studentBtn?.classList.toggle("active", role === "student");
+        elements.teacherView?.classList.toggle("hidden", role !== "teacher");
+        elements.studentView?.classList.toggle("hidden", role !== "student");
+        applyRoleVisibility();
+        try {
+          localStorage.setItem("qs_role", role === "teacher" ? "docente" : "estudiante");
+        } catch (error) {}
+        if (!options.silent) {
+          showNotification("success", "Vista cambiada", `Ahora ves como ${role === "teacher" ? "Profesor" : "Estudiante"}`);
+        }
+      }
+
+      function applyRoleVisibility() {
+        document.querySelectorAll(".teacher-only").forEach((element) => {
+          element.classList.toggle("hidden", currentRole !== "teacher");
+        });
+      }
+
+      function showEmptyState(message, loading = false) {
+        if (!elements.emptyState || !elements.emptyMessage) return;
+        elements.emptyMessage.textContent = message;
+        elements.emptyState.classList.remove("hidden");
+        elements.emptyState.classList.toggle("loading", loading);
+      }
+
+      function hideEmptyState() {
+        elements.emptyState?.classList.add("hidden");
+      }
+
       function showNotification(type, title, message) {
-        const notification = document.getElementById("notification");
-        const icon = document.getElementById("notificationIcon");
-        const titleEl = document.getElementById("notificationTitle");
-        const messageEl = document.getElementById("notificationMessage");
-
-        // Set content
-        titleEl.textContent = title;
-        messageEl.textContent = message;
-
-        // Set type
-        notification.classList.remove("error");
-        if (type === "error") {
-          notification.classList.add("error");
-          icon.textContent = "❌";
-        } else if (type === "info") {
-          icon.textContent = "ℹ️";
-        } else {
-          icon.textContent = "✅";
-        }
-
-        // Show notification
-        notification.classList.add("show");
-
-        // Hide after 3 seconds
+        if (!elements.notification) return;
+        const icons = { success: "✅", error: "⚠️", info: "ℹ️" };
+        elements.notificationIcon.textContent = icons[type] || "ℹ️";
+        elements.notificationTitle.textContent = title;
+        elements.notificationMessage.textContent = message;
+        elements.notification.classList.toggle("error", type === "error");
+        elements.notification.classList.add("show");
         setTimeout(() => {
-          notification.classList.remove("show");
+          elements.notification?.classList.remove("show");
         }, 3000);
       }
 
-      // Initialize
-      switchRole("teacher");
+      function formatCategoryLabel(key = "otros") {
+        return key
+          .toString()
+          .replace(/[_-]+/g, " ")
+          .replace(/\b\w/g, (char) => char.toUpperCase());
+      }
+
+      function getFileInfo(material) {
+        const extension = (material.extension || "").toLowerCase();
+        const map = { pdf: "pdf", doc: "doc", docx: "doc", xls: "xls", xlsx: "xls", ppt: "ppt", pptx: "ppt" };
+        const className = map[extension] || "default";
+        const label = extension ? extension.toUpperCase() : "FILE";
+        return { className, label };
+      }
+
+      function formatDownloads(value, formatter) {
+        const count = Number(value) || 0;
+        const formatted = formatter.format(count);
+        return `${formatted} descarga${count === 1 ? "" : "s"}`;
+      }
+
+      function formatDate(value) {
+        if (!value) return "Sin fecha";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return value;
+        return new Intl.DateTimeFormat("es-MX", { dateStyle: "medium" }).format(date);
+      }
+
+      function escapeHtml(value) {
+        return value.replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;"
+        })[char]);
+      }
+
+      function escapeAttr(value) {
+        return escapeHtml(value).replace(/\s+/g, "-");
+      }
+
+      window.switchRole = switchRole;
+      window.cancelUpload = cancelUpload;
     </script>
     <script type="module" src="./js/role-gate.js"></script>
-    <script>
-      (function () {
-        function c() {
-          var b = a.contentDocument || a.contentWindow.document;
-          if (b) {
-            var d = b.createElement("script");
-            d.innerHTML =
-              "window.__CF$cv$params={r:'97f34a58a708a99e',t:'MTc1Nzg4ODYyMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
-            b.getElementsByTagName("head")[0].appendChild(d);
-          }
-        }
-        if (document.body) {
-          var a = document.createElement("iframe");
-          a.height = 1;
-          a.width = 1;
-          a.style.position = "absolute";
-          a.style.top = 0;
-          a.style.left = 0;
-          a.style.border = "none";
-          a.style.visibility = "hidden";
-          document.body.appendChild(a);
-          if ("loading" !== document.readyState) c();
-          else if (window.addEventListener)
-            document.addEventListener("DOMContentLoaded", c);
-          else {
-            var e = document.onreadystatechange || function () {};
-            document.onreadystatechange = function (b) {
-              e(b);
-              "loading" !== document.readyState &&
-                ((document.onreadystatechange = e), c());
-            };
-          }
-        }
-      })();
-    </script>
-  <script>
-    // Persistencia de rol local (sin layout): inicializa según localStorage
-    (function(){
-      try {
-        var current = (localStorage.getItem('qs_role')||'estudiante').toLowerCase();
-        if (typeof switchRole === 'function') {
-          switchRole(current === 'docente' ? 'teacher' : 'student');
-        }
-      } catch(e){}
-    })();
-  </script>
+    
+  
   <script defer src="js/back-home.js"></script>
   <script defer src="js/nav-inject.js"></script>
  </body>
 
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
