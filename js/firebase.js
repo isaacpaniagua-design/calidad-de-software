@@ -1,4 +1,4 @@
-﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import { getFirestore, collection, doc, setDoc, addDoc, getDoc, getDocs, deleteDoc, updateDoc, onSnapshot, query, where, orderBy, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
@@ -59,7 +59,7 @@ export async function signInWithGooglePotros() {
   } catch (e) {
     if (e?.code === 'auth/unauthorized-domain') {
       const host = (typeof location !== 'undefined' ? location.hostname : '(desconocido)');
-      throw new Error(`Dominio no autorizado en Firebase Auth (${host}). Agrega este hostname en Firebase Console â†’ Authentication â†’ Settings â†’ Authorized domains.`);
+      throw new Error(`Dominio no autorizado en Firebase Auth (${host}). Agrega este hostname en Firebase Console → Authentication → Settings → Authorized domains.`);
     }
     throw e;
   }
@@ -134,27 +134,40 @@ function todayKey() {
   return `${y}-${m}-${day}`;
 }
 
-export async function saveTodayAttendance({ uid, name, email, type }) {
+export async function saveTodayAttendance({ uid, name, email, type, manual = false }) {
   const db = getDb();
+  const authInstance = getAuthInstance();
+  const currentUser = authInstance?.currentUser || null;
   const date = todayKey();
-  const attendanceId = `${date}_${uid}`; // evita duplicados por dÃ­a-usuario
+  const attendanceId = `${date}_${uid}`; // evita duplicados por dia-usuario
   const ref = doc(collection(db, 'attendances'), attendanceId);
 
   const existing = await getDoc(ref);
   if (existing.exists()) {
-    throw new Error('Ya tienes tu asistencia registrada para el dÃ­a de hoy');
+    throw new Error('Ya tienes tu asistencia registrada para el dia de hoy');
   }
+
+  const normalizedEmail = (email || '').toLowerCase();
+  if (!normalizedEmail) {
+    throw new Error('Correo electronico requerido');
+  }
+
+  const createdByUid = currentUser?.uid || uid;
+  const createdByEmail = (currentUser?.email || normalizedEmail).toLowerCase();
 
   await setDoc(ref, {
     uid,
     name,
-    email: email.toLowerCase(),
+    email: normalizedEmail,
     type: type || 'student',
     date,
+    manual: !!manual,
+    createdByUid,
+    createdByEmail,
     timestamp: serverTimestamp()
   });
 
-  return { id: attendanceId, uid, name, email, type, date };
+  return { id: attendanceId, uid, name, email: normalizedEmail, type, date };
 }
 
 export function subscribeTodayAttendance(cb) {
@@ -296,7 +309,7 @@ export async function updateStudentGradePartial(studentId, path, value) {
 // ====== Materiales (Storage + Firestore) ======
 export async function uploadMaterial({ file, title, category, description, ownerEmail, onProgress }) {
   if (!useStorage) {
-    throw new Error('Firebase Storage estÃ¡ deshabilitado. Usa addMaterialLink con un URL.');
+    throw new Error('Firebase Storage está deshabilitado. Usa addMaterialLink con un URL.');
   }
   const st = getStorageInstance();
   const db = getDb();
@@ -509,7 +522,7 @@ export function subscribeForumTopics(cb, onError) {
 
 export async function createForumTopic({ title, category, content, authorName, authorEmail }) {
   const db = getDb();
-  if (!title || !content) throw new Error('Título y contenido son requeridos');
+  if (!title || !content) throw new Error('T�tulo y contenido son requeridos');
   const docRef = await addDoc(collection(db, 'forum_topics'), {
     title,
     category: category || 'General',
@@ -586,6 +599,8 @@ export async function deleteForumReply(topicId, replyId) {
     await updateDoc(topicRef, { repliesCount: increment(-1), updatedAt: serverTimestamp() });
   } catch(_) {}
 }
+
+
 
 
 
