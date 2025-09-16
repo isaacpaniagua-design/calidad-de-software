@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
@@ -553,7 +553,7 @@
             onclick="switchRole('teacher')"
             id="teacherBtn"
           >
-            👩‍🏫 Profesor
+            ????? Profesor
           </button>
           <button
             type="button"
@@ -561,14 +561,14 @@
             onclick="switchRole('student')"
             id="studentBtn"
           >
-            🧑‍🎓 Estudiante
+            ????? Estudiante
           </button>
         </div>
 
         <div class="header-content">
-          <h1 class="platform-title">📚 Materiales de Curso</h1>
+          <h1 class="platform-title">?? Materiales de Curso</h1>
           <p class="platform-subtitle">
-            Calidad de Software · Recursos y Documentos
+            Calidad de Software � Recursos y Documentos
           </p>
         </div>
       </div>
@@ -580,24 +580,24 @@
           <!-- Statistics -->
           <div class="stats-grid">
             <div class="stat-card">
-              <div class="stat-icon">📦</div>
+              <div class="stat-icon">??</div>
               <div class="stat-number" id="statTotalMaterials">--</div>
               <div class="stat-label">Total materiales</div>
             </div>
             <div class="stat-card">
-              <div class="stat-icon">⬇️</div>
+              <div class="stat-icon">??</div>
               <div class="stat-number" id="statTotalDownloads">--</div>
               <div class="stat-label">Descargas</div>
             </div>
             <div class="stat-card">
-              <div class="stat-icon">🗂️</div>
+              <div class="stat-icon">???</div>
               <div class="stat-number" id="statTotalCategories">--</div>
-              <div class="stat-label">Categorías</div>
+              <div class="stat-label">Categor�as</div>
             </div>
             <div class="stat-card">
-              <div class="stat-icon">🕒</div>
+              <div class="stat-icon">??</div>
               <div class="stat-number" id="statLastUpdated">--</div>
-              <div class="stat-label">Última actualización</div>
+              <div class="stat-label">�ltima actualizaci�n</div>
             </div>
           </div>
 
@@ -606,12 +606,12 @@
             class="upload-area"
             onclick="document.getElementById('fileInput').click()"
           >
-            <div class="upload-icon">⬆️</div>
+            <div class="upload-icon">??</div>
             <div class="upload-text">
-              Arrastra archivos aquí o haz clic para seleccionar
+              Arrastra archivos aqu� o haz clic para seleccionar
             </div>
             <div class="upload-subtext">
-              Formatos soportados: PDF, DOC(X), XLS(X), PPT(X) · Máx. 10&nbsp;MB
+              Formatos soportados: PDF, DOC(X), XLS(X), PPT(X) � M�x. 10&nbsp;MB
               por archivo
             </div>
             <input
@@ -631,20 +631,20 @@
             <form id="materialForm">
               <div class="form-group">
                 <label class="form-label" for="materialTitle"
-                  >Título del material</label
+                  >T�tulo del material</label
                 >
                 <input
                   type="text"
                   class="form-input"
                   id="materialTitle"
-                  placeholder="Ej: Presentación Sesión 1 - Introducción"
+                  placeholder="Ej: Presentaci�n Sesi�n 1 - Introducci�n"
                   required
                 />
               </div>
 
               <div class="form-group">
                 <label class="form-label" for="materialCategory"
-                  >Categoría</label
+                  >Categor�a</label
                 >
                 <select class="form-select" id="materialCategory" required>
                   <option value="presentations">Presentaciones</option>
@@ -656,12 +656,12 @@
 
               <div class="form-group">
                 <label class="form-label" for="materialDescription"
-                  >Descripción</label
+                  >Descripci�n</label
                 >
                 <textarea
                   class="form-textarea"
                   id="materialDescription"
-                  placeholder="Breve descripción del contenido y propósito del material"
+                  placeholder="Breve descripci�n del contenido y prop�sito del material"
                 ></textarea>
               </div>
 
@@ -686,7 +686,7 @@
         <!-- Student View -->
         <div id="studentView" class="hidden">
           <div class="search-bar">
-            <div class="search-icon">🔍</div>
+            <div class="search-icon">??</div>
             <input
               type="text"
               class="search-input"
@@ -702,7 +702,7 @@
         <!-- Materials Grid -->
         <div class="materials-grid" id="materialsGrid"></div>
         <div class="empty-state hidden" id="emptyState">
-          <div class="empty-icon">📂</div>
+          <div class="empty-icon">??</div>
           <p class="empty-message" id="emptyMessage">Cargando materiales...</p>
         </div>
       </div>
@@ -711,18 +711,18 @@
     <!-- Notification -->
     <div class="notification" id="notification">
       <div class="flex items-center">
-        <div class="text-2xl mr-3" id="notificationIcon">ℹ️</div>
+        <div class="text-2xl mr-3" id="notificationIcon">??</div>
         <div>
-          <div class="font-bold" id="notificationTitle">Éxito</div>
+          <div class="font-bold" id="notificationTitle">�xito</div>
           <div class="text-sm text-gray-600" id="notificationMessage">
-            Operación completada correctamente
+            Operaci�n completada correctamente
           </div>
         </div>
       </div>
     </div>
 
     <script>
-      const API_BASE_URL = "/api/materials";
+      const API_BASE_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec"; // Reemplaza con la URL de tu Web App de Apps Script
       let materialsData = [];
       let filteredCategory = "all";
       let searchTerm = "";
@@ -772,21 +772,26 @@
       async function loadMaterials() {
         showEmptyState("Cargando materiales...", true);
         try {
-          const response = await fetch(API_BASE_URL, {
+          const response = await fetch(`${API_BASE_URL}?action=list`, {
             headers: { Accept: "application/json" },
           });
           if (!response.ok) {
             throw new Error(`Error ${response.status}`);
           }
           const payload = await response.json();
+          if (payload?.success === false) {
+            throw new Error(payload.message || "Servicio de materiales no disponible");
+          }
           const materials = Array.isArray(payload?.materials)
             ? payload.materials
+            : Array.isArray(payload?.items)
+            ? payload.items
             : Array.isArray(payload)
             ? payload
             : [];
           materialsData = materials.map(normalizeMaterial);
           if (!materialsData.length) {
-            showEmptyState("Aún no hay materiales disponibles.");
+            showEmptyState("A�n no hay materiales disponibles.");
           } else {
             hideEmptyState();
           }
@@ -797,7 +802,7 @@
           showNotification(
             "error",
             "Error al cargar",
-            error.message || "Intenta nuevamente más tarde"
+            error.message || "Intenta nuevamente m�s tarde"
           );
         }
       }
@@ -811,7 +816,7 @@
             (typeof crypto !== "undefined" && crypto.randomUUID
               ? crypto.randomUUID()
               : `tmp-${Date.now()}-${Math.random().toString(16).slice(2)}`),
-          title: material.title ?? material.name ?? "Material sin título",
+          title: material.title ?? material.name ?? "Material sin t�tulo",
           description: material.description ?? material.summary ?? "",
           category: (material.category ?? material.type ?? "otros")
             .toString()
@@ -990,7 +995,7 @@
             );
             const description = material.description
               ? escapeHtml(material.description)
-              : "Sin descripción disponible.";
+              : "Sin descripci�n disponible.";
 
             return `
               <div class="material-card" data-category="${escapeAttr(
@@ -1014,13 +1019,13 @@
                 <div class="material-actions">
                   <button class="action-btn download-btn" data-action="download" data-id="${
                     material.id
-                  }">⬇️ Descargar</button>
+                  }">?? Descargar</button>
                   <button class="action-btn edit-btn teacher-only" data-action="edit" data-id="${
                     material.id
-                  }">✏️ Editar</button>
+                  }">?? Editar</button>
                   <button class="action-btn delete-btn teacher-only" data-action="delete" data-id="${
                     material.id
-                  }">🗑️ Eliminar</button>
+                  }">??? Eliminar</button>
                 </div>
               </div>
             `;
@@ -1083,7 +1088,7 @@
         if (!title) {
           showNotification(
             "error",
-            "Título requerido",
+            "T�tulo requerido",
             "Ingresa el nombre del material antes de subirlo"
           );
           return;
@@ -1094,6 +1099,7 @@
         formData.append("title", title);
         formData.append("category", category);
         formData.append("description", description);
+        formData.append("action", "upload");
 
         try {
           showNotification(
@@ -1112,7 +1118,7 @@
             showNotification(
               "success",
               "Material subido",
-              "El material se cargó correctamente"
+              "El material se carg� correctamente"
             );
           }
         } catch (error) {
@@ -1146,6 +1152,13 @@
                 const response = xhr.responseText
                   ? JSON.parse(xhr.responseText)
                   : {};
+                const response = xhr.responseText
+                  ? JSON.parse(xhr.responseText)
+                  : {};
+                if (response?.success === false) {
+                  reject(new Error(response.message || "No se pudo guardar"));
+                  return;
+                }
                 resolve(response.material ?? response);
               } catch (parseError) {
                 resolve({});
@@ -1188,19 +1201,36 @@
           showNotification(
             "error",
             "Material no encontrado",
-            "El recurso seleccionado no está disponible"
+            "El recurso seleccionado no est� disponible"
           );
           return;
         }
         try {
-          const targetUrl =
-            material.downloadUrl ||
-            `${API_BASE_URL}/${encodeURIComponent(material.id)}/download`;
-          window.open(targetUrl, "_blank", "noopener");
-          if (!Number.isNaN(Number(material.downloads))) {
-            material.downloads = Number(material.downloads || 0) + 1;
-            renderStats();
+          const response = await fetch(
+            `${API_BASE_URL}?action=download&id=${encodeURIComponent(material.id)}`,
+            {
+              headers: { Accept: "application/json" },
+              cache: "no-store",
+            }
+          );
+          if (!response.ok) {
+            throw new Error(`Error ${response.status}`);
           }
+          const payload = await response.json();
+          if (payload?.success === false) {
+            throw new Error(payload.message || "Servicio de materiales no disponible");
+          }
+          const targetUrl =
+            payload.downloadUrl ||
+            material.downloadUrl ||
+            `https://drive.google.com/file/d/${encodeURIComponent(material.id)}/view?usp=sharing`;
+          if (payload.downloads !== undefined) {
+            material.downloads = Number(payload.downloads) || 0;
+          } else if (!Number.isNaN(Number(material.downloads))) {
+            material.downloads = Number(material.downloads || 0) + 1;
+          }
+          renderStats();
+          window.open(targetUrl, "_blank", "noopener");
           showNotification("success", "Descarga iniciada", material.title);
         } catch (error) {
           showNotification(
@@ -1217,18 +1247,18 @@
           (item) => String(item.id) === String(id)
         );
         if (!material) return;
-        const newTitle = prompt("Editar título", material.title);
+        const newTitle = prompt("Editar t�tulo", material.title);
         if (newTitle === null) return;
         const newDescription = prompt(
-          "Editar descripción",
+          "Editar descripci�n",
           material.description || ""
         );
         if (newDescription === null) return;
         try {
           const response = await fetch(
-            `${API_BASE_URL}/${encodeURIComponent(material.id)}`,
+            `${API_BASE_URL}?action=update&id=${encodeURIComponent(material.id)}`,
             {
-              method: "PATCH",
+              method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 title: newTitle.trim(),
@@ -1239,7 +1269,14 @@
           if (!response.ok) {
             throw new Error(`Error ${response.status}`);
           }
-          const updated = normalizeMaterial(await response.json());
+          const payload = await response.json();
+          if (payload?.success === false) {
+            throw new Error(payload.message || "No se pudo actualizar");
+          }
+          if (payload?.success === false) {
+            throw new Error(payload.message || "Servicio de materiales no disponible");
+          }
+          const updated = normalizeMaterial(payload.material ?? payload);
           materialsData = materialsData.map((item) =>
             String(item.id) === String(updated.id) ? updated : item
           );
@@ -1266,25 +1303,37 @@
         );
         if (!material) return;
         const confirmed = confirm(
-          `¿Estás seguro de eliminar "${material.title}"?`
+          `�Est�s seguro de eliminar "${material.title}"?`
         );
         if (!confirmed) return;
         try {
           const response = await fetch(
-            `${API_BASE_URL}/${encodeURIComponent(material.id)}`,
-            { method: "DELETE" }
+            `${API_BASE_URL}?action=delete&id=${encodeURIComponent(material.id)}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({}),
+            }
           );
-          if (!response.ok && response.status !== 204) {
-            throw new Error(`Error ${response.status}`);
+          const raw = await response.text();
+          let payload = {};
+          if (raw) {
+            try {
+              payload = JSON.parse(raw);
+            } catch (parseError) {
+              payload = {};
+            }
           }
-          materialsData = materialsData.filter(
+          if (payload?.success === false) {
+            throw new Error(payload.message || "No se pudo eliminar");
+          }
             (item) => String(item.id) !== String(material.id)
           );
           renderAll();
           showNotification(
             "success",
             "Material eliminado",
-            "El recurso se eliminó correctamente"
+            "El recurso se elimin� correctamente"
           );
         } catch (error) {
           console.error("Delete error", error);
@@ -1338,8 +1387,8 @@
 
       function showNotification(type, title, message) {
         if (!elements.notification) return;
-        const icons = { success: "✅", error: "⚠️", info: "ℹ️" };
-        elements.notificationIcon.textContent = icons[type] || "ℹ️";
+        const icons = { success: "?", error: "??", info: "??" };
+        elements.notificationIcon.textContent = icons[type] || "??";
         elements.notificationTitle.textContent = title;
         elements.notificationMessage.textContent = message;
         elements.notification.classList.toggle("error", type === "error");
@@ -1414,3 +1463,15 @@
     <script defer src="js/nav-inject.js"></script>
   </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
