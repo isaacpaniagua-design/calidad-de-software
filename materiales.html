@@ -722,7 +722,7 @@
     </div>
 
     <script>
-      const API_BASE_URL = "/api/materials";
+      const API_BASE_URL = "https://script.google.com/macros/s/AKfycbyTQcJy3VkAx_tVqXpihcxYufAxPVzsxATa_51sskK8vuUTJTvZJZWvbjjw725kBTba/exec";
       let materialsData = [];
       let filteredCategory = "all";
       let searchTerm = "";
@@ -772,15 +772,21 @@
       async function loadMaterials() {
         showEmptyState("Cargando materiales...", true);
         try {
-          const response = await fetch(API_BASE_URL, {
+          const response = await fetch(`${API_BASE_URL}?action=list`, {
             headers: { Accept: "application/json" },
+            cache: "no-store",
           });
           if (!response.ok) {
             throw new Error(`Error ${response.status}`);
           }
           const payload = await response.json();
+          if (payload?.success === false) {
+            throw new Error(payload.message || "Servicio de materiales no disponible");
+          }
           const materials = Array.isArray(payload?.materials)
             ? payload.materials
+            : Array.isArray(payload?.items)
+            ? payload.items
             : Array.isArray(payload)
             ? payload
             : [];
@@ -1094,6 +1100,7 @@
         formData.append("title", title);
         formData.append("category", category);
         formData.append("description", description);
+        formData.append("action", "upload");
 
         try {
           showNotification(
@@ -1146,6 +1153,10 @@
                 const response = xhr.responseText
                   ? JSON.parse(xhr.responseText)
                   : {};
+                if (response?.success === false) {
+                  reject(new Error(response.message || "No se pudo guardar"));
+                  return;
+                }
                 resolve(response.material ?? response);
               } catch (parseError) {
                 resolve({});
@@ -1193,14 +1204,31 @@
           return;
         }
         try {
-          const targetUrl =
-            material.downloadUrl ||
-            `${API_BASE_URL}/${encodeURIComponent(material.id)}/download`;
-          window.open(targetUrl, "_blank", "noopener");
-          if (!Number.isNaN(Number(material.downloads))) {
-            material.downloads = Number(material.downloads || 0) + 1;
-            renderStats();
+          const response = await fetch(
+            `${API_BASE_URL}?action=download&id=${encodeURIComponent(material.id)}`,
+            {
+              headers: { Accept: "application/json" },
+              cache: "no-store",
+            }
+          );
+          if (!response.ok) {
+            throw new Error(`Error ${response.status}`);
           }
+          const payload = await response.json();
+          if (payload?.success === false) {
+            throw new Error(payload.message || "Servicio de materiales no disponible");
+          }
+          const targetUrl =
+            payload.downloadUrl ||
+            material.downloadUrl ||
+            `https://drive.google.com/file/d/${encodeURIComponent(material.id)}/view?usp=sharing`;
+          if (payload.downloads !== undefined) {
+            material.downloads = Number(payload.downloads) || 0;
+          } else if (!Number.isNaN(Number(material.downloads))) {
+            material.downloads = Number(material.downloads || 0) + 1;
+          }
+          renderStats();
+          window.open(targetUrl, "_blank", "noopener");
           showNotification("success", "Descarga iniciada", material.title);
         } catch (error) {
           showNotification(
@@ -1226,9 +1254,9 @@
         if (newDescription === null) return;
         try {
           const response = await fetch(
-            `${API_BASE_URL}/${encodeURIComponent(material.id)}`,
+            `${API_BASE_URL}?action=update&id=${encodeURIComponent(material.id)}`,
             {
-              method: "PATCH",
+              method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 title: newTitle.trim(),
@@ -1239,7 +1267,11 @@
           if (!response.ok) {
             throw new Error(`Error ${response.status}`);
           }
-          const updated = normalizeMaterial(await response.json());
+          const payload = await response.json();
+          if (payload?.success === false) {
+            throw new Error(payload.message || "No se pudo actualizar");
+          }
+          const updated = normalizeMaterial(payload.material ?? payload);
           materialsData = materialsData.map((item) =>
             String(item.id) === String(updated.id) ? updated : item
           );
@@ -1271,11 +1303,26 @@
         if (!confirmed) return;
         try {
           const response = await fetch(
-            `${API_BASE_URL}/${encodeURIComponent(material.id)}`,
-            { method: "DELETE" }
+            `${API_BASE_URL}?action=delete&id=${encodeURIComponent(material.id)}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({}),
+            }
           );
-          if (!response.ok && response.status !== 204) {
-            throw new Error(`Error ${response.status}`);
+          const raw = await response.text();
+          let payload = {};
+          if (raw) {
+            try {
+              payload = JSON.parse(raw);
+            } catch (parseError) {
+              payload = {};
+            }
+          }
+          if (!response.ok || payload?.success === false) {
+            throw new Error(
+              (payload && payload.message) || `Error ${response.status}`
+            );
           }
           materialsData = materialsData.filter(
             (item) => String(item.id) !== String(material.id)
@@ -1414,3 +1461,9 @@
     <script defer src="js/nav-inject.js"></script>
   </body>
 </html>
+
+
+
+
+
+
