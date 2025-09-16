@@ -538,9 +538,7 @@
 
         .category-tabs {
           justify-content: center;
-        }
-      }
-    </style>
+        }\r\n    </style>
   </head>
   <body>
     <div class="main-container">
@@ -722,8 +720,11 @@
     </div>
 
     <script>
-      const API_BASE_URL =
-        "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLi63bYyU271xcfIg71LNFUBzbyz52zN8jv48kWBAWULY9iWwgCpCC_izUOH6XN8HP-0I_f7K_W1l-uXj8dG1PYO6nDcuX71pvpDVrObN1309iVhm-okJor-oV3seiEb0nqmWu_TlZTwicdaZqlK7UrgEsLJ2L1xr2Sn5hIJhizwE3iMSdV4_cere9EoP-BsE7WyO9nDTgFCis4Poyyc2f8u_JFDwvJoxIEC7Q_D7eGjy2NY3uGB0vzHTqIhPXTXrdNVo7TjmvLeks2v1Zk1eg5Bg2fM9w&lib=MRdLKf7JkP-BdCHqiTbAAxlasQu9GX-ad";
+      const API_BASE_URL = "https://script.google.com/macros/s/AKfycbxr1Nlueyw4xddx2t_83RX1WSPoA9I94TFTvBC8kP8bxfzd7kszQmaDPQ5T9FYit2No/exec";
+      function buildApiUrl(query) {
+        const separator = API_BASE_URL.includes('?') ? '&' : '?';
+        return `${API_BASE_URL}${separator}${query}`;
+      }
       let materialsData = [];
       let filteredCategory = "all";
       let searchTerm = "";
@@ -773,7 +774,7 @@
       async function loadMaterials() {
         showEmptyState("Cargando materiales...", true);
         try {
-          const response = await fetch(`${API_BASE_URL}?action=list`, {
+          const response = await fetch(buildApiUrl('action=list'), {
             headers: { Accept: "application/json" },
             cache: "no-store",
           });
@@ -808,9 +809,7 @@
             "Error al cargar",
             error.message || "Intenta nuevamente más tarde"
           );
-        }
-      }
-
+        }\r\n
       function normalizeMaterial(material) {
         if (!material || typeof material !== "object") return {};
         return {
@@ -1069,9 +1068,7 @@
                 timeStyle: "short",
               }).format(latestUpdate)
             : "Sin registros";
-        }
-      }
-
+        }\r\n
       async function handleMaterialSubmit(event) {
         event.preventDefault();
         if (!selectedFiles.length) {
@@ -1132,13 +1129,11 @@
             "No se pudo subir",
             error.message || "Intenta nuevamente"
           );
-        }
-      }
-
+        }\r\n
       function uploadMaterial(formData) {
         return new Promise((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open("POST", API_BASE_URL);
+          xhr.open("POST", buildApiUrl('action=upload'));
 
           xhr.upload.addEventListener("progress", (event) => {
             if (!event.lengthComputable) return;
@@ -1187,17 +1182,13 @@
         if (elements.uploadArea) {
           elements.uploadArea.style.display = "";
           elements.uploadArea.classList.remove("dragover");
-        }
-      }
-
+        }\r\n
       function cancelUpload() {
         resetUploadWorkflow();
       }
 
       async function downloadMaterial(id) {
-        const material = materialsData.find(
-          (item) => String(item.id) === String(id)
-        );
+        const material = materialsData.find((item) => String(item.id) === String(id));
         if (!material) {
           showNotification(
             "error",
@@ -1208,9 +1199,7 @@
         }
         try {
           const response = await fetch(
-            `${API_BASE_URL}?action=download&id=${encodeURIComponent(
-              material.id
-            )}`,
+            buildApiUrl(`action=download&id=${encodeURIComponent(material.id)}`),
             {
               headers: { Accept: "application/json" },
               cache: "no-store",
@@ -1228,9 +1217,7 @@
           const targetUrl =
             payload.downloadUrl ||
             material.downloadUrl ||
-            `https://drive.google.com/file/d/${encodeURIComponent(
-              material.id
-            )}/view?usp=sharing`;
+            buildApiUrl(`action=download&id=${encodeURIComponent(material.id)}`);
           if (payload.downloads !== undefined) {
             material.downloads = Number(payload.downloads) || 0;
           } else if (!Number.isNaN(Number(material.downloads))) {
@@ -1245,14 +1232,10 @@
             "No se pudo descargar",
             error.message || "Intenta nuevamente"
           );
-        }
-      }
-
+        }\r\n
       async function editMaterial(id) {
         if (currentRole !== "teacher") return;
-        const material = materialsData.find(
-          (item) => String(item.id) === String(id)
-        );
+        const material = materialsData.find((item) => String(item.id) === String(id));
         if (!material) return;
         const newTitle = prompt("Editar título", material.title);
         if (newTitle === null) return;
@@ -1263,9 +1246,7 @@
         if (newDescription === null) return;
         try {
           const response = await fetch(
-            `${API_BASE_URL}?action=update&id=${encodeURIComponent(
-              material.id
-            )}`,
+            buildApiUrl(`action=update&id=${encodeURIComponent(material.id)}`),
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -1299,14 +1280,10 @@
             "No se pudo actualizar",
             error.message || "Revisa e intenta de nuevo"
           );
-        }
-      }
-
+        }\r\n
       async function deleteMaterial(id) {
         if (currentRole !== "teacher") return;
-        const material = materialsData.find(
-          (item) => String(item.id) === String(id)
-        );
+        const material = materialsData.find((item) => String(item.id) === String(id));
         if (!material) return;
         const confirmed = confirm(
           `¿Estás seguro de eliminar "${material.title}"?`
@@ -1314,9 +1291,7 @@
         if (!confirmed) return;
         try {
           const response = await fetch(
-            `${API_BASE_URL}?action=delete&id=${encodeURIComponent(
-              material.id
-            )}`,
+            buildApiUrl(`action=delete&id=${encodeURIComponent(material.id)}`),
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -1353,9 +1328,7 @@
             "No se pudo eliminar",
             error.message || "Intenta nuevamente"
           );
-        }
-      }
-
+        }\r\n
       function switchRole(role, options = {}) {
         if (role !== "teacher" && role !== "student") return;
         currentRole = role;
@@ -1376,9 +1349,7 @@
             "Vista cambiada",
             `Ahora ves como ${role === "teacher" ? "Profesor" : "Estudiante"}`
           );
-        }
-      }
-
+        }\r\n
       function applyRoleVisibility() {
         document.querySelectorAll(".teacher-only").forEach((element) => {
           element.classList.toggle("hidden", currentRole !== "teacher");
@@ -1474,3 +1445,9 @@
     <script defer src="js/nav-inject.js"></script>
   </body>
 </html>
+
+
+
+
+
+
