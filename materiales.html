@@ -1,1478 +1,1574 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Materiales - Calidad de Software</title>
+    <title>Sistema de Gestión de Calificaciones - Calidad de Software</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
-
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
       body {
         font-family: "Inter", sans-serif;
-        background: #764ba2;
-        min-height: 100vh;
       }
-
-      .main-container {
-        background: white;
-        border-radius: 2rem;
-        margin: 2rem;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-        overflow: hidden;
-        position: relative;
-      }
-
-      .header {
+      .gradient-bg {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 3rem 2rem;
-        text-align: center;
-        position: relative;
       }
-
-      .header::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-        opacity: 0.3;
+      .card-shadow {
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
       }
-
-      .header-content {
-        position: relative;
-        z-index: 1;
-      }
-
-      .platform-title {
-        font-size: 3rem;
-        font-weight: 800;
-        margin-bottom: 1rem;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-      }
-
-      .platform-subtitle {
-        font-size: 1.5rem;
-        opacity: 0.9;
-        font-weight: 500;
-      }
-      .role-toggle {
-        position: absolute;
-        top: 2rem;
-        right: 2rem;
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-        border-radius: 2rem;
-        padding: 0.5rem;
-        display: flex;
-        gap: 0.5rem;
-      }
-
-      .role-btn {
-        padding: 0.75rem 1.5rem;
-        border-radius: 1.5rem;
-        background: transparent;
-        color: white;
-        border: none;
-        cursor: pointer;
-        font-weight: 600;
-        transition: all 0.3s ease;
-      }
-
-      .role-btn.active {
-        background: white;
-        color: #764ba2;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-      }
-
-      .content-area {
-        padding: 3rem 2rem;
-      }
-
-      .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 3rem;
-      }
-
-      .stat-card {
-        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-        border-radius: 1rem;
-        padding: 2rem;
-        text-align: center;
-        border: 2px solid #e2e8f0;
-        transition: all 0.3s ease;
-      }
-
-      .stat-card:hover {
-        transform: translateY(-5px);
-        border-color: #764ba2;
-        box-shadow: 0 10px 30px rgba(118, 75, 162, 0.2);
-      }
-
-      .stat-icon {
-        width: 3rem;
-        height: 3rem;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.5rem;
-        margin: 0 auto 1rem;
-      }
-
-      .stat-number {
-        font-size: 2rem;
-        font-weight: 800;
-        color: #1a202c;
-        margin-bottom: 0.5rem;
-      }
-
-      .stat-label {
-        color: #4a5568;
-        font-weight: 500;
-      }
-
-      .upload-area {
-        border: 3px dashed #cbd5e0;
-        border-radius: 1rem;
-        padding: 3rem;
-        text-align: center;
-        margin-bottom: 3rem;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        background: #f7fafc;
-      }
-
-      .upload-area:hover,
-      .upload-area.dragover {
-        border-color: #764ba2;
-        background: #f0f4ff;
-        transform: scale(1.02);
-      }
-
-      .upload-icon {
-        font-size: 4rem;
-        color: #764ba2;
-        margin-bottom: 1rem;
-      }
-
-      .upload-text {
-        font-size: 1.25rem;
-        color: #4a5568;
-        margin-bottom: 1rem;
-      }
-
-      .upload-subtext {
-        color: #718096;
-        font-size: 0.9rem;
-      }
-
-      .file-input {
-        display: none;
-      }
-
-      .category-tabs {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
-      }
-
-      .category-tab {
-        padding: 1rem 2rem;
-        border-radius: 2rem;
-        background: #f7fafc;
-        color: #4a5568;
-        border: 2px solid #e2e8f0;
-        cursor: pointer;
-        font-weight: 600;
-        transition: all 0.3s ease;
-      }
-
-      .category-tab:hover {
-        border-color: #764ba2;
-        color: #764ba2;
-      }
-
-      .category-tab.active {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        border-color: #764ba2;
-      }
-
-      .search-bar {
-        position: relative;
-        margin-bottom: 2rem;
-      }
-
-      .search-input {
-        width: 100%;
-        padding: 1rem 1rem 1rem 3rem;
-        border: 2px solid #e2e8f0;
-        border-radius: 1rem;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-      }
-
-      .search-input:focus {
-        outline: none;
-        border-color: #764ba2;
-        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
-      }
-
-      .search-icon {
-        position: absolute;
-        left: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #9ca3af;
-      }
-
-      .empty-state {
-        border: 2px dashed #cbd5e0;
-        border-radius: 1rem;
-        padding: 3rem 2rem;
-        text-align: center;
-        color: #4a5568;
-        background: #f8fafc;
-      }
-
-      .empty-icon {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-      }
-
-      .cancel-btn {
-        background: #6b7280;
-      }
-
-      .cancel-btn:hover {
-        background: #4b5563;
-      }
-      \r\n .materials-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-        gap: 2rem;
-        margin-bottom: 3rem;
-        align-items: stretch;
-      }
-
-      .material-card {
-        background: white;
-        border-radius: 1rem;
-        padding: 2rem;
-        border: 2px solid #e2e8f0;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-      }
-
-      .material-card:hover {
-        transform: translateY(-5px);
-        border-color: #764ba2;
-        box-shadow: 0 10px 30px rgba(118, 75, 162, 0.2);
-      }
-
-      .material-header {
-        display: flex;
-        align-items: flex-start;
-        margin-bottom: 1rem;
-        min-height: 4rem;
-      }
-
-      .file-icon {
-        width: 3rem;
-        height: 3rem;
-        border-radius: 0.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.5rem;
-        margin-right: 1rem;
-        flex-shrink: 0;
-      }
-
-      .file-icon.pdf {
-        background: linear-gradient(135deg, #dc2626, #991b1b);
-      }
-
-      .file-icon.doc {
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
-      }
-
-      .file-icon.xls {
-        background: linear-gradient(135deg, #16a34a, #15803d);
-      }
-
-      .file-icon.ppt {
-        background: linear-gradient(135deg, #ea580c, #c2410c);
-      }
-
-      .file-icon.default {
-        background: linear-gradient(135deg, #6b7280, #4b5563);
-      }
-
-      .material-title {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #1a202c;
-        margin-bottom: 0.5rem;
-        line-height: 1.3;
-        min-height: 2.6rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-
-      .material-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        color: #718096;
-        font-size: 0.9rem;
-        margin-bottom: 1rem;
-      }
-
-      .material-description {
-        color: #4a5568;
-        font-size: 0.9rem;
-        line-height: 1.5;
-        flex-grow: 1;
-        margin-bottom: 1.5rem;
-        min-height: 3.6rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-
-      .material-actions {
-        display: flex;
-        gap: 0.5rem;
-        margin-top: auto;
-      }
-
-      .action-btn {
-        padding: 0.5rem 1rem;
-        border-radius: 0.5rem;
-        border: none;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-      }
-
-      .download-btn {
-        background: linear-gradient(135deg, #16a34a, #15803d);
-        color: white;
-        flex: 1;
-      }
-
-      .download-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(22, 163, 74, 0.4);
-      }
-
-      .edit-btn {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-        color: white;
-      }
-
-      .edit-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
-      }
-
-      .delete-btn {
-        background: linear-gradient(135deg, #dc2626, #991b1b);
-        color: white;
-      }
-
-      .delete-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(220, 38, 38, 0.4);
-      }
-
-      .upload-form {
-        background: #f8fafc;
-        border-radius: 1rem;
-        padding: 2rem;
-        margin-bottom: 3rem;
-        border: 2px solid #e2e8f0;
-      }
-
-      .form-group {
-        margin-bottom: 1.5rem;
-      }
-
-      .form-label {
-        display: block;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 0.5rem;
-      }
-
-      .form-input,
-      .form-select,
-      .form-textarea {
-        width: 100%;
-        padding: 0.75rem;
-        border: 2px solid #e2e8f0;
-        border-radius: 0.5rem;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-      }
-
-      .form-input:focus,
-      .form-select:focus,
-      .form-textarea:focus {
-        outline: none;
-        border-color: #764ba2;
-        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
-      }
-
-      .form-textarea {
-        resize: vertical;
-        min-height: 100px;
-      }
-
-      .submit-btn {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        padding: 1rem 2rem;
-        border-radius: 0.5rem;
-        border: none;
-        cursor: pointer;
-        font-weight: 700;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-      }
-
-      .submit-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(118, 75, 162, 0.4);
-      }
-
       .progress-bar {
-        width: 100%;
-        height: 0.5rem;
-        background: #e2e8f0;
-        border-radius: 0.25rem;
-        overflow: hidden;
-        margin-top: 1rem;
-      }
-
-      .progress-fill {
-        height: 100%;
-        background: linear-gradient(135deg, #16a34a, #15803d);
-        width: 0%;
-        transition: width 0.3s ease;
-      }
-
-      .hidden {
-        display: none !important;
-      }
-
-      .notification {
-        position: fixed;
-        top: 2rem;
-        right: 2rem;
-        background: white;
-        border-radius: 1rem;
-        padding: 1.5rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        border-left: 4px solid #16a34a;
-        z-index: 1000;
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
-      }
-
-      .notification.show {
-        transform: translateX(0);
-      }
-
-      .notification.error {
-        border-left-color: #dc2626;
-      }
-
-      @media (max-width: 768px) {
-        .main-container {
-          margin: 1rem;
-        }
-
-        .header {
-          padding: 2rem 1rem;
-        }
-
-        .platform-title {
-          font-size: 2rem;
-        }
-
-        .role-toggle {
-          position: relative;
-          top: auto;
-          right: auto;
-          margin-top: 2rem;
-        }
-
-        .content-area {
-          padding: 2rem 1rem;
-        }
-
-        .materials-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .category-tabs {
-          justify-content: center;
-        }
+        transition: width 0.3s ease-in-out;
       }
     </style>
   </head>
-  <body>
-    <div class="main-container">
-      <!-- Header -->
-      <div class="header">
-        <div class="role-toggle">
-          <button
-            type="button"
-            class="role-btn active"
-            onclick="switchRole('teacher')"
-            id="teacherBtn"
-          >
-            ????? Profesor
-          </button>
-          <button
-            type="button"
-            class="role-btn"
-            onclick="switchRole('student')"
-            id="studentBtn"
-          >
-            ????? Estudiante
-          </button>
-        </div>
-
-        <div class="header-content">
-          <h1 class="platform-title">?? Materiales de Curso</h1>
-          <p class="platform-subtitle">
-            Calidad de Software � Recursos y Documentos
-          </p>
-        </div>
-      </div>
-
-      <!-- Content Area -->
-      <div class="content-area">
-        <!-- Teacher View -->
-        <div id="teacherView">
-          <!-- Statistics -->
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-icon">??</div>
-              <div class="stat-number" id="statTotalMaterials">--</div>
-              <div class="stat-label">Total materiales</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">??</div>
-              <div class="stat-number" id="statTotalDownloads">--</div>
-              <div class="stat-label">Descargas</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">???</div>
-              <div class="stat-number" id="statTotalCategories">--</div>
-              <div class="stat-label">Categor�as</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">??</div>
-              <div class="stat-number" id="statLastUpdated">--</div>
-              <div class="stat-label">�ltima actualizaci�n</div>
-            </div>
-          </div>
-
-          <!-- Upload Area -->
-          <div
-            class="upload-area"
-            onclick="document.getElementById('fileInput').click()"
-          >
-            <div class="upload-icon">??</div>
-            <div class="upload-text">
-              Arrastra archivos aqu� o haz clic para seleccionar
-            </div>
-            <div class="upload-subtext">
-              Formatos soportados: PDF, DOC(X), XLS(X), PPT(X) � M�x. 10&nbsp;MB
-              por archivo
-            </div>
-            <input
-              type="file"
-              id="fileInput"
-              class="file-input"
-              multiple
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-            />
-          </div>
-
-          <!-- Upload Form -->
-          <div class="upload-form hidden" id="uploadForm">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">
-              Detalles del material
-            </h3>
-            <form id="materialForm">
-              <div class="form-group">
-                <label class="form-label" for="materialTitle"
-                  >T�tulo del material</label
-                >
-                <input
-                  type="text"
-                  class="form-input"
-                  id="materialTitle"
-                  placeholder="Ej: Presentaci�n Sesi�n 1 - Introducci�n"
-                  required
-                />
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="materialCategory"
-                  >Categor�a</label
-                >
-                <select class="form-select" id="materialCategory" required>
-                  <option value="presentations">Presentaciones</option>
-                  <option value="templates">Plantillas</option>
-                  <option value="exercises">Ejercicios</option>
-                  <option value="references">Referencias</option>
-                </select>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="materialDescription"
-                  >Descripci�n</label
-                >
-                <textarea
-                  class="form-textarea"
-                  id="materialDescription"
-                  placeholder="Breve descripci�n del contenido y prop�sito del material"
-                ></textarea>
-              </div>
-
-              <div class="form-group">
-                <button type="submit" class="submit-btn">Subir material</button>
-                <button
-                  type="button"
-                  class="submit-btn cancel-btn"
-                  onclick="cancelUpload()"
-                >
-                  Cancelar
-                </button>
-              </div>
-
-              <div class="progress-bar hidden" id="progressBar">
-                <div class="progress-fill" id="progressFill"></div>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!-- Student View -->
-        <div id="studentView" class="hidden">
-          <div class="search-bar">
-            <div class="search-icon">??</div>
-            <input
-              type="text"
-              class="search-input"
-              placeholder="Buscar materiales..."
-              id="searchInput"
-            />
-          </div>
-        </div>
-
-        <!-- Category Tabs (Both Views) -->
-        <div class="category-tabs" id="categoryTabs"></div>
-
-        <!-- Materials Grid -->
-        <div class="materials-grid" id="materialsGrid"></div>
-        <div class="empty-state hidden" id="emptyState">
-          <div class="empty-icon">??</div>
-          <p class="empty-message" id="emptyMessage">Cargando materiales...</p>
-        </div>
+  <body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <div class="gradient-bg text-white py-8">
+      <div class="container mx-auto px-6">
+        <h1 class="text-3xl font-bold mb-2">
+          Sistema de Gestión de Calificaciones
+        </h1>
+        <p class="text-blue-100">Calidad de Software - Gestión por Unidades</p>
       </div>
     </div>
 
-    <!-- Notification -->
-    <div class="notification" id="notification">
-      <div class="flex items-center">
-        <div class="text-2xl mr-3" id="notificationIcon">??</div>
-        <div>
-          <div class="font-bold" id="notificationTitle">�xito</div>
-          <div class="text-sm text-gray-600" id="notificationMessage">
-            Operaci�n completada correctamente
+    <div class="container mx-auto px-6 py-8">
+      <!-- Student Info -->
+      <div class="bg-white rounded-lg card-shadow p-6 mb-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Seleccionar Estudiante</label
+            >
+            <select
+              id="studentSelect"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">-- Seleccione un estudiante --</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Nombre Completo</label
+            >
+            <input
+              type="text"
+              id="studentName"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+              readonly
+              placeholder="Nombre del estudiante"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2"
+              >Correo Electrónico</label
+            >
+            <input
+              type="email"
+              id="studentEmail"
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+              readonly
+              placeholder="Correo del estudiante"
+            />
           </div>
         </div>
+        <div class="mt-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2"
+            >Código del Estudiante</label
+          >
+          <input
+            type="text"
+            id="studentId"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+            readonly
+            placeholder="Código del estudiante"
+          />
+        </div>
+      </div>
+
+      <!-- Overall Progress -->
+      <div class="bg-white rounded-lg card-shadow p-6 mb-8">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4">
+          Progreso General del Curso
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div class="text-center">
+            <div class="text-3xl font-bold text-blue-600" id="finalGrade">
+              0.0
+            </div>
+            <div class="text-sm text-gray-600">Calificación Final</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-green-600" id="unit1Grade">
+              0.0
+            </div>
+            <div class="text-sm text-gray-600">Unidad I (30%)</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-yellow-600" id="unit2Grade">
+              0.0
+            </div>
+            <div class="text-sm text-gray-600">Unidad II (30%)</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-purple-600" id="unit3Grade">
+              0.0
+            </div>
+            <div class="text-sm text-gray-600">Unidad III (40%)</div>
+          </div>
+        </div>
+        <div class="mt-6">
+          <div class="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Progreso del Curso</span>
+            <span id="progressPercent">0%</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-3">
+            <div
+              class="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full progress-bar"
+              id="progressBar"
+              style="width: 0%"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Units Tabs -->
+      <div class="bg-white rounded-lg card-shadow overflow-hidden">
+        <div class="flex border-b">
+          <button
+            class="tab-button flex-1 py-4 px-6 text-center font-medium transition-colors bg-blue-50 text-blue-600 border-b-2 border-blue-600"
+            data-unit="1"
+          >
+            Unidad I - Fundamentos (30%)
+          </button>
+          <button
+            class="tab-button flex-1 py-4 px-6 text-center font-medium transition-colors text-gray-600 hover:text-blue-600"
+            data-unit="2"
+          >
+            Unidad II - Modelos (30%)
+          </button>
+          <button
+            class="tab-button flex-1 py-4 px-6 text-center font-medium transition-colors text-gray-600 hover:text-blue-600"
+            data-unit="3"
+          >
+            Unidad III - Certificación (40%)
+          </button>
+          <button
+            class="tab-button flex-1 py-4 px-6 text-center font-medium transition-colors text-gray-600 hover:text-blue-600"
+            data-unit="project"
+          >
+            📑 Rúbrica Proyecto Final
+          </button>
+        </div>
+
+        <!-- Unit 1 Content -->
+        <div class="unit-content p-6" id="unit1">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6">
+            I. Fundamentos de Calidad de Software
+          </h3>
+          <div class="space-y-4">
+            <div
+              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-800">
+                  Foro: Ejemplo de Métricas
+                </h4>
+                <p class="text-sm text-gray-600">
+                  Peso en unidad: 5% | Peso global: 1.5%
+                </p>
+              </div>
+              <input
+                type="number"
+                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                min="0"
+                max="5"
+                step="0.1"
+                data-weight="1.5"
+                placeholder="0.0"
+              />
+            </div>
+            <div
+              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-800">
+                  Taller de Complejidad Ciclomática
+                </h4>
+                <p class="text-sm text-gray-600">
+                  Peso en unidad: 5% | Peso global: 1.5%
+                </p>
+              </div>
+              <input
+                type="number"
+                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                min="0"
+                max="5"
+                step="0.1"
+                data-weight="1.5"
+                placeholder="0.0"
+              />
+            </div>
+            <div
+              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-800">
+                  Plan de Pruebas (IEEE 829)
+                </h4>
+                <p class="text-sm text-gray-600">
+                  Peso en unidad: 20% | Peso global: 6%
+                </p>
+              </div>
+              <input
+                type="number"
+                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                min="0"
+                max="5"
+                step="0.1"
+                data-weight="6"
+                placeholder="0.0"
+              />
+            </div>
+            <div
+              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-800">
+                  Simulación de Revisión Técnica
+                </h4>
+                <p class="text-sm text-gray-600">
+                  Peso en unidad: 20% | Peso global: 6%
+                </p>
+              </div>
+              <input
+                type="number"
+                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                min="0"
+                max="5"
+                step="0.1"
+                data-weight="6"
+                placeholder="0.0"
+              />
+            </div>
+            <div
+              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-800">
+                  Diseño de Casos de Prueba
+                </h4>
+                <p class="text-sm text-gray-600">
+                  Peso en unidad: 10% | Peso global: 3%
+                </p>
+              </div>
+              <input
+                type="number"
+                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                min="0"
+                max="5"
+                step="0.1"
+                data-weight="3"
+                placeholder="0.0"
+              />
+            </div>
+            <div
+              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-800">Foro de Seguridad</h4>
+                <p class="text-sm text-gray-600">
+                  Peso en unidad: 10% | Peso global: 3%
+                </p>
+              </div>
+              <input
+                type="number"
+                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                min="0"
+                max="5"
+                step="0.1"
+                data-weight="3"
+                placeholder="0.0"
+              />
+            </div>
+            <div
+              class="grade-item flex items-center justify-between p-4 bg-blue-50 rounded-lg border-2 border-blue-200"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-blue-800">Examen Unidad I</h4>
+                <p class="text-sm text-blue-600">
+                  Peso en unidad: 30% | Peso global: 9%
+                </p>
+              </div>
+              <input
+                type="number"
+                class="grade-input w-20 px-3 py-2 border border-blue-300 rounded-lg text-center"
+                min="0"
+                max="5"
+                step="0.1"
+                data-weight="9"
+                placeholder="0.0"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Unit 2 Content -->
+        <div class="unit-content p-6 hidden" id="unit2">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6">
+            II. Modelos y Estándares de Calidad
+          </h3>
+          <div class="space-y-4">
+            <div
+              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-800">
+                  Role-Playing de Auditoría
+                </h4>
+                <p class="text-sm text-gray-600">
+                  Peso en unidad: 10% | Peso global: 3%
+                </p>
+              </div>
+              <input
+                type="number"
+                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                min="0"
+                max="5"
+                step="0.1"
+                data-weight="3"
+                placeholder="0.0"
+              />
+            </div>
+            <div
+              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-800">
+                  Informe Comparativo de Modelos
+                </h4>
+                <p class="text-sm text-gray-600">
+                  Peso en unidad: 40% | Peso global: 12%
+                </p>
+              </div>
+              <input
+                type="number"
+                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                min="0"
+                max="5"
+                step="0.1"
+                data-weight="12"
+                placeholder="0.0"
+              />
+            </div>
+            <div
+              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-800">
+                  Mapa Conceptual Colaborativo
+                </h4>
+                <p class="text-sm text-gray-600">
+                  Peso en unidad: 10% | Peso global: 3%
+                </p>
+              </div>
+              <input
+                type="number"
+                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                min="0"
+                max="5"
+                step="0.1"
+                data-weight="3"
+                placeholder="0.0"
+              />
+            </div>
+            <div
+              class="grade-item flex items-center justify-between p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-yellow-800">Examen Unidad II</h4>
+                <p class="text-sm text-yellow-600">
+                  Peso en unidad: 40% | Peso global: 12%
+                </p>
+              </div>
+              <input
+                type="number"
+                class="grade-input w-20 px-3 py-2 border border-yellow-300 rounded-lg text-center"
+                min="0"
+                max="5"
+                step="0.1"
+                data-weight="12"
+                placeholder="0.0"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Unit 3 Content -->
+        <div class="unit-content p-6 hidden" id="unit3">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6">
+            III. Plan de Certificación de Calidad
+          </h3>
+          <div class="space-y-4">
+            <div
+              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-800">
+                  Proyecto Final – Fase 1 (Diagnóstico)
+                </h4>
+                <p class="text-sm text-gray-600">
+                  Peso en unidad: 10% | Peso global: 4%
+                </p>
+              </div>
+              <input
+                type="number"
+                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                min="0"
+                max="5"
+                step="0.1"
+                data-weight="4"
+                placeholder="0.0"
+              />
+            </div>
+            <div
+              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-800">
+                  Proyecto Final – Fase 2 (Gap Analysis)
+                </h4>
+                <p class="text-sm text-gray-600">
+                  Peso en unidad: 15% | Peso global: 6%
+                </p>
+              </div>
+              <input
+                type="number"
+                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                min="0"
+                max="5"
+                step="0.1"
+                data-weight="6"
+                placeholder="0.0"
+              />
+            </div>
+            <div
+              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-800">
+                  Proyecto Final – Fases 3 y 4 (Roadmap y Gestión de Cambio)
+                </h4>
+                <p class="text-sm text-gray-600">
+                  Peso en unidad: 15% | Peso global: 6%
+                </p>
+              </div>
+              <input
+                type="number"
+                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                min="0"
+                max="5"
+                step="0.1"
+                data-weight="6"
+                placeholder="0.0"
+              />
+            </div>
+            <div
+              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-gray-800">
+                  Presentación del Proyecto Final
+                </h4>
+                <p class="text-sm text-gray-600">
+                  Peso en unidad: 20% | Peso global: 8%
+                </p>
+              </div>
+              <input
+                type="number"
+                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                min="0"
+                max="5"
+                step="0.1"
+                data-weight="8"
+                placeholder="0.0"
+              />
+            </div>
+            <div
+              class="grade-item flex items-center justify-between p-4 bg-purple-50 rounded-lg border-2 border-purple-200"
+            >
+              <div class="flex-1">
+                <h4 class="font-medium text-purple-800">
+                  Examen Final Integrador
+                </h4>
+                <p class="text-sm text-purple-600">
+                  Peso en unidad: 40% | Peso global: 16%
+                </p>
+              </div>
+              <input
+                type="number"
+                class="grade-input w-20 px-3 py-2 border border-purple-300 rounded-lg text-center"
+                min="0"
+                max="5"
+                step="0.1"
+                data-weight="16"
+                placeholder="0.0"
+              />
+            </div>
+          </div>
+        </div>
+
+        <!-- Project Rubric Content -->
+        <div class="unit-content p-6 hidden" id="project">
+          <h3 class="text-xl font-semibold text-gray-800 mb-6">
+            📑 Rúbrica del Proyecto Final – Plan de Certificación de Calidad
+          </h3>
+
+          <!-- Fase 1: Diagnóstico -->
+          <div class="mb-8">
+            <h4
+              class="text-lg font-semibold text-purple-800 mb-4 bg-purple-50 p-3 rounded-lg"
+            >
+              Fase 1: Diagnóstico y Selección del Modelo (10% de Unidad III)
+            </h4>
+            <div class="space-y-3">
+              <div
+                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div class="flex-1">
+                  <h5 class="font-medium text-gray-800">
+                    Claridad y completitud del diagnóstico
+                  </h5>
+                  <p class="text-sm text-gray-600">
+                    Peso en fase: 40% | Peso en unidad: 4% | Peso global: 1.6%
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  data-weight="1.6"
+                  placeholder="0.0"
+                />
+              </div>
+              <div
+                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div class="flex-1">
+                  <h5 class="font-medium text-gray-800">
+                    Justificación de la selección del modelo
+                  </h5>
+                  <p class="text-sm text-gray-600">
+                    Peso en fase: 40% | Peso en unidad: 4% | Peso global: 1.6%
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  data-weight="1.6"
+                  placeholder="0.0"
+                />
+              </div>
+              <div
+                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div class="flex-1">
+                  <h5 class="font-medium text-gray-800">
+                    Presentación y formato
+                  </h5>
+                  <p class="text-sm text-gray-600">
+                    Peso en fase: 20% | Peso en unidad: 2% | Peso global: 0.8%
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  data-weight="0.8"
+                  placeholder="0.0"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Fase 2: Gap Analysis -->
+          <div class="mb-8">
+            <h4
+              class="text-lg font-semibold text-blue-800 mb-4 bg-blue-50 p-3 rounded-lg"
+            >
+              Fase 2: Gap Analysis (15% de Unidad III)
+            </h4>
+            <div class="space-y-3">
+              <div
+                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div class="flex-1">
+                  <h5 class="font-medium text-gray-800">
+                    Identificación de brechas
+                  </h5>
+                  <p class="text-sm text-gray-600">
+                    Peso en fase: 40% | Peso en unidad: 6% | Peso global: 2.4%
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  data-weight="2.4"
+                  placeholder="0.0"
+                />
+              </div>
+              <div
+                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div class="flex-1">
+                  <h5 class="font-medium text-gray-800">
+                    Acciones recomendadas y priorización
+                  </h5>
+                  <p class="text-sm text-gray-600">
+                    Peso en fase: 40% | Peso en unidad: 6% | Peso global: 2.4%
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  data-weight="2.4"
+                  placeholder="0.0"
+                />
+              </div>
+              <div
+                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div class="flex-1">
+                  <h5 class="font-medium text-gray-800">
+                    Claridad visual del documento
+                  </h5>
+                  <p class="text-sm text-gray-600">
+                    Peso en fase: 20% | Peso en unidad: 3% | Peso global: 1.2%
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  data-weight="1.2"
+                  placeholder="0.0"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Fase 3-4: Roadmap -->
+          <div class="mb-8">
+            <h4
+              class="text-lg font-semibold text-green-800 mb-4 bg-green-50 p-3 rounded-lg"
+            >
+              Fase 3-4: Roadmap y Gestión del Cambio (15% de Unidad III)
+            </h4>
+            <div class="space-y-3">
+              <div
+                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div class="flex-1">
+                  <h5 class="font-medium text-gray-800">
+                    Secuencia lógica y realista de hitos
+                  </h5>
+                  <p class="text-sm text-gray-600">
+                    Peso en fase: 30% | Peso en unidad: 4.5% | Peso global: 1.8%
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  data-weight="1.8"
+                  placeholder="0.0"
+                />
+              </div>
+              <div
+                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div class="flex-1">
+                  <h5 class="font-medium text-gray-800">
+                    Factibilidad de recursos, tiempos y responsables
+                  </h5>
+                  <p class="text-sm text-gray-600">
+                    Peso en fase: 40% | Peso en unidad: 6% | Peso global: 2.4%
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  data-weight="2.4"
+                  placeholder="0.0"
+                />
+              </div>
+              <div
+                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div class="flex-1">
+                  <h5 class="font-medium text-gray-800">
+                    Plan de comunicación y capacitación
+                  </h5>
+                  <p class="text-sm text-gray-600">
+                    Peso en fase: 20% | Peso en unidad: 3% | Peso global: 1.2%
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  data-weight="1.2"
+                  placeholder="0.0"
+                />
+              </div>
+              <div
+                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div class="flex-1">
+                  <h5 class="font-medium text-gray-800">
+                    Presentación y formato
+                  </h5>
+                  <p class="text-sm text-gray-600">
+                    Peso en fase: 10% | Peso en unidad: 1.5% | Peso global: 0.6%
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  data-weight="0.6"
+                  placeholder="0.0"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Presentación Final -->
+          <div class="mb-8">
+            <h4
+              class="text-lg font-semibold text-orange-800 mb-4 bg-orange-50 p-3 rounded-lg"
+            >
+              Presentación Final (20% de Unidad III)
+            </h4>
+            <div class="space-y-3">
+              <div
+                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div class="flex-1">
+                  <h5 class="font-medium text-gray-800">
+                    Claridad y estructura de la exposición
+                  </h5>
+                  <p class="text-sm text-gray-600">
+                    Peso en fase: 25% | Peso en unidad: 5% | Peso global: 2%
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  data-weight="2"
+                  placeholder="0.0"
+                />
+              </div>
+              <div
+                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div class="flex-1">
+                  <h5 class="font-medium text-gray-800">
+                    Dominio del tema y respuesta a preguntas
+                  </h5>
+                  <p class="text-sm text-gray-600">
+                    Peso en fase: 25% | Peso en unidad: 5% | Peso global: 2%
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  data-weight="2"
+                  placeholder="0.0"
+                />
+              </div>
+              <div
+                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div class="flex-1">
+                  <h5 class="font-medium text-gray-800">
+                    Calidad de diapositivas y visuales
+                  </h5>
+                  <p class="text-sm text-gray-600">
+                    Peso en fase: 20% | Peso en unidad: 4% | Peso global: 1.6%
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  data-weight="1.6"
+                  placeholder="0.0"
+                />
+              </div>
+              <div
+                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div class="flex-1">
+                  <h5 class="font-medium text-gray-800">
+                    Justificación del valor de negocio (ROI)
+                  </h5>
+                  <p class="text-sm text-gray-600">
+                    Peso en fase: 20% | Peso en unidad: 4% | Peso global: 1.6%
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  data-weight="1.6"
+                  placeholder="0.0"
+                />
+              </div>
+              <div
+                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+              >
+                <div class="flex-1">
+                  <h5 class="font-medium text-gray-800">
+                    Trabajo en equipo y participación equitativa
+                  </h5>
+                  <p class="text-sm text-gray-600">
+                    Peso en fase: 10% | Peso en unidad: 2% | Peso global: 0.8%
+                  </p>
+                </div>
+                <input
+                  type="number"
+                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
+                  min="0"
+                  max="5"
+                  step="0.1"
+                  data-weight="0.8"
+                  placeholder="0.0"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Project Summary -->
+          <div class="bg-purple-50 border-2 border-purple-200 rounded-lg p-6">
+            <h4 class="text-lg font-semibold text-purple-800 mb-4">
+              Resumen del Proyecto Final
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+              <div>
+                <div
+                  class="text-2xl font-bold text-purple-600"
+                  id="projectTotalGrade"
+                >
+                  0.0
+                </div>
+                <div class="text-sm text-gray-600">Calificación Total</div>
+              </div>
+              <div>
+                <div
+                  class="text-2xl font-bold text-purple-600"
+                  id="phase1Grade"
+                >
+                  0.0
+                </div>
+                <div class="text-sm text-gray-600">Fase 1 (10%)</div>
+              </div>
+              <div>
+                <div class="text-2xl font-bold text-blue-600" id="phase2Grade">
+                  0.0
+                </div>
+                <div class="text-sm text-gray-600">Fase 2 (15%)</div>
+              </div>
+              <div>
+                <div
+                  class="text-2xl font-bold text-green-600"
+                  id="phase34Grade"
+                >
+                  0.0
+                </div>
+                <div class="text-sm text-gray-600">Fases 3-4 (15%)</div>
+              </div>
+            </div>
+            <div class="mt-4 text-center">
+              <div
+                class="text-2xl font-bold text-orange-600"
+                id="presentationGrade"
+              >
+                0.0
+              </div>
+              <div class="text-sm text-gray-600">Presentación Final (20%)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="mt-8 flex flex-wrap gap-4 justify-center">
+        <button
+          id="calculateBtn"
+          class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+        >
+          Calcular Calificaciones
+        </button>
+        <button
+          id="clearBtn"
+          class="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+        >
+          Limpiar Todo
+        </button>
+        <button
+          id="exportBtn"
+          class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+        >
+          Exportar Reporte
+        </button>
+      </div>
+
+      <!-- Results Summary -->
+      <div
+        id="resultsSummary"
+        class="mt-8 bg-white rounded-lg card-shadow p-6 hidden"
+      >
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+          Resumen de Calificaciones
+        </h3>
+        <div id="summaryContent" class="space-y-3"></div>
       </div>
     </div>
 
     <script>
-      const API_BASE_URL = "https://script.google.com/macros/s/AKfycbyTQcJy3VkAx_tVqXpihcxYufAxPVzsxATa_51sskK8vuUTJTvZJZWvbjjw725kBTba/exec";
-      let materialsData = [];
-      let filteredCategory = "all";
-      let searchTerm = "";
-      let selectedFiles = [];
-      let currentRole =
-        (localStorage.getItem("qs_role") || "estudiante").toLowerCase() ===
-        "docente"
-          ? "teacher"
-          : "student";
+      // Student data
+      const students = [
+        {
+          id: "00000249116",
+          name: "Arana Guerrero,Danett Itzanami",
+          email: "danett.arana249116@potros.itson.edu.mx",
+        },
+        {
+          id: "00000147818",
+          name: "Araujo Godoy,Abraham Francisco",
+          email: "abraham.araujo@potros.itson.edu.mx",
+        },
+        {
+          id: "00000244228",
+          name: "Avalos Morales,Egla Icel",
+          email: "egla.avalos244228@potros.itson.edu.mx",
+        },
+        {
+          id: "00000244442",
+          name: "Blasco Villagomez,Luis Mario",
+          email: "luis.blasco244442@potros.itson.edu.mx",
+        },
+        {
+          id: "00000244242",
+          name: "Duarte Lopez,Adlemi Guadalupe",
+          email: "adlemi.duarte244242@potros.itson.edu.mx",
+        },
+        {
+          id: "00000244473",
+          name: "Espericueta Ramos,Jesus Alan",
+          email: "jesus.espericueta244473@potros.itson.edu.mx",
+        },
+        {
+          id: "00000244608",
+          name: "Gracia Morales,Sergio Alejandro",
+          email: "sergio.gracia244608@potros.itson.edu.mx",
+        },
+        {
+          id: "00000228847",
+          name: "Hernandez Gonzalez,Julian Ricardo",
+          email: "julian.hernandez228847@potros.itson.edu.mx",
+        },
+        {
+          id: "00000248997",
+          name: "Le Blohic Garay,Mario Enrique",
+          email: "mario.leblohic248997@potros.itson.edu.mx",
+        },
+        {
+          id: "00000249012",
+          name: "Lopez Guerrero,Luis Carlos",
+          email: "luis.lopez249012@potros.itson.edu.mx",
+        },
+        {
+          id: "00000248990",
+          name: "Maldonado Montoya,Jose Gabriel",
+          email: "jose.maldonado248990@potros.itson.edu.mx",
+        },
+        {
+          id: "00000244378",
+          name: "Martínez Santacruz,Yolanda",
+          email: "yolanda.martinez244378@potros.itson.edu.mx",
+        },
+        {
+          id: "00000217812",
+          name: "Martínez Soto,Dainiz Raí",
+          email: "dainiz.martinez217812@potros.itson.edu.mx",
+        },
+        {
+          id: "00000244321",
+          name: "Nevescanin Moreno,Angel Stipe",
+          email: "angel.nevescanin244321@potros.itson.edu.mx",
+        },
+        {
+          id: "00000244477",
+          name: "Osuna Aguilera,Erik David",
+          email: "erik.osuna244477@potros.itson.edu.mx",
+        },
+        {
+          id: "00000244711",
+          name: "Palacios Cardenas,Jorge Eduardo",
+          email: "jorge.palacios244711@potros.itson.edu.mx",
+        },
+        {
+          id: "00000244569",
+          name: "Preciado Ruiz,Juan Carlos",
+          email: "juan.preciado244569@potros.itson.edu.mx",
+        },
+        {
+          id: "00000244373",
+          name: "Reyes Galaz,Jose Abelardo",
+          email: "jose.reyes244373@potros.itson.edu.mx",
+        },
+        {
+          id: "00000240691",
+          name: "Rivas Quintana,Emmanuel",
+          email: "emmanuel.rivas240691@potros.itson.edu.mx",
+        },
+        {
+          id: "00000244266",
+          name: "Rocha Aguilar,Víctor Emmanuel",
+          email: "victor.rocha244266@potros.itson.edu.mx",
+        },
+        {
+          id: "00000244312",
+          name: "Rodriguez Alvarado,Jose Agustin",
+          email: "jose.rodriguez244312@potros.itson.edu.mx",
+        },
+        {
+          id: "00000244621",
+          name: "Soto Carrazco,Francisco Javier",
+          email: "francisco.soto244621@potros.itson.edu.mx",
+        },
+        {
+          id: "00000216759",
+          name: "Sánchez Zavala,Dulce María",
+          email: "dulce.sanchez216759@potros.itson.edu.mx",
+        },
+        {
+          id: "00000244689",
+          name: "Villegas Sosa,Ramsés Mauricio",
+          email: "ramses.villegas244689@potros.itson.edu.mx",
+        },
+        {
+          id: "00000244679",
+          name: "Viveros Zavala,Angel Gael",
+          email: "angel.viveros244679@potros.itson.edu.mx",
+        },
+      ];
 
-      const elements = {
-        teacherBtn: document.getElementById("teacherBtn"),
-        studentBtn: document.getElementById("studentBtn"),
-        teacherView: document.getElementById("teacherView"),
-        studentView: document.getElementById("studentView"),
-        uploadArea: document.querySelector(".upload-area"),
-        uploadForm: document.getElementById("uploadForm"),
-        materialForm: document.getElementById("materialForm"),
-        fileInput: document.getElementById("fileInput"),
-        progressBar: document.getElementById("progressBar"),
-        progressFill: document.getElementById("progressFill"),
-        categorySelect: document.getElementById("materialCategory"),
-        searchInput: document.getElementById("searchInput"),
-        categoryTabs: document.getElementById("categoryTabs"),
-        materialsGrid: document.getElementById("materialsGrid"),
-        emptyState: document.getElementById("emptyState"),
-        emptyMessage: document.getElementById("emptyMessage"),
-        statTotal: document.getElementById("statTotalMaterials"),
-        statDownloads: document.getElementById("statTotalDownloads"),
-        statCategories: document.getElementById("statTotalCategories"),
-        statUpdated: document.getElementById("statLastUpdated"),
-        notification: document.getElementById("notification"),
-        notificationIcon: document.getElementById("notificationIcon"),
-        notificationTitle: document.getElementById("notificationTitle"),
-        notificationMessage: document.getElementById("notificationMessage"),
-      };
-
-      initializeMaterials();
-
-      async function initializeMaterials() {
-        wireUploadEvents();
-        wireFilters();
-        switchRole(currentRole, { silent: true });
-        await loadMaterials();
+      // Populate student dropdown
+      function populateStudentDropdown() {
+        const select = document.getElementById("studentSelect");
+        students.forEach((student) => {
+          const option = document.createElement("option");
+          option.value = student.id;
+          option.textContent = `${student.id} - ${student.name}`;
+          select.appendChild(option);
+        });
       }
 
-      async function loadMaterials() {
-        showEmptyState("Cargando materiales...", true);
-        try {
-          const response = await fetch(`${API_BASE_URL}?action=list`, {
-            headers: { Accept: "application/json" },
-          });
-          if (!response.ok) {
-            throw new Error(`Error ${response.status}`);
-          }
-          const payload = await response.json();
-          if (payload?.success === false) {
-            throw new Error(payload.message || "Servicio de materiales no disponible");
-          }
-          const materials = Array.isArray(payload?.materials)
-            ? payload.materials
-            : Array.isArray(payload?.items)
-            ? payload.items
-            : Array.isArray(payload)
-            ? payload
-            : [];
-          materialsData = materials.map(normalizeMaterial);
-          if (!materialsData.length) {
-            showEmptyState("A�n no hay materiales disponibles.");
+      // Handle student selection
+      document
+        .getElementById("studentSelect")
+        .addEventListener("change", function () {
+          const selectedId = this.value;
+          const student = students.find((s) => s.id === selectedId);
+
+          if (student) {
+            document.getElementById("studentId").value = student.id;
+            document.getElementById("studentName").value = student.name;
+            document.getElementById("studentEmail").value = student.email;
+
+            // Load saved grades for this student
+            loadStudentGrades(selectedId);
           } else {
-            hideEmptyState();
-          }
-          renderAll();
-        } catch (error) {
-          console.error("Error loading materials", error);
-          showEmptyState("No se pudieron cargar los materiales.");
-          showNotification(
-            "error",
-            "Error al cargar",
-            error.message || "Intenta nuevamente m�s tarde"
-          );
-        }
-      }
-
-      function normalizeMaterial(material) {
-        if (!material || typeof material !== "object") return {};
-        return {
-          id:
-            material.id ??
-            material._id ??
-            (typeof crypto !== "undefined" && crypto.randomUUID
-              ? crypto.randomUUID()
-              : `tmp-${Date.now()}-${Math.random().toString(16).slice(2)}`),
-          title: material.title ?? material.name ?? "Material sin t�tulo",
-          description: material.description ?? material.summary ?? "",
-          category: (material.category ?? material.type ?? "otros")
-            .toString()
-            .toLowerCase(),
-          createdAt:
-            material.createdAt ?? material.created_at ?? material.date ?? null,
-          updatedAt: material.updatedAt ?? material.updated_at ?? null,
-          downloads: Number(material.downloads ?? material.totalDownloads ?? 0),
-          extension: (material.extension ?? material.fileExtension ?? "")
-            .toString()
-            .toLowerCase(),
-          mimeType: material.mimeType ?? material.contentType ?? "",
-          downloadUrl: material.downloadUrl ?? material.url ?? null,
-          size: Number(material.size ?? 0),
-        };
-      }
-
-      function wireUploadEvents() {
-        elements.fileInput?.addEventListener("change", (event) => {
-          selectedFiles = Array.from(event.target.files || []);
-          if (selectedFiles.length) {
-            elements.uploadForm.classList.remove("hidden");
-            elements.uploadArea.style.display = "none";
+            document.getElementById("studentId").value = "";
+            document.getElementById("studentName").value = "";
+            document.getElementById("studentEmail").value = "";
+            clearAllGrades();
           }
         });
 
-        if (!elements.uploadArea) return;
+      // Save and load grades functionality
+      function saveStudentGrades(studentId) {
+        if (!studentId) return;
 
-        ["dragover", "dragenter"].forEach((evt) => {
-          elements.uploadArea.addEventListener(evt, (event) => {
-            event.preventDefault();
-            elements.uploadArea.classList.add("dragover");
+        const grades = {};
+        document.querySelectorAll(".grade-input").forEach((input, index) => {
+          grades[`regular_${index}`] = input.value;
+        });
+        document
+          .querySelectorAll(".project-grade-input")
+          .forEach((input, index) => {
+            grades[`project_${index}`] = input.value;
           });
-        });
 
-        ["dragleave", "dragend"].forEach((evt) => {
-          elements.uploadArea.addEventListener(evt, (event) => {
-            event.preventDefault();
-            elements.uploadArea.classList.remove("dragover");
+        localStorage.setItem(`grades_${studentId}`, JSON.stringify(grades));
+      }
+
+      function loadStudentGrades(studentId) {
+        const savedGrades = localStorage.getItem(`grades_${studentId}`);
+        if (savedGrades) {
+          const grades = JSON.parse(savedGrades);
+          document.querySelectorAll(".grade-input").forEach((input, index) => {
+            input.value = grades[`regular_${index}`] || "";
           });
-        });
-
-        elements.uploadArea.addEventListener("drop", (event) => {
-          event.preventDefault();
-          elements.uploadArea.classList.remove("dragover");
-          selectedFiles = Array.from(event.dataTransfer?.files || []);
-          if (selectedFiles.length) {
-            elements.uploadForm.classList.remove("hidden");
-            elements.uploadArea.style.display = "none";
-          }
-        });
-
-        elements.materialForm?.addEventListener("submit", handleMaterialSubmit);
-      }
-
-      function wireFilters() {
-        elements.searchInput?.addEventListener("input", (event) => {
-          searchTerm = event.target.value.trim().toLowerCase();
-          renderMaterials();
-        });
-
-        elements.materialsGrid?.addEventListener("click", (event) => {
-          const actionButton = event.target.closest("[data-action]");
-          if (!actionButton) return;
-          const materialId = actionButton.dataset.id;
-          if (!materialId) return;
-          const action = actionButton.dataset.action;
-          if (action === "download") {
-            downloadMaterial(materialId);
-          } else if (action === "edit") {
-            editMaterial(materialId);
-          } else if (action === "delete") {
-            deleteMaterial(materialId);
-          }
-        });
-      }
-
-      function renderAll() {
-        renderCategoryTabs();
-        renderMaterials();
-        renderStats();
-      }
-
-      function renderCategoryTabs() {
-        if (!elements.categoryTabs) return;
-        const categories = Array.from(
-          new Set(materialsData.map((m) => m.category))
-        ).filter(Boolean);
-        const allCategories = [
-          { key: "all", label: "Todos" },
-          ...categories.map((key) => ({
-            key,
-            label: formatCategoryLabel(key),
-          })),
-        ];
-
-        if (!allCategories.some((cat) => cat.key === filteredCategory)) {
-          filteredCategory = "all";
-        }
-
-        elements.categoryTabs.innerHTML = allCategories
-          .map(
-            (category) => `
-              <div class="category-tab${
-                filteredCategory === category.key ? " active" : ""
-              }" data-category="${category.key}">
-                ${category.label}
-              </div>
-            `
-          )
-          .join("");
-
-        const existingOptions = new Set(
-          Array.from(elements.categorySelect?.options || []).map(
-            (opt) => opt.value
-          )
-        );
-        categories.forEach((key) => {
-          if (elements.categorySelect && !existingOptions.has(key)) {
-            const option = document.createElement("option");
-            option.value = key;
-            option.textContent = formatCategoryLabel(key);
-            elements.categorySelect.appendChild(option);
-          }
-        });
-
-        elements.categoryTabs
-          .querySelectorAll(".category-tab")
-          .forEach((tab) => {
-            tab.addEventListener("click", () => {
-              filteredCategory = tab.dataset.category || "all";
-              renderMaterials();
+          document
+            .querySelectorAll(".project-grade-input")
+            .forEach((input, index) => {
+              input.value = grades[`project_${index}`] || "";
             });
-          });
+          calculateProjectGrades();
+          calculateGrades();
+        } else {
+          clearAllGrades();
+        }
       }
 
-      function renderMaterials() {
-        if (!elements.materialsGrid) return;
-        const matches = materialsData
-          .filter((material) => {
-            const inCategory =
-              filteredCategory === "all" ||
-              material.category === filteredCategory;
-            if (!searchTerm) return inCategory;
-            return (
-              inCategory &&
-              `${material.title} ${material.description}`
-                .toLowerCase()
-                .includes(searchTerm)
-            );
-          })
-          .sort(
-            (a, b) =>
-              new Date(b.updatedAt || b.createdAt || 0) -
-              new Date(a.updatedAt || a.createdAt || 0)
-          );
+      function clearAllGrades() {
+        document.querySelectorAll(".grade-input").forEach((input) => {
+          input.value = "";
+        });
+        document.querySelectorAll(".project-grade-input").forEach((input) => {
+          input.value = "";
+        });
+        calculateProjectGrades();
+        calculateGrades();
+      }
 
-        if (!matches.length) {
-          elements.materialsGrid.innerHTML = "";
-          showEmptyState("No se encontraron materiales para esta vista.");
-          applyRoleVisibility();
-          return;
+      function calculateProjectGrades() {
+        // Calculate Phase 1 (Diagnóstico)
+        let phase1Total = 0;
+        const phase1Inputs = document.querySelectorAll(
+          "#project .project-grade-input"
+        );
+        for (let i = 0; i < 3; i++) {
+          const grade = parseFloat(phase1Inputs[i].value) || 0;
+          const weight = parseFloat(phase1Inputs[i].dataset.weight);
+          phase1Total += (grade * weight) / 4; // 4% total weight for phase 1
         }
 
-        hideEmptyState();
-        const formatter = new Intl.NumberFormat("es-MX");
-        elements.materialsGrid.innerHTML = matches
-          .map((material) => {
-            const fileInfo = getFileInfo(material);
-            const downloadsLabel = formatDownloads(
-              material.downloads,
-              formatter
-            );
-            const createdLabel = formatDate(
-              material.updatedAt || material.createdAt
-            );
-            const description = material.description
-              ? escapeHtml(material.description)
-              : "Sin descripci�n disponible.";
+        // Calculate Phase 2 (Gap Analysis)
+        let phase2Total = 0;
+        for (let i = 3; i < 6; i++) {
+          const grade = parseFloat(phase1Inputs[i].value) || 0;
+          const weight = parseFloat(phase1Inputs[i].dataset.weight);
+          phase2Total += (grade * weight) / 6; // 6% total weight for phase 2
+        }
 
-            return `
-              <div class="material-card" data-category="${escapeAttr(
-                material.category
-              )}">
-                <div class="material-header">
-                  <div class="file-icon ${fileInfo.className}">${
-              fileInfo.label
-            }</div>
-                  <div>
-                    <div class="material-title">${escapeHtml(
-                      material.title
-                    )}</div>
-                    <div class="material-meta">
-                      <span>${createdLabel}</span>
-                      <span>${downloadsLabel}</span>
-                    </div>
-                  </div>
+        // Calculate Phase 3-4 (Roadmap)
+        let phase34Total = 0;
+        for (let i = 6; i < 10; i++) {
+          const grade = parseFloat(phase1Inputs[i].value) || 0;
+          const weight = parseFloat(phase1Inputs[i].dataset.weight);
+          phase34Total += (grade * weight) / 6; // 6% total weight for phases 3-4
+        }
+
+        // Calculate Presentation
+        let presentationTotal = 0;
+        for (let i = 10; i < 15; i++) {
+          const grade = parseFloat(phase1Inputs[i].value) || 0;
+          const weight = parseFloat(phase1Inputs[i].dataset.weight);
+          presentationTotal += (grade * weight) / 8; // 8% total weight for presentation
+        }
+
+        // Update project displays
+        document.getElementById("phase1Grade").textContent = (
+          (phase1Total * 4) /
+          4
+        ).toFixed(1);
+        document.getElementById("phase2Grade").textContent = (
+          (phase2Total * 6) /
+          6
+        ).toFixed(1);
+        document.getElementById("phase34Grade").textContent = (
+          (phase34Total * 6) /
+          6
+        ).toFixed(1);
+        document.getElementById("presentationGrade").textContent = (
+          (presentationTotal * 8) /
+          8
+        ).toFixed(1);
+
+        const projectTotal =
+          phase1Total + phase2Total + phase34Total + presentationTotal;
+        document.getElementById("projectTotalGrade").textContent =
+          projectTotal.toFixed(1);
+
+        return projectTotal;
+      }
+
+      // Auto-save grades when changed
+      document.querySelectorAll(".grade-input").forEach((input) => {
+        input.addEventListener("input", () => {
+          calculateGrades();
+          const studentId = document.getElementById("studentId").value;
+          if (studentId) {
+            saveStudentGrades(studentId);
+          }
+        });
+      });
+
+      // Auto-save project grades when changed
+      document.querySelectorAll(".project-grade-input").forEach((input) => {
+        input.addEventListener("input", () => {
+          calculateProjectGrades();
+          calculateGrades();
+          const studentId = document.getElementById("studentId").value;
+          if (studentId) {
+            saveStudentGrades(studentId);
+          }
+        });
+      });
+
+      // Tab functionality
+      document.querySelectorAll(".tab-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          const unit = button.dataset.unit;
+
+          // Update tab buttons
+          document.querySelectorAll(".tab-button").forEach((btn) => {
+            btn.classList.remove(
+              "bg-blue-50",
+              "text-blue-600",
+              "border-b-2",
+              "border-blue-600"
+            );
+            btn.classList.add("text-gray-600");
+          });
+          button.classList.add(
+            "bg-blue-50",
+            "text-blue-600",
+            "border-b-2",
+            "border-blue-600"
+          );
+          button.classList.remove("text-gray-600");
+
+          // Update content
+          document.querySelectorAll(".unit-content").forEach((content) => {
+            content.classList.add("hidden");
+          });
+          if (unit === "project") {
+            document.getElementById("project").classList.remove("hidden");
+          } else {
+            document.getElementById(`unit${unit}`).classList.remove("hidden");
+          }
+        });
+      });
+
+      // Auto-calculate on input change
+      document.querySelectorAll(".grade-input").forEach((input) => {
+        input.addEventListener("input", calculateGrades);
+      });
+
+      function calculateGrades() {
+        let totalWeightedGrade = 0;
+        let unit1Total = 0;
+        let unit2Total = 0;
+        let unit3Total = 0;
+
+        // Calculate for each unit
+        document.querySelectorAll("#unit1 .grade-input").forEach((input) => {
+          const grade = parseFloat(input.value) || 0;
+          const weight = parseFloat(input.dataset.weight);
+          unit1Total += (grade * weight) / 30; // Unit 1 is 30% of total
+        });
+
+        document.querySelectorAll("#unit2 .grade-input").forEach((input) => {
+          const grade = parseFloat(input.value) || 0;
+          const weight = parseFloat(input.dataset.weight);
+          unit2Total += (grade * weight) / 30; // Unit 2 is 30% of total
+        });
+
+        document.querySelectorAll("#unit3 .grade-input").forEach((input) => {
+          const grade = parseFloat(input.value) || 0;
+          const weight = parseFloat(input.dataset.weight);
+          unit3Total += (grade * weight) / 40; // Unit 3 is 40% of total
+        });
+
+        totalWeightedGrade = unit1Total + unit2Total + unit3Total;
+
+        // Update displays
+        document.getElementById("finalGrade").textContent =
+          totalWeightedGrade.toFixed(1);
+        document.getElementById("unit1Grade").textContent = (
+          (unit1Total * 30) /
+          30
+        ).toFixed(1);
+        document.getElementById("unit2Grade").textContent = (
+          (unit2Total * 30) /
+          30
+        ).toFixed(1);
+        document.getElementById("unit3Grade").textContent = (
+          (unit3Total * 40) /
+          40
+        ).toFixed(1);
+
+        // Update progress bar
+        const progressPercent = Math.min((totalWeightedGrade / 5) * 100, 100);
+        document.getElementById(
+          "progressPercent"
+        ).textContent = `${progressPercent.toFixed(0)}%`;
+        document.getElementById(
+          "progressBar"
+        ).style.width = `${progressPercent}%`;
+
+        // Update progress bar color based on grade
+        const progressBar = document.getElementById("progressBar");
+        progressBar.className = "h-3 rounded-full progress-bar";
+        if (totalWeightedGrade >= 4.5) {
+          progressBar.classList.add(
+            "bg-gradient-to-r",
+            "from-green-500",
+            "to-green-600"
+          );
+        } else if (totalWeightedGrade >= 3.5) {
+          progressBar.classList.add(
+            "bg-gradient-to-r",
+            "from-yellow-500",
+            "to-yellow-600"
+          );
+        } else if (totalWeightedGrade >= 3.0) {
+          progressBar.classList.add(
+            "bg-gradient-to-r",
+            "from-orange-500",
+            "to-orange-600"
+          );
+        } else {
+          progressBar.classList.add(
+            "bg-gradient-to-r",
+            "from-red-500",
+            "to-red-600"
+          );
+        }
+      }
+
+      // Calculate button
+      document.getElementById("calculateBtn").addEventListener("click", () => {
+        calculateGrades();
+        showSummary();
+      });
+
+      // Clear button
+      document.getElementById("clearBtn").addEventListener("click", () => {
+        const studentId = document.getElementById("studentId").value;
+        if (
+          studentId &&
+          confirm(
+            "¿Está seguro de que desea limpiar todas las calificaciones de este estudiante?"
+          )
+        ) {
+          // Clear grades from localStorage
+          localStorage.removeItem(`grades_${studentId}`);
+          clearAllGrades();
+          document.getElementById("resultsSummary").classList.add("hidden");
+        } else if (!studentId) {
+          // If no student selected, just clear the form
+          document.getElementById("studentSelect").value = "";
+          document.getElementById("studentName").value = "";
+          document.getElementById("studentId").value = "";
+          document.getElementById("studentEmail").value = "";
+          clearAllGrades();
+          document.getElementById("resultsSummary").classList.add("hidden");
+        }
+      });
+
+      // Export button
+      document.getElementById("exportBtn").addEventListener("click", () => {
+        const studentName =
+          document.getElementById("studentName").value || "Estudiante";
+        const studentId = document.getElementById("studentId").value || "N/A";
+        const finalGrade = document.getElementById("finalGrade").textContent;
+
+        let reportContent = `REPORTE DE CALIFICACIONES - CALIDAD DE SOFTWARE\n`;
+        reportContent += `==============================================\n\n`;
+        reportContent += `Estudiante: ${studentName}\n`;
+        reportContent += `Código: ${studentId}\n`;
+        reportContent += `Fecha: ${new Date().toLocaleDateString()}\n\n`;
+        reportContent += `CALIFICACIÓN FINAL: ${finalGrade}/5.0\n\n`;
+
+        reportContent += `DETALLE POR UNIDADES:\n`;
+        reportContent += `- Unidad I (30%): ${
+          document.getElementById("unit1Grade").textContent
+        }/5.0\n`;
+        reportContent += `- Unidad II (30%): ${
+          document.getElementById("unit2Grade").textContent
+        }/5.0\n`;
+        reportContent += `- Unidad III (40%): ${
+          document.getElementById("unit3Grade").textContent
+        }/5.0\n\n`;
+
+        const blob = new Blob([reportContent], { type: "text/plain" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Reporte_${studentName.replace(/\s+/g, "_")}_${
+          new Date().toISOString().split("T")[0]
+        }.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      function showSummary() {
+        const finalGrade = parseFloat(
+          document.getElementById("finalGrade").textContent
+        );
+        const summaryDiv = document.getElementById("summaryContent");
+
+        let status = "";
+        let statusColor = "";
+
+        if (finalGrade >= 3.0) {
+          status = "APROBADO";
+          statusColor = "text-green-600";
+        } else {
+          status = "REPROBADO";
+          statusColor = "text-red-600";
+        }
+
+        summaryDiv.innerHTML = `
+                <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                    <span class="font-medium">Estado del Curso:</span>
+                    <span class="font-bold ${statusColor}">${status}</span>
                 </div>
-                <div class="material-description">${description}</div>
-                <div class="material-actions">
-                  <button class="action-btn download-btn" data-action="download" data-id="${
-                    material.id
-                  }">?? Descargar</button>
-                  <button class="action-btn edit-btn teacher-only" data-action="edit" data-id="${
-                    material.id
-                  }">?? Editar</button>
-                  <button class="action-btn delete-btn teacher-only" data-action="delete" data-id="${
-                    material.id
-                  }">??? Eliminar</button>
+                <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                    <span class="font-medium">Calificación Final:</span>
+                    <span class="font-bold text-blue-600">${finalGrade.toFixed(
+                      1
+                    )}/5.0</span>
                 </div>
-              </div>
+                <div class="text-sm text-gray-600 mt-4">
+                    <p><strong>Nota:</strong> La calificación mínima para aprobar es 3.0/5.0</p>
+                </div>
             `;
-          })
-          .join("");
 
-        applyRoleVisibility();
+        document.getElementById("resultsSummary").classList.remove("hidden");
       }
 
-      function renderStats() {
-        const formatter = new Intl.NumberFormat("es-MX");
-        const total = materialsData.length;
-        const downloads = materialsData.reduce(
-          (sum, material) => sum + (Number(material.downloads) || 0),
-          0
-        );
-        const categories = new Set(
-          materialsData.map((material) => material.category)
-        ).size;
-        const latestUpdate = materialsData
-          .map((material) => material.updatedAt || material.createdAt)
-          .filter(Boolean)
-          .map((value) => new Date(value))
-          .filter((date) => !Number.isNaN(date.getTime()))
-          .sort((a, b) => b - a)[0];
-
-        if (elements.statTotal)
-          elements.statTotal.textContent = formatter.format(total);
-        if (elements.statDownloads)
-          elements.statDownloads.textContent = formatter.format(downloads);
-        if (elements.statCategories)
-          elements.statCategories.textContent = formatter.format(categories);
-        if (elements.statUpdated) {
-          elements.statUpdated.textContent = latestUpdate
-            ? new Intl.DateTimeFormat("es-MX", {
-                dateStyle: "medium",
-                timeStyle: "short",
-              }).format(latestUpdate)
-            : "Sin registros";
-        }
-      }
-
-      async function handleMaterialSubmit(event) {
-        event.preventDefault();
-        if (!selectedFiles.length) {
-          showNotification(
-            "error",
-            "Selecciona un archivo",
-            "Debes elegir al menos un archivo para subir"
-          );
-          return;
-        }
-
-        const title = document.getElementById("materialTitle").value.trim();
-        const category = elements.categorySelect?.value || "otros";
-        const description = document
-          .getElementById("materialDescription")
-          .value.trim();
-
-        if (!title) {
-          showNotification(
-            "error",
-            "T�tulo requerido",
-            "Ingresa el nombre del material antes de subirlo"
-          );
-          return;
-        }
-
-        const formData = new FormData();
-        selectedFiles.forEach((file) => formData.append("files", file));
-        formData.append("title", title);
-        formData.append("category", category);
-        formData.append("description", description);
-        formData.append("action", "upload");
-
-        try {
-          showNotification(
-            "info",
-            "Subiendo material",
-            "Estamos procesando tu archivo"
-          );
-          const createdMaterial = await uploadMaterial(formData);
-          if (createdMaterial) {
-            materialsData = [
-              normalizeMaterial(createdMaterial),
-              ...materialsData,
-            ];
-            renderAll();
-            resetUploadWorkflow();
-            showNotification(
-              "success",
-              "Material subido",
-              "El material se carg� correctamente"
-            );
-          }
-        } catch (error) {
-          console.error("Upload error", error);
-          showNotification(
-            "error",
-            "No se pudo subir",
-            error.message || "Intenta nuevamente"
-          );
-        }
-      }
-
-      function uploadMaterial(formData) {
-        return new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open("POST", API_BASE_URL);
-
-          xhr.upload.addEventListener("progress", (event) => {
-            if (!event.lengthComputable) return;
-            const percentage = Math.round((event.loaded / event.total) * 100);
-            elements.progressBar?.classList.remove("hidden");
-            if (elements.progressFill) {
-              elements.progressFill.style.width = `${percentage}%`;
-            }
-          });
-
-          xhr.onload = () => {
-            elements.progressBar?.classList.add("hidden");
-            if (xhr.status >= 200 && xhr.status < 300) {
-              try {
-                const response = xhr.responseText
-                  ? JSON.parse(xhr.responseText)
-                  : {};
-                const response = xhr.responseText
-                  ? JSON.parse(xhr.responseText)
-                  : {};
-                if (response?.success === false) {
-                  reject(new Error(response.message || "No se pudo guardar"));
-                  return;
-                }
-                resolve(response.material ?? response);
-              } catch (parseError) {
-                resolve({});
-              }
-            } else {
-              reject(new Error(xhr.responseText || `Error ${xhr.status}`));
-            }
-          };
-
-          xhr.onerror = () => {
-            elements.progressBar?.classList.add("hidden");
-            reject(new Error("Error de red durante la carga"));
-          };
-
-          xhr.send(formData);
-        });
-      }
-
-      function resetUploadWorkflow() {
-        selectedFiles = [];
-        if (elements.fileInput) elements.fileInput.value = "";
-        if (elements.materialForm) elements.materialForm.reset();
-        if (elements.progressFill) elements.progressFill.style.width = "0%";
-        if (elements.uploadForm) elements.uploadForm.classList.add("hidden");
-        if (elements.uploadArea) {
-          elements.uploadArea.style.display = "";
-          elements.uploadArea.classList.remove("dragover");
-        }
-      }
-
-      function cancelUpload() {
-        resetUploadWorkflow();
-      }
-
-      async function downloadMaterial(id) {
-        const material = materialsData.find(
-          (item) => String(item.id) === String(id)
-        );
-        if (!material) {
-          showNotification(
-            "error",
-            "Material no encontrado",
-            "El recurso seleccionado no est� disponible"
-          );
-          return;
-        }
-        try {
-          const response = await fetch(
-            `${API_BASE_URL}?action=download&id=${encodeURIComponent(material.id)}`,
-            {
-              headers: { Accept: "application/json" },
-              cache: "no-store",
-            }
-          );
-          if (!response.ok) {
-            throw new Error(`Error ${response.status}`);
-          }
-          const payload = await response.json();
-          if (payload?.success === false) {
-            throw new Error(payload.message || "Servicio de materiales no disponible");
-          }
-          const targetUrl =
-            payload.downloadUrl ||
-            material.downloadUrl ||
-            `https://drive.google.com/file/d/${encodeURIComponent(material.id)}/view?usp=sharing`;
-          if (payload.downloads !== undefined) {
-            material.downloads = Number(payload.downloads) || 0;
-          } else if (!Number.isNaN(Number(material.downloads))) {
-            material.downloads = Number(material.downloads || 0) + 1;
-          }
-          renderStats();
-          window.open(targetUrl, "_blank", "noopener");
-          showNotification("success", "Descarga iniciada", material.title);
-        } catch (error) {
-          showNotification(
-            "error",
-            "No se pudo descargar",
-            error.message || "Intenta nuevamente"
-          );
-        }
-      }
-
-      async function editMaterial(id) {
-        if (currentRole !== "teacher") return;
-        const material = materialsData.find(
-          (item) => String(item.id) === String(id)
-        );
-        if (!material) return;
-        const newTitle = prompt("Editar t�tulo", material.title);
-        if (newTitle === null) return;
-        const newDescription = prompt(
-          "Editar descripci�n",
-          material.description || ""
-        );
-        if (newDescription === null) return;
-        try {
-          const response = await fetch(
-            `${API_BASE_URL}?action=update&id=${encodeURIComponent(material.id)}`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                title: newTitle.trim(),
-                description: newDescription.trim(),
-              }),
-            }
-          );
-          if (!response.ok) {
-            throw new Error(`Error ${response.status}`);
-          }
-          const payload = await response.json();
-          if (payload?.success === false) {
-            throw new Error(payload.message || "No se pudo actualizar");
-          }
-          if (payload?.success === false) {
-            throw new Error(payload.message || "Servicio de materiales no disponible");
-          }
-          const updated = normalizeMaterial(payload.material ?? payload);
-          materialsData = materialsData.map((item) =>
-            String(item.id) === String(updated.id) ? updated : item
-          );
-          renderAll();
-          showNotification(
-            "success",
-            "Material actualizado",
-            "Los cambios se guardaron correctamente"
-          );
-        } catch (error) {
-          console.error("Edit error", error);
-          showNotification(
-            "error",
-            "No se pudo actualizar",
-            error.message || "Revisa e intenta de nuevo"
-          );
-        }
-      }
-
-      async function deleteMaterial(id) {
-        if (currentRole !== "teacher") return;
-        const material = materialsData.find(
-          (item) => String(item.id) === String(id)
-        );
-        if (!material) return;
-        const confirmed = confirm(
-          `�Est�s seguro de eliminar "${material.title}"?`
-        );
-        if (!confirmed) return;
-        try {
-          const response = await fetch(
-            `${API_BASE_URL}?action=delete&id=${encodeURIComponent(material.id)}`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({}),
-            }
-          );
-          const raw = await response.text();
-          let payload = {};
-          if (raw) {
-            try {
-              payload = JSON.parse(raw);
-            } catch (parseError) {
-              payload = {};
-            }
-          }
-          if (payload?.success === false) {
-            throw new Error(payload.message || "No se pudo eliminar");
-          }
-            (item) => String(item.id) !== String(material.id)
-          );
-          renderAll();
-          showNotification(
-            "success",
-            "Material eliminado",
-            "El recurso se elimin� correctamente"
-          );
-        } catch (error) {
-          console.error("Delete error", error);
-          showNotification(
-            "error",
-            "No se pudo eliminar",
-            error.message || "Intenta nuevamente"
-          );
-        }
-      }
-
-      function switchRole(role, options = {}) {
-        if (role !== "teacher" && role !== "student") return;
-        currentRole = role;
-        elements.teacherBtn?.classList.toggle("active", role === "teacher");
-        elements.studentBtn?.classList.toggle("active", role === "student");
-        elements.teacherView?.classList.toggle("hidden", role !== "teacher");
-        elements.studentView?.classList.toggle("hidden", role !== "student");
-        applyRoleVisibility();
-        try {
-          localStorage.setItem(
-            "qs_role",
-            role === "teacher" ? "docente" : "estudiante"
-          );
-        } catch (error) {}
-        if (!options.silent) {
-          showNotification(
-            "success",
-            "Vista cambiada",
-            `Ahora ves como ${role === "teacher" ? "Profesor" : "Estudiante"}`
-          );
-        }
-      }
-
-      function applyRoleVisibility() {
-        document.querySelectorAll(".teacher-only").forEach((element) => {
-          element.classList.toggle("hidden", currentRole !== "teacher");
-        });
-      }
-
-      function showEmptyState(message, loading = false) {
-        if (!elements.emptyState || !elements.emptyMessage) return;
-        elements.emptyMessage.textContent = message;
-        elements.emptyState.classList.remove("hidden");
-        elements.emptyState.classList.toggle("loading", loading);
-      }
-
-      function hideEmptyState() {
-        elements.emptyState?.classList.add("hidden");
-      }
-
-      function showNotification(type, title, message) {
-        if (!elements.notification) return;
-        const icons = { success: "?", error: "??", info: "??" };
-        elements.notificationIcon.textContent = icons[type] || "??";
-        elements.notificationTitle.textContent = title;
-        elements.notificationMessage.textContent = message;
-        elements.notification.classList.toggle("error", type === "error");
-        elements.notification.classList.add("show");
-        setTimeout(() => {
-          elements.notification?.classList.remove("show");
-        }, 3000);
-      }
-
-      function formatCategoryLabel(key = "otros") {
-        return key
-          .toString()
-          .replace(/[_-]+/g, " ")
-          .replace(/\b\w/g, (char) => char.toUpperCase());
-      }
-
-      function getFileInfo(material) {
-        const extension = (material.extension || "").toLowerCase();
-        const map = {
-          pdf: "pdf",
-          doc: "doc",
-          docx: "doc",
-          xls: "xls",
-          xlsx: "xls",
-          ppt: "ppt",
-          pptx: "ppt",
-        };
-        const className = map[extension] || "default";
-        const label = extension ? extension.toUpperCase() : "FILE";
-        return { className, label };
-      }
-
-      function formatDownloads(value, formatter) {
-        const count = Number(value) || 0;
-        const formatted = formatter.format(count);
-        return `${formatted} descarga${count === 1 ? "" : "s"}`;
-      }
-
-      function formatDate(value) {
-        if (!value) return "Sin fecha";
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return value;
-        return new Intl.DateTimeFormat("es-MX", { dateStyle: "medium" }).format(
-          date
-        );
-      }
-
-      function escapeHtml(value) {
-        return value.replace(
-          /[&<>"']/g,
-          (char) =>
-            ({
-              "&": "&amp;",
-              "<": "&lt;",
-              ">": "&gt;",
-              '"': "&quot;",
-              "'": "&#39;",
-            }[char])
-        );
-      }
-
-      function escapeAttr(value) {
-        return escapeHtml(value).replace(/\s+/g, "-");
-      }
-
-      window.switchRole = switchRole;
-      window.cancelUpload = cancelUpload;
+      // Initialize
+      populateStudentDropdown();
+      calculateProjectGrades();
+      calculateGrades();
     </script>
     <script type="module" src="./js/role-gate.js"></script>
-
+    <script>
+      (function () {
+        function c() {
+          var b = a.contentDocument || a.contentWindow.document;
+          if (b) {
+            var d = b.createElement("script");
+            d.innerHTML =
+              "window.__CF$cv$params={r:'97f4850af46b453c',t:'MTc1NzkwMTUxMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
+            b.getElementsByTagName("head")[0].appendChild(d);
+          }
+        }
+        if (document.body) {
+          var a = document.createElement("iframe");
+          a.height = 1;
+          a.width = 1;
+          a.style.position = "absolute";
+          a.style.top = 0;
+          a.style.left = 0;
+          a.style.border = "none";
+          a.style.visibility = "hidden";
+          document.body.appendChild(a);
+          if ("loading" !== document.readyState) c();
+          else if (window.addEventListener)
+            document.addEventListener("DOMContentLoaded", c);
+          else {
+            var e = document.onreadystatechange || function () {};
+            document.onreadystatechange = function (b) {
+              e(b);
+              "loading" !== document.readyState &&
+                ((document.onreadystatechange = e), c());
+            };
+          }
+        }
+      })();
+    </script>
+    <script>
+      // Gating por rol local: estudiante solo lectura
+      document.addEventListener("DOMContentLoaded", function () {
+        try {
+          var rol = (
+            localStorage.getItem("qs_role") || "estudiante"
+          ).toLowerCase();
+          if (rol !== "docente") {
+            document
+              .querySelectorAll("input, select, textarea, button")
+              .forEach(function (el) {
+                var id = el.id || "";
+                if (
+                  id === "calculateBtn" ||
+                  id === "clearBtn" ||
+                  id === "exportBtn"
+                ) {
+                  // permitir cálculo/limpieza/export de su propia vista
+                } else if (el.tagName === "BUTTON") {
+                  el.disabled = true;
+                } else if (
+                  el.tagName === "INPUT" ||
+                  el.tagName === "SELECT" ||
+                  el.tagName === "TEXTAREA"
+                ) {
+                  el.readOnly = true;
+                  el.disabled = true;
+                }
+              });
+            document
+              .querySelectorAll(".teacher-only,.docente-only")
+              .forEach(function (el) {
+                el.style.display = "none";
+              });
+          }
+        } catch (e) {}
+      });
+    </script>
     <script defer src="js/back-home.js"></script>
     <script defer src="js/nav-inject.js"></script>
   </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
