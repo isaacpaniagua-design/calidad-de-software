@@ -1,1820 +1,101 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sistema de Gestión de Calificaciones - Calidad de Software</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Calificaciones · Plataforma QS</title>
+
+    <!-- Estilos acotados a esta vista. No toca tu layout global. -->
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
-      body {
-        font-family: "Inter", sans-serif;
+      :root {
+        --qs-primary: #667eea;
       }
-      .gradient-bg {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      #mi-progreso {
+        max-width: 1100px;
+        margin: 80px auto 40px;
+        padding: 0 16px;
       }
-      .card-shadow {
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      #mi-progreso .titulo-seccion {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0 0 12px;
       }
-      .progress-bar {
-        transition: width 0.3s ease-in-out;
+      #mi-progreso .mi-resumen {
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.03);
+      }
+      #mi-progreso .mi-kpis {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      #mi-progreso .mi-kpi {
+        min-width: 140px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.05);
+        text-align: center;
+      }
+      #mi-progreso .mi-kpi span {
+        display: block;
+        font-weight: 700;
+        font-size: 1.25rem;
+      }
+      #mi-progreso .mi-kpi small {
+        display: block;
+        opacity: 0.75;
+      }
+      #mi-progreso .mi-bar {
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+      #mi-progreso .mi-bar-fill {
+        height: 100%;
+        background: var(--qs-primary);
+        width: 0%;
+        transition: width 0.4s ease;
+      }
+      #mi-progreso .tabla-wrapper {
+        margin-top: 14px;
+        overflow-x: auto;
+      }
+      #mi-progreso table {
+        width: 100%;
+        border-collapse: collapse;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(4px);
+      }
+      #mi-progreso thead th {
+        text-align: left;
+        font-weight: 700;
+        font-size: 0.95rem;
+        padding: 10px;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        white-space: nowrap;
+      }
+      #mi-progreso tbody td {
+        padding: 10px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        font-size: 0.95rem;
+        vertical-align: top;
+      }
+      #mi-progreso .mi-msg {
+        margin-top: 8px;
+        opacity: 0.85;
+        font-size: 0.9rem;
+      }
+      #mi-progreso .muted {
+        opacity: 0.7;
       }
     </style>
   </head>
-  <body class="bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <div class="gradient-bg text-white py-8">
-      <div class="container mx-auto px-6">
-        <h1 class="text-3xl font-bold mb-2">
-          Sistema de Gestión de Calificaciones
-        </h1>
-        <p class="text-blue-100">Calidad de Software - Gestión por Unidades</p>
-      </div>
-    </div>
-
-    <div class="container mx-auto px-6 py-8">
-      <!-- Student Info -->
-      <div class="bg-white rounded-lg card-shadow p-6 mb-8">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2"
-              >Seleccionar Estudiante</label
-            >
-            <select
-              id="studentSelect"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="">-- Seleccione un estudiante --</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2"
-              >Nombre Completo</label
-            >
-            <input
-              type="text"
-              id="studentName"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
-              readonly
-              placeholder="Nombre del estudiante"
-            />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2"
-              >Correo Electrónico</label
-            >
-            <input
-              type="email"
-              id="studentEmail"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
-              readonly
-              placeholder="Correo del estudiante"
-            />
-          </div>
-        </div>
-        <div class="mt-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2"
-            >Código del Estudiante</label
-          >
-          <input
-            type="text"
-            id="studentId"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
-            readonly
-            placeholder="Código del estudiante"
-          />
-        </div>
-      </div>
-
-      <!-- Overall Progress -->
-      <div class="bg-white rounded-lg card-shadow p-6 mb-8">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4">
-          Progreso General del Curso
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div class="text-center">
-            <div class="text-3xl font-bold text-blue-600" id="finalGrade">
-              0.0
-            </div>
-            <div class="text-sm text-gray-600">Calificación Final</div>
-          </div>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-green-600" id="unit1Grade">
-              0.0
-            </div>
-            <div class="text-sm text-gray-600">Unidad I (30%)</div>
-          </div>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-yellow-600" id="unit2Grade">
-              0.0
-            </div>
-            <div class="text-sm text-gray-600">Unidad II (30%)</div>
-          </div>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-purple-600" id="unit3Grade">
-              0.0
-            </div>
-            <div class="text-sm text-gray-600">Unidad III (40%)</div>
-          </div>
-        </div>
-        <div class="mt-6">
-          <div class="flex justify-between text-sm text-gray-600 mb-2">
-            <span>Progreso del Curso</span>
-            <span id="progressPercent">0%</span>
-          </div>
-          <div class="w-full bg-gray-200 rounded-full h-3">
-            <div
-              class="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full progress-bar"
-              id="progressBar"
-              style="width: 0%"
-            ></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Units Tabs -->
-      <div class="bg-white rounded-lg card-shadow overflow-hidden">
-        <div class="flex border-b">
-          <button
-            class="tab-button flex-1 py-4 px-6 text-center font-medium transition-colors bg-blue-50 text-blue-600 border-b-2 border-blue-600"
-            data-unit="1"
-          >
-            Unidad I - Fundamentos (30%)
-          </button>
-          <button
-            class="tab-button flex-1 py-4 px-6 text-center font-medium transition-colors text-gray-600 hover:text-blue-600"
-            data-unit="2"
-          >
-            Unidad II - Modelos (30%)
-          </button>
-          <button
-            class="tab-button flex-1 py-4 px-6 text-center font-medium transition-colors text-gray-600 hover:text-blue-600"
-            data-unit="3"
-          >
-            Unidad III - Certificación (40%)
-          </button>
-          <button
-            class="tab-button flex-1 py-4 px-6 text-center font-medium transition-colors text-gray-600 hover:text-blue-600"
-            data-unit="project"
-          >
-            📑 Rúbrica Proyecto Final
-          </button>
-        </div>
-
-        <!-- Unit 1 Content -->
-        <div class="unit-content p-6" id="unit1">
-          <h3 class="text-xl font-semibold text-gray-800 mb-6">
-            I. Fundamentos de Calidad de Software
-          </h3>
-          <div class="space-y-4">
-            <div
-              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-gray-800">
-                  Foro: Ejemplo de Métricas
-                </h4>
-                <p class="text-sm text-gray-600">
-                  Peso en unidad: 5% | Peso global: 1.5%
-                </p>
-              </div>
-              <input
-                type="number"
-                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                min="0"
-                max="5"
-                step="0.1"
-                data-weight="1.5"
-                placeholder="0.0"
-              />
-            </div>
-            <div
-              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-gray-800">
-                  Taller de Complejidad Ciclomática
-                </h4>
-                <p class="text-sm text-gray-600">
-                  Peso en unidad: 5% | Peso global: 1.5%
-                </p>
-              </div>
-              <input
-                type="number"
-                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                min="0"
-                max="5"
-                step="0.1"
-                data-weight="1.5"
-                placeholder="0.0"
-              />
-            </div>
-            <div
-              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-gray-800">
-                  Plan de Pruebas (IEEE 829)
-                </h4>
-                <p class="text-sm text-gray-600">
-                  Peso en unidad: 20% | Peso global: 6%
-                </p>
-              </div>
-              <input
-                type="number"
-                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                min="0"
-                max="5"
-                step="0.1"
-                data-weight="6"
-                placeholder="0.0"
-              />
-            </div>
-            <div
-              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-gray-800">
-                  Simulación de Revisión Técnica
-                </h4>
-                <p class="text-sm text-gray-600">
-                  Peso en unidad: 20% | Peso global: 6%
-                </p>
-              </div>
-              <input
-                type="number"
-                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                min="0"
-                max="5"
-                step="0.1"
-                data-weight="6"
-                placeholder="0.0"
-              />
-            </div>
-            <div
-              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-gray-800">
-                  Diseño de Casos de Prueba
-                </h4>
-                <p class="text-sm text-gray-600">
-                  Peso en unidad: 10% | Peso global: 3%
-                </p>
-              </div>
-              <input
-                type="number"
-                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                min="0"
-                max="5"
-                step="0.1"
-                data-weight="3"
-                placeholder="0.0"
-              />
-            </div>
-            <div
-              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-gray-800">Foro de Seguridad</h4>
-                <p class="text-sm text-gray-600">
-                  Peso en unidad: 10% | Peso global: 3%
-                </p>
-              </div>
-              <input
-                type="number"
-                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                min="0"
-                max="5"
-                step="0.1"
-                data-weight="3"
-                placeholder="0.0"
-              />
-            </div>
-            <div
-              class="grade-item flex items-center justify-between p-4 bg-blue-50 rounded-lg border-2 border-blue-200"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-blue-800">Examen Unidad I</h4>
-                <p class="text-sm text-blue-600">
-                  Peso en unidad: 30% | Peso global: 9%
-                </p>
-              </div>
-              <input
-                type="number"
-                class="grade-input w-20 px-3 py-2 border border-blue-300 rounded-lg text-center"
-                min="0"
-                max="5"
-                step="0.1"
-                data-weight="9"
-                placeholder="0.0"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Unit 2 Content -->
-        <div class="unit-content p-6 hidden" id="unit2">
-          <h3 class="text-xl font-semibold text-gray-800 mb-6">
-            II. Modelos y Estándares de Calidad
-          </h3>
-          <div class="space-y-4">
-            <div
-              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-gray-800">
-                  Role-Playing de Auditoría
-                </h4>
-                <p class="text-sm text-gray-600">
-                  Peso en unidad: 10% | Peso global: 3%
-                </p>
-              </div>
-              <input
-                type="number"
-                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                min="0"
-                max="5"
-                step="0.1"
-                data-weight="3"
-                placeholder="0.0"
-              />
-            </div>
-            <div
-              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-gray-800">
-                  Informe Comparativo de Modelos
-                </h4>
-                <p class="text-sm text-gray-600">
-                  Peso en unidad: 40% | Peso global: 12%
-                </p>
-              </div>
-              <input
-                type="number"
-                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                min="0"
-                max="5"
-                step="0.1"
-                data-weight="12"
-                placeholder="0.0"
-              />
-            </div>
-            <div
-              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-gray-800">
-                  Mapa Conceptual Colaborativo
-                </h4>
-                <p class="text-sm text-gray-600">
-                  Peso en unidad: 10% | Peso global: 3%
-                </p>
-              </div>
-              <input
-                type="number"
-                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                min="0"
-                max="5"
-                step="0.1"
-                data-weight="3"
-                placeholder="0.0"
-              />
-            </div>
-            <div
-              class="grade-item flex items-center justify-between p-4 bg-yellow-50 rounded-lg border-2 border-yellow-200"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-yellow-800">Examen Unidad II</h4>
-                <p class="text-sm text-yellow-600">
-                  Peso en unidad: 40% | Peso global: 12%
-                </p>
-              </div>
-              <input
-                type="number"
-                class="grade-input w-20 px-3 py-2 border border-yellow-300 rounded-lg text-center"
-                min="0"
-                max="5"
-                step="0.1"
-                data-weight="12"
-                placeholder="0.0"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Unit 3 Content -->
-        <div class="unit-content p-6 hidden" id="unit3">
-          <h3 class="text-xl font-semibold text-gray-800 mb-6">
-            III. Plan de Certificación de Calidad
-          </h3>
-          <div class="space-y-4">
-            <div
-              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-gray-800">
-                  Proyecto Final – Fase 1 (Diagnóstico)
-                </h4>
-                <p class="text-sm text-gray-600">
-                  Peso en unidad: 10% | Peso global: 4%
-                </p>
-              </div>
-              <input
-                type="number"
-                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                min="0"
-                max="5"
-                step="0.1"
-                data-weight="4"
-                placeholder="0.0"
-              />
-            </div>
-            <div
-              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-gray-800">
-                  Proyecto Final – Fase 2 (Gap Analysis)
-                </h4>
-                <p class="text-sm text-gray-600">
-                  Peso en unidad: 15% | Peso global: 6%
-                </p>
-              </div>
-              <input
-                type="number"
-                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                min="0"
-                max="5"
-                step="0.1"
-                data-weight="6"
-                placeholder="0.0"
-              />
-            </div>
-            <div
-              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-gray-800">
-                  Proyecto Final – Fases 3 y 4 (Roadmap y Gestión de Cambio)
-                </h4>
-                <p class="text-sm text-gray-600">
-                  Peso en unidad: 15% | Peso global: 6%
-                </p>
-              </div>
-              <input
-                type="number"
-                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                min="0"
-                max="5"
-                step="0.1"
-                data-weight="6"
-                placeholder="0.0"
-              />
-            </div>
-            <div
-              class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-gray-800">
-                  Presentación del Proyecto Final
-                </h4>
-                <p class="text-sm text-gray-600">
-                  Peso en unidad: 20% | Peso global: 8%
-                </p>
-              </div>
-              <input
-                type="number"
-                class="grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                min="0"
-                max="5"
-                step="0.1"
-                data-weight="8"
-                placeholder="0.0"
-              />
-            </div>
-            <div
-              class="grade-item flex items-center justify-between p-4 bg-purple-50 rounded-lg border-2 border-purple-200"
-            >
-              <div class="flex-1">
-                <h4 class="font-medium text-purple-800">
-                  Examen Final Integrador
-                </h4>
-                <p class="text-sm text-purple-600">
-                  Peso en unidad: 40% | Peso global: 16%
-                </p>
-              </div>
-              <input
-                type="number"
-                class="grade-input w-20 px-3 py-2 border border-purple-300 rounded-lg text-center"
-                min="0"
-                max="5"
-                step="0.1"
-                data-weight="16"
-                placeholder="0.0"
-              />
-            </div>
-          </div>
-        </div>
-
-        <!-- Project Rubric Content -->
-        <div class="unit-content p-6 hidden" id="project">
-          <h3 class="text-xl font-semibold text-gray-800 mb-6">
-            📑 Rúbrica del Proyecto Final – Plan de Certificación de Calidad
-          </h3>
-
-          <!-- Fase 1: Diagnóstico -->
-          <div class="mb-8">
-            <h4
-              class="text-lg font-semibold text-purple-800 mb-4 bg-purple-50 p-3 rounded-lg"
-            >
-              Fase 1: Diagnóstico y Selección del Modelo (10% de Unidad III)
-            </h4>
-            <div class="space-y-3">
-              <div
-                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div class="flex-1">
-                  <h5 class="font-medium text-gray-800">
-                    Claridad y completitud del diagnóstico
-                  </h5>
-                  <p class="text-sm text-gray-600">
-                    Peso en fase: 40% | Peso en unidad: 4% | Peso global: 1.6%
-                  </p>
-                </div>
-                <input
-                  type="number"
-                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  data-weight="1.6"
-                  placeholder="0.0"
-                />
-              </div>
-              <div
-                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div class="flex-1">
-                  <h5 class="font-medium text-gray-800">
-                    Justificación de la selección del modelo
-                  </h5>
-                  <p class="text-sm text-gray-600">
-                    Peso en fase: 40% | Peso en unidad: 4% | Peso global: 1.6%
-                  </p>
-                </div>
-                <input
-                  type="number"
-                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  data-weight="1.6"
-                  placeholder="0.0"
-                />
-              </div>
-              <div
-                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div class="flex-1">
-                  <h5 class="font-medium text-gray-800">
-                    Presentación y formato
-                  </h5>
-                  <p class="text-sm text-gray-600">
-                    Peso en fase: 20% | Peso en unidad: 2% | Peso global: 0.8%
-                  </p>
-                </div>
-                <input
-                  type="number"
-                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  data-weight="0.8"
-                  placeholder="0.0"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Fase 2: Gap Analysis -->
-          <div class="mb-8">
-            <h4
-              class="text-lg font-semibold text-blue-800 mb-4 bg-blue-50 p-3 rounded-lg"
-            >
-              Fase 2: Gap Analysis (15% de Unidad III)
-            </h4>
-            <div class="space-y-3">
-              <div
-                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div class="flex-1">
-                  <h5 class="font-medium text-gray-800">
-                    Identificación de brechas
-                  </h5>
-                  <p class="text-sm text-gray-600">
-                    Peso en fase: 40% | Peso en unidad: 6% | Peso global: 2.4%
-                  </p>
-                </div>
-                <input
-                  type="number"
-                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  data-weight="2.4"
-                  placeholder="0.0"
-                />
-              </div>
-              <div
-                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div class="flex-1">
-                  <h5 class="font-medium text-gray-800">
-                    Acciones recomendadas y priorización
-                  </h5>
-                  <p class="text-sm text-gray-600">
-                    Peso en fase: 40% | Peso en unidad: 6% | Peso global: 2.4%
-                  </p>
-                </div>
-                <input
-                  type="number"
-                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  data-weight="2.4"
-                  placeholder="0.0"
-                />
-              </div>
-              <div
-                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div class="flex-1">
-                  <h5 class="font-medium text-gray-800">
-                    Claridad visual del documento
-                  </h5>
-                  <p class="text-sm text-gray-600">
-                    Peso en fase: 20% | Peso en unidad: 3% | Peso global: 1.2%
-                  </p>
-                </div>
-                <input
-                  type="number"
-                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  data-weight="1.2"
-                  placeholder="0.0"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Fase 3-4: Roadmap -->
-          <div class="mb-8">
-            <h4
-              class="text-lg font-semibold text-green-800 mb-4 bg-green-50 p-3 rounded-lg"
-            >
-              Fase 3-4: Roadmap y Gestión del Cambio (15% de Unidad III)
-            </h4>
-            <div class="space-y-3">
-              <div
-                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div class="flex-1">
-                  <h5 class="font-medium text-gray-800">
-                    Secuencia lógica y realista de hitos
-                  </h5>
-                  <p class="text-sm text-gray-600">
-                    Peso en fase: 30% | Peso en unidad: 4.5% | Peso global: 1.8%
-                  </p>
-                </div>
-                <input
-                  type="number"
-                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  data-weight="1.8"
-                  placeholder="0.0"
-                />
-              </div>
-              <div
-                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div class="flex-1">
-                  <h5 class="font-medium text-gray-800">
-                    Factibilidad de recursos, tiempos y responsables
-                  </h5>
-                  <p class="text-sm text-gray-600">
-                    Peso en fase: 40% | Peso en unidad: 6% | Peso global: 2.4%
-                  </p>
-                </div>
-                <input
-                  type="number"
-                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  data-weight="2.4"
-                  placeholder="0.0"
-                />
-              </div>
-              <div
-                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div class="flex-1">
-                  <h5 class="font-medium text-gray-800">
-                    Plan de comunicación y capacitación
-                  </h5>
-                  <p class="text-sm text-gray-600">
-                    Peso en fase: 20% | Peso en unidad: 3% | Peso global: 1.2%
-                  </p>
-                </div>
-                <input
-                  type="number"
-                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  data-weight="1.2"
-                  placeholder="0.0"
-                />
-              </div>
-              <div
-                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div class="flex-1">
-                  <h5 class="font-medium text-gray-800">
-                    Presentación y formato
-                  </h5>
-                  <p class="text-sm text-gray-600">
-                    Peso en fase: 10% | Peso en unidad: 1.5% | Peso global: 0.6%
-                  </p>
-                </div>
-                <input
-                  type="number"
-                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  data-weight="0.6"
-                  placeholder="0.0"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Presentación Final -->
-          <div class="mb-8">
-            <h4
-              class="text-lg font-semibold text-orange-800 mb-4 bg-orange-50 p-3 rounded-lg"
-            >
-              Presentación Final (20% de Unidad III)
-            </h4>
-            <div class="space-y-3">
-              <div
-                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div class="flex-1">
-                  <h5 class="font-medium text-gray-800">
-                    Claridad y estructura de la exposición
-                  </h5>
-                  <p class="text-sm text-gray-600">
-                    Peso en fase: 25% | Peso en unidad: 5% | Peso global: 2%
-                  </p>
-                </div>
-                <input
-                  type="number"
-                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  data-weight="2"
-                  placeholder="0.0"
-                />
-              </div>
-              <div
-                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div class="flex-1">
-                  <h5 class="font-medium text-gray-800">
-                    Dominio del tema y respuesta a preguntas
-                  </h5>
-                  <p class="text-sm text-gray-600">
-                    Peso en fase: 25% | Peso en unidad: 5% | Peso global: 2%
-                  </p>
-                </div>
-                <input
-                  type="number"
-                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  data-weight="2"
-                  placeholder="0.0"
-                />
-              </div>
-              <div
-                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div class="flex-1">
-                  <h5 class="font-medium text-gray-800">
-                    Calidad de diapositivas y visuales
-                  </h5>
-                  <p class="text-sm text-gray-600">
-                    Peso en fase: 20% | Peso en unidad: 4% | Peso global: 1.6%
-                  </p>
-                </div>
-                <input
-                  type="number"
-                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  data-weight="1.6"
-                  placeholder="0.0"
-                />
-              </div>
-              <div
-                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div class="flex-1">
-                  <h5 class="font-medium text-gray-800">
-                    Justificación del valor de negocio (ROI)
-                  </h5>
-                  <p class="text-sm text-gray-600">
-                    Peso en fase: 20% | Peso en unidad: 4% | Peso global: 1.6%
-                  </p>
-                </div>
-                <input
-                  type="number"
-                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  data-weight="1.6"
-                  placeholder="0.0"
-                />
-              </div>
-              <div
-                class="grade-item flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-              >
-                <div class="flex-1">
-                  <h5 class="font-medium text-gray-800">
-                    Trabajo en equipo y participación equitativa
-                  </h5>
-                  <p class="text-sm text-gray-600">
-                    Peso en fase: 10% | Peso en unidad: 2% | Peso global: 0.8%
-                  </p>
-                </div>
-                <input
-                  type="number"
-                  class="project-grade-input w-20 px-3 py-2 border border-gray-300 rounded-lg text-center"
-                  min="0"
-                  max="5"
-                  step="0.1"
-                  data-weight="0.8"
-                  placeholder="0.0"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Project Summary -->
-          <div class="bg-purple-50 border-2 border-purple-200 rounded-lg p-6">
-            <h4 class="text-lg font-semibold text-purple-800 mb-4">
-              Resumen del Proyecto Final
-            </h4>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
-              <div>
-                <div
-                  class="text-2xl font-bold text-purple-600"
-                  id="projectTotalGrade"
-                >
-                  0.0
-                </div>
-                <div class="text-sm text-gray-600">Calificación Total</div>
-              </div>
-              <div>
-                <div
-                  class="text-2xl font-bold text-purple-600"
-                  id="phase1Grade"
-                >
-                  0.0
-                </div>
-                <div class="text-sm text-gray-600">Fase 1 (10%)</div>
-              </div>
-              <div>
-                <div class="text-2xl font-bold text-blue-600" id="phase2Grade">
-                  0.0
-                </div>
-                <div class="text-sm text-gray-600">Fase 2 (15%)</div>
-              </div>
-              <div>
-                <div
-                  class="text-2xl font-bold text-green-600"
-                  id="phase34Grade"
-                >
-                  0.0
-                </div>
-                <div class="text-sm text-gray-600">Fases 3-4 (15%)</div>
-              </div>
-            </div>
-            <div class="mt-4 text-center">
-              <div
-                class="text-2xl font-bold text-orange-600"
-                id="presentationGrade"
-              >
-                0.0
-              </div>
-              <div class="text-sm text-gray-600">Presentación Final (20%)</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="mt-8 flex flex-wrap gap-4 justify-center">
-        <button
-          id="calculateBtn"
-          class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
-        >
-          Calcular Calificaciones
-        </button>
-        <button
-          id="clearBtn"
-          class="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-lg font-medium transition-colors"
-        >
-          Limpiar Todo
-        </button>
-        <button
-          id="exportBtn"
-          class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
-        >
-          Exportar Reporte
-        </button>
-      </div>
-
-      <!-- Results Summary -->
-      <div
-        id="resultsSummary"
-        class="mt-8 bg-white rounded-lg card-shadow p-6 hidden"
-      >
-        <h3 class="text-xl font-semibold text-gray-800 mb-4">
-          Resumen de Calificaciones
-        </h3>
-        <div id="summaryContent" class="space-y-3"></div>
-      </div>
-    </div>
-
-    <script>
-      // Student data
-      const students = [
-        {
-          id: "00000249116",
-          name: "Arana Guerrero,Danett Itzanami",
-          email: "danett.arana249116@potros.itson.edu.mx",
-        },
-        {
-          id: "00000147818",
-          name: "Araujo Godoy,Abraham Francisco",
-          email: "abraham.araujo@potros.itson.edu.mx",
-        },
-        {
-          id: "00000244228",
-          name: "Avalos Morales,Egla Icel",
-          email: "egla.avalos244228@potros.itson.edu.mx",
-        },
-        {
-          id: "00000244442",
-          name: "Blasco Villagomez,Luis Mario",
-          email: "luis.blasco244442@potros.itson.edu.mx",
-        },
-        {
-          id: "00000244242",
-          name: "Duarte Lopez,Adlemi Guadalupe",
-          email: "adlemi.duarte244242@potros.itson.edu.mx",
-        },
-        {
-          id: "00000244473",
-          name: "Espericueta Ramos,Jesus Alan",
-          email: "jesus.espericueta244473@potros.itson.edu.mx",
-        },
-        {
-          id: "00000244608",
-          name: "Gracia Morales,Sergio Alejandro",
-          email: "sergio.gracia244608@potros.itson.edu.mx",
-        },
-        {
-          id: "00000228847",
-          name: "Hernandez Gonzalez,Julian Ricardo",
-          email: "julian.hernandez228847@potros.itson.edu.mx",
-        },
-        {
-          id: "00000248997",
-          name: "Le Blohic Garay,Mario Enrique",
-          email: "mario.leblohic248997@potros.itson.edu.mx",
-        },
-        {
-          id: "00000249012",
-          name: "Lopez Guerrero,Luis Carlos",
-          email: "luis.lopez249012@potros.itson.edu.mx",
-        },
-        {
-          id: "00000248990",
-          name: "Maldonado Montoya,Jose Gabriel",
-          email: "jose.maldonado248990@potros.itson.edu.mx",
-        },
-        {
-          id: "00000244378",
-          name: "Martínez Santacruz,Yolanda",
-          email: "yolanda.martinez244378@potros.itson.edu.mx",
-        },
-        {
-          id: "00000217812",
-          name: "Martínez Soto,Dainiz Raí",
-          email: "dainiz.martinez217812@potros.itson.edu.mx",
-        },
-        {
-          id: "00000244321",
-          name: "Nevescanin Moreno,Angel Stipe",
-          email: "angel.nevescanin244321@potros.itson.edu.mx",
-        },
-        {
-          id: "00000244477",
-          name: "Osuna Aguilera,Erik David",
-          email: "erik.osuna244477@potros.itson.edu.mx",
-        },
-        {
-          id: "00000244711",
-          name: "Palacios Cardenas,Jorge Eduardo",
-          email: "jorge.palacios244711@potros.itson.edu.mx",
-        },
-        {
-          id: "00000244569",
-          name: "Preciado Ruiz,Juan Carlos",
-          email: "juan.preciado244569@potros.itson.edu.mx",
-        },
-        {
-          id: "00000244373",
-          name: "Reyes Galaz,Jose Abelardo",
-          email: "jose.reyes244373@potros.itson.edu.mx",
-        },
-        {
-          id: "00000240691",
-          name: "Rivas Quintana,Emmanuel",
-          email: "emmanuel.rivas240691@potros.itson.edu.mx",
-        },
-        {
-          id: "00000244266",
-          name: "Rocha Aguilar,Víctor Emmanuel",
-          email: "victor.rocha244266@potros.itson.edu.mx",
-        },
-        {
-          id: "00000244312",
-          name: "Rodriguez Alvarado,Jose Agustin",
-          email: "jose.rodriguez244312@potros.itson.edu.mx",
-        },
-        {
-          id: "00000244621",
-          name: "Soto Carrazco,Francisco Javier",
-          email: "francisco.soto244621@potros.itson.edu.mx",
-        },
-        {
-          id: "00000216759",
-          name: "Sánchez Zavala,Dulce María",
-          email: "dulce.sanchez216759@potros.itson.edu.mx",
-        },
-        {
-          id: "00000244689",
-          name: "Villegas Sosa,Ramsés Mauricio",
-          email: "ramses.villegas244689@potros.itson.edu.mx",
-        },
-        {
-          id: "00000244679",
-          name: "Viveros Zavala,Angel Gael",
-          email: "angel.viveros244679@potros.itson.edu.mx",
-        },
-      ];
-
-      // Populate student dropdown
-      function populateStudentDropdown() {
-        const select = document.getElementById("studentSelect");
-        students.forEach((student) => {
-          const option = document.createElement("option");
-          option.value = student.id;
-          option.textContent = `${student.id} - ${student.name}`;
-          select.appendChild(option);
-        });
-      }
-
-      // Handle student selection
-      document
-        .getElementById("studentSelect")
-        .addEventListener("change", function () {
-          const selectedId = this.value;
-          const student = students.find((s) => s.id === selectedId);
-
-          if (student) {
-            document.getElementById("studentId").value = student.id;
-            document.getElementById("studentName").value = student.name;
-            document.getElementById("studentEmail").value = student.email;
-
-            // Load saved grades for this student
-            loadStudentGrades(selectedId);
-          } else {
-            document.getElementById("studentId").value = "";
-            document.getElementById("studentName").value = "";
-            document.getElementById("studentEmail").value = "";
-            clearAllGrades();
-          }
-        });
-
-      // Save and load grades functionality
-      function saveStudentGrades(studentId) {
-        if (!studentId) return;
-
-        const grades = {};
-        document.querySelectorAll(".grade-input").forEach((input, index) => {
-          grades[`regular_${index}`] = input.value;
-        });
-        document
-          .querySelectorAll(".project-grade-input")
-          .forEach((input, index) => {
-            grades[`project_${index}`] = input.value;
-          });
-
-        localStorage.setItem(`grades_${studentId}`, JSON.stringify(grades));
-      }
-
-      function loadStudentGrades(studentId) {
-        const savedGrades = localStorage.getItem(`grades_${studentId}`);
-        if (savedGrades) {
-          const grades = JSON.parse(savedGrades);
-          document.querySelectorAll(".grade-input").forEach((input, index) => {
-            input.value = grades[`regular_${index}`] || "";
-          });
-          document
-            .querySelectorAll(".project-grade-input")
-            .forEach((input, index) => {
-              input.value = grades[`project_${index}`] || "";
-            });
-          calculateProjectGrades();
-          calculateGrades();
-        } else {
-          clearAllGrades();
-        }
-      }
-
-      function clearAllGrades() {
-        document.querySelectorAll(".grade-input").forEach((input) => {
-          input.value = "";
-        });
-        document.querySelectorAll(".project-grade-input").forEach((input) => {
-          input.value = "";
-        });
-        calculateProjectGrades();
-        calculateGrades();
-      }
-
-      function calculateProjectGrades() {
-        // Calculate Phase 1 (Diagnóstico)
-        let phase1Total = 0;
-        const phase1Inputs = document.querySelectorAll(
-          "#project .project-grade-input"
-        );
-        for (let i = 0; i < 3; i++) {
-          const grade = parseFloat(phase1Inputs[i].value) || 0;
-          const weight = parseFloat(phase1Inputs[i].dataset.weight);
-          phase1Total += (grade * weight) / 4; // 4% total weight for phase 1
-        }
-
-        // Calculate Phase 2 (Gap Analysis)
-        let phase2Total = 0;
-        for (let i = 3; i < 6; i++) {
-          const grade = parseFloat(phase1Inputs[i].value) || 0;
-          const weight = parseFloat(phase1Inputs[i].dataset.weight);
-          phase2Total += (grade * weight) / 6; // 6% total weight for phase 2
-        }
-
-        // Calculate Phase 3-4 (Roadmap)
-        let phase34Total = 0;
-        for (let i = 6; i < 10; i++) {
-          const grade = parseFloat(phase1Inputs[i].value) || 0;
-          const weight = parseFloat(phase1Inputs[i].dataset.weight);
-          phase34Total += (grade * weight) / 6; // 6% total weight for phases 3-4
-        }
-
-        // Calculate Presentation
-        let presentationTotal = 0;
-        for (let i = 10; i < 15; i++) {
-          const grade = parseFloat(phase1Inputs[i].value) || 0;
-          const weight = parseFloat(phase1Inputs[i].dataset.weight);
-          presentationTotal += (grade * weight) / 8; // 8% total weight for presentation
-        }
-
-        // Update project displays
-        document.getElementById("phase1Grade").textContent = (
-          (phase1Total * 4) /
-          4
-        ).toFixed(1);
-        document.getElementById("phase2Grade").textContent = (
-          (phase2Total * 6) /
-          6
-        ).toFixed(1);
-        document.getElementById("phase34Grade").textContent = (
-          (phase34Total * 6) /
-          6
-        ).toFixed(1);
-        document.getElementById("presentationGrade").textContent = (
-          (presentationTotal * 8) /
-          8
-        ).toFixed(1);
-
-        const projectTotal =
-          phase1Total + phase2Total + phase34Total + presentationTotal;
-        document.getElementById("projectTotalGrade").textContent =
-          projectTotal.toFixed(1);
-
-        return projectTotal;
-      }
-
-      // Auto-save grades when changed
-      document.querySelectorAll(".grade-input").forEach((input) => {
-        input.addEventListener("input", () => {
-          calculateGrades();
-          const studentId = document.getElementById("studentId").value;
-          if (studentId) {
-            saveStudentGrades(studentId);
-          }
-        });
-      });
-
-      // Auto-save project grades when changed
-      document.querySelectorAll(".project-grade-input").forEach((input) => {
-        input.addEventListener("input", () => {
-          calculateProjectGrades();
-          calculateGrades();
-          const studentId = document.getElementById("studentId").value;
-          if (studentId) {
-            saveStudentGrades(studentId);
-          }
-        });
-      });
-
-      // Tab functionality
-      document.querySelectorAll(".tab-button").forEach((button) => {
-        button.addEventListener("click", () => {
-          const unit = button.dataset.unit;
-
-          // Update tab buttons
-          document.querySelectorAll(".tab-button").forEach((btn) => {
-            btn.classList.remove(
-              "bg-blue-50",
-              "text-blue-600",
-              "border-b-2",
-              "border-blue-600"
-            );
-            btn.classList.add("text-gray-600");
-          });
-          button.classList.add(
-            "bg-blue-50",
-            "text-blue-600",
-            "border-b-2",
-            "border-blue-600"
-          );
-          button.classList.remove("text-gray-600");
-
-          // Update content
-          document.querySelectorAll(".unit-content").forEach((content) => {
-            content.classList.add("hidden");
-          });
-          if (unit === "project") {
-            document.getElementById("project").classList.remove("hidden");
-          } else {
-            document.getElementById(`unit${unit}`).classList.remove("hidden");
-          }
-        });
-      });
-
-      // Auto-calculate on input change
-      document.querySelectorAll(".grade-input").forEach((input) => {
-        input.addEventListener("input", calculateGrades);
-      });
-
-      function calculateGrades() {
-        let totalWeightedGrade = 0;
-        let unit1Total = 0;
-        let unit2Total = 0;
-        let unit3Total = 0;
-
-        // Calculate for each unit
-        document.querySelectorAll("#unit1 .grade-input").forEach((input) => {
-          const grade = parseFloat(input.value) || 0;
-          const weight = parseFloat(input.dataset.weight);
-          unit1Total += (grade * weight) / 30; // Unit 1 is 30% of total
-        });
-
-        document.querySelectorAll("#unit2 .grade-input").forEach((input) => {
-          const grade = parseFloat(input.value) || 0;
-          const weight = parseFloat(input.dataset.weight);
-          unit2Total += (grade * weight) / 30; // Unit 2 is 30% of total
-        });
-
-        document.querySelectorAll("#unit3 .grade-input").forEach((input) => {
-          const grade = parseFloat(input.value) || 0;
-          const weight = parseFloat(input.dataset.weight);
-          unit3Total += (grade * weight) / 40; // Unit 3 is 40% of total
-        });
-
-        totalWeightedGrade = unit1Total + unit2Total + unit3Total;
-
-        // Update displays
-        document.getElementById("finalGrade").textContent =
-          totalWeightedGrade.toFixed(1);
-        document.getElementById("unit1Grade").textContent = (
-          (unit1Total * 30) /
-          30
-        ).toFixed(1);
-        document.getElementById("unit2Grade").textContent = (
-          (unit2Total * 30) /
-          30
-        ).toFixed(1);
-        document.getElementById("unit3Grade").textContent = (
-          (unit3Total * 40) /
-          40
-        ).toFixed(1);
-
-        // Update progress bar
-        const progressPercent = Math.min((totalWeightedGrade / 5) * 100, 100);
-        document.getElementById(
-          "progressPercent"
-        ).textContent = `${progressPercent.toFixed(0)}%`;
-        document.getElementById(
-          "progressBar"
-        ).style.width = `${progressPercent}%`;
-
-        // Update progress bar color based on grade
-        const progressBar = document.getElementById("progressBar");
-        progressBar.className = "h-3 rounded-full progress-bar";
-        if (totalWeightedGrade >= 4.5) {
-          progressBar.classList.add(
-            "bg-gradient-to-r",
-            "from-green-500",
-            "to-green-600"
-          );
-        } else if (totalWeightedGrade >= 3.5) {
-          progressBar.classList.add(
-            "bg-gradient-to-r",
-            "from-yellow-500",
-            "to-yellow-600"
-          );
-        } else if (totalWeightedGrade >= 3.0) {
-          progressBar.classList.add(
-            "bg-gradient-to-r",
-            "from-orange-500",
-            "to-orange-600"
-          );
-        } else {
-          progressBar.classList.add(
-            "bg-gradient-to-r",
-            "from-red-500",
-            "to-red-600"
-          );
-        }
-      }
-
-      // Calculate button
-      document.getElementById("calculateBtn").addEventListener("click", () => {
-        calculateGrades();
-        showSummary();
-      });
-
-      // Clear button
-      document.getElementById("clearBtn").addEventListener("click", () => {
-        const studentId = document.getElementById("studentId").value;
-        if (
-          studentId &&
-          confirm(
-            "¿Está seguro de que desea limpiar todas las calificaciones de este estudiante?"
-          )
-        ) {
-          // Clear grades from localStorage
-          localStorage.removeItem(`grades_${studentId}`);
-          clearAllGrades();
-          document.getElementById("resultsSummary").classList.add("hidden");
-        } else if (!studentId) {
-          // If no student selected, just clear the form
-          document.getElementById("studentSelect").value = "";
-          document.getElementById("studentName").value = "";
-          document.getElementById("studentId").value = "";
-          document.getElementById("studentEmail").value = "";
-          clearAllGrades();
-          document.getElementById("resultsSummary").classList.add("hidden");
-        }
-      });
-
-      // Export button
-      document.getElementById("exportBtn").addEventListener("click", () => {
-        const studentName =
-          document.getElementById("studentName").value || "Estudiante";
-        const studentId = document.getElementById("studentId").value || "N/A";
-        const finalGrade = document.getElementById("finalGrade").textContent;
-
-        let reportContent = `REPORTE DE CALIFICACIONES - CALIDAD DE SOFTWARE\n`;
-        reportContent += `==============================================\n\n`;
-        reportContent += `Estudiante: ${studentName}\n`;
-        reportContent += `Código: ${studentId}\n`;
-        reportContent += `Fecha: ${new Date().toLocaleDateString()}\n\n`;
-        reportContent += `CALIFICACIÓN FINAL: ${finalGrade}/5.0\n\n`;
-
-        reportContent += `DETALLE POR UNIDADES:\n`;
-        reportContent += `- Unidad I (30%): ${
-          document.getElementById("unit1Grade").textContent
-        }/5.0\n`;
-        reportContent += `- Unidad II (30%): ${
-          document.getElementById("unit2Grade").textContent
-        }/5.0\n`;
-        reportContent += `- Unidad III (40%): ${
-          document.getElementById("unit3Grade").textContent
-        }/5.0\n\n`;
-
-        const blob = new Blob([reportContent], { type: "text/plain" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `Reporte_${studentName.replace(/\s+/g, "_")}_${
-          new Date().toISOString().split("T")[0]
-        }.txt`;
-        a.click();
-        URL.revokeObjectURL(url);
-      });
-
-      function showSummary() {
-        const finalGrade = parseFloat(
-          document.getElementById("finalGrade").textContent
-        );
-        const summaryDiv = document.getElementById("summaryContent");
-
-        let status = "";
-        let statusColor = "";
-
-        if (finalGrade >= 3.0) {
-          status = "APROBADO";
-          statusColor = "text-green-600";
-        } else {
-          status = "REPROBADO";
-          statusColor = "text-red-600";
-        }
-
-        summaryDiv.innerHTML = `
-                <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                    <span class="font-medium">Estado del Curso:</span>
-                    <span class="font-bold ${statusColor}">${status}</span>
-                </div>
-                <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                    <span class="font-medium">Calificación Final:</span>
-                    <span class="font-bold text-blue-600">${finalGrade.toFixed(
-                      1
-                    )}/5.0</span>
-                </div>
-                <div class="text-sm text-gray-600 mt-4">
-                    <p><strong>Nota:</strong> La calificación mínima para aprobar es 3.0/5.0</p>
-                </div>
-            `;
-
-        document.getElementById("resultsSummary").classList.remove("hidden");
-      }
-
-      // Initialize
-      populateStudentDropdown();
-      calculateProjectGrades();
-      calculateGrades();
-    </script>
-    <script type="module" src="./js/role-gate.js"></script>
-    <script>
-      (function () {
-        function c() {
-          var b = a.contentDocument || a.contentWindow.document;
-          if (b) {
-            var d = b.createElement("script");
-            d.innerHTML =
-              "window.__CF$cv$params={r:'97f4850af46b453c',t:'MTc1NzkwMTUxMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
-            b.getElementsByTagName("head")[0].appendChild(d);
-          }
-        }
-        if (document.body) {
-          var a = document.createElement("iframe");
-          a.height = 1;
-          a.width = 1;
-          a.style.position = "absolute";
-          a.style.top = 0;
-          a.style.left = 0;
-          a.style.border = "none";
-          a.style.visibility = "hidden";
-          document.body.appendChild(a);
-          if ("loading" !== document.readyState) c();
-          else if (window.addEventListener)
-            document.addEventListener("DOMContentLoaded", c);
-          else {
-            var e = document.onreadystatechange || function () {};
-            document.onreadystatechange = function (b) {
-              e(b);
-              "loading" !== document.readyState &&
-                ((document.onreadystatechange = e), c());
-            };
-          }
-        }
-      })();
-    </script>
-    <script>
-      // Gating por rol local: estudiante solo lectura
-      document.addEventListener("DOMContentLoaded", function () {
-        try {
-          var rol = (
-            localStorage.getItem("qs_role") || "estudiante"
-          ).toLowerCase();
-          if (rol !== "docente") {
-            document
-              .querySelectorAll("input, select, textarea, button")
-              .forEach(function (el) {
-                var id = el.id || "";
-                if (
-                  id === "calculateBtn" ||
-                  id === "clearBtn" ||
-                  id === "exportBtn"
-                ) {
-                  // permitir cálculo/limpieza/export de su propia vista
-                } else if (el.tagName === "BUTTON") {
-                  el.disabled = true;
-                } else if (
-                  el.tagName === "INPUT" ||
-                  el.tagName === "SELECT" ||
-                  el.tagName === "TEXTAREA"
-                ) {
-                  el.readOnly = true;
-                  el.disabled = true;
-                }
-              });
-            document
-              .querySelectorAll(".teacher-only,.docente-only")
-              .forEach(function (el) {
-                el.style.display = "none";
-              });
-          }
-        } catch (e) {}
-      });
-    </script>
-    <script defer src="js/back-home.js"></script>
-    <script defer src="js/nav-inject.js"></script>
-
-    <!-- Firebase (compat para no tocar tu frontend) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
-    <script>
-      // Reuse the existing firebaseConfig variable declared earlier in the script.
-      firebase.initializeApp(firebaseConfig);
-      const auth = firebase.auth();
-      const firestoreDb = firebase.firestore();
-    </script>
-    <!-- ==== INTEGRACIÓN CALIFICACIONES (PEGAR ANTES DE </body>) ==== -->
-    <script type="module">
-      // SDK modular
-      import { Calificaciones } from "./calificaciones-backend.js";
-      import {
-        getFirestore,
-        doc,
-        getDoc,
-        query,
-        where,
-        getDocs,
-        collection,
-      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
-      import { getApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
-
-      // Tu config ya activa en el proyecto
-      // Removed duplicate declaration of firebaseConfig to avoid redeclaration error.
-
-      // Grupo desde URL ?grupo=calidad-2025
-      const queryParams = new URLSearchParams(location.search);
-      const GRUPO_ID_PARAM = queryParams.get("grupo") || "calidad-2025";
-
-      // Selectores no intrusivos. Solo pintamos si existen.
-      const $ = (s) => document.querySelector(s);
-      const elDocente = {
-        root: $("#grades-root") || $("#calificaciones-root") || document.body,
-        table: $("#tabla-calificaciones") || $("#grades-table"),
-        tbody: $("#grades-body") || $("#tabla-calificaciones tbody") || null,
-        msg: $("#msg") || $("#grades-msg"),
-        btnGuardar: $("#btnGuardar") || $("#grades-save"),
-      };
-
-      // Cache de usuarios para mostrar nombre/matrícula
-      // Reuse the existing firestoreDb variable
-      const userCache = new Map();
-      async function getUser(uid) {
-        if (userCache.has(uid)) return userCache.get(uid);
-        const snap = await getDoc(doc(db, "users", uid));
-        const data = snap.exists() ? snap.data() : {};
-        userCache.set(uid, data);
-        return data;
-      }
-
-      // Render alumno (solo lectura)
-      function renderAlumno({ items, resumen }, me) {
-        if (!el.table) {
-          // Fallback mínimo sin alterar layout
-          const box = document.createElement("div");
-          box.innerHTML = `
-        <div class="card">
-          <h3>Mis calificaciones</h3>
-          <p><strong>Porcentaje:</strong> ${resumen.porcentaje}%</p>
-        </div>`;
-          el.root.appendChild(box);
-          return;
-        }
-        // Construye encabezado si no existe
-        if (!el.tbody) {
-          const tb = document.createElement("tbody");
-          el.table.appendChild(tb);
-          el.tbody = tb;
-        }
-        // Limpia cuerpo
-        el.tbody.innerHTML = "";
-        // Fila resumen
-        el.tbody.insertAdjacentHTML(
-          "beforeend",
-          `
-      <tr class="resumen">
-        <td colspan="4"><strong>Total</strong></td>
-        <td><strong>${resumen.porcentaje}%</strong></td>
-      </tr>`
-        );
-
-        // Detalle de items
-        items.forEach((it) => {
-          el.tbody.insertAdjacentHTML(
-            "beforeend",
-            `
-        <tr>
-          <td>${me?.nombre || "-"}</td>
-          <td>${it.nombre || "Actividad"}</td>
-          <td>${Number(it.puntos || 0)} / ${Number(it.maxPuntos || 0)}</td>
-          <td>${Number(it.ponderacion || 0)}%</td>
-          <td></td>
-        </tr>`
-          );
-        });
-      }
-
-      // Render docente (lista por alumno, sin mover estilos si ya hay tabla)
-      async function renderDocente(rows) {
-        // rows: [{alumnoUid, items:[...], resumen:{porcentaje}}]
-        if (!el.table) {
-          const box = document.createElement("div");
-          const total = rows.length;
-          const top = rows
-            .slice(0, 5)
-            .map((r) => `${r.alumnoUid}: ${r.resumen.porcentaje}%`)
-            .join("<br>");
-          box.innerHTML = `
-        <div class="card">
-          <h3>Calificaciones del grupo</h3>
-          <p>Total alumnos: ${total}</p>
-          <div>${top}</div>
-        </div>`;
-          el.root.appendChild(box);
-          return;
-        }
-        if (!el.tbody) {
-          const tb = document.createElement("tbody");
-          el.table.appendChild(tb);
-          el.tbody = tb;
-        }
-        el.tbody.innerHTML = "";
-
-        // Prefetch nombres
-        const metas = {};
-        await Promise.all(
-          rows.map(async (r) => {
-            metas[r.alumnoUid] = await getUser(r.alumnoUid);
-          })
-        );
-
-        rows.forEach((r) => {
-          const meta = metas[r.alumnoUid] || {};
-          const nombre = meta.nombre || r.alumnoUid;
-          const matricula = meta.matricula || "";
-          el.tbody.insertAdjacentHTML(
-            "beforeend",
-            `
-        <tr data-uid="${r.alumnoUid}">
-          <td>${nombre}</td>
-          <td>${matricula}</td>
-          <td>${r.resumen.porcentaje}%</td>
-          <td>
-            <button class="btn-detalle" data-uid="${r.alumnoUid}">Detalle</button>
-            <button class="btn-agregar" data-uid="${r.alumnoUid}">Añadir</button>
-          </td>
-        </tr>`
-          );
-        });
-
-        // Delegación de eventos sin romper tu CSS
-        el.table.addEventListener("click", async (e) => {
-          const uid = e.target?.dataset?.uid;
-          if (!uid) return;
-          if (e.target.classList.contains("btn-detalle")) {
-            // Muestra detalle en un modal simple o consola si no existe modal
-            const me = await getUser(uid);
-            const data = rows.find((x) => x.alumnoUid === uid);
-            const detalle = (data?.items || [])
-              .map(
-                (it) =>
-                  `${it.nombre}: ${it.puntos}/${it.maxPuntos} (${it.ponderacion}%)`
-              )
-              .join("\n");
-            alert(`${me?.nombre || uid}\n\n${detalle || "Sin actividades"}`);
-          }
-          if (e.target.classList.contains("btn-agregar")) {
-            // Captura rápida (prompt). Si ya tienes formulario propio, ignora esto.
-            const nombre = prompt("Nombre de la actividad:");
-            if (!nombre) return;
-            const ponderacion = Number(prompt("Ponderación % (0-100):") || 0);
-            const maxPuntos = Number(prompt("Puntos máximos:") || 0);
-            const puntos = Number(prompt("Puntos obtenidos:") || 0);
-            try {
-              await Calificaciones.addGradeForStudent(uid, {
-                nombre,
-                ponderacion,
-                maxPuntos,
-                puntos,
-              });
-              el.msg && (el.msg.textContent = "Guardado.");
-              setTimeout(() => {
-                location.reload();
-              }, 600);
-            } catch (err) {
-              console.error(err);
-              el.msg && (el.msg.textContent = "Error al guardar");
-            }
-          }
-        });
-
-        // Guardado masivo si tienes un botón existente y filas con inputs
-        el.btnGuardar &&
-          el.btnGuardar.addEventListener("click", async () => {
-            const filas = el.table.querySelectorAll("tr[data-uid]");
-            for (const tr of filas) {
-              // Si tu diseño ya tiene inputs por fila, aquí podrías leerlos y llamar updateGrade(...)
-              // Este bloque es NO-OP si no hay inputs.
-            }
-            el.msg && (el.msg.textContent = "Listo.");
-            setTimeout(() => el.msg && (el.msg.textContent = ""), 1500);
-          });
-      }
-
-      // Arranque
-      try {
-        const { role } = await Calificaciones.init({
-          firebaseConfig,
-          grupoId: GRUPO_ID,
-        });
-        if (role === "docente") {
-          const grupo = await Calificaciones.listGroupGrades();
-          await renderDocente(grupo);
-        } else {
-          // alumno actual
-          const meSnap = await getDoc(
-            doc(
-              db,
-              "users",
-              (
-                await import(
-                  "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js"
-                )
-              ).getAuth().currentUser.uid
-            )
-          );
-          const me = meSnap.exists() ? meSnap.data() : {};
-          const mis = await Calificaciones.listMyGrades();
-          renderAlumno(mis, me);
-        }
-      } catch (e) {
-        console.error(e);
-        el.msg &&
-          (el.msg.textContent = "Inicia sesión para ver calificaciones.");
-      }
-    </script>
-    <!-- ==== /INTEGRACIÓN CALIFICACIONES ==== -->
-
-    <!-- === VISTA ALUMNO: PROGRESO DE CALIFICACIONES (solo lectura) === -->
-    <section id="mi-progreso" style="margin-top: 1rem">
+  <body>
+    <!-- Contenedor. Si ya tienes header/nav/footer fijos, esto se integra al centro. -->
+    <main id="mi-progreso">
       <h2 class="titulo-seccion">Mis calificaciones</h2>
 
       <div id="mi-resumen" class="mi-resumen">
@@ -1830,7 +111,7 @@
           </div>
         </div>
         <div class="mi-bar">
-          <div id="mi-bar-fill" class="mi-bar-fill" style="width: 0%"></div>
+          <div id="mi-bar-fill" class="mi-bar-fill"></div>
         </div>
       </div>
 
@@ -1846,81 +127,20 @@
               <th>Fecha</th>
             </tr>
           </thead>
-          <tbody id="mi-tbody"></tbody>
+          <tbody id="mi-tbody">
+            <tr>
+              <td class="muted" colspan="6">Cargando…</td>
+            </tr>
+          </tbody>
         </table>
       </div>
 
       <p id="mi-msg" class="mi-msg"></p>
-    </section>
+    </main>
 
-    <style>
-      /* Estilos acotados a la vista de alumno */
-      #mi-progreso .mi-resumen {
-        padding: 12px;
-        border-radius: 10px;
-        background: rgba(0, 0, 0, 0.03);
-      }
-      #mi-progreso .mi-kpis {
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
-        margin-bottom: 10px;
-      }
-      #mi-progreso .mi-kpi {
-        min-width: 120px;
-        padding: 10px 12px;
-        border-radius: 10px;
-        background: rgba(0, 0, 0, 0.04);
-        text-align: center;
-      }
-      #mi-progreso .mi-kpi span {
-        display: block;
-        font-weight: 700;
-        font-size: 20px;
-      }
-      #mi-progreso .mi-kpi small {
-        display: block;
-        opacity: 0.7;
-      }
-      #mi-progreso .mi-bar {
-        height: 10px;
-        border-radius: 999px;
-        background: rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-      }
-      #mi-progreso .mi-bar-fill {
-        height: 100%;
-      }
-      #mi-progreso .tabla {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 12px;
-      }
-      #mi-progreso .tabla th,
-      #mi-progreso .tabla td {
-        padding: 10px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-        text-align: left;
-        font-size: 0.95rem;
-      }
-      #mi-progreso .mi-msg {
-        margin-top: 8px;
-        opacity: 0.8;
-      }
-    </style>
-
-    <script type="module">
-      import { Calificaciones } from "./calificaciones-backend.js";
-      import { getApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
-      import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
-      import {
-        getFirestore,
-        doc,
-        getDoc,
-      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
-
-      // Config de tu proyecto
-      const firebaseConfig = {
+    <!-- Config Firebase en global para evitar “firebaseConfig is not defined” -->
+    <script>
+      window.firebaseConfig = {
         apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
         authDomain: "calidad-de-software-v2.firebaseapp.com",
         projectId: "calidad-de-software-v2",
@@ -1928,11 +148,42 @@
         messagingSenderId: "220818066383",
         appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
       };
-      // Grupo por URL ?grupo=calidad-2025
+    </script>
+
+    <!-- SDK Firebase (módulos). Sin archivos locales, sin Cloudflare. -->
+    <script type="module">
+      import {
+        initializeApp,
+        getApps,
+        getApp,
+      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+      import {
+        getAuth,
+        onAuthStateChanged,
+      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+      import {
+        getFirestore,
+        doc,
+        getDoc,
+        collection,
+        getDocs,
+        query,
+        orderBy,
+      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+
+      // Init seguro (evita doble init si tu layout ya inicializó Firebase)
+      const app = getApps().length
+        ? getApp()
+        : initializeApp(window.firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      // Grupo vía URL ?grupo=calidad-2025
       const params = new URLSearchParams(location.search);
       const GRUPO_ID = params.get("grupo") || "calidad-2025";
 
-      const elAlumno = {
+      // Selectores
+      const el = {
         tbody: document.getElementById("mi-tbody"),
         msg: document.getElementById("mi-msg"),
         kpiTotal: document.getElementById("kpi-total"),
@@ -1941,91 +192,113 @@
         barFill: document.getElementById("mi-bar-fill"),
       };
 
-      // Color de barra usa CSS actual si lo tienes; si no, fallback
-      const fallbackBarColor =
-        getComputedStyle(document.body).getPropertyValue("--primary")?.trim() ||
+      // Color de barra toma tu --primary si existe
+      const primaryFromTheme = getComputedStyle(document.body)
+        .getPropertyValue("--primary")
+        ?.trim();
+      el.barFill.style.background =
+        primaryFromTheme ||
+        getComputedStyle(document.documentElement).getPropertyValue(
+          "--qs-primary"
+        ) ||
         "#667eea";
-      el.barFill.style.background = fallbackBarColor;
 
-      function fmtPct(n) {
-        return `${Math.max(0, Math.min(100, Number(n) || 0)).toFixed(2)}%`;
-      }
-      function fmtDate(ts) {
+      // Utils
+      const clampPct = (n) => Math.max(0, Math.min(100, Number(n) || 0));
+      const fmtPct = (n) => `${clampPct(n).toFixed(2)}%`;
+      const fmtDate = (ts) => {
         if (!ts) return "";
-        const d = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
-        return d.toLocaleDateString("es-MX");
-      }
+        const d = ts?.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
+        return isNaN(d.getTime()) ? "" : d.toLocaleDateString("es-MX");
+      };
 
-      // Calcula aporte por ítem y peso acumulado mostrado
-      function computeContrib(item) {
-        const max = Number(item.maxPuntos) || 0;
-        const pts = Number(item.puntos) || 0;
-        const pond = Number(item.ponderacion) || 0; // % de la calificación final
-        const ratio = max > 0 ? pts / max : 0;
-        const aporta = ratio * pond; // porcentaje que aporta al final
-        return { aporta, pondUsed: pond };
-      }
-
-      try {
-        // Init y auth
-        await Calificaciones.init({ firebaseConfig, grupoId: GRUPO_ID });
-
-        const auth = getAuth(getApp());
-        const user = auth.currentUser;
-        if (!user) {
-          el.msg.textContent =
-            "Inicia sesión con tu correo @potros para ver tu progreso.";
-          throw new Error("No auth");
+      // Cálculo de resumen
+      function resumenDeItems(items) {
+        let porcentaje = 0;
+        let pondSum = 0;
+        for (const it of items) {
+          const max = Number(it.maxPuntos) || 0;
+          const pts = Number(it.puntos) || 0;
+          const pond = Number(it.ponderacion) || 0; // % de la calificación final
+          if (max > 0) porcentaje += (pts / max) * pond;
+          pondSum += pond;
         }
+        return { porcentaje: clampPct(porcentaje), pondSum: clampPct(pondSum) };
+      }
 
-        // Datos de usuario para mostrar nombre si lo requieres
-        const db = getFirestore(getApp());
-        const meSnap = await getDoc(doc(db, "users", user.uid));
-        const me = meSnap.exists() ? meSnap.data() : {};
+      async function obtenerMisItems(uid) {
+        const ref = collection(
+          db,
+          "grupos",
+          GRUPO_ID,
+          "calificaciones",
+          uid,
+          "items"
+        );
+        const snap = await getDocs(query(ref, orderBy("fecha", "asc")));
+        return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      }
 
-        // Trae mis calificaciones
-        const { items, resumen } = await Calificaciones.listMyGrades();
+      async function pintarAlumno(uid) {
+        // Datos base
+        const userDoc = await getDoc(doc(db, "users", uid));
+        const me = userDoc.exists() ? userDoc.data() : {};
+
+        // Items
+        const items = await obtenerMisItems(uid);
+        const { porcentaje, pondSum } = resumenDeItems(items);
 
         // KPIs
-        el.kpiTotal.textContent = fmtPct(resumen.porcentaje);
+        el.kpiTotal.textContent = fmtPct(porcentaje);
         el.kpiItems.textContent = items.length;
-        const pondUsed = items.reduce(
-          (s, it) => s + (Number(it.ponderacion) || 0),
-          0
-        );
-        el.kpiPond.textContent = fmtPct(pondUsed);
-        el.barFill.style.width = fmtPct(resumen.porcentaje);
+        el.kpiPond.textContent = fmtPct(pondSum);
+        el.barFill.style.width = fmtPct(porcentaje);
 
         // Tabla
         el.tbody.innerHTML = "";
         if (items.length === 0) {
-          el.tbody.innerHTML = `<tr><td colspan="6">Sin actividades registradas aún.</td></tr>`;
+          el.tbody.innerHTML = `<tr><td colspan="6" class="muted">Sin actividades registradas aún.</td></tr>`;
         } else {
-          items.forEach((it) => {
-            const { aporta } = computeContrib(it);
+          for (const it of items) {
+            const max = Number(it.maxPuntos) || 0;
+            const pts = Number(it.puntos) || 0;
+            const pond = Number(it.ponderacion) || 0;
+            const aporta = max > 0 ? (pts / max) * pond : 0;
             el.tbody.insertAdjacentHTML(
               "beforeend",
               `
-          <tr>
-            <td>${it.nombre || "Actividad"}</td>
-            <td>${Number(it.puntos || 0)}</td>
-            <td>${Number(it.maxPuntos || 0)}</td>
-            <td>${Number(it.ponderacion || 0)}%</td>
-            <td>${fmtPct(aporta)}</td>
-            <td>${fmtDate(it.fecha)}</td>
-          </tr>
-        `
+            <tr>
+              <td>${it.nombre || "Actividad"}</td>
+              <td>${pts}</td>
+              <td>${max}</td>
+              <td>${pond}%</td>
+              <td>${fmtPct(aporta)}</td>
+              <td>${fmtDate(it.fecha)}</td>
+            </tr>
+          `
             );
-          });
+          }
         }
 
-        // Mensaje inferior opcional
+        // Pie de estado
         el.msg.textContent = me?.nombre ? `Alumno: ${me.nombre}` : "";
-      } catch (e) {
-        // No rompe la página
-        console.error(e);
       }
+
+      // Auth gate
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          el.msg.textContent =
+            "Inicia sesión con tu correo @potros para ver tu progreso.";
+          return;
+        }
+        try {
+          await pintarAlumno(user.uid);
+        } catch (err) {
+          console.error(err);
+          el.tbody.innerHTML = `<tr><td colspan="6">Error al cargar calificaciones.</td></tr>`;
+          el.msg.textContent = "Inténtalo más tarde.";
+        }
+      });
     </script>
-    <!-- === /VISTA ALUMNO === -->
   </body>
 </html>
