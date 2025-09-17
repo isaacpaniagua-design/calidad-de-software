@@ -2,7 +2,7 @@
 // Compat ES2015: llena #studentSelect si está vacío y pinta tabla qsp-*.
 
 import { initFirebase, getDb } from './firebase.js';
-import { collection, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+import { collection, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 window.__teacherPreviewLoaded = true;
 

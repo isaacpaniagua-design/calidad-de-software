@@ -2,7 +2,7 @@
 // Compat ES2015: sin optional chaining ni default params.
 
 import { initFirebase, getDb, getAuthInstance, onAuth } from './firebase.js';
-import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+import { collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 function $(s, r){ return (r || document).querySelector(s); }
 function $id(id){ return document.getElementById(id); }
