@@ -284,33 +284,30 @@ nav.navbar {
 .hero-container {
   overflow: visible !important;
 }
-
-.gradient-bg + .container{ max-width: 1560px; }
-.content-area{ max-width: min(1600px, 98vw); }
-
-/* Altura libre en Materiales */
-.content-area,
+/* ===== Materiales: altura libre y sin recortes ===== */
 #materialsGrid,
 .materials-grid,
-.material-card{
+.content-area,
+#teacherView,
+.material-card {
   height: auto !important;
   max-height: none !important;
-  overflow-y: visible !important;
+  overflow: visible !important;
 }
 
-/* Que el contenedor superior no recorte */
-.gradient-bg,
-.header-shell,
-.hero,
-.hero-container{
+/* Evitar cortes por wrappers superiores solo en Materiales */
+body:has(#materialsGrid) .gradient-bg,
+body:has(#materialsGrid) .hero,
+body:has(#materialsGrid) .hero-container,
+body:has(#materialsGrid) .header-shell {
   height: auto !important;
   min-height: unset !important;
   overflow: visible !important;
 }
 
-/* Columna del formulario sin forzar alto */
-#teacherView{ align-self: start; }
-
-/* Evita efectos de clearfix/floats antiguos */
-.content-area::after{ content:""; display:block; clear:both; }
-
+/* Grid flexible para tarjetas largas */
+body:has(#materialsGrid) #materialsGrid.materials-grid {
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-auto-rows: auto;
+  align-content: start;
+}
