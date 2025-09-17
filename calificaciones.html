@@ -434,41 +434,58 @@
         const inputs = document.querySelectorAll(
           "#project .project-grade-input"
         );
+        const get = (i) => {
+          const el = inputs[i];
+          if (!el) return { g: 0, w: 0 };
+          const g = Number(el.value) || 0;
+          const w = Number(el.dataset.weight) || 0; // peso faltante = 0
+          return { g, w };
+        };
+
+        // P1: i 0–2   · P2: i 3–5   · P3-4: i 6–9   · Presentación: i 10–14
         let p1 = 0,
-          p2 = 0,
-          p34 = 0,
-          pres = 0;
-        for (let i = 0; i < 3; i++) {
-          const g = +inputs[i].value || 0,
-            w = +inputs[i].dataset.weight;
-          p1 += (g * w) / 4;
+          w1 = 0;
+        for (let i = 0; i < 3 && i < inputs.length; i++) {
+          const { g, w } = get(i);
+          p1 += g * w;
+          w1 += w;
         }
-        for (let i = 3; i < 6; i++) {
-          const g = +inputs[i].value || 0,
-            w = +inputs[i].dataset.weight;
-          p2 += (g * w) / 6;
+        let p2 = 0,
+          w2 = 0;
+        for (let i = 3; i < 6 && i < inputs.length; i++) {
+          const { g, w } = get(i);
+          p2 += g * w;
+          w2 += w;
         }
-        for (let i = 6; i < 10; i++) {
-          const g = +inputs[i].value || 0,
-            w = +inputs[i].dataset.weight;
-          p34 += (g * w) / 6;
+        let p34 = 0,
+          w34 = 0;
+        for (let i = 6; i < 10 && i < inputs.length; i++) {
+          const { g, w } = get(i);
+          p34 += g * w;
+          w34 += w;
         }
-        for (let i = 10; i < 15; i++) {
-          const g = +inputs[i].value || 0,
-            w = +inputs[i].dataset.weight;
-          pres += (g * w) / 8;
+        let pres = 0,
+          wp = 0;
+        for (let i = 10; i < 15 && i < inputs.length; i++) {
+          const { g, w } = get(i);
+          pres += g * w;
+          wp += w;
         }
-        document.getElementById("phase1Grade").textContent = p1.toFixed(1);
-        document.getElementById("phase2Grade").textContent = p2.toFixed(1);
-        document.getElementById("phase34Grade").textContent = p34.toFixed(1);
-        document.getElementById("presentationGrade").textContent =
-          pres.toFixed(1);
-        document.getElementById("projectTotalGrade").textContent = (
-          p1 +
-          p2 +
-          p34 +
-          pres
-        ).toFixed(1);
+
+        const s1 = w1 ? p1 / w1 : 0;
+        const s2 = w2 ? p2 / w2 : 0;
+        const s34 = w34 ? p34 / w34 : 0;
+        const sp = wp ? pres / wp : 0;
+
+        const setTxt = (id, val) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = val.toFixed(1);
+        };
+        setTxt("phase1Grade", s1);
+        setTxt("phase2Grade", s2);
+        setTxt("phase34Grade", s34);
+        setTxt("presentationGrade", sp);
+        setTxt("projectTotalGrade", s1 + s2 + s34 + sp);
       }
 
       document.querySelectorAll(".grade-input").forEach((input) => {
