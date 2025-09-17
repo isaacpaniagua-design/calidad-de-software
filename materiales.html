@@ -4,7 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Materiales - Calidad de Software</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="../css/layout.css" />
+    <script src="../js/layout.js" defer></script>
+    <script src="../js/nav-inject.js" defer></script>
+
     <script>
       UPLOADCARE_PUBLIC_KEY = "85eb5471d305dcd08e71";
       UPLOADCARE_LOCALE = "es";
@@ -13,66 +17,8 @@
       charset="utf-8"
       src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"
     ></script>
+
     <style>
-      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
-      body {
-        font-family: "Inter", sans-serif;
-        background: #764ba2;
-        min-height: 100vh;
-      }
-      .main-container {
-        background: white;
-        border-radius: 2rem;
-        margin: 2rem;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-        overflow: hidden;
-        position: relative;
-      }
-      .header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 3rem 2rem;
-        text-align: center;
-        position: relative;
-      }
-      .platform-title {
-        font-size: 3rem;
-        font-weight: 800;
-        margin-bottom: 1rem;
-      }
-      .platform-subtitle {
-        font-size: 1.5rem;
-        opacity: 0.9;
-        font-weight: 500;
-      }
-      .role-toggle {
-        position: absolute;
-        top: 2rem;
-        right: 2rem;
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-        border-radius: 2rem;
-        padding: 0.5rem;
-        display: flex;
-        gap: 0.5rem;
-      }
-      .role-btn {
-        padding: 0.75rem 1.5rem;
-        border-radius: 1.5rem;
-        background: transparent;
-        color: white;
-        border: none;
-        cursor: pointer;
-        font-weight: 600;
-      }
-      .role-btn.active {
-        background: white;
-        color: #764ba2;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-      }
-      .content-area {
-        padding: 3rem 2rem;
-      }
       .upload-form {
         background: #f8fafc;
         border-radius: 1rem;
@@ -99,7 +45,7 @@
         font-size: 1rem;
       }
       .submit-btn {
-        background: linear-gradient(135deg, #667eea, #764ba2);
+        background: var(--primary-color, #4a67e2);
         color: white;
         padding: 1rem 2rem;
         border-radius: 0.5rem;
@@ -116,7 +62,9 @@
         background: white;
         border-radius: 1rem;
         padding: 2rem;
-        border: 2px solid #e2e8f0;
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1),
+          0 2px 4px -2px rgb(0 0 0 / 0.1);
         display: flex;
         flex-direction: column;
       }
@@ -138,19 +86,19 @@
         flex-shrink: 0;
       }
       .file-icon.pdf {
-        background: linear-gradient(135deg, #dc2626, #991b1b);
+        background: #dc2626;
       }
       .file-icon.doc {
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        background: #2563eb;
       }
       .file-icon.xls {
-        background: linear-gradient(135deg, #16a34a, #15803d);
+        background: #16a34a;
       }
       .file-icon.ppt {
-        background: linear-gradient(135deg, #ea580c, #c2410c);
+        background: #ea580c;
       }
       .file-icon.default {
-        background: linear-gradient(135deg, #6b7280, #4b5563);
+        background: #6b7280;
       }
       .material-title {
         font-size: 1.1rem;
@@ -180,117 +128,114 @@
         color: white;
       }
       .download-btn {
-        background: linear-gradient(135deg, #16a34a, #15803d);
+        background: #16a34a;
         flex: 1;
       }
       .edit-btn {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
+        background: #f59e0b;
       }
       .delete-btn {
-        background: linear-gradient(135deg, #dc2626, #991b1b);
+        background: #dc2626;
+      }
+      .role-toggle {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        justify-content: center;
+      }
+      .role-btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 1.5rem;
+        background-color: #f3f4f6;
+        border: 1px solid #d1d5db;
+        cursor: pointer;
+      }
+      .role-btn.active {
+        background-color: var(--primary-color, #4a67e2);
+        color: white;
+        border-color: var(--primary-color, #4a67e2);
       }
       .hidden {
         display: none !important;
       }
-      .notification {
-        position: fixed;
-        top: 2rem;
-        right: 2rem;
-        background: white;
-        border-radius: 1rem;
-        padding: 1.5rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        border-left: 4px solid #16a34a;
-        z-index: 1000;
-        transform: translateX(120%);
-        transition: transform 0.3s ease-in-out;
-      }
-      .notification.show {
-        transform: translateX(0);
-      }
-      .notification.error {
-        border-left-color: #dc2626;
-      }
     </style>
   </head>
   <body>
-    <div class="main-container">
-      <div class="header">
-        <div class="role-toggle">
-          <button type="button" class="role-btn" id="teacherBtn">
-            👩‍🏫 Profesor
-          </button>
-          <button type="button" class="role-btn active" id="studentBtn">
-            🧑‍🎓 Estudiante
-          </button>
-        </div>
-        <div class="header-content">
-          <h1 class="platform-title">📚 Materiales de Curso</h1>
-          <p class="platform-subtitle">
-            Calidad de Software · Recursos y Documentos
-          </p>
+    <div id="main-nav"></div>
+
+    <main class="container">
+      <header class="page-header">
+        <h1>📚 Materiales de Curso</h1>
+        <p>Recursos y documentos de la materia.</p>
+      </header>
+
+      <div class="role-toggle">
+        <button type="button" class="role-btn" id="teacherBtn">
+          👩‍🏫 Profesor
+        </button>
+        <button type="button" class="role-btn active" id="studentBtn">
+          🧑‍🎓 Estudiante
+        </button>
+      </div>
+
+      <div id="teacherView" class="hidden">
+        <div class="upload-form">
+          <h3 class="text-xl font-bold text-gray-800 mb-4">
+            Subir Nuevo Material
+          </h3>
+          <form id="materialForm">
+            <div class="form-group">
+              <label class="form-label" for="file-widget">Archivo</label
+              ><input
+                type="hidden"
+                role="uploadcare-uploader"
+                name="content"
+                id="file-widget"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="materialTitle">Título</label
+              ><input
+                type="text"
+                class="form-input"
+                id="materialTitle"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="materialCategory">Categoría</label
+              ><select class="form-select" id="materialCategory" required>
+                <option value="presentations">Presentaciones</option>
+                <option value="templates">Plantillas</option>
+                <option value="exercises">Ejercicios</option>
+                <option value="references">Referencias</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="materialDescription"
+                >Descripción</label
+              ><textarea
+                class="form-textarea"
+                id="materialDescription"
+              ></textarea>
+            </div>
+            <div class="form-group">
+              <button type="submit" class="submit-btn">Guardar Material</button>
+            </div>
+          </form>
         </div>
       </div>
-      <div class="content-area">
-        <div id="teacherView" class="hidden">
-          <div class="upload-form">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">
-              Subir Nuevo Material
-            </h3>
-            <form id="materialForm">
-              <div class="form-group">
-                <label class="form-label" for="file-widget">Archivo</label
-                ><input
-                  type="hidden"
-                  role="uploadcare-uploader"
-                  name="content"
-                  id="file-widget"
-                />
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="materialTitle">Título</label
-                ><input
-                  type="text"
-                  class="form-input"
-                  id="materialTitle"
-                  required
-                />
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="materialCategory"
-                  >Categoría</label
-                ><select class="form-select" id="materialCategory" required>
-                  <option value="presentations">Presentaciones</option>
-                  <option value="templates">Plantillas</option>
-                  <option value="exercises">Ejercicios</option>
-                  <option value="references">Referencias</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="materialDescription"
-                  >Descripción</label
-                ><textarea
-                  class="form-textarea"
-                  id="materialDescription"
-                ></textarea>
-              </div>
-              <div class="form-group">
-                <button type="submit" class="submit-btn">
-                  Guardar Material
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-        <div class="materials-grid" id="materialsGrid"></div>
-        <div class="empty-state" id="emptyState">
-          <p id="emptyMessage">Verificando usuario...</p>
-        </div>
+
+      <div class="materials-grid" id="materialsGrid"></div>
+
+      <div class="empty-state hidden" id="emptyState">
+        <p id="emptyMessage">Verificando usuario...</p>
       </div>
-    </div>
-    <div class="notification" id="notification">
-      <span id="notificationIcon">✅</span
-      ><span id="notificationMessage"></span>
+    </main>
+
+    <div id="notification" class="notification-toast">
+      <span id="notificationIcon">✅</span>
+      <span id="notificationMessage"></span>
     </div>
 
     <script type="module">
@@ -327,17 +272,15 @@
           isCurrentUserTeacher = isTeacherEmail(user.email);
           await initializeApp();
         } else {
-          window.location.href = "index.html";
+          window.location.href = "../index.html"; // Corregido para salir de la carpeta /pages
         }
       });
 
       async function initializeApp() {
-        // Inicializa el widget DESPUÉS de que sabemos que el usuario es un profesor
         if (isCurrentUserTeacher) {
           uploadcareWidget = uploadcare.Widget("#file-widget");
           elements.form.addEventListener("submit", handleFormSubmit);
         }
-
         elements.grid.addEventListener("click", handleGridClick);
         elements.teacherBtn.addEventListener("click", () =>
           switchRole("teacher")
@@ -351,9 +294,7 @@
           render();
         } catch (error) {
           console.error("Error al inicializar:", error);
-          showNotification("error", "No se pudieron cargar los materiales.");
-          elements.emptyMessage.textContent =
-            "Error al cargar. Revisa los permisos.";
+          elements.emptyMessage.textContent = "Error al cargar los materiales.";
         }
 
         if (isCurrentUserTeacher) {
@@ -365,13 +306,12 @@
 
       function render() {
         elements.grid.innerHTML = "";
+        elements.emptyState.classList.toggle("hidden", allMaterials.length > 0);
         if (allMaterials.length === 0) {
-          elements.emptyState.classList.remove("hidden");
           elements.emptyMessage.textContent =
             "Aún no hay materiales disponibles.";
-          return;
         }
-        elements.emptyState.classList.add("hidden");
+
         allMaterials.forEach((material) => {
           elements.grid.insertAdjacentHTML(
             "beforeend",
@@ -419,13 +359,10 @@
       async function handleFormSubmit(event) {
         event.preventDefault();
         const title = document.getElementById("materialTitle").value.trim();
-        if (!title) return showNotification("error", "El título es requerido.");
-
+        if (!title) return;
         const fileInfo = uploadcareWidget.value();
-        if (!fileInfo)
-          return showNotification("error", "Debes seleccionar un archivo.");
+        if (!fileInfo) return;
 
-        showNotification("info", "Subiendo archivo...");
         fileInfo.done(async (file) => {
           const newMaterialData = {
             title,
@@ -444,9 +381,7 @@
             render();
             elements.form.reset();
             uploadcareWidget.value(null);
-            showNotification("success", "Material guardado.");
           } catch (error) {
-            showNotification("error", "No se pudo guardar.");
             console.error(error);
           }
         });
@@ -463,15 +398,10 @@
           if (mat) mat.downloads = (mat.downloads || 0) + 1;
           render();
         } else if (button.classList.contains("delete-btn")) {
-          if (!confirm("¿Seguro que quieres eliminar este material?")) return;
-          try {
-            await deleteMaterial(id);
-            allMaterials = allMaterials.filter((m) => m.id !== id);
-            render();
-            showNotification("success", "Material eliminado.");
-          } catch (error) {
-            showNotification("error", "No se pudo eliminar.");
-          }
+          if (!confirm("¿Seguro?")) return;
+          await deleteMaterial(id);
+          allMaterials = allMaterials.filter((m) => m.id !== id);
+          render();
         } else if (button.classList.contains("edit-btn")) {
           const material = allMaterials.find((m) => m.id === id);
           const newTitle = prompt("Nuevo título:", material.title);
@@ -480,25 +410,15 @@
             material.description
           );
           if (newTitle === null || newDescription === null) return;
-          try {
-            await updateMaterial(id, newTitle.trim(), newDescription.trim());
-            material.title = newTitle.trim();
-            material.description = newDescription.trim();
-            render();
-            showNotification("success", "Material actualizado.");
-          } catch (error) {
-            showNotification("error", "No se pudo actualizar.");
-          }
+          await updateMaterial(id, newTitle.trim(), newDescription.trim());
+          material.title = newTitle.trim();
+          material.description = newDescription.trim();
+          render();
         }
       }
 
       function switchRole(newRole) {
-        if (!isCurrentUserTeacher && newRole === "teacher") {
-          console.log(
-            "Acceso denegado: solo los profesores pueden cambiar a la vista de profesor."
-          );
-          return;
-        }
+        if (!isCurrentUserTeacher && newRole === "teacher") return;
         currentRole = newRole;
         elements.teacherBtn.classList.toggle("active", newRole === "teacher");
         elements.studentBtn.classList.toggle("active", newRole === "student");
@@ -532,14 +452,6 @@
         const p = document.createElement("p");
         p.textContent = str;
         return p.innerHTML;
-      }
-      function showNotification(type, message) {
-        elements.notificationMessage.textContent = message;
-        elements.notification.className = `notification ${
-          type === "error" ? "error" : ""
-        }`;
-        elements.notification.classList.add("show");
-        setTimeout(() => elements.notification.classList.remove("show"), 3000);
       }
     </script>
   </body>
