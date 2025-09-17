@@ -20,6 +20,77 @@
         transition: width 0.3s ease-in-out;
       }
     </style>
+    <style id="qs-calificaciones-css">
+      #calificaciones-root .qsc-wrap {
+        max-width: 1100px;
+        margin: 24px auto;
+        padding: 0 16px;
+      }
+      #calificaciones-root .qsc-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0 0 12px;
+      }
+      #calificaciones-root .qsc-kpis {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      #calificaciones-root .qsc-kpi {
+        min-width: 140px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.05);
+        text-align: center;
+      }
+      #calificaciones-root .qsc-kpi span {
+        display: block;
+        font-weight: 700;
+        font-size: 1.1rem;
+      }
+      #calificaciones-root .qsc-kpi small {
+        display: block;
+        opacity: 0.75;
+      }
+      #calificaciones-root .qsc-bar {
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+      #calificaciones-root .qsc-bar-fill {
+        height: 100%;
+        background: var(--primary, #667eea);
+        width: 0%;
+        transition: width 0.4s ease;
+      }
+      #calificaciones-root .qsc-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 14px;
+        background: rgba(255, 255, 255, 0.85);
+      }
+      #calificaciones-root .qsc-table th {
+        padding: 10px;
+        text-align: left;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+        white-space: nowrap;
+        font-weight: 700;
+      }
+      #calificaciones-root .qsc-table td {
+        padding: 10px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      }
+      #calificaciones-root .qsc-msg {
+        margin-top: 8px;
+        opacity: 0.85;
+        font-size: 0.9rem;
+      }
+      #calificaciones-root .qsc-muted {
+        opacity: 0.7;
+      }
+    </style>
   </head>
   <body class="bg-gray-50 min-h-screen">
     <!-- Header -->
@@ -1495,41 +1566,7 @@
       calculateGrades();
     </script>
     <script type="module" src="./js/role-gate.js"></script>
-    <script>
-      (function () {
-        function c() {
-          var b = a.contentDocument || a.contentWindow.document;
-          if (b) {
-            var d = b.createElement("script");
-            d.innerHTML =
-              "window.__CF$cv$params={r:'97f4850af46b453c',t:'MTc1NzkwMTUxMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
-            b.getElementsByTagName("head")[0].appendChild(d);
-          }
-        }
-        if (document.body) {
-          var a = document.createElement("iframe");
-          a.height = 1;
-          a.width = 1;
-          a.style.position = "absolute";
-          a.style.top = 0;
-          a.style.left = 0;
-          a.style.border = "none";
-          a.style.visibility = "hidden";
-          document.body.appendChild(a);
-          if ("loading" !== document.readyState) c();
-          else if (window.addEventListener)
-            document.addEventListener("DOMContentLoaded", c);
-          else {
-            var e = document.onreadystatechange || function () {};
-            document.onreadystatechange = function (b) {
-              e(b);
-              "loading" !== document.readyState &&
-                ((document.onreadystatechange = e), c());
-            };
-          }
-        }
-      })();
-    </script>
+
     <script>
       // Gating por rol local: estudiante solo lectura
       document.addEventListener("DOMContentLoaded", function () {
@@ -1570,357 +1607,8 @@
     </script>
     <script defer src="js/back-home.js"></script>
     <script defer src="js/nav-inject.js"></script>
-
-    <!-- Firebase (compat para no tocar tu frontend) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
     <script>
-      // Reuse the existing firebaseConfig variable declared earlier in the script.
-      firebase.initializeApp(firebaseConfig);
-      const auth = firebase.auth();
-      const firestoreDb = firebase.firestore();
-    </script>
-    <!-- ==== INTEGRACIÓN CALIFICACIONES (PEGAR ANTES DE </body>) ==== -->
-    <script type="module">
-      // SDK modular
-      import { Calificaciones } from "./calificaciones-backend.js";
-      import {
-        getFirestore,
-        doc,
-        getDoc,
-        query,
-        where,
-        getDocs,
-        collection,
-      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
-      import { getApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
-
-      // Tu config ya activa en el proyecto
-      // Removed duplicate declaration of firebaseConfig to avoid redeclaration error.
-
-      // Grupo desde URL ?grupo=calidad-2025
-      const queryParams = new URLSearchParams(location.search);
-      const GRUPO_ID_PARAM = queryParams.get("grupo") || "calidad-2025";
-
-      // Selectores no intrusivos. Solo pintamos si existen.
-      const $ = (s) => document.querySelector(s);
-      const elDocente = {
-        root: $("#grades-root") || $("#calificaciones-root") || document.body,
-        table: $("#tabla-calificaciones") || $("#grades-table"),
-        tbody: $("#grades-body") || $("#tabla-calificaciones tbody") || null,
-        msg: $("#msg") || $("#grades-msg"),
-        btnGuardar: $("#btnGuardar") || $("#grades-save"),
-      };
-
-      // Cache de usuarios para mostrar nombre/matrícula
-      // Reuse the existing firestoreDb variable
-      const userCache = new Map();
-      async function getUser(uid) {
-        if (userCache.has(uid)) return userCache.get(uid);
-        const snap = await getDoc(doc(db, "users", uid));
-        const data = snap.exists() ? snap.data() : {};
-        userCache.set(uid, data);
-        return data;
-      }
-
-      // Render alumno (solo lectura)
-      function renderAlumno({ items, resumen }, me) {
-        if (!el.table) {
-          // Fallback mínimo sin alterar layout
-          const box = document.createElement("div");
-          box.innerHTML = `
-        <div class="card">
-          <h3>Mis calificaciones</h3>
-          <p><strong>Porcentaje:</strong> ${resumen.porcentaje}%</p>
-        </div>`;
-          el.root.appendChild(box);
-          return;
-        }
-        // Construye encabezado si no existe
-        if (!el.tbody) {
-          const tb = document.createElement("tbody");
-          el.table.appendChild(tb);
-          el.tbody = tb;
-        }
-        // Limpia cuerpo
-        el.tbody.innerHTML = "";
-        // Fila resumen
-        el.tbody.insertAdjacentHTML(
-          "beforeend",
-          `
-      <tr class="resumen">
-        <td colspan="4"><strong>Total</strong></td>
-        <td><strong>${resumen.porcentaje}%</strong></td>
-      </tr>`
-        );
-
-        // Detalle de items
-        items.forEach((it) => {
-          el.tbody.insertAdjacentHTML(
-            "beforeend",
-            `
-        <tr>
-          <td>${me?.nombre || "-"}</td>
-          <td>${it.nombre || "Actividad"}</td>
-          <td>${Number(it.puntos || 0)} / ${Number(it.maxPuntos || 0)}</td>
-          <td>${Number(it.ponderacion || 0)}%</td>
-          <td></td>
-        </tr>`
-          );
-        });
-      }
-
-      // Render docente (lista por alumno, sin mover estilos si ya hay tabla)
-      async function renderDocente(rows) {
-        // rows: [{alumnoUid, items:[...], resumen:{porcentaje}}]
-        if (!el.table) {
-          const box = document.createElement("div");
-          const total = rows.length;
-          const top = rows
-            .slice(0, 5)
-            .map((r) => `${r.alumnoUid}: ${r.resumen.porcentaje}%`)
-            .join("<br>");
-          box.innerHTML = `
-        <div class="card">
-          <h3>Calificaciones del grupo</h3>
-          <p>Total alumnos: ${total}</p>
-          <div>${top}</div>
-        </div>`;
-          el.root.appendChild(box);
-          return;
-        }
-        if (!el.tbody) {
-          const tb = document.createElement("tbody");
-          el.table.appendChild(tb);
-          el.tbody = tb;
-        }
-        el.tbody.innerHTML = "";
-
-        // Prefetch nombres
-        const metas = {};
-        await Promise.all(
-          rows.map(async (r) => {
-            metas[r.alumnoUid] = await getUser(r.alumnoUid);
-          })
-        );
-
-        rows.forEach((r) => {
-          const meta = metas[r.alumnoUid] || {};
-          const nombre = meta.nombre || r.alumnoUid;
-          const matricula = meta.matricula || "";
-          el.tbody.insertAdjacentHTML(
-            "beforeend",
-            `
-        <tr data-uid="${r.alumnoUid}">
-          <td>${nombre}</td>
-          <td>${matricula}</td>
-          <td>${r.resumen.porcentaje}%</td>
-          <td>
-            <button class="btn-detalle" data-uid="${r.alumnoUid}">Detalle</button>
-            <button class="btn-agregar" data-uid="${r.alumnoUid}">Añadir</button>
-          </td>
-        </tr>`
-          );
-        });
-
-        // Delegación de eventos sin romper tu CSS
-        el.table.addEventListener("click", async (e) => {
-          const uid = e.target?.dataset?.uid;
-          if (!uid) return;
-          if (e.target.classList.contains("btn-detalle")) {
-            // Muestra detalle en un modal simple o consola si no existe modal
-            const me = await getUser(uid);
-            const data = rows.find((x) => x.alumnoUid === uid);
-            const detalle = (data?.items || [])
-              .map(
-                (it) =>
-                  `${it.nombre}: ${it.puntos}/${it.maxPuntos} (${it.ponderacion}%)`
-              )
-              .join("\n");
-            alert(`${me?.nombre || uid}\n\n${detalle || "Sin actividades"}`);
-          }
-          if (e.target.classList.contains("btn-agregar")) {
-            // Captura rápida (prompt). Si ya tienes formulario propio, ignora esto.
-            const nombre = prompt("Nombre de la actividad:");
-            if (!nombre) return;
-            const ponderacion = Number(prompt("Ponderación % (0-100):") || 0);
-            const maxPuntos = Number(prompt("Puntos máximos:") || 0);
-            const puntos = Number(prompt("Puntos obtenidos:") || 0);
-            try {
-              await Calificaciones.addGradeForStudent(uid, {
-                nombre,
-                ponderacion,
-                maxPuntos,
-                puntos,
-              });
-              el.msg && (el.msg.textContent = "Guardado.");
-              setTimeout(() => {
-                location.reload();
-              }, 600);
-            } catch (err) {
-              console.error(err);
-              el.msg && (el.msg.textContent = "Error al guardar");
-            }
-          }
-        });
-
-        // Guardado masivo si tienes un botón existente y filas con inputs
-        el.btnGuardar &&
-          el.btnGuardar.addEventListener("click", async () => {
-            const filas = el.table.querySelectorAll("tr[data-uid]");
-            for (const tr of filas) {
-              // Si tu diseño ya tiene inputs por fila, aquí podrías leerlos y llamar updateGrade(...)
-              // Este bloque es NO-OP si no hay inputs.
-            }
-            el.msg && (el.msg.textContent = "Listo.");
-            setTimeout(() => el.msg && (el.msg.textContent = ""), 1500);
-          });
-      }
-
-      // Arranque
-      try {
-        const { role } = await Calificaciones.init({
-          firebaseConfig,
-          grupoId: GRUPO_ID,
-        });
-        if (role === "docente") {
-          const grupo = await Calificaciones.listGroupGrades();
-          await renderDocente(grupo);
-        } else {
-          // alumno actual
-          const meSnap = await getDoc(
-            doc(
-              db,
-              "users",
-              (
-                await import(
-                  "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js"
-                )
-              ).getAuth().currentUser.uid
-            )
-          );
-          const me = meSnap.exists() ? meSnap.data() : {};
-          const mis = await Calificaciones.listMyGrades();
-          renderAlumno(mis, me);
-        }
-      } catch (e) {
-        console.error(e);
-        el.msg &&
-          (el.msg.textContent = "Inicia sesión para ver calificaciones.");
-      }
-    </script>
-    <!-- ==== /INTEGRACIÓN CALIFICACIONES ==== -->
-
-    <!-- === VISTA ALUMNO: PROGRESO DE CALIFICACIONES (solo lectura) === -->
-    <section id="mi-progreso" style="margin-top: 1rem">
-      <h2 class="titulo-seccion">Mis calificaciones</h2>
-
-      <div id="mi-resumen" class="mi-resumen">
-        <div class="mi-kpis">
-          <div class="mi-kpi">
-            <span id="kpi-total">--%</span><small>Total</small>
-          </div>
-          <div class="mi-kpi">
-            <span id="kpi-items">0</span><small>Actividades</small>
-          </div>
-          <div class="mi-kpi">
-            <span id="kpi-pond">0%</span><small>Peso cubierto</small>
-          </div>
-        </div>
-        <div class="mi-bar">
-          <div id="mi-bar-fill" class="mi-bar-fill" style="width: 0%"></div>
-        </div>
-      </div>
-
-      <div class="tabla-wrapper">
-        <table id="mi-tabla" class="tabla">
-          <thead>
-            <tr>
-              <th>Actividad</th>
-              <th>Puntos</th>
-              <th>Máx</th>
-              <th>Ponderación</th>
-              <th>Aporta al final</th>
-              <th>Fecha</th>
-            </tr>
-          </thead>
-          <tbody id="mi-tbody"></tbody>
-        </table>
-      </div>
-
-      <p id="mi-msg" class="mi-msg"></p>
-    </section>
-
-    <style>
-      /* Estilos acotados a la vista de alumno */
-      #mi-progreso .mi-resumen {
-        padding: 12px;
-        border-radius: 10px;
-        background: rgba(0, 0, 0, 0.03);
-      }
-      #mi-progreso .mi-kpis {
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
-        margin-bottom: 10px;
-      }
-      #mi-progreso .mi-kpi {
-        min-width: 120px;
-        padding: 10px 12px;
-        border-radius: 10px;
-        background: rgba(0, 0, 0, 0.04);
-        text-align: center;
-      }
-      #mi-progreso .mi-kpi span {
-        display: block;
-        font-weight: 700;
-        font-size: 20px;
-      }
-      #mi-progreso .mi-kpi small {
-        display: block;
-        opacity: 0.7;
-      }
-      #mi-progreso .mi-bar {
-        height: 10px;
-        border-radius: 999px;
-        background: rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-      }
-      #mi-progreso .mi-bar-fill {
-        height: 100%;
-      }
-      #mi-progreso .tabla {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 12px;
-      }
-      #mi-progreso .tabla th,
-      #mi-progreso .tabla td {
-        padding: 10px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-        text-align: left;
-        font-size: 0.95rem;
-      }
-      #mi-progreso .mi-msg {
-        margin-top: 8px;
-        opacity: 0.8;
-      }
-    </style>
-
-    <script type="module">
-      import { Calificaciones } from "./calificaciones-backend.js";
-      import { getApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
-      import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
-      import {
-        getFirestore,
-        doc,
-        getDoc,
-      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
-
-      // Config de tu proyecto
-      const firebaseConfig = {
+      window.firebaseConfig = {
         apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
         authDomain: "calidad-de-software-v2.firebaseapp.com",
         projectId: "calidad-de-software-v2",
@@ -1928,104 +1616,175 @@
         messagingSenderId: "220818066383",
         appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
       };
-      // Grupo por URL ?grupo=calidad-2025
-      const params = new URLSearchParams(location.search);
-      const GRUPO_ID = params.get("grupo") || "calidad-2025";
+    </script>
 
-      const elAlumno = {
-        tbody: document.getElementById("mi-tbody"),
-        msg: document.getElementById("mi-msg"),
-        kpiTotal: document.getElementById("kpi-total"),
-        kpiItems: document.getElementById("kpi-items"),
-        kpiPond: document.getElementById("kpi-pond"),
-        barFill: document.getElementById("mi-bar-fill"),
-      };
-
-      // Color de barra usa CSS actual si lo tienes; si no, fallback
-      const fallbackBarColor =
-        getComputedStyle(document.body).getPropertyValue("--primary")?.trim() ||
-        "#667eea";
-      el.barFill.style.background = fallbackBarColor;
-
-      function fmtPct(n) {
-        return `${Math.max(0, Math.min(100, Number(n) || 0)).toFixed(2)}%`;
-      }
-      function fmtDate(ts) {
-        if (!ts) return "";
-        const d = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
-        return d.toLocaleDateString("es-MX");
-      }
-
-      // Calcula aporte por ítem y peso acumulado mostrado
-      function computeContrib(item) {
-        const max = Number(item.maxPuntos) || 0;
-        const pts = Number(item.puntos) || 0;
-        const pond = Number(item.ponderacion) || 0; // % de la calificación final
-        const ratio = max > 0 ? pts / max : 0;
-        const aporta = ratio * pond; // porcentaje que aporta al final
-        return { aporta, pondUsed: pond };
-      }
-
-      try {
-        // Init y auth
-        await Calificaciones.init({ firebaseConfig, grupoId: GRUPO_ID });
-
-        const auth = getAuth(getApp());
-        const user = auth.currentUser;
-        if (!user) {
-          el.msg.textContent =
-            "Inicia sesión con tu correo @potros para ver tu progreso.";
-          throw new Error("No auth");
+    <!-- Firebase (compat para no tocar tu frontend) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script>
+      if (typeof firebase !== "undefined") {
+        if (!firebase.apps || firebase.apps.length === 0) {
+          firebase.initializeApp(window.firebaseConfig);
         }
-
-        // Datos de usuario para mostrar nombre si lo requieres
-        const db = getFirestore(getApp());
-        const meSnap = await getDoc(doc(db, "users", user.uid));
-        const me = meSnap.exists() ? meSnap.data() : {};
-
-        // Trae mis calificaciones
-        const { items, resumen } = await Calificaciones.listMyGrades();
-
-        // KPIs
-        el.kpiTotal.textContent = fmtPct(resumen.porcentaje);
-        el.kpiItems.textContent = items.length;
-        const pondUsed = items.reduce(
-          (s, it) => s + (Number(it.ponderacion) || 0),
-          0
-        );
-        el.kpiPond.textContent = fmtPct(pondUsed);
-        el.barFill.style.width = fmtPct(resumen.porcentaje);
-
-        // Tabla
-        el.tbody.innerHTML = "";
-        if (items.length === 0) {
-          el.tbody.innerHTML = `<tr><td colspan="6">Sin actividades registradas aún.</td></tr>`;
-        } else {
-          items.forEach((it) => {
-            const { aporta } = computeContrib(it);
-            el.tbody.insertAdjacentHTML(
-              "beforeend",
-              `
-          <tr>
-            <td>${it.nombre || "Actividad"}</td>
-            <td>${Number(it.puntos || 0)}</td>
-            <td>${Number(it.maxPuntos || 0)}</td>
-            <td>${Number(it.ponderacion || 0)}%</td>
-            <td>${fmtPct(aporta)}</td>
-            <td>${fmtDate(it.fecha)}</td>
-          </tr>
-        `
-            );
-          });
-        }
-
-        // Mensaje inferior opcional
-        el.msg.textContent = me?.nombre ? `Alumno: ${me.nombre}` : "";
-      } catch (e) {
-        // No rompe la página
-        console.error(e);
+        window._authCompat = firebase.auth();
+        window._dbCompat = firebase.firestore();
       }
     </script>
-    <!-- === /VISTA ALUMNO === -->
+
+    <script>
+      // Reuse the existing firebaseConfig variable declared earlier in the script.
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const firestoreDb = firebase.firestore();
+    </script>
+
+    <div id="calificaciones-root" data-grupo="calidad-2025"></div>
+
+    <script type="module">
+      import {
+        initializeApp,
+        getApps,
+        getApp,
+      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+      import {
+        getAuth,
+        onAuthStateChanged,
+      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+      import {
+        getFirestore,
+        doc,
+        getDoc,
+        collection,
+        getDocs,
+        query,
+        orderBy,
+      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+
+      const app = getApps().length
+        ? getApp()
+        : initializeApp(window.firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      const root = document.getElementById("calificaciones-root");
+      if (!root) console.warn("#calificaciones-root no existe");
+      const params = new URLSearchParams(location.search);
+      const GRUPO_ID =
+        root?.dataset?.grupo || params.get("grupo") || "calidad-2025";
+
+      root.innerHTML = `
+    <section class="qsc-wrap">
+      <h2 class="qsc-title">Mis calificaciones</h2>
+      <div class="qsc-kpis">
+        <div class="qsc-kpi"><span id="qsc-kpi-total">--%</span><small>Total</small></div>
+        <div class="qsc-kpi"><span id="qsc-kpi-items">0</span><small>Actividades</small></div>
+        <div class="qsc-kpi"><span id="qsc-kpi-pond">0%</span><small>Peso cubierto</small></div>
+      </div>
+      <div class="qsc-bar"><div id="qsc-bar-fill" class="qsc-bar-fill"></div></div>
+      <div class="qsc-table-wrap">
+        <table class="qsc-table">
+          <thead><tr>
+            <th>Actividad</th><th>Puntos</th><th>Máx</th>
+            <th>Ponderación</th><th>Aporta al final</th><th>Fecha</th>
+          </tr></thead>
+          <tbody id="qsc-tbody"><tr><td class="qsc-muted" colspan="6">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+      <p id="qsc-msg" class="qsc-msg"></p>
+    </section>`;
+
+      const ui = {
+        tbody: root.querySelector("#qsc-tbody"),
+        msg: root.querySelector("#qsc-msg"),
+        kpiTotal: root.querySelector("#qsc-kpi-total"),
+        kpiItems: root.querySelector("#qsc-kpi-items"),
+        kpiPond: root.querySelector("#qsc-kpi-pond"),
+        barFill: root.querySelector("#qsc-bar-fill"),
+      };
+
+      const clampPct = (n) => Math.max(0, Math.min(100, Number(n) || 0));
+      const fmtPct = (n) => `${clampPct(n).toFixed(2)}%`;
+      const fmtDate = (ts) => {
+        if (!ts) return "";
+        const d = ts?.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
+        return isNaN(d.getTime()) ? "" : d.toLocaleDateString("es-MX");
+      };
+
+      async function obtenerMisItems(uid) {
+        const ref = collection(
+          db,
+          "grupos",
+          GRUPO_ID,
+          "calificaciones",
+          uid,
+          "items"
+        );
+        const snap = await getDocs(query(ref, orderBy("fecha", "asc")));
+        return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      }
+      function resumen(items) {
+        let porc = 0,
+          pond = 0;
+        for (const it of items) {
+          const max = Number(it.maxPuntos) || 0;
+          const pts = Number(it.puntos) || 0;
+          const pnd = Number(it.ponderacion) || 0;
+          if (max > 0) porc += (pts / max) * pnd;
+          pond += pnd;
+        }
+        return { porcentaje: clampPct(porc), pondSum: clampPct(pond) };
+      }
+      function render(items, me) {
+        const { porcentaje, pondSum } = resumen(items);
+        ui.kpiTotal.textContent = fmtPct(porcentaje);
+        ui.kpiItems.textContent = items.length;
+        ui.kpiPond.textContent = fmtPct(pondSum);
+        ui.barFill.style.width = fmtPct(porcentaje);
+        ui.tbody.innerHTML = "";
+        if (items.length === 0) {
+          ui.tbody.innerHTML = `<tr><td colspan="6" class="qsc-muted">Sin actividades registradas aún.</td></tr>`;
+          ui.msg.textContent = me?.nombre ? `Alumno: ${me.nombre}` : "";
+          return;
+        }
+        for (const it of items) {
+          const max = Number(it.maxPuntos) || 0;
+          const pts = Number(it.puntos) || 0;
+          const pnd = Number(it.ponderacion) || 0;
+          const aporta = max > 0 ? (pts / max) * pnd : 0;
+          ui.tbody.insertAdjacentHTML(
+            "beforeend",
+            `
+        <tr>
+          <td>${it.nombre || "Actividad"}</td>
+          <td>${pts}</td>
+          <td>${max}</td>
+          <td>${pnd}%</td>
+          <td>${fmtPct(aporta)}</td>
+          <td>${fmtDate(it.fecha)}</td>
+        </tr>`
+          );
+        }
+        ui.msg.textContent = me?.nombre ? `Alumno: ${me.nombre}` : "";
+      }
+
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          ui.msg.textContent =
+            "Inicia sesión con tu correo @potros para ver tu progreso.";
+          return;
+        }
+        try {
+          const meSnap = await getDoc(doc(db, "users", user.uid));
+          const me = meSnap.exists() ? meSnap.data() : {};
+          const items = await obtenerMisItems(user.uid);
+          render(items, me);
+        } catch (err) {
+          console.error(err);
+          ui.tbody.innerHTML = `<tr><td colspan="6">Error al cargar calificaciones.</td></tr>`;
+          ui.msg.textContent = "Inténtalo más tarde.";
+        }
+      });
+    </script>
   </body>
 </html>
