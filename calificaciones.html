@@ -1598,22 +1598,15 @@
       import { getApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
 
       // Tu config ya activa en el proyecto
-      const firebaseConfig = {
-        apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
-        authDomain: "calidad-de-software-v2.firebaseapp.com",
-        projectId: "calidad-de-software-v2",
-        storageBucket: "calidad-de-software-v2.firebasestorage.app",
-        messagingSenderId: "220818066383",
-        appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
-      };
+      // Removed duplicate declaration of firebaseConfig to avoid redeclaration error.
 
       // Grupo desde URL ?grupo=calidad-2025
-      const params = new URLSearchParams(location.search);
-      const GRUPO_ID = params.get("grupo") || "calidad-2025";
+      const queryParams = new URLSearchParams(location.search);
+      const GRUPO_ID_PARAM = queryParams.get("grupo") || "calidad-2025";
 
       // Selectores no intrusivos. Solo pintamos si existen.
       const $ = (s) => document.querySelector(s);
-      const el = {
+      const elDocente = {
         root: $("#grades-root") || $("#calificaciones-root") || document.body,
         table: $("#tabla-calificaciones") || $("#grades-table"),
         tbody: $("#grades-body") || $("#tabla-calificaciones tbody") || null,
@@ -1819,5 +1812,220 @@
       }
     </script>
     <!-- ==== /INTEGRACIÓN CALIFICACIONES ==== -->
+
+    <!-- === VISTA ALUMNO: PROGRESO DE CALIFICACIONES (solo lectura) === -->
+    <section id="mi-progreso" style="margin-top: 1rem">
+      <h2 class="titulo-seccion">Mis calificaciones</h2>
+
+      <div id="mi-resumen" class="mi-resumen">
+        <div class="mi-kpis">
+          <div class="mi-kpi">
+            <span id="kpi-total">--%</span><small>Total</small>
+          </div>
+          <div class="mi-kpi">
+            <span id="kpi-items">0</span><small>Actividades</small>
+          </div>
+          <div class="mi-kpi">
+            <span id="kpi-pond">0%</span><small>Peso cubierto</small>
+          </div>
+        </div>
+        <div class="mi-bar">
+          <div id="mi-bar-fill" class="mi-bar-fill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <div class="tabla-wrapper">
+        <table id="mi-tabla" class="tabla">
+          <thead>
+            <tr>
+              <th>Actividad</th>
+              <th>Puntos</th>
+              <th>Máx</th>
+              <th>Ponderación</th>
+              <th>Aporta al final</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="mi-tbody"></tbody>
+        </table>
+      </div>
+
+      <p id="mi-msg" class="mi-msg"></p>
+    </section>
+
+    <style>
+      /* Estilos acotados a la vista de alumno */
+      #mi-progreso .mi-resumen {
+        padding: 12px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.03);
+      }
+      #mi-progreso .mi-kpis {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+      #mi-progreso .mi-kpi {
+        min-width: 120px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.04);
+        text-align: center;
+      }
+      #mi-progreso .mi-kpi span {
+        display: block;
+        font-weight: 700;
+        font-size: 20px;
+      }
+      #mi-progreso .mi-kpi small {
+        display: block;
+        opacity: 0.7;
+      }
+      #mi-progreso .mi-bar {
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+      #mi-progreso .mi-bar-fill {
+        height: 100%;
+      }
+      #mi-progreso .tabla {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 12px;
+      }
+      #mi-progreso .tabla th,
+      #mi-progreso .tabla td {
+        padding: 10px;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        text-align: left;
+        font-size: 0.95rem;
+      }
+      #mi-progreso .mi-msg {
+        margin-top: 8px;
+        opacity: 0.8;
+      }
+    </style>
+
+    <script type="module">
+      import { Calificaciones } from "./calificaciones-backend.js";
+      import { getApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+      import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+      import {
+        getFirestore,
+        doc,
+        getDoc,
+      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+
+      // Config de tu proyecto
+      const firebaseConfig = {
+        apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
+        authDomain: "calidad-de-software-v2.firebaseapp.com",
+        projectId: "calidad-de-software-v2",
+        storageBucket: "calidad-de-software-v2.firebasestorage.app",
+        messagingSenderId: "220818066383",
+        appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
+      };
+      // Grupo por URL ?grupo=calidad-2025
+      const params = new URLSearchParams(location.search);
+      const GRUPO_ID = params.get("grupo") || "calidad-2025";
+
+      const elAlumno = {
+        tbody: document.getElementById("mi-tbody"),
+        msg: document.getElementById("mi-msg"),
+        kpiTotal: document.getElementById("kpi-total"),
+        kpiItems: document.getElementById("kpi-items"),
+        kpiPond: document.getElementById("kpi-pond"),
+        barFill: document.getElementById("mi-bar-fill"),
+      };
+
+      // Color de barra usa CSS actual si lo tienes; si no, fallback
+      const fallbackBarColor =
+        getComputedStyle(document.body).getPropertyValue("--primary")?.trim() ||
+        "#667eea";
+      el.barFill.style.background = fallbackBarColor;
+
+      function fmtPct(n) {
+        return `${Math.max(0, Math.min(100, Number(n) || 0)).toFixed(2)}%`;
+      }
+      function fmtDate(ts) {
+        if (!ts) return "";
+        const d = ts.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
+        return d.toLocaleDateString("es-MX");
+      }
+
+      // Calcula aporte por ítem y peso acumulado mostrado
+      function computeContrib(item) {
+        const max = Number(item.maxPuntos) || 0;
+        const pts = Number(item.puntos) || 0;
+        const pond = Number(item.ponderacion) || 0; // % de la calificación final
+        const ratio = max > 0 ? pts / max : 0;
+        const aporta = ratio * pond; // porcentaje que aporta al final
+        return { aporta, pondUsed: pond };
+      }
+
+      try {
+        // Init y auth
+        await Calificaciones.init({ firebaseConfig, grupoId: GRUPO_ID });
+
+        const auth = getAuth(getApp());
+        const user = auth.currentUser;
+        if (!user) {
+          el.msg.textContent =
+            "Inicia sesión con tu correo @potros para ver tu progreso.";
+          throw new Error("No auth");
+        }
+
+        // Datos de usuario para mostrar nombre si lo requieres
+        const db = getFirestore(getApp());
+        const meSnap = await getDoc(doc(db, "users", user.uid));
+        const me = meSnap.exists() ? meSnap.data() : {};
+
+        // Trae mis calificaciones
+        const { items, resumen } = await Calificaciones.listMyGrades();
+
+        // KPIs
+        el.kpiTotal.textContent = fmtPct(resumen.porcentaje);
+        el.kpiItems.textContent = items.length;
+        const pondUsed = items.reduce(
+          (s, it) => s + (Number(it.ponderacion) || 0),
+          0
+        );
+        el.kpiPond.textContent = fmtPct(pondUsed);
+        el.barFill.style.width = fmtPct(resumen.porcentaje);
+
+        // Tabla
+        el.tbody.innerHTML = "";
+        if (items.length === 0) {
+          el.tbody.innerHTML = `<tr><td colspan="6">Sin actividades registradas aún.</td></tr>`;
+        } else {
+          items.forEach((it) => {
+            const { aporta } = computeContrib(it);
+            el.tbody.insertAdjacentHTML(
+              "beforeend",
+              `
+          <tr>
+            <td>${it.nombre || "Actividad"}</td>
+            <td>${Number(it.puntos || 0)}</td>
+            <td>${Number(it.maxPuntos || 0)}</td>
+            <td>${Number(it.ponderacion || 0)}%</td>
+            <td>${fmtPct(aporta)}</td>
+            <td>${fmtDate(it.fecha)}</td>
+          </tr>
+        `
+            );
+          });
+        }
+
+        // Mensaje inferior opcional
+        el.msg.textContent = me?.nombre ? `Alumno: ${me.nombre}` : "";
+      } catch (e) {
+        // No rompe la página
+        console.error(e);
+      }
+    </script>
+    <!-- === /VISTA ALUMNO === -->
   </body>
 </html>
