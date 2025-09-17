@@ -5,7 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Materiales - Calidad de Software</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <script>
+      UPLOADCARE_PUBLIC_KEY = "85eb5471d305dcd08e71";
+      UPLOADCARE_LOCALE = "es";
+    </script>
+    <script
+      charset="utf-8"
+      src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"
+    ></script>
+
     <style>
+      /* Tu CSS existente va aquí, no necesita cambios. */
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
       body {
         font-family: "Inter", sans-serif;
@@ -27,25 +38,10 @@
         text-align: center;
         position: relative;
       }
-      .header::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-        opacity: 0.3;
-      }
-      .header-content {
-        position: relative;
-        z-index: 1;
-      }
       .platform-title {
         font-size: 3rem;
         font-weight: 800;
         margin-bottom: 1rem;
-        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
       }
       .platform-subtitle {
         font-size: 1.5rem;
@@ -71,7 +67,6 @@
         border: none;
         cursor: pointer;
         font-weight: 600;
-        transition: all 0.3s ease;
       }
       .role-btn.active {
         background: white;
@@ -81,175 +76,57 @@
       .content-area {
         padding: 3rem 2rem;
       }
-      .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 3rem;
-      }
-      .stat-card {
-        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+      .upload-form {
+        background: #f8fafc;
         border-radius: 1rem;
         padding: 2rem;
-        text-align: center;
+        margin-bottom: 3rem;
         border: 2px solid #e2e8f0;
-        transition: all 0.3s ease;
       }
-      .stat-card:hover {
-        transform: translateY(-5px);
-        border-color: #764ba2;
-        box-shadow: 0 10px 30px rgba(118, 75, 162, 0.2);
+      .form-group {
+        margin-bottom: 1.5rem;
       }
-      .stat-icon {
-        width: 3rem;
-        height: 3rem;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.5rem;
-        margin: 0 auto 1rem;
-      }
-      .stat-number {
-        font-size: 2rem;
-        font-weight: 800;
-        color: #1a202c;
+      .form-label {
+        display: block;
+        font-weight: 600;
+        color: #374151;
         margin-bottom: 0.5rem;
       }
-      .stat-label {
-        color: #4a5568;
-        font-weight: 500;
-      }
-      .upload-area {
-        border: 3px dashed #cbd5e0;
-        border-radius: 1rem;
-        padding: 3rem;
-        text-align: center;
-        margin-bottom: 3rem;
-        transition: all 0.3s ease;
-        cursor: pointer;
-        background: #f7fafc;
-      }
-      .upload-area:hover,
-      .upload-area.dragover {
-        border-color: #764ba2;
-        background: #f0f4ff;
-        transform: scale(1.02);
-      }
-      .upload-icon {
-        font-size: 4rem;
-        color: #764ba2;
-        margin-bottom: 1rem;
-      }
-      .upload-text {
-        font-size: 1.25rem;
-        color: #4a5568;
-        margin-bottom: 1rem;
-      }
-      .upload-subtext {
-        color: #718096;
-        font-size: 0.9rem;
-      }
-      .file-input {
-        display: none;
-      }
-      .category-tabs {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
-      }
-      .category-tab {
-        padding: 1rem 2rem;
-        border-radius: 2rem;
-        background: #f7fafc;
-        color: #4a5568;
+      .form-input,
+      .form-select,
+      .form-textarea {
+        width: 100%;
+        padding: 0.75rem;
         border: 2px solid #e2e8f0;
-        cursor: pointer;
-        font-weight: 600;
-        transition: all 0.3s ease;
+        border-radius: 0.5rem;
+        font-size: 1rem;
       }
-      .category-tab:hover {
-        border-color: #764ba2;
-        color: #764ba2;
-      }
-      .category-tab.active {
+      .submit-btn {
         background: linear-gradient(135deg, #667eea, #764ba2);
         color: white;
-        border-color: #764ba2;
-      }
-      .search-bar {
-        position: relative;
-        margin-bottom: 2rem;
-      }
-      .search-input {
-        width: 100%;
-        padding: 1rem 1rem 1rem 3rem;
-        border: 2px solid #e2e8f0;
-        border-radius: 1rem;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-      }
-      .search-input:focus {
-        outline: none;
-        border-color: #764ba2;
-        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
-      }
-      .search-icon {
-        position: absolute;
-        left: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #9ca3af;
-      }
-      .empty-state {
-        border: 2px dashed #cbd5e0;
-        border-radius: 1rem;
-        padding: 3rem 2rem;
-        text-align: center;
-        color: #4a5568;
-        background: #f8fafc;
-      }
-      .empty-icon {
-        font-size: 2.5rem;
-        margin-bottom: 1rem;
-      }
-      .cancel-btn {
-        background: #6b7280;
-      }
-      .cancel-btn:hover {
-        background: #4b5563;
+        padding: 1rem 2rem;
+        border-radius: 0.5rem;
+        border: none;
+        cursor: pointer;
+        font-weight: 700;
       }
       .materials-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         gap: 2rem;
-        margin-bottom: 3rem;
-        align-items: stretch;
       }
       .material-card {
         background: white;
         border-radius: 1rem;
         padding: 2rem;
         border: 2px solid #e2e8f0;
-        transition: all 0.3s ease;
-        cursor: pointer;
         display: flex;
         flex-direction: column;
-        height: 100%;
-      }
-      .material-card:hover {
-        transform: translateY(-5px);
-        border-color: #764ba2;
-        box-shadow: 0 10px 30px rgba(118, 75, 162, 0.2);
       }
       .material-header {
         display: flex;
         align-items: flex-start;
         margin-bottom: 1rem;
-        min-height: 4rem;
       }
       .file-icon {
         width: 3rem;
@@ -281,36 +158,16 @@
       .material-title {
         font-size: 1.1rem;
         font-weight: 700;
-        color: #1a202c;
-        margin-bottom: 0.5rem;
-        line-height: 1.3;
-        min-height: 2.6rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
       }
       .material-meta {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
         color: #718096;
         font-size: 0.9rem;
         margin-bottom: 1rem;
       }
       .material-description {
         color: #4a5568;
-        font-size: 0.9rem;
-        line-height: 1.5;
         flex-grow: 1;
         margin-bottom: 1.5rem;
-        min-height: 3.6rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
       }
       .material-actions {
         display: flex;
@@ -323,99 +180,17 @@
         border: none;
         cursor: pointer;
         font-weight: 600;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
+        color: white;
       }
       .download-btn {
         background: linear-gradient(135deg, #16a34a, #15803d);
-        color: white;
         flex: 1;
-      }
-      .download-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(22, 163, 74, 0.4);
       }
       .edit-btn {
         background: linear-gradient(135deg, #f59e0b, #d97706);
-        color: white;
-      }
-      .edit-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(245, 158, 11, 0.4);
       }
       .delete-btn {
         background: linear-gradient(135deg, #dc2626, #991b1b);
-        color: white;
-      }
-      .delete-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(220, 38, 38, 0.4);
-      }
-      .upload-form {
-        background: #f8fafc;
-        border-radius: 1rem;
-        padding: 2rem;
-        margin-bottom: 3rem;
-        border: 2px solid #e2e8f0;
-      }
-      .form-group {
-        margin-bottom: 1.5rem;
-      }
-      .form-label {
-        display: block;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 0.5rem;
-      }
-      .form-input,
-      .form-select,
-      .form-textarea {
-        width: 100%;
-        padding: 0.75rem;
-        border: 2px solid #e2e8f0;
-        border-radius: 0.5rem;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-      }
-      .form-input:focus,
-      .form-select:focus,
-      .form-textarea:focus {
-        outline: none;
-        border-color: #764ba2;
-        box-shadow: 0 0 0 3px rgba(118, 75, 162, 0.1);
-      }
-      .form-textarea {
-        resize: vertical;
-        min-height: 100px;
-      }
-      .submit-btn {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        padding: 1rem 2rem;
-        border-radius: 0.5rem;
-        border: none;
-        cursor: pointer;
-        font-weight: 700;
-        font-size: 1rem;
-        transition: all 0.3s ease;
-      }
-      .submit-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 25px rgba(118, 75, 162, 0.4);
-      }
-      .progress-bar {
-        width: 100%;
-        height: 0.5rem;
-        background: #e2e8f0;
-        border-radius: 0.25rem;
-        overflow: hidden;
-        margin-top: 1rem;
-      }
-      .progress-fill {
-        height: 100%;
-        background: linear-gradient(135deg, #16a34a, #15803d);
-        width: 0%;
-        transition: width 0.3s ease;
       }
       .hidden {
         display: none !important;
@@ -439,62 +214,16 @@
       .notification.error {
         border-left-color: #dc2626;
       }
-      @media (max-width: 768px) {
-        .main-container {
-          margin: 1rem;
-        }
-        .header {
-          padding: 2rem 1rem;
-        }
-        .platform-title {
-          font-size: 2rem;
-        }
-        .role-toggle {
-          position: relative;
-          top: auto;
-          right: auto;
-          margin: 1.5rem auto 0;
-          justify-content: center;
-        }
-        .content-area {
-          padding: 2rem 1rem;
-        }
-        .materials-grid {
-          grid-template-columns: 1fr;
-        }
-        .category-tabs {
-          justify-content: center;
-        }
-        .notification {
-          left: 1rem;
-          right: 1rem;
-          top: 1rem;
-          transform: translateY(-120%);
-        }
-        .notification.show {
-          transform: translateY(0);
-        }
-      }
     </style>
   </head>
   <body>
     <div class="main-container">
       <div class="header">
         <div class="role-toggle">
-          <button
-            type="button"
-            class="role-btn active"
-            onclick="switchRole('teacher')"
-            id="teacherBtn"
-          >
+          <button type="button" class="role-btn active" id="teacherBtn">
             👩‍🏫 Profesor
           </button>
-          <button
-            type="button"
-            class="role-btn"
-            onclick="switchRole('student')"
-            id="studentBtn"
-          >
+          <button type="button" class="role-btn" id="studentBtn">
             🧑‍🎓 Estudiante
           </button>
         </div>
@@ -505,64 +234,29 @@
           </p>
         </div>
       </div>
+
       <div class="content-area">
         <div id="teacherView">
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-icon">📦</div>
-              <div class="stat-number" id="statTotalMaterials">--</div>
-              <div class="stat-label">Total materiales</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">⬇️</div>
-              <div class="stat-number" id="statTotalDownloads">--</div>
-              <div class="stat-label">Descargas</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">🗂️</div>
-              <div class="stat-number" id="statTotalCategories">--</div>
-              <div class="stat-label">Categorías</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-icon">🕒</div>
-              <div class="stat-number" id="statLastUpdated">--</div>
-              <div class="stat-label">Última actualización</div>
-            </div>
-          </div>
-          <div
-            class="upload-area"
-            onclick="document.getElementById('fileInput').click()"
-          >
-            <div class="upload-icon">⬆️</div>
-            <div class="upload-text">
-              Arrastra archivos aquí o haz clic para seleccionar
-            </div>
-            <div class="upload-subtext">
-              Formatos soportados: PDF, DOC(X), XLS(X), PPT(X) · Máx. 10&nbsp;MB
-              por archivo
-            </div>
-            <input
-              type="file"
-              id="fileInput"
-              class="file-input"
-              multiple
-              accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-            />
-          </div>
-          <div class="upload-form hidden" id="uploadForm">
+          <div class="upload-form">
             <h3 class="text-xl font-bold text-gray-800 mb-4">
-              Detalles del material
+              Subir Nuevo Material
             </h3>
             <form id="materialForm">
               <div class="form-group">
-                <label class="form-label" for="materialTitle"
-                  >Título del material</label
-                >
+                <label class="form-label" for="file-widget">Archivo</label>
+                <input
+                  type="hidden"
+                  role="uploadcare-uploader"
+                  name="content"
+                  id="file-widget"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="materialTitle">Título</label>
                 <input
                   type="text"
                   class="form-input"
                   id="materialTitle"
-                  placeholder="Ej: Presentación Sesión 1 - Introducción"
                   required
                 />
               </div>
@@ -584,568 +278,213 @@
                 <textarea
                   class="form-textarea"
                   id="materialDescription"
-                  placeholder="Breve descripción del contenido y propósito del material"
                 ></textarea>
               </div>
               <div class="form-group">
-                <button type="submit" class="submit-btn">Subir material</button>
-                <button
-                  type="button"
-                  class="submit-btn cancel-btn"
-                  onclick="cancelUpload()"
-                >
-                  Cancelar
+                <button type="submit" class="submit-btn">
+                  Guardar Material
                 </button>
-              </div>
-              <div class="progress-bar hidden" id="progressBar">
-                <div class="progress-fill" id="progressFill"></div>
               </div>
             </form>
           </div>
         </div>
-        <div id="studentView" class="hidden">
-          <div class="search-bar">
-            <div class="search-icon">🔍</div>
-            <input
-              type="text"
-              class="search-input"
-              placeholder="Buscar materiales..."
-              id="searchInput"
-            />
-          </div>
-        </div>
-        <div class="category-tabs" id="categoryTabs"></div>
+
         <div class="materials-grid" id="materialsGrid"></div>
         <div class="empty-state hidden" id="emptyState">
-          <div class="empty-icon">📂</div>
-          <p class="empty-message" id="emptyMessage">Cargando materiales...</p>
+          <p id="emptyMessage">Cargando materiales...</p>
         </div>
       </div>
     </div>
+
     <div class="notification" id="notification">
-      <div class="flex items-center">
-        <div class="text-2xl mr-3" id="notificationIcon">ℹ️</div>
-        <div>
-          <div class="font-bold" id="notificationTitle">Éxito</div>
-          <div class="text-sm text-gray-600" id="notificationMessage">
-            Operación completada correctamente
-          </div>
-        </div>
-      </div>
+      <span id="notificationIcon">✅</span>
+      <span id="notificationMessage">Operación exitosa</span>
     </div>
 
-    <script>
-      // -----------------------------------------------------------------------------
-      // CONFIGURACIÓN: Reemplaza esta URL con la de tu aplicación web de Google Apps Script.
-      // -----------------------------------------------------------------------------
-      const API_BASE_URL =
-        "https://script.google.com/macros/s/AKfycbxr1Nlueyw4xddx2t_83RX1WSPoA9I94TFTvBC8kP8bxfzd7kszQmaDPQ5T9FYit2No/exec";
-      // -----------------------------------------------------------------------------
+    <script type="module">
+      import {
+        getMaterials,
+        saveMaterial,
+        deleteMaterial,
+        updateMaterial,
+        incrementDownloads,
+      } from "./js/materials-manager.js";
 
-      function buildApiUrl(query) {
-        const separator = API_BASE_URL.includes("?") ? "&" : "?";
-        return `${API_BASE_URL}${separator}${query}`;
-      }
-      let materialsData = [];
-      let filteredCategory = "all";
-      let searchTerm = "";
-      let selectedFiles = [];
-      let currentRole =
-        (localStorage.getItem("qs_role") || "estudiante").toLowerCase() ===
-        "docente"
-          ? "teacher"
-          : "student";
-
+      // --- STATE & ELEMENTS ---
+      let allMaterials = [];
+      let currentRole = "student"; // 'student' or 'teacher'
       const elements = {
+        grid: document.getElementById("materialsGrid"),
+        form: document.getElementById("materialForm"),
+        teacherView: document.getElementById("teacherView"),
         teacherBtn: document.getElementById("teacherBtn"),
         studentBtn: document.getElementById("studentBtn"),
-        teacherView: document.getElementById("teacherView"),
-        studentView: document.getElementById("studentView"),
-        uploadArea: document.querySelector(".upload-area"),
-        uploadForm: document.getElementById("uploadForm"),
-        materialForm: document.getElementById("materialForm"),
-        fileInput: document.getElementById("fileInput"),
-        progressBar: document.getElementById("progressBar"),
-        progressFill: document.getElementById("progressFill"),
-        categorySelect: document.getElementById("materialCategory"),
-        searchInput: document.getElementById("searchInput"),
-        categoryTabs: document.getElementById("categoryTabs"),
-        materialsGrid: document.getElementById("materialsGrid"),
-        emptyState: document.getElementById("emptyState"),
-        emptyMessage: document.getElementById("emptyMessage"),
-        statTotal: document.getElementById("statTotalMaterials"),
-        statDownloads: document.getElementById("statTotalDownloads"),
-        statCategories: document.getElementById("statTotalCategories"),
-        statUpdated: document.getElementById("statLastUpdated"),
         notification: document.getElementById("notification"),
         notificationIcon: document.getElementById("notificationIcon"),
-        notificationTitle: document.getElementById("notificationTitle"),
         notificationMessage: document.getElementById("notificationMessage"),
       };
+      const uploadcareWidget = uploadcare.Widget("#file-widget");
 
-      initializeMaterials();
-
-      async function initializeMaterials() {
-        wireUploadEvents();
-        wireFilters();
-        switchRole(currentRole, { silent: true });
-        await loadMaterials();
-      }
-
-      async function loadMaterials() {
-        showEmptyState("Cargando materiales...", true);
-        try {
-          const response = await fetch(buildApiUrl("action=list"), {
-            headers: { Accept: "application/json" },
-            cache: "no-store",
-          });
-          if (!response.ok)
-            throw new Error(`Error de red: ${response.statusText}`);
-          const payload = await response.json();
-          if (payload?.success === false)
-            throw new Error(payload.message || "Servicio no disponible");
-          materialsData = (payload.materials || []).map(normalizeMaterial);
-          renderAll();
-          if (!materialsData.length)
-            showEmptyState("Aún no hay materiales disponibles.");
-          else hideEmptyState();
-        } catch (error) {
-          console.error("Error al cargar materiales:", error);
-          showEmptyState("No se pudieron cargar los materiales.");
-          showNotification("error", "Error al cargar", error.message);
+      // --- RENDERING ---
+      function render() {
+        elements.grid.innerHTML = "";
+        if (allMaterials.length === 0) {
+          document.getElementById("emptyState").classList.remove("hidden");
+          document.getElementById("emptyMessage").textContent =
+            "Aún no hay materiales disponibles.";
+          return;
         }
-      }
+        document.getElementById("emptyState").classList.add("hidden");
 
-      function normalizeMaterial(material) {
-        if (!material || typeof material !== "object") return {};
-        return {
-          id: material.id || `tmp-${Date.now()}`,
-          title: material.title || "Sin título",
-          description: material.description || "",
-          category: (material.category || "otros").toString().toLowerCase(),
-          createdAt: material.createdAt || null,
-          updatedAt: material.updatedAt || null,
-          downloads: Number(material.downloads || 0),
-          extension: (material.extension || "").toString().toLowerCase(),
-        };
-      }
-
-      function wireUploadEvents() {
-        elements.fileInput?.addEventListener("change", (event) =>
-          handleFileSelection(event.target.files)
-        );
-        if (!elements.uploadArea) return;
-        ["dragover", "dragenter"].forEach((evt) =>
-          elements.uploadArea.addEventListener(evt, (e) => {
-            e.preventDefault();
-            elements.uploadArea.classList.add("dragover");
-          })
-        );
-        ["dragleave", "dragend", "drop"].forEach((evt) =>
-          elements.uploadArea.addEventListener(evt, (e) => {
-            e.preventDefault();
-            elements.uploadArea.classList.remove("dragover");
-          })
-        );
-        elements.uploadArea.addEventListener("drop", (event) =>
-          handleFileSelection(event.dataTransfer?.files)
-        );
-        elements.materialForm?.addEventListener("submit", handleMaterialSubmit);
-      }
-
-      function handleFileSelection(files) {
-        selectedFiles = Array.from(files || []);
-        if (selectedFiles.length) {
-          elements.uploadForm.classList.remove("hidden");
-          elements.uploadArea.style.display = "none";
-          document.getElementById("materialTitle").value =
-            selectedFiles[0].name.replace(/\.[^/.]+$/, "");
-        }
-      }
-
-      function wireFilters() {
-        elements.searchInput?.addEventListener("input", (event) => {
-          searchTerm = event.target.value.trim().toLowerCase();
-          renderMaterials();
+        allMaterials.forEach((material) => {
+          const card = createMaterialCard(material);
+          elements.grid.insertAdjacentHTML("beforeend", card);
         });
-        elements.materialsGrid?.addEventListener("click", (event) => {
-          const actionButton = event.target.closest("[data-action]");
-          if (!actionButton) return;
-          const { action, id } = actionButton.dataset;
-          if (!id) return;
-          if (action === "download") downloadMaterial(id);
-          else if (action === "edit") editMaterial(id);
-          else if (action === "delete") deleteMaterial(id);
-        });
-        elements.categoryTabs.addEventListener("click", (event) => {
-          const tab = event.target.closest(".category-tab");
-          if (tab && tab.dataset.category) {
-            filteredCategory = tab.dataset.category;
-            renderAll();
-          }
-        });
-      }
-
-      function renderAll() {
-        renderCategoryTabs();
-        renderMaterials();
-        renderStats();
-      }
-
-      function renderCategoryTabs() {
-        if (!elements.categoryTabs) return;
-        const categories = [
-          ...new Set(materialsData.map((m) => m.category)),
-        ].filter(Boolean);
-        const allCategories = [
-          { key: "all", label: "Todos" },
-          ...categories.map((key) => ({
-            key,
-            label: formatCategoryLabel(key),
-          })),
-        ];
-        if (!allCategories.some((cat) => cat.key === filteredCategory))
-          filteredCategory = "all";
-        elements.categoryTabs.innerHTML = allCategories
-          .map(
-            (cat) =>
-              `<div class="category-tab ${
-                filteredCategory === cat.key ? "active" : ""
-              }" data-category="${cat.key}">${cat.label}</div>`
-          )
-          .join("");
-      }
-
-      function renderMaterials() {
-        if (!elements.materialsGrid) return;
-        const matches = materialsData
-          .filter(
-            (m) =>
-              (filteredCategory === "all" || m.category === filteredCategory) &&
-              `${m.title} ${m.description}`.toLowerCase().includes(searchTerm)
-          )
-          .sort(
-            (a, b) =>
-              new Date(b.updatedAt || b.createdAt || 0) -
-              new Date(a.updatedAt || a.createdAt || 0)
-          );
-
-        if (!matches.length) {
-          elements.materialsGrid.innerHTML = "";
-          showEmptyState("No se encontraron materiales para esta vista.");
-        } else {
-          hideEmptyState();
-          elements.materialsGrid.innerHTML = matches
-            .map((material) => createMaterialCard(material))
-            .join("");
-        }
         applyRoleVisibility();
       }
 
       function createMaterialCard(material) {
         const fileInfo = getFileInfo(material);
-        const downloadsLabel = `${new Intl.NumberFormat("es-MX").format(
-          material.downloads
-        )} descarga${material.downloads === 1 ? "" : "s"}`;
-        const createdLabel = formatDate(
-          material.updatedAt || material.createdAt
-        );
-        const description = material.description
-          ? escapeHtml(material.description)
-          : "Sin descripción disponible.";
+        const date = new Date(material.createdAt).toLocaleDateString("es-MX");
+        const description = material.description || "Sin descripción.";
+
         return `
-          <div class="material-card" data-category="${escapeAttr(
-            material.category
-          )}">
-            <div class="material-header">
-              <div class="file-icon ${fileInfo.className}">${
+                <div class="material-card">
+                    <div class="material-header">
+                        <div class="file-icon ${fileInfo.className}">${
           fileInfo.label
         }</div>
-              <div>
-                <div class="material-title">${escapeHtml(material.title)}</div>
-                <div class="material-meta"><span>${createdLabel}</span><span>${downloadsLabel}</span></div>
-              </div>
-            </div>
-            <div class="material-description">${description}</div>
-            <div class="material-actions">
-              <button class="action-btn download-btn" data-action="download" data-id="${
-                material.id
-              }">⬇️ Descargar</button>
-              <button class="action-btn edit-btn teacher-only" data-action="edit" data-id="${
-                material.id
-              }">✏️ Editar</button>
-              <button class="action-btn delete-btn teacher-only" data-action="delete" data-id="${
-                material.id
-              }">🗑️ Eliminar</button>
-            </div>
-          </div>`;
+                        <div>
+                            <h4 class="material-title">${escapeHtml(
+                              material.title
+                            )}</h4>
+                            <p class="material-meta">${date} · ${
+          material.downloads || 0
+        } descargas</p>
+                        </div>
+                    </div>
+                    <p class="material-description">${escapeHtml(
+                      description
+                    )}</p>
+                    <div class="material-actions">
+                        <button class="action-btn download-btn" data-id="${
+                          material.id
+                        }" data-url="${
+          material.downloadUrl
+        }">⬇️ Descargar</button>
+                        <button class="action-btn edit-btn teacher-only" data-id="${
+                          material.id
+                        }">✏️ Editar</button>
+                        <button class="action-btn delete-btn teacher-only" data-id="${
+                          material.id
+                        }">🗑️ Eliminar</button>
+                    </div>
+                </div>
+            `;
       }
 
-      function renderStats() {
-        const total = materialsData.length;
-        const downloads = materialsData.reduce(
-          (sum, m) => sum + m.downloads,
-          0
-        );
-        const categories = new Set(materialsData.map((m) => m.category)).size;
-        const latestUpdate = materialsData
-          .map((m) => new Date(m.updatedAt || m.createdAt))
-          .sort((a, b) => b - a)[0];
-        if (elements.statTotal) elements.statTotal.textContent = total;
-        if (elements.statDownloads)
-          elements.statDownloads.textContent = downloads;
-        if (elements.statCategories)
-          elements.statCategories.textContent = categories;
-        if (elements.statUpdated)
-          elements.statUpdated.textContent = latestUpdate
-            ? new Intl.DateTimeFormat("es-MX", { dateStyle: "medium" }).format(
-                latestUpdate
-              )
-            : "N/A";
-      }
-
-      async function handleMaterialSubmit(event) {
+      // --- EVENT HANDLERS ---
+      async function handleFormSubmit(event) {
         event.preventDefault();
-        if (!selectedFiles.length)
-          return showNotification(
-            "error",
-            "Selecciona un archivo",
-            "Debes elegir un archivo para subir"
-          );
         const title = document.getElementById("materialTitle").value.trim();
-        const category = elements.categorySelect?.value || "otros";
-        const description = document
-          .getElementById("materialDescription")
-          .value.trim();
-        if (!title)
-          return showNotification(
-            "error",
-            "Título requerido",
-            "Ingresa el nombre del material"
-          );
+        if (!title) return showNotification("error", "El título es requerido.");
 
-        const formData = new FormData();
-        formData.append("file", selectedFiles[0]);
-        formData.append("title", title);
-        formData.append("category", category);
-        formData.append("description", description);
+        const fileInfo = uploadcareWidget.value();
+        if (!fileInfo)
+          return showNotification("error", "Debes seleccionar un archivo.");
 
-        try {
-          showNotification(
-            "info",
-            "Subiendo material...",
-            `${selectedFiles[0].name}`
-          );
-          const createdMaterial = await uploadWithXHR(formData);
-          if (createdMaterial) {
-            materialsData.unshift(normalizeMaterial(createdMaterial));
-            renderAll();
-            resetUploadWorkflow();
-            showNotification(
-              "success",
-              "Material subido",
-              "El recurso se cargó correctamente"
-            );
+        showNotification("info", "Subiendo archivo...");
+
+        fileInfo.done(async (file) => {
+          const newMaterialData = {
+            title,
+            category: document.getElementById("materialCategory").value,
+            description: document
+              .getElementById("materialDescription")
+              .value.trim(),
+            downloadUrl: file.cdnUrl,
+            fileName: file.name,
+            extension: file.name.split(".").pop().toLowerCase() || "",
+            createdAt: new Date().toISOString(),
+            downloads: 0,
+          };
+
+          try {
+            const savedMaterial = await saveMaterial(newMaterialData);
+            allMaterials.unshift(savedMaterial);
+            render();
+            elements.form.reset();
+            uploadcareWidget.value(null);
+            showNotification("success", "Material guardado con éxito.");
+          } catch (error) {
+            console.error("Error guardando material:", error);
+            showNotification("error", "No se pudo guardar el material.");
           }
-        } catch (error) {
-          console.error("Error al subir:", error);
-          showNotification("error", "No se pudo subir", error.message);
-        }
-      }
-
-      function uploadWithXHR(formData) {
-        return new Promise((resolve, reject) => {
-          const xhr = new XMLHttpRequest();
-          xhr.open("POST", buildApiUrl("action=upload"));
-          xhr.upload.addEventListener("progress", (e) => {
-            if (e.lengthComputable) {
-              const percentage = Math.round((e.loaded / e.total) * 100);
-              elements.progressBar?.classList.remove("hidden");
-              if (elements.progressFill)
-                elements.progressFill.style.width = `${percentage}%`;
-            }
-          });
-          xhr.onload = () => {
-            elements.progressBar?.classList.add("hidden");
-            try {
-              if (xhr.status >= 200 && xhr.status < 300) {
-                const res = JSON.parse(xhr.responseText);
-                if (res.success) resolve(res.material);
-                else reject(new Error(res.message || "Error del servidor"));
-              } else {
-                reject(new Error(`Error ${xhr.status}: ${xhr.statusText}`));
-              }
-            } catch (e) {
-              reject(new Error("Respuesta inválida del servidor"));
-            }
-          };
-          xhr.onerror = () => {
-            elements.progressBar?.classList.add("hidden");
-            reject(new Error("Error de red"));
-          };
-          xhr.send(formData);
         });
       }
 
-      function resetUploadWorkflow() {
-        selectedFiles = [];
-        if (elements.fileInput) elements.fileInput.value = "";
-        elements.materialForm?.reset();
-        if (elements.progressFill) elements.progressFill.style.width = "0%";
-        elements.uploadForm?.classList.add("hidden");
-        if (elements.uploadArea) elements.uploadArea.style.display = "";
-      }
+      async function handleGridClick(event) {
+        const button = event.target.closest(".action-btn");
+        if (!button) return;
 
-      function cancelUpload() {
-        resetUploadWorkflow();
-      }
-
-      async function downloadMaterial(id) {
-        const material = materialsData.find((item) => item.id === id);
-        if (!material)
-          return showNotification("error", "Material no encontrado");
-        showNotification("info", "Iniciando descarga...", material.title);
-
-        // Simplemente redirigimos, el script se encarga de la lógica y la descarga
-        window.open(buildApiUrl(`action=download&id=${id}`), "_blank");
-
-        // Actualización optimista de la UI
-        material.downloads++;
-        renderStats();
-        renderMaterials();
-      }
-
-      async function editMaterial(id) {
-        if (currentRole !== "teacher") return;
-        const material = materialsData.find((item) => item.id === id);
-        if (!material) return;
-        const newTitle = prompt("Editar título:", material.title);
-        if (newTitle === null || newTitle.trim() === "") return;
-        const newDescription = prompt(
-          "Editar descripción:",
-          material.description
-        );
-        if (newDescription === null) return;
-
-        try {
-          const response = await fetch(buildApiUrl(`action=update&id=${id}`), {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" }, // Apps Script prefiere texto plano para JSON simple
-            body: JSON.stringify({
-              title: newTitle.trim(),
-              description: newDescription.trim(),
-            }),
-          });
-          if (!response.ok) throw new Error(`Error ${response.status}`);
-          const payload = await response.json();
-          if (!payload.success)
-            throw new Error(payload.message || "No se pudo actualizar");
-
-          const updated = normalizeMaterial(payload.material);
-          materialsData = materialsData.map((item) =>
-            item.id === updated.id ? updated : item
+        const id = button.dataset.id;
+        if (button.classList.contains("download-btn")) {
+          window.open(button.dataset.url, "_blank");
+          await incrementDownloads(id);
+          const mat = allMaterials.find((m) => m.id === id);
+          if (mat) mat.downloads++;
+          render();
+        } else if (button.classList.contains("delete-btn")) {
+          if (!confirm("¿Estás seguro de que quieres eliminar este material?"))
+            return;
+          try {
+            await deleteMaterial(id);
+            allMaterials = allMaterials.filter((m) => m.id !== id);
+            render();
+            showNotification("success", "Material eliminado.");
+          } catch (error) {
+            showNotification("error", "No se pudo eliminar.");
+          }
+        } else if (button.classList.contains("edit-btn")) {
+          const material = allMaterials.find((m) => m.id === id);
+          const newTitle = prompt("Nuevo título:", material.title);
+          const newDescription = prompt(
+            "Nueva descripción:",
+            material.description
           );
-          renderAll();
-          showNotification(
-            "success",
-            "Material actualizado",
-            "Los cambios se guardaron"
-          );
-        } catch (error) {
-          console.error("Error al editar:", error);
-          showNotification("error", "No se pudo actualizar", error.message);
+          if (newTitle === null || newDescription === null) return;
+          try {
+            await updateMaterial(id, newTitle, newDescription);
+            material.title = newTitle;
+            material.description = newDescription;
+            render();
+            showNotification("success", "Material actualizado.");
+          } catch (error) {
+            showNotification("error", "No se pudo actualizar.");
+          }
         }
       }
 
-      async function deleteMaterial(id) {
-        if (currentRole !== "teacher") return;
-        const material = materialsData.find((item) => item.id === id);
-        if (
-          !material ||
-          !confirm(`¿Estás seguro de eliminar "${material.title}"?`)
-        )
-          return;
-
-        try {
-          const response = await fetch(buildApiUrl(`action=delete&id=${id}`), {
-            method: "GET",
-          }); // GET es más simple para Apps Script sin payload
-          if (!response.ok) throw new Error(`Error ${response.status}`);
-          const payload = await response.json();
-          if (!payload.success)
-            throw new Error(payload.message || "No se pudo eliminar");
-
-          materialsData = materialsData.filter((item) => item.id !== id);
-          renderAll();
-          showNotification(
-            "success",
-            "Material eliminado",
-            "El recurso se eliminó correctamente"
-          );
-        } catch (error) {
-          console.error("Error al eliminar:", error);
-          showNotification("error", "No se pudo eliminar", error.message);
-        }
-      }
-
-      function switchRole(role, options = {}) {
-        if (role !== "teacher" && role !== "student") return;
-        currentRole = role;
-        elements.teacherBtn?.classList.toggle("active", role === "teacher");
-        elements.studentBtn?.classList.toggle("active", role === "student");
-        elements.teacherView?.classList.toggle("hidden", role !== "teacher");
-        elements.studentView?.classList.toggle("hidden", role !== "student");
+      function switchRole(newRole) {
+        currentRole = newRole;
+        elements.teacherBtn.classList.toggle("active", newRole === "teacher");
+        elements.studentBtn.classList.toggle("active", newRole === "student");
         applyRoleVisibility();
-        try {
-          localStorage.setItem(
-            "qs_role",
-            role === "teacher" ? "docente" : "estudiante"
-          );
-        } catch (error) {}
-        if (!options.silent)
-          showNotification(
-            "success",
-            "Vista cambiada",
-            `Ahora ves como ${role === "teacher" ? "Profesor" : "Estudiante"}`
-          );
       }
 
       function applyRoleVisibility() {
-        document
-          .querySelectorAll(".teacher-only")
-          .forEach((el) =>
-            el.classList.toggle("hidden", currentRole !== "teacher")
-          );
+        elements.teacherView.classList.toggle(
+          "hidden",
+          currentRole !== "teacher"
+        );
+        document.querySelectorAll(".teacher-only").forEach((el) => {
+          el.classList.toggle("hidden", currentRole !== "teacher");
+        });
       }
-      function showEmptyState(message) {
-        if (elements.emptyState) {
-          elements.emptyMessage.textContent = message;
-          elements.emptyState.classList.remove("hidden");
-        }
-      }
-      function hideEmptyState() {
-        elements.emptyState?.classList.add("hidden");
-      }
-      function showNotification(type, title, message) {
-        if (!elements.notification) return;
-        elements.notificationIcon.textContent =
-          { success: "✅", error: "⚠️", info: "ℹ️" }[type] || "ℹ️";
-        elements.notificationTitle.textContent = title;
-        elements.notificationMessage.textContent = message;
-        elements.notification.className = `notification ${
-          type === "error" ? "error" : ""
-        }`;
-        elements.notification.classList.add("show");
-        setTimeout(() => elements.notification?.classList.remove("show"), 4000);
-      }
-      function formatCategoryLabel(key = "otros") {
-        return key
-          .toString()
-          .replace(/[_-]+/g, " ")
-          .replace(/\b\w/g, (c) => c.toUpperCase());
-      }
+
+      // --- UTILS ---
       function getFileInfo(material) {
-        const ext = (material.extension || "").toLowerCase();
+        const ext = material.extension || "";
         const map = {
           pdf: "pdf",
           doc: "doc",
@@ -1155,28 +494,48 @@
           ppt: "ppt",
           pptx: "ppt",
         };
-        const className = map[ext] || "default";
-        return { className, label: ext ? ext.toUpperCase() : "FILE" };
+        return { className: map[ext] || "default", label: ext.toUpperCase() };
       }
-      function formatDate(value) {
-        if (!value) return "Sin fecha";
-        const date = new Date(value);
-        return !isNaN(date.getTime())
-          ? new Intl.DateTimeFormat("es-MX", { dateStyle: "medium" }).format(
-              date
-            )
-          : "Fecha inválida";
-      }
-      function escapeHtml(value) {
+      function escapeHtml(str) {
         const p = document.createElement("p");
-        p.textContent = value;
+        p.textContent = str;
         return p.innerHTML;
       }
-      function escapeAttr(value) {
-        return escapeHtml(value).replace(/\s+/g, "-");
+      function showNotification(type, message) {
+        elements.notificationMessage.textContent = message;
+        elements.notification.className = `notification ${
+          type === "error" ? "error" : ""
+        }`;
+        elements.notification.classList.add("show");
+        setTimeout(() => elements.notification.classList.remove("show"), 3000);
       }
-      window.switchRole = switchRole;
-      window.cancelUpload = cancelUpload;
+
+      // --- INITIALIZATION ---
+      async function initialize() {
+        elements.form.addEventListener("submit", handleFormSubmit);
+        elements.grid.addEventListener("click", handleGridClick);
+        elements.teacherBtn.addEventListener("click", () =>
+          switchRole("teacher")
+        );
+        elements.studentBtn.addEventListener("click", () =>
+          switchRole("student")
+        );
+
+        try {
+          allMaterials = await getMaterials();
+          render();
+        } catch (error) {
+          console.error("Error al inicializar:", error);
+          showNotification("error", "No se pudieron cargar los materiales.");
+          document.getElementById("emptyMessage").textContent =
+            "Error al cargar los materiales.";
+        }
+
+        // Inicia en la vista de estudiante por defecto
+        switchRole("student");
+      }
+
+      initialize();
     </script>
   </body>
 </html>
