@@ -1,10 +1,10 @@
 // js/materials-manager.js
 
-// Importamos la configuración que ya tienes y las herramientas de Firebase
-import { firebaseConfig } from "./firebase-config.js";
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+// --- CAMBIO IMPORTANTE ---
+// Ya no inicializamos Firebase aquí. En su lugar, importamos la conexión a la BD
+// y las funciones que tu archivo firebase.js ya nos ofrece.
+import { getDb } from "./firebase.js";
 import {
-  getFirestore,
   collection,
   getDocs,
   addDoc,
@@ -14,16 +14,15 @@ import {
   increment,
   orderBy,
   query,
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  serverTimestamp, // Importamos serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-// Inicializamos Firebase y Firestore
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Obtenemos la instancia ÚNICA de la base de datos
+const db = getDb();
 const materialsCollection = collection(db, "materials");
 
 /**
  * Obtiene todos los materiales de la base de datos, ordenados por fecha de creación.
- * @returns {Promise<Array>} Una promesa que se resuelve con un array de objetos de materiales.
  */
 export async function getMaterials() {
   console.log("Cargando materiales desde Firestore...");
@@ -36,19 +35,23 @@ export async function getMaterials() {
 
 /**
  * Guarda un nuevo objeto de material en la base de datos.
- * @param {object} materialData - El objeto con los datos del material.
- * @returns {Promise<object>} Una promesa que se resuelve con el documento guardado.
  */
 export async function saveMaterial(materialData) {
   console.log("Guardando material en Firestore:", materialData);
-  const docRef = await addDoc(materialsCollection, materialData);
-  return { id: docRef.id, ...materialData };
+
+  // --- CAMBIO IMPORTANTE ---
+  // Añadimos el serverTimestamp() aquí para que Firestore ponga la fecha correcta.
+  const dataWithTimestamp = {
+    ...materialData,
+    createdAt: serverTimestamp(),
+  };
+
+  const docRef = await addDoc(materialsCollection, dataWithTimestamp);
+  return { id: docRef.id, ...dataWithTimestamp };
 }
 
 /**
  * Elimina un material de la base de datos usando su ID.
- * @param {string} id - El ID del documento a eliminar.
- * @returns {Promise<void>}
  */
 export async function deleteMaterial(id) {
   console.log("Eliminando material de Firestore:", id);
@@ -58,10 +61,6 @@ export async function deleteMaterial(id) {
 
 /**
  * Actualiza el título y la descripción de un material.
- * @param {string} id - El ID del material a actualizar.
- * @param {string} newTitle - El nuevo título.
- * @param {string} newDescription - La nueva descripción.
- * @returns {Promise<void>}
  */
 export async function updateMaterial(id, newTitle, newDescription) {
   console.log("Actualizando material en Firestore:", id);
@@ -69,13 +68,12 @@ export async function updateMaterial(id, newTitle, newDescription) {
   await updateDoc(materialDoc, {
     title: newTitle,
     description: newDescription,
+    updatedAt: serverTimestamp(), // También actualizamos la fecha de modificación
   });
 }
 
 /**
  * Incrementa el contador de descargas de un material en 1.
- * @param {string} id - El ID del material.
- * @returns {Promise<void>}
  */
 export async function incrementDownloads(id) {
   console.log("Incrementando descargas para:", id);
