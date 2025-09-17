@@ -1,11 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Materiales - Calidad de Software</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
     <script>
       UPLOADCARE_PUBLIC_KEY = "85eb5471d305dcd08e71";
       UPLOADCARE_LOCALE = "es";
@@ -14,9 +13,7 @@
       charset="utf-8"
       src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"
     ></script>
-    <script type="module" src="./js/role-gate.js"></script>
     <style>
-      /* Tu CSS existente va aquí, no necesita cambios. */
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
       body {
         font-family: "Inter", sans-serif;
@@ -220,10 +217,10 @@
     <div class="main-container">
       <div class="header">
         <div class="role-toggle">
-          <button type="button" class="role-btn active" id="teacherBtn">
+          <button type="button" class="role-btn" id="teacherBtn">
             👩‍🏫 Profesor
           </button>
-          <button type="button" class="role-btn" id="studentBtn">
+          <button type="button" class="role-btn active" id="studentBtn">
             🧑‍🎓 Estudiante
           </button>
         </div>
@@ -234,17 +231,16 @@
           </p>
         </div>
       </div>
-
       <div class="content-area">
-        <div id="teacherView">
+        <div id="teacherView" class="hidden">
           <div class="upload-form">
             <h3 class="text-xl font-bold text-gray-800 mb-4">
               Subir Nuevo Material
             </h3>
             <form id="materialForm">
               <div class="form-group">
-                <label class="form-label" for="file-widget">Archivo</label>
-                <input
+                <label class="form-label" for="file-widget">Archivo</label
+                ><input
                   type="hidden"
                   role="uploadcare-uploader"
                   name="content"
@@ -252,8 +248,8 @@
                 />
               </div>
               <div class="form-group">
-                <label class="form-label" for="materialTitle">Título</label>
-                <input
+                <label class="form-label" for="materialTitle">Título</label
+                ><input
                   type="text"
                   class="form-input"
                   id="materialTitle"
@@ -263,8 +259,7 @@
               <div class="form-group">
                 <label class="form-label" for="materialCategory"
                   >Categoría</label
-                >
-                <select class="form-select" id="materialCategory" required>
+                ><select class="form-select" id="materialCategory" required>
                   <option value="presentations">Presentaciones</option>
                   <option value="templates">Plantillas</option>
                   <option value="exercises">Ejercicios</option>
@@ -274,8 +269,7 @@
               <div class="form-group">
                 <label class="form-label" for="materialDescription"
                   >Descripción</label
-                >
-                <textarea
+                ><textarea
                   class="form-textarea"
                   id="materialDescription"
                 ></textarea>
@@ -288,20 +282,19 @@
             </form>
           </div>
         </div>
-
         <div class="materials-grid" id="materialsGrid"></div>
-        <div class="empty-state hidden" id="emptyState">
-          <p id="emptyMessage">Cargando materiales...</p>
+        <div class="empty-state" id="emptyState">
+          <p id="emptyMessage">Verificando usuario...</p>
         </div>
       </div>
     </div>
-
     <div class="notification" id="notification">
-      <span id="notificationIcon">✅</span>
-      <span id="notificationMessage">Operación exitosa</span>
+      <span id="notificationIcon">✅</span
+      ><span id="notificationMessage"></span>
     </div>
 
     <script type="module">
+      import { onAuth, isTeacherEmail } from "./js/firebase.js";
       import {
         getMaterials,
         saveMaterial,
@@ -310,9 +303,12 @@
         incrementDownloads,
       } from "./js/materials-manager.js";
 
-      // --- STATE & ELEMENTS ---
       let allMaterials = [];
-      let currentRole = "student"; // 'student' or 'teacher'
+      let currentUser = null;
+      let isCurrentUserTeacher = false;
+      let currentRole = "student";
+      let uploadcareWidget;
+
       const elements = {
         grid: document.getElementById("materialsGrid"),
         form: document.getElementById("materialForm"),
@@ -320,58 +316,96 @@
         teacherBtn: document.getElementById("teacherBtn"),
         studentBtn: document.getElementById("studentBtn"),
         notification: document.getElementById("notification"),
-        notificationIcon: document.getElementById("notificationIcon"),
         notificationMessage: document.getElementById("notificationMessage"),
+        emptyState: document.getElementById("emptyState"),
+        emptyMessage: document.getElementById("emptyMessage"),
       };
-      const uploadcareWidget = uploadcare.Widget("#file-widget");
 
-      // --- RENDERING ---
+      onAuth(async (user) => {
+        if (user) {
+          currentUser = user;
+          isCurrentUserTeacher = isTeacherEmail(user.email);
+          await initializeApp();
+        } else {
+          window.location.href = "index.html";
+        }
+      });
+
+      async function initializeApp() {
+        // Inicializa el widget DESPUÉS de que sabemos que el usuario es un profesor
+        if (isCurrentUserTeacher) {
+          uploadcareWidget = uploadcare.Widget("#file-widget");
+          elements.form.addEventListener("submit", handleFormSubmit);
+        }
+
+        elements.grid.addEventListener("click", handleGridClick);
+        elements.teacherBtn.addEventListener("click", () =>
+          switchRole("teacher")
+        );
+        elements.studentBtn.addEventListener("click", () =>
+          switchRole("student")
+        );
+
+        try {
+          allMaterials = await getMaterials();
+          render();
+        } catch (error) {
+          console.error("Error al inicializar:", error);
+          showNotification("error", "No se pudieron cargar los materiales.");
+          elements.emptyMessage.textContent =
+            "Error al cargar. Revisa los permisos.";
+        }
+
+        if (isCurrentUserTeacher) {
+          switchRole("teacher");
+        } else {
+          switchRole("student");
+        }
+      }
+
       function render() {
         elements.grid.innerHTML = "";
         if (allMaterials.length === 0) {
-          document.getElementById("emptyState").classList.remove("hidden");
-          document.getElementById("emptyMessage").textContent =
+          elements.emptyState.classList.remove("hidden");
+          elements.emptyMessage.textContent =
             "Aún no hay materiales disponibles.";
           return;
         }
-        document.getElementById("emptyState").classList.add("hidden");
-
+        elements.emptyState.classList.add("hidden");
         allMaterials.forEach((material) => {
-          const card = createMaterialCard(material);
-          elements.grid.insertAdjacentHTML("beforeend", card);
+          elements.grid.insertAdjacentHTML(
+            "beforeend",
+            createMaterialCard(material)
+          );
         });
         applyRoleVisibility();
       }
 
       function createMaterialCard(material) {
         const fileInfo = getFileInfo(material);
-        const date = new Date(material.createdAt).toLocaleDateString("es-MX");
-        const description = material.description || "Sin descripción.";
-
+        const date = material.createdAt?.toDate
+          ? material.createdAt.toDate().toLocaleDateString("es-MX")
+          : new Date().toLocaleDateString("es-MX");
+        const url = material.url || material.downloadUrl;
         return `
                 <div class="material-card">
                     <div class="material-header">
                         <div class="file-icon ${fileInfo.className}">${
           fileInfo.label
         }</div>
-                        <div>
-                            <h4 class="material-title">${escapeHtml(
-                              material.title
-                            )}</h4>
-                            <p class="material-meta">${date} · ${
+                        <div><h4 class="material-title">${escapeHtml(
+                          material.title
+                        )}</h4><p class="material-meta">${date} · ${
           material.downloads || 0
-        } descargas</p>
-                        </div>
+        } descargas</p></div>
                     </div>
                     <p class="material-description">${escapeHtml(
-                      description
+                      material.description || "Sin descripción."
                     )}</p>
                     <div class="material-actions">
                         <button class="action-btn download-btn" data-id="${
                           material.id
-                        }" data-url="${
-          material.downloadUrl
-        }">⬇️ Descargar</button>
+                        }" data-url="${url}">⬇️ Descargar</button>
                         <button class="action-btn edit-btn teacher-only" data-id="${
                           material.id
                         }">✏️ Editar</button>
@@ -379,50 +413,57 @@
                           material.id
                         }">🗑️ Eliminar</button>
                     </div>
-                </div>
-            `;
+                </div>`;
       }
 
-      // Dentro de la función handleFormSubmit en materiales.html
+      async function handleFormSubmit(event) {
+        event.preventDefault();
+        const title = document.getElementById("materialTitle").value.trim();
+        if (!title) return showNotification("error", "El título es requerido.");
 
-      fileInfo.done(async (file) => {
-        // --- CAMBIO AQUÍ ---
-        // Ya no creamos la fecha aquí, el manager se encargará
-        const newMaterialData = {
-          title,
-          category: document.getElementById("materialCategory").value,
-          description: document
-            .getElementById("materialDescription")
-            .value.trim(),
-          url: file.cdnUrl,
-          fileName: file.name,
-          extension: file.name.split(".").pop().toLowerCase() || "",
-          downloads: 0,
-          // La propiedad `createdAt` ha sido eliminada de aquí
-        };
-        try {
-          const savedMaterial = await saveMaterial(newMaterialData);
-          // ... el resto de la función no cambia
-          // ...
-        } catch (error) {
-          // ...
-        }
-      });
+        const fileInfo = uploadcareWidget.value();
+        if (!fileInfo)
+          return showNotification("error", "Debes seleccionar un archivo.");
+
+        showNotification("info", "Subiendo archivo...");
+        fileInfo.done(async (file) => {
+          const newMaterialData = {
+            title,
+            category: document.getElementById("materialCategory").value,
+            description: document
+              .getElementById("materialDescription")
+              .value.trim(),
+            url: file.cdnUrl,
+            fileName: file.name,
+            extension: file.name.split(".").pop().toLowerCase() || "",
+            downloads: 0,
+          };
+          try {
+            const savedMaterial = await saveMaterial(newMaterialData);
+            allMaterials.unshift(savedMaterial);
+            render();
+            elements.form.reset();
+            uploadcareWidget.value(null);
+            showNotification("success", "Material guardado.");
+          } catch (error) {
+            showNotification("error", "No se pudo guardar.");
+            console.error(error);
+          }
+        });
+      }
 
       async function handleGridClick(event) {
         const button = event.target.closest(".action-btn");
         if (!button) return;
-
         const id = button.dataset.id;
         if (button.classList.contains("download-btn")) {
           window.open(button.dataset.url, "_blank");
           await incrementDownloads(id);
           const mat = allMaterials.find((m) => m.id === id);
-          if (mat) mat.downloads++;
+          if (mat) mat.downloads = (mat.downloads || 0) + 1;
           render();
         } else if (button.classList.contains("delete-btn")) {
-          if (!confirm("¿Estás seguro de que quieres eliminar este material?"))
-            return;
+          if (!confirm("¿Seguro que quieres eliminar este material?")) return;
           try {
             await deleteMaterial(id);
             allMaterials = allMaterials.filter((m) => m.id !== id);
@@ -440,9 +481,9 @@
           );
           if (newTitle === null || newDescription === null) return;
           try {
-            await updateMaterial(id, newTitle, newDescription);
-            material.title = newTitle;
-            material.description = newDescription;
+            await updateMaterial(id, newTitle.trim(), newDescription.trim());
+            material.title = newTitle.trim();
+            material.description = newDescription.trim();
             render();
             showNotification("success", "Material actualizado.");
           } catch (error) {
@@ -452,6 +493,12 @@
       }
 
       function switchRole(newRole) {
+        if (!isCurrentUserTeacher && newRole === "teacher") {
+          console.log(
+            "Acceso denegado: solo los profesores pueden cambiar a la vista de profesor."
+          );
+          return;
+        }
         currentRole = newRole;
         elements.teacherBtn.classList.toggle("active", newRole === "teacher");
         elements.studentBtn.classList.toggle("active", newRole === "student");
@@ -468,7 +515,6 @@
         });
       }
 
-      // --- UTILS ---
       function getFileInfo(material) {
         const ext = material.extension || "";
         const map = {
@@ -495,33 +541,6 @@
         elements.notification.classList.add("show");
         setTimeout(() => elements.notification.classList.remove("show"), 3000);
       }
-
-      // --- INITIALIZATION ---
-      async function initialize() {
-        elements.form.addEventListener("submit", handleFormSubmit);
-        elements.grid.addEventListener("click", handleGridClick);
-        elements.teacherBtn.addEventListener("click", () =>
-          switchRole("teacher")
-        );
-        elements.studentBtn.addEventListener("click", () =>
-          switchRole("student")
-        );
-
-        try {
-          allMaterials = await getMaterials();
-          render();
-        } catch (error) {
-          console.error("Error al inicializar:", error);
-          showNotification("error", "No se pudieron cargar los materiales.");
-          document.getElementById("emptyMessage").textContent =
-            "Error al cargar los materiales.";
-        }
-
-        // Inicia en la vista de estudiante por defecto
-        switchRole("student");
-      }
-
-      initialize();
     </script>
   </body>
 </html>
