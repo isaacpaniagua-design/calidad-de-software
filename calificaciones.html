@@ -1825,7 +1825,80 @@
         root.dataset.grupo || params.get("grupo") || "calidad-2025";
 
       // Ponderaciones por unidad (final = 30/30/40)
-      const UNIT_WEIGHTS = { 1: 30, 2: 30, 3: 40 };
+      // === PONDERACIONES POR UNIDAD (FINAL 30/30/40) ===
+      const UNIT_WEIGHTS_FINAL = { 1: 30, 2: 30, 3: 40 }; // %
+
+      /** U1 y U2: 10/20/25/45; U3: proyecto 70% + 30% restante proporcional (3/6/7.5/13.5) */
+      function unitCategoryWeights(u) {
+        if (u === 3) {
+          const rest = 0.3; // 30% del total de U3
+          return {
+            participacion: 10 * rest, // 3.0
+            asignacion: 20 * rest, // 6.0
+            trabajo: 25 * rest, // 7.5
+            examen: 45 * rest, // 13.5
+            proyecto: 70.0,
+          };
+        }
+        return {
+          participacion: 10,
+          asignacion: 20,
+          trabajo: 25,
+          examen: 45,
+          proyecto: 0,
+        };
+      }
+
+      /** Calcula % de la unidad sumando aportes por categoría.
+       *  Cada categoría reparte su peso fijo entre el número de ítems que tenga. */
+      function computeUnit(items, u) {
+        const W = unitCategoryWeights(u);
+        const groups = {
+          participacion: [],
+          asignacion: [],
+          trabajo: [],
+          examen: [],
+          proyecto: [],
+        };
+
+        for (const it of items) {
+          // Requiere que ya tengas inferUnidad(...) y canonicalTipo(...)
+          if (inferUnidad(it) !== u) continue;
+          const t = canonicalTipo(it);
+          const max = Number(it.maxPuntos) || 0;
+          const pts = Number(it.puntos) || 0;
+          const ratio = max > 0 ? pts / max : 0; // 0–1
+          groups[t].push(ratio);
+        }
+
+        let unitPct = 0; // % obtenido dentro de la unidad
+        let covered = 0; // % cubierto de la unidad (por categorías con ítems)
+
+        for (const t of Object.keys(groups)) {
+          const catW = W[t] || 0; // % fijo de la categoría en la unidad
+          const n = groups[t].length; // ítems en esa categoría
+          if (catW > 0 && n > 0) {
+            const perItemW = catW / n; // % de unidad por ítem
+            unitPct += groups[t].reduce((s, r) => s + r * perItemW, 0);
+            covered += catW;
+          }
+        }
+        return {
+          unitPct: Math.min(100, unitPct),
+          covered: Math.min(100, covered),
+          groups,
+          weights: W,
+        };
+      }
+
+      /** Aporte al FINAL de un ítem concreto considerando su unidad y categoría */
+      function aportaItemFinal(u, t, ratio, groups, weights) {
+        const n = groups[t]?.length || 1;
+        const catW = weights[t] || 0; // % en la unidad
+        const itemW_unit = catW / n; // % de unidad para este ítem
+        const unitW_final = UNIT_WEIGHTS_FINAL[u]; // 30/30/40
+        return Math.min(100, ratio * itemW_unit * (unitW_final / 100));
+      }
 
       // UI mínima, no rompe tu diseño
       root.innerHTML = `
