@@ -1786,5 +1786,283 @@
         }
       });
     </script>
+
+    <script type="module">
+      import {
+        initializeApp,
+        getApps,
+        getApp,
+      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+      import {
+        getAuth,
+        onAuthStateChanged,
+      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+      import {
+        getFirestore,
+        doc,
+        getDoc,
+        collection,
+        getDocs,
+        query,
+        orderBy,
+      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+
+      // Init seguro con tu config global (window.firebaseConfig ya definida arriba)
+      const app = getApps().length
+        ? getApp()
+        : initializeApp(window.firebaseConfig);
+      const auth = getAuth(app);
+      const db = getFirestore(app);
+
+      // Contenedor y grupo
+      const root = document.getElementById("calificaciones-root");
+      if (!root) {
+        console.warn("#calificaciones-root no existe");
+        throw new Error("Sin root");
+      }
+      const params = new URLSearchParams(location.search);
+      const GRUPO_ID =
+        root.dataset.grupo || params.get("grupo") || "calidad-2025";
+
+      // Ponderaciones por unidad (final = 30/30/40)
+      const UNIT_WEIGHTS = { 1: 30, 2: 30, 3: 40 };
+
+      // UI mínima, no rompe tu diseño
+      root.innerHTML = `
+    <section class="qsc-wrap">
+      <h2 class="qsc-title">Mis calificaciones</h2>
+      <div class="qsc-kpis" id="qsc-kpis">
+        <div class="qsc-kpi"><span id="kpi-final">--%</span><small>Final (30/30/40)</small></div>
+        <div class="qsc-kpi"><span id="kpi-u1">--%</span><small>Unidad 1</small></div>
+        <div class="qsc-kpi"><span id="kpi-u2">--%</span><small>Unidad 2</small></div>
+        <div class="qsc-kpi"><span id="kpi-u3">--%</span><small>Unidad 3</small></div>
+        <div class="qsc-kpi"><span id="kpi-items">0</span><small>Actividades</small></div>
+        <div class="qsc-kpi"><span id="kpi-pond">0%</span><small>Peso cubierto</small></div>
+      </div>
+      <div class="qsc-bar"><div id="qsc-bar-fill" class="qsc-bar-fill"></div></div>
+
+      <div class="qsc-table-wrap">
+        <table class="qsc-table">
+          <thead>
+            <tr>
+              <th>Actividad</th>
+              <th>Tipo</th>
+              <th>Unidad</th>
+              <th>Puntos</th>
+              <th>Máx</th>
+              <th>Ponderación</th>
+              <th>Aporta al final</th>
+              <th>Escala</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+          <tbody id="qsc-tbody">
+            <tr><td class="qsc-muted" colspan="9">Cargando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="qsc-msg" class="qsc-msg"></p>
+    </section>`;
+
+      // Refs UI
+      const ui = {
+        tbody: root.querySelector("#qsc-tbody"),
+        msg: root.querySelector("#qsc-msg"),
+        kFinal: root.querySelector("#kpi-final"),
+        kU1: root.querySelector("#kpi-u1"),
+        kU2: root.querySelector("#kpi-u2"),
+        kU3: root.querySelector("#kpi-u3"),
+        kItems: root.querySelector("#kpi-items"),
+        kPond: root.querySelector("#kpi-pond"),
+        barFill: root.querySelector("#qsc-bar-fill"),
+      };
+
+      // Helpers
+      const clampPct = (n) => Math.max(0, Math.min(100, Number(n) || 0));
+      const fmtPct = (n) => `${clampPct(n).toFixed(2)}%`;
+      const fmtDate = (ts) => {
+        if (!ts) return "";
+        const d = ts?.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
+        return isNaN(d.getTime()) ? "" : d.toLocaleDateString("es-MX");
+      };
+
+      // Inferencia suave de unidad y tipo si faltan
+      function inferUnidad(it) {
+        if (it.unidad != null) return Number(it.unidad);
+        const n = String(it.nombre || "").toLowerCase();
+        if (/\bunidad\s*1\b|\bu1\b/.test(n)) return 1;
+        if (/\bunidad\s*2\b|\bu2\b/.test(n)) return 2;
+        if (/\bunidad\s*3\b|\bu3\b/.test(n)) return 3;
+        return 0; // sin unidad
+      }
+      function inferTipo(it) {
+        if (it.tipo) return String(it.tipo).toLowerCase();
+        const n = String(it.nombre || "").toLowerCase();
+        if (/examen|quiz|prueba/.test(n)) return "examen";
+        if (/proyecto|entregable final/.test(n)) return "proyecto";
+        if (/asignaci[oó]n|tarea/.test(n)) return "asignacion";
+        if (/actividad|pr[aá]ctica|ejercicio/.test(n)) return "actividad";
+        return "actividad";
+      }
+
+      // Escala por tipo (puedes ajustar umbrales por tipo)
+      function escala(scorePct, tipo) {
+        const t = String(tipo || "general").toLowerCase();
+        const thresholds = {
+          general: [90, 80, 70, 60],
+          examen: [90, 80, 70, 60],
+          proyecto: [90, 80, 75, 65],
+          asignacion: [90, 80, 70, 60],
+          actividad: [90, 80, 70, 60],
+        };
+        const [A, B, C, D] = thresholds[t] || thresholds.general;
+        return scorePct >= A
+          ? "Excelente"
+          : scorePct >= B
+          ? "Notable"
+          : scorePct >= C
+          ? "Bueno"
+          : scorePct >= D
+          ? "Suficiente"
+          : "Insuficiente";
+      }
+
+      // Carga items del alumno
+      async function obtenerMisItems(uid) {
+        const ref = collection(
+          db,
+          "grupos",
+          GRUPO_ID,
+          "calificaciones",
+          uid,
+          "items"
+        );
+        const snap = await getDocs(query(ref, orderBy("fecha", "asc")));
+        return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      }
+
+      // Cálculo por unidad respetando ponderaciones internas
+      function calcularUnidades(items) {
+        // Separar por unidad
+        const buckets = { 1: [], 2: [], 3: [] };
+        let pondTotal = 0;
+        for (const it of items) {
+          const u = inferUnidad(it);
+          if (u === 1 || u === 2 || u === 3) buckets[u].push(it);
+          pondTotal += Number(it.ponderacion) || 0;
+        }
+        // Para cada unidad: normaliza por suma de ponderaciones de esa unidad
+        function unitScore(arr) {
+          if (!arr.length) return { score: 0, pond: 0 };
+          let raw = 0,
+            pondSum = 0;
+          for (const it of arr) {
+            const max = Number(it.maxPuntos) || 0;
+            const pts = Number(it.puntos) || 0;
+            const pond = Number(it.ponderacion) || 0;
+            if (max > 0) raw += (pts / max) * pond;
+            pondSum += pond;
+          }
+          const scorePct = pondSum > 0 ? (raw / pondSum) * 100 : 0; // 0–100%
+          return { score: clampPct(scorePct), pond: clampPct(pondSum) };
+        }
+        const u1 = unitScore(buckets[1]);
+        const u2 = unitScore(buckets[2]);
+        const u3 = unitScore(buckets[3]);
+        return { u1, u2, u3, pondTotal: clampPct(pondTotal) };
+      }
+
+      function calcularFinal(u1, u2, u3) {
+        // final = 0.30*u1 + 0.30*u2 + 0.40*u3
+        return clampPct(u1 * 0.3 + u2 * 0.3 + u3 * 0.4);
+      }
+
+      function render(items, me) {
+        // KPIs por unidad y final
+        const { u1, u2, u3, pondTotal } = calcularUnidades(items);
+        const finalPct = calcularFinal(u1.score, u2.score, u3.score);
+
+        ui.kFinal.textContent = fmtPct(finalPct);
+        ui.kU1.textContent = u1.pond > 0 ? fmtPct(u1.score) : "—";
+        ui.kU2.textContent = u2.pond > 0 ? fmtPct(u2.score) : "—";
+        ui.kU3.textContent = u3.pond > 0 ? fmtPct(u3.score) : "—";
+        ui.kItems.textContent = items.length;
+        ui.kPond.textContent = fmtPct(pondTotal);
+        ui.barFill.style.width = fmtPct(finalPct);
+
+        // Tabla
+        ui.tbody.innerHTML = "";
+        if (!items.length) {
+          ui.tbody.innerHTML = `<tr><td colspan="9" class="qsc-muted">Sin actividades registradas aún.</td></tr>`;
+          ui.msg.textContent = me?.nombre ? `Alumno: ${me.nombre}` : "";
+          return;
+        }
+        for (const it of items) {
+          const tipo = inferTipo(it);
+          const unidad = inferUnidad(it);
+          const max = Number(it.maxPuntos) || 0;
+          const pts = Number(it.puntos) || 0;
+          const pond = Number(it.ponderacion) || 0;
+          const puntPct = max > 0 ? (pts / max) * 100 : 0; // % propio del ítem
+          const aporta = max > 0 ? (pts / max) * pond : 0; // % que aporta al FINAL
+          const esc = escala(clampPct(puntPct), tipo);
+
+          ui.tbody.insertAdjacentHTML(
+            "beforeend",
+            `
+        <tr>
+          <td>${it.nombre || "Actividad"}</td>
+          <td>${tipo}</td>
+          <td>${unidad || "-"}</td>
+          <td>${pts}</td>
+          <td>${max}</td>
+          <td>${pond}%</td>
+          <td>${fmtPct(aporta)}</td>
+          <td>${fmtPct(puntPct)} · ${esc}</td>
+          <td>${fmtDate(it.fecha)}</td>
+        </tr>
+      `
+          );
+        }
+        ui.msg.textContent = me?.nombre ? `Alumno: ${me.nombre}` : "";
+      }
+
+      // Auth gate
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          ui.msg.textContent =
+            "Inicia sesión con tu correo @potros para ver tu progreso.";
+          return;
+        }
+        try {
+          // Datos del usuario (si no hay permisos, se usa fallback)
+          let me = { nombre: user.displayName || user.email, matricula: "" };
+          try {
+            const meSnap = await getDoc(doc(db, "users", user.uid));
+            if (meSnap.exists()) me = { ...me, ...meSnap.data() };
+          } catch (_) {}
+
+          const items = await getDocs(
+            query(
+              collection(
+                db,
+                "grupos",
+                GRUPO_ID,
+                "calificaciones",
+                user.uid,
+                "items"
+              ),
+              orderBy("fecha", "asc")
+            )
+          ).then((s) => s.docs.map((d) => ({ id: d.id, ...d.data() })));
+
+          render(items, me);
+        } catch (err) {
+          console.error(err);
+          ui.tbody.innerHTML = `<tr><td colspan="9">Error al cargar calificaciones.</td></tr>`;
+          ui.msg.textContent = "Inténtalo más tarde.";
+        }
+      });
+    </script>
   </body>
 </html>
