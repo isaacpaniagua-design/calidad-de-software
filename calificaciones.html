@@ -1532,27 +1532,292 @@
     </script>
     <script>
       // Gating por rol local: estudiante solo lectura
-      document.addEventListener('DOMContentLoaded', function(){
-        try{
-          var rol = (localStorage.getItem('qs_role')||'estudiante').toLowerCase();
-          if(rol !== 'docente'){
-            document.querySelectorAll('input, select, textarea, button').forEach(function(el){
-              var id = el.id||'';
-              if(id==='calculateBtn' || id==='clearBtn' || id==='exportBtn'){
-                // permitir cálculo/limpieza/export de su propia vista
-              } else if(el.tagName==='BUTTON'){ el.disabled = true; }
-              else if(el.tagName==='INPUT' || el.tagName==='SELECT' || el.tagName==='TEXTAREA'){ el.readOnly = true; el.disabled = true; }
-            });
-            document.querySelectorAll('.teacher-only,.docente-only').forEach(function(el){ el.style.display='none'; });
+      document.addEventListener("DOMContentLoaded", function () {
+        try {
+          var rol = (
+            localStorage.getItem("qs_role") || "estudiante"
+          ).toLowerCase();
+          if (rol !== "docente") {
+            document
+              .querySelectorAll("input, select, textarea, button")
+              .forEach(function (el) {
+                var id = el.id || "";
+                if (
+                  id === "calculateBtn" ||
+                  id === "clearBtn" ||
+                  id === "exportBtn"
+                ) {
+                  // permitir cálculo/limpieza/export de su propia vista
+                } else if (el.tagName === "BUTTON") {
+                  el.disabled = true;
+                } else if (
+                  el.tagName === "INPUT" ||
+                  el.tagName === "SELECT" ||
+                  el.tagName === "TEXTAREA"
+                ) {
+                  el.readOnly = true;
+                  el.disabled = true;
+                }
+              });
+            document
+              .querySelectorAll(".teacher-only,.docente-only")
+              .forEach(function (el) {
+                el.style.display = "none";
+              });
           }
-        }catch(e){}
+        } catch (e) {}
       });
     </script>
     <script defer src="js/back-home.js"></script>
     <script defer src="js/nav-inject.js"></script>
+
+    <!-- Firebase (compat para no tocar tu frontend) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <script>
+      // Reuse the existing firebaseConfig variable declared earlier in the script.
+      firebase.initializeApp(firebaseConfig);
+      const auth = firebase.auth();
+      const firestoreDb = firebase.firestore();
+    </script>
+    <!-- ==== INTEGRACIÓN CALIFICACIONES (PEGAR ANTES DE </body>) ==== -->
+    <script type="module">
+      // SDK modular
+      import { Calificaciones } from "./calificaciones-backend.js";
+      import {
+        getFirestore,
+        doc,
+        getDoc,
+        query,
+        where,
+        getDocs,
+        collection,
+      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+      import { getApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+
+      // Tu config ya activa en el proyecto
+      const firebaseConfig = {
+        apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
+        authDomain: "calidad-de-software-v2.firebaseapp.com",
+        projectId: "calidad-de-software-v2",
+        storageBucket: "calidad-de-software-v2.firebasestorage.app",
+        messagingSenderId: "220818066383",
+        appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
+      };
+
+      // Grupo desde URL ?grupo=calidad-2025
+      const params = new URLSearchParams(location.search);
+      const GRUPO_ID = params.get("grupo") || "calidad-2025";
+
+      // Selectores no intrusivos. Solo pintamos si existen.
+      const $ = (s) => document.querySelector(s);
+      const el = {
+        root: $("#grades-root") || $("#calificaciones-root") || document.body,
+        table: $("#tabla-calificaciones") || $("#grades-table"),
+        tbody: $("#grades-body") || $("#tabla-calificaciones tbody") || null,
+        msg: $("#msg") || $("#grades-msg"),
+        btnGuardar: $("#btnGuardar") || $("#grades-save"),
+      };
+
+      // Cache de usuarios para mostrar nombre/matrícula
+      // Reuse the existing firestoreDb variable
+      const userCache = new Map();
+      async function getUser(uid) {
+        if (userCache.has(uid)) return userCache.get(uid);
+        const snap = await getDoc(doc(db, "users", uid));
+        const data = snap.exists() ? snap.data() : {};
+        userCache.set(uid, data);
+        return data;
+      }
+
+      // Render alumno (solo lectura)
+      function renderAlumno({ items, resumen }, me) {
+        if (!el.table) {
+          // Fallback mínimo sin alterar layout
+          const box = document.createElement("div");
+          box.innerHTML = `
+        <div class="card">
+          <h3>Mis calificaciones</h3>
+          <p><strong>Porcentaje:</strong> ${resumen.porcentaje}%</p>
+        </div>`;
+          el.root.appendChild(box);
+          return;
+        }
+        // Construye encabezado si no existe
+        if (!el.tbody) {
+          const tb = document.createElement("tbody");
+          el.table.appendChild(tb);
+          el.tbody = tb;
+        }
+        // Limpia cuerpo
+        el.tbody.innerHTML = "";
+        // Fila resumen
+        el.tbody.insertAdjacentHTML(
+          "beforeend",
+          `
+      <tr class="resumen">
+        <td colspan="4"><strong>Total</strong></td>
+        <td><strong>${resumen.porcentaje}%</strong></td>
+      </tr>`
+        );
+
+        // Detalle de items
+        items.forEach((it) => {
+          el.tbody.insertAdjacentHTML(
+            "beforeend",
+            `
+        <tr>
+          <td>${me?.nombre || "-"}</td>
+          <td>${it.nombre || "Actividad"}</td>
+          <td>${Number(it.puntos || 0)} / ${Number(it.maxPuntos || 0)}</td>
+          <td>${Number(it.ponderacion || 0)}%</td>
+          <td></td>
+        </tr>`
+          );
+        });
+      }
+
+      // Render docente (lista por alumno, sin mover estilos si ya hay tabla)
+      async function renderDocente(rows) {
+        // rows: [{alumnoUid, items:[...], resumen:{porcentaje}}]
+        if (!el.table) {
+          const box = document.createElement("div");
+          const total = rows.length;
+          const top = rows
+            .slice(0, 5)
+            .map((r) => `${r.alumnoUid}: ${r.resumen.porcentaje}%`)
+            .join("<br>");
+          box.innerHTML = `
+        <div class="card">
+          <h3>Calificaciones del grupo</h3>
+          <p>Total alumnos: ${total}</p>
+          <div>${top}</div>
+        </div>`;
+          el.root.appendChild(box);
+          return;
+        }
+        if (!el.tbody) {
+          const tb = document.createElement("tbody");
+          el.table.appendChild(tb);
+          el.tbody = tb;
+        }
+        el.tbody.innerHTML = "";
+
+        // Prefetch nombres
+        const metas = {};
+        await Promise.all(
+          rows.map(async (r) => {
+            metas[r.alumnoUid] = await getUser(r.alumnoUid);
+          })
+        );
+
+        rows.forEach((r) => {
+          const meta = metas[r.alumnoUid] || {};
+          const nombre = meta.nombre || r.alumnoUid;
+          const matricula = meta.matricula || "";
+          el.tbody.insertAdjacentHTML(
+            "beforeend",
+            `
+        <tr data-uid="${r.alumnoUid}">
+          <td>${nombre}</td>
+          <td>${matricula}</td>
+          <td>${r.resumen.porcentaje}%</td>
+          <td>
+            <button class="btn-detalle" data-uid="${r.alumnoUid}">Detalle</button>
+            <button class="btn-agregar" data-uid="${r.alumnoUid}">Añadir</button>
+          </td>
+        </tr>`
+          );
+        });
+
+        // Delegación de eventos sin romper tu CSS
+        el.table.addEventListener("click", async (e) => {
+          const uid = e.target?.dataset?.uid;
+          if (!uid) return;
+          if (e.target.classList.contains("btn-detalle")) {
+            // Muestra detalle en un modal simple o consola si no existe modal
+            const me = await getUser(uid);
+            const data = rows.find((x) => x.alumnoUid === uid);
+            const detalle = (data?.items || [])
+              .map(
+                (it) =>
+                  `${it.nombre}: ${it.puntos}/${it.maxPuntos} (${it.ponderacion}%)`
+              )
+              .join("\n");
+            alert(`${me?.nombre || uid}\n\n${detalle || "Sin actividades"}`);
+          }
+          if (e.target.classList.contains("btn-agregar")) {
+            // Captura rápida (prompt). Si ya tienes formulario propio, ignora esto.
+            const nombre = prompt("Nombre de la actividad:");
+            if (!nombre) return;
+            const ponderacion = Number(prompt("Ponderación % (0-100):") || 0);
+            const maxPuntos = Number(prompt("Puntos máximos:") || 0);
+            const puntos = Number(prompt("Puntos obtenidos:") || 0);
+            try {
+              await Calificaciones.addGradeForStudent(uid, {
+                nombre,
+                ponderacion,
+                maxPuntos,
+                puntos,
+              });
+              el.msg && (el.msg.textContent = "Guardado.");
+              setTimeout(() => {
+                location.reload();
+              }, 600);
+            } catch (err) {
+              console.error(err);
+              el.msg && (el.msg.textContent = "Error al guardar");
+            }
+          }
+        });
+
+        // Guardado masivo si tienes un botón existente y filas con inputs
+        el.btnGuardar &&
+          el.btnGuardar.addEventListener("click", async () => {
+            const filas = el.table.querySelectorAll("tr[data-uid]");
+            for (const tr of filas) {
+              // Si tu diseño ya tiene inputs por fila, aquí podrías leerlos y llamar updateGrade(...)
+              // Este bloque es NO-OP si no hay inputs.
+            }
+            el.msg && (el.msg.textContent = "Listo.");
+            setTimeout(() => el.msg && (el.msg.textContent = ""), 1500);
+          });
+      }
+
+      // Arranque
+      try {
+        const { role } = await Calificaciones.init({
+          firebaseConfig,
+          grupoId: GRUPO_ID,
+        });
+        if (role === "docente") {
+          const grupo = await Calificaciones.listGroupGrades();
+          await renderDocente(grupo);
+        } else {
+          // alumno actual
+          const meSnap = await getDoc(
+            doc(
+              db,
+              "users",
+              (
+                await import(
+                  "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js"
+                )
+              ).getAuth().currentUser.uid
+            )
+          );
+          const me = meSnap.exists() ? meSnap.data() : {};
+          const mis = await Calificaciones.listMyGrades();
+          renderAlumno(mis, me);
+        }
+      } catch (e) {
+        console.error(e);
+        el.msg &&
+          (el.msg.textContent = "Inicia sesión para ver calificaciones.");
+      }
+    </script>
+    <!-- ==== /INTEGRACIÓN CALIFICACIONES ==== -->
   </body>
-
 </html>
-
-
-
