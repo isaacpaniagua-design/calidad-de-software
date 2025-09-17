@@ -55,8 +55,8 @@
     <div class="main-container">
         <div class="header">
             <div class="role-toggle">
-              <button type="button" class="role-btn active" id="teacherBtn">👩‍🏫 Profesor</button>
-              <button type="button" class="role-btn" id="studentBtn">🧑‍🎓 Estudiante</button>
+              <button type="button" class="role-btn" id="teacherBtn">👩‍🏫 Profesor</button>
+              <button type="button" class="role-btn active" id="studentBtn">🧑‍🎓 Estudiante</button>
             </div>
             <div class="header-content">
               <h1 class="platform-title">📚 Materiales de Curso</h1>
@@ -83,16 +83,17 @@
     <div class="notification" id="notification"><span id="notificationIcon">✅</span><span id="notificationMessage"></span></div>
 
     <script type="module">
-        // Importamos las herramientas de Firebase que ya tienes en tu proyecto
-        import { auth } from './js/firebase.js';
-        import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+        // --- ESTE ES EL CAMBIO MÁS IMPORTANTE ---
+        // Importamos tu función `onAuth` que ya maneja la autenticación.
+        import { onAuth, isTeacherEmail } from './js/firebase.js';
         
-        // Importamos las funciones que creamos para manejar los materiales
+        // Importamos las funciones para manejar los materiales
         import { getMaterials, saveMaterial, deleteMaterial, updateMaterial, incrementDownloads } from './js/materials-manager.js';
 
         // --- STATE & ELEMENTS ---
         let allMaterials = [];
         let currentUser = null; 
+        let isCurrentUserTeacher = false;
         const elements = {
             grid: document.getElementById('materialsGrid'),
             form: document.getElementById('materialForm'),
@@ -106,26 +107,19 @@
         };
         const uploadcareWidget = uploadcare.Widget('#file-widget');
 
-        // --- LA SOLUCIÓN ESTÁ AQUÍ ---
-        // onAuthStateChanged es el vigilante de Firebase. Se activa cuando el usuario
-        // inicia o cierra sesión, y nos da la información del usuario.
-        onAuthStateChanged(auth, async (user) => {
+        // Usamos tu función `onAuth` que nos notificará cuando el estado del usuario cambie.
+        onAuth(async (user) => {
             if (user) {
-                // Si hay un usuario, significa que el inicio de sesión es válido.
                 console.log("Usuario autenticado:", user.email);
                 currentUser = user;
-                // Ahora es seguro llamar a la función que carga los datos.
+                isCurrentUserTeacher = isTeacherEmail(user.email);
                 await initializeApp();
             } else {
-                // Si no hay usuario, es porque no ha iniciado sesión.
                 console.log("Usuario no autenticado. Redirigiendo al login...");
-                // Lo enviamos a la página de inicio.
                 window.location.href = 'index.html';
             }
         });
 
-        // --- LÓGICA PRINCIPAL DE LA APLICACIÓN ---
-        // Esta función ahora solo se ejecuta DESPUÉS de que onAuthStateChanged lo permite.
         async function initializeApp() {
             elements.form.addEventListener('submit', handleFormSubmit);
             elements.grid.addEventListener('click', handleGridClick);
@@ -138,12 +132,11 @@
             } catch (error) {
                 console.error("Error al inicializar:", error);
                 showNotification('error', 'No se pudieron cargar los materiales.');
-                elements.emptyMessage.textContent = 'Error al cargar los materiales. Revisa los permisos.';
+                elements.emptyMessage.textContent = 'Error al cargar. Revisa los permisos.';
             }
             
-            // Revisa si el email del usuario es el del profesor para poner la vista correcta.
-            const teacherEmails = ["isaac.paniagua@potros.itson.edu.mx"]; // Lo puedes sacar de firebase-config.js si lo exportas
-            if (teacherEmails.includes(currentUser.email)) {
+            // Si el usuario es profesor, le mostramos la vista de profesor.
+            if (isCurrentUserTeacher) {
                 switchRole('teacher');
             } else {
                 switchRole('student');
@@ -166,7 +159,7 @@
 
         function createMaterialCard(material) {
             const fileInfo = getFileInfo(material);
-            const date = new Date(material.createdAt).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+            const date = material.createdAt?.toDate ? material.createdAt.toDate().toLocaleDateString('es-MX') : new Date().toLocaleDateString('es-MX');
             return `
                 <div class="material-card">
                     <div class="material-header">
@@ -175,14 +168,13 @@
                     </div>
                     <p class="material-description">${escapeHtml(material.description || 'Sin descripción.')}</p>
                     <div class="material-actions">
-                        <button class="action-btn download-btn" data-id="${material.id}" data-url="${material.downloadUrl}">⬇️ Descargar</button>
+                        <button class="action-btn download-btn" data-id="${material.id}" data-url="${material.url || material.downloadUrl}">⬇️ Descargar</button>
                         <button class="action-btn edit-btn teacher-only" data-id="${material.id}">✏️ Editar</button>
                         <button class="action-btn delete-btn teacher-only" data-id="${material.id}">🗑️ Eliminar</button>
                     </div>
                 </div>`;
         }
         
-        // --- MANEJADORES DE EVENTOS (sin cambios) ---
         async function handleFormSubmit(event) {
             event.preventDefault();
             const title = document.getElementById('materialTitle').value.trim();
@@ -191,7 +183,7 @@
             if (!fileInfo) return showNotification('error', 'Debes seleccionar un archivo.');
             showNotification('info', 'Subiendo archivo...');
             fileInfo.done(async (file) => {
-                const newMaterialData = { title, category: document.getElementById('materialCategory').value, description: document.getElementById('materialDescription').value.trim(), downloadUrl: file.cdnUrl, fileName: file.name, extension: file.name.split('.').pop().toLowerCase() || '', createdAt: new Date().toISOString(), downloads: 0 };
+                const newMaterialData = { title, category: document.getElementById('materialCategory').value, description: document.getElementById('materialDescription').value.trim(), url: file.cdnUrl, fileName: file.name, extension: file.name.split('.').pop().toLowerCase() || '', createdAt: new Date(), downloads: 0 };
                 try {
                     const savedMaterial = await saveMaterial(newMaterialData);
                     allMaterials.unshift(savedMaterial);
@@ -240,7 +232,6 @@
         function switchRole(newRole) { currentRole = newRole; elements.teacherBtn.classList.toggle('active', newRole === 'teacher'); elements.studentBtn.classList.toggle('active', newRole === 'student'); applyRoleVisibility(); }
         function applyRoleVisibility() { elements.teacherView.classList.toggle('hidden', currentRole !== 'teacher'); document.querySelectorAll('.teacher-only').forEach(el => el.classList.toggle('hidden', currentRole !== 'teacher')); }
         
-        // --- UTILIDADES (sin cambios) ---
         function getFileInfo(material) { const ext = material.extension || ''; const map = { pdf: "pdf", doc: "doc", docx: "doc", xls: "xls", xlsx: "xls", ppt: "ppt", pptx: "ppt" }; return { className: map[ext] || "default", label: ext.toUpperCase() }; }
         function escapeHtml(str) { const p = document.createElement("p"); p.textContent = str; return p.innerHTML; }
         function showNotification(type, message) { elements.notificationMessage.textContent = message; elements.notification.className = `notification ${type === 'error' ? 'error' : ''}`; elements.notification.classList.add('show'); setTimeout(() => elements.notification.classList.remove('show'), 3000); }
