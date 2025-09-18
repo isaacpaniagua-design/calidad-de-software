@@ -82,6 +82,11 @@
         padding: 10px;
         border-bottom: 1px solid rgba(0, 0, 0, 0.08);
       }
+
+      /* Ocultar la vista de alumno (student-preview) por defecto. Se mostrará cuando el docente pulse el botón "Vista de alumno". */
+      #student-preview {
+        display: none;
+      }
       #calificaciones-root .qsc-msg {
         margin-top: 8px;
         opacity: 0.85;
@@ -157,6 +162,16 @@
             readonly
             placeholder="Código del estudiante"
           />
+        </div>
+        <!-- Botón para mostrar la vista de alumno: cuando se pulsa, desplaza la página hacia la vista de estudiante (student-preview). -->
+        <div class="mt-4">
+          <button
+            id="viewStudentPreviewBtn"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            type="button"
+          >
+            Vista de alumno
+          </button>
         </div>
       </div>
 
@@ -1704,6 +1719,28 @@
       populateStudentDropdown();
       calculateProjectGrades();
       calculateGrades();
+    </script>
+    <!-- Script para activar la vista de alumno y ocultar el preview por defecto -->
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        // Ocultar la vista de alumno (student-preview) al cargar la página
+        const preview = document.getElementById("student-preview");
+        if (preview) {
+          preview.style.display = "none";
+        }
+        // Configurar el botón de vista de alumno
+        const btn = document.getElementById("viewStudentPreviewBtn");
+        if (btn) {
+          btn.addEventListener("click", function () {
+            const prev = document.getElementById("student-preview");
+            if (prev) {
+              // Mostrar el preview y desplazar la página suavemente
+              prev.style.display = "";
+              prev.scrollIntoView({ behavior: "smooth" });
+            }
+          });
+        }
+      });
     </script>
     <script type="module" src="./js/role-gate.js"></script>
 
