@@ -1379,96 +1379,88 @@
         input.addEventListener("input", calculateGrades);
       });
 
-  document.getElementById("unit3Grade").textContent = (
-    (unit3Total * 40) / 40
-  ).toFixed(1);
-  
-  // Update progress bar
-  const progressPercent = Math.min((totalWeightedGrade / 5) * 100, 100);
-  document.getElementById("progressPercent").textContent = `${progressPercent.toFixed(0)}%`;
-  document.getElementById("progressBar").style.width = `${progressPercent}%`;
-  
-  // Update progress bar color based on grade
-  const progressBar = document.getElementById("progressBar");
-  progressBar.className = "h-3 rounded-full progress-bar";
-  if (totalWeightedGrade >= 4.5) {
-    progressBar.classList.add("bg-gradient-to-r", "from-green-500", "to-green-600");
-  } else if (totalWeightedGrade >= 3.5) {
-    progressBar.classList.add("bg-gradient-to-r", "from-yellow-500", "to-yellow-600");
-  } else if (totalWeightedGrade >= 3.0) {
-    progressBar.classList.add("bg-gradient-to-r", "from-orange-500", "to-orange-600");
-  } else {
-    progressBar.classList.add("bg-gradient-to-r", "from-red-500", "to-red-600");
-  }
-</script>
-<script
-          function calculateGrades(){
-  const $ = (s, r=document)=>r.querySelector(s);
-  const set = (id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v; };
-  const num = (x)=>{ if(x==null) return NaN; x=String(x).replace('%','').replace(',','.').trim(); return x===''?NaN:Number(x); };
+      function calculateGrades() {
+        let totalWeightedGrade = 0;
+        let unit1Total = 0;
+        let unit2Total = 0;
+        let unit3Total = 0;
 
-  function readUnit(sel, unitFactor){ // unitFactor: U1=0.30, U2=0.30, U3=0.40
-    const rows=[];
-    document.querySelectorAll(sel+" .grade-input").forEach(inp=>{
-      const max = num(inp.dataset.max); const v = num(inp.value); // nota capturada
-      const g5  = Math.max(0, Math.min(5, (isNaN(max)?5:max) ? ( (isNaN(v)?0:v) / (isNaN(max)?5:max) * 5 ) : 0));
+        // Calculate for each unit
+        document.querySelectorAll("#unit1 .grade-input").forEach((input) => {
+          const grade = parseFloat(input.value) || 0;
+          const weight = parseFloat(input.dataset.weight);
+          unit1Total += (grade * weight) / 30; // Unit 1 is 30% of total
+        });
 
-      // 1) Peso global directo
-      let w = num(inp.dataset.weight);
+        document.querySelectorAll("#unit2 .grade-input").forEach((input) => {
+          const grade = parseFloat(input.value) || 0;
+          const weight = parseFloat(input.dataset.weight);
+          unit2Total += (grade * weight) / 30; // Unit 2 is 30% of total
+        });
 
-      // 2) Peso en unidad -> convertir a global
-      if (isNaN(w)) {
-        let wu = num(inp.dataset.weightUnit||inp.dataset.weightunit);
-        if (!isNaN(wu)) w = wu * unitFactor; // ej. 5 * 0.30 = 1.5
-      }
+        document.querySelectorAll("#unit3 .grade-input").forEach((input) => {
+          const grade = parseFloat(input.value) || 0;
+          const weight = parseFloat(input.dataset.weight);
+          unit3Total += (grade * weight) / 40; // Unit 3 is 40% of total
+        });
 
-      // 3) Intento desde el texto cercano (soporta tu “Peso en unidad: 5% | Peso global: 1.5%”)
-      if (isNaN(w)) {
-        const row = inp.closest('tr,.qsc-item,.row,.item') || inp.parentElement;
-        const txt = row ? row.textContent : '';
-        let m = /Peso\s*global:\s*([0-9]+(?:[.,][0-9]+)?)\s*%/i.exec(txt);
-        if (m) w = num(m[1]);
-        if (isNaN(w)) {
-          m = /Peso\s*en\s*unidad:\s*([0-9]+(?:[.,][0-9]+)?)\s*%/i.exec(txt);
-          if (m) w = num(m[1]) * unitFactor;
+        totalWeightedGrade = unit1Total + unit2Total + unit3Total;
+
+        // Update displays
+        document.getElementById("finalGrade").textContent =
+          totalWeightedGrade.toFixed(1);
+        document.getElementById("unit1Grade").textContent = (
+          (unit1Total * 30) /
+          30
+        ).toFixed(1);
+        document.getElementById("unit2Grade").textContent = (
+          (unit2Total * 30) /
+          30
+        ).toFixed(1);
+        document.getElementById("unit3Grade").textContent = (
+          (unit3Total * 40) /
+          40
+        ).toFixed(1);
+
+        // Update progress bar
+        const progressPercent = Math.min((totalWeightedGrade / 5) * 100, 100);
+        document.getElementById(
+          "progressPercent"
+        ).textContent = `${progressPercent.toFixed(0)}%`;
+        document.getElementById(
+          "progressBar"
+        ).style.width = `${progressPercent}%`;
+
+        // Update progress bar color based on grade
+        const progressBar = document.getElementById("progressBar");
+        progressBar.className = "h-3 rounded-full progress-bar";
+        if (totalWeightedGrade >= 4.5) {
+          progressBar.classList.add(
+            "bg-gradient-to-r",
+            "from-green-500",
+            "to-green-600"
+          );
+        } else if (totalWeightedGrade >= 3.5) {
+          progressBar.classList.add(
+            "bg-gradient-to-r",
+            "from-yellow-500",
+            "to-yellow-600"
+          );
+        } else if (totalWeightedGrade >= 3.0) {
+          progressBar.classList.add(
+            "bg-gradient-to-r",
+            "from-orange-500",
+            "to-orange-600"
+          );
+        } else {
+          progressBar.classList.add(
+            "bg-gradient-to-r",
+            "from-red-500",
+            "to-red-600"
+          );
         }
       }
 
-      rows.push({ g5, w: isNaN(w)?0:w });
-    });
-    return rows;
-  }
-
-  const U1 = readUnit("#unit1", 0.30);
-  const U2 = readUnit("#unit2", 0.30);
-  const U3 = readUnit("#unit3", 0.40);
-
-  function unitStats(rows){
-    const W = rows.reduce((s,r)=>s+r.w,0);                      // suma de pesos globales en esa unidad
-    const aporte = rows.reduce((s,r)=> s + (r.g5/5)*r.w, 0);    // aporta al FINAL (0–30/40)
-    const prom5  = W ? rows.reduce((s,r)=> s + r.g5*r.w,0)/W : 0; // 0–5 interno
-    return {W, aporte, prom5};
-  }
-
-  const s1=unitStats(U1), s2=unitStats(U2), s3=unitStats(U3);
-
-  // Pintar
-  set("unit1Grade", s1.prom5.toFixed(1));
-  set("unit2Grade", s2.prom5.toFixed(1));
-  set("unit3Grade", s3.prom5.toFixed(1));
-  if ($("#unit1Pct")) set("unit1Pct", s1.aporte.toFixed(1)+"%");
-  if ($("#unit2Pct")) set("unit2Pct", s2.aporte.toFixed(1)+"%");
-  if ($("#unit3Pct")) set("unit3Pct", s3.aporte.toFixed(1)+"%");
-
-  const finalPct = s1.aporte + s2.aporte + s3.aporte;           // 0–100%
-  const final5   = finalPct * 0.05;
-  set("finalGrade", final5.toFixed(1));
-  set("progressPercent", Math.round(finalPct)+"%");
-  const bar = document.getElementById("progressBar");
-  if (bar){ bar.style.width = Math.min(100, finalPct)+"%"; bar.className="h-3 rounded-full progress-bar"; }
-}
-</script>
-<script>
       // Calculate button
       document.getElementById("calculateBtn").addEventListener("click", () => {
         calculateGrades();
@@ -1570,12 +1562,12 @@
 
         document.getElementById("resultsSummary").classList.remove("hidden");
       }
-</script>
+
       // Initialize
       populateStudentDropdown();
       calculateProjectGrades();
       calculateGrades();
-  
+    </script>
     <script type="module" src="./js/role-gate.js"></script>
 
     <script>
