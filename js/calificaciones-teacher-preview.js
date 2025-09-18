@@ -90,8 +90,12 @@ async function resolverUidPorMatricula(db, matricula){
   return null;
 }
 async function obtenerItemsAlumno(db, grupoId, uid){
-  const { collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js');
-  const base = collection(db,'grupos',grupoId,'calificaciones',uid,'items');
+  const { collection, doc, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js');
+  // En lugar de pasar todos los segmentos a collection(), creamos una referencia al documento
+  // grupos/{grupoId}/calificaciones/{uid} y luego obtenemos la subcolección 'items'. Esto
+  // evita errores de versión al construir rutas anidadas directamente con collection().
+  const calificacionRef = doc(db, 'grupos', grupoId, 'calificaciones', uid);
+  const base = collection(calificacionRef, 'items');
   const snap = await getDocs(query(base, orderBy('fecha','asc')));
   return snap.docs.map(d=>({id:d.id, ...d.data()}));
 }
@@ -114,9 +118,22 @@ async function fetchStudentList(db, grupoId){
     });
   }
   try{
-    const { collection, getDocs, query, where } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js');
-    let s = await getDocs(query(collection(db, `courses/${grupoId}/members`), where('role','==','student'))); if(!s.empty) await pushFrom(s);
-    s = await getDocs(query(collection(db, `grupos/${grupoId}/members`), where('role','==','student'))); if(!s.empty) await pushFrom(s);
+    const { collection, doc, getDocs, query, where } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js');
+    // Para evitar pasar rutas con barras ("/") a collection(), construimos una referencia
+    // al documento y luego solicitamos la subcolección 'members'.
+    let s;
+    try {
+      const courseRef = doc(db, 'courses', grupoId);
+      const courseMembers = collection(courseRef, 'members');
+      s = await getDocs(query(courseMembers, where('role','==','student')));
+      if(!s.empty) await pushFrom(s);
+    } catch (_){ /* ignorar */ }
+    try {
+      const grupoRef = doc(db, 'grupos', grupoId);
+      const grupoMembers = collection(grupoRef, 'members');
+      s = await getDocs(query(grupoMembers, where('role','==','student')));
+      if(!s.empty) await pushFrom(s);
+    } catch (_){ /* ignorar */ }
     if(!out.length){ s = await getDocs(query(collection(db,'users'), where('role','==','student'))); if(!s.empty) await pushFrom(s); }
   }catch(_){}
   return out;

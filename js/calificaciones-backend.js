@@ -136,8 +136,15 @@ function renderAlumno(items){
 // === Firestore ===
 async function obtenerItemsAlumno(db, grupoId, uid){
   // Estructura actual: grupos/{grupo}/calificaciones/{uid}/items
-  const { collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js');
-  const base = collection(db, 'grupos', grupoId, 'calificaciones', uid, 'items');
+  // Importar los módulos de Firestore usando la misma versión que firebase.js (10.12.3).
+  // Para evitar conflictos entre versiones, importamos doc() además de collection().
+  const { collection, doc, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js');
+  // En lugar de pasar todos los segmentos de la ruta a collection(), creamos primero
+  // una referencia al documento (grupos/{grupo}/calificaciones/{uid}) y luego
+  // obtenemos la subcolección 'items' de esa referencia. Esto evita errores del tipo
+  // "Expected first argument to collection() to be a CollectionReference...".
+  const calificacionRef = doc(db, 'grupos', grupoId, 'calificaciones', uid);
+  const base = collection(calificacionRef, 'items');
   const snap = await getDocs(query(base, orderBy('fecha','asc')));
   return snap.docs.map(d => ({ id:d.id, ...d.data() }));
 }
