@@ -66,13 +66,32 @@ function renderAlumno(items){
     } else {
       for(const it of items){
         const tipo = it.tipo || it.category || '—';
-        const uni  = it.unidad ?? inferUnidad(it) || '—';
+        // Evitar el uso de nullish coalescing (??) para compatibilidad con navegadores
+        // que no soportan esa sintaxis. Preferimos la propiedad "unidad" si existe
+        // (no es null ni undefined); de lo contrario, inferimos la unidad a partir del nombre.
+        const uni  = ((it.unidad !== undefined && it.unidad !== null) ? it.unidad : inferUnidad(it)) || '—';
         const max  = Number(it.maxPuntos)||0;
         const pts  = Number(it.puntos)||0;
         const pnd  = Number(it.ponderacion)||0;
         const aporta = max>0 ? (pts/max)*pnd : 0;
         const escala = max>0 ? escPct(100*(pts/max)) : '—';
-        const fecha = (()=>{ try{ const d = it.fecha?.toDate ? it.fecha.toDate() : (it.fecha instanceof Date ? it.fecha : null); return d? d.toLocaleDateString() : '—'; } catch(_){ return '—'; } })();
+        // Evitar optional chaining (?.) por compatibilidad. Convertimos la fecha
+        // a Date sólo si el objeto tiene un método toDate; de lo contrario,
+        // utilizamos el objeto si ya es una instancia de Date.
+        const fecha = (()=>{
+          try {
+            let d = null;
+            const f = it.fecha;
+            if (f && typeof f.toDate === 'function') {
+              d = f.toDate();
+            } else if (f instanceof Date) {
+              d = f;
+            }
+            return d ? d.toLocaleDateString() : '—';
+          } catch (_){
+            return '—';
+          }
+        })();
         tbody.insertAdjacentHTML('beforeend', `
           <tr>
             <td>${it.nombre || it.title || 'Actividad'}</td>
@@ -129,7 +148,17 @@ async function main(){
   const db = getDb();
   const root = $id('calificaciones-root') || document.body;
   const params = new URLSearchParams(location.search);
-  const GRUPO_ID = (root?.dataset?.grupo || params.get('grupo') || 'calidad-2025').trim();
+  // Determinar el ID del grupo de forma segura, evitando optional chaining que puede
+  // generar errores de sintaxis en navegadores antiguos. Usamos el dataset si existe,
+  // de lo contrario consultamos los parámetros de la URL y finalmente un valor por defecto.
+  let grupoIdVal = 'calidad-2025';
+  if (root && root.dataset && root.dataset.grupo) {
+    grupoIdVal = root.dataset.grupo;
+  } else {
+    const p = params.get('grupo');
+    if (p) grupoIdVal = p;
+  }
+  const GRUPO_ID = String(grupoIdVal).trim();
 
   // Carga automática para el usuario autenticado (si lo hay)
   onAuth(async (user)=>{
