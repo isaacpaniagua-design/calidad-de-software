@@ -81,14 +81,16 @@ function renderQsp(items){
 // --- Firestore helpers
 async function resolverUidPorMatricula(db, matricula){
   try{
-    const { collection, getDocs, query, where } = await import('https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js');
+  // Importar Firestore desde la misma versión que firebase.js (10.12.3) para evitar
+  // incompatibilidades con las instancias de Firestore.
+  const { collection, getDocs, query, where } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js');
     const s = await getDocs(query(collection(db,'users'), where('matricula','==', String(matricula))));
     if(!s.empty) return s.docs[0].id;
   }catch(e){ console.warn('[preview] resolverUidPorMatricula', e); }
   return null;
 }
 async function obtenerItemsAlumno(db, grupoId, uid){
-  const { collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js');
+  const { collection, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js');
   const base = collection(db,'grupos',grupoId,'calificaciones',uid,'items');
   const snap = await getDocs(query(base, orderBy('fecha','asc')));
   return snap.docs.map(d=>({id:d.id, ...d.data()}));
@@ -112,7 +114,7 @@ async function fetchStudentList(db, grupoId){
     });
   }
   try{
-    const { collection, getDocs, query, where } = await import('https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js');
+    const { collection, getDocs, query, where } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js');
     let s = await getDocs(query(collection(db, `courses/${grupoId}/members`), where('role','==','student'))); if(!s.empty) await pushFrom(s);
     s = await getDocs(query(collection(db, `grupos/${grupoId}/members`), where('role','==','student'))); if(!s.empty) await pushFrom(s);
     if(!out.length){ s = await getDocs(query(collection(db,'users'), where('role','==','student'))); if(!s.empty) await pushFrom(s); }
