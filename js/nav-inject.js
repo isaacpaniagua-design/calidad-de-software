@@ -70,6 +70,82 @@ document.addEventListener('DOMContentLoaded', function(){
       var pb = parseInt(window.getComputedStyle(document.body).paddingBottom || '0', 10) || 0;
       if (pb < 12) document.body.style.paddingBottom = '12px';
     } catch(e){}
+
+    // Insert an authentication guard script on pages that require a logged-in user.
+    // This dynamically loads js/auth-guard.js as a module, which redirects to login.html
+    // if no user is signed in. Skip this injection on the login and 404 pages.
+    try {
+      var pg = (location.pathname.split('/')?.pop() || '').toLowerCase();
+      if (pg !== 'login.html' && pg !== '404.html') {
+        var guard = document.createElement('script');
+        guard.type = 'module';
+        // Compute relative path to auth-guard.js based on current location
+        try {
+          var segs = location.pathname.split('/').filter(Boolean);
+          var up = Math.max(segs.length - 2, 0);
+          var prefix = '';
+          for (var i = 0; i < up; i++) prefix += '../';
+          guard.src = prefix + 'js/auth-guard.js';
+        } catch (_) {
+          guard.src = 'js/auth-guard.js';
+        }
+        document.body.appendChild(guard);
+      }
+    } catch (e) {}
+
+    // Always append a sign‑in/out button to the navigation tabs.  This button
+    // uses Firebase to determine whether a user is logged in and will either
+    // trigger Google sign‑in or sign the user out accordingly.  We compute
+    // a relative base path to import firebase.js correctly from pages in
+    // subfolders (e.g. sesiones/).  The button is appended only once
+    // after the navigation has been injected.
+    try {
+      // Only inject on pages other than login and 404
+      var pg2 = (location.pathname.split('/')?.pop() || '').toLowerCase();
+      if (pg2 !== 'login.html' && pg2 !== '404.html') {
+        var signScript = document.createElement('script');
+        signScript.type = 'module';
+        signScript.textContent = `
+          (async () => {
+            // Compute base path relative to the current page.  We need to go up
+            // one directory level for each extra path segment beyond the
+            // project root.  Example: '/calidad-de-software/index.html' has
+            // segments ['calidad-de-software','index.html'] => upCount=0.
+            // '/calidad-de-software/sesiones/sesion1.html' => segments
+            // ['calidad-de-software','sesiones','sesion1.html'] => upCount=1.
+            const segments = window.location.pathname.split('/')
+              .filter(Boolean);
+            let upCount = Math.max(segments.length - 2, 0);
+            let basePath = '';
+            for (let i = 0; i < upCount; i++) basePath += '../';
+            const modulePath = basePath + 'js/firebase.js';
+            const firebaseModule = await import(modulePath);
+            const { onAuth, signInWithGoogleOpen, signOutCurrent } = firebaseModule;
+            const navTabs = document.querySelector('.qs-tabs');
+            if (!navTabs) return;
+            // Create button only once
+            let btn = navTabs.querySelector('.qs-auth-btn');
+            if (!btn) {
+              btn = document.createElement('button');
+              btn.className = 'qs-btn qs-auth-btn';
+              // Add some margin to separate it from other tabs
+              btn.style.marginLeft = '8px';
+              navTabs.appendChild(btn);
+            }
+            onAuth((user) => {
+              if (user) {
+                btn.textContent = 'Cerrar sesión';
+                btn.onclick = () => signOutCurrent();
+              } else {
+                btn.textContent = 'Iniciar sesión';
+                btn.onclick = () => signInWithGoogleOpen();
+              }
+            });
+          })().catch(console.error);
+        `;
+        document.body.appendChild(signScript);
+      }
+    } catch (e) {}
   }catch(e){ /* noop */ }
 });
 

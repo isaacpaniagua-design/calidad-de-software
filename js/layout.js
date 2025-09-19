@@ -105,6 +105,48 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.appendChild(guard);
       }
     } catch (_) {}
+
+    // Inserta un botón de autenticación (iniciar/cerrar sesión) en la
+    // navegación generada por layout.js.  Calcula la ruta base y utiliza
+    // import dinámico para obtener las funciones de Firebase.  Se ejecuta
+    // como módulo para disponer de 'await' y 'import'.
+    try {
+      const pg2 = (location.pathname.split('/').pop() || '').toLowerCase();
+      if (pg2 !== 'login.html' && pg2 !== '404.html') {
+        const signScr = document.createElement('script');
+        signScr.type = 'module';
+        signScr.textContent = `
+          (async () => {
+            // Compute prefix relative to current page to locate firebase.js
+            const segs = window.location.pathname.split('/').filter(Boolean);
+            let up = Math.max(segs.length - 2, 0);
+            let prefix = '';
+            for (let i = 0; i < up; i++) prefix += '../';
+            const firebaseModule = await import(prefix + 'js/firebase.js');
+            const { onAuth, signInWithGoogleOpen, signOutCurrent } = firebaseModule;
+            const navTabs = document.querySelector('.qs-tabs');
+            if (!navTabs) return;
+            let btn = navTabs.querySelector('.qs-auth-btn');
+            if (!btn) {
+              btn = document.createElement('button');
+              btn.className = 'qs-btn qs-auth-btn';
+              btn.style.marginLeft = '8px';
+              navTabs.appendChild(btn);
+            }
+            onAuth((user) => {
+              if (user) {
+                btn.textContent = 'Cerrar sesión';
+                btn.onclick = () => signOutCurrent();
+              } else {
+                btn.textContent = 'Iniciar sesión';
+                btn.onclick = () => signInWithGoogleOpen();
+              }
+            });
+          })().catch(console.error);
+        `;
+        document.body.appendChild(signScr);
+      }
+    } catch (_) {}
     return; // fin páginas normales
   }
 
