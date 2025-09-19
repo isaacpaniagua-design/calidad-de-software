@@ -113,9 +113,49 @@
 
     </style>
   </head>
-  <body class="bg-gray-50 min-h-screen">
-    <div id="calificaciones-root"></div>
-    <script type="module" src="js/calificaciones-backend.js"></script>
+    <body class="bg-gray-50 min-h-screen">
+      <div id="calificaciones-root">
+        <section class="qsc-wrap">
+          <h2 class="qsc-title">Mis calificaciones</h2>
+          <div class="qsc-kpis">
+            <div class="qsc-kpi">
+              <span id="qsc-kpi-total">--%</span>
+              <small>Total</small>
+            </div>
+            <div class="qsc-kpi">
+              <span id="qsc-kpi-items">0</span>
+              <small>Actividades</small>
+            </div>
+            <div class="qsc-kpi">
+              <span id="qsc-kpi-pond">0%</span>
+              <small>Peso cubierto</small>
+            </div>
+          </div>
+          <div class="qsc-bar">
+            <div id="qsc-bar-fill" class="qsc-bar-fill"></div>
+          </div>
+          <div class="qsc-table-wrap">
+            <table class="qsc-table">
+              <thead>
+                <tr>
+                  <th>Actividad</th>
+                  <th>Puntos</th>
+                  <th>Máx</th>
+                  <th>Ponderación</th>
+                  <th>Aporta al final</th>
+                  <th>Fecha</th>
+                </tr>
+              </thead>
+              <tbody id="qsc-tbody">
+                <tr>
+                  <td class="qsc-muted" colspan="6">Cargando…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <p id="qsc-msg" class="qsc-msg"></p>
+      </div>
 
     <!-- Header -->
     <div class="gradient-bg text-white py-8">
@@ -1815,618 +1855,70 @@
           });
       });
     </script>
-    </body>
-</html>
+          <script type="module" src="./js/role-gate.js"></script>
 
-    <script defer src="js/back-home.js"></script>
-    <script defer src="js/nav-inject.js"></script>
-    <script>
-      window.firebaseConfig = {
-        apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
-        authDomain: "calidad-de-software-v2.firebaseapp.com",
-        projectId: "calidad-de-software-v2",
-        storageBucket: "calidad-de-software-v2.firebasestorage.app",
-        messagingSenderId: "220818066383",
-        appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
-      };
-    </script>
-
-    <!-- Firebase (compat para no tocar tu frontend) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-    <script>
-      if (typeof firebase !== "undefined") {
-        if (!firebase.apps || firebase.apps.length === 0) {
-          firebase.initializeApp(window.firebaseConfig);
-        }
-        window._authCompat = firebase.auth();
-        window._dbCompat = firebase.firestore();
-      }
-    </script>
-
-    <script>
-      // Reuse the existing firebaseConfig variable declared earlier in the script.
-      firebase.initializeApp(firebaseConfig);
-      const auth = firebase.auth();
-      const firestoreDb = firebase.firestore();
-    </script>
-
-    <div id="calificaciones-root" data-grupo="calidad-2025"></div>
-
-    <script type="module">
-      import {
-        initializeApp,
-        getApps,
-        getApp,
-      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
-      import {
-        getAuth,
-        onAuthStateChanged,
-      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
-      import {
-        getFirestore,
-        doc,
-        getDoc,
-        collection,
-        getDocs,
-        query,
-        orderBy,
-      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
-
-      const app = getApps().length
-        ? getApp()
-        : initializeApp(window.firebaseConfig);
-      const auth = getAuth(app);
-      const db = getFirestore(app);
-
-      const root = document.getElementById("calificaciones-root");
-      if (!root) console.warn("#calificaciones-root no existe");
-      const params = new URLSearchParams(location.search);
-      const GRUPO_ID =
-        root?.dataset?.grupo || params.get("grupo") || "calidad-2025";
-
-      root.innerHTML = `
-    <section class="qsc-wrap">
-      <h2 class="qsc-title">Mis calificaciones</h2>
-      <div class="qsc-kpis">
-        <div class="qsc-kpi"><span id="qsc-kpi-total">--%</span><small>Total</small></div>
-        <div class="qsc-kpi"><span id="qsc-kpi-items">0</span><small>Actividades</small></div>
-        <div class="qsc-kpi"><span id="qsc-kpi-pond">0%</span><small>Peso cubierto</small></div>
-      </div>
-      <div class="qsc-bar"><div id="qsc-bar-fill" class="qsc-bar-fill"></div></div>
-      <div class="qsc-table-wrap">
-        <table class="qsc-table">
-          <thead><tr>
-            <th>Actividad</th><th>Puntos</th><th>Máx</th>
-            <th>Ponderación</th><th>Aporta al final</th><th>Fecha</th>
-          </tr></thead>
-          <tbody id="qsc-tbody"><tr><td class="qsc-muted" colspan="6">Cargando…</td></tr></tbody>
-        </table>
-      </div>
-      <p id="qsc-msg" class="qsc-msg"></p>
-    </section>`;
-
-      const ui = {
-        tbody: root.querySelector("#qsc-tbody"),
-        msg: root.querySelector("#qsc-msg"),
-        kpiTotal: root.querySelector("#qsc-kpi-total"),
-        kpiItems: root.querySelector("#qsc-kpi-items"),
-        kpiPond: root.querySelector("#qsc-kpi-pond"),
-        barFill: root.querySelector("#qsc-bar-fill"),
-      };
-
-      const clampPct = (n) => Math.max(0, Math.min(100, Number(n) || 0));
-      const fmtPct = (n) => `${clampPct(n).toFixed(2)}%`;
-      const fmtDate = (ts) => {
-        if (!ts) return "";
-        const d = ts?.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
-        return isNaN(d.getTime()) ? "" : d.toLocaleDateString("es-MX");
-      };
-
-      async function obtenerMisItems(uid) {
-        const ref = collection(
-          db,
-          "grupos",
-          GRUPO_ID,
-          "calificaciones",
-          uid,
-          "items"
-        );
-        const snap = await getDocs(query(ref, orderBy("fecha", "asc")));
-        return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      }
-      function resumen(items) {
-        let porc = 0,
-          pond = 0;
-        for (const it of items) {
-          const max = Number(it.maxPuntos) || 0;
-          const pts = Number(it.puntos) || 0;
-          const pnd = Number(it.ponderacion) || 0;
-          if (max > 0) porc += (pts / max) * pnd;
-          pond += pnd;
-        }
-        /*
-         * Ajuste de ponderación total
-         * --------------------------
-         *
-         * La suma de ponderaciones (pond) proveniente de Firestore puede no
-         * coincidir con el 100 % esperado cuando las unidades se han
-         * actualizado en el frontend (por ejemplo, al añadir actividades o
-         * modificar pesos). Esto provoca que el KPI "Peso cubierto" muestre
-         * porcentajes como 24.9 %, lo que genera confusión. Para mejorar la
-         * usabilidad, asumimos que la suma total de ponderaciones del curso
-         * debe ser 100 % (30 % + 30 % + 40 %). Si la suma real es menor,
-         * escalamos proporcionalmente el porcentaje de calificación y
-         * normalizamos la ponderación total a 100 %.
-         */
-        const EXPECTED_TOTAL_POND = 100;
-        if (pond > 0 && pond < EXPECTED_TOTAL_POND) {
-          const scale = EXPECTED_TOTAL_POND / pond;
-          porc = porc * scale;
-          pond = EXPECTED_TOTAL_POND;
-        }
-        return { porcentaje: clampPct(porc), pondSum: clampPct(pond) };
-      }
-      function render(items, me) {
-        const { porcentaje, pondSum } = resumen(items);
-        ui.kpiTotal.textContent = fmtPct(porcentaje);
-        ui.kpiItems.textContent = items.length;
-        ui.kpiPond.textContent = fmtPct(pondSum);
-        ui.barFill.style.width = fmtPct(porcentaje);
-        ui.tbody.innerHTML = "";
-        if (items.length === 0) {
-          ui.tbody.innerHTML = `<tr><td colspan="6" class="qsc-muted">Sin actividades registradas aún.</td></tr>`;
-          ui.msg.textContent = me?.nombre ? `Alumno: ${me.nombre}` : "";
-          return;
-        }
-        for (const it of items) {
-          const max = Number(it.maxPuntos) || 0;
-          const pts = Number(it.puntos) || 0;
-          const pnd = Number(it.ponderacion) || 0;
-          const aporta = max > 0 ? (pts / max) * pnd : 0;
-          ui.tbody.insertAdjacentHTML(
-            "beforeend",
-            `
-        <tr>
-          <td>${it.nombre || "Actividad"}</td>
-          <td>${pts}</td>
-          <td>${max}</td>
-          <td>${pnd}%</td>
-          <td>${fmtPct(aporta)}</td>
-          <td>${fmtDate(it.fecha)}</td>
-        </tr>`
-          );
-        }
-        ui.msg.textContent = me?.nombre ? `Alumno: ${me.nombre}` : "";
-      }
-
-      onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-          ui.msg.textContent =
-            "Inicia sesión con tu correo @potros para ver tu progreso.";
-          return;
-        }
-        try {
-          const meSnap = await getDoc(doc(db, "users", user.uid));
-          const me = meSnap.exists() ? meSnap.data() : {};
-          const items = await obtenerMisItems(user.uid);
-          render(items, me);
-        } catch (err) {
-          console.error(err);
-          ui.tbody.innerHTML = `<tr><td colspan="6">Error al cargar calificaciones.</td></tr>`;
-          ui.msg.textContent = "Inténtalo más tarde.";
-        }
-      });
-    </script>
-
-    <script type="module">
-      import {
-        initializeApp,
-        getApps,
-        getApp,
-      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
-      import {
-        getAuth,
-        onAuthStateChanged,
-      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
-      import {
-        getFirestore,
-        doc,
-        getDoc,
-        collection,
-        getDocs,
-        query,
-        orderBy,
-      } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
-
-      // Init seguro con tu config global (window.firebaseConfig ya definida arriba)
-      const app = getApps().length
-        ? getApp()
-        : initializeApp(window.firebaseConfig);
-      const auth = getAuth(app);
-      const db = getFirestore(app);
-
-      // Contenedor y grupo
-      const root = document.getElementById("calificaciones-root");
-      if (!root) {
-        console.warn("#calificaciones-root no existe");
-        throw new Error("Sin root");
-      }
-      const params = new URLSearchParams(location.search);
-      const GRUPO_ID =
-        root.dataset.grupo || params.get("grupo") || "calidad-2025";
-
-      // Ponderaciones por unidad (final = 30/30/40)
-      // === PONDERACIONES POR UNIDAD (FINAL 30/30/40) ===
-      // El proyecto final y su rúbrica se integran dentro del 40 % que aporta la unidad III al curso.
-      // Las unidades I y II aportan un 30 % cada una.
-      const UNIT_WEIGHTS_FINAL = { 1: 30, 2: 30, 3: 40 }; // %
-
-      /**
-       * Distribución de categorías por unidad.
-       * U1 y U2: participacion 10, asignación 20, trabajo 25 y examen 45 (% dentro de la unidad).
-       * U3: proyecto 36 y examen 24 (% del total del curso). Las demás categorías no aplican.
-       */
-      function unitCategoryWeights(u) {
-        if (u === 3) {
-          // Para la unidad III (40 % del curso) el proyecto final (fases y presentación)
-          // y el examen se integran en las categorías "proyecto" y "examen" dentro de ese 40 %.
-          // Las categorías de participación/asignación/trabajo no aplican en U3.
-          return {
-            participacion: 0,
-            asignacion: 0,
-            trabajo: 0,
-            examen: 16.0,
-            proyecto: 24.0,
-          };
-        }
-        return {
-          participacion: 10,
-          asignacion: 20,
-          trabajo: 25,
-          examen: 45,
-          proyecto: 0,
-        };
-      }
-
-      /** Calcula % de la unidad sumando aportes por categoría.
-       *  Cada categoría reparte su peso fijo entre el número de ítems que tenga. */
-      function computeUnit(items, u) {
-        const W = unitCategoryWeights(u);
-        const groups = {
-          participacion: [],
-          asignacion: [],
-          trabajo: [],
-          examen: [],
-          proyecto: [],
-        };
-
-        for (const it of items) {
-          // Requiere que ya tengas inferUnidad(...) y canonicalTipo(...)
-          if (inferUnidad(it) !== u) continue;
-          const t = canonicalTipo(it);
-          const max = Number(it.maxPuntos) || 0;
-          const pts = Number(it.puntos) || 0;
-          const ratio = max > 0 ? pts / max : 0; // 0–1
-          groups[t].push(ratio);
-        }
-
-        let unitPct = 0; // % obtenido dentro de la unidad
-        let covered = 0; // % cubierto de la unidad (por categorías con ítems)
-
-        for (const t of Object.keys(groups)) {
-          const catW = W[t] || 0; // % fijo de la categoría en la unidad
-          const n = groups[t].length; // ítems en esa categoría
-          if (catW > 0 && n > 0) {
-            const perItemW = catW / n; // % de unidad por ítem
-            unitPct += groups[t].reduce((s, r) => s + r * perItemW, 0);
-            covered += catW;
-          }
-        }
-        return {
-          unitPct: Math.min(100, unitPct),
-          covered: Math.min(100, covered),
-          groups,
-          weights: W,
-        };
-      }
-
-      /** Aporte al FINAL de un ítem concreto considerando su unidad y categoría */
-      function aportaItemFinal(u, t, ratio, groups, weights) {
-        const n = groups[t]?.length || 1;
-        const catW = weights[t] || 0; // % en la unidad
-        const itemW_unit = catW / n; // % de unidad para este ítem
-        const unitW_final = UNIT_WEIGHTS_FINAL[u]; // 30/30/40
-        return Math.min(100, ratio * itemW_unit * (unitW_final / 100));
-      }
-
-      // UI mínima, no rompe tu diseño
-      root.innerHTML = `
-    <section class="qsc-wrap">
-      <h2 class="qsc-title">Mis calificaciones</h2>
-      <div class="qsc-kpis" id="qsc-kpis">
-        <div class="qsc-kpi"><span id="kpi-final">--%</span><small>Final (30/30/40)</small></div>
-        <div class="qsc-kpi"><span id="kpi-u1">--%</span><small>Unidad 1 (30%)</small></div>
-        <div class="qsc-kpi"><span id="kpi-u2">--%</span><small>Unidad 2 (30%)</small></div>
-        <div class="qsc-kpi"><span id="kpi-u3">--%</span><small>Unidad 3 (40%)</small></div>
-        <div class="qsc-kpi"><span id="kpi-items">0</span><small>Actividades</small></div>
-        <div class="qsc-kpi"><span id="kpi-pond">0%</span><small>Peso cubierto</small></div>
-      </div>
-      <div class="qsc-bar"><div id="qsc-bar-fill" class="qsc-bar-fill"></div></div>
-
-      <div class="qsc-table-wrap">
-        <table class="qsc-table">
-          <thead>
-            <tr>
-              <th>Actividad</th>
-              <th>Tipo</th>
-              <th>Unidad</th>
-              <th>Puntos</th>
-              <th>Máx</th>
-              <th>Ponderación</th>
-              <th>Aporta al final</th>
-              <th>Escala</th>
-              <th>Fecha</th>
-            </tr>
-          </thead>
-          <tbody id="qsc-tbody">
-            <tr><td class="qsc-muted" colspan="9">Cargando…</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p id="qsc-msg" class="qsc-msg"></p>
-    </section>`;
-
-      // Refs UI
-      const ui = {
-        tbody: root.querySelector("#qsc-tbody"),
-        msg: root.querySelector("#qsc-msg"),
-        kFinal: root.querySelector("#kpi-final"),
-        kU1: root.querySelector("#kpi-u1"),
-        kU2: root.querySelector("#kpi-u2"),
-        kU3: root.querySelector("#kpi-u3"),
-        kItems: root.querySelector("#kpi-items"),
-        kPond: root.querySelector("#kpi-pond"),
-        barFill: root.querySelector("#qsc-bar-fill"),
-      };
-
-      // Helpers
-      const clampPct = (n) => Math.max(0, Math.min(100, Number(n) || 0));
-      const fmtPct = (n) => `${clampPct(n).toFixed(2)}%`;
-      const fmtDate = (ts) => {
-        if (!ts) return "";
-        const d = ts?.seconds ? new Date(ts.seconds * 1000) : new Date(ts);
-        return isNaN(d.getTime()) ? "" : d.toLocaleDateString("es-MX");
-      };
-
-      // Inferencia suave de unidad y tipo si faltan
-      function inferUnidad(it) {
-        if (it.unidad != null) return Number(it.unidad);
-        const n = String(it.nombre || "").toLowerCase();
-        if (/\bunidad\s*1\b|\bu1\b/.test(n)) return 1;
-        if (/\bunidad\s*2\b|\bu2\b/.test(n)) return 2;
-        if (/\bunidad\s*3\b|\bu3\b/.test(n)) return 3;
-        return 0; // sin unidad
-      }
-      function inferTipo(it) {
-        if (it.tipo) return String(it.tipo).toLowerCase();
-        const n = String(it.nombre || "").toLowerCase();
-        if (/examen|quiz|prueba/.test(n)) return "examen";
-        if (/proyecto|entregable final/.test(n)) return "proyecto";
-        if (/asignaci[oó]n|tarea/.test(n)) return "asignacion";
-        if (/actividad|pr[aá]ctica|ejercicio/.test(n)) return "actividad";
-        return "actividad";
-      }
-
-      // Escala por tipo (puedes ajustar umbrales por tipo)
-      function escala(scorePct, tipo) {
-        const t = String(tipo || "general").toLowerCase();
-        const thresholds = {
-          general: [90, 80, 70, 60],
-          examen: [90, 80, 70, 60],
-          proyecto: [90, 80, 75, 65],
-          asignacion: [90, 80, 70, 60],
-          actividad: [90, 80, 70, 60],
-        };
-        const [A, B, C, D] = thresholds[t] || thresholds.general;
-        return scorePct >= A
-          ? "Excelente"
-          : scorePct >= B
-          ? "Notable"
-          : scorePct >= C
-          ? "Bueno"
-          : scorePct >= D
-          ? "Suficiente"
-          : "Insuficiente";
-      }
-
-      // Carga items del alumno
-      async function obtenerMisItems(uid) {
-        const ref = collection(
-          db,
-          "grupos",
-          GRUPO_ID,
-          "calificaciones",
-          uid,
-          "items"
-        );
-        const snap = await getDocs(query(ref, orderBy("fecha", "asc")));
-        return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-      }
-
-      // Cálculo por unidad respetando ponderaciones internas
-      function calcularUnidades(items) {
-        // Separar por unidad
-        const buckets = { 1: [], 2: [], 3: [] };
-        let pondTotal = 0;
-        for (const it of items) {
-          const u = inferUnidad(it);
-          if (u === 1 || u === 2 || u === 3) buckets[u].push(it);
-          pondTotal += Number(it.ponderacion) || 0;
-        }
-        // Para cada unidad: normaliza por suma de ponderaciones de esa unidad
-        function unitScore(arr) {
-          if (!arr.length) return { score: 0, pond: 0 };
-          let raw = 0,
-            pondSum = 0;
-          for (const it of arr) {
-            const max = Number(it.maxPuntos) || 0;
-            const pts = Number(it.puntos) || 0;
-            const pond = Number(it.ponderacion) || 0;
-            if (max > 0) raw += (pts / max) * pond;
-            pondSum += pond;
-          }
-          const scorePct = pondSum > 0 ? (raw / pondSum) * 100 : 0; // 0–100%
-          return { score: clampPct(scorePct), pond: clampPct(pondSum) };
-        }
-        const u1 = unitScore(buckets[1]);
-        const u2 = unitScore(buckets[2]);
-        const u3 = unitScore(buckets[3]);
-        /*
-         * Ajuste de ponderaciones por unidad
-         * ----------------------------------
-         *
-         * Las ponderaciones acumuladas (pond) de cada unidad en la vista de
-         * estudiantes se extraen del campo "ponderacion" almacenado en
-         * Firestore para cada actividad. Sin embargo, estas ponderaciones
-         * pueden no reflejar los pesos globales actualizados cuando se
-         * realizan cambios en el frontend (por ejemplo, al añadir nuevas
-         * actividades como la participación en clase). Esto provoca que la
-         * suma de ponderaciones mostrada en los KPI de la unidad no alcance
-         * el 30 % o 40 % esperados, dando lugar a valores como 24.9 %.
-         *
-         * Para evitar esta discrepancia y garantizar que las unidades
-         * siempre muestren el porcentaje correcto de avance según su
-         * ponderación en el curso (Unidad I = 30 %, Unidad II = 30 %,
-         * Unidad III = 40 %), se sobreescriben los campos `pond` de cada
-         * unidad con valores fijos cuando existan actividades en esa
-         * unidad. Si una unidad no tiene actividades registradas,
-         * su ponderación se mantiene en cero para indicar que aún no se ha
-         * cubierto.
-         */
-        // Ajustar las ponderaciones fijas por unidad para que reflejen la distribución 30/30/40.
-        const FIXED_PONDS = { 1: 30, 2: 30, 3: 40 };
-        u1.pond = buckets[1].length > 0 ? FIXED_PONDS[1] : 0;
-        u2.pond = buckets[2].length > 0 ? FIXED_PONDS[2] : 0;
-        u3.pond = buckets[3].length > 0 ? FIXED_PONDS[3] : 0;
-        // Actualizar pondTotal en base a los valores fijos
-        pondTotal = u1.pond + u2.pond + u3.pond;
-        return { u1, u2, u3, pondTotal: clampPct(pondTotal) };
-      }
-
-      function calcularFinal(u1, u2, u3) {
-        // final = (30/100)*u1 + (30/100)*u2 + (40/100)*u3
-        // Equivale a ponderar las unidades I y II con el 30 % y la unidad III con el 40 %,
-        // normalizado sobre la suma de ponderaciones (100).
-        const totalWeight = 30 + 30 + 40;
-        return clampPct((u1 * 30 + u2 * 30 + u3 * 40) / totalWeight);
-      }
-
-      function render(items, me) {
-        // KPIs por unidad y final
-        const { u1, u2, u3, pondTotal } = calcularUnidades(items);
-        // Calculamos la contribución de cada unidad al total del curso.
-        // Cada unidad aporta un porcentaje fijo (30 %, 30 %, 40 %) que se
-        // multiplica por el desempeño de la unidad (0–100 %). De este modo,
-        // si un alumno obtiene 100 % en la unidad I, su contribución al
-        // curso será 30 %; con 80 %, aportará 24 % (80 % × 30). Esto evita
-        // que la interfaz muestre 100 cuando se espera ver 30.
-        const weight1 = UNIT_WEIGHTS_FINAL[1] || 0;
-        const weight2 = UNIT_WEIGHTS_FINAL[2] || 0;
-        const weight3 = UNIT_WEIGHTS_FINAL[3] || 0;
-        const unit1Contribution = (u1.score / 100) * weight1;
-        const unit2Contribution = (u2.score / 100) * weight2;
-        const unit3Contribution = (u3.score / 100) * weight3;
-        const totalWeightSum = weight1 + weight2 + weight3;
-        // El porcentaje final se normaliza sobre la suma total de pesos (100)
-        // para que el máximo sea 100 %. Por ejemplo, 30 + 30 + 40 = 100 → 100 %.
-        const finalPct = totalWeightSum > 0
-          ? ((unit1Contribution + unit2Contribution + unit3Contribution) / totalWeightSum) * 100
-          : 0;
-
-        // Mostrar cada contribución y el porcentaje final
-        ui.kFinal.textContent = fmtPct(finalPct);
-        ui.kU1.textContent = u1.pond > 0 ? fmtPct(unit1Contribution) : "—";
-        ui.kU2.textContent = u2.pond > 0 ? fmtPct(unit2Contribution) : "—";
-        ui.kU3.textContent = u3.pond > 0 ? fmtPct(unit3Contribution) : "—";
-        ui.kItems.textContent = items.length;
-        ui.kPond.textContent = fmtPct(pondTotal);
-        ui.barFill.style.width = fmtPct(finalPct);
-
-        // Tabla
-        ui.tbody.innerHTML = "";
-        if (!items.length) {
-          ui.tbody.innerHTML = `<tr><td colspan="9" class="qsc-muted">Sin actividades registradas aún.</td></tr>`;
-          ui.msg.textContent = me?.nombre ? `Alumno: ${me.nombre}` : "";
-          return;
-        }
-        for (const it of items) {
-          const tipo = inferTipo(it);
-          const unidad = inferUnidad(it);
-          const max = Number(it.maxPuntos) || 0;
-          const pts = Number(it.puntos) || 0;
-          const pond = Number(it.ponderacion) || 0;
-          const puntPct = max > 0 ? (pts / max) * 100 : 0; // % propio del ítem
-          const aporta = max > 0 ? (pts / max) * pond : 0; // % que aporta al FINAL
-          const esc = escala(clampPct(puntPct), tipo);
-
-          ui.tbody.insertAdjacentHTML(
-            "beforeend",
-            `
-        <tr>
-          <td>${it.nombre || "Actividad"}</td>
-          <td>${tipo}</td>
-          <td>${unidad || "-"}</td>
-          <td>${pts}</td>
-          <td>${max}</td>
-          <td>${pond}%</td>
-          <td>${fmtPct(aporta)}</td>
-          <td>${fmtPct(puntPct)} · ${esc}</td>
-          <td>${fmtDate(it.fecha)}</td>
-        </tr>
-      `
-          );
-        }
-        ui.msg.textContent = me?.nombre ? `Alumno: ${me.nombre}` : "";
-      }
-
-      // Auth gate
-      onAuthStateChanged(auth, async (user) => {
-        if (!user) {
-          ui.msg.textContent =
-            "Inicia sesión con tu correo @potros para ver tu progreso.";
-          return;
-        }
-        try {
-          // Datos del usuario (si no hay permisos, se usa fallback)
-          let me = { nombre: user.displayName || user.email, matricula: "" };
+      <script>
+        // Gating por rol local: estudiante solo lectura
+        document.addEventListener("DOMContentLoaded", function () {
           try {
-            const meSnap = await getDoc(doc(db, "users", user.uid));
-            if (meSnap.exists()) me = { ...me, ...meSnap.data() };
-          } catch (_) {}
+            var rol = (
+              localStorage.getItem("qs_role") || "estudiante"
+            ).toLowerCase();
+            if (rol !== "docente") {
+              document
+                .querySelectorAll("input, select, textarea, button")
+                .forEach(function (el) {
+                  if (el.tagName === "BUTTON") {
+                    if (!el.classList.contains('tab-button')) {
+                      el.disabled = true;
+                    }
+                  } else if (
+                    el.tagName === "INPUT" ||
+                    el.tagName === "SELECT" ||
+                    el.tagName === "TEXTAREA"
+                  ) {
+                    el.readOnly = true;
+                    el.disabled = true;
+                  }
+                });
+              document
+                .querySelectorAll(".teacher-only,.docente-only")
+                .forEach(function (el) {
+                  el.style.display = "none";
+                });
+            }
+          } catch (e) {}
+        });
+      </script>
 
-          const items = await getDocs(
-            query(
-              collection(
-                db,
-                "grupos",
-                GRUPO_ID,
-                "calificaciones",
-                user.uid,
-                "items"
-              ),
-              orderBy("fecha", "asc")
-            )
-          ).then((s) => s.docs.map((d) => ({ id: d.id, ...d.data() })));
+      <script>
+        window.firebaseConfig = {
+          apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
+          authDomain: "calidad-de-software-v2.firebaseapp.com",
+          projectId: "calidad-de-software-v2",
+          storageBucket: "calidad-de-software-v2.appspot.com",
+          messagingSenderId: "220818066383",
+          appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
+        };
+      </script>
 
-          render(items, me);
-        } catch (err) {
-          console.error(err);
-          ui.tbody.innerHTML = `<tr><td colspan="9">Error al cargar calificaciones.</td></tr>`;
-          ui.msg.textContent = "Inténtalo más tarde.";
-        }
-      });
-    </script>
-  </body>
-</html>
+      <script type="module" src="js/calificaciones-backend.js"></script>
+      <!-- Cargar vista previa del estudiante para docentes. -->
+      <script type="module" src="js/calificaciones-teacher-preview.js"></script>
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          document
+            .querySelectorAll('.grade-input, .project-grade-input')
+            .forEach(function (input) {
+              input.setAttribute('max', '10');
+              input.setAttribute('min', '0');
+            });
+        });
+      </script>
+
+      <script defer src="js/layout.js"></script>
+      <script defer src="js/back-home.js"></script>
+      <script defer src="js/nav-inject.js"></script>
+    </body>
+  </html>
