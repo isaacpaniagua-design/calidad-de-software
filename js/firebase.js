@@ -130,6 +130,7 @@ export async function getDriveAccessTokenInteractive() {
 export async function signOutCurrent() {
   const auth = getAuthInstance();
   await signOut(auth);
+  driveAccessToken = null;
 }
 
 // --- Autenticación con correo y contraseña ---
@@ -434,7 +435,13 @@ export async function uploadMaterial({
       "Firebase Storage está deshabilitado. Usa addMaterialLink con un URL."
     );
   }
+  if (!file) {
+    throw new Error("Archivo requerido");
+  }
   const st = getStorageInstance();
+  if (!st) {
+    throw new Error("Firebase Storage no está inicializado");
+  }
   const db = getDb();
   const ts = Date.now();
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -502,6 +509,7 @@ export async function uploadMaterialToDrive({
   title,
   category,
   description,
+  ownerEmail,
   folderId = driveFolderId,
   onProgress,
 }) {
@@ -604,7 +612,10 @@ export async function uploadMaterialToDrive({
     description,
     url,
     path: null,
-    ownerEmail: auth?.currentUser?.email?.toLowerCase() || null,
+    ownerEmail:
+      ownerEmail?.toLowerCase() ||
+      auth?.currentUser?.email?.toLowerCase() ||
+      null,
     createdAt: serverTimestamp(),
     downloads: 0,
   });
