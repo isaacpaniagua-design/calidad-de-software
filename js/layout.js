@@ -122,7 +122,9 @@ document.addEventListener("DOMContentLoaded", () => {
             let up = Math.max(segs.length - 2, 0);
             let prefix = '';
             for (let i = 0; i < up; i++) prefix += '../';
-            const firebaseModule = await import(prefix + 'js/firebase.js');
+            // Use './js/firebase.js' when prefix is empty so that the import is treated as relative.
+            const importPath = (prefix === '') ? './js/firebase.js' : (prefix + 'js/firebase.js');
+            const firebaseModule = await import(importPath);
             const { onAuth, signInWithGoogleOpen, signOutCurrent } = firebaseModule;
             const navTabs = document.querySelector('.qs-tabs');
             if (!navTabs) return;
@@ -175,6 +177,47 @@ document.addEventListener("DOMContentLoaded", () => {
     userSelect: "none",
   });
   document.body.appendChild(back);
+
+  // Agregar botón de autenticación en las páginas de sesiones. Este botón
+  // permite iniciar sesión con Google o cerrar sesión y se sitúa en la
+  // esquina inferior derecha. Al igual que en las páginas con navegación
+  // global, se calcula un prefijo relativo para importar firebase.js.
+  try {
+    const authScript = document.createElement('script');
+    authScript.type = 'module';
+    authScript.textContent = `
+      (async () => {
+        const segs = window.location.pathname.split('/').filter(Boolean);
+        let up = Math.max(segs.length - 2, 0);
+        let prefix = '';
+        for (let i = 0; i < up; i++) prefix += '../';
+        const importPath = (prefix === '') ? './js/firebase.js' : (prefix + 'js/firebase.js');
+        const { onAuth, signInWithGoogleOpen, signOutCurrent } = await import(importPath);
+        const btn = document.createElement('button');
+        btn.className = 'qs-btn qs-auth-btn';
+        btn.style.position = 'fixed';
+        btn.style.right = '16px';
+        btn.style.bottom = '16px';
+        btn.style.zIndex = '950';
+        btn.style.padding = '8px 12px';
+        btn.style.borderRadius = '999px';
+        btn.style.background = 'linear-gradient(135deg,#667eea,#764ba2)';
+        btn.style.color = '#fff';
+        btn.style.boxShadow = '0 6px 18px rgba(0,0,0,.2)';
+        document.body.appendChild(btn);
+        onAuth((user) => {
+          if (user) {
+            btn.textContent = 'Cerrar sesión';
+            btn.onclick = () => signOutCurrent();
+          } else {
+            btn.textContent = 'Iniciar sesión';
+            btn.onclick = () => signInWithGoogleOpen();
+          }
+        });
+      })().catch(console.error);
+    `;
+    document.body.appendChild(authScript);
+  } catch (_) {}
 
   // Atajo de teclado: Alt+← o Backspace con no-input → regresar
   addEventListener("keydown", (e) => {

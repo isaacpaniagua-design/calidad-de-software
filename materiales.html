@@ -296,6 +296,16 @@
       ><span id="notificationMessage"></span>
     </div>
 
+    <!-- Botón de regreso al inicio para cualquier rol.  Otros módulos utilizan
+         la navegación fija generada por nav‑inject.js, pero este botón
+         adicional ofrece una ruta clara de regreso a la página principal en
+         dispositivos móviles.  Aparece en la esquina inferior izquierda. -->
+    <a href="index.html"
+       class="fixed left-4 bottom-4 z-50 px-4 py-2 rounded-full text-white shadow-lg"
+       style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+      ⟵ Inicio
+    </a>
+
     <script type="module">
       import { onAuth, isTeacherEmail } from "./js/firebase.js";
       import {
@@ -359,10 +369,13 @@
             "Error al cargar. Revisa los permisos.";
         }
 
-        if (isCurrentUserTeacher) {
-          switchRole("teacher");
-        } else {
+        if (!isCurrentUserTeacher) {
+          // Ocultar el conmutador de roles para los estudiantes
+          const roleToggle = document.querySelector('.role-toggle');
+          if (roleToggle) roleToggle.classList.add('hidden');
           switchRole("student");
+        } else {
+          switchRole("teacher");
         }
       }
 

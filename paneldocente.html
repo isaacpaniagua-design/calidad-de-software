@@ -3539,6 +3539,31 @@
     </script>
     <script type="module" src="./js/paneldocente-backend.js"></script>
     <script type="module" src="./js/role-gate.js"></script>
+    <!-- Protección adicional: oculta este panel a usuarios que no sean docentes. -->
+    <script type="module">
+      (async () => {
+        // Importar las utilidades de Firebase sin filtrar por dominio.  Se
+        // utiliza la misma versión de firebase.js que el resto del proyecto.
+        const { onAuth, isTeacherEmail, isTeacherByDoc } = await import('./js/firebase.js');
+        onAuth(async (user) => {
+          if (!user) {
+            // Sin sesión: redirige a login
+            window.location.href = 'login.html';
+            return;
+          }
+          // Verificar si el correo pertenece al listado de docentes o si
+          // existe un documento de profesor en Firestore.  Si el usuario no
+          // cumple ninguna de estas condiciones, redirige a la portada.
+          let isDoc = false;
+          try {
+            isDoc = (await isTeacherByDoc(user.uid)) || false;
+          } catch (_) {}
+          if (!isTeacherEmail(user.email) && !isDoc) {
+            window.location.href = 'index.html';
+          }
+        });
+      })().catch(console.error);
+    </script>
     <script defer src="./js/layout.js"></script>
     <script defer src="js/back-home.js"></script>
     <script defer src="js/nav-inject.js"></script>

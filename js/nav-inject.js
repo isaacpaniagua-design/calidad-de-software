@@ -119,26 +119,42 @@ document.addEventListener('DOMContentLoaded', function(){
             let basePath = '';
             for (let i = 0; i < upCount; i++) basePath += '../';
             const modulePath = basePath + 'js/firebase.js';
-            const firebaseModule = await import(modulePath);
-            const { onAuth, signInWithGoogleOpen, signOutCurrent } = firebaseModule;
+            // Prepend './' when prefix is empty so that import specifier is treated as a relative path.
+            const importPath = (basePath === '') ? './js/firebase.js' : modulePath;
+            const firebaseModule = await import(importPath);
+            const { onAuth, signInWithGoogleOpen, signOutCurrent, isTeacherEmail, isTeacherByDoc } = firebaseModule;
             const navTabs = document.querySelector('.qs-tabs');
             if (!navTabs) return;
-            // Create button only once
+            // Localiza el enlace al panel docente (Panel).  Puede estar ausente si no se inyectó la pestaña.
+            const panelLink = navTabs.querySelector('a[href$="paneldocente.html"]');
+            // Crea o reutiliza el botón de inicio/cierre de sesión una sola vez.
             let btn = navTabs.querySelector('.qs-auth-btn');
             if (!btn) {
               btn = document.createElement('button');
               btn.className = 'qs-btn qs-auth-btn';
-              // Add some margin to separate it from other tabs
               btn.style.marginLeft = '8px';
               navTabs.appendChild(btn);
             }
-            onAuth((user) => {
+            // Escucha cambios de autenticación para ajustar el texto del botón y ocultar el enlace de panel
+            onAuth(async (user) => {
               if (user) {
                 btn.textContent = 'Cerrar sesión';
                 btn.onclick = () => signOutCurrent();
+                // Ocultar el panel docente a usuarios que no sean profesores.
+                let okTeacher = false;
+                try {
+                  okTeacher = isTeacherEmail(user.email) || (await isTeacherByDoc(user.uid));
+                } catch (_) {
+                  okTeacher = false;
+                }
+                if (panelLink) {
+                  panelLink.style.display = okTeacher ? '' : 'none';
+                }
               } else {
                 btn.textContent = 'Iniciar sesión';
                 btn.onclick = () => signInWithGoogleOpen();
+                // Sin sesión: oculta el panel docente
+                if (panelLink) panelLink.style.display = 'none';
               }
             });
           })().catch(console.error);
