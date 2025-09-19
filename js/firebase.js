@@ -130,6 +130,7 @@ export async function getDriveAccessTokenInteractive() {
 export async function signOutCurrent() {
   const auth = getAuthInstance();
   await signOut(auth);
+  driveAccessToken = null;
 }
 
 // --- Autenticación con correo y contraseña ---
@@ -253,7 +254,7 @@ export async function saveTodayAttendance({
   return { id: attendanceId, uid, name, email: normalizedEmail, type, date };
 }
 
-export function subscribeTodayAttendance(cb) {
+export function subscribeTodayAttendance(cb, onError) {
   const db = getDb();
   const date = todayKey();
   const q = query(
@@ -261,25 +262,31 @@ export function subscribeTodayAttendance(cb) {
     where("date", "==", date),
     orderBy("timestamp", "desc")
   );
-  return onSnapshot(q, (snap) => {
-    const items = [];
-    snap.forEach((docSnap) => {
-      const data = docSnap.data();
-      items.push({
-        id: docSnap.id,
-        name: data.name,
-        email: data.email,
-        type: data.type,
-        timestamp: data.timestamp?.toDate
-          ? data.timestamp.toDate()
-          : new Date(),
+  return onSnapshot(
+    q,
+    (snap) => {
+      const items = [];
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        items.push({
+          id: docSnap.id,
+          name: data.name,
+          email: data.email,
+          type: data.type,
+          timestamp: data.timestamp?.toDate
+            ? data.timestamp.toDate()
+            : new Date(),
+        });
       });
-    });
-    cb(items);
-  });
+      cb(items);
+    },
+    (error) => {
+      if (onError) onError(error);
+    }
+  );
 }
 
-export function subscribeTodayAttendanceByUser(email, cb) {
+export function subscribeTodayAttendanceByUser(email, cb, onError) {
   const db = getDb();
   const date = todayKey();
   const q = query(
@@ -288,22 +295,28 @@ export function subscribeTodayAttendanceByUser(email, cb) {
     where("email", "==", (email || "").toLowerCase()),
     orderBy("timestamp", "desc")
   );
-  return onSnapshot(q, (snap) => {
-    const items = [];
-    snap.forEach((docSnap) => {
-      const data = docSnap.data();
-      items.push({
-        id: docSnap.id,
-        name: data.name,
-        email: data.email,
-        type: data.type,
-        timestamp: data.timestamp?.toDate
-          ? data.timestamp.toDate()
-          : new Date(),
+  return onSnapshot(
+    q,
+    (snap) => {
+      const items = [];
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        items.push({
+          id: docSnap.id,
+          name: data.name,
+          email: data.email,
+          type: data.type,
+          timestamp: data.timestamp?.toDate
+            ? data.timestamp.toDate()
+            : new Date(),
+        });
       });
-    });
-    cb(items);
-  });
+      cb(items);
+    },
+    (error) => {
+      if (onError) onError(error);
+    }
+  );
 }
 
 export async function fetchAttendancesByDateRange(startDateStr, endDateStr) {
@@ -434,7 +447,13 @@ export async function uploadMaterial({
       "Firebase Storage está deshabilitado. Usa addMaterialLink con un URL."
     );
   }
+  if (!file) {
+    throw new Error("Archivo requerido");
+  }
   const st = getStorageInstance();
+  if (!st) {
+    throw new Error("Firebase Storage no está inicializado");
+  }
   const db = getDb();
   const ts = Date.now();
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -502,6 +521,7 @@ export async function uploadMaterialToDrive({
   title,
   category,
   description,
+  ownerEmail,
   folderId = driveFolderId,
   onProgress,
 }) {
@@ -604,7 +624,10 @@ export async function uploadMaterialToDrive({
     description,
     url,
     path: null,
-    ownerEmail: auth?.currentUser?.email?.toLowerCase() || null,
+    ownerEmail:
+      ownerEmail?.toLowerCase() ||
+      auth?.currentUser?.email?.toLowerCase() ||
+      null,
     createdAt: serverTimestamp(),
     downloads: 0,
   });
