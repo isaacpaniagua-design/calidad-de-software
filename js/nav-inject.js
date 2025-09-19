@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function(){
       '    <a class="qs-btn" href="asistencia.html">Asistencia</a>',
       '    <a class="qs-btn" href="calificaciones.html">Calificaciones</a>',
       '    <a class="qs-btn" href="Foro.html">Foro</a>',
-      '    <a class="qs-btn" href="paneldocente.html">Panel</a>',
+      '    <a class="qs-btn teacher-only" href="paneldocente.html">Panel</a>',
       '  </nav>',
       '</div>'
     ].join('');
