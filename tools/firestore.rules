@@ -7,9 +7,23 @@ service cloud.firestore {
     function isPotros() {
       return isSignedIn() && request.auth.token.email.matches('.*@potros\\.itson\\.edu\\.mx$');
     }
+    function allowedTeacherEmails() {
+      // Mantén esta lista sincronizada con allowedTeacherEmails en js/firebase-config.js
+      return [
+        'isaac.paniagua@potros.itson.edu.mx',
+      ];
+    }
+    function isAllowedTeacherEmail() {
+      return isPotros() && allowedTeacherEmails().hasAny([request.auth.token.email]);
+    }
     // Mark teachers by creating a doc at /teachers/{uid}
     function isTeacher() {
-      return isPotros() && exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
+      return (
+        isPotros() && (
+          exists(/databases/$(database)/documents/teachers/$(request.auth.uid)) ||
+          isAllowedTeacherEmail()
+        )
+      );
     }
 
     // Mark teachers collection access
@@ -17,9 +31,9 @@ service cloud.firestore {
       // Allow get to let the client check its status
       allow get: if isPotros();
       // Allow the designated teacher to create their own marker doc
-      allow create: if isPotros()
-        && request.auth.token.email == 'isaac.paniagua@potros.itson.edu.mx'
-        && request.auth.uid == uid;
+      allow create: if isAllowedTeacherEmail()
+        && request.auth.uid == uid
+        && request.resource.data.email == request.auth.token.email;
       // Lock updates/deletes from client
       allow update, delete: if false;
     }
