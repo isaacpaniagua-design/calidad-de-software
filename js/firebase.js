@@ -353,11 +353,7 @@ export async function fetchAttendancesByDateRange(startDateStr, endDateStr) {
     where("date", "<=", endDateStr),
     orderBy("date", "asc")
   );
-  const snap = await (
-    await import(
-      "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js"
-    )
-  ).getDocs(qy);
+  const snap = await getDocs(qy);
   const items = [];
   snap.forEach((docSnap) => {
     const data = docSnap.data();
@@ -386,11 +382,7 @@ export async function fetchAttendancesByDateRangeByUser(
     where("date", "<=", endDateStr),
     orderBy("date", "asc")
   );
-  const snap = await (
-    await import(
-      "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js"
-    )
-  ).getDocs(qy);
+  const snap = await getDocs(qy);
   const items = [];
   snap.forEach((docSnap) => {
     const data = docSnap.data();
