@@ -727,3 +727,4 @@
       window.switchRole = switchRole;
       window.cancelUpload = cancelUpload;
     
+}}}
