@@ -119,7 +119,14 @@
               <input type="email" id="manualAttendanceEmail" class="form-input" placeholder="correo@potros.itson.edu.mx" />
             </div>
           </div>
+          <p id="manualAttendanceWarning" class="hidden mt-4 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+            Tu cuenta aún no tiene permisos para registrar asistencias manuales en Firebase. Solicita que tu perfil docente sea habilitado para continuar.
+          </p>
           <button type="button" id="manualAttendanceBtn" class="submit-btn mt-6">Registrar asistencia manual</button>
+        </div>
+        <div class="teacher-only bg-white rounded-2xl shadow border border-amber-200 text-amber-700 px-6 py-5 mb-10 hidden" id="manualAttendanceNotice">
+          <h3 class="text-xl font-semibold mb-2">Permisos de registro manual pendientes</h3>
+          <p class="text-sm leading-relaxed">Iniciaste sesión con un perfil marcado como docente en la lista del curso, pero tu cuenta aún no tiene privilegios de docente en Firebase. Ponte en contacto con el administrador para habilitar tu acceso o utiliza el registro automático mientras tanto.</p>
         </div>
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <!-- Attendance Button Section -->
@@ -532,6 +539,8 @@
       const userPhoto = document.getElementById('userPhoto');
       const attendanceBtn = document.getElementById('attendanceBtn');
       const manualCard = document.getElementById('manualAttendanceCard');
+      const manualWarning = document.getElementById('manualAttendanceWarning');
+      const manualNotice = document.getElementById('manualAttendanceNotice');
       const manualSelect = document.getElementById('manualAttendanceSelect');
       const manualNameInput = document.getElementById('manualAttendanceName');
       const manualEmailInput = document.getElementById('manualAttendanceEmail');
@@ -644,7 +653,27 @@
 
           const roster = Array.isArray(window.students) ? window.students : [];
           const rosterEntry = roster.find((student) => (student.email || '').toLowerCase() === normalizedEmail);
-          const isTeacher = rosterEntry?.type === 'teacher';
+          const flaggedAsTeacher = rosterEntry?.type === 'teacher';
+
+
+          const hasFirestoreTeacherPrivileges = teacherByDoc || teacherByAllowlist;
+          const showTeacherRoleUi = hasFirestoreTeacherPrivileges || flaggedAsTeacher;
+
+          window.currentUserHasTeacherPrivileges = hasFirestoreTeacherPrivileges;
+
+          applyRoleVisibility(showTeacherRoleUi ? 'docente' : 'estudiante');
+
+          if (manualCard) {
+            manualCard.classList.toggle('hidden', !hasFirestoreTeacherPrivileges);
+            manualCard.style.display = hasFirestoreTeacherPrivileges ? '' : 'none';
+          }
+          if (manualWarning) {
+            manualWarning.classList.add('hidden');
+          }
+          if (manualNotice) {
+            const showNotice = flaggedAsTeacher && !hasFirestoreTeacherPrivileges;
+            manualNotice.classList.toggle('hidden', !showNotice);
+            manualNotice.style.display = showNotice ? '' : 'none';
 
           const hasTeacherPrivileges = teacherByDoc || teacherByAllowlist || isTeacher;
           window.currentUserHasTeacherPrivileges = hasTeacherPrivileges;
@@ -654,6 +683,7 @@
           if (manualCard) {
             manualCard.classList.toggle('hidden', !hasTeacherPrivileges);
             manualCard.style.display = hasTeacherPrivileges ? '' : 'none';
+
           }
 
           const active = (typeof window.isClassActiveNow === 'function' ? window.isClassActiveNow() : true);
@@ -699,6 +729,13 @@
           if (manualCard) {
             manualCard.classList.add('hidden');
             manualCard.style.display = 'none';
+          }
+          if (manualWarning) {
+            manualWarning.classList.add('hidden');
+          }
+          if (manualNotice) {
+            manualNotice.classList.add('hidden');
+            manualNotice.style.display = 'none';
           }
           window.currentUserHasTeacherPrivileges = false;
           try { window.clearInterval(window.__classActiveTimer); } catch(_) {}
@@ -757,6 +794,9 @@
 
         manualBtn.disabled = true;
         try {
+          if (manualWarning) {
+            manualWarning.classList.add('hidden');
+          }
           await saveTodayAttendance({
             uid,
             name,
@@ -774,10 +814,16 @@
           if (manualSelect) manualSelect.value = '';
           if (manualNameInput) manualNameInput.value = '';
           if (manualEmailInput) manualEmailInput.value = '';
+          if (manualWarning) {
+            manualWarning.classList.add('hidden');
+          }
         } catch (error) {
           console.error('Manual attendance error', error);
           if (error?.code === 'permission-denied') {
-            alert('Tu cuenta no tiene permisos suficientes para registrar asistencias manuales. Verifica que hayas iniciado sesión como docente.');
+            if (manualWarning) {
+              manualWarning.classList.remove('hidden');
+            }
+            alert('Tu cuenta aún no tiene privilegios habilitados en Firebase para registrar asistencias manuales. Solicita la activación de tu perfil docente.');
           } else {
             alert(error?.message || 'No se pudo registrar manualmente.');
           }
