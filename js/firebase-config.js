@@ -17,6 +17,7 @@ export const firebaseConfig = {
 export const allowedEmailDomain = "potros.itson.edu.mx";
 
 // Correos con permisos de docente (pueden editar calificaciones y materiales)
+// Mantener sincronizado con tools/firestore.rules > allowedTeacherEmails().
 export const allowedTeacherEmails = [
   "isaac.paniagua@potros.itson.edu.mx"
 ];

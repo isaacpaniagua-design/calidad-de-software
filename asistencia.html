@@ -519,10 +519,10 @@
     </script>
 
     <script type="module">
-      import { initFirebase, onAuth, signInWithGooglePotros, signOutCurrent, saveTodayAttendance, subscribeTodayAttendance, fetchAttendancesByDateRange } from './js/firebase.js';
+      import * as firebaseModule from './js/firebase.js';
       import { allowedEmailDomain } from './js/firebase-config.js';
 
-      initFirebase();
+      firebaseModule.initFirebase();
 
       const signInBtn = document.getElementById('signInBtn');
       const signOutBtn = document.getElementById('signOutBtn');
@@ -536,11 +536,34 @@
       const manualEmailInput = document.getElementById('manualAttendanceEmail');
       const manualBtn = document.getElementById('manualAttendanceBtn');
 
+      window.currentUserHasTeacherPrivileges = false;
+
       function setAttendanceEnabled(enabled) {
         if (!attendanceBtn) return;
         attendanceBtn.disabled = !enabled;
         attendanceBtn.style.opacity = enabled ? '1' : '0.6';
         attendanceBtn.style.cursor = enabled ? 'pointer' : 'not-allowed';
+      }
+
+      function syncAttendanceState(items) {
+        if (typeof window.setRegisteredAttendances === 'function') {
+          window.setRegisteredAttendances(items);
+        } else {
+          window.registeredAttendances = Array.isArray(items) ? items : [];
+        }
+        if (typeof window.updateAttendanceList === 'function') window.updateAttendanceList();
+        if (typeof window.updateAttendanceCount === 'function') window.updateAttendanceCount();
+      }
+
+      function applyRoleVisibility(role) {
+        const target = role === 'docente' ? 'docente' : 'estudiante';
+        try { localStorage.setItem('qs_role', target); } catch (_) {}
+        document.querySelectorAll('.teacher-only, .docente-only').forEach((el) => {
+          el.style.display = target === 'docente' ? '' : 'none';
+        });
+        document.querySelectorAll('.student-only, .estudiante-only').forEach((el) => {
+          el.style.display = target === 'docente' ? 'none' : '';
+        });
       }
 
       setAttendanceEnabled(false);
@@ -569,7 +592,7 @@
       if (signInBtn) {
         signInBtn.addEventListener('click', async () => {
           try {
-            await signInWithGooglePotros();
+            await firebaseModule.signInWithGooglePotros();
           } catch (e) {
             alert(e.message || 'No se pudo iniciar sesión');
           }
@@ -578,13 +601,14 @@
 
       if (signOutBtn) {
         signOutBtn.addEventListener('click', async () => {
-          await signOutCurrent();
+          await firebaseModule.signOutCurrent();
         });
       }
 
       let unsubscribeAttendance = null;
-      onAuth(async (user) => {
+      firebaseModule.onAuth(async (user) => {
         if (user && user.email?.toLowerCase().endsWith(`@${allowedEmailDomain}`)) {
+          const normalizedEmail = user.email.toLowerCase();
           userName.textContent = user.displayName || user.email;
           if (user.photoURL) {
             userPhoto.src = user.photoURL;
@@ -594,13 +618,36 @@
           }
           userInfo.classList.remove('hidden');
           if (signInBtn) signInBtn.classList.add('hidden');
-          const rosterEntry = (Array.isArray(window.students) ? window.students : []).find((student) => (student.email || '').toLowerCase() === user.email.toLowerCase());
-          if (rosterEntry?.type === 'teacher') {
-            try { localStorage.setItem('qs_role', 'docente'); } catch (_) {}
-            if (manualCard) {
-              manualCard.classList.remove('hidden');
-              manualCard.style.display = '';
+
+          let teacherByDoc = false;
+          try {
+            teacherByDoc = await firebaseModule.isTeacherByDoc(user.uid);
+          } catch (err) {
+            console.error('No se pudo verificar el perfil de docente en Firestore', err);
+          }
+
+          const teacherByAllowlist = firebaseModule.isTeacherEmail(normalizedEmail);
+          if (teacherByAllowlist && user?.uid && !teacherByDoc) {
+            try {
+              const ensured = await firebaseModule.ensureTeacherDocForUser({
+                uid: user.uid,
+                email: normalizedEmail,
+                displayName: user.displayName,
+              });
+              teacherByDoc = ensured || teacherByDoc;
+            } catch (err) {
+              console.error('No se pudo preparar el perfil de docente en Firestore', err);
             }
+          }
+
+          const hasTeacherPrivileges = teacherByDoc || teacherByAllowlist;
+          window.currentUserHasTeacherPrivileges = hasTeacherPrivileges;
+
+          applyRoleVisibility(hasTeacherPrivileges ? 'docente' : 'estudiante');
+
+          if (manualCard) {
+            manualCard.classList.toggle('hidden', !hasTeacherPrivileges);
+            manualCard.style.display = hasTeacherPrivileges ? '' : 'none';
           }
 
           const active = (typeof window.isClassActiveNow === 'function' ? window.isClassActiveNow() : true);
@@ -613,33 +660,44 @@
           window.__classActiveTimer = window.setInterval(() => {
             const activeNow = (typeof window.isClassActiveNow === 'function' ? window.isClassActiveNow() : true);
             setAttendanceEnabled(activeNow);
-            const banner = document.getElementById('classBanner');
-            if (banner) banner.classList.toggle('hidden', !activeNow);
+            const bannerNow = document.getElementById('classBanner');
+            if (bannerNow) bannerNow.classList.toggle('hidden', !activeNow);
           }, 60000);
 
           if (unsubscribeAttendance) unsubscribeAttendance();
-          unsubscribeAttendance = subscribeTodayAttendance((items) => {
-            if (typeof window.setRegisteredAttendances === 'function') {
-              window.setRegisteredAttendances(items);
-            } else {
-              window.registeredAttendances = items;
+          const handleSnapshot = (items) => {
+            syncAttendanceState(items);
+          };
+          const handleSubscriptionError = (error) => {
+            console.error('Attendance subscription error', error);
+            syncAttendanceState([]);
+            if (!hasTeacherPrivileges && !window.__attSubscriptionWarned) {
+              window.__attSubscriptionWarned = true;
+              alert('No se pudo consultar tu asistencia en línea por permisos insuficientes. Tu registro seguirá guardándose.');
             }
-            if (typeof window.updateAttendanceList === 'function') window.updateAttendanceList();
-            if (typeof window.updateAttendanceCount === 'function') window.updateAttendanceCount();
-          });
+          };
+          window.__attSubscriptionWarned = false;
+            try {
+              unsubscribeAttendance = hasTeacherPrivileges
+                ? firebaseModule.subscribeTodayAttendance(handleSnapshot, handleSubscriptionError)
+                : firebaseModule.subscribeTodayAttendanceByUser(normalizedEmail, handleSnapshot, handleSubscriptionError);
+          } catch (subscriptionError) {
+            handleSubscriptionError(subscriptionError);
+          }
         } else {
           userInfo.classList.add('hidden');
           if (signInBtn) signInBtn.classList.remove('hidden');
           setAttendanceEnabled(false);
+          applyRoleVisibility('estudiante');
           if (manualCard) {
             manualCard.classList.add('hidden');
             manualCard.style.display = 'none';
           }
+          window.currentUserHasTeacherPrivileges = false;
           try { window.clearInterval(window.__classActiveTimer); } catch(_) {}
-          window.registeredAttendances = [];
-          if (typeof window.updateAttendanceList === 'function') window.updateAttendanceList();
-          if (typeof window.updateAttendanceCount === 'function') window.updateAttendanceCount();
+          syncAttendanceState([]);
           if (unsubscribeAttendance) { unsubscribeAttendance(); unsubscribeAttendance = null; }
+          window.__attSubscriptionWarned = false;
         }
       });
 
@@ -658,6 +716,10 @@
 
       async function manualRegisterAttendance() {
         if (!manualBtn) return;
+        if (!window.currentUserHasTeacherPrivileges) {
+          alert('Solo las cuentas de docente pueden registrar asistencias manuales.');
+          return;
+        }
         const roster = Array.isArray(window.students) ? window.students : [];
         const selectedId = manualSelect ? manualSelect.value : '';
         const typedEmail = (manualEmailInput?.value || '').trim().toLowerCase();
@@ -688,7 +750,7 @@
 
         manualBtn.disabled = true;
         try {
-          await saveTodayAttendance({
+          await firebaseModule.saveTodayAttendance({
             uid,
             name,
             email,
@@ -707,7 +769,11 @@
           if (manualEmailInput) manualEmailInput.value = '';
         } catch (error) {
           console.error('Manual attendance error', error);
-          alert(error?.message || 'No se pudo registrar manualmente.');
+          if (error?.code === 'permission-denied') {
+            alert('Tu cuenta no tiene permisos suficientes para registrar asistencias manuales. Verifica que hayas iniciado sesión como docente.');
+          } else {
+            alert(error?.message || 'No se pudo registrar manualmente.');
+          }
         } finally {
           manualBtn.disabled = false;
         }
@@ -735,7 +801,7 @@
           return;
         }
         try {
-          await saveTodayAttendance({
+          await firebaseModule.saveTodayAttendance({
             uid: user.uid,
             name: found.name,
             email: email,
@@ -821,7 +887,7 @@
         const start = startInput?.value;
         const end = endInput?.value;
         if (!start || !end || start > end) { alert('Selecciona un rango válido'); return; }
-        const items = await fetchAttendancesByDateRange(start, end);
+        const items = await firebaseModule.fetchAttendancesByDateRange(start, end);
         if (!isPdf) {
           // CSV
           const header = ['Fecha','Hora','Nombre','Email','Tipo'];
