@@ -130,6 +130,7 @@ export async function getDriveAccessTokenInteractive() {
 export async function signOutCurrent() {
   const auth = getAuthInstance();
   await signOut(auth);
+  driveAccessToken = null;
 }
 
 // --- Autenticación con correo y contraseña ---
@@ -184,18 +185,22 @@ export async function isTeacherByDoc(uid) {
 export async function ensureTeacherDocForUser({ uid, email, displayName }) {
   if (!uid || !email) return false;
   const lower = (email || "").toLowerCase();
-  if (!isTeacherEmail(lower)) return false;
   const db = getDb();
   const ref = doc(collection(db, "teachers"), uid);
   try {
     const snap = await getDoc(ref);
-    if (!snap.exists()) {
-      await setDoc(ref, {
-        email: lower,
-        name: displayName || null,
-        createdAt: serverTimestamp(),
-      });
+    if (snap.exists()) {
+      return true;
     }
+    if (!isTeacherEmail(lower)) {
+      // No intentamos crear el documento si el correo no tiene privilegios de docente.
+      return false;
+    }
+    await setDoc(ref, {
+      email: lower,
+      name: displayName || null,
+      createdAt: serverTimestamp(),
+    });
     return true;
   } catch (_) {
     return false;
@@ -221,8 +226,16 @@ export async function saveTodayAttendance({
   const db = getDb();
   const authInstance = getAuthInstance();
   const currentUser = authInstance?.currentUser || null;
+  const normalizedUid =
+    typeof uid === "string" && uid.trim().length > 0
+      ? uid.trim()
+      : String(uid || "").trim();
+  if (!normalizedUid) {
+    throw new Error("Identificador de usuario requerido");
+  }
+
   const date = todayKey();
-  const attendanceId = `${date}_${uid}`; // evita duplicados por dia-usuario
+  const attendanceId = `${date}_${normalizedUid}`; // evita duplicados por dia-usuario
   const ref = doc(collection(db, "attendances"), attendanceId);
 
   const existing = await getDoc(ref);
@@ -230,22 +243,35 @@ export async function saveTodayAttendance({
     throw new Error("Ya tienes tu asistencia registrada para el dia de hoy");
   }
 
-  const normalizedEmail = (email || "").toLowerCase();
+  const normalizedEmail = String(email || "").trim().toLowerCase();
   if (!normalizedEmail) {
     throw new Error("Correo electronico requerido");
   }
 
-  const createdByUid = currentUser?.uid || uid;
-  const createdByEmail = (currentUser?.email || normalizedEmail).toLowerCase();
+  const createdByUid =
+    typeof (currentUser?.uid || normalizedUid) === "string"
+      ? (currentUser?.uid || normalizedUid)
+      : String(currentUser?.uid || normalizedUid);
+  const normalizedCreatedByUid = String(createdByUid || "").trim();
+  if (!normalizedCreatedByUid) {
+    throw new Error("Sesion invalida para registrar asistencia");
+  }
+  const createdByEmail = String(currentUser?.email || normalizedEmail)
+    .trim()
+    .toLowerCase();
+  const normalizedType =
+    typeof type === "string" && type.trim().length > 0
+      ? type.trim()
+      : "student";
 
   await setDoc(ref, {
-    uid,
+    uid: normalizedUid,
     name,
     email: normalizedEmail,
-    type: type || "student",
+    type: normalizedType,
     date,
     manual: !!manual,
-    createdByUid,
+    createdByUid: normalizedCreatedByUid,
     createdByEmail,
     timestamp: serverTimestamp(),
   });
@@ -253,7 +279,7 @@ export async function saveTodayAttendance({
   return { id: attendanceId, uid, name, email: normalizedEmail, type, date };
 }
 
-export function subscribeTodayAttendance(cb) {
+export function subscribeTodayAttendance(cb, onError) {
   const db = getDb();
   const date = todayKey();
   const q = query(
@@ -261,25 +287,31 @@ export function subscribeTodayAttendance(cb) {
     where("date", "==", date),
     orderBy("timestamp", "desc")
   );
-  return onSnapshot(q, (snap) => {
-    const items = [];
-    snap.forEach((docSnap) => {
-      const data = docSnap.data();
-      items.push({
-        id: docSnap.id,
-        name: data.name,
-        email: data.email,
-        type: data.type,
-        timestamp: data.timestamp?.toDate
-          ? data.timestamp.toDate()
-          : new Date(),
+  return onSnapshot(
+    q,
+    (snap) => {
+      const items = [];
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        items.push({
+          id: docSnap.id,
+          name: data.name,
+          email: data.email,
+          type: data.type,
+          timestamp: data.timestamp?.toDate
+            ? data.timestamp.toDate()
+            : new Date(),
+        });
       });
-    });
-    cb(items);
-  });
+      cb(items);
+    },
+    (error) => {
+      if (onError) onError(error);
+    }
+  );
 }
 
-export function subscribeTodayAttendanceByUser(email, cb) {
+export function subscribeTodayAttendanceByUser(email, cb, onError) {
   const db = getDb();
   const date = todayKey();
   const q = query(
@@ -288,22 +320,28 @@ export function subscribeTodayAttendanceByUser(email, cb) {
     where("email", "==", (email || "").toLowerCase()),
     orderBy("timestamp", "desc")
   );
-  return onSnapshot(q, (snap) => {
-    const items = [];
-    snap.forEach((docSnap) => {
-      const data = docSnap.data();
-      items.push({
-        id: docSnap.id,
-        name: data.name,
-        email: data.email,
-        type: data.type,
-        timestamp: data.timestamp?.toDate
-          ? data.timestamp.toDate()
-          : new Date(),
+  return onSnapshot(
+    q,
+    (snap) => {
+      const items = [];
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        items.push({
+          id: docSnap.id,
+          name: data.name,
+          email: data.email,
+          type: data.type,
+          timestamp: data.timestamp?.toDate
+            ? data.timestamp.toDate()
+            : new Date(),
+        });
       });
-    });
-    cb(items);
-  });
+      cb(items);
+    },
+    (error) => {
+      if (onError) onError(error);
+    }
+  );
 }
 
 export async function fetchAttendancesByDateRange(startDateStr, endDateStr) {
@@ -315,11 +353,7 @@ export async function fetchAttendancesByDateRange(startDateStr, endDateStr) {
     where("date", "<=", endDateStr),
     orderBy("date", "asc")
   );
-  const snap = await (
-    await import(
-      "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js"
-    )
-  ).getDocs(qy);
+  const snap = await getDocs(qy);
   const items = [];
   snap.forEach((docSnap) => {
     const data = docSnap.data();
@@ -348,11 +382,7 @@ export async function fetchAttendancesByDateRangeByUser(
     where("date", "<=", endDateStr),
     orderBy("date", "asc")
   );
-  const snap = await (
-    await import(
-      "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js"
-    )
-  ).getDocs(qy);
+  const snap = await getDocs(qy);
   const items = [];
   snap.forEach((docSnap) => {
     const data = docSnap.data();
@@ -434,7 +464,13 @@ export async function uploadMaterial({
       "Firebase Storage está deshabilitado. Usa addMaterialLink con un URL."
     );
   }
+  if (!file) {
+    throw new Error("Archivo requerido");
+  }
   const st = getStorageInstance();
+  if (!st) {
+    throw new Error("Firebase Storage no está inicializado");
+  }
   const db = getDb();
   const ts = Date.now();
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
@@ -502,6 +538,7 @@ export async function uploadMaterialToDrive({
   title,
   category,
   description,
+  ownerEmail,
   folderId = driveFolderId,
   onProgress,
 }) {
@@ -604,7 +641,10 @@ export async function uploadMaterialToDrive({
     description,
     url,
     path: null,
-    ownerEmail: auth?.currentUser?.email?.toLowerCase() || null,
+    ownerEmail:
+      ownerEmail?.toLowerCase() ||
+      auth?.currentUser?.email?.toLowerCase() ||
+      null,
     createdAt: serverTimestamp(),
     downloads: 0,
   });
