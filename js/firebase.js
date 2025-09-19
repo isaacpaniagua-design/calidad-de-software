@@ -254,7 +254,7 @@ export async function saveTodayAttendance({
   return { id: attendanceId, uid, name, email: normalizedEmail, type, date };
 }
 
-export function subscribeTodayAttendance(cb) {
+export function subscribeTodayAttendance(cb, onError) {
   const db = getDb();
   const date = todayKey();
   const q = query(
@@ -262,25 +262,31 @@ export function subscribeTodayAttendance(cb) {
     where("date", "==", date),
     orderBy("timestamp", "desc")
   );
-  return onSnapshot(q, (snap) => {
-    const items = [];
-    snap.forEach((docSnap) => {
-      const data = docSnap.data();
-      items.push({
-        id: docSnap.id,
-        name: data.name,
-        email: data.email,
-        type: data.type,
-        timestamp: data.timestamp?.toDate
-          ? data.timestamp.toDate()
-          : new Date(),
+  return onSnapshot(
+    q,
+    (snap) => {
+      const items = [];
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        items.push({
+          id: docSnap.id,
+          name: data.name,
+          email: data.email,
+          type: data.type,
+          timestamp: data.timestamp?.toDate
+            ? data.timestamp.toDate()
+            : new Date(),
+        });
       });
-    });
-    cb(items);
-  });
+      cb(items);
+    },
+    (error) => {
+      if (onError) onError(error);
+    }
+  );
 }
 
-export function subscribeTodayAttendanceByUser(email, cb) {
+export function subscribeTodayAttendanceByUser(email, cb, onError) {
   const db = getDb();
   const date = todayKey();
   const q = query(
@@ -289,22 +295,28 @@ export function subscribeTodayAttendanceByUser(email, cb) {
     where("email", "==", (email || "").toLowerCase()),
     orderBy("timestamp", "desc")
   );
-  return onSnapshot(q, (snap) => {
-    const items = [];
-    snap.forEach((docSnap) => {
-      const data = docSnap.data();
-      items.push({
-        id: docSnap.id,
-        name: data.name,
-        email: data.email,
-        type: data.type,
-        timestamp: data.timestamp?.toDate
-          ? data.timestamp.toDate()
-          : new Date(),
+  return onSnapshot(
+    q,
+    (snap) => {
+      const items = [];
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        items.push({
+          id: docSnap.id,
+          name: data.name,
+          email: data.email,
+          type: data.type,
+          timestamp: data.timestamp?.toDate
+            ? data.timestamp.toDate()
+            : new Date(),
+        });
       });
-    });
-    cb(items);
-  });
+      cb(items);
+    },
+    (error) => {
+      if (onError) onError(error);
+    }
+  );
 }
 
 export async function fetchAttendancesByDateRange(startDateStr, endDateStr) {
