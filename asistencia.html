@@ -120,7 +120,11 @@
             </div>
           </div>
           <p id="manualAttendanceWarning" class="hidden mt-4 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+
             Los registros manuales sin privilegios en Firebase se guardarán de forma local en este navegador hasta que tu cuenta sea autorizada.
+
+            Tu cuenta aún no tiene permisos para registrar asistencias manuales en Firebase. Solicita que tu perfil docente sea habilitado para continuar.
+
           </p>
           <button type="button" id="manualAttendanceBtn" class="submit-btn mt-6">Registrar asistencia manual</button>
         </div>
@@ -821,6 +825,7 @@
           const rosterEntry = roster.find((student) => (student.email || '').toLowerCase() === normalizedEmail);
           const flaggedAsTeacher = rosterEntry?.type === 'teacher';
 
+
           const hasFirestoreTeacherPrivileges = teacherByDoc || teacherByAllowlist;
           const showTeacherRoleUi = hasFirestoreTeacherPrivileges || flaggedAsTeacher;
           const canUseManualUi = showTeacherRoleUi;
@@ -828,9 +833,18 @@
           window.currentUserHasTeacherPrivileges = hasFirestoreTeacherPrivileges;
           window.currentUserCanManualRegister = canUseManualUi;
 
+
+
+          const hasFirestoreTeacherPrivileges = teacherByDoc || teacherByAllowlist;
+          const showTeacherRoleUi = hasFirestoreTeacherPrivileges || flaggedAsTeacher;
+
+          window.currentUserHasTeacherPrivileges = hasFirestoreTeacherPrivileges;
+
+
           applyRoleVisibility(showTeacherRoleUi ? 'docente' : 'estudiante');
 
           if (manualCard) {
+
             manualCard.classList.toggle('hidden', !canUseManualUi);
             manualCard.style.display = canUseManualUi ? '' : 'none';
             if (!canUseManualUi) delete manualCard.dataset.forceVisible;
@@ -843,11 +857,31 @@
             } else {
               manualWarning.classList.add('hidden');
             }
+
+            manualCard.classList.toggle('hidden', !hasFirestoreTeacherPrivileges);
+            manualCard.style.display = hasFirestoreTeacherPrivileges ? '' : 'none';
+          }
+          if (manualWarning) {
+            manualWarning.classList.add('hidden');
+
           }
           if (manualNotice) {
             const showNotice = flaggedAsTeacher && !hasFirestoreTeacherPrivileges;
             manualNotice.classList.toggle('hidden', !showNotice);
             manualNotice.style.display = showNotice ? '' : 'none';
+
+
+
+          const hasTeacherPrivileges = teacherByDoc || teacherByAllowlist || isTeacher;
+          window.currentUserHasTeacherPrivileges = hasTeacherPrivileges;
+
+          applyRoleVisibility(hasTeacherPrivileges ? 'docente' : 'estudiante');
+
+          if (manualCard) {
+            manualCard.classList.toggle('hidden', !hasTeacherPrivileges);
+            manualCard.style.display = hasTeacherPrivileges ? '' : 'none';
+
+
           }
 
           const active = (typeof window.isClassActiveNow === 'function' ? window.isClassActiveNow() : true);
@@ -866,6 +900,7 @@
 
             if (unsubscribeAttendance) unsubscribeAttendance();
             const handleSnapshot = (items) => {
+
               setRemoteAttendanceRecords(items);
             };
             const handleSubscriptionError = (error) => {
@@ -873,13 +908,26 @@
               setRemoteAttendanceRecords([]);
 
               if (!hasFirestoreTeacherPrivileges && !window.__attSubscriptionWarned) {
+
+              syncAttendanceState(items);
+            };
+            const handleSubscriptionError = (error) => {
+              console.error('Attendance subscription error', error);
+              syncAttendanceState([]);
+
+              if (!hasTeacherPrivileges && !window.__attSubscriptionWarned) {
+
                 window.__attSubscriptionWarned = true;
                 alert('No se pudo consultar tu asistencia en línea por permisos insuficientes. Tu registro seguirá guardándose.');
               }
             };
             window.__attSubscriptionWarned = false;
             try {
+
               unsubscribeAttendance = hasFirestoreTeacherPrivileges
+
+              unsubscribeAttendance = hasTeacherPrivileges
+
                 ? subscribeTodayAttendance(handleSnapshot, handleSubscriptionError)
                 : subscribeTodayAttendanceByUser(normalizedEmail, handleSnapshot, handleSubscriptionError);
           } catch (subscriptionError) {
@@ -963,6 +1011,7 @@
         const now = new Date();
         let savedToFirestore = false;
         try {
+
           if (hasPrivileges) {
             await saveTodayAttendance({
               uid,
@@ -987,6 +1036,38 @@
               manualWarning.classList.remove('hidden');
             }
             alert('Tu cuenta aún no tiene privilegios habilitados en Firebase para registrar asistencias manuales. El registro se guardará solo de forma local en esta sesión.');
+
+          if (manualWarning) {
+            manualWarning.classList.add('hidden');
+          }
+          await saveTodayAttendance({
+            uid,
+            name,
+            email,
+            type,
+            manual: true
+          });
+          const when = new Date();
+          if (typeof window.showSuccessModal === 'function') {
+            window.showSuccessModal({ name, type }, when);
+          }
+          if (typeof window.showAttendanceToast === 'function') {
+            window.showAttendanceToast('Asistencia registrada manualmente');
+          }
+          if (manualSelect) manualSelect.value = '';
+          if (manualNameInput) manualNameInput.value = '';
+          if (manualEmailInput) manualEmailInput.value = '';
+          if (manualWarning) {
+            manualWarning.classList.add('hidden');
+          }
+        } catch (error) {
+          console.error('Manual attendance error', error);
+          if (error?.code === 'permission-denied') {
+            if (manualWarning) {
+              manualWarning.classList.remove('hidden');
+            }
+            alert('Tu cuenta aún no tiene privilegios habilitados en Firebase para registrar asistencias manuales. Solicita la activación de tu perfil docente.');
+
           } else {
             alert(error?.message || 'No se pudo registrar manualmente.');
             return;
