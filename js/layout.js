@@ -91,6 +91,20 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.appendChild(footer);
     }
     footer.innerHTML = footerHtml;
+
+    // Carga de guardia de autenticación para páginas con navegación global.
+    // Inserta un script de tipo módulo que importa Firebase y redirige a login.html
+    // si no hay usuario autenticado. Evita inyectar este guardia en la página de login
+    // o en el error 404.
+    try {
+      const pg = (location.pathname.split('/').pop() || '').toLowerCase();
+      if (pg !== 'login.html' && pg !== '404.html') {
+        const guard = document.createElement('script');
+        guard.type = 'module';
+        guard.src = base + 'js/auth-guard.js';
+        document.body.appendChild(guard);
+      }
+    } catch (_) {}
     return; // fin páginas normales
   }
 
