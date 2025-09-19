@@ -655,6 +655,7 @@
           const rosterEntry = roster.find((student) => (student.email || '').toLowerCase() === normalizedEmail);
           const flaggedAsTeacher = rosterEntry?.type === 'teacher';
 
+
           const hasFirestoreTeacherPrivileges = teacherByDoc || teacherByAllowlist;
           const showTeacherRoleUi = hasFirestoreTeacherPrivileges || flaggedAsTeacher;
 
@@ -673,6 +674,16 @@
             const showNotice = flaggedAsTeacher && !hasFirestoreTeacherPrivileges;
             manualNotice.classList.toggle('hidden', !showNotice);
             manualNotice.style.display = showNotice ? '' : 'none';
+
+          const hasTeacherPrivileges = teacherByDoc || teacherByAllowlist || isTeacher;
+          window.currentUserHasTeacherPrivileges = hasTeacherPrivileges;
+
+          applyRoleVisibility(hasTeacherPrivileges ? 'docente' : 'estudiante');
+
+          if (manualCard) {
+            manualCard.classList.toggle('hidden', !hasTeacherPrivileges);
+            manualCard.style.display = hasTeacherPrivileges ? '' : 'none';
+
           }
 
           const active = (typeof window.isClassActiveNow === 'function' ? window.isClassActiveNow() : true);
