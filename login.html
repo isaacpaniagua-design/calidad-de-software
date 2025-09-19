@@ -28,55 +28,32 @@
   <body>
     <div class="card">
       <h1 class="text-2xl font-semibold mb-4 text-center">Iniciar sesión</h1>
-      <form id="loginForm" class="flex flex-col gap-4">
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700">Correo electrónico</label>
-          <input
-            type="email"
-            id="email"
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-            placeholder="usuario@dominio.com"
-            required
-          />
-        </div>
-        <div>
-          <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
-          <input
-            type="password"
-            id="password"
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
-            placeholder="••••••••"
-            required
-          />
-        </div>
-        <button
-          type="submit"
-          class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium"
-        >
-          Ingresar
-        </button>
-        <div id="errorMessage" class="text-red-600 text-sm"></div>
-      </form>
+      <button
+        id="googleLoginBtn"
+        class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium flex items-center justify-center gap-2"
+      >
+        <!-- Google logo (simple SVG) -->
+        <svg class="w-5 h-5" viewBox="0 0 488 512" fill="currentColor" aria-hidden="true"><path d="M488 261.8C488 403.3 392.3 512 244.5 512 109.3 512 0 402.8 0 267.5S109.3 23 244.5 23c66.8 0 121.6 24.3 163.8 64.2l-66.5 63.7C306.8 117.9 278.9 105 244.5 105c-85 0-154 69.1-154 154.5s69 154.5 154 154.5c73.9 0 120.3-43.2 134.7-102.8H244.5v-82.3h243.4c2.3 13.2 3.5 26.7 3.5 40.9z"/></svg>
+        Iniciar sesión con Google
+      </button>
+      <div id="errorMessage" class="text-red-600 text-sm mt-4 text-center"></div>
       <p class="mt-4 text-center text-sm">
         <a href="index.html" class="text-indigo-600 hover:underline">Regresar al inicio</a>
       </p>
     </div>
     <script type="module">
-      import { initFirebase, signInWithEmailPassword } from './js/firebase.js';
+      import { initFirebase, signInWithGoogleOpen } from './js/firebase.js';
       initFirebase();
-      const form = document.getElementById('loginForm');
-      form.addEventListener('submit', async (e) => {
+      const btn = document.getElementById('googleLoginBtn');
+      const errorDiv = document.getElementById('errorMessage');
+      btn.addEventListener('click', async (e) => {
         e.preventDefault();
-        const email = document.getElementById('email').value.trim();
-        const password = document.getElementById('password').value;
-        const errorDiv = document.getElementById('errorMessage');
         errorDiv.textContent = '';
         try {
-          await signInWithEmailPassword(email, password);
-          // Redirigir al inicio después de iniciar sesión
+          await signInWithGoogleOpen();
           window.location.href = 'index.html';
         } catch (err) {
-          errorDiv.textContent = err?.message || 'Error al iniciar sesión.';
+          errorDiv.textContent = err?.message || 'Error al iniciar sesión con Google.';
         }
       });
     </script>

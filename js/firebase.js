@@ -30,9 +30,7 @@ import {
   getDownloadURL,
   deleteObject,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
-import {
-  signInWithEmailAndPassword,
-} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import {
   firebaseConfig,
   allowedEmailDomain,
@@ -142,6 +140,18 @@ export async function signOutCurrent() {
 export async function signInWithEmailPassword(email, password) {
   const auth = getAuthInstance();
   return signInWithEmailAndPassword(auth, email, password);
+}
+
+// --- Autenticación con Google sin restricción de dominio ---
+// Permite iniciar sesión con cualquier cuenta de Google. Útil para pruebas con
+// correos que no pertenecen al dominio institucional. Tras iniciar sesión, el
+// rol de docente o estudiante se determinará mediante isTeacherEmail o
+// isTeacherByDoc. No solicita permisos de Drive.
+export async function signInWithGoogleOpen() {
+  const auth = getAuthInstance();
+  const provider = new GoogleAuthProvider();
+  const result = await signInWithPopup(auth, provider);
+  return result?.user || null;
 }
 
 export function onAuth(cb) {

@@ -81,12 +81,16 @@ function applyGradesRole(isTeacher) {
     if (auth?.currentUser) await signOutCurrent();
     else await signInWithGooglePotros();
   };
-  // Añadir enlace para iniciar sesión con correo/contraseña
-  const emailLink = document.createElement('a');
-  emailLink.href = 'login.html';
-  emailLink.textContent = 'Acceso con correo';
-  emailLink.className = 'text-sm text-indigo-600 hover:underline';
-  btnWrap.appendChild(emailLink);
+  // Para pruebas con cuentas externas o dominios no permitidos, se puede
+  // acceder mediante la página login.html. Si deseas mostrar un enlace
+  // explícito aquí, descomenta el siguiente bloque:
+  /*
+  const altLink = document.createElement('a');
+  altLink.href = 'login.html';
+  altLink.textContent = 'Acceso alternativo';
+  altLink.className = 'text-sm text-indigo-600 hover:underline';
+  btnWrap.appendChild(altLink);
+  */
 }
 
 onAuth(async (user) => {
