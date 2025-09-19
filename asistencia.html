@@ -521,13 +521,6 @@
     <script type="module">
 
       import { initFirebase, onAuth, signInWithGooglePotros, signOutCurrent, saveTodayAttendance, subscribeTodayAttendance, subscribeTodayAttendanceByUser, fetchAttendancesByDateRange, ensureTeacherDocForUser, isTeacherEmail, isTeacherByDoc } from './js/firebase.js';
-
-
-      import { initFirebase, onAuth, signInWithGooglePotros, signOutCurrent, saveTodayAttendance, subscribeTodayAttendance, subscribeTodayAttendanceByUser, fetchAttendancesByDateRange, ensureTeacherDocForUser, isTeacherEmail, isTeacherByDoc } from './js/firebase.js';
-
-      import { initFirebase, onAuth, signInWithGooglePotros, signOutCurrent, saveTodayAttendance, subscribeTodayAttendance, subscribeTodayAttendanceByUser, fetchAttendancesByDateRange } from './js/firebase.js';
- main
- main
       import { allowedEmailDomain } from './js/firebase-config.js';
 
       initFirebase();
@@ -628,7 +621,6 @@
           if (signInBtn) signInBtn.classList.add('hidden');
 
 
-main
           let teacherByDoc = false;
           try {
             teacherByDoc = await isTeacherByDoc(user.uid);
@@ -648,30 +640,13 @@ main
             } catch (err) {
               console.error('No se pudo preparar el perfil de docente en Firestore', err);
             }
+          }
 
           const roster = Array.isArray(window.students) ? window.students : [];
           const rosterEntry = roster.find((student) => (student.email || '').toLowerCase() === normalizedEmail);
           const isTeacher = rosterEntry?.type === 'teacher';
 
-          applyRoleVisibility(isTeacher ? 'docente' : 'estudiante');
-
-          if (manualCard) {
-            manualCard.classList.toggle('hidden', !isTeacher);
-            manualCard.style.display = isTeacher ? '' : 'none';
- main
-          }
-
-          const hasTeacherPrivileges = teacherByDoc || teacherByAllowlist;
-          window.currentUserHasTeacherPrivileges = hasTeacherPrivileges;
-
-          applyRoleVisibility(hasTeacherPrivileges ? 'docente' : 'estudiante');
-
-          if (manualCard) {
-            manualCard.classList.toggle('hidden', !hasTeacherPrivileges);
-            manualCard.style.display = hasTeacherPrivileges ? '' : 'none';
-          }
-
-          const hasTeacherPrivileges = teacherByDoc || teacherByAllowlist;
+          const hasTeacherPrivileges = teacherByDoc || teacherByAllowlist || isTeacher;
           window.currentUserHasTeacherPrivileges = hasTeacherPrivileges;
 
           applyRoleVisibility(hasTeacherPrivileges ? 'docente' : 'estudiante');
@@ -695,39 +670,24 @@ main
             if (bannerNow) bannerNow.classList.toggle('hidden', !activeNow);
           }, 60000);
 
-          if (unsubscribeAttendance) unsubscribeAttendance();
-          const handleSnapshot = (items) => {
-            syncAttendanceState(items);
-          };
-          const handleSubscriptionError = (error) => {
-            console.error('Attendance subscription error', error);
-            syncAttendanceState([]);
+            if (unsubscribeAttendance) unsubscribeAttendance();
+            const handleSnapshot = (items) => {
+              syncAttendanceState(items);
+            };
+            const handleSubscriptionError = (error) => {
+              console.error('Attendance subscription error', error);
+              syncAttendanceState([]);
 
-            if (!hasTeacherPrivileges && !window.__attSubscriptionWarned) {
-
-
-            if (!hasTeacherPrivileges && !window.__attSubscriptionWarned) {
-
-            if (!isTeacher && !window.__attSubscriptionWarned) {
- main
- main
-              window.__attSubscriptionWarned = true;
-              alert('No se pudo consultar tu asistencia en línea por permisos insuficientes. Tu registro seguirá guardándose.');
-            }
-          };
-          window.__attSubscriptionWarned = false;
-          try {
-
-            unsubscribeAttendance = hasTeacherPrivileges
-
- 
-            unsubscribeAttendance = hasTeacherPrivileges
-
-            unsubscribeAttendance = isTeacher
- main
- main
-              ? subscribeTodayAttendance(handleSnapshot, handleSubscriptionError)
-              : subscribeTodayAttendanceByUser(normalizedEmail, handleSnapshot, handleSubscriptionError);
+              if (!hasTeacherPrivileges && !window.__attSubscriptionWarned) {
+                window.__attSubscriptionWarned = true;
+                alert('No se pudo consultar tu asistencia en línea por permisos insuficientes. Tu registro seguirá guardándose.');
+              }
+            };
+            window.__attSubscriptionWarned = false;
+            try {
+              unsubscribeAttendance = hasTeacherPrivileges
+                ? subscribeTodayAttendance(handleSnapshot, handleSubscriptionError)
+                : subscribeTodayAttendanceByUser(normalizedEmail, handleSnapshot, handleSubscriptionError);
           } catch (subscriptionError) {
             handleSubscriptionError(subscriptionError);
           }
