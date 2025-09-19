@@ -120,7 +120,7 @@
             </div>
           </div>
           <p id="manualAttendanceWarning" class="hidden mt-4 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
-            Los registros manuales sin privilegios en Firebase se guardarán de forma local en este navegador hasta que tu cuenta sea autorizada.
+
           </p>
           <button type="button" id="manualAttendanceBtn" class="submit-btn mt-6">Registrar asistencia manual</button>
         </div>
@@ -821,33 +821,19 @@
           const rosterEntry = roster.find((student) => (student.email || '').toLowerCase() === normalizedEmail);
           const flaggedAsTeacher = rosterEntry?.type === 'teacher';
 
-          const hasTeacherFirestoreAccess = teacherByDoc || teacherByAllowlist;
-          const showTeacherRoleUi = hasTeacherFirestoreAccess || flaggedAsTeacher;
-          const canUseManualUi = showTeacherRoleUi;
-
-          window.currentUserHasTeacherPrivileges = hasTeacherFirestoreAccess;
-          window.currentUserCanManualRegister = canUseManualUi;
-
-          applyRoleVisibility(showTeacherRoleUi ? 'docente' : 'estudiante');
-
-          if (manualCard) {
             manualCard.classList.toggle('hidden', !canUseManualUi);
             manualCard.style.display = canUseManualUi ? '' : 'none';
             if (!canUseManualUi) delete manualCard.dataset.forceVisible;
           }
           if (manualWarning) {
-            if (!hasTeacherFirestoreAccess && canUseManualUi) {
+
               manualWarning.textContent =
                 'Tu cuenta aún no tiene permisos en Firebase. Los registros manuales se guardarán localmente hasta que se autorice tu acceso.';
               manualWarning.classList.remove('hidden');
             } else {
               manualWarning.classList.add('hidden');
             }
-          }
-          if (manualNotice) {
-            const showNotice = flaggedAsTeacher && !hasTeacherFirestoreAccess;
-            manualNotice.classList.toggle('hidden', !showNotice);
-            manualNotice.style.display = showNotice ? '' : 'none';
+
           }
 
           const active = (typeof window.isClassActiveNow === 'function' ? window.isClassActiveNow() : true);
@@ -866,20 +852,21 @@
 
             if (unsubscribeAttendance) unsubscribeAttendance();
             const handleSnapshot = (items) => {
+
               setRemoteAttendanceRecords(items);
             };
             const handleSubscriptionError = (error) => {
               console.error('Attendance subscription error', error);
               setRemoteAttendanceRecords([]);
 
-              if (!hasTeacherFirestoreAccess && !window.__attSubscriptionWarned) {
+
                 window.__attSubscriptionWarned = true;
                 alert('No se pudo consultar tu asistencia en línea por permisos insuficientes. Tu registro seguirá guardándose.');
               }
             };
             window.__attSubscriptionWarned = false;
             try {
-              unsubscribeAttendance = hasTeacherFirestoreAccess
+
                 ? subscribeTodayAttendance(handleSnapshot, handleSubscriptionError)
                 : subscribeTodayAttendanceByUser(normalizedEmail, handleSnapshot, handleSubscriptionError);
           } catch (subscriptionError) {
@@ -963,6 +950,7 @@
         const now = new Date();
         let savedToFirestore = false;
         try {
+
           if (hasPrivileges) {
             await saveTodayAttendance({
               uid,
@@ -976,17 +964,7 @@
             manualWarning.textContent =
               'Modo de prueba activo: este registro manual se guardará solo en este navegador.';
             manualWarning.classList.remove('hidden');
-          }
-        } catch (error) {
-          console.error('Manual attendance error', error);
-          if (error?.code === 'permission-denied') {
-            savedToFirestore = false;
-            if (manualWarning) {
-              manualWarning.textContent =
-                'Tu cuenta aún no tiene privilegios habilitados en Firebase para registrar asistencias manuales. Se guardará solo de forma local en esta sesión.';
-              manualWarning.classList.remove('hidden');
-            }
-            alert('Tu cuenta aún no tiene privilegios habilitados en Firebase para registrar asistencias manuales. El registro se guardará solo de forma local en esta sesión.');
+
           } else {
             alert(error?.message || 'No se pudo registrar manualmente.');
             return;
