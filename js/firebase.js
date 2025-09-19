@@ -31,6 +31,9 @@ import {
   deleteObject,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
 import {
+  signInWithEmailAndPassword,
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+import {
   firebaseConfig,
   allowedEmailDomain,
   useStorage,
@@ -129,6 +132,16 @@ export async function getDriveAccessTokenInteractive() {
 export async function signOutCurrent() {
   const auth = getAuthInstance();
   await signOut(auth);
+}
+
+// --- Autenticación con correo y contraseña ---
+// Permite iniciar sesión con credenciales de email/password previamente
+// registradas en Firebase Authentication. No realiza ninguna validación de
+// dominio; se espera que el rol de docente o estudiante se determine después
+// mediante isTeacherEmail/isTeacherByDoc.
+export async function signInWithEmailPassword(email, password) {
+  const auth = getAuthInstance();
+  return signInWithEmailAndPassword(auth, email, password);
 }
 
 export function onAuth(cb) {

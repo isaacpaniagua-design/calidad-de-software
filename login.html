@@ -1,0 +1,84 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Iniciar sesión · Plataforma QS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+      .card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1 class="text-2xl font-semibold mb-4 text-center">Iniciar sesión</h1>
+      <form id="loginForm" class="flex flex-col gap-4">
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700">Correo electrónico</label>
+          <input
+            type="email"
+            id="email"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+            placeholder="usuario@dominio.com"
+            required
+          />
+        </div>
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+          <input
+            type="password"
+            id="password"
+            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm p-2"
+            placeholder="••••••••"
+            required
+          />
+        </div>
+        <button
+          type="submit"
+          class="w-full py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium"
+        >
+          Ingresar
+        </button>
+        <div id="errorMessage" class="text-red-600 text-sm"></div>
+      </form>
+      <p class="mt-4 text-center text-sm">
+        <a href="index.html" class="text-indigo-600 hover:underline">Regresar al inicio</a>
+      </p>
+    </div>
+    <script type="module">
+      import { initFirebase, signInWithEmailPassword } from './js/firebase.js';
+      initFirebase();
+      const form = document.getElementById('loginForm');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('errorMessage');
+        errorDiv.textContent = '';
+        try {
+          await signInWithEmailPassword(email, password);
+          // Redirigir al inicio después de iniciar sesión
+          window.location.href = 'index.html';
+        } catch (err) {
+          errorDiv.textContent = err?.message || 'Error al iniciar sesión.';
+        }
+      });
+    </script>
+  </body>
+</html>

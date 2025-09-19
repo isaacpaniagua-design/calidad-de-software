@@ -70,16 +70,23 @@ function applyGradesRole(isTeacher) {
   btnWrap.style.top = "10px";
   btnWrap.style.right = "12px";
   btnWrap.style.zIndex = "1000";
+  btnWrap.className = "flex gap-2 items-center";
   const authBtn = upsertAuthButton(btnWrap);
   document.body.appendChild(btnWrap);
   authBtn.textContent = getAuthInstance()?.currentUser
-    ? "Cerrar sesion"
-    : "Iniciar sesion";
+    ? "Cerrar sesión"
+    : "Iniciar con Google";
   authBtn.onclick = async () => {
     const auth = getAuthInstance();
     if (auth?.currentUser) await signOutCurrent();
     else await signInWithGooglePotros();
   };
+  // Añadir enlace para iniciar sesión con correo/contraseña
+  const emailLink = document.createElement('a');
+  emailLink.href = 'login.html';
+  emailLink.textContent = 'Acceso con correo';
+  emailLink.className = 'text-sm text-indigo-600 hover:underline';
+  btnWrap.appendChild(emailLink);
 }
 
 onAuth(async (user) => {
