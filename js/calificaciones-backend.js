@@ -133,6 +133,12 @@ function renderAlumno(items){
   }
 }
 
+function setStatusMessage(message){
+  const el = $id('qsc-msg');
+  if (!el) return;
+  el.textContent = message ? String(message) : '';
+}
+
 // === Firestore ===
 async function obtenerItemsAlumno(db, grupoId, uid){
   // Estructura actual: grupos/{grupo}/calificaciones/{uid}/items
@@ -169,12 +175,23 @@ async function main(){
 
   // Carga automática para el usuario autenticado (si lo hay)
   onAuth(async (user)=>{
-    if (!user) return;
+    if (!user) {
+      renderAlumno([]);
+      setStatusMessage('Inicia sesión con tu correo @potros.itson.edu.mx para ver tu progreso.');
+      return;
+    }
     try{
       const items = await obtenerItemsAlumno(db, GRUPO_ID, user.uid);
       renderAlumno(items);
+      setStatusMessage(items && items.length ? '' : 'Sin actividades registradas aún.');
     }catch(e){
       console.error('[calificaciones-backend] error', e);
+      renderAlumno([]);
+      if (e && (e.code === 'permission-denied' || e.code === 'firestore/permission-denied')) {
+        setStatusMessage('Tu cuenta no tiene permisos para consultar las calificaciones en línea. Contacta al docente para habilitar el acceso.');
+      } else {
+        setStatusMessage('No se pudieron cargar tus calificaciones. Intenta nuevamente más tarde.');
+      }
     }
   });
 }
