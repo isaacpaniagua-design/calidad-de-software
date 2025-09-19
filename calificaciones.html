@@ -127,8 +127,8 @@
     </div>
 
     <div class="container mx-auto px-6 py-8">
-      <!-- Student Info -->
-      <div class="bg-white rounded-lg card-shadow p-6 mb-8">
+      <!-- Student Info (visible sólo para docentes) -->
+      <div class="bg-white rounded-lg card-shadow p-6 mb-8 teacher-only">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2"
@@ -1119,8 +1119,8 @@
         </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="mt-8 flex flex-wrap gap-4 justify-center">
+      <!-- Action Buttons (visible sólo para docentes) -->
+      <div class="mt-8 flex flex-wrap gap-4 justify-center teacher-only">
         <button
           id="calculateBtn"
           class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
@@ -1767,17 +1767,13 @@
             localStorage.getItem("qs_role") || "estudiante"
           ).toLowerCase();
           if (rol !== "docente") {
+            // Deshabilitar todas las entradas y botones para estudiantes.  No se hace
+            // excepción con los botones de cálculo/limpieza/exportación ya
+            // que éstos se ocultan con la clase `teacher-only`.
             document
               .querySelectorAll("input, select, textarea, button")
               .forEach(function (el) {
-                var id = el.id || "";
-                if (
-                  id === "calculateBtn" ||
-                  id === "clearBtn" ||
-                  id === "exportBtn"
-                ) {
-                  // permitir cálculo/limpieza/export de su propia vista
-                } else if (el.tagName === "BUTTON") {
+                if (el.tagName === "BUTTON") {
                   el.disabled = true;
                 } else if (
                   el.tagName === "INPUT" ||
