@@ -519,7 +519,11 @@
     </script>
 
     <script type="module">
+ codex/fix-backend-errors-with-firebase-emgmjd
+      import { initFirebase, onAuth, signInWithGooglePotros, signOutCurrent, saveTodayAttendance, subscribeTodayAttendance, subscribeTodayAttendanceByUser, fetchAttendancesByDateRange, ensureTeacherDocForUser, isTeacherEmail, isTeacherByDoc } from './js/firebase.js';
+
       import { initFirebase, onAuth, signInWithGooglePotros, signOutCurrent, saveTodayAttendance, subscribeTodayAttendance, subscribeTodayAttendanceByUser, fetchAttendancesByDateRange } from './js/firebase.js';
+ main
       import { allowedEmailDomain } from './js/firebase-config.js';
 
       initFirebase();
@@ -535,6 +539,8 @@
       const manualNameInput = document.getElementById('manualAttendanceName');
       const manualEmailInput = document.getElementById('manualAttendanceEmail');
       const manualBtn = document.getElementById('manualAttendanceBtn');
+
+      window.currentUserHasTeacherPrivileges = false;
 
       function setAttendanceEnabled(enabled) {
         if (!attendanceBtn) return;
@@ -617,6 +623,27 @@
           userInfo.classList.remove('hidden');
           if (signInBtn) signInBtn.classList.add('hidden');
 
+ codex/fix-backend-errors-with-firebase-emgmjd
+          let teacherByDoc = false;
+          try {
+            teacherByDoc = await isTeacherByDoc(user.uid);
+          } catch (err) {
+            console.error('No se pudo verificar el perfil de docente en Firestore', err);
+          }
+
+          const teacherByAllowlist = isTeacherEmail(normalizedEmail);
+          if (teacherByAllowlist && user?.uid && !teacherByDoc) {
+            try {
+              const ensured = await ensureTeacherDocForUser({
+                uid: user.uid,
+                email: normalizedEmail,
+                displayName: user.displayName,
+              });
+              teacherByDoc = ensured || teacherByDoc;
+            } catch (err) {
+              console.error('No se pudo preparar el perfil de docente en Firestore', err);
+            }
+
           const roster = Array.isArray(window.students) ? window.students : [];
           const rosterEntry = roster.find((student) => (student.email || '').toLowerCase() === normalizedEmail);
           const isTeacher = rosterEntry?.type === 'teacher';
@@ -626,6 +653,17 @@
           if (manualCard) {
             manualCard.classList.toggle('hidden', !isTeacher);
             manualCard.style.display = isTeacher ? '' : 'none';
+ main
+          }
+
+          const hasTeacherPrivileges = teacherByDoc || teacherByAllowlist;
+          window.currentUserHasTeacherPrivileges = hasTeacherPrivileges;
+
+          applyRoleVisibility(hasTeacherPrivileges ? 'docente' : 'estudiante');
+
+          if (manualCard) {
+            manualCard.classList.toggle('hidden', !hasTeacherPrivileges);
+            manualCard.style.display = hasTeacherPrivileges ? '' : 'none';
           }
 
           const active = (typeof window.isClassActiveNow === 'function' ? window.isClassActiveNow() : true);
@@ -649,14 +687,22 @@
           const handleSubscriptionError = (error) => {
             console.error('Attendance subscription error', error);
             syncAttendanceState([]);
+ codex/fix-backend-errors-with-firebase-emgmjd
+            if (!hasTeacherPrivileges && !window.__attSubscriptionWarned) {
+
             if (!isTeacher && !window.__attSubscriptionWarned) {
+ main
               window.__attSubscriptionWarned = true;
               alert('No se pudo consultar tu asistencia en línea por permisos insuficientes. Tu registro seguirá guardándose.');
             }
           };
           window.__attSubscriptionWarned = false;
           try {
+ codex/fix-backend-errors-with-firebase-emgmjd
+            unsubscribeAttendance = hasTeacherPrivileges
+
             unsubscribeAttendance = isTeacher
+ main
               ? subscribeTodayAttendance(handleSnapshot, handleSubscriptionError)
               : subscribeTodayAttendanceByUser(normalizedEmail, handleSnapshot, handleSubscriptionError);
           } catch (subscriptionError) {
@@ -671,6 +717,7 @@
             manualCard.classList.add('hidden');
             manualCard.style.display = 'none';
           }
+          window.currentUserHasTeacherPrivileges = false;
           try { window.clearInterval(window.__classActiveTimer); } catch(_) {}
           syncAttendanceState([]);
           if (unsubscribeAttendance) { unsubscribeAttendance(); unsubscribeAttendance = null; }
@@ -693,6 +740,10 @@
 
       async function manualRegisterAttendance() {
         if (!manualBtn) return;
+        if (!window.currentUserHasTeacherPrivileges) {
+          alert('Solo las cuentas de docente pueden registrar asistencias manuales.');
+          return;
+        }
         const roster = Array.isArray(window.students) ? window.students : [];
         const selectedId = manualSelect ? manualSelect.value : '';
         const typedEmail = (manualEmailInput?.value || '').trim().toLowerCase();
@@ -742,7 +793,11 @@
           if (manualEmailInput) manualEmailInput.value = '';
         } catch (error) {
           console.error('Manual attendance error', error);
-          alert(error?.message || 'No se pudo registrar manualmente.');
+          if (error?.code === 'permission-denied') {
+            alert('Tu cuenta no tiene permisos suficientes para registrar asistencias manuales. Verifica que hayas iniciado sesión como docente.');
+          } else {
+            alert(error?.message || 'No se pudo registrar manualmente.');
+          }
         } finally {
           manualBtn.disabled = false;
         }

@@ -185,18 +185,22 @@ export async function isTeacherByDoc(uid) {
 export async function ensureTeacherDocForUser({ uid, email, displayName }) {
   if (!uid || !email) return false;
   const lower = (email || "").toLowerCase();
-  if (!isTeacherEmail(lower)) return false;
   const db = getDb();
   const ref = doc(collection(db, "teachers"), uid);
   try {
     const snap = await getDoc(ref);
-    if (!snap.exists()) {
-      await setDoc(ref, {
-        email: lower,
-        name: displayName || null,
-        createdAt: serverTimestamp(),
-      });
+    if (snap.exists()) {
+      return true;
     }
+    if (!isTeacherEmail(lower)) {
+      // No intentamos crear el documento si el correo no tiene privilegios de docente.
+      return false;
+    }
+    await setDoc(ref, {
+      email: lower,
+      name: displayName || null,
+      createdAt: serverTimestamp(),
+    });
     return true;
   } catch (_) {
     return false;
@@ -222,8 +226,16 @@ export async function saveTodayAttendance({
   const db = getDb();
   const authInstance = getAuthInstance();
   const currentUser = authInstance?.currentUser || null;
+  const normalizedUid =
+    typeof uid === "string" && uid.trim().length > 0
+      ? uid.trim()
+      : String(uid || "").trim();
+  if (!normalizedUid) {
+    throw new Error("Identificador de usuario requerido");
+  }
+
   const date = todayKey();
-  const attendanceId = `${date}_${uid}`; // evita duplicados por dia-usuario
+  const attendanceId = `${date}_${normalizedUid}`; // evita duplicados por dia-usuario
   const ref = doc(collection(db, "attendances"), attendanceId);
 
   const existing = await getDoc(ref);
@@ -231,22 +243,35 @@ export async function saveTodayAttendance({
     throw new Error("Ya tienes tu asistencia registrada para el dia de hoy");
   }
 
-  const normalizedEmail = (email || "").toLowerCase();
+  const normalizedEmail = String(email || "").trim().toLowerCase();
   if (!normalizedEmail) {
     throw new Error("Correo electronico requerido");
   }
 
-  const createdByUid = currentUser?.uid || uid;
-  const createdByEmail = (currentUser?.email || normalizedEmail).toLowerCase();
+  const createdByUid =
+    typeof (currentUser?.uid || normalizedUid) === "string"
+      ? (currentUser?.uid || normalizedUid)
+      : String(currentUser?.uid || normalizedUid);
+  const normalizedCreatedByUid = String(createdByUid || "").trim();
+  if (!normalizedCreatedByUid) {
+    throw new Error("Sesion invalida para registrar asistencia");
+  }
+  const createdByEmail = String(currentUser?.email || normalizedEmail)
+    .trim()
+    .toLowerCase();
+  const normalizedType =
+    typeof type === "string" && type.trim().length > 0
+      ? type.trim()
+      : "student";
 
   await setDoc(ref, {
-    uid,
+    uid: normalizedUid,
     name,
     email: normalizedEmail,
-    type: type || "student",
+    type: normalizedType,
     date,
     manual: !!manual,
-    createdByUid,
+    createdByUid: normalizedCreatedByUid,
     createdByEmail,
     timestamp: serverTimestamp(),
   });
