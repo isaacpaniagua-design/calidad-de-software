@@ -1,11 +1,33 @@
-﻿// Injects a top nav similar to index, without altering page structure
+// Injects a top nav similar to index, without altering page structure
 document.addEventListener('DOMContentLoaded', function(){
   try{
+    var prefix = '';
+    try {
+      var segments = (location.pathname || '').split('/').filter(Boolean);
+      var upLevels = Math.max(segments.length - 2, 0);
+      for (var i = 0; i < upLevels; i++) prefix += '../';
+    } catch (_) {
+      prefix = '';
+    }
+
+    try {
+      var hasLayout = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).some(function(link){
+        var href = link.getAttribute('href') || link.href || '';
+        return href.indexOf('layout.css') !== -1;
+      });
+      if (!hasLayout) {
+        var cssLink = document.createElement('link');
+        cssLink.rel = 'stylesheet';
+        cssLink.href = prefix + 'css/layout.css';
+        document.head && document.head.appendChild(cssLink);
+      }
+    } catch (_) {}
+
     // Basic CSS to match index styling
     var css = `
       /* Override any previous pseudo icon */
       .qs-brand::before { content: none !important; }
-      body { padding-top: 72px; }
+      body { padding-top: calc(var(--nav-h, 64px) + 8px); }
       .qs-nav { position: fixed; top:0; left:0; right:0; z-index:1000; backdrop-filter:saturate(140%) blur(18px); background:rgba(255,255,255,0.95); border-bottom:1px solid rgba(255,255,255,0.2); box-shadow:0 8px 32px rgba(0,0,0,0.10); }
       .qs-nav .wrap { max-width:1200px; margin:0 auto; padding:14px 20px; display:flex; gap:16px; align-items:center; justify-content:space-between; }
       .qs-brand { display:flex; gap:12px; align-items:center; color:#1f2937; font-weight:800; font-size:1.2rem; text-decoration:none; padding:6px 12px; border-radius:16px; }
@@ -56,8 +78,11 @@ document.addEventListener('DOMContentLoaded', function(){
     // Offset sticky/fixed toolbars and ensure scroll
     try {
       var navH = document.querySelector('.qs-nav')?.getBoundingClientRect().height || 72;
+      var pad = navH + 4;
       document.documentElement.style.setProperty('--qs-nav-h', navH + 'px');
-      document.body.style.paddingTop = (navH + 4) + 'px';
+      document.documentElement.style.setProperty('--nav-h', navH + 'px');
+      document.documentElement.style.setProperty('--anchor-offset', (navH + 8) + 'px');
+      try { document.body.style.setProperty('padding-top', pad + 'px', 'important'); } catch (_) { document.body.style.paddingTop = pad + 'px'; }
       var fixedNodes = Array.from(document.querySelectorAll('.fixed, [style*="position:fixed"], [class*=" top-0"], [class*="top-0 "]'));
       fixedNodes.forEach(function(el){
         var cs = window.getComputedStyle(el);
@@ -79,16 +104,7 @@ document.addEventListener('DOMContentLoaded', function(){
       if (pg !== 'login.html' && pg !== '404.html') {
         var guard = document.createElement('script');
         guard.type = 'module';
-        // Compute relative path to auth-guard.js based on current location
-        try {
-          var segs = location.pathname.split('/').filter(Boolean);
-          var up = Math.max(segs.length - 2, 0);
-          var prefix = '';
-          for (var i = 0; i < up; i++) prefix += '../';
-          guard.src = prefix + 'js/auth-guard.js';
-        } catch (_) {
-          guard.src = 'js/auth-guard.js';
-        }
+        guard.src = prefix + 'js/auth-guard.js';
         document.body.appendChild(guard);
       }
     } catch (e) {}

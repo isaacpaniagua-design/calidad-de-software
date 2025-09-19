@@ -165,65 +165,244 @@
         position: relative;
         z-index: 1;
       }
+
+      .session-toolbar {
+        position: sticky;
+        top: calc(var(--nav-h, 72px) + 12px);
+        z-index: 40;
+        padding: 0.75rem 0;
+        margin-bottom: 1.75rem;
+      }
+
+      .session-toolbar-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.25rem;
+        padding: 1rem 1.5rem;
+        border-radius: 1.5rem;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.1);
+        backdrop-filter: saturate(140%) blur(18px);
+      }
+
+      .session-toolbar-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .session-toolbar-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1.05rem;
+        box-shadow: 0 12px 25px rgba(79, 70, 229, 0.35);
+      }
+
+      .session-toolbar-kicker {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #6366f1;
+        font-weight: 600;
+        margin-bottom: 0.15rem;
+      }
+
+      .session-toolbar-title {
+        font-size: 1.375rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+      }
+
+      .slide-toolbar {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        border-radius: 9999px;
+        background: linear-gradient(
+          135deg,
+          rgba(99, 102, 241, 0.12),
+          rgba(129, 140, 248, 0.18)
+        );
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6),
+          0 8px 24px rgba(79, 70, 229, 0.18);
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        max-width: 100%;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .slide-toolbar::-webkit-scrollbar {
+        display: none;
+      }
+
+      .slide-tab {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.45rem 1.1rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #4338ca;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9),
+          0 1px 3px rgba(15, 23, 42, 0.08);
+        transition: transform 0.2s ease, box-shadow 0.2s ease,
+          color 0.2s ease, background 0.2s ease;
+        cursor: pointer;
+        scroll-snap-align: center;
+        white-space: nowrap;
+      }
+
+      .slide-tab:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 25px rgba(79, 70, 229, 0.25);
+        background: rgba(255, 255, 255, 0.95);
+      }
+
+      .slide-tab:focus-visible {
+        outline: 2px solid rgba(99, 102, 241, 0.6);
+        outline-offset: 3px;
+      }
+
+      .slide-tab-active {
+        color: #fff;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        border-color: transparent;
+        box-shadow: 0 16px 30px rgba(79, 70, 229, 0.38);
+      }
+
+      .slide-tab-active::after {
+        content: "";
+        position: absolute;
+        left: 20%;
+        right: 20%;
+        bottom: -6px;
+        height: 4px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.75);
+      }
+
+      @media (max-width: 768px) {
+        .session-toolbar-card {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .slide-toolbar {
+          width: 100%;
+        }
+      }
     </style>
-    <link rel="icon" href="/favicon.ico"/>
-  <link rel="stylesheet" href="/css/layout.css">
-</head>
+  </head>
   <body class="bg-gray-50 min-h-screen">
     <!-- Navigation -->
-    <nav class="bg-white shadow-lg sticky top-0 z-50">
+    <nav
+      class="session-toolbar"
+      aria-label="Navegación de diapositivas de la sesión 2"
+    >
       <div class="max-w-6xl mx-auto px-4">
-        <div class="flex justify-between items-center py-4">
-          <div class="flex items-center space-x-4">
-            <div
-              class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center"
-            >
-              <span class="text-white font-bold text-lg">S2</span>
+        <div class="session-toolbar-card">
+          <div class="session-toolbar-info">
+            <div class="session-toolbar-badge">QS</div>
+            <div>
+              <p class="session-toolbar-kicker">Sesión 2</p>
+              <h1 class="session-toolbar-title">
+                Conceptos Fundamentales de Calidad
+              </h1>
+              <p class="text-sm text-gray-500">
+                Marco teórico, evolución y aportes clave
+              </p>
             </div>
-            <h1 class="text-xl font-semibold text-gray-800">
-              Sesión 2: Conceptos Fundamentales
-            </h1>
           </div>
-          <div class="flex space-x-1 overflow-x-auto">
+          <div
+            class="slide-toolbar"
+            role="tablist"
+            aria-label="Diapositivas de la sesión 2"
+          >
             <button
+              type="button"
               onclick="showSlide(1)"
-              class="px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm whitespace-nowrap"
+              class="slide-tab slide-tab-active"
               id="slide1-btn"
+              role="tab"
+              aria-controls="slide1"
+              aria-selected="true"
+              tabindex="0"
             >
               Título
             </button>
             <button
+              type="button"
               onclick="showSlide(2)"
-              class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm whitespace-nowrap"
+              class="slide-tab"
               id="slide2-btn"
+              role="tab"
+              aria-controls="slide2"
+              aria-selected="false"
+              tabindex="-1"
             >
               La Fábula
             </button>
             <button
+              type="button"
               onclick="showSlide(3)"
-              class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm whitespace-nowrap"
+              class="slide-tab"
               id="slide3-btn"
+              role="tab"
+              aria-controls="slide3"
+              aria-selected="false"
+              tabindex="-1"
             >
               Discusión
             </button>
             <button
+              type="button"
               onclick="showSlide(4)"
-              class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm whitespace-nowrap"
+              class="slide-tab"
               id="slide4-btn"
+              role="tab"
+              aria-controls="slide4"
+              aria-selected="false"
+              tabindex="-1"
             >
               Evolución
             </button>
             <button
+              type="button"
               onclick="showSlide(5)"
-              class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm whitespace-nowrap"
+              class="slide-tab"
               id="slide5-btn"
+              role="tab"
+              aria-controls="slide5"
+              aria-selected="false"
+              tabindex="-1"
             >
               Gurús
             </button>
             <button
+              type="button"
               onclick="showSlide(6)"
-              class="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm whitespace-nowrap"
+              class="slide-tab"
               id="slide6-btn"
+              role="tab"
+              aria-controls="slide6"
+              aria-selected="false"
+              tabindex="-1"
             >
               Trilogía
             </button>
@@ -1250,45 +1429,75 @@
     </main>
 
     <script>
+      const slideButtons = Array.from(
+        document.querySelectorAll('.slide-toolbar [id$="-btn"]')
+      );
+      const totalSlides = slideButtons.length;
+      const prefersReducedMotion = (() => {
+        try {
+          return (
+            window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          );
+        } catch (_) {
+          return false;
+        }
+      })();
       let currentSlide = 1;
 
       function showSlide(slideNumber) {
-        // Hide all slides
-        for (let i = 1; i <= 6; i++) {
-          document.getElementById("slide" + i).classList.add("hidden");
-          document
-            .getElementById("slide" + i + "-btn")
-            .classList.remove("bg-blue-500", "text-white");
-          document
-            .getElementById("slide" + i + "-btn")
-            .classList.add("bg-gray-200", "text-gray-700");
-        }
+        if (slideNumber < 1 || slideNumber > totalSlides) return;
 
-        // Show selected slide
-        document
-          .getElementById("slide" + slideNumber)
-          .classList.remove("hidden");
-        document
-          .getElementById("slide" + slideNumber + "-btn")
-          .classList.remove("bg-gray-200", "text-gray-700");
-        document
-          .getElementById("slide" + slideNumber + "-btn")
-          .classList.add("bg-blue-500", "text-white");
+        slideButtons.forEach(function (button, index) {
+          const displayIndex = index + 1;
+          const slideElement = document.getElementById('slide' + displayIndex);
+          const isActive = displayIndex === slideNumber;
+
+          if (slideElement) {
+            slideElement.classList.toggle('hidden', !isActive);
+          }
+
+          button.classList.toggle('slide-tab-active', isActive);
+          button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+          button.setAttribute('tabindex', isActive ? '0' : '-1');
+        });
+
+        const activeButton = document.getElementById(
+          'slide' + slideNumber + '-btn'
+        );
+
+        if (activeButton) {
+          const behavior = prefersReducedMotion ? 'auto' : 'smooth';
+          try {
+            requestAnimationFrame(function () {
+              activeButton.scrollIntoView({
+                behavior,
+                block: 'nearest',
+                inline: 'center',
+              });
+            });
+          } catch (_) {
+            if (!prefersReducedMotion) {
+              activeButton.scrollIntoView();
+            }
+          }
+        }
 
         currentSlide = slideNumber;
       }
 
       // Keyboard navigation
-      document.addEventListener("keydown", function (e) {
-        if (e.key === "ArrowLeft" && currentSlide > 1) {
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'ArrowLeft' && currentSlide > 1) {
           showSlide(currentSlide - 1);
-        } else if (e.key === "ArrowRight" && currentSlide < 6) {
+        } else if (e.key === 'ArrowRight' && currentSlide < totalSlides) {
           showSlide(currentSlide + 1);
         }
       });
 
-      // Initialize first slide
-      showSlide(1);
+      if (totalSlides > 0) {
+        showSlide(1);
+      }
     </script>
     <script>
       (function () {
@@ -1331,6 +1540,5 @@
 
   <script defer src="js/back-home.js"></script>
   <script defer src="js/nav-inject.js"></script>
-    <script defer src="/js/layout.js"></script>
-</body>
+  </body>
 </html>
