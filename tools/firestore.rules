@@ -60,9 +60,26 @@ service cloud.firestore {
     match /attendances/{attendanceId} {
       allow read: if isPotros();
       allow create: if isPotros()
-        && request.resource.data.email == request.auth.token.email
-        && request.resource.data.uid == request.auth.uid
-        && request.resource.data.date is string;
+        && request.resource.data.date is string
+        && request.resource.data.email is string
+        && request.resource.data.uid is string
+        && request.resource.data.manual is bool
+        && request.resource.data.createdByUid is string
+        && request.resource.data.createdByEmail is string
+        && (
+          (
+            request.resource.data.email == request.auth.token.email
+            && request.resource.data.uid == request.auth.uid
+            && request.resource.data.createdByUid == request.auth.uid
+            && request.resource.data.createdByEmail == request.auth.token.email
+          )
+          || (
+            isTeacher()
+            && request.resource.data.manual == true
+            && request.resource.data.createdByUid == request.auth.uid
+            && request.resource.data.createdByEmail == request.auth.token.email
+          )
+        );
       allow update, delete: if false;
     }
 
