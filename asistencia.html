@@ -718,11 +718,14 @@
           manualCard.classList.remove('hidden');
           manualCard.style.display = '';
         }
-        if (manualWarning) {
-          manualWarning.textContent =
-            'Modo de prueba activo: los registros manuales se guardan localmente en este navegador.';
-          manualWarning.classList.remove('hidden');
-        }
+                  if (manualWarning) {
+            if (!hasTeacherPrivileges) {
+              manualWarning.textContent = 'Tu cuenta aún no tiene permisos para registrar asistencias manuales en Firebase. Los registros manuales se guardarán localmente hasta que se autorice tu acceso.';
+              manualWarning.classList.remove('hidden');
+            } else {
+              manualWarning.classList.add('hidden');
+            }
+          }
         if (manualNotice) {
           manualNotice.classList.add('hidden');
           manualNotice.style.display = 'none';
@@ -830,12 +833,14 @@
             manualCard.style.display = canUseManualUi ? '' : 'none';
             if (!canUseManualUi) delete manualCard.dataset.forceVisible;
           }
-          if (manualWarning) {
-
-              manualWarning.textContent =
-                'Tu cuenta aún no tiene permisos en Firebase. Los registros manuales se guardarán localmente hasta que se autorice tu acceso.';
+                    if (manualWarning) {
+            if (!hasTeacherPrivileges) {
+              manualWarning.textContent = 'Tu cuenta aún no tiene permisos para registrar asistencias manuales en Firebase. Los registros manuales se guardarán localmente hasta que se autorice tu acceso.';
               manualWarning.classList.remove('hidden');
             } else {
+              manualWarning.classList.add('hidden');
+            }
+          } else {
               manualWarning.classList.add('hidden');
             }
 
@@ -887,8 +892,13 @@
             manualCard.classList.add('hidden');
             manualCard.style.display = 'none';
           }
-          if (manualWarning) {
-            manualWarning.classList.add('hidden');
+                    if (manualWarning) {
+            if (!hasTeacherPrivileges) {
+              manualWarning.textContent = 'Tu cuenta aún no tiene permisos para registrar asistencias manuales en Firebase. Los registros manuales se guardarán localmente hasta que se autorice tu acceso.';
+              manualWarning.classList.remove('hidden');
+            } else {
+              manualWarning.classList.add('hidden');
+            }
           }
           if (manualNotice) {
             manualNotice.classList.add('hidden');
@@ -966,11 +976,13 @@
               manual: true
             });
             savedToFirestore = true;
-          } else if (manualWarning) {
-            manualWarning.textContent =
-              'Modo de prueba activo: este registro manual se guardará solo en este navegador.';
-            manualWarning.classList.remove('hidden');
-
+          } else           if (manualWarning) {
+            if (!hasTeacherPrivileges) {
+              manualWarning.textContent = 'Tu cuenta aún no tiene permisos para registrar asistencias manuales en Firebase. Los registros manuales se guardarán localmente hasta que se autorice tu acceso.';
+              manualWarning.classList.remove('hidden');
+            } else {
+              manualWarning.classList.add('hidden');
+            }
           } else {
             alert(error?.message || 'No se pudo registrar manualmente.');
             return;
