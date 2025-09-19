@@ -2,7 +2,10 @@ import {
   initFirebase,
   onAuth,
   getAuthInstance,
-  signInWithGooglePotros,
+  // Use the unrestricted Google sign-in for all roles. This allows accounts
+  // outside of the @potros domain to authenticate while roles are determined
+  // via Firestore and allowedTeacherEmails.
+  signInWithGoogleOpen as signInWithGooglePotros,
   signOutCurrent,
   isTeacherEmail,
   isTeacherByDoc,
@@ -116,5 +119,10 @@ onAuth(async (user) => {
 
   const page = (location.pathname.split("/").pop() || "").toLowerCase();
   if (page === "materiales.html") applyMaterialsRole(teacher);
-  if (page === "calificaciones.html") applyGradesRole(teacher);
+  // Calificaciones.html ya contiene la barra de navegación con su propio botón
+  // de autenticación a través de nav-inject.js.  Evitamos inyectar otro
+  // botón (qs-auth-btn) desde role-gate para no duplicar controles.
+  if (page === "calificaciones.html") {
+    // No llamar a applyGradesRole aquí.
+  }
 });
