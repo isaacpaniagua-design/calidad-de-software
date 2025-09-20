@@ -315,11 +315,21 @@ html:not(.role-teacher) .teacher-only{display:none !important;}
             const defaultLink = actions.querySelector('[data-default-auth-link]');
             if (defaultLink) defaultLink.remove();
 
+            let btn = actions.querySelector('.qs-auth-btn');
+
             if (!btn) {
               btn = document.createElement('button');
               btn.type = 'button';
               btn.className = 'qs-cta qs-auth-btn';
               actions.appendChild(btn);
+            }
+
+            if (!btn) return;
+
+            if (!btn.textContent) {
+              btn.textContent = 'Iniciar sesión';
+              btn.setAttribute('aria-label', 'Iniciar sesión');
+              btn.title = 'Iniciar sesión';
             }
             // Localiza el enlace al panel docente (Panel).  Puede estar ausente si no se inyectó la pestaña.
             const panelLink = navTabs.querySelector('a[href$="paneldocente.html"]');
