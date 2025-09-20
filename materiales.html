@@ -369,6 +369,25 @@
         emptyMessage: document.getElementById("emptyMessage"),
       };
 
+      const essentialElementKeys = [
+        "grid",
+        "emptyState",
+        "emptyMessage",
+        "notification",
+        "notificationMessage",
+      ];
+
+      const missingEssentialElements = essentialElementKeys.filter(
+        (key) => !elements[key]
+      );
+
+      if (missingEssentialElements.length > 0) {
+        console.error(
+          "materiales.html: faltan elementos esenciales en el DOM",
+          missingEssentialElements
+        );
+      }
+
       onAuth(async (user) => {
         if (user) {
           currentUser = user;
@@ -380,13 +399,18 @@
       });
 
       async function initializeApp() {
+        if (missingEssentialElements.length > 0) {
+          return;
+        }
         // Inicializa el widget DESPUÉS de que sabemos que el usuario es un profesor
         if (isCurrentUserTeacher && elements.form) {
           uploadcareWidget = uploadcare.Widget("#file-widget");
           elements.form.addEventListener("submit", handleFormSubmit);
         }
 
-        elements.grid.addEventListener("click", handleGridClick);
+        if (elements.grid) {
+          elements.grid.addEventListener("click", handleGridClick);
+        }
 
         try {
           allMaterials = await getMaterials();
@@ -394,14 +418,19 @@
         } catch (error) {
           console.error("Error al inicializar:", error);
           showNotification("error", "No se pudieron cargar los materiales.");
-          elements.emptyMessage.textContent =
-            "Error al cargar. Revisa los permisos.";
+          if (elements.emptyMessage) {
+            elements.emptyMessage.textContent =
+              "Error al cargar. Revisa los permisos.";
+          }
         }
 
         applyRoleVisibility();
       }
 
       function render() {
+        if (!elements.grid || !elements.emptyState || !elements.emptyMessage) {
+          return;
+        }
         elements.grid.innerHTML = "";
         if (allMaterials.length === 0) {
           elements.emptyState.classList.remove("hidden");
@@ -570,6 +599,10 @@
         return p.innerHTML;
       }
       function showNotification(type, message) {
+        if (!elements.notification || !elements.notificationMessage) {
+          console.warn("materiales.html: no se encontró el contenedor de notificaciones.");
+          return;
+        }
         elements.notificationMessage.textContent = message;
         elements.notification.className = `notification ${
           type === "error" ? "error" : ""
