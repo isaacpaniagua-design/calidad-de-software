@@ -35,7 +35,7 @@ function ensureUI(root){
   if ($id('student-preview')) return;
   const wrap = document.createElement('section');
   wrap.id = 'student-preview';
-  wrap.className = 'qsc-wrap qsc-compact';
+  wrap.className = 'qsc-wrap qsc-compact teacher-only';
   wrap.innerHTML = `
     <h2 class="qsc-title" style="margin-bottom:10px">Vista de estudiante (preview docente)</h2>
     <div class="qsc-kpis">
