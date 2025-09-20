@@ -63,10 +63,16 @@ document.addEventListener('DOMContentLoaded', function(){
       nav = document.createElement('div');
       nav.className = 'qs-nav';
       nav.innerHTML = template;
+      nav.setAttribute('data-role','main-nav');
       document.body.prepend(nav);
     } else {
       nav.classList.add('qs-nav');
-      nav.innerHTML = template;
+      nav.setAttribute('data-role','main-nav');
+      var hasBrand = !!nav.querySelector('.qs-brand');
+      var hasTabs = !!nav.querySelector('.qs-tabs');
+      if (!hasBrand || !hasTabs || !nav.children || nav.children.length === 0) {
+        nav.innerHTML = template;
+      }
     }
 
     // Mark active link
