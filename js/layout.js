@@ -39,6 +39,9 @@ function bootstrapLayout() {
   const nav = ensureNavigation(basePath);
   const footer = ensureFooter();
 
+  toggleTeacherNavLinks(html.classList.contains("role-teacher"));
+  observeRoleClassChanges();
+
   updateAuthAppearance(nav, readStoredAuthState());
   bindNavAuthRedirect(nav);
   setupNavToggle(nav);
@@ -60,6 +63,7 @@ function bootstrapLayout() {
   window.__qsLayoutReadAuthState = readStoredAuthState;
   window.__qsLayoutPersistAuthState = persistAuthState;
   window.__qsLayoutPersistRole = persistRole;
+  window.__qsLayoutToggleTeacherNavLinks = toggleTeacherNavLinks;
 
   function computeBasePath() {
     try {
@@ -108,7 +112,13 @@ function bootstrapLayout() {
             <a class="qs-btn" href="${base}asistencia.html">Asistencia</a>
             <a class="qs-btn" href="${base}calificaciones.html">Calificaciones</a>
             <a class="qs-btn" href="${base}Foro.html">Foro</a>
-            <a class="qs-btn teacher-only" data-route="panel" href="${base}paneldocente.html">Panel</a>
+            <a
+              class="qs-btn teacher-only"
+              data-route="panel"
+              href="${base}paneldocente.html"
+              hidden
+              aria-hidden="true"
+            >Panel</a>
           </nav>
         </div>
       </div>`;
@@ -221,6 +231,7 @@ function bootstrapLayout() {
     try {
       localStorage.setItem(ROLE_STORAGE_KEY, role);
     } catch (_) {}
+    toggleTeacherNavLinks(role === "docente");
   }
 
   function updateAuthAppearance(nav, state) {
@@ -241,6 +252,35 @@ function bootstrapLayout() {
         defaultLink.title = "Iniciar sesión";
         defaultLink.setAttribute("data-awaiting-auth", "signed-out");
       }
+    } catch (_) {}
+  }
+
+  function toggleTeacherNavLinks(isTeacher) {
+    try {
+      const links = nav ? nav.querySelectorAll("[data-route='panel']") : [];
+      links.forEach((link) => {
+        if (!link) return;
+        if (isTeacher) {
+          link.removeAttribute("hidden");
+          link.removeAttribute("aria-hidden");
+        } else {
+          link.setAttribute("hidden", "hidden");
+          link.setAttribute("aria-hidden", "true");
+        }
+      });
+    } catch (_) {}
+  }
+
+  function observeRoleClassChanges() {
+    if (!html || !window.MutationObserver) return;
+    try {
+      const observer = new MutationObserver(() => {
+        toggleTeacherNavLinks(html.classList.contains("role-teacher"));
+      });
+      observer.observe(html, {
+        attributes: true,
+        attributeFilter: ["class"],
+      });
     } catch (_) {}
   }
 
