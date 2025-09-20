@@ -8,7 +8,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Materiales - Calidad de Software</title>
     <script src="js/student-nav-fixed.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script>
       UPLOADCARE_PUBLIC_KEY = "85eb5471d305dcd08e71";
       UPLOADCARE_LOCALE = "es";
@@ -60,31 +59,6 @@
         opacity: 0.9;
         font-weight: 500;
       }
-      .role-toggle {
-        position: absolute;
-        top: 2rem;
-        right: 2rem;
-        background: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(10px);
-        border-radius: 2rem;
-        padding: 0.5rem;
-        display: flex;
-        gap: 0.5rem;
-      }
-      .role-btn {
-        padding: 0.75rem 1.5rem;
-        border-radius: 1.5rem;
-        background: transparent;
-        color: white;
-        border: none;
-        cursor: pointer;
-        font-weight: 600;
-      }
-      .role-btn.active {
-        background: white;
-        color: #764ba2;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-      }
       .content-area {
         padding: 3rem 2rem;
       }
@@ -98,11 +72,33 @@
       .form-group {
         margin-bottom: 1.5rem;
       }
+      .upload-form-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 1rem;
+      }
       .form-label {
         display: block;
         font-weight: 600;
         color: #374151;
         margin-bottom: 0.5rem;
+      }
+      .return-home-btn {
+        position: fixed;
+        left: 1rem;
+        bottom: 1rem;
+        z-index: 50;
+        padding: 0.75rem 1.5rem;
+        border-radius: 9999px;
+        color: #ffffff;
+        box-shadow: 0 10px 25px rgba(76, 29, 149, 0.35);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
       }
       .form-input,
       .form-select,
@@ -280,7 +276,7 @@
       <div class="content-area">
         <div id="teacherView" class="hidden">
           <div class="upload-form">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">
+            <h3 class="upload-form-title">
               Subir Nuevo Material
             </h3>
             <form id="materialForm">
@@ -344,8 +340,7 @@
          adicional ofrece una ruta clara de regreso a la página principal en
          dispositivos móviles.  Aparece en la esquina inferior izquierda. -->
     <a href="index.html"
-       class="fixed left-4 bottom-4 z-50 px-4 py-2 rounded-full text-white shadow-lg"
-       style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+       class="return-home-btn">
       ⟵ Inicio
     </a>
 
@@ -362,15 +357,12 @@
       let allMaterials = [];
       let currentUser = null;
       let isCurrentUserTeacher = false;
-      let currentRole = "student";
       let uploadcareWidget;
 
       const elements = {
         grid: document.getElementById("materialsGrid"),
         form: document.getElementById("materialForm"),
         teacherView: document.getElementById("teacherView"),
-        teacherBtn: document.getElementById("teacherBtn"),
-        studentBtn: document.getElementById("studentBtn"),
         notification: document.getElementById("notification"),
         notificationMessage: document.getElementById("notificationMessage"),
         emptyState: document.getElementById("emptyState"),
@@ -389,18 +381,12 @@
 
       async function initializeApp() {
         // Inicializa el widget DESPUÉS de que sabemos que el usuario es un profesor
-        if (isCurrentUserTeacher) {
+        if (isCurrentUserTeacher && elements.form) {
           uploadcareWidget = uploadcare.Widget("#file-widget");
           elements.form.addEventListener("submit", handleFormSubmit);
         }
 
         elements.grid.addEventListener("click", handleGridClick);
-        elements.teacherBtn.addEventListener("click", () =>
-          switchRole("teacher")
-        );
-        elements.studentBtn.addEventListener("click", () =>
-          switchRole("student")
-        );
 
         try {
           allMaterials = await getMaterials();
@@ -412,14 +398,7 @@
             "Error al cargar. Revisa los permisos.";
         }
 
-        if (!isCurrentUserTeacher) {
-          // Ocultar el conmutador de roles para los estudiantes
-          const roleToggle = document.querySelector('.role-toggle');
-          if (roleToggle) roleToggle.classList.add('hidden');
-          switchRole("student");
-        } else {
-          switchRole("teacher");
-        }
+        applyRoleVisibility();
       }
 
       function render() {
@@ -551,26 +530,24 @@
         }
       }
 
-      function switchRole(newRole) {
-        if (!isCurrentUserTeacher && newRole === "teacher") {
-          console.log(
-            "Acceso denegado: solo los profesores pueden cambiar a la vista de profesor."
-          );
-          return;
-        }
-        currentRole = newRole;
-        elements.teacherBtn.classList.toggle("active", newRole === "teacher");
-        elements.studentBtn.classList.toggle("active", newRole === "student");
-        applyRoleVisibility();
-      }
-
       function applyRoleVisibility() {
-        elements.teacherView.classList.toggle(
-          "hidden",
-          currentRole !== "teacher"
-        );
+        const shouldShowTeacherContent = isCurrentUserTeacher;
+        if (elements.teacherView) {
+          elements.teacherView.classList.toggle(
+            "hidden",
+            !shouldShowTeacherContent
+          );
+        }
         document.querySelectorAll(".teacher-only").forEach((el) => {
-          el.classList.toggle("hidden", currentRole !== "teacher");
+          const hideElement = !shouldShowTeacherContent;
+          el.classList.toggle("hidden", hideElement);
+          if (hideElement) {
+            el.setAttribute("hidden", "true");
+            el.setAttribute("aria-hidden", "true");
+          } else {
+            el.removeAttribute("hidden");
+            el.removeAttribute("aria-hidden");
+          }
         });
       }
 
@@ -601,16 +578,6 @@
         setTimeout(() => elements.notification.classList.remove("show"), 3000);
       }
     </script>
-    <script>
-document.addEventListener('DOMContentLoaded', function(){
-  var area = document.querySelector('.content-area');
-  var tv = document.getElementById('teacherView');
-  if (area && tv && tv.classList.contains('hidden')) {
-    area.classList.add('student-view');
-  }
-});
-</script>
-
       <script defer src="js/nav-inject.js"></script>
 </body>
 </html>
