@@ -14,11 +14,7 @@
   } catch (_) {}
 })();
 
-function initNavInject(){
-  if (initNavInject.__ran) return;
-  initNavInject.__ran = true;
 
-  // Injects a top nav similar to index, without altering page structure
   try{
     var prefix = '';
     try {
