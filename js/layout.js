@@ -159,7 +159,6 @@ document.addEventListener("DOMContentLoaded", () => {
           navTabs.appendChild(btn);
         }
         onAuth(async (user) => {
-          const root = document.documentElement;
           if (user) {
             btn.textContent = 'Cerrar sesión';
             btn.onclick = () => signOutCurrent();
@@ -169,23 +168,10 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (_) {
               canSeePanel = false;
             }
-            if (root) {
-              if (canSeePanel) {
-                root.classList.add('role-teacher');
-                root.classList.remove('role-student');
-              } else {
-                root.classList.remove('role-teacher');
-                root.classList.add('role-student');
-              }
-            }
             if (panelLink) panelLink.style.display = canSeePanel ? '' : 'none';
           } else {
             btn.textContent = 'Iniciar sesión';
             btn.onclick = () => signInWithGoogleOpen();
-            if (root) {
-              root.classList.remove('role-teacher');
-              root.classList.add('role-student');
-            }
             if (panelLink) panelLink.style.display = 'none';
           }
         });
