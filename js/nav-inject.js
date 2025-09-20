@@ -11,18 +11,15 @@
     if (configuredSrc) {
       layoutSrc = configuredSrc;
     } else if (currentScript.src) {
-      try {
-        const scriptUrl = new URL(currentScript.src, window.location.href);
-        const basePath = scriptUrl.pathname.substring(
-          0,
-          scriptUrl.pathname.lastIndexOf("/") + 1
-        );
-        const resolvedUrl = new URL("layout.js", `${scriptUrl.origin}${basePath}`);
-        layoutSrc = resolvedUrl.href;
-      } catch (error) {
+      const anchor = document.createElement("a");
+      anchor.href = currentScript.src;
+
+      if (anchor.protocol && anchor.host) {
+        const basePath = anchor.pathname.replace(/[^/]*$/, "");
+        layoutSrc = `${anchor.protocol}//${anchor.host}${basePath}layout.js`;
+      } else {
         console.warn(
-          "nav-inject.js: no se pudo resolver la ruta hacia layout.js; se usará la predeterminada.",
-          error
+          "nav-inject.js: no se pudo resolver la ruta hacia layout.js; se usará la predeterminada."
         );
       }
     }
