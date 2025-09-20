@@ -204,7 +204,7 @@ function initLayout() {
 
     // Footer compartido
     const year = new Date().getFullYear();
-    const footerHtml = `<div class="footer-content">© ${year} Plataforma QS - Calidad de Software | Isaac Paniagua</div>`;
+    const footerHtml = `<div class="footer-content">© ${year} · Plataforma QS - Calidad de Software | Isaac Paniagua</div>`;
     let footer = document.querySelector("footer.footer");
     if (!footer) {
       footer = document.createElement("footer");
@@ -212,6 +212,7 @@ function initLayout() {
       document.body.appendChild(footer);
     }
     footer.innerHTML = footerHtml;
+    footer.setAttribute("data-footer-version", "2024-unified");
 
     // Carga de guardia de autenticación para páginas con navegación global.
     // Inserta un script de tipo módulo que importa Firebase y redirige a login.html
