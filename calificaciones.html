@@ -23,14 +23,13 @@
       }
     </style>
     <style id="qs-calificaciones-css">
-      /* Ocultar por completo la vista de resumen de calificaciones (qsc-wrap).
-         Esta sección mostraba una tabla con el progreso del alumno y un conjunto
-         de indicadores KPI.  El docente solicitó que ya no se muestre ni para
-         docentes ni para estudiantes, por lo que se fuerza su estilo a
-         `display:none`.  Mantenemos el resto de reglas intactas para evitar
-         desbordes de otras clases. */
-      #calificaciones-root .qsc-wrap {
+      /* Mostrar el resumen de calificaciones únicamente al personal docente
+         para que pueda monitorear el avance individual de cada alumno en
+         tiempo real. Para estudiantes se mantiene oculto. */
+      html:not(.role-teacher) #calificaciones-root .qsc-wrap {
         display: none !important;
+      }
+      #calificaciones-root .qsc-wrap {
         max-width: 1100px;
         margin: 24px auto;
         padding: 0 16px;
@@ -92,16 +91,14 @@
         border-bottom: 1px solid rgba(0, 0, 0, 0.08);
       }
 
-      /* Ocultar la vista de alumno (student-preview) por defecto. Se mostrará cuando el docente pulse el botón "Vista de alumno". */
-      #student-preview {
+      /* La vista de alumno permanece oculta para estudiantes, pero se muestra
+         automáticamente al personal docente. */
+      html:not(.role-teacher) #student-preview {
         display: none;
       }
 
-      /* Ocultar el botón "Vista de alumno" completamente.
-         Este botón permitía al docente previsualizar la interfaz de alumno.  A solicitud del
-         usuario se elimina para todos los roles, por lo que se aplica un estilo
-         forzado que lo oculta de la página. */
-      #viewStudentPreviewBtn {
+      /* El botón "Vista de alumno" sólo se oculta para estudiantes. */
+      html:not(.role-teacher) #viewStudentPreviewBtn {
         display: none !important;
       }
       #calificaciones-root .qsc-msg {
@@ -115,7 +112,7 @@
 
     </style>
   </head>
-    <body class="bg-gray-50 min-h-screen">
+    <body id="calificaciones-root" class="bg-gray-50 min-h-screen">
       <div class="qs-nav" data-role="main-nav">
         <div class="wrap">
           <a class="qs-brand" href="index.html">
@@ -1756,25 +1753,34 @@
       calculateProjectGrades();
       calculateGrades();
     </script>
-    <!-- Script para activar la vista de alumno y ocultar el preview por defecto -->
+    <!-- Script para activar la vista de alumno y ocultar el preview sólo a estudiantes -->
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        // Ocultar la vista de alumno (student-preview) al cargar la página
-        const preview = document.getElementById("student-preview");
+        var rolLocal = (localStorage.getItem("qs_role") || "estudiante").toLowerCase();
+        var isTeacher = rolLocal === "docente" || document.documentElement.classList.contains("role-teacher");
+        var preview = document.getElementById("student-preview");
         if (preview) {
-          preview.style.display = "none";
+          if (isTeacher) {
+            preview.style.removeProperty("display");
+          } else {
+            preview.style.display = "none";
+          }
         }
-        // Configurar el botón de vista de alumno
+        // Configurar el botón de vista de alumno únicamente para estudiantes que necesiten mostrarlo manualmente
         const btn = document.getElementById("viewStudentPreviewBtn");
         if (btn) {
-          btn.addEventListener("click", function () {
-            const prev = document.getElementById("student-preview");
-            if (prev) {
-              // Mostrar el preview y desplazar la página suavemente
-              prev.style.display = "";
-              prev.scrollIntoView({ behavior: "smooth" });
-            }
-          });
+          if (isTeacher) {
+            btn.classList.remove("hidden");
+          } else {
+            btn.addEventListener("click", function () {
+              var prev = document.getElementById("student-preview");
+              if (prev) {
+                // Mostrar el preview y desplazar la página suavemente
+                prev.style.display = "";
+                prev.scrollIntoView({ behavior: "smooth" });
+              }
+            });
+          }
         }
       });
     </script>
