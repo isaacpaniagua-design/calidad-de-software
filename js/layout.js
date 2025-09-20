@@ -11,6 +11,47 @@
   } catch (_) {}
 })();
 
+function getStoredAuthState() {
+  const key = 'qs_auth_state';
+  try {
+    const sessionValue = sessionStorage.getItem(key);
+    if (sessionValue) return sessionValue;
+  } catch (_) {}
+  try {
+    const localValue = localStorage.getItem(key);
+    if (localValue) return localValue;
+  } catch (_) {}
+  try {
+    if (typeof window !== 'undefined' && window.__qsAuthState) {
+      return window.__qsAuthState;
+    }
+  } catch (_) {}
+  return '';
+}
+
+function applyInitialAuthAppearance(navEl) {
+  if (!navEl) return;
+  try {
+    const actions = navEl.querySelector('.qs-actions');
+    if (!actions) return;
+    const defaultLink = actions.querySelector('[data-default-auth-link]');
+    if (!defaultLink) return;
+    const state = getStoredAuthState();
+    const isSignedIn = state === 'signed-in';
+    const text = isSignedIn ? 'Cerrar sesión' : 'Iniciar sesión';
+    defaultLink.textContent = text;
+    defaultLink.setAttribute('aria-label', text);
+    defaultLink.title = text;
+    defaultLink.setAttribute('data-awaiting-auth', isSignedIn ? 'signed-in' : 'signed-out');
+    if (isSignedIn && !defaultLink.__qsAwaitPrevent) {
+      defaultLink.__qsAwaitPrevent = true;
+      defaultLink.addEventListener('click', (evt) => {
+        try { evt.preventDefault(); } catch (_) {}
+      });
+    }
+  } catch (_) {}
+}
+
 function initLayout() {
   const p = location.pathname;
   const pLow = p.toLowerCase();
@@ -87,7 +128,9 @@ function initLayout() {
     ) {
       navEl.innerHTML = navHtml;
       navEl.setAttribute("data-nav-version", NAV_VERSION);
+
     }
+    (window.setupQsNavToggle || ensureToggle)(navEl);
 
     const ensureToggle = (navNode) => {
       if (!navNode || navNode.__qsToggleBound) return;
@@ -202,53 +245,60 @@ function initLayout() {
             for (let i = 0; i < up; i++) prefix += '../';
             // Use './js/firebase.js' when prefix is empty so that the import is treated as relative.
             const importPath = (prefix === '') ? './js/firebase.js' : (prefix + 'js/firebase.js');
-        const firebaseModule = await import(importPath);
-        const { onAuth, signInWithGoogleOpen, signOutCurrent, isTeacherEmail, isTeacherByDoc } = firebaseModule;
-        const navTabs = document.querySelector('.qs-tabs');
-        const actions = document.querySelector('.qs-actions');
-        if (!navTabs || !actions) return;
-        const defaultLink = actions.querySelector('[data-default-auth-link]');
-        if (defaultLink) defaultLink.remove();
-        const panelLink = navTabs.querySelector('a[href$="paneldocente.html"]');
-        let btn = actions.querySelector('.qs-auth-btn');
-        if (!btn) {
-          btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'qs-cta qs-auth-btn';
-          actions.appendChild(btn);
-        }
-        const setSignInAppearance = () => {
-          btn.textContent = 'Iniciar sesión';
-          btn.setAttribute('aria-label', 'Iniciar sesión');
-          btn.title = 'Iniciar sesión';
-        };
-        const setSignOutAppearance = () => {
-          btn.textContent = 'Cerrar sesión';
-          btn.setAttribute('aria-label', 'Cerrar sesión');
-          btn.title = 'Cerrar sesión';
-        };
-        setSignInAppearance();
-        btn.onclick = () => signInWithGoogleOpen();
-        onAuth(async (user) => {
-
-          if (user) {
-            setSignOutAppearance();
-            btn.onclick = () => signOutCurrent();
-            let canSeePanel = false;
-            try {
-              canSeePanel = isTeacherEmail(user.email) || (await isTeacherByDoc(user.uid));
-            } catch (_) {
-              canSeePanel = false;
             }
+            const panelLink = navTabs.querySelector('a[href$="paneldocente.html"]');
 
-            if (panelLink) panelLink.style.display = canSeePanel ? '' : 'none';
-          } else {
-            setSignInAppearance();
-            btn.onclick = () => signInWithGoogleOpen();
 
-            if (panelLink) panelLink.style.display = 'none';
-          }
-        });
+            const persistAuthState = (state) => {
+              try { sessionStorage.setItem(AUTH_STORAGE_KEY, state); } catch (_) {}
+              try { localStorage.setItem(AUTH_STORAGE_KEY, state); } catch (_) {}
+              try { window.__qsAuthState = state; } catch (_) {}
+            };
+
+            const setSignInAppearance = () => {
+              btn.textContent = 'Iniciar sesión';
+              btn.setAttribute('aria-label', 'Iniciar sesión');
+              btn.title = 'Iniciar sesión';
+            };
+            const setSignOutAppearance = () => {
+              btn.textContent = 'Cerrar sesión';
+              btn.setAttribute('aria-label', 'Cerrar sesión');
+              btn.title = 'Cerrar sesión';
+            };
+
+            const applyStateAppearance = (state) => {
+              if (state === 'signed-in') {
+                setSignOutAppearance();
+                btn.onclick = () => signOutCurrent();
+              } else {
+                setSignInAppearance();
+                btn.onclick = () => signInWithGoogleOpen();
+              }
+            };
+
+            applyStateAppearance(readStoredAuthState());
+            onAuth(async (user) => {
+
+              if (user) {
+                persistAuthState('signed-in');
+                setSignOutAppearance();
+                btn.onclick = () => signOutCurrent();
+                let canSeePanel = false;
+                try {
+                  canSeePanel = isTeacherEmail(user.email) || (await isTeacherByDoc(user.uid));
+                } catch (_) {
+                  canSeePanel = false;
+                }
+
+                if (panelLink) panelLink.style.display = canSeePanel ? '' : 'none';
+              } else {
+                persistAuthState('signed-out');
+                setSignInAppearance();
+                btn.onclick = () => signInWithGoogleOpen();
+
+                if (panelLink) panelLink.style.display = 'none';
+              }
+            });
           })().catch(console.error);
         `;
         document.body.appendChild(signScr);

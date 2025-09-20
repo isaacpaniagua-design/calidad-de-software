@@ -134,6 +134,7 @@ body{padding-top:calc(var(--nav-h,72px)+8px);}
       }
     }
 
+
     function ensureNavToggle(navEl){
       if (!navEl || navEl.__qsToggleBound) return;
       try {
@@ -164,6 +165,7 @@ body{padding-top:calc(var(--nav-h,72px)+8px);}
       window.setupQsNavToggle = ensureNavToggle;
     }
     (window.setupQsNavToggle || ensureNavToggle)(nav);
+
 
     function getStoredAuthState(){
       var key = 'qs_auth_state';
@@ -301,7 +303,7 @@ body{padding-top:calc(var(--nav-h,72px)+8px);}
             if (!navTabs || !actions) return;
             const defaultLink = actions.querySelector('[data-default-auth-link]');
             if (defaultLink) defaultLink.remove();
-            let btn = actions.querySelector('.qs-auth-btn');
+
             if (!btn) {
               btn = document.createElement('button');
               btn.type = 'button';
@@ -310,6 +312,28 @@ body{padding-top:calc(var(--nav-h,72px)+8px);}
             }
             // Localiza el enlace al panel docente (Panel).  Puede estar ausente si no se inyectó la pestaña.
             const panelLink = navTabs.querySelector('a[href$="paneldocente.html"]');
+
+            const AUTH_STORAGE_KEY = 'qs_auth_state';
+            const readStoredAuthState = () => {
+              try {
+                const sessionValue = sessionStorage.getItem(AUTH_STORAGE_KEY);
+                if (sessionValue) return sessionValue;
+              } catch (_) {}
+              try {
+                const localValue = localStorage.getItem(AUTH_STORAGE_KEY);
+                if (localValue) return localValue;
+              } catch (_) {}
+              try {
+                if (window.__qsAuthState) return window.__qsAuthState;
+              } catch (_) {}
+              return '';
+            };
+
+            const persistAuthState = (state) => {
+              try { sessionStorage.setItem(AUTH_STORAGE_KEY, state); } catch (_) {}
+              try { localStorage.setItem(AUTH_STORAGE_KEY, state); } catch (_) {}
+              try { window.__qsAuthState = state; } catch (_) {}
+            };
 
             function setSignInAppearance() {
               btn.textContent = 'Iniciar sesión';
@@ -323,13 +347,13 @@ body{padding-top:calc(var(--nav-h,72px)+8px);}
               btn.title = 'Cerrar sesión';
             }
 
-            setSignInAppearance();
-            btn.onclick = () => signInWithGoogleOpen();
+
 
             // Escucha cambios de autenticación para ajustar el botón y ocultar el enlace de panel
             onAuth(async (user) => {
               const root = document.documentElement;
               if (user) {
+                persistAuthState('signed-in');
                 setSignOutAppearance();
                 btn.onclick = () => signOutCurrent();
                 // Ocultar el panel docente a usuarios que no sean profesores.
@@ -352,6 +376,7 @@ body{padding-top:calc(var(--nav-h,72px)+8px);}
                   panelLink.style.display = okTeacher ? '' : 'none';
                 }
               } else {
+                persistAuthState('signed-out');
                 setSignInAppearance();
                 btn.onclick = () => signInWithGoogleOpen();
                 if (root) {
