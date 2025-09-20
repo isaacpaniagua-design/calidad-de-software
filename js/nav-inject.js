@@ -134,7 +134,6 @@ body{padding-top:calc(var(--nav-h,72px)+8px);}
       }
     }
 
-    applyInitialAuthAppearance(nav);
 
     function ensureNavToggle(navEl){
       if (!navEl || navEl.__qsToggleBound) return;
@@ -167,27 +166,6 @@ body{padding-top:calc(var(--nav-h,72px)+8px);}
     }
     (window.setupQsNavToggle || ensureNavToggle)(nav);
 
-    function applyInitialAuthAppearance(navEl){
-      if (!navEl) return;
-      try {
-        var actions = navEl.querySelector('.qs-actions');
-        if (!actions) return;
-        var defaultLink = actions.querySelector('[data-default-auth-link]');
-        if (!defaultLink) return;
-        var state = getStoredAuthState();
-        var isSignedIn = state === 'signed-in';
-        defaultLink.textContent = isSignedIn ? 'Cerrar sesión' : 'Iniciar sesión';
-        defaultLink.setAttribute('aria-label', isSignedIn ? 'Cerrar sesión' : 'Iniciar sesión');
-        defaultLink.title = isSignedIn ? 'Cerrar sesión' : 'Iniciar sesión';
-        defaultLink.setAttribute('data-awaiting-auth', isSignedIn ? 'signed-in' : 'signed-out');
-        if (isSignedIn && !defaultLink.__qsAwaitPrevent) {
-          defaultLink.__qsAwaitPrevent = true;
-          defaultLink.addEventListener('click', function(evt){
-            try { evt.preventDefault(); } catch (_) {}
-          });
-        }
-      } catch (_) {}
-    }
 
     function getStoredAuthState(){
       var key = 'qs_auth_state';
@@ -325,13 +303,7 @@ body{padding-top:calc(var(--nav-h,72px)+8px);}
             if (!navTabs || !actions) return;
             const defaultLink = actions.querySelector('[data-default-auth-link]');
             if (defaultLink) defaultLink.remove();
-            const existingButtons = Array.from(actions.querySelectorAll('.qs-auth-btn'));
-            let btn = existingButtons[0] || null;
-            if (existingButtons.length > 1) {
-              for (let i = 1; i < existingButtons.length; i++) {
-                existingButtons[i].remove();
-              }
-            }
+
             if (!btn) {
               btn = document.createElement('button');
               btn.type = 'button';
@@ -375,17 +347,7 @@ body{padding-top:calc(var(--nav-h,72px)+8px);}
               btn.title = 'Cerrar sesión';
             }
 
-            const applyStateAppearance = (state) => {
-              if (state === 'signed-in') {
-                setSignOutAppearance();
-                btn.onclick = () => signOutCurrent();
-              } else {
-                setSignInAppearance();
-                btn.onclick = () => signInWithGoogleOpen();
-              }
-            };
 
-            applyStateAppearance(readStoredAuthState());
 
             // Escucha cambios de autenticación para ajustar el botón y ocultar el enlace de panel
             onAuth(async (user) => {

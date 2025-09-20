@@ -128,9 +128,9 @@ function initLayout() {
     ) {
       navEl.innerHTML = navHtml;
       navEl.setAttribute("data-nav-version", NAV_VERSION);
-    }
 
-    applyInitialAuthAppearance(navEl);
+    }
+    (window.setupQsNavToggle || ensureToggle)(navEl);
 
     const ensureToggle = (navNode) => {
       if (!navNode || navNode.__qsToggleBound) return;
@@ -245,43 +245,9 @@ function initLayout() {
             for (let i = 0; i < up; i++) prefix += '../';
             // Use './js/firebase.js' when prefix is empty so that the import is treated as relative.
             const importPath = (prefix === '') ? './js/firebase.js' : (prefix + 'js/firebase.js');
-            const firebaseModule = await import(importPath);
-            const { onAuth, signInWithGoogleOpen, signOutCurrent, isTeacherEmail, isTeacherByDoc } = firebaseModule;
-            const navTabs = document.querySelector('.qs-tabs');
-            const actions = document.querySelector('.qs-actions');
-            if (!navTabs || !actions) return;
-            const defaultLink = actions.querySelector('[data-default-auth-link]');
-            if (defaultLink) defaultLink.remove();
-            const existingButtons = Array.from(actions.querySelectorAll('.qs-auth-btn'));
-            let btn = existingButtons[0] || null;
-            if (existingButtons.length > 1) {
-              for (let i = 1; i < existingButtons.length; i++) {
-                existingButtons[i].remove();
-              }
-            }
-            if (!btn) {
-              btn = document.createElement('button');
-              btn.type = 'button';
-              btn.className = 'qs-cta qs-auth-btn';
-              actions.appendChild(btn);
             }
             const panelLink = navTabs.querySelector('a[href$="paneldocente.html"]');
 
-            const AUTH_STORAGE_KEY = 'qs_auth_state';
-            const readStoredAuthState = () => {
-              try {
-                const sessionValue = sessionStorage.getItem(AUTH_STORAGE_KEY);
-                if (sessionValue) return sessionValue;
-              } catch (_) {}
-              try {
-                const localValue = localStorage.getItem(AUTH_STORAGE_KEY);
-                if (localValue) return localValue;
-              } catch (_) {}
-              try {
-                if (window.__qsAuthState) return window.__qsAuthState;
-              } catch (_) {}
-              return '';
-            };
 
             const persistAuthState = (state) => {
               try { sessionStorage.setItem(AUTH_STORAGE_KEY, state); } catch (_) {}
