@@ -212,7 +212,7 @@ function initLayout() {
       footer.classList.add('footer');
     }
     footer.innerHTML = footerHtml;
-    footer.setAttribute('data-footer-version', '2024-unified');
+
 
     try {
       const pg = (location.pathname.split('/').pop() || '').toLowerCase();
