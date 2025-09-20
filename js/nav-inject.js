@@ -54,15 +54,11 @@ function initNavInject(){
       .qs-brand::before { content: none !important; }
       body { padding-top: calc(var(--nav-h, 64px) + 8px); }
       .qs-nav { position: fixed; top:0; left:0; right:0; z-index:1000; background:#ffffff; border-bottom:1px solid #e5e7eb; }
-      .qs-nav .wrap { max-width:1200px; margin:0 auto; padding:14px 20px; display:flex; gap:16px; align-items:center; justify-content:space-between; }
+
       .qs-brand { display:flex; gap:10px; align-items:center; color:#1f2937; font-weight:700; font-size:1.1rem; text-decoration:none; padding:6px 0; }
       .qs-brand:hover { color:#1d4ed8; }
       .qs-logo { width:28px; height:28px; border-radius:6px; background:#4f46e5; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:.9rem; letter-spacing:.5px; }
       .qs-title { color:inherit; font-weight:700; }
-      .qs-tabs { display:flex; gap:8px; flex-wrap:nowrap; overflow-x:auto; white-space:nowrap; background:none; padding:4px; border-radius:999px; }
-      .qs-btn { border:0; padding:8px 14px; border-radius:999px; background:transparent; color:#374151; text-decoration:none; font-weight:600; font-size:.9rem; flex:0 0 auto; }
-      .qs-btn:hover { background:#e0e7ff; color:#1d4ed8; }
-      .qs-btn[aria-current="page"] { background:#4338ca; color:#fff; }
     `;
 
     var style = document.getElementById('qs-nav-inline-style');
@@ -83,6 +79,11 @@ function initNavInject(){
       '    <a class="qs-btn" href="Foro.html">Foro</a>',
       '    <a class="qs-btn teacher-only" href="paneldocente.html">Panel</a>',
       '  </nav>',
+      '  <div class="qs-actions">',
+      '    <button class="qs-auth-icon" type="button" aria-label="Iniciar sesión" title="Iniciar sesión">',
+      '      <span class="qs-auth-icon-symbol" aria-hidden="true">🔐</span>',
+      '    </button>',
+      '  </div>',
       '</div>'
     ].join('');
 
@@ -98,7 +99,8 @@ function initNavInject(){
       nav.setAttribute('data-role','main-nav');
       var hasBrand = !!nav.querySelector('.qs-brand');
       var hasTabs = !!nav.querySelector('.qs-tabs');
-      if (!hasBrand || !hasTabs || !nav.children || nav.children.length === 0) {
+      var hasActions = !!nav.querySelector('.qs-actions .qs-auth-icon');
+      if (!hasBrand || !hasTabs || !hasActions || !nav.children || nav.children.length === 0) {
         nav.innerHTML = template;
       }
     }
@@ -235,25 +237,33 @@ function initNavInject(){
             const firebaseModule = await import(importPath);
             const { onAuth, signInWithGoogleOpen, signOutCurrent, isTeacherEmail, isTeacherByDoc } = firebaseModule;
             const navTabs = document.querySelector('.qs-tabs');
-            if (!navTabs) return;
+            const actions = document.querySelector('.qs-auth-icon');
+            if (!navTabs || !actions) return;
+            const iconSpan = actions.querySelector('.qs-auth-icon-symbol') || actions;
             // Localiza el enlace al panel docente (Panel).  Puede estar ausente si no se inyectó la pestaña.
             const panelLink = navTabs.querySelector('a[href$="paneldocente.html"]');
 
-            // Calcular página actual (sin parámetros) para condicionar la creación del botón de inicio/cierre de sesión.
-            // Crea o reutiliza el botón de inicio/cierre de sesión una sola vez.
-            let btn = navTabs.querySelector('.qs-auth-btn');
-            if (!btn) {
-              btn = document.createElement('button');
-              btn.className = 'qs-btn qs-auth-btn';
-              btn.style.marginLeft = '8px';
-              navTabs.appendChild(btn);
+            function setSignInAppearance() {
+              iconSpan.textContent = '🔐';
+              actions.setAttribute('aria-label', 'Iniciar sesión');
+              actions.title = 'Iniciar sesión';
             }
-            // Escucha cambios de autenticación para ajustar el texto del botón y ocultar el enlace de panel
+
+            function setSignOutAppearance() {
+              iconSpan.textContent = '⎋';
+              actions.setAttribute('aria-label', 'Cerrar sesión');
+              actions.title = 'Cerrar sesión';
+            }
+
+            setSignInAppearance();
+            actions.onclick = () => signInWithGoogleOpen();
+
+            // Escucha cambios de autenticación para ajustar el botón y ocultar el enlace de panel
             onAuth(async (user) => {
               const root = document.documentElement;
               if (user) {
-                btn.textContent = 'Cerrar sesión';
-                btn.onclick = () => signOutCurrent();
+                setSignOutAppearance();
+                actions.onclick = () => signOutCurrent();
                 // Ocultar el panel docente a usuarios que no sean profesores.
                 let okTeacher = false;
                 try {
@@ -274,8 +284,8 @@ function initNavInject(){
                   panelLink.style.display = okTeacher ? '' : 'none';
                 }
               } else {
-                btn.textContent = 'Iniciar sesión';
-                btn.onclick = () => signInWithGoogleOpen();
+                setSignInAppearance();
+                actions.onclick = () => signInWithGoogleOpen();
                 if (root) {
                   root.classList.remove('role-teacher');
                   root.classList.add('role-student');
