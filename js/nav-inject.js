@@ -104,6 +104,67 @@ function initNavInject(){
       }
     }
 
+    function getStoredAuthState(){
+      var key = 'qs_auth_state';
+      try {
+        var sessionValue = sessionStorage.getItem(key);
+        if (sessionValue) return sessionValue;
+      } catch (_) {}
+      try {
+        var localValue = localStorage.getItem(key);
+        if (localValue) return localValue;
+      } catch (_) {}
+      if (typeof window !== 'undefined' && window.__qsAuthState) {
+        return window.__qsAuthState;
+      }
+      return '';
+    }
+
+    function shouldBypassAuth(href){
+      if (!href) return true;
+      var trimmed = href.trim();
+      if (!trimmed) return true;
+      var lower = trimmed.split('#')[0].split('?')[0].toLowerCase();
+      if (!lower) return true;
+      if (lower === 'login.html' || lower === '404.html') return true;
+      var lowerTrimmed = trimmed.toLowerCase();
+      if (lowerTrimmed.indexOf('mailto:') === 0 || lowerTrimmed.indexOf('tel:') === 0) return true;
+      if (lowerTrimmed.indexOf('javascript:') === 0) return true;
+      if (/^https?:\/\//i.test(trimmed)) return true;
+      if (trimmed.charAt(0) === '#') return true;
+      return false;
+    }
+
+    function bindNavAuthRedirect(navEl){
+      if (!navEl || navEl.__qsAuthRedirectBound) return;
+      navEl.__qsAuthRedirectBound = true;
+      navEl.addEventListener('click', function(evt){
+        try {
+          var anchor = evt.target && evt.target.closest ? evt.target.closest('a[href]') : null;
+          if (!anchor) return;
+          if (!navEl.contains(anchor)) return;
+          var href = anchor.getAttribute('href') || '';
+          if (shouldBypassAuth(href)) return;
+          var state = getStoredAuthState();
+          if (state && state !== 'signed-in' && state !== 'unknown') {
+            evt.preventDefault();
+            var loginUrl = prefix + 'login.html';
+            try {
+              if (window.location.replace) {
+                window.location.replace(loginUrl);
+              } else {
+                window.location.href = loginUrl;
+              }
+            } catch (_) {
+              window.location.href = loginUrl;
+            }
+          }
+        } catch (_) {}
+      }, true);
+    }
+
+    bindNavAuthRedirect(nav);
+
     // Mark active link
     var current = (location.pathname.split('/').pop()||'').toLowerCase();
     document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
