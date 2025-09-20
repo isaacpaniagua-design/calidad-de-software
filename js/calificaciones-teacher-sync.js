@@ -42,8 +42,23 @@ function isTeacherRole() {
   return document.documentElement.classList.contains('role-teacher');
 }
 
+function isTeacherUiEnabled() {
+  try {
+    var input = document.querySelector('.grade-input');
+    if (input && !input.disabled && !input.readOnly) return true;
+    var toolbar = document.querySelector('.teacher-only');
+    if (toolbar) {
+      var style = window.getComputedStyle ? getComputedStyle(toolbar) : null;
+      if (style && style.display !== 'none' && style.visibility !== 'hidden') return true;
+    }
+  } catch (_) {}
+  return false;
+}
+
 function shouldUseFirestore() {
-  return !!db && isTeacherRole();
+  if (!db) return false;
+  if (isTeacherRole()) return true;
+  return isTeacherUiEnabled();
 }
 
 function detectUnidad(input) {
