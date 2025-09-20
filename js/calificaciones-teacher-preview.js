@@ -2,6 +2,7 @@
 // Vista de estudiante para preview docente: llena #studentSelect si está vacío y pinta tabla qsp-*.
 
 import { initFirebase, getDb } from './firebase.js';
+import { buildCandidateDocIds } from './calificaciones-helpers.js';
 
 const $ = (s, r=document)=>r.querySelector(s);
 const $id = (id)=>document.getElementById(id);
@@ -100,15 +101,36 @@ async function resolverUidPorMatricula(db, matricula){
   }catch(e){ console.warn('[preview] resolverUidPorMatricula', e); }
   return null;
 }
-async function obtenerItemsAlumno(db, grupoId, uid){
-  const { collection, doc, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js');
-  // En lugar de pasar todos los segmentos a collection(), creamos una referencia al documento
-  // grupos/{grupoId}/calificaciones/{uid} y luego obtenemos la subcolección 'items'. Esto
-  // evita errores de versión al construir rutas anidadas directamente con collection().
-  const calificacionRef = doc(db, 'grupos', grupoId, 'calificaciones', uid);
-  const base = collection(calificacionRef, 'items');
-  const snap = await getDocs(query(base, orderBy('fecha','asc')));
-  return snap.docs.map(d=>({id:d.id, ...d.data()}));
+async function obtenerItemsAlumno(db, grupoId, profile){
+  const { collection, doc, getDoc, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js');
+
+  const candidates = buildCandidateDocIds(profile);
+  for (let i = 0; i < candidates.length; i++) {
+    try {
+      const ref = doc(db, 'grupos', grupoId, 'calificaciones', candidates[i]);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const data = snap.data() || {};
+        if (Array.isArray(data.items)) {
+          return data.items.map(item => Object.assign({}, item));
+        }
+      }
+    } catch (err) {
+      console.warn('[preview] obtenerItemsAlumno(doc)', err);
+    }
+  }
+
+  const uid = profile && profile.uid ? profile.uid : null;
+  if (!uid) return [];
+  try {
+    const calificacionRef = doc(db, 'grupos', grupoId, 'calificaciones', uid);
+    const base = collection(calificacionRef, 'items');
+    const snap = await getDocs(query(base, orderBy('fecha','asc')));
+    return snap.docs.map(d=>({id:d.id, ...d.data()}));
+  } catch (err) {
+    console.warn('[preview] obtenerItemsAlumno(legacy)', err);
+    return [];
+  }
 }
 
 async function fetchStudentList(db, grupoId){
@@ -170,8 +192,10 @@ async function main(){
       for(const m of list){
         const opt = document.createElement('option');
         opt.textContent = m.displayName ? `${m.displayName} · ${m.email||m.matricula||m.uid}` : (m.email||m.matricula||m.uid||'Alumno');
-        opt.value = m.matricula || m.uid || '';
+        opt.value = m.matricula || m.uid || m.email || '';
         if (m.uid) opt.dataset.uid = m.uid;
+        if (m.email) opt.dataset.email = m.email;
+        if (m.matricula) opt.dataset.matricula = m.matricula;
         sel.appendChild(opt);
       }
     }
@@ -179,10 +203,17 @@ async function main(){
     sel.addEventListener('change', async ()=>{
       const matricula = sel.value;
       const opt = sel.selectedOptions[0];
-      const uid = opt?.dataset?.uid || await resolverUidPorMatricula(db, matricula);
-      if(!uid){ $id('qsp-tbody').innerHTML='<tr><td class="qsc-muted" colspan="6">No se encontró UID para la selección.</td></tr>'; return; }
+      const profile = {
+        uid: opt?.dataset?.uid || await resolverUidPorMatricula(db, matricula),
+        email: opt?.dataset?.email || null,
+        matricula: opt?.dataset?.matricula || matricula || null,
+      };
+      if(!profile.uid && !profile.email && !profile.matricula){
+        $id('qsp-tbody').innerHTML='<tr><td class="qsc-muted" colspan="6">No se encontró información para la selección.</td></tr>';
+        return;
+      }
       try{
-        const items = await obtenerItemsAlumno(db, GRUPO_ID, uid);
+        const items = await obtenerItemsAlumno(db, GRUPO_ID, profile);
         renderQsp(items);
       }catch(e){
         console.error('[preview] obtenerItemsAlumno', e);

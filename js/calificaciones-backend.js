@@ -3,6 +3,7 @@
 // sin tocar tu diseño. Calcula KPIs, tabla "Mis calificaciones" y escala 0–5.
 
 import { initFirebase, getDb, getAuthInstance, onAuth } from './firebase.js';
+import { buildCandidateDocIds } from './calificaciones-helpers.js';
 
 const $ = (s, r=document)=>r.querySelector(s);
 const $id = (id)=>document.getElementById(id);
@@ -145,19 +146,39 @@ function setStatusMessage(message){
 }
 
 // === Firestore ===
-async function obtenerItemsAlumno(db, grupoId, uid){
-  // Estructura actual: grupos/{grupo}/calificaciones/{uid}/items
-  // Importar los módulos de Firestore usando la misma versión que firebase.js (10.12.3).
-  // Para evitar conflictos entre versiones, importamos doc() además de collection().
-  const { collection, doc, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js');
-  // En lugar de pasar todos los segmentos de la ruta a collection(), creamos primero
-  // una referencia al documento (grupos/{grupo}/calificaciones/{uid}) y luego
-  // obtenemos la subcolección 'items' de esa referencia. Esto evita errores del tipo
-  // "Expected first argument to collection() to be a CollectionReference...".
-  const calificacionRef = doc(db, 'grupos', grupoId, 'calificaciones', uid);
-  const base = collection(calificacionRef, 'items');
-  const snap = await getDocs(query(base, orderBy('fecha','asc')));
-  return snap.docs.map(d => ({ id:d.id, ...d.data() }));
+async function obtenerItemsAlumno(db, grupoId, profile){
+  const { collection, doc, getDoc, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js');
+
+  // 1) Intentar cargar el documento compacto (con campo items[]) usando distintos
+  // identificadores derivados del perfil del alumno (correo, matrícula, uid).
+  const candidates = buildCandidateDocIds(profile);
+  for (let i = 0; i < candidates.length; i++) {
+    try {
+      const ref = doc(db, 'grupos', grupoId, 'calificaciones', candidates[i]);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const data = snap.data() || {};
+        if (Array.isArray(data.items)) {
+          return data.items.map(item => Object.assign({}, item));
+        }
+      }
+    } catch (err) {
+      console.warn('[calificaciones-backend] obtenerItemsAlumno(doc)', err);
+    }
+  }
+
+  // 2) Compatibilidad: ruta original grupos/{grupo}/calificaciones/{uid}/items.
+  const uid = profile && profile.uid ? profile.uid : null;
+  if (!uid) return [];
+  try {
+    const calificacionRef = doc(db, 'grupos', grupoId, 'calificaciones', uid);
+    const base = collection(calificacionRef, 'items');
+    const snap = await getDocs(query(base, orderBy('fecha','asc')));
+    return snap.docs.map(d => ({ id:d.id, ...d.data() }));
+  } catch (err) {
+    console.warn('[calificaciones-backend] obtenerItemsAlumno(legacy)', err);
+    return [];
+  }
 }
 
 async function main(){
@@ -186,7 +207,10 @@ async function main(){
       return;
     }
     try{
-      const items = await obtenerItemsAlumno(db, GRUPO_ID, user.uid);
+      const items = await obtenerItemsAlumno(db, GRUPO_ID, {
+        uid: user.uid,
+        email: user.email || null,
+      });
       renderAlumno(items);
       setStatusMessage(items && items.length ? '' : 'Sin actividades registradas aún.');
     }catch(e){
