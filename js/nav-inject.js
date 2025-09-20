@@ -54,20 +54,11 @@ function initNavInject(){
       .qs-brand::before { content: none !important; }
       body { padding-top: calc(var(--nav-h, 64px) + 8px); }
       .qs-nav { position: fixed; top:0; left:0; right:0; z-index:1000; background:#ffffff; border-bottom:1px solid #e5e7eb; }
-      .qs-nav .wrap { max-width:1200px; margin:0 auto; padding:14px 20px; display:flex; gap:16px; align-items:center; }
+
       .qs-brand { display:flex; gap:10px; align-items:center; color:#1f2937; font-weight:700; font-size:1.1rem; text-decoration:none; padding:6px 0; }
       .qs-brand:hover { color:#1d4ed8; }
       .qs-logo { width:28px; height:28px; border-radius:6px; background:#4f46e5; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:.9rem; letter-spacing:.5px; }
       .qs-title { color:inherit; font-weight:700; }
-      .qs-tabs { display:flex; gap:8px; flex-wrap:nowrap; overflow-x:auto; white-space:nowrap; background:none; padding:4px; border-radius:999px; flex:1 1 auto; justify-content:center; }
-      .qs-btn { border:0; padding:8px 14px; border-radius:999px; background:transparent; color:#374151; text-decoration:none; font-weight:600; font-size:.9rem; flex:0 0 auto; }
-      .qs-btn:hover { background:#e0e7ff; color:#1d4ed8; }
-      .qs-btn[aria-current="page"] { background:#4338ca; color:#fff; }
-      .qs-actions { display:flex; align-items:center; gap:12px; margin-left:auto; padding-left:16px; }
-      .qs-auth-icon { border:0; width:40px; height:40px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; background:#eef2ff; color:#3730a3; cursor:pointer; transition:background-color .2s ease, color .2s ease; }
-      .qs-auth-icon:hover { background:#4338ca; color:#fff; }
-      .qs-auth-icon:focus-visible { outline:2px solid #4338ca; outline-offset:2px; }
-      .qs-auth-icon-symbol { font-size:1.2rem; line-height:1; }
     `;
 
     var style = document.getElementById('qs-nav-inline-style');
