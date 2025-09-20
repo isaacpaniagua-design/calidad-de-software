@@ -90,30 +90,7 @@ function bootstrapLayout() {
     }
   }
 
-  function ensureStyles(base) {
-    try {
-      const head = doc.head || doc.getElementsByTagName("head")[0];
-      if (!head) return;
-      const href = `${base}css/layout.css`;
-      const already = Array.from(
-        doc.querySelectorAll("link[rel='stylesheet']"),
-      ).some((link) =>
-        (link.getAttribute("href") || "").includes("css/layout.css"),
-      );
-      if (!already) {
-        const link = doc.createElement("link");
-        link.rel = "stylesheet";
-        link.href = href;
-        link.setAttribute("data-qs", "layout");
-        head.appendChild(link);
-      }
-    } catch (_) {}
-  }
 
-  function ensureNavigation(base) {
-    if (!body) return null;
-    const template = `
-      <div class="qs-nav__inner">
         <a class="qs-brand" href="${base}index.html">
           <span class="qs-logo" aria-hidden="true">QS</span>
           <span class="qs-brand-text">
@@ -139,9 +116,7 @@ function bootstrapLayout() {
         </div>
       </div>`;
 
-    let nav =
-      doc.querySelector(".qs-nav[data-role='main-nav']") ||
-      doc.querySelector("[data-role='main-nav']");
+
 
     if (!nav) {
       nav = doc.createElement("nav");
@@ -160,31 +135,10 @@ function bootstrapLayout() {
       }
     }
 
-    body.classList.add("qs-layout--with-nav");
-    return nav;
-  }
-
-  function ensureAuthSlot(nav) {
-    if (!nav) return;
-    const actions = nav.querySelector(".qs-actions");
-    if (actions && !actions.querySelector("[data-default-auth-link]")) {
-      const defaultLink = doc.createElement("a");
-      defaultLink.className = "qs-cta";
-      defaultLink.href = "login.html";
-      defaultLink.setAttribute("data-default-auth-link", "true");
-      defaultLink.textContent = "Iniciar sesión";
-      actions.appendChild(defaultLink);
     }
   }
 
-  function ensureFooter() {
-    if (!body) return null;
-    const year = new Date().getFullYear();
-    const markup = `<div class="qs-footer__inner">© ${year} · Plataforma QS - Calidad de Software | Isaac Paniagua</div>`;
-    let footer = doc.querySelector("footer.qs-footer");
-    if (!footer) {
-      footer = doc.querySelector("footer") || doc.createElement("footer");
-      if (!footer.parentNode) body.appendChild(footer);
+
     }
     footer.classList.add("qs-footer");
     footer.setAttribute("data-footer-version", FOOTER_VERSION);
@@ -192,54 +146,12 @@ function bootstrapLayout() {
     return footer;
   }
 
-  function setupNavToggle(nav) {
-    if (!nav || nav.__qsToggleBound) return;
-    nav.__qsToggleBound = true;
-    const toggle = nav.querySelector(".qs-menu-toggle");
-    const region = nav.querySelector(".qs-links-region");
-    if (!toggle || !region) return;
-    const setState = (open) => {
-      region.setAttribute("data-open", open ? "true" : "false");
-      toggle.setAttribute("aria-expanded", open ? "true" : "false");
-      if (open) nav.classList.add("is-open");
-      else nav.classList.remove("is-open");
-    };
-    setState(false);
-    toggle.addEventListener("click", () => {
-      setState(!nav.classList.contains("is-open"));
-    });
-    region.addEventListener("click", (evt) => {
-      const anchor =
-        evt.target && evt.target.closest ? evt.target.closest("a[href]") : null;
-      if (anchor) setState(false);
-    });
-    window.addEventListener("resize", () => {
-      if (window.innerWidth > 960) setState(false);
-    });
-  }
 
-  function highlightActiveLink(nav, pageName) {
-    if (!nav) return;
-    nav.querySelectorAll(".qs-tabs a.qs-btn").forEach((link) => {
-      const href = (link.getAttribute("href") || "").toLowerCase();
-      const file = href.split("/").pop();
-      if (file === pageName) {
-        link.setAttribute("aria-current", "page");
-      } else {
-        link.removeAttribute("aria-current");
       }
     });
   }
 
-  function refreshNavSpacing(nav) {
-    try {
-      const height = nav ? Math.round(nav.getBoundingClientRect().height) : 0;
-      const safe = Math.max(56, Math.min(height || 0, 96));
-      html.style.setProperty("--qs-nav-height", `${safe}px`);
-      html.style.setProperty("--qs-anchor-offset", `${safe + 8}px`);
-      if (body) body.style.setProperty("padding-top", `${safe}px`);
-    } catch (_) {}
-  }
+
 
   function observeNavHeight(nav) {
     if (!nav || !window.ResizeObserver) return;
@@ -337,86 +249,7 @@ function bootstrapLayout() {
     } catch (_) {}
   }
 
-  function injectAuthGuard(base) {
-    if (doc.querySelector("script[data-qs='auth-guard']")) return;
-    const script = doc.createElement("script");
-    script.type = "module";
-    script.src = `${base}js/auth-guard.js`;
-    script.setAttribute("data-qs", "auth-guard");
-    doc.body && doc.body.appendChild(script);
-  }
 
-  function injectAuthIntegration(base, nav) {
-    if (doc.querySelector("script[data-qs='auth-ui']")) return;
-    const script = doc.createElement("script");
-    script.type = "module";
-    script.setAttribute("data-qs", "auth-ui");
-    const importPath = base ? `${base}js/firebase.js` : "./js/firebase.js";
-    script.textContent = `
-      import { onAuth, signInWithGoogleOpen, signOutCurrent, isTeacherEmail, isTeacherByDoc } from '${importPath}';
-      const nav = document.querySelector('.qs-nav');
-      const actions = nav?.querySelector('.qs-actions');
-      if (!nav || !actions) return;
-      const defaultLink = actions.querySelector('[data-default-auth-link]');
-      if (defaultLink) defaultLink.remove();
-      let button = actions.querySelector('.qs-auth-btn');
-      if (!button) {
-        button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'qs-cta qs-auth-btn';
-        actions.appendChild(button);
-      }
-      const panelLink = nav.querySelector('[data-route="panel"]');
-      const html = document.documentElement;
-      const AUTH_KEY = '${AUTH_STORAGE_KEY}';
-      const ROLE_KEY = '${ROLE_STORAGE_KEY}';
-      const persistAuth = (state) => {
-        try { sessionStorage.setItem(AUTH_KEY, state); } catch (_) {}
-        try { localStorage.setItem(AUTH_KEY, state); } catch (_) {}
-        window.__qsAuthState = state;
-      };
-      const persistRole = (role) => {
-        try { localStorage.setItem(ROLE_KEY, role); } catch (_) {}
-      };
-      const applyRole = (isTeacher) => {
-        if (!html) return;
-        if (isTeacher) {
-          html.classList.add('role-teacher');
-          html.classList.remove('role-student');
-        } else {
-          html.classList.remove('role-teacher');
-          html.classList.add('role-student');
-        }
-      };
-      const showPanel = (visible) => {
-        if (!panelLink) return;
-        panelLink.style.display = visible ? '' : 'none';
-      };
-      const setSignIn = () => {
-        button.textContent = 'Iniciar sesión';
-        button.setAttribute('aria-label', 'Iniciar sesión');
-        button.title = 'Iniciar sesión';
-        button.onclick = () => signInWithGoogleOpen();
-      };
-      const setSignOut = () => {
-        button.textContent = 'Cerrar sesión';
-        button.setAttribute('aria-label', 'Cerrar sesión');
-        button.title = 'Cerrar sesión';
-        button.onclick = () => signOutCurrent();
-      };
-      const initialState = window.__qsAuthState || (() => {
-        try { return sessionStorage.getItem(AUTH_KEY) || localStorage.getItem(AUTH_KEY) || 'unknown'; } catch (_) { return 'unknown'; }
-      })();
-      if (initialState === 'signed-in') setSignOut(); else setSignIn();
-      onAuth(async (user) => {
-        if (user) {
-          persistAuth('signed-in');
-          setSignOut();
-          let isTeacher = false;
-          try {
-            isTeacher = isTeacherEmail(user.email) || (await isTeacherByDoc(user.uid));
-          } catch (_) {
-            isTeacher = false;
           }
           persistRole(isTeacher ? 'docente' : 'estudiante');
           applyRole(isTeacher);
@@ -430,8 +263,7 @@ function bootstrapLayout() {
         }
       });
     `;
-    doc.body && doc.body.appendChild(script);
-  }
+
 }
 
 if (document.readyState === "loading") {

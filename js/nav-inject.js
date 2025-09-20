@@ -5,21 +5,7 @@
   const current = document.currentScript;
   let layoutSrc = "js/layout.js";
   try {
-    if (current) {
-      const rawSrc = current.getAttribute("src") || "";
-      if (rawSrc) {
-        const replaced = rawSrc.replace(
-          /nav-inject\.js(.*)$/i,
-          (match, suffix) => {
-            return `layout.js${suffix || ""}`;
-          },
-        );
-        if (replaced !== rawSrc) {
-          layoutSrc = replaced;
-        } else {
-          const url = new URL(rawSrc, location.href);
-          url.pathname = url.pathname.replace(/nav-inject\.js$/i, "layout.js");
-          layoutSrc = url.href;
+
         }
       }
     }
