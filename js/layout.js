@@ -110,9 +110,6 @@ function bootstrapLayout() {
             <a class="qs-btn" href="${base}Foro.html">Foro</a>
             <a class="qs-btn teacher-only" data-route="panel" href="${base}paneldocente.html">Panel</a>
           </nav>
-          <div class="qs-actions" data-auth-slot>
-            <a class="qs-cta" href="${base}login.html" data-default-auth-link>Iniciar sesión</a>
-          </div>
         </div>
       </div>`;
 
@@ -130,8 +127,6 @@ function bootstrapLayout() {
       if (nav.getAttribute("data-nav-version") !== NAV_VERSION) {
         nav.innerHTML = template;
         nav.setAttribute("data-nav-version", NAV_VERSION);
-      } else {
-        ensureAuthSlot(nav);
       }
     }
 
