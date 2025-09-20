@@ -1,3 +1,16 @@
+// Refleja el rol almacenado lo antes posible para controlar los elementos
+// marcados como `teacher-only` antes de que se renderice el contenido.
+(function syncRoleFromStorage(){
+  try {
+    const root = document.documentElement;
+    if (!root) return;
+    const stored = localStorage.getItem("qs_role");
+    root.classList.remove("role-teacher", "role-student");
+    if (stored === "docente") root.classList.add("role-teacher");
+    else if (stored) root.classList.add("role-student");
+  } catch (_) {}
+})();
+
 document.addEventListener("DOMContentLoaded", () => {
   const p = location.pathname;
   const pLow = p.toLowerCase();
@@ -224,12 +237,21 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.style.boxShadow = '0 6px 18px rgba(0,0,0,.2)';
         document.body.appendChild(btn);
         onAuth((user) => {
+          const root = document.documentElement;
           if (user) {
             btn.textContent = 'Cerrar sesión';
             btn.onclick = () => signOutCurrent();
+            if (root) {
+              root.classList.add('role-teacher');
+              root.classList.remove('role-student');
+            }
           } else {
             btn.textContent = 'Iniciar sesión';
             btn.onclick = () => signInWithGoogleOpen();
+            if (root) {
+              root.classList.remove('role-teacher');
+              root.classList.add('role-student');
+            }
           }
         });
       })().catch(console.error);
