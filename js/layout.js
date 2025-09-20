@@ -83,7 +83,10 @@ function initLayout() {
       document.head.appendChild(link);
     }
 
-    // Nav compartido
+    if (document.body) {
+      document.body.classList.add('qs-global-layout');
+    }
+
     const NAV_VERSION = '2024-11-revamp';
     const navHtml = `
       <div class="wrap">
@@ -128,9 +131,9 @@ function initLayout() {
     ) {
       navEl.innerHTML = navHtml;
       navEl.setAttribute("data-nav-version", NAV_VERSION);
-
     }
-    (window.setupQsNavToggle || ensureToggle)(navEl);
+
+    applyInitialAuthAppearance(navEl);
 
     const ensureToggle = (navNode) => {
       if (!navNode || navNode.__qsToggleBound) return;
@@ -161,7 +164,6 @@ function initLayout() {
     }
     (window.setupQsNavToggle || ensureToggle)(navEl);
 
-    // Marca pestaña activa
     const fname = (p.split("/").pop() || "index.html").toLowerCase();
     navEl.querySelectorAll(".qs-tabs a.qs-btn").forEach((a) => {
       const href = (a.getAttribute("href") || "")
@@ -172,7 +174,6 @@ function initLayout() {
       else a.removeAttribute("aria-current");
     });
 
-    // Quita "Roadmap" de navs residuales
     document
       .querySelectorAll(".qs-tabs a, nav a, .navbar a, .topbar a")
       .forEach((a) => {
@@ -181,7 +182,6 @@ function initLayout() {
         if (href.endsWith("roadmap.html") || txt === "roadmap") a.remove();
       });
 
-    // Padding-top según altura real del nav
     const pickNav = () =>
       document.querySelector('[data-role="main-nav"], .qs-nav, nav');
     const setPad = () => {
@@ -189,7 +189,6 @@ function initLayout() {
       const h = el ? el.getBoundingClientRect().height : 64;
       const safe = Math.min(Math.max(Math.round(h), 56), 96);
       document.documentElement.style.setProperty("--nav-h", safe + "px");
-      document.body.style.removeProperty("padding-top");
       if (el) {
         el.style.marginTop = "0";
         el.style.marginBottom = "0";
@@ -202,21 +201,19 @@ function initLayout() {
       if (obEl) new ResizeObserver(setPad).observe(obEl);
     }
 
-    // Footer compartido
     const year = new Date().getFullYear();
-    const footerHtml = `<div class="footer-content">© ${year} Plataforma QS - Calidad de Software | Isaac Paniagua</div>`;
+    const footerHtml = `<div class="footer-content">© ${year} · Plataforma QS - Calidad de Software | Isaac Paniagua</div>`;
     let footer = document.querySelector("footer.footer");
     if (!footer) {
       footer = document.createElement("footer");
       footer.className = "footer";
       document.body.appendChild(footer);
+    } else {
+      footer.classList.add('footer');
     }
     footer.innerHTML = footerHtml;
+    footer.setAttribute('data-footer-version', '2024-unified');
 
-    // Carga de guardia de autenticación para páginas con navegación global.
-    // Inserta un script de tipo módulo que importa Firebase y redirige a login.html
-    // si no hay usuario autenticado. Evita inyectar este guardia en la página de login
-    // o en el error 404.
     try {
       const pg = (location.pathname.split('/').pop() || '').toLowerCase();
       if (pg !== 'login.html' && pg !== '404.html') {
@@ -227,10 +224,6 @@ function initLayout() {
       }
     } catch (_) {}
 
-    // Inserta un botón de autenticación (iniciar/cerrar sesión) en la
-    // navegación generada por layout.js.  Calcula la ruta base y utiliza
-    // import dinámico para obtener las funciones de Firebase.  Se ejecuta
-    // como módulo para disponer de 'await' y 'import'.
     try {
       const pg2 = (location.pathname.split('/').pop() || '').toLowerCase();
       if (pg2 !== 'login.html' && pg2 !== '404.html') {
@@ -238,16 +231,48 @@ function initLayout() {
         signScr.type = 'module';
         signScr.textContent = `
           (async () => {
-            // Compute prefix relative to current page to locate firebase.js
             const segs = window.location.pathname.split('/').filter(Boolean);
             let up = Math.max(segs.length - 2, 0);
             let prefix = '';
             for (let i = 0; i < up; i++) prefix += '../';
-            // Use './js/firebase.js' when prefix is empty so that the import is treated as relative.
             const importPath = (prefix === '') ? './js/firebase.js' : (prefix + 'js/firebase.js');
+            const firebaseModule = await import(importPath);
+            const { onAuth, signInWithGoogleOpen, signOutCurrent, isTeacherEmail, isTeacherByDoc } = firebaseModule;
+            const navTabs = document.querySelector('.qs-tabs');
+            const actions = document.querySelector('.qs-actions');
+            if (!navTabs || !actions) return;
+            const defaultLink = actions.querySelector('[data-default-auth-link]');
+            if (defaultLink) defaultLink.remove();
+            const existingButtons = Array.from(actions.querySelectorAll('.qs-auth-btn'));
+            let btn = existingButtons[0] || null;
+            if (existingButtons.length > 1) {
+              for (let i = 1; i < existingButtons.length; i++) {
+                existingButtons[i].remove();
+              }
+            }
+            if (!btn) {
+              btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'qs-cta qs-auth-btn';
+              actions.appendChild(btn);
             }
             const panelLink = navTabs.querySelector('a[href$="paneldocente.html"]');
 
+            const AUTH_STORAGE_KEY = 'qs_auth_state';
+            const readStoredAuthState = () => {
+              try {
+                const sessionValue = sessionStorage.getItem(AUTH_STORAGE_KEY);
+                if (sessionValue) return sessionValue;
+              } catch (_) {}
+              try {
+                const localValue = localStorage.getItem(AUTH_STORAGE_KEY);
+                if (localValue) return localValue;
+              } catch (_) {}
+              try {
+                if (window.__qsAuthState) return window.__qsAuthState;
+              } catch (_) {}
+              return '';
+            };
 
             const persistAuthState = (state) => {
               try { sessionStorage.setItem(AUTH_STORAGE_KEY, state); } catch (_) {}
@@ -310,7 +335,6 @@ function initLayout() {
   // ====== SESIONES: NO nav/footer global. Solo botón "Regresar al inicio" ======
   // No tocamos tu JS/CSS de la sesión. Conserva interacciones y navegación propia.
 
-  // Botón fijo inferior-izquierda
   const back = document.createElement("a");
   back.href = base + "index.html";
   back.id = "btn-back-home";
@@ -333,10 +357,6 @@ function initLayout() {
   });
   document.body.appendChild(back);
 
-  // Agregar botón de autenticación en las páginas de sesiones. Este botón
-  // permite iniciar sesión con Google o cerrar sesión y se sitúa en la
-  // esquina inferior derecha. Al igual que en las páginas con navegación
-  // global, se calcula un prefijo relativo para importar firebase.js.
   try {
     const authScript = document.createElement('script');
     authScript.type = 'module';
@@ -383,7 +403,6 @@ function initLayout() {
     document.body.appendChild(authScript);
   } catch (_) {}
 
-  // Atajo de teclado: Alt+← o Backspace con no-input → regresar
   addEventListener("keydown", (e) => {
     const tag = ((e.target && e.target.tagName) || "").toLowerCase();
     if (tag === "input" || tag === "textarea" || e.isComposing) return;
