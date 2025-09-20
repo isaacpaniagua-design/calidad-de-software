@@ -526,675 +526,287 @@
     </script>
 
     <script type="module">
+  import {
+    initFirebase,
+    onAuth,
+    signInWithGooglePotros,
+    signOutCurrent,
+    saveTodayAttendance,
+    subscribeTodayAttendance,
+    subscribeTodayAttendanceByUser,
+    fetchAttendancesByDateRange,
+    isTeacherByDoc,
+    isTeacherEmail
+  } from './js/firebase.js';
+  import { allowedEmailDomain } from './js/firebase-config.js';
 
-      import { initFirebase, onAuth, signInWithGooglePotros, signOutCurrent, saveTodayAttendance, subscribeTodayAttendance, subscribeTodayAttendanceByUser, fetchAttendancesByDateRange, ensureTeacherDocForUser, isTeacherEmail, isTeacherByDoc } from './js/firebase.js';
-      import { allowedEmailDomain } from './js/firebase-config.js';
+  // Init
+  initFirebase();
 
-      initFirebase();
+  // Refs
+  const signInBtn = document.getElementById('signInBtn');
+  const signOutBtn = document.getElementById('signOutBtn'); // puede no existir
+  const userInfo = document.getElementById('userInfo');
+  const userName = document.getElementById('userName');
+  const userPhoto = document.getElementById('userPhoto');
+  const attendanceBtn = document.getElementById('attendanceBtn');
+  const manualCard = document.getElementById('manualAttendanceCard');      // se ocultará
+  const manualWarning = document.getElementById('manualAttendanceWarning'); // se ocultará
+  const manualNotice = document.getElementById('manualAttendanceNotice');   // se ocultará
 
-      const signInBtn = document.getElementById('signInBtn');
-      const signOutBtn = document.getElementById('signOutBtn');
-      const userInfo = document.getElementById('userInfo');
-      const userName = document.getElementById('userName');
-      const userPhoto = document.getElementById('userPhoto');
-      const attendanceBtn = document.getElementById('attendanceBtn');
-      const manualCard = document.getElementById('manualAttendanceCard');
-      const manualWarning = document.getElementById('manualAttendanceWarning');
-      const manualNotice = document.getElementById('manualAttendanceNotice');
-      const manualSelect = document.getElementById('manualAttendanceSelect');
-      const manualNameInput = document.getElementById('manualAttendanceName');
-      const manualEmailInput = document.getElementById('manualAttendanceEmail');
-      const manualBtn = document.getElementById('manualAttendanceBtn');
+  // Estado
+  let unsubscribeAttendance = null;
 
-      window.currentUserHasTeacherPrivileges = false;
-      window.currentUserCanManualRegister = false;
+  // Utilidades UI mínimas
+  function setAttendanceEnabled(enabled){
+    if (!attendanceBtn) return;
+    attendanceBtn.disabled = !enabled;
+    attendanceBtn.style.opacity = enabled ? '1' : '0.6';
+    attendanceBtn.style.cursor = enabled ? 'pointer' : 'not-allowed';
+  }
+  function applyRoleVisibility(role){
+    const target = role === 'docente' ? 'docente' : 'estudiante';
+    try { localStorage.setItem('qs_role', target); } catch(_) {}
+    document.querySelectorAll('.teacher-only, .docente-only').forEach((el)=>{
+      if (el?.dataset?.forceVisible === 'true') return;
+      el.style.display = target === 'docente' ? '' : 'none';
+    });
+    document.querySelectorAll('.student-only, .estudiante-only').forEach((el)=>{
+      el.style.display = target === 'docente' ? 'none' : '';
+    });
+  }
+  function normalizeAttendanceRecord(record){
+    if (!record) return null;
+    const email = typeof record.email === 'string' ? record.email : '';
+    return {
+      id: record.id || record.uid || ('att-' + Date.now()),
+      uid: record.uid,
+      name: record.name || email || 'Registro',
+      email,
+      type: record.type || 'student',
+      timestamp: record.timestamp instanceof Date ? record.timestamp : new Date(),
+      manual: !!record.manual,
+      source: record.source || 'remote'
+    };
+  }
+  function setRemoteAttendanceRecords(items){
+    const list = Array.isArray(items) ? items.map(normalizeAttendanceRecord).filter(Boolean) : [];
+    if (typeof window.setRegisteredAttendances === 'function') {
+      window.setRegisteredAttendances(list);
+    } else {
+      window.registeredAttendances = list;
+    }
+    if (typeof window.updateAttendanceList === 'function') window.updateAttendanceList();
+    if (typeof window.updateAttendanceCount === 'function') window.updateAttendanceCount();
+  }
 
-      function setAttendanceEnabled(enabled) {
-        if (!attendanceBtn) return;
-        attendanceBtn.disabled = !enabled;
-        attendanceBtn.style.opacity = enabled ? '1' : '0.6';
-        attendanceBtn.style.cursor = enabled ? 'pointer' : 'not-allowed';
-      }
+  // Autenticación
+  if (signInBtn) {
+    signInBtn.addEventListener('click', async () => {
+      try { await signInWithGooglePotros(); }
+      catch(e){ alert(e?.message || 'No se pudo iniciar sesión'); }
+    });
+  }
+  if (signOutBtn) {
+    signOutBtn.addEventListener('click', async () => { await signOutCurrent(); });
+  }
 
-      function applyRoleVisibility(role) {
-        const target = role === 'docente' ? 'docente' : 'estudiante';
-        try { localStorage.setItem('qs_role', target); } catch (_) {}
-        document.querySelectorAll('.teacher-only, .docente-only').forEach((el) => {
-          if (el?.dataset?.forceVisible === 'true') return;
-          el.style.display = target === 'docente' ? '' : 'none';
-        });
-        document.querySelectorAll('.student-only, .estudiante-only').forEach((el) => {
-          el.style.display = target === 'docente' ? 'none' : '';
-        });
-      }
+  // Registro propio de asistencia
+  async function registerAttendance(){
+    // Ventana de clase opcional
+    if (typeof window.isClassActiveNow === 'function' && !window.isClassActiveNow()) {
+      alert('La asistencia solo puede registrarse Lun/Mié/Vie entre 18:00 y 19:00, del 25 de agosto al 12 de diciembre.');
+      return;
+    }
+    // Usuario actual
+    const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js');
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (!user) {
+      alert('Primero inicia sesión con tu cuenta @' + allowedEmailDomain);
+      return;
+    }
+    const email = (user.email || '').toLowerCase();
+    if (!email.endsWith('@' + allowedEmailDomain)) {
+      alert('Solo se permite acceder con cuenta @' + allowedEmailDomain);
+      return;
+    }
+    // Debe existir en roster window.students
+    const roster = Array.isArray(window.students) ? window.students : [];
+    const found = roster.find(s => (s.email || '').toLowerCase() === email);
+    if (!found) {
+      alert('Tu correo no está en la lista del curso. Contacta al docente.');
+      return;
+    }
 
-      const LOCAL_ATTENDANCE_KEY = 'qs_manual_attendance_buffer';
-      let manualTestModeActive = false;
-      let remoteAttendanceRecords = [];
-
-      function ensureDateValue(value) {
-        if (value instanceof Date && !Number.isNaN(value.valueOf())) return value;
-        if (typeof value === 'number' || typeof value === 'string') {
-          const parsed = new Date(value);
-          if (!Number.isNaN(parsed.valueOf())) return parsed;
-        }
-        return new Date();
-      }
-
-      function normalizeAttendanceRecord(record, defaultSource = 'remote') {
-        if (!record) return null;
-        const email = typeof record.email === 'string' ? record.email : '';
-        const baseId = record.id || record.uid || `att-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        return {
-          id: baseId,
-          uid: record.uid,
-          name: record.name || email || 'Registro sin nombre',
-          email,
-          normalizedEmail: email.toLowerCase(),
-          type: record.type || 'manual',
-          timestamp: ensureDateValue(record.timestamp),
-          manual: record.manual === true || record.manual === 'true',
-          source: record.source || defaultSource,
-        };
-      }
-
-      function isSameDay(a, b) {
-        if (!(a instanceof Date) || !(b instanceof Date)) return false;
-        return (
-          a.getFullYear() === b.getFullYear() &&
-          a.getMonth() === b.getMonth() &&
-          a.getDate() === b.getDate()
-        );
-      }
-
-      function recordsMatch(a, b) {
-        if (!a || !b) return false;
-        if (!a.normalizedEmail || !b.normalizedEmail) return false;
-        return a.normalizedEmail === b.normalizedEmail && isSameDay(a.timestamp, b.timestamp);
-      }
-
-      function loadLocalAttendanceBuffer() {
-        try {
-          const stored = localStorage.getItem(LOCAL_ATTENDANCE_KEY);
-          if (!stored) return [];
-          const parsed = JSON.parse(stored);
-          if (!Array.isArray(parsed)) return [];
-          return parsed
-            .map((item) => ({ ...item, source: 'local', manual: true }))
-            .map((item) => normalizeAttendanceRecord(item, 'local'))
-            .filter(Boolean);
-        } catch (_) {
-          return [];
-        }
-      }
-
-      let localAttendanceRecords = loadLocalAttendanceBuffer();
-
-      function persistLocalAttendanceBuffer() {
-        try {
-          const serializable = localAttendanceRecords
-            .filter((item) => item && item.source === 'local')
-            .map((item) => ({
-              id: item.id,
-              uid: item.uid,
-              name: item.name,
-              email: item.email,
-              type: item.type,
-              manual: true,
-              timestamp: item.timestamp?.toISOString?.() || new Date().toISOString(),
-            }));
-          localStorage.setItem(LOCAL_ATTENDANCE_KEY, JSON.stringify(serializable));
-        } catch (_) {}
-      }
-
-      function mergeAttendanceRecords(remoteList, localList) {
-        const combined = [];
-        const addIfMissing = (record) => {
-          if (!record) return;
-          const exists = combined.some((item) => recordsMatch(item, record));
-          if (!exists) combined.push(record);
-        };
-        remoteList
-          .slice()
-          .sort((a, b) => b.timestamp - a.timestamp)
-          .forEach((record) => addIfMissing(record));
-        localList
-          .slice()
-          .sort((a, b) => b.timestamp - a.timestamp)
-          .forEach((record) => addIfMissing(record));
-        combined.sort((a, b) => b.timestamp - a.timestamp);
-        return combined;
-      }
-
-      function renderAttendanceState() {
-        const combined = mergeAttendanceRecords(remoteAttendanceRecords, localAttendanceRecords);
-        if (typeof window.setRegisteredAttendances === 'function') {
-          window.setRegisteredAttendances(combined);
-        } else {
-          window.registeredAttendances = combined;
-        }
-        if (typeof window.updateAttendanceList === 'function') window.updateAttendanceList();
-        if (typeof window.updateAttendanceCount === 'function') window.updateAttendanceCount();
-      }
-
-      function removeLocalMatchesWithRemote() {
-        if (!remoteAttendanceRecords.length || !localAttendanceRecords.length) return;
-        const filtered = localAttendanceRecords.filter((localItem) => {
-          const matched = remoteAttendanceRecords.some((remoteItem) => recordsMatch(remoteItem, localItem));
-          return !matched;
-        });
-        const changed = filtered.length !== localAttendanceRecords.length;
-        localAttendanceRecords = filtered;
-        if (changed) persistLocalAttendanceBuffer();
-      }
-
-      function setRemoteAttendanceRecords(items) {
-        remoteAttendanceRecords = Array.isArray(items)
-          ? items.map((item) => normalizeAttendanceRecord({ ...item, source: 'remote' }, 'remote')).filter(Boolean)
-          : [];
-        removeLocalMatchesWithRemote();
-        renderAttendanceState();
-      }
-
-      function clearRemoteAttendance() {
-        remoteAttendanceRecords = [];
-        renderAttendanceState();
-      }
-
-      function upsertLocalAttendance(record, { persist = true } = {}) {
-        const normalized = normalizeAttendanceRecord(record, record?.source || 'local');
-        if (!normalized) return;
-        localAttendanceRecords = localAttendanceRecords.filter((item) => !recordsMatch(item, normalized));
-        localAttendanceRecords.unshift(normalized);
-        if (persist && normalized.source === 'local') persistLocalAttendanceBuffer();
-        renderAttendanceState();
-      }
-
-      function activateManualTestMode() {
-        manualTestModeActive = true;
-        window.currentUserCanManualRegister = true;
-        if (manualCard) {
-          manualCard.dataset.forceVisible = 'true';
-          manualCard.classList.remove('hidden');
-          manualCard.style.display = '';
-        }
-                  if (manualWarning) {
-            if (!hasTeacherPrivileges) {
-              manualWarning.textContent = 'Tu cuenta aún no tiene permisos para registrar asistencias manuales en Firebase. Los registros manuales se guardarán localmente hasta que se autorice tu acceso.';
-              manualWarning.classList.remove('hidden');
-            } else {
-              manualWarning.classList.add('hidden');
-            }
-          }
-        if (manualNotice) {
-          manualNotice.classList.add('hidden');
-          manualNotice.style.display = 'none';
-        }
-        renderAttendanceState();
-      }
-
-      function deactivateManualTestMode() {
-        manualTestModeActive = false;
-        if (manualCard) {
-          delete manualCard.dataset.forceVisible;
-          if (!window.currentUserCanManualRegister) {
-            manualCard.classList.add('hidden');
-            manualCard.style.display = 'none';
-          }
-        }
-      }
-
-      setAttendanceEnabled(false);
-
-      if (manualBtn) {
-        manualBtn.addEventListener('click', (event) => {
-          event.preventDefault();
-          manualRegisterAttendance();
-        });
-      }
-
-      if (manualSelect) {
-        manualSelect.addEventListener('change', () => {
-          const roster = Array.isArray(window.students) ? window.students : [];
-          const selected = roster.find((item) => String(item.id) === manualSelect.value);
-          if (selected) {
-            if (manualNameInput) manualNameInput.value = selected.name || '';
-            if (manualEmailInput) manualEmailInput.value = selected.email || '';
-          } else {
-            if (manualNameInput) manualNameInput.value = '';
-            if (manualEmailInput) manualEmailInput.value = '';
-          }
-        });
-      }
-
-      if (signInBtn) {
-        signInBtn.addEventListener('click', async () => {
-          try {
-            await signInWithGooglePotros();
-          } catch (e) {
-            alert(e.message || 'No se pudo iniciar sesión');
-          }
-        });
-      }
-
-      if (signOutBtn) {
-        signOutBtn.addEventListener('click', async () => {
-          await signOutCurrent();
-        });
-      }
-
-      let unsubscribeAttendance = null;
-      onAuth(async (user) => {
-        if (user && user.email?.toLowerCase().endsWith(`@${allowedEmailDomain}`)) {
-          deactivateManualTestMode();
-          const normalizedEmail = user.email.toLowerCase();
-          userName.textContent = user.displayName || user.email;
-          if (user.photoURL) {
-            userPhoto.src = user.photoURL;
-            userPhoto.classList.remove('hidden');
-          } else {
-            userPhoto.classList.add('hidden');
-          }
-          userInfo.classList.remove('hidden');
-          if (signInBtn) signInBtn.classList.add('hidden');
-
-
-          let teacherByDoc = false;
-          try {
-            teacherByDoc = await isTeacherByDoc(user.uid);
-          } catch (err) {
-            console.error('No se pudo verificar el perfil de docente en Firestore', err);
-          }
-
-          const teacherByAllowlist = isTeacherEmail(normalizedEmail);
-          if (teacherByAllowlist && user?.uid && !teacherByDoc) {
-            try {
-              const ensured = await ensureTeacherDocForUser({
-                uid: user.uid,
-                email: normalizedEmail,
-                displayName: user.displayName,
-              });
-              teacherByDoc = ensured || teacherByDoc;
-            } catch (err) {
-              console.error('No se pudo preparar el perfil de docente en Firestore', err);
-            }
-          }
-
-          const roster = Array.isArray(window.students) ? window.students : [];
-          const rosterEntry = roster.find((student) => (student.email || '').toLowerCase() === normalizedEmail);
-          const flaggedAsTeacher = rosterEntry?.type === 'teacher';
-          const hasTeacherPrivileges = !!(teacherByDoc || teacherByAllowlist);
-          const canUseManualUi = !!(hasTeacherPrivileges || flaggedAsTeacher);
-          window.currentUserHasTeacherPrivileges = hasTeacherPrivileges;
-          window.currentUserCanManualRegister = canUseManualUi;
-
-
-            manualCard.classList.toggle('hidden', !canUseManualUi);
-            manualCard.style.display = canUseManualUi ? '' : 'none';
-            if (!canUseManualUi) delete manualCard.dataset.forceVisible;
-          }
-                    if (manualWarning) {
-            if (!hasTeacherPrivileges) {
-              manualWarning.textContent = 'Tu cuenta aún no tiene permisos para registrar asistencias manuales en Firebase. Los registros manuales se guardarán localmente hasta que se autorice tu acceso.';
-              manualWarning.classList.remove('hidden');
-            } else {
-              manualWarning.classList.add('hidden');
-            }
-          } else {
-              manualWarning.classList.add('hidden');
-            }
-
-          }
-
-          const active = (typeof window.isClassActiveNow === 'function' ? window.isClassActiveNow() : true);
-          setAttendanceEnabled(active);
-          const banner = document.getElementById('classBanner');
-          if (banner) banner.classList.toggle('hidden', !active);
-
-          // Actualiza el estado del botón según horario (cada minuto)
-          try { window.clearInterval(window.__classActiveTimer); } catch(_) {}
-          window.__classActiveTimer = window.setInterval(() => {
-            const activeNow = (typeof window.isClassActiveNow === 'function' ? window.isClassActiveNow() : true);
-            setAttendanceEnabled(activeNow);
-            const bannerNow = document.getElementById('classBanner');
-            if (bannerNow) bannerNow.classList.toggle('hidden', !activeNow);
-          }, 60000);
-
-            if (unsubscribeAttendance) unsubscribeAttendance();
-            const handleSnapshot = (items) => {
-
-              setRemoteAttendanceRecords(items);
-            };
-            const handleSubscriptionError = (error) => {
-              console.error('Attendance subscription error', error);
-              setRemoteAttendanceRecords([]);
-
-
-                window.__attSubscriptionWarned = true;
-                alert('No se pudo consultar tu asistencia en línea por permisos insuficientes. Tu registro seguirá guardándose.');
-              }
-            };
-            window.__attSubscriptionWarned = false;
-            try {
-              const byAll = !!(teacherByDoc || teacherByAllowlist);
-              unsubscribeAttendance = byAll
-                ? subscribeTodayAttendance(handleSnapshot, handleSubscriptionError)
-                : subscribeTodayAttendanceByUser(normalizedEmail, handleSnapshot, handleSubscriptionError);
-} catch (subscriptionError) {
-            handleSubscriptionError(subscriptionError);
-          }
-        } else {
-          userInfo.classList.add('hidden');
-          if (signInBtn) signInBtn.classList.remove('hidden');
-          setAttendanceEnabled(false);
-          applyRoleVisibility('estudiante');
-          if (manualCard) {
-            manualCard.classList.add('hidden');
-            manualCard.style.display = 'none';
-          }
-                    if (manualWarning) {
-            if (!hasTeacherPrivileges) {
-              manualWarning.textContent = 'Tu cuenta aún no tiene permisos para registrar asistencias manuales en Firebase. Los registros manuales se guardarán localmente hasta que se autorice tu acceso.';
-              manualWarning.classList.remove('hidden');
-            } else {
-              manualWarning.classList.add('hidden');
-            }
-          }
-          if (manualNotice) {
-            manualNotice.classList.add('hidden');
-            manualNotice.style.display = 'none';
-          }
-          window.currentUserHasTeacherPrivileges = false;
-          window.currentUserCanManualRegister = false;
-          try { window.clearInterval(window.__classActiveTimer); } catch(_) {}
-          clearRemoteAttendance();
-          if (unsubscribeAttendance) { unsubscribeAttendance(); unsubscribeAttendance = null; }
-          window.__attSubscriptionWarned = false;
-          activateManualTestMode();
-        }
+    const now = new Date();
+    try {
+      await saveTodayAttendance({
+        uid: user.uid,
+        name: found.name,
+        email,
+        type: found.type || 'student',
+        manual: false
       });
-
-      function populateManualAttendanceOptions() {
-        if (!manualSelect) return;
-        const roster = Array.isArray(window.students) ? window.students : [];
-        const options = roster
-          .filter((student) => student && student.id && student.name)
-          .map((student) => {
-            const emailLabel = student.email ? ` - ${student.email}` : '';
-            return `<option value="${student.id}">${student.name}${emailLabel}</option>`;
-          })
-          .join('');
-        manualSelect.innerHTML = '<option value="">-- Selecciona desde la lista --</option>' + options;
+      const record = {
+        uid: user.uid,
+        id: user.uid,
+        name: found.name,
+        email,
+        type: found.type || 'student',
+        timestamp: now,
+        manual: false,
+        source: 'pending-remote'
+      };
+      if (typeof window.upsertLocalAttendance === 'function') {
+        window.upsertLocalAttendance(record, { persist: false });
       }
-
-      async function manualRegisterAttendance() {
-        if (!manualBtn) return;
-        if (!manualTestModeActive && !window.currentUserCanManualRegister) {
-          alert('Solo las cuentas autorizadas como docentes pueden registrar asistencias manuales.');
-          return;
-        }
-        const roster = Array.isArray(window.students) ? window.students : [];
-        const selectedId = manualSelect ? manualSelect.value : '';
-        const typedEmail = (manualEmailInput?.value || '').trim().toLowerCase();
-        const typedName = (manualNameInput?.value || '').trim();
-
-        let student = null;
-        if (selectedId) {
-          student = roster.find((item) => String(item.id) === selectedId);
-        }
-        if (!student && typedEmail) {
-          student = roster.find((item) => (item.email || '').toLowerCase() === typedEmail);
-        }
-
-        let email = (student?.email || typedEmail || '').toLowerCase();
-        if (!email) {
-          alert('Ingresa un correo valido o selecciona un integrante.');
-          return;
-        }
-
-        const name = typedName || student?.name || email;
-        const type = student?.type || 'manual';
-        const uid = student?.uid || student?.id || `manual-${Date.now()}`;
-        const hasPrivileges = !!window.currentUserHasTeacherPrivileges;
-
-        if (typeof window.isClassActiveNow === 'function' && !window.isClassActiveNow()) {
-          const proceed = confirm('La clase no esta en horario. Registrar de todas formas?');
-          if (!proceed) return;
-        }
-
-        manualBtn.disabled = true;
-        const now = new Date();
-        let savedToFirestore = false;
-        try {
-
-          if (hasPrivileges) {
-            await saveTodayAttendance({
-              uid,
-              name,
-              email,
-              type,
-              manual: true
-            });
-            savedToFirestore = true;
-          } else           if (manualWarning) {
-            if (!hasTeacherPrivileges) {
-              manualWarning.textContent = 'Tu cuenta aún no tiene permisos para registrar asistencias manuales en Firebase. Los registros manuales se guardarán localmente hasta que se autorice tu acceso.';
-              manualWarning.classList.remove('hidden');
-            } else {
-              manualWarning.classList.add('hidden');
-            }
-          } else {
-            alert(error?.message || 'No se pudo registrar manualmente.');
-            return;
-          }
-        } finally {
-          manualBtn.disabled = false;
-        }
-
-        const record = {
-          uid,
-          id: uid,
-          name,
+      if (typeof window.showSuccessModal === 'function') {
+        window.showSuccessModal({ name: found.name, type: found.type || 'student' }, now);
+      }
+      if (typeof window.showAttendanceToast === 'function') {
+        window.showAttendanceToast('¡Asistencia registrada correctamente!');
+      }
+    } catch (e) {
+      if (e?.code === 'permission-denied') {
+        // Guarda local si no hay permisos
+        const fallback = {
+          uid: user.uid,
+          id: 'local-' + user.uid + '-' + Date.now(),
+          name: found.name,
           email,
-          type,
+          type: found.type || 'student',
           timestamp: now,
-          manual: true,
-          source: savedToFirestore ? 'pending-remote' : 'local'
+          manual: false,
+          source: 'local'
         };
-
-        upsertLocalAttendance(record, { persist: !savedToFirestore });
-
-        if (savedToFirestore && manualWarning) {
-          manualWarning.classList.add('hidden');
-        }
-
-        if (typeof window.showSuccessModal === 'function') {
-          window.showSuccessModal({ name, type }, now);
+        if (typeof window.upsertLocalAttendance === 'function') {
+          window.upsertLocalAttendance(fallback, { persist: true });
         }
         if (typeof window.showAttendanceToast === 'function') {
-          window.showAttendanceToast(savedToFirestore ? 'Asistencia registrada manualmente' : 'Asistencia guardada localmente');
+          window.showAttendanceToast('Asistencia guardada localmente por falta de permisos.');
         }
-        if (manualSelect) manualSelect.value = '';
-        if (manualNameInput) manualNameInput.value = '';
-        if (manualEmailInput) manualEmailInput.value = '';
+        if (typeof window.showSuccessModal === 'function') {
+          window.showSuccessModal({ name: found.name, type: found.type || 'student' }, now);
+        }
+      } else {
+        alert(e?.message || 'No se pudo registrar la asistencia.');
       }
-      window.registerAttendance = async function registerAttendance() {
-        if (typeof window.isClassActiveNow === 'function' && !window.isClassActiveNow()) {
-          alert('La asistencia solo puede registrarse Lun/Mié/Vie entre 18:00 y 19:00, del 25 de agosto al 12 de diciembre.');
-          return;
-        }
-        const { getAuth } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js');
-        const user = getAuth().currentUser;
-        if (!user) {
-          alert('Primero inicia sesión con tu cuenta @' + allowedEmailDomain);
-          return;
-        }
-        const email = user.email.toLowerCase();
-        if (!email.endsWith(`@${allowedEmailDomain}`)) {
-          alert('Solo se permite acceder con cuenta @' + allowedEmailDomain);
-          return;
-        }
-        const roster = window.students || [];
-        const found = roster.find(s => (s.email || '').toLowerCase() === email);
-        if (!found) {
-          alert('Tu correo no está en la lista del curso. Contacta al docente.');
-          return;
-        }
-        const now = new Date();
-        try {
-          await saveTodayAttendance({
-            uid: user.uid,
-            name: found.name,
-            email: email,
-            type: found.type
-          });
-          const record = {
-            uid: user.uid,
-            id: user.uid,
-            name: found.name,
-            email,
-            type: found.type,
-            timestamp: now,
-            manual: false,
-            source: 'pending-remote'
-          };
-          upsertLocalAttendance(record, { persist: false });
-          if (typeof window.showSuccessModal === 'function') {
-            window.showSuccessModal({ name: found.name, type: found.type }, now);
+    }
+  }
+  // Exponer y bind
+  window.registerAttendance = registerAttendance;
+  if (attendanceBtn) {
+    attendanceBtn.onclick = (e)=>{ e.preventDefault(); registerAttendance(); };
+  }
+
+  // Suscripción por rol
+  onAuth(async (user) => {
+    // Oculta todo manual y preview siempre
+    if (manualCard) { manualCard.classList.add('hidden'); manualCard.style.display = 'none'; }
+    if (manualWarning) { manualWarning.classList.add('hidden'); }
+    if (manualNotice) { manualNotice.classList.add('hidden'); }
+
+    if (user && (user.email || '').toLowerCase().endsWith('@' + allowedEmailDomain)) {
+      const normalizedEmail = user.email.toLowerCase();
+      // UI de usuario
+      if (userName) userName.textContent = user.displayName || user.email;
+      if (userPhoto) {
+        if (user.photoURL) { userPhoto.src = user.photoURL; userPhoto.classList.remove('hidden'); }
+        else { userPhoto.classList.add('hidden'); }
+      }
+      if (userInfo) userInfo.classList.remove('hidden');
+      if (signInBtn) signInBtn.classList.add('hidden');
+
+      // Docente solo si el correo es el del docente o Firestore lo marca
+      let teacherByDoc = false;
+      try { teacherByDoc = await isTeacherByDoc(user.uid); } catch(_) {}
+      const teacherByAllowlist = isTeacherEmail(normalizedEmail) || normalizedEmail === 'isaac.paniagua@potros.itson.edu.mx';
+      const isTeacher = !!(teacherByDoc || teacherByAllowlist);
+      applyRoleVisibility(isTeacher ? 'docente' : 'estudiante');
+
+      // Habilita botón por horario
+      const active = (typeof window.isClassActiveNow === 'function') ? window.isClassActiveNow() : true;
+      setAttendanceEnabled(active);
+      const banner = document.getElementById('classBanner');
+      if (banner) banner.classList.toggle('hidden', !active);
+      try { window.clearInterval(window.__classActiveTimer); } catch(_) {}
+      window.__classActiveTimer = window.setInterval(()=>{
+        const activeNow = (typeof window.isClassActiveNow === 'function') ? window.isClassActiveNow() : true;
+        setAttendanceEnabled(activeNow);
+        const b = document.getElementById('classBanner');
+        if (b) b.classList.toggle('hidden', !activeNow);
+      }, 60000);
+
+      // Suscripción
+      try {
+        if (unsubscribeAttendance) { unsubscribeAttendance(); unsubscribeAttendance = null; }
+        const handleSnapshot = (items)=>{ setRemoteAttendanceRecords(items); };
+        const handleSubscriptionError = (err)=>{
+          console.error('Attendance subscription error', err);
+          setRemoteAttendanceRecords([]);
+          if (!window.__attSubscriptionWarned) {
+            window.__attSubscriptionWarned = true;
+            alert('No se pudo consultar tu asistencia en línea. Se seguirá mostrando lo guardado localmente.');
           }
-          if (typeof window.showAttendanceToast === 'function') {
-            window.showAttendanceToast('¡Asistencia registrada correctamente!');
-          }
-        } catch (e) {
-          if (e?.code === 'permission-denied') {
-            const fallbackRecord = {
-              uid: user.uid,
-              id: `local-${user.uid}-${Date.now()}`,
-              name: found.name,
-              email,
-              type: found.type,
-              timestamp: now,
-              manual: false,
-              source: 'local'
-            };
-            upsertLocalAttendance(fallbackRecord, { persist: true });
-            if (typeof window.showAttendanceToast === 'function') {
-              window.showAttendanceToast('Asistencia guardada localmente por falta de permisos.');
-            }
-            if (typeof window.showSuccessModal === 'function') {
-              window.showSuccessModal({ name: found.name, type: found.type }, now);
-            }
-          } else {
-            alert(e?.message || 'No se pudo registrar la asistencia.');
-          }
-        }
+        };
+        window.__attSubscriptionWarned = false;
+        unsubscribeAttendance = isTeacher
+          ? subscribeTodayAttendance(handleSnapshot, handleSubscriptionError)
+          : subscribeTodayAttendanceByUser(normalizedEmail, handleSnapshot, handleSubscriptionError);
+      } catch (subscriptionError) {
+        console.error(subscriptionError);
       }
+    } else {
+      // No autenticado o dominio inválido
+      if (userInfo) userInfo.classList.add('hidden');
+      if (signInBtn) signInBtn.classList.remove('hidden');
+      setAttendanceEnabled(false);
+      applyRoleVisibility('estudiante');
+      try { window.clearInterval(window.__classActiveTimer); } catch(_) {}
+      setRemoteAttendanceRecords([]);
+      if (unsubscribeAttendance) { try { unsubscribeAttendance(); } catch(_){} unsubscribeAttendance = null; }
+      window.__attSubscriptionWarned = false;
+    }
+  });
 
-      if (attendanceBtn) {
-        attendanceBtn.onclick = (e) => { e.preventDefault(); window.registerAttendance(); };
-      }
-
-      populateManualAttendanceOptions();
-
-      renderAttendanceState();
-      activateManualTestMode();
-
-      // Exportadores
-      function formatDateTime(d) {
-        const dd = d instanceof Date ? d : new Date(d);
-        return {
-          date: dd.toLocaleDateString('es-MX'),
-          time: dd.toLocaleTimeString('es-MX', { hour12: false })
-        }
-      }
-
-      function exportAttendanceCSV() {
-        const items = (typeof window.getFilteredAttendances === 'function' ? window.getFilteredAttendances() : window.registeredAttendances) || [];
-        const header = ['Fecha','Hora','Nombre','Email','Tipo','EnHorario'];
-        const rows = items.map(it => {
-          const { date, time } = formatDateTime(it.timestamp);
-          const within = (typeof window.isWithinClassWindow === 'function') ? window.isWithinClassWindow(it.timestamp) : true;
-          return [date, time, (it.name||''), (it.email||''), (it.type||''), within?'Si':'No'];
-        });
-        const csv = [header].concat(rows).map(r => r.map(v => '"'+String(v).replace('"','""')+'"').join(',')).join('\r\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `asistencias_${new Date().toISOString().slice(0,10)}.csv`;
-        a.click();
-        URL.revokeObjectURL(a.href);
-      }
-
-      function exportAttendancePDF() {
-        const items = (typeof window.getFilteredAttendances === 'function' ? window.getFilteredAttendances() : window.registeredAttendances) || [];
-        const w = window.open('', '_blank');
-        const today = new Date();
-        const title = `Asistencias ${today.toLocaleDateString('es-MX')}`;
-        const rows = items.map((it, idx) => {
-          const { date, time } = formatDateTime(it.timestamp);
-          const within = (typeof window.isWithinClassWindow === 'function') ? window.isWithinClassWindow(it.timestamp) : true;
-          return `<tr><td>${idx+1}</td><td>${date}</td><td>${time}</td><td>${it.name||''}</td><td>${it.email||''}</td><td>${it.type||''}</td><td>${within?'Si':'No'}</td></tr>`;
-        }).join('');
-        const htmlDaily = `<!DOCTYPE html><html data-layout="global"><head><meta charset="utf-8"><title>${title}</title>
-          <style>body{font-family:Arial,sans-serif;padding:24px} h1{font-size:18px;margin:0 0 12px} table{width:100%;border-collapse:collapse} th,td{border:1px solid #ddd;padding:6px;font-size:12px} th{background:#f3f4f6;text-align:left}</style>
-          <link rel="stylesheet" href="css/layout.css"><body>
-          <h1>${title}</h1>
-          <table><thead><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Nombre</th><th>Email</th><th>Tipo</th><th>EnHorario</th></tr></thead>
-          <tbody>${rows}</tbody></table>
-          </body></html>`;
-        w.document.write(htmlDaily);
-        w.document.close();
-        setTimeout(() => { try { w.focus(); w.print(); } catch(_){} }, 300);
-      }
-
-      document.getElementById('exportAttendanceCsvBtn')?.addEventListener('click', exportAttendanceCSV);
-      document.getElementById('exportAttendancePdfBtn')?.addEventListener('click', exportAttendancePDF);
-
-      // Valores por defecto para fechas
-      const startInput = document.getElementById('attStartDate');
-      const endInput = document.getElementById('attEndDate');
-      const todayStr = new Date().toISOString().slice(0,10);
-      if (startInput && !startInput.value) startInput.value = todayStr;
-      if (endInput && !endInput.value) endInput.value = todayStr;
-
-      async function exportRange(isPdf) {
-        const start = startInput?.value;
-        const end = endInput?.value;
-        if (!start || !end || start > end) { alert('Selecciona un rango válido'); return; }
-        const items = await fetchAttendancesByDateRange(start, end);
-        if (!isPdf) {
-          // CSV
-          const header = ['Fecha','Hora','Nombre','Email','Tipo'];
-          const rows = items.map(it => {
-            const date = it.date || (it.timestamp ? it.timestamp.toISOString().slice(0,10) : '');
-            const time = it.timestamp ? it.timestamp.toLocaleTimeString('es-MX',{hour12:false}) : '';
-            return [date, time, (it.name||''), (it.email||''), (it.type||'')];
-          });
-          const csv = [header].concat(rows).map(r => r.map(v => '"'+String(v).replace('"','""')+'"').join(',')).join('\r\n');
-          const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-          const a = document.createElement('a');
-          a.href = URL.createObjectURL(blob);
-          a.download = `asistencias_${start}_a_${end}.csv`;
-          a.click();
-          URL.revokeObjectURL(a.href);
-        } else {
-          // PDF
-          const w = window.open('', '_blank');
-          const rows = items.map((it, idx) => {
-            const date = it.date || (it.timestamp ? it.timestamp.toISOString().slice(0,10) : '');
-            const time = it.timestamp ? it.timestamp.toLocaleTimeString('es-MX',{hour12:false}) : '';
-            return `<tr><td>${idx+1}</td><td>${date}</td><td>${time}</td><td>${it.name||''}</td><td>${it.email||''}</td><td>${it.type||''}</td></tr>`;
-          }).join('');
-          const htmlRange = `<!DOCTYPE html><html data-layout="global"><head><meta charset='utf-8'><title>Asistencias ${start} a ${end}</title><style>body{font-family:Arial,sans-serif;padding:24px} table{width:100%;border-collapse:collapse} th,td{border:1px solid #ddd;padding:6px;font-size:12px} th{background:#f3f4f6;text-align:left}</style><link rel="stylesheet" href="css/layout.css"><body><h1>Asistencias ${start} a ${end}</h1><table><thead><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Nombre</th><th>Email</th><th>Tipo</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
-          w.document.write(htmlRange);
-          w.document.close();
-          setTimeout(() => { try { w.focus(); w.print(); } catch(_){} }, 300);
-        }
-      }
-
-      document.getElementById('exportAttendanceRangeCsvBtn')?.addEventListener('click', () => exportRange(false));
-      document.getElementById('exportAttendanceRangePdfBtn')?.addEventListener('click', () => exportRange(true));
-    </script>
+  // Exportadores rango siguen funcionando porque existen fetchAttendancesByDateRange
+  const startInput = document.getElementById('attStartDate');
+  const endInput = document.getElementById('attEndDate');
+  const todayStr = new Date().toISOString().slice(0,10);
+  if (startInput && !startInput.value) startInput.value = todayStr;
+  if (endInput && !endInput.value) endInput.value = todayStr;
+  async function exportRange(isPdf){
+    const start = startInput?.value;
+    const end = endInput?.value;
+    if (!start || !end || start > end) { alert('Selecciona un rango válido'); return; }
+    const items = await fetchAttendancesByDateRange(start, end);
+    if (!isPdf) {
+      const header = ['Fecha','Hora','Nombre','Email','Tipo'];
+      const rows = items.map(it => {
+        const date = it.date || (it.timestamp ? it.timestamp.toISOString().slice(0,10) : '');
+        const time = it.timestamp ? it.timestamp.toLocaleTimeString('es-MX',{hour12:false}) : '';
+        return [date, time, (it.name||''), (it.email||''), (it.type||'')];
+      });
+      const csv = [header].concat(rows).map(r => r.map(v => '"'+String(v).replace('"','""')+'"').join(',')).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `asistencias_${start}_a_${end}.csv`; a.click(); URL.revokeObjectURL(a.href);
+    } else {
+      const w = window.open('', '_blank');
+      const rows = items.map((it, idx)=>{
+        const date = it.date || (it.timestamp ? it.timestamp.toISOString().slice(0,10) : '');
+        const time = it.timestamp ? it.timestamp.toLocaleTimeString('es-MX',{hour12:false}) : '';
+        return `<tr><td>${idx+1}</td><td>${date}</td><td>${time}</td><td>${it.name||''}</td><td>${it.email||''}</td><td>${it.type||''}</td></tr>`;
+      }).join('');
+      const htmlRange = `<!DOCTYPE html><html data-layout="global"><head><meta charset='utf-8'><title>Asistencias ${start} a ${end}</title><style>body{font-family:Arial,sans-serif;padding:24px} table{width:100%;border-collapse:collapse} th,td{border:1px solid #ddd;padding:6px;font-size:12px} th{background:#f3f4f6;text-align:left}</style><link rel="stylesheet" href="css/layout.css"><body><h1>Asistencias ${start} a ${end}</h1><table><thead><tr><th>#</th><th>Fecha</th><th>Hora</th><th>Nombre</th><th>Email</th><th>Tipo</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+      w.document.write(htmlRange); w.document.close(); setTimeout(()=>{ try{ w.focus(); w.print(); }catch(_){ } }, 300);
+    }
+  }
+  document.getElementById('exportAttendanceRangeCsvBtn')?.addEventListener('click', ()=>exportRange(false));
+  document.getElementById('exportAttendanceRangePdfBtn')?.addEventListener('click', ()=>exportRange(true));
+</script>
 
 <footer class="footer">
   <div class="footer-content">© 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua</div>
