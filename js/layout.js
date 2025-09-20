@@ -11,7 +11,6 @@
   } catch (_) {}
 })();
 
-document.addEventListener("DOMContentLoaded", () => {
   const p = location.pathname;
   const pLow = p.toLowerCase();
   const inSesiones =
@@ -159,6 +158,7 @@ document.addEventListener("DOMContentLoaded", () => {
           navTabs.appendChild(btn);
         }
         onAuth(async (user) => {
+
           if (user) {
             btn.textContent = 'Cerrar sesión';
             btn.onclick = () => signOutCurrent();
@@ -168,10 +168,12 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (_) {
               canSeePanel = false;
             }
+
             if (panelLink) panelLink.style.display = canSeePanel ? '' : 'none';
           } else {
             btn.textContent = 'Iniciar sesión';
             btn.onclick = () => signInWithGoogleOpen();
+
             if (panelLink) panelLink.style.display = 'none';
           }
         });
@@ -275,4 +277,10 @@ document.addEventListener("DOMContentLoaded", () => {
       go();
     }
   });
-});
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initLayout, { once: true });
+} else {
+  initLayout();
+}

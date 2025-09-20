@@ -14,8 +14,7 @@
   } catch (_) {}
 })();
 
-// Injects a top nav similar to index, without altering page structure
-document.addEventListener('DOMContentLoaded', function(){
+
   try{
     var prefix = '';
     try {
@@ -57,9 +56,13 @@ document.addEventListener('DOMContentLoaded', function(){
       .qs-btn[aria-current="page"] { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; box-shadow:0 6px 16px rgba(102,126,234,.45); }
     `;
 
-    var style = document.createElement('style');
+    var style = document.getElementById('qs-nav-inline-style');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'qs-nav-inline-style';
+      document.head.appendChild(style);
+    }
     style.textContent = css;
-    document.head.appendChild(style);
 
     var template = [
       '<div class="wrap">',
@@ -217,5 +220,11 @@ document.addEventListener('DOMContentLoaded', function(){
       }
     } catch (e) {}
   }catch(e){ /* noop */ }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initNavInject, { once: true });
+} else {
+  initNavInject();
+}
 
