@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Asistencia - ITSON</title>
+    <script src="js/student-nav-fixed.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -58,15 +59,6 @@
     </nav>
   </div>
 </div>
-<script>
-(function(){
-  var path = (location.pathname.split('/').pop()||'index.html').toLowerCase();
-  document.querySelectorAll('.qs-tabs a.qs-btn').forEach(function(a){
-    var href = (a.getAttribute('href')||'').toLowerCase();
-    if (href === path) a.setAttribute('aria-current','page');
-  });
-})();
-</script>
 <div class="container mx-auto px-4 py-8 max-w-6xl">
         <!-- Header -->
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100">
@@ -242,6 +234,7 @@
             {id: "244242", name: "Duarte Lopez, Adlemi Guadalupe", email: "adlemi.duarte244242@potros.itson.edu.mx", type: "student"},
             {id: "244473", name: "Espericueta Ramos, Jesus Alan", email: "jesus.espericueta244473@potros.itson.edu.mx", type: "student"},
             {id: "244608", name: "Gracia Morales, Sergio Alejandro", email: "sergio.gracia244608@potros.itson.edu.mx", type: "student"},
+            {id: "251001", name: "Guaymas, Iman", email: "iman.guaymas@potros.itson.edu.mx", type: "student"},
             {id: "228847", name: "Hernandez Gonzalez, Julian Ricardo", email: "julian.hernandez228847@potros.itson.edu.mx", type: "student"},
             {id: "248997", name: "Le Blohic Garay, Mario Enrique", email: "mario.leblohic248997@potros.itson.edu.mx", type: "student"},
             {id: "249012", name: "Lopez Guerrero, Luis Carlos", email: "luis.lopez249012@potros.itson.edu.mx", type: "student"},
@@ -747,7 +740,24 @@
           setRemoteAttendanceRecords([]);
           if (!window.__attSubscriptionWarned) {
             window.__attSubscriptionWarned = true;
-            alert('No se pudo consultar tu asistencia en línea. Se seguirá mostrando lo guardado localmente.');
+            const permissionDenied = (err?.code === 'permission-denied') ||
+              (typeof err?.message === 'string' && err.message.toLowerCase().includes('permission'));
+            if (!isTeacher && permissionDenied) {
+              if (typeof window.showAttendanceToast === 'function') {
+                window.showAttendanceToast('No se pudo sincronizar tu asistencia en línea. Mostrando los datos guardados en este dispositivo.');
+              } else {
+                console.info('Attendance subscription fallback to local data for student');
+              }
+            } else {
+              const fallbackMessage = isTeacher
+                ? 'Ocurrió un problema al sincronizar la asistencia en línea. Puedes reintentar más tarde o contactar al administrador.'
+                : 'No fue posible sincronizar la asistencia en línea en este momento. Seguiremos usando la información disponible aquí.';
+              if (typeof window.showAttendanceToast === 'function') {
+                window.showAttendanceToast(fallbackMessage);
+              } else {
+                console.warn(fallbackMessage);
+              }
+            }
           }
         };
         window.__attSubscriptionWarned = false;
