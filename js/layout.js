@@ -11,6 +11,7 @@
   } catch (_) {}
 })();
 
+
   const p = location.pathname;
   const pLow = p.toLowerCase();
   const inSesiones =
