@@ -74,7 +74,7 @@ function bootstrapLayout() {
   window.__qsLayoutPersistAuthState = persistAuthState;
   window.__qsLayoutPersistRole = persistRole;
   window.__qsLayoutToggleTeacherNavLinks = toggleTeacherNavLinks;
-  markLayoutReady();
+
 
   function computeBasePath() {
     try {
