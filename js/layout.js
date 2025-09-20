@@ -1,6 +1,6 @@
-// Inicializa el layout global de la plataforma QS.
-// Se encarga de inyectar/normalizar la barra de navegación, footer y rutinas
-// auxiliares que dependen del estado de autenticación.
+// Unified layout bootstrap for the QS platform.
+// Creates the navigation bar, footer, and login integrations used across pages.
+
 (function initializeLoadingOverlay() {
   ensureLoadingOverlay();
   try {
@@ -25,43 +25,43 @@
   } catch (_) {}
 })();
 
+const NAV_VERSION = "2024.12.clean";
+const FOOTER_VERSION = "2024.12.clean";
+const AUTH_STORAGE_KEY = "qs_auth_state";
+const ROLE_STORAGE_KEY = "qs_role";
+
 function bootstrapLayout() {
   if (window.__qsLayoutBooted) return;
   window.__qsLayoutBooted = true;
 
-  const NAV_VERSION = "2024.12.clean";
-  const FOOTER_VERSION = "2024.12.clean";
-  const AUTH_STORAGE_KEY = "qs_auth_state";
-  const ROLE_STORAGE_KEY = "qs_role";
-
   const doc = document;
+  if (!doc) return;
+
   const html = doc.documentElement;
-  const body = doc.body;
-  const currentPage = (location.pathname.split("/").pop() || "").toLowerCase();
+  const body = doc.body || doc.documentElement;
+  const currentPage = (location.pathname.split("/").pop() || "index.html").toLowerCase();
   const isLogin = currentPage === "login.html";
   const isNotFound = currentPage === "404.html";
 
-  if (body) body.classList.add("qs-layout");
+  const basePath = computeBasePath(doc);
+  ensureFavicon(doc, basePath);
 
-  const basePath = computeBasePath();
-  ensureStyles(basePath);
+  const nav = ensureNavigation(doc, body, basePath);
+  const footer = ensureFooter(doc, body);
 
-  const nav = ensureNavigation(basePath);
-  const footer = ensureFooter();
-
-  toggleTeacherNavLinks(html.classList.contains("role-teacher"));
-  observeRoleClassChanges();
+  toggleTeacherNavLinks(nav, html.classList.contains("role-teacher"));
+  observeRoleClassChanges(html, (isTeacher) => toggleTeacherNavLinks(nav, isTeacher));
 
   updateAuthAppearance(nav, readStoredAuthState());
-  bindNavAuthRedirect(nav);
+  bindNavAuthRedirect(nav, basePath);
   setupNavToggle(nav);
   highlightActiveLink(nav, currentPage);
   refreshNavSpacing(nav);
   observeNavHeight(nav);
 
   if (!isLogin && !isNotFound) {
-    injectAuthGuard(basePath);
-    injectAuthIntegration(basePath, nav);
+    injectAuthGuard(doc, basePath);
+    injectAuthIntegration(doc, basePath, nav);
   }
 
   window.QSLayout = Object.freeze({
@@ -72,244 +72,355 @@ function bootstrapLayout() {
 
   window.__qsLayoutReadAuthState = readStoredAuthState;
   window.__qsLayoutPersistAuthState = persistAuthState;
-  window.__qsLayoutPersistRole = persistRole;
-  window.__qsLayoutToggleTeacherNavLinks = toggleTeacherNavLinks;
+  window.__qsLayoutPersistRole = (role) => persistRole(role, nav);
+  window.__qsLayoutToggleTeacherNavLinks = (isTeacher) => toggleTeacherNavLinks(nav, isTeacher);
+}
 
+function computeBasePath(doc) {
+  try {
+    const script = doc.currentScript || doc.querySelector("script[src*='layout.js']");
+    if (!script) return "./";
+    const src = script.getAttribute("src") || "layout.js";
+    const scriptUrl = new URL(src, location.href);
+    const scriptParts = scriptUrl.pathname.split("/").filter(Boolean);
+    if (scriptParts.length) scriptParts.pop();
+    const pageParts = location.pathname.split("/").filter(Boolean);
+    if (pageParts.length) pageParts.pop();
 
-  function computeBasePath() {
-    try {
-      const script =
-        doc.currentScript || doc.querySelector("script[src*='layout.js']");
-      if (!script) return "";
-      const rawSrc = script.getAttribute("src") || "";
-      const resolved = new URL(rawSrc, location.href);
-      const parts = resolved.pathname.split("/").filter(Boolean);
-      if (parts.length) parts.pop();
-      const rootParts = parts.length ? parts.slice(0, -1) : [];
-      const pageParts = location.pathname
-        .split("/")
-        .filter(Boolean)
-        .slice(0, -1);
-      const from = pageParts.slice();
-      const to = rootParts.slice();
-      while (from.length && to.length && from[0] === to[0]) {
-        from.shift();
-        to.shift();
-      }
-      const ups = new Array(from.length).fill("..");
-      const downs = to;
-      const prefix = ups.concat(downs).join("/");
-      return prefix ? prefix + "/" : "./";
-    } catch (_) {
-      return "";
+    let commonIndex = 0;
+    while (
+      commonIndex < scriptParts.length &&
+      commonIndex < pageParts.length &&
+      scriptParts[commonIndex] === pageParts[commonIndex]
+    ) {
+      commonIndex += 1;
     }
+
+    const ups = pageParts.slice(commonIndex).map(() => "..");
+    const downs = scriptParts.slice(commonIndex);
+    const relative = ups.concat(downs).join("/");
+    return relative ? relative + "/" : "./";
+  } catch (_) {
+    return "./";
+  }
+}
+
+function ensureNavigation(doc, body, basePath) {
+  let nav = doc.querySelector(".qs-nav");
+  const template = buildNavTemplate(basePath);
+
+  if (!nav) {
+    nav = doc.createElement("div");
+    nav.className = "qs-nav";
+    nav.setAttribute("data-role", "main-nav");
+    nav.setAttribute("data-nav-version", NAV_VERSION);
+    nav.innerHTML = template;
+    if (body.firstChild) body.insertBefore(nav, body.firstChild);
+    else body.appendChild(nav);
+  } else {
+    nav.classList.add("qs-nav");
+    nav.setAttribute("data-role", "main-nav");
+    nav.setAttribute("data-nav-version", NAV_VERSION);
+    nav.innerHTML = template;
   }
 
+  return nav;
+}
 
-        <a class="qs-brand" href="${base}index.html">
-          <span class="qs-logo" aria-hidden="true">QS</span>
-          <span class="qs-brand-text">
-            <span class="qs-title">Plataforma QS</span>
-            <span class="qs-subtitle">Calidad de Software</span>
-          </span>
-        </a>
+function buildNavTemplate(basePath) {
+  return `
+    <div class="wrap">
+      <div class="qs-brand-shell">
+        <div class="qs-brand-region">
+          <a class="qs-brand" href="${basePath}index.html">
+            <span class="qs-logo" aria-hidden="true">QS</span>
+            <span class="qs-brand-text">
+              <span class="qs-title">Calidad de Software</span>
+              <span class="qs-subtitle">Campus QS</span>
+            </span>
+          </a>
+          <span class="qs-chip">Edicion 2024</span>
+        </div>
         <button class="qs-menu-toggle" type="button" aria-expanded="false" aria-controls="qs-nav-links">
           <span class="qs-menu-icon" aria-hidden="true"></span>
-          <span class="sr-only">Abrir menú</span>
+          <span class="sr-only">Abrir menu</span>
         </button>
-        <div class="qs-links-region" data-open="false">
-          <nav class="qs-tabs" id="qs-nav-links" aria-label="Navegación principal">
-            <a class="qs-btn" href="${base}materiales.html">Materiales</a>
-            <a class="qs-btn" href="${base}asistencia.html">Asistencia</a>
-            <a class="qs-btn" href="${base}calificaciones.html">Calificaciones</a>
-            <a class="qs-btn" href="${base}Foro.html">Foro</a>
-            <a
-              class="qs-btn teacher-only"
-              data-route="panel"
-              href="${base}paneldocente.html"
-              hidden
-              aria-hidden="true"
-            >Panel</a>
-          </nav>
+      </div>
+      <div class="qs-links-region" data-open="false">
+        <nav class="qs-tabs" id="qs-nav-links" aria-label="Navegacion principal">
+          <a class="qs-btn" href="${basePath}materiales.html">Materiales</a>
+          <a class="qs-btn" href="${basePath}asistencia.html">Asistencia</a>
+          <a class="qs-btn" href="${basePath}calificaciones.html">Calificaciones</a>
+          <a class="qs-btn" href="${basePath}Foro.html">Foro</a>
+          <a class="qs-btn teacher-only" data-route="panel" href="${basePath}paneldocente.html" hidden aria-hidden="true">Panel</a>
+        </nav>
+        <div class="qs-actions">
+          <a class="qs-cta" data-default-auth-link data-awaiting-auth="signed-out" href="${basePath}login.html">Iniciar sesion</a>
         </div>
-      </div>`;
+      </div>
+    </div>
+  `;
+}
 
+function ensureFooter(doc, body) {
+  let footer = doc.querySelector("footer[data-footer-version]");
+  const markup = `
+    <div class="footer-content">&copy; ${new Date().getFullYear()} Plataforma QS - Calidad de Software</div>
+  `;
 
-
-    if (!nav) {
-      nav = doc.createElement("nav");
-      nav.className = "qs-nav";
-      nav.setAttribute("data-role", "main-nav");
-      nav.setAttribute("data-nav-version", NAV_VERSION);
-      nav.innerHTML = template;
-      body.prepend(nav);
-    } else {
-      nav.classList.add("qs-nav");
-      if (nav.getAttribute("data-nav-version") !== NAV_VERSION) {
-        nav.innerHTML = template;
-        nav.setAttribute("data-nav-version", NAV_VERSION);
-      }
-    }
-
-    }
-  }
-
-
-    }
+  if (!footer) {
+    footer = doc.createElement("footer");
+    footer.className = "qs-footer";
+    footer.setAttribute("data-footer-version", FOOTER_VERSION);
+    footer.innerHTML = markup;
+    body.appendChild(footer);
+  } else {
     footer.classList.add("qs-footer");
     footer.setAttribute("data-footer-version", FOOTER_VERSION);
     footer.innerHTML = markup;
-    return footer;
   }
 
+  return footer;
+}
 
-      }
-    });
+function ensureFavicon(doc, basePath) {
+  const head = doc.head || doc.getElementsByTagName("head")[0];
+  if (!head) return;
+  const desiredHref = new URL(`${basePath}favicon.ico`, location.href).href;
+  let link = head.querySelector("link[rel='icon']");
+  if (!link) {
+    link = doc.createElement("link");
+    link.rel = "icon";
+    head.appendChild(link);
   }
+  link.href = desiredHref;
+}
 
+function setupNavToggle(nav) {
+  if (!nav || nav.__qsToggleBound) return;
+  const toggle = nav.querySelector(".qs-menu-toggle");
+  const region = nav.querySelector(".qs-links-region");
+  if (!toggle || !region) return;
 
+  const setState = (open) => {
+    nav.classList.toggle("is-open", open);
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    region.setAttribute("data-open", open ? "true" : "false");
+  };
 
-  function observeNavHeight(nav) {
-    if (!nav || !window.ResizeObserver) return;
+  toggle.addEventListener("click", () => {
+    setState(!nav.classList.contains("is-open"));
+  });
+
+  region.addEventListener("click", (evt) => {
+    const anchor = evt.target && evt.target.closest ? evt.target.closest("a") : null;
+    if (anchor) setState(false);
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 960) setState(false);
+  });
+
+  nav.__qsToggleBound = true;
+}
+
+function refreshNavSpacing(nav) {
+  if (!nav) return;
+  try {
+    const rect = nav.getBoundingClientRect();
+    const height = Math.max(56, Math.min(120, Math.round(rect.height || 72)));
+    const root = document.documentElement;
+    root.style.setProperty("--nav-h", `${height}px`);
+    root.style.setProperty("--anchor-offset", `${height + 8}px`);
+  } catch (_) {}
+}
+
+function observeNavHeight(nav) {
+  if (!nav || !window.ResizeObserver) return;
+  try {
     const observer = new ResizeObserver(() => refreshNavSpacing(nav));
     observer.observe(nav);
-  }
+  } catch (_) {}
+}
 
-  function shouldBypassAuth(href) {
-    if (!href) return true;
-    const trimmed = href.trim();
-    if (!trimmed) return true;
-    const lower = trimmed.split("#")[0].split("?")[0].toLowerCase();
-    if (!lower) return true;
-    if (lower === "login.html" || lower === "404.html") return true;
-    if (/^https?:\/\//.test(trimmed)) return true;
-    if (trimmed.startsWith("#")) return true;
-    if (trimmed.startsWith("mailto:")) return true;
-    if (trimmed.startsWith("tel:")) return true;
-    return false;
-  }
-
-  function bindNavAuthRedirect(nav) {
-    if (!nav || nav.__qsAuthRedirect) return;
-    nav.__qsAuthRedirect = true;
-    nav.addEventListener(
-      "click",
-      (evt) => {
-        try {
-          const anchor =
-            evt.target && evt.target.closest
-              ? evt.target.closest("a[href]")
-              : null;
-          if (!anchor) return;
-          if (!nav.contains(anchor)) return;
-          const href = anchor.getAttribute("href") || "";
-          if (shouldBypassAuth(href)) return;
-          const state = readStoredAuthState();
-          if (state && state !== "signed-in" && state !== "unknown") {
-            evt.preventDefault();
-            location.href = `${basePath}login.html`;
-          }
-        } catch (_) {}
-      },
-      true,
-    );
-  }
-
-  function readStoredAuthState() {
-    try {
-      const sessionValue = sessionStorage.getItem(AUTH_STORAGE_KEY);
-      if (sessionValue) return sessionValue;
-    } catch (_) {}
-    try {
-      const localValue = localStorage.getItem(AUTH_STORAGE_KEY);
-      if (localValue) return localValue;
-    } catch (_) {}
-    if (window.__qsAuthState) return window.__qsAuthState;
-    return "unknown";
-  }
-
-  function persistAuthState(state) {
-    try {
-      sessionStorage.setItem(AUTH_STORAGE_KEY, state);
-    } catch (_) {}
-    try {
-      localStorage.setItem(AUTH_STORAGE_KEY, state);
-    } catch (_) {}
-    window.__qsAuthState = state;
-  }
-
-  function persistRole(role) {
-    try {
-      localStorage.setItem(ROLE_STORAGE_KEY, role);
-    } catch (_) {}
-    toggleTeacherNavLinks(role === "docente");
-  }
-
-  function updateAuthAppearance(nav, state) {
-    if (!nav) return;
-    try {
-      const actions = nav.querySelector(".qs-actions");
-      if (!actions) return;
-      const defaultLink = actions.querySelector("[data-default-auth-link]");
-      if (!defaultLink) return;
-      if (state === "signed-in") {
-        defaultLink.textContent = "Cerrar sesión";
-        defaultLink.setAttribute("aria-label", "Cerrar sesión");
-        defaultLink.title = "Cerrar sesión";
-        defaultLink.setAttribute("data-awaiting-auth", "signed-in");
+function highlightActiveLink(nav, currentPage) {
+  if (!nav) return;
+  try {
+    const links = nav.querySelectorAll(".qs-tabs a[href]");
+    links.forEach((link) => {
+      const href = (link.getAttribute("href") || "").toLowerCase();
+      const normalized = href.split("#")[0].split("?")[0];
+      const isIndex = !currentPage || currentPage === "index.html";
+      const matches = normalized === currentPage || (isIndex && (normalized === "" || normalized === "./" || normalized === "index.html"));
+      if (matches) {
+        link.setAttribute("aria-current", "page");
       } else {
-        defaultLink.textContent = "Iniciar sesión";
-        defaultLink.setAttribute("aria-label", "Iniciar sesión");
-        defaultLink.title = "Iniciar sesión";
-        defaultLink.setAttribute("data-awaiting-auth", "signed-out");
+        link.removeAttribute("aria-current");
       }
-    } catch (_) {}
-  }
+    });
+  } catch (_) {}
+}
 
-  function toggleTeacherNavLinks(isTeacher) {
+function bindNavAuthRedirect(nav, basePath) {
+  if (!nav || nav.__qsAuthRedirectBound) return;
+  nav.__qsAuthRedirectBound = true;
+  nav.addEventListener(
+    "click",
+    (evt) => {
+      const anchor = evt.target && evt.target.closest ? evt.target.closest("a[href]") : null;
+      if (!anchor || !nav.contains(anchor)) return;
+      const href = anchor.getAttribute("href") || "";
+      if (shouldBypassAuth(href)) return;
+      const state = readStoredAuthState();
+      if (state !== "signed-in" && state !== "unknown") {
+        evt.preventDefault();
+        location.href = `${basePath}login.html`;
+      }
+    },
+    true,
+  );
+}
+
+function shouldBypassAuth(href) {
+  if (!href) return true;
+  const trimmed = href.trim();
+  if (!trimmed) return true;
+  const lower = trimmed.split("#")[0].split("?")[0].toLowerCase();
+  if (!lower) return true;
+  if (lower === "login.html" || lower === "404.html") return true;
+  if (/^https?:\/\//.test(trimmed)) return true;
+  if (trimmed.startsWith("#")) return true;
+  if (trimmed.startsWith("mailto:")) return true;
+  if (trimmed.startsWith("tel:")) return true;
+  return false;
+}
+
+function readStoredAuthState() {
+  try {
+    const sessionValue = sessionStorage.getItem(AUTH_STORAGE_KEY);
+    if (sessionValue) return sessionValue;
+  } catch (_) {}
+  try {
+    const localValue = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (localValue) return localValue;
+  } catch (_) {}
+  if (typeof window.__qsAuthState === "string") return window.__qsAuthState;
+  return "unknown";
+}
+
+function persistAuthState(state) {
+  try {
+    sessionStorage.setItem(AUTH_STORAGE_KEY, state);
+  } catch (_) {}
+  try {
+    localStorage.setItem(AUTH_STORAGE_KEY, state);
+  } catch (_) {}
+  window.__qsAuthState = state;
+}
+
+function persistRole(role, nav) {
+  try {
+    if (role) localStorage.setItem(ROLE_STORAGE_KEY, role);
+    else localStorage.removeItem(ROLE_STORAGE_KEY);
+  } catch (_) {}
+  toggleTeacherNavLinks(nav, role === "docente");
+}
+
+function toggleTeacherNavLinks(nav, isTeacher) {
+  if (!nav) return;
+  try {
+    nav.querySelectorAll("[data-route='panel']").forEach((link) => {
+      if (!link) return;
+      if (isTeacher) {
+        link.removeAttribute("hidden");
+        link.removeAttribute("aria-hidden");
+      } else {
+        link.setAttribute("hidden", "hidden");
+        link.setAttribute("aria-hidden", "true");
+      }
+    });
+  } catch (_) {}
+}
+
+function observeRoleClassChanges(html, callback) {
+  if (!html || !window.MutationObserver) return;
+  try {
+    const observer = new MutationObserver(() => {
+      callback(html.classList.contains("role-teacher"));
+    });
+    observer.observe(html, { attributes: true, attributeFilter: ["class"] });
+  } catch (_) {}
+}
+
+function updateAuthAppearance(nav, state) {
+  if (!nav) return;
+  try {
+    const actions = nav.querySelector(".qs-actions");
+    if (!actions) return;
+    const link = actions.querySelector("[data-default-auth-link]");
+    if (!link) return;
+    if (state === "signed-in") {
+      link.textContent = "Cerrar sesion";
+      link.setAttribute("aria-label", "Cerrar sesion");
+      link.setAttribute("data-awaiting-auth", "signed-in");
+    } else {
+      link.textContent = "Iniciar sesion";
+      link.setAttribute("aria-label", "Iniciar sesion");
+      link.setAttribute("data-awaiting-auth", "signed-out");
+    }
+  } catch (_) {}
+}
+
+function injectAuthGuard(doc, basePath) {
+  try {
+    if (doc.querySelector("script[data-qs-auth-guard]")) return;
+    const existing = doc.querySelector("script[src$='auth-guard.js']");
+    if (existing) return;
+    const script = doc.createElement("script");
+    script.type = "module";
+    script.src = `${basePath}js/auth-guard.js`;
+    script.setAttribute("data-qs-auth-guard", "true");
+    doc.head.appendChild(script);
+  } catch (_) {}
+}
+
+function injectAuthIntegration(doc, basePath, nav) {
+  if (!nav) return;
+  const authLink = nav.querySelector("[data-default-auth-link]");
+  if (!authLink) return;
+
+  try {
+    if (!doc.querySelector("script[src$='role-gate.js']")) {
+      if (!doc.querySelector("script[data-qs-auth-integration]")) {
+        const script = doc.createElement("script");
+        script.type = "module";
+        script.src = `${basePath}js/role-gate.js`;
+        script.setAttribute("data-qs-auth-integration", "true");
+        doc.head.appendChild(script);
+      }
+    }
+  } catch (_) {}
+
+  if (authLink.__qsAuthBound) return;
+  authLink.__qsAuthBound = true;
+  authLink.addEventListener("click", async (evt) => {
     try {
-      const links = nav ? nav.querySelectorAll("[data-route='panel']") : [];
-      links.forEach((link) => {
-        if (!link) return;
-        if (isTeacher) {
-          link.removeAttribute("hidden");
-          link.removeAttribute("aria-hidden");
-        } else {
-          link.setAttribute("hidden", "hidden");
-          link.setAttribute("aria-hidden", "true");
+      const state = readStoredAuthState();
+      if (state === "signed-in") {
+        evt.preventDefault();
+        const module = await import(`${basePath}js/firebase.js`);
+        if (module && typeof module.signOutCurrent === "function") {
+          await module.signOutCurrent();
+          persistAuthState("signed-out");
+          updateAuthAppearance(nav, "signed-out");
         }
-      });
-    } catch (_) {}
-  }
-
-  function observeRoleClassChanges() {
-    if (!html || !window.MutationObserver) return;
-    try {
-      const observer = new MutationObserver(() => {
-        toggleTeacherNavLinks(html.classList.contains("role-teacher"));
-      });
-      observer.observe(html, {
-        attributes: true,
-        attributeFilter: ["class"],
-      });
-    } catch (_) {}
-  }
-
-
-          }
-          persistRole(isTeacher ? 'docente' : 'estudiante');
-          applyRole(isTeacher);
-          showPanel(isTeacher);
-        } else {
-          persistAuth('signed-out');
-          setSignIn();
-          showPanel(false);
-          persistRole('estudiante');
-          applyRole(false);
-        }
-      });
-    `;
-
+      } else {
+        persistAuthState("awaiting");
+      }
+    } catch (error) {
+      console.error('[layout] auth integration failed', error);
+    }
+  });
 }
 
 function ensureLoadingOverlay() {
@@ -323,7 +434,7 @@ function ensureLoadingOverlay() {
     overlay.innerHTML = `
       <div class="qs-loading-card" role="status" aria-live="polite" aria-busy="true">
         <span class="qs-loading-spinner" aria-hidden="true"></span>
-        <p class="qs-loading-text">Cargando plataforma…</p>
+        <p class="qs-loading-text">Cargando plataforma...</p>
       </div>
     `;
     const target = doc.body || doc.documentElement;
@@ -361,9 +472,7 @@ function markLayoutReady() {
 window.addEventListener("load", markLayoutReady, { once: true });
 
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", bootstrapLayout, {
-    once: true,
-  });
+  document.addEventListener("DOMContentLoaded", bootstrapLayout, { once: true });
 } else {
   bootstrapLayout();
 }
