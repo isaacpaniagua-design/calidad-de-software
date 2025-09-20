@@ -1,3 +1,16 @@
+// Refleja el rol almacenado lo antes posible para controlar los elementos
+// marcados como `teacher-only` antes de que se renderice el contenido.
+(function syncRoleFromStorage(){
+  try {
+    const root = document.documentElement;
+    if (!root) return;
+    const stored = localStorage.getItem("qs_role");
+    root.classList.remove("role-teacher", "role-student");
+    if (stored === "docente") root.classList.add("role-teacher");
+    else if (stored) root.classList.add("role-student");
+  } catch (_) {}
+})();
+
 document.addEventListener("DOMContentLoaded", () => {
   const p = location.pathname;
   const pLow = p.toLowerCase();
@@ -21,13 +34,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // Nav compartido
     const navHtml = `
       <div class="wrap">
-        <a class="qs-brand" href="${base}index.html"><span>Plataforma QS</span></a>
+        <a class="qs-brand" href="${base}index.html">
+          <span class="qs-logo">QS</span>
+          <span class="qs-title">Plataforma QS</span>
+        </a>
         <nav class="qs-tabs" aria-label="Navegación">
           <a class="qs-btn" href="${base}materiales.html">Materiales</a>
           <a class="qs-btn" href="${base}asistencia.html">Asistencia</a>
           <a class="qs-btn" href="${base}calificaciones.html">Calificaciones</a>
           <a class="qs-btn" href="${base}Foro.html">Foro</a>
-          <a class="qs-btn" href="${base}paneldocente.html">Panel</a>
+          <a class="qs-btn teacher-only" href="${base}paneldocente.html">Panel</a>
         </nav>
       </div>`;
 
@@ -38,7 +54,13 @@ document.addEventListener("DOMContentLoaded", () => {
       document.body.prepend(navEl);
     }
     navEl.setAttribute("data-role", "main-nav");
-    navEl.innerHTML = navHtml;
+    if (
+      !navEl.children.length ||
+      !navEl.querySelector(".qs-brand") ||
+      !navEl.querySelector(".qs-tabs")
+    ) {
+      navEl.innerHTML = navHtml;
+    }
 
     // Marca pestaña activa
     const fname = (p.split("/").pop() || "index.html").toLowerCase();
@@ -124,26 +146,49 @@ document.addEventListener("DOMContentLoaded", () => {
             for (let i = 0; i < up; i++) prefix += '../';
             // Use './js/firebase.js' when prefix is empty so that the import is treated as relative.
             const importPath = (prefix === '') ? './js/firebase.js' : (prefix + 'js/firebase.js');
-            const firebaseModule = await import(importPath);
-            const { onAuth, signInWithGoogleOpen, signOutCurrent } = firebaseModule;
-            const navTabs = document.querySelector('.qs-tabs');
-            if (!navTabs) return;
-            let btn = navTabs.querySelector('.qs-auth-btn');
-            if (!btn) {
-              btn = document.createElement('button');
-              btn.className = 'qs-btn qs-auth-btn';
-              btn.style.marginLeft = '8px';
-              navTabs.appendChild(btn);
+        const firebaseModule = await import(importPath);
+        const { onAuth, signInWithGoogleOpen, signOutCurrent, isTeacherEmail, isTeacherByDoc } = firebaseModule;
+        const navTabs = document.querySelector('.qs-tabs');
+        if (!navTabs) return;
+        const panelLink = navTabs.querySelector('a[href$="paneldocente.html"]');
+        let btn = navTabs.querySelector('.qs-auth-btn');
+        if (!btn) {
+          btn = document.createElement('button');
+          btn.className = 'qs-btn qs-auth-btn';
+          btn.style.marginLeft = '8px';
+          navTabs.appendChild(btn);
+        }
+        onAuth(async (user) => {
+          const root = document.documentElement;
+          if (user) {
+            btn.textContent = 'Cerrar sesión';
+            btn.onclick = () => signOutCurrent();
+            let canSeePanel = false;
+            try {
+              canSeePanel = isTeacherEmail(user.email) || (await isTeacherByDoc(user.uid));
+            } catch (_) {
+              canSeePanel = false;
             }
-            onAuth((user) => {
-              if (user) {
-                btn.textContent = 'Cerrar sesión';
-                btn.onclick = () => signOutCurrent();
+            if (root) {
+              if (canSeePanel) {
+                root.classList.add('role-teacher');
+                root.classList.remove('role-student');
               } else {
-                btn.textContent = 'Iniciar sesión';
-                btn.onclick = () => signInWithGoogleOpen();
+                root.classList.remove('role-teacher');
+                root.classList.add('role-student');
               }
-            });
+            }
+            if (panelLink) panelLink.style.display = canSeePanel ? '' : 'none';
+          } else {
+            btn.textContent = 'Iniciar sesión';
+            btn.onclick = () => signInWithGoogleOpen();
+            if (root) {
+              root.classList.remove('role-teacher');
+              root.classList.add('role-student');
+            }
+            if (panelLink) panelLink.style.display = 'none';
+          }
+        });
           })().catch(console.error);
         `;
         document.body.appendChild(signScr);
@@ -206,12 +251,21 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.style.boxShadow = '0 6px 18px rgba(0,0,0,.2)';
         document.body.appendChild(btn);
         onAuth((user) => {
+          const root = document.documentElement;
           if (user) {
             btn.textContent = 'Cerrar sesión';
             btn.onclick = () => signOutCurrent();
+            if (root) {
+              root.classList.add('role-teacher');
+              root.classList.remove('role-student');
+            }
           } else {
             btn.textContent = 'Iniciar sesión';
             btn.onclick = () => signInWithGoogleOpen();
+            if (root) {
+              root.classList.remove('role-teacher');
+              root.classList.add('role-student');
+            }
           }
         });
       })().catch(console.error);

@@ -282,10 +282,43 @@ export async function saveTodayAttendance({
 export function subscribeTodayAttendance(cb, onError) {
   const db = getDb();
   const date = todayKey();
+  const q = query(collection(db, "attendances"), where("date", "==", date));
+  return onSnapshot(
+    q,
+    (snap) => {
+      const items = [];
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        items.push({
+          id: docSnap.id,
+          name: data.name,
+          email: data.email,
+          type: data.type,
+          timestamp: data.timestamp?.toDate
+            ? data.timestamp.toDate()
+            : new Date(),
+        });
+      });
+      items.sort((a, b) => {
+        const timeA = a.timestamp?.getTime?.() || 0;
+        const timeB = b.timestamp?.getTime?.() || 0;
+        return timeB - timeA;
+      });
+      cb(items);
+    },
+    (error) => {
+      if (onError) onError(error);
+    }
+  );
+}
+
+export function subscribeTodayAttendanceByUser(email, cb, onError) {
+  const db = getDb();
+  const date = todayKey();
   const q = query(
     collection(db, "attendances"),
     where("date", "==", date),
-    orderBy("timestamp", "desc")
+    where("email", "==", (email || "").toLowerCase())
   );
   return onSnapshot(
     q,
@@ -303,38 +336,10 @@ export function subscribeTodayAttendance(cb, onError) {
             : new Date(),
         });
       });
-      cb(items);
-    },
-    (error) => {
-      if (onError) onError(error);
-    }
-  );
-}
-
-export function subscribeTodayAttendanceByUser(email, cb, onError) {
-  const db = getDb();
-  const date = todayKey();
-  const q = query(
-    collection(db, "attendances"),
-    where("date", "==", date),
-    where("email", "==", (email || "").toLowerCase()),
-    orderBy("timestamp", "desc")
-  );
-  return onSnapshot(
-    q,
-    (snap) => {
-      const items = [];
-      snap.forEach((docSnap) => {
-        const data = docSnap.data();
-        items.push({
-          id: docSnap.id,
-          name: data.name,
-          email: data.email,
-          type: data.type,
-          timestamp: data.timestamp?.toDate
-            ? data.timestamp.toDate()
-            : new Date(),
-        });
+      items.sort((a, b) => {
+        const timeA = a.timestamp?.getTime?.() || 0;
+        const timeB = b.timestamp?.getTime?.() || 0;
+        return timeB - timeA;
       });
       cb(items);
     },

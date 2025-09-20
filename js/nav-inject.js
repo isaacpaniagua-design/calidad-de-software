@@ -1,3 +1,19 @@
+// Marca rol previamente almacenado para evitar flashes de contenido docente.
+(function syncRoleFromStorage(){
+  try {
+    var root = document.documentElement;
+    var stored = localStorage.getItem('qs_role');
+    if (root) {
+      root.classList.remove('role-teacher', 'role-student');
+      if (stored === 'docente') {
+        root.classList.add('role-teacher');
+      } else if (stored) {
+        root.classList.add('role-student');
+      }
+    }
+  } catch (_) {}
+})();
+
 // Injects a top nav similar to index, without altering page structure
 document.addEventListener('DOMContentLoaded', function(){
   try{
@@ -63,10 +79,16 @@ document.addEventListener('DOMContentLoaded', function(){
       nav = document.createElement('div');
       nav.className = 'qs-nav';
       nav.innerHTML = template;
+      nav.setAttribute('data-role','main-nav');
       document.body.prepend(nav);
     } else {
       nav.classList.add('qs-nav');
-      nav.innerHTML = template;
+      nav.setAttribute('data-role','main-nav');
+      var hasBrand = !!nav.querySelector('.qs-brand');
+      var hasTabs = !!nav.querySelector('.qs-tabs');
+      if (!hasBrand || !hasTabs || !nav.children || nav.children.length === 0) {
+        nav.innerHTML = template;
+      }
     }
 
     // Mark active link
@@ -155,6 +177,7 @@ document.addEventListener('DOMContentLoaded', function(){
             }
             // Escucha cambios de autenticación para ajustar el texto del botón y ocultar el enlace de panel
             onAuth(async (user) => {
+              const root = document.documentElement;
               if (user) {
                 btn.textContent = 'Cerrar sesión';
                 btn.onclick = () => signOutCurrent();
@@ -165,12 +188,25 @@ document.addEventListener('DOMContentLoaded', function(){
                 } catch (_) {
                   okTeacher = false;
                 }
+                if (root) {
+                  if (okTeacher) {
+                    root.classList.add('role-teacher');
+                    root.classList.remove('role-student');
+                  } else {
+                    root.classList.remove('role-teacher');
+                    root.classList.add('role-student');
+                  }
+                }
                 if (panelLink) {
                   panelLink.style.display = okTeacher ? '' : 'none';
                 }
               } else {
                 btn.textContent = 'Iniciar sesión';
                 btn.onclick = () => signInWithGoogleOpen();
+                if (root) {
+                  root.classList.remove('role-teacher');
+                  root.classList.add('role-student');
+                }
                 // Sin sesión: oculta el panel docente
                 if (panelLink) panelLink.style.display = 'none';
               }

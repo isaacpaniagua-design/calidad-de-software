@@ -242,6 +242,7 @@
             {id: "244242", name: "Duarte Lopez, Adlemi Guadalupe", email: "adlemi.duarte244242@potros.itson.edu.mx", type: "student"},
             {id: "244473", name: "Espericueta Ramos, Jesus Alan", email: "jesus.espericueta244473@potros.itson.edu.mx", type: "student"},
             {id: "244608", name: "Gracia Morales, Sergio Alejandro", email: "sergio.gracia244608@potros.itson.edu.mx", type: "student"},
+            {id: "251001", name: "Guaymas, Iman", email: "iman.guaymas@potros.itson.edu.mx", type: "student"},
             {id: "228847", name: "Hernandez Gonzalez, Julian Ricardo", email: "julian.hernandez228847@potros.itson.edu.mx", type: "student"},
             {id: "248997", name: "Le Blohic Garay, Mario Enrique", email: "mario.leblohic248997@potros.itson.edu.mx", type: "student"},
             {id: "249012", name: "Lopez Guerrero, Luis Carlos", email: "luis.lopez249012@potros.itson.edu.mx", type: "student"},
@@ -747,7 +748,24 @@
           setRemoteAttendanceRecords([]);
           if (!window.__attSubscriptionWarned) {
             window.__attSubscriptionWarned = true;
-            alert('No se pudo consultar tu asistencia en línea. Se seguirá mostrando lo guardado localmente.');
+            const permissionDenied = (err?.code === 'permission-denied') ||
+              (typeof err?.message === 'string' && err.message.toLowerCase().includes('permission'));
+            if (!isTeacher && permissionDenied) {
+              if (typeof window.showAttendanceToast === 'function') {
+                window.showAttendanceToast('No se pudo sincronizar tu asistencia en línea. Mostrando los datos guardados en este dispositivo.');
+              } else {
+                console.info('Attendance subscription fallback to local data for student');
+              }
+            } else {
+              const fallbackMessage = isTeacher
+                ? 'Ocurrió un problema al sincronizar la asistencia en línea. Puedes reintentar más tarde o contactar al administrador.'
+                : 'No fue posible sincronizar la asistencia en línea en este momento. Seguiremos usando la información disponible aquí.';
+              if (typeof window.showAttendanceToast === 'function') {
+                window.showAttendanceToast(fallbackMessage);
+              } else {
+                console.warn(fallbackMessage);
+              }
+            }
           }
         };
         window.__attSubscriptionWarned = false;

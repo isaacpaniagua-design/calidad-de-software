@@ -117,6 +117,12 @@ onAuth(async (user) => {
   }
   setLocalRole(teacher);
 
+  const root = document.documentElement;
+  if (root) {
+    root.classList.toggle('role-teacher', !!teacher);
+    root.classList.toggle('role-student', !teacher);
+  }
+
   const page = (location.pathname.split("/").pop() || "").toLowerCase();
   if (page === "materiales.html") applyMaterialsRole(teacher);
   // Calificaciones.html ya contiene la barra de navegación con su propio botón
