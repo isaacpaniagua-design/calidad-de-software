@@ -117,15 +117,38 @@
         <div class="wrap">
           <a class="qs-brand" href="index.html">
             <span class="qs-logo">QS</span>
-            <span class="qs-title">Plataforma QS</span>
+            <span class="qs-brand-text">
+              <span class="qs-title">Plataforma QS</span>
+              <span class="qs-subtitle">Calidad de Software</span>
+            </span>
           </a>
-          <nav class="qs-tabs" aria-label="Navegación">
-            <a class="qs-btn" href="materiales.html">Materiales</a>
-            <a class="qs-btn" href="asistencia.html">Asistencia</a>
-            <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
-            <a class="qs-btn" href="Foro.html">Foro</a>
-            <a class="qs-btn teacher-only" href="paneldocente.html">Panel</a>
-          </nav>
+          <button
+            class="qs-menu-toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="qs-nav-links"
+          >
+            <span class="qs-menu-icon" aria-hidden="true"></span>
+            <span class="sr-only">Abrir menú</span>
+          </button>
+          <div class="qs-links-region">
+            <nav
+              class="qs-tabs"
+              id="qs-nav-links"
+              aria-label="Navegación principal"
+            >
+              <a class="qs-btn" href="materiales.html">Materiales</a>
+              <a class="qs-btn" href="asistencia.html">Asistencia</a>
+              <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+              <a class="qs-btn" href="Foro.html">Foro</a>
+              <a class="qs-btn teacher-only" href="paneldocente.html">Panel</a>
+            </nav>
+            <div class="qs-actions" data-auth-slot>
+              <a class="qs-cta" href="login.html" data-default-auth-link
+                >Iniciar sesión</a
+              >
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1823,13 +1846,25 @@
         } catch (e) {}
       });
     </script>
+
+    <script>
+      window.firebaseConfig = {
+        apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
+        authDomain: "calidad-de-software-v2.firebaseapp.com",
+        projectId: "calidad-de-software-v2",
+        storageBucket: "calidad-de-software-v2.appspot.com",
+        messagingSenderId: "220818066383",
+        appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
+      };
+    </script>
+
     <script type="module" src="js/calificaciones-backend.js"></script>
     <!-- Cargar vista previa del estudiante para docentes. Este módulo inserta la sección
          #student-preview en el DOM y llena la tabla de actividades cuando se
          selecciona un alumno. Si el usuario no tiene rol de docente, la sección
          seguirá oculta por el gating de permisos. -->
     <script type="module" src="js/calificaciones-teacher-preview.js"></script>
-<script defer src="js/layout.js"></script>
+
     <!-- Ajuste dinámico de los rangos de las calificaciones: escala 0–10 -->
     <script>
       document.addEventListener('DOMContentLoaded', function () {
@@ -1841,70 +1876,9 @@
           });
       });
     </script>
-          <script type="module" src="./js/role-gate.js"></script>
 
-      <script>
-        // Gating por rol local: estudiante solo lectura
-        document.addEventListener("DOMContentLoaded", function () {
-          try {
-            var rol = (
-              localStorage.getItem("qs_role") || "estudiante"
-            ).toLowerCase();
-            if (rol !== "docente") {
-              document
-                .querySelectorAll("input, select, textarea, button")
-                .forEach(function (el) {
-                  if (el.tagName === "BUTTON") {
-                    if (!el.classList.contains('tab-button')) {
-                      el.disabled = true;
-                    }
-                  } else if (
-                    el.tagName === "INPUT" ||
-                    el.tagName === "SELECT" ||
-                    el.tagName === "TEXTAREA"
-                  ) {
-                    el.readOnly = true;
-                    el.disabled = true;
-                  }
-                });
-              document
-                .querySelectorAll(".teacher-only,.docente-only")
-                .forEach(function (el) {
-                  el.style.display = "none";
-                });
-            }
-          } catch (e) {}
-        });
-      </script>
-
-      <script>
-        window.firebaseConfig = {
-          apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
-          authDomain: "calidad-de-software-v2.firebaseapp.com",
-          projectId: "calidad-de-software-v2",
-          storageBucket: "calidad-de-software-v2.appspot.com",
-          messagingSenderId: "220818066383",
-          appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
-        };
-      </script>
-
-      <script type="module" src="js/calificaciones-backend.js"></script>
-      <!-- Cargar vista previa del estudiante para docentes. -->
-      <script type="module" src="js/calificaciones-teacher-preview.js"></script>
-
-      <script>
-        document.addEventListener('DOMContentLoaded', function () {
-          document
-            .querySelectorAll('.grade-input, .project-grade-input')
-            .forEach(function (input) {
-              input.setAttribute('max', '10');
-              input.setAttribute('min', '0');
-            });
-        });
-      </script>
-
-      <script defer src="js/layout.js"></script>
-      <script defer src="js/back-home.js"></script>
-      <script defer src="js/nav-inject.js"></script>
+    <script defer src="js/layout.js"></script>
+    <script defer src="js/back-home.js"></script>
+    <script defer src="js/nav-inject.js"></script>
     </body>
   </html>

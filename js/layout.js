@@ -11,6 +11,47 @@
   } catch (_) {}
 })();
 
+function getStoredAuthState() {
+  const key = 'qs_auth_state';
+  try {
+    const sessionValue = sessionStorage.getItem(key);
+    if (sessionValue) return sessionValue;
+  } catch (_) {}
+  try {
+    const localValue = localStorage.getItem(key);
+    if (localValue) return localValue;
+  } catch (_) {}
+  try {
+    if (typeof window !== 'undefined' && window.__qsAuthState) {
+      return window.__qsAuthState;
+    }
+  } catch (_) {}
+  return '';
+}
+
+function applyInitialAuthAppearance(navEl) {
+  if (!navEl) return;
+  try {
+    const actions = navEl.querySelector('.qs-actions');
+    if (!actions) return;
+    const defaultLink = actions.querySelector('[data-default-auth-link]');
+    if (!defaultLink) return;
+    const state = getStoredAuthState();
+    const isSignedIn = state === 'signed-in';
+    const text = isSignedIn ? 'Cerrar sesión' : 'Iniciar sesión';
+    defaultLink.textContent = text;
+    defaultLink.setAttribute('aria-label', text);
+    defaultLink.title = text;
+    defaultLink.setAttribute('data-awaiting-auth', isSignedIn ? 'signed-in' : 'signed-out');
+    if (isSignedIn && !defaultLink.__qsAwaitPrevent) {
+      defaultLink.__qsAwaitPrevent = true;
+      defaultLink.addEventListener('click', (evt) => {
+        try { evt.preventDefault(); } catch (_) {}
+      });
+    }
+  } catch (_) {}
+}
+
 function initLayout() {
   const p = location.pathname;
   const pLow = p.toLowerCase();
@@ -43,19 +84,32 @@ function initLayout() {
     }
 
     // Nav compartido
+    const NAV_VERSION = '2024-11-revamp';
     const navHtml = `
       <div class="wrap">
         <a class="qs-brand" href="${base}index.html">
           <span class="qs-logo">QS</span>
-          <span class="qs-title">Plataforma QS</span>
+          <span class="qs-brand-text">
+            <span class="qs-title">Plataforma QS</span>
+            <span class="qs-subtitle">Calidad de Software</span>
+          </span>
         </a>
-        <nav class="qs-tabs" aria-label="Navegación">
-          <a class="qs-btn" href="${base}materiales.html">Materiales</a>
-          <a class="qs-btn" href="${base}asistencia.html">Asistencia</a>
-          <a class="qs-btn" href="${base}calificaciones.html">Calificaciones</a>
-          <a class="qs-btn" href="${base}Foro.html">Foro</a>
-          <a class="qs-btn teacher-only" href="${base}paneldocente.html">Panel</a>
-        </nav>
+        <button class="qs-menu-toggle" type="button" aria-expanded="false" aria-controls="qs-nav-links">
+          <span class="qs-menu-icon" aria-hidden="true"></span>
+          <span class="sr-only">Abrir menú</span>
+        </button>
+        <div class="qs-links-region">
+          <nav class="qs-tabs" id="qs-nav-links" aria-label="Navegación principal">
+            <a class="qs-btn" href="${base}materiales.html">Materiales</a>
+            <a class="qs-btn" href="${base}asistencia.html">Asistencia</a>
+            <a class="qs-btn" href="${base}calificaciones.html">Calificaciones</a>
+            <a class="qs-btn" href="${base}Foro.html">Foro</a>
+            <a class="qs-btn teacher-only" href="${base}paneldocente.html">Panel</a>
+          </nav>
+          <div class="qs-actions" data-auth-slot>
+            <a class="qs-cta" href="${base}login.html" data-default-auth-link>Iniciar sesión</a>
+          </div>
+        </div>
       </div>`;
 
     let navEl = document.querySelector(".qs-nav, [data-role='main-nav']");
@@ -65,13 +119,47 @@ function initLayout() {
       document.body.prepend(navEl);
     }
     navEl.setAttribute("data-role", "main-nav");
+    const version = navEl.getAttribute("data-nav-version");
     if (
       !navEl.children.length ||
       !navEl.querySelector(".qs-brand") ||
-      !navEl.querySelector(".qs-tabs")
+      !navEl.querySelector(".qs-tabs") ||
+      version !== NAV_VERSION
     ) {
       navEl.innerHTML = navHtml;
+      navEl.setAttribute("data-nav-version", NAV_VERSION);
     }
+
+    applyInitialAuthAppearance(navEl);
+
+    const ensureToggle = (navNode) => {
+      if (!navNode || navNode.__qsToggleBound) return;
+      const toggle = navNode.querySelector(".qs-menu-toggle");
+      const region = navNode.querySelector(".qs-links-region");
+      if (!toggle || !region) return;
+      navNode.__qsToggleBound = true;
+      const setState = (open) => {
+        if (open) navNode.classList.add("is-open");
+        else navNode.classList.remove("is-open");
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+        region.setAttribute("data-open", open ? "true" : "false");
+      };
+      setState(false);
+      toggle.addEventListener("click", () => {
+        setState(!navNode.classList.contains("is-open"));
+      });
+      region.addEventListener("click", (evt) => {
+        const anchor = evt.target?.closest?.("a[href]");
+        if (anchor) setState(false);
+      });
+      window.addEventListener("resize", () => {
+        if (window.innerWidth > 960) setState(false);
+      });
+    };
+    if (typeof window.setupQsNavToggle !== "function") {
+      window.setupQsNavToggle = ensureToggle;
+    }
+    (window.setupQsNavToggle || ensureToggle)(navEl);
 
     // Marca pestaña activa
     const fname = (p.split("/").pop() || "index.html").toLowerCase();
@@ -157,38 +245,94 @@ function initLayout() {
             for (let i = 0; i < up; i++) prefix += '../';
             // Use './js/firebase.js' when prefix is empty so that the import is treated as relative.
             const importPath = (prefix === '') ? './js/firebase.js' : (prefix + 'js/firebase.js');
-        const firebaseModule = await import(importPath);
-        const { onAuth, signInWithGoogleOpen, signOutCurrent, isTeacherEmail, isTeacherByDoc } = firebaseModule;
-        const navTabs = document.querySelector('.qs-tabs');
-        if (!navTabs) return;
-        const panelLink = navTabs.querySelector('a[href$="paneldocente.html"]');
-        let btn = navTabs.querySelector('.qs-auth-btn');
-        if (!btn) {
-          btn = document.createElement('button');
-          btn.className = 'qs-btn qs-auth-btn';
-          btn.style.marginLeft = '8px';
-          navTabs.appendChild(btn);
-        }
-        onAuth(async (user) => {
-
-          if (user) {
-            btn.textContent = 'Cerrar sesión';
-            btn.onclick = () => signOutCurrent();
-            let canSeePanel = false;
-            try {
-              canSeePanel = isTeacherEmail(user.email) || (await isTeacherByDoc(user.uid));
-            } catch (_) {
-              canSeePanel = false;
+            const firebaseModule = await import(importPath);
+            const { onAuth, signInWithGoogleOpen, signOutCurrent, isTeacherEmail, isTeacherByDoc } = firebaseModule;
+            const navTabs = document.querySelector('.qs-tabs');
+            const actions = document.querySelector('.qs-actions');
+            if (!navTabs || !actions) return;
+            const defaultLink = actions.querySelector('[data-default-auth-link]');
+            if (defaultLink) defaultLink.remove();
+            const existingButtons = Array.from(actions.querySelectorAll('.qs-auth-btn'));
+            let btn = existingButtons[0] || null;
+            if (existingButtons.length > 1) {
+              for (let i = 1; i < existingButtons.length; i++) {
+                existingButtons[i].remove();
+              }
             }
+            if (!btn) {
+              btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'qs-cta qs-auth-btn';
+              actions.appendChild(btn);
+            }
+            const panelLink = navTabs.querySelector('a[href$="paneldocente.html"]');
 
-            if (panelLink) panelLink.style.display = canSeePanel ? '' : 'none';
-          } else {
-            btn.textContent = 'Iniciar sesión';
-            btn.onclick = () => signInWithGoogleOpen();
+            const AUTH_STORAGE_KEY = 'qs_auth_state';
+            const readStoredAuthState = () => {
+              try {
+                const sessionValue = sessionStorage.getItem(AUTH_STORAGE_KEY);
+                if (sessionValue) return sessionValue;
+              } catch (_) {}
+              try {
+                const localValue = localStorage.getItem(AUTH_STORAGE_KEY);
+                if (localValue) return localValue;
+              } catch (_) {}
+              try {
+                if (window.__qsAuthState) return window.__qsAuthState;
+              } catch (_) {}
+              return '';
+            };
 
-            if (panelLink) panelLink.style.display = 'none';
-          }
-        });
+            const persistAuthState = (state) => {
+              try { sessionStorage.setItem(AUTH_STORAGE_KEY, state); } catch (_) {}
+              try { localStorage.setItem(AUTH_STORAGE_KEY, state); } catch (_) {}
+              try { window.__qsAuthState = state; } catch (_) {}
+            };
+
+            const setSignInAppearance = () => {
+              btn.textContent = 'Iniciar sesión';
+              btn.setAttribute('aria-label', 'Iniciar sesión');
+              btn.title = 'Iniciar sesión';
+            };
+            const setSignOutAppearance = () => {
+              btn.textContent = 'Cerrar sesión';
+              btn.setAttribute('aria-label', 'Cerrar sesión');
+              btn.title = 'Cerrar sesión';
+            };
+
+            const applyStateAppearance = (state) => {
+              if (state === 'signed-in') {
+                setSignOutAppearance();
+                btn.onclick = () => signOutCurrent();
+              } else {
+                setSignInAppearance();
+                btn.onclick = () => signInWithGoogleOpen();
+              }
+            };
+
+            applyStateAppearance(readStoredAuthState());
+            onAuth(async (user) => {
+
+              if (user) {
+                persistAuthState('signed-in');
+                setSignOutAppearance();
+                btn.onclick = () => signOutCurrent();
+                let canSeePanel = false;
+                try {
+                  canSeePanel = isTeacherEmail(user.email) || (await isTeacherByDoc(user.uid));
+                } catch (_) {
+                  canSeePanel = false;
+                }
+
+                if (panelLink) panelLink.style.display = canSeePanel ? '' : 'none';
+              } else {
+                persistAuthState('signed-out');
+                setSignInAppearance();
+                btn.onclick = () => signInWithGoogleOpen();
+
+                if (panelLink) panelLink.style.display = 'none';
+              }
+            });
           })().catch(console.error);
         `;
         document.body.appendChild(signScr);

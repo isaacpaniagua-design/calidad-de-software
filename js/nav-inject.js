@@ -48,18 +48,37 @@ function initNavInject(){
       }
     } catch (_) {}
 
-    // Basic CSS to match index styling
+    // CSS base del nuevo navbar (versión inyectada)
     var css = `
-      /* Override any previous pseudo icon */
-      .qs-brand::before { content: none !important; }
-      body { padding-top: calc(var(--nav-h, 64px) + 8px); }
-      .qs-nav { position: fixed; top:0; left:0; right:0; z-index:1000; background:#ffffff; border-bottom:1px solid #e5e7eb; }
-
-      .qs-brand { display:flex; gap:10px; align-items:center; color:#1f2937; font-weight:700; font-size:1.1rem; text-decoration:none; padding:6px 0; }
-      .qs-brand:hover { color:#1d4ed8; }
-      .qs-logo { width:28px; height:28px; border-radius:6px; background:#4f46e5; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-weight:700; font-size:.9rem; letter-spacing:.5px; }
-      .qs-title { color:inherit; font-weight:700; }
-    `;
+.qs-brand::before{content:none !important;}
+body{padding-top:calc(var(--nav-h,72px)+8px);}
+.qs-nav{position:fixed;top:0;left:0;right:0;margin:0;z-index:1000;background:linear-gradient(135deg,rgba(79,70,229,0.94),rgba(124,58,237,0.92));border-bottom:1px solid rgba(148,163,184,0.25);box-shadow:0 18px 48px rgba(15,23,42,0.28);backdrop-filter:blur(22px) saturate(150%);-webkit-backdrop-filter:blur(22px) saturate(150%);}
+.qs-nav .wrap{max-width:1200px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px;}
+.qs-brand{display:inline-flex;align-items:center;gap:12px;text-decoration:none;color:#f8fafc;font-weight:700;border-radius:16px;padding:6px 10px;transition:color .2s ease,transform .2s ease;}
+.qs-brand:hover{color:#ffffff;transform:translateY(-1px);}
+.qs-logo{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:12px;background:linear-gradient(140deg,#6366f1,#a855f7);color:#fff;font-weight:800;font-size:1rem;letter-spacing:.6px;box-shadow:0 12px 26px rgba(99,102,241,0.45);}
+.qs-brand-text{display:flex;flex-direction:column;line-height:1.1;}
+.qs-title{color:inherit;font-weight:800;font-size:1.05rem;letter-spacing:.01em;}
+.qs-subtitle{font-size:.72rem;text-transform:uppercase;letter-spacing:.18em;font-weight:600;color:rgba(226,232,240,0.72);}
+.qs-links-region{display:flex;align-items:center;gap:18px;}
+.qs-tabs{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;}
+.qs-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 18px;border-radius:999px;border:1px solid transparent;background:rgba(255,255,255,0.16);color:#f8fafc;font-weight:600;font-size:.95rem;text-decoration:none;line-height:1;transition:all .2s ease;box-shadow:0 1px 2px rgba(15,23,42,0.18);}
+.qs-btn:hover{background:rgba(255,255,255,0.26);color:#fff;transform:translateY(-1px);box-shadow:0 10px 24px rgba(15,23,42,0.22);}
+.qs-btn[aria-current="page"]{background:#fff;color:#312e81;box-shadow:0 18px 42px rgba(15,23,42,0.25);}
+.qs-actions{display:flex;align-items:center;gap:12px;}
+.qs-cta{display:inline-flex;align-items:center;justify-content:center;padding:11px 22px;border-radius:999px;font-weight:700;font-size:.95rem;text-decoration:none;background:linear-gradient(135deg,#f97316,#facc15);color:#111827;box-shadow:0 18px 40px rgba(249,115,22,0.35);transition:transform .2s ease,box-shadow .2s ease;}
+.qs-cta:hover{transform:translateY(-1px) scale(1.01);box-shadow:0 24px 48px rgba(249,115,22,0.45);color:#111827;}
+.qs-menu-toggle{display:none;align-items:center;justify-content:center;width:42px;height:42px;border-radius:14px;border:0;background:rgba(255,255,255,0.18);color:#f8fafc;cursor:pointer;transition:background .2s ease,transform .2s ease,box-shadow .2s ease;}
+.qs-menu-toggle:hover{background:rgba(255,255,255,0.28);transform:translateY(-1px);box-shadow:0 12px 30px rgba(15,23,42,0.28);}
+.qs-menu-icon,.qs-menu-icon::before,.qs-menu-icon::after{display:block;position:relative;width:18px;height:2px;border-radius:999px;background:currentColor;transition:transform .25s ease,opacity .25s ease;content:"";}
+.qs-menu-icon::before{position:absolute;transform:translateY(-6px);}
+.qs-menu-icon::after{position:absolute;transform:translateY(6px);}
+.qs-nav.is-open .qs-menu-icon{background:transparent;}
+.qs-nav.is-open .qs-menu-icon::before{transform:rotate(45deg);}
+.qs-nav.is-open .qs-menu-icon::after{transform:rotate(-45deg);}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+@media(max-width:960px){.qs-nav .wrap{flex-wrap:wrap;padding:14px 20px 18px;gap:14px;}.qs-menu-toggle{display:inline-flex;}.qs-links-region{width:100%;flex-direction:column;align-items:stretch;background:rgba(15,23,42,0.35);border-radius:20px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,0.12);display:none;}.qs-nav.is-open .qs-links-region{display:flex;}.qs-tabs{flex-direction:column;align-items:stretch;gap:12px;}.qs-btn{width:100%;justify-content:flex-start;background:rgba(255,255,255,0.14);}.qs-actions{width:100%;justify-content:stretch;}.qs-cta{width:100%;}}
+`;
 
     var style = document.getElementById('qs-nav-inline-style');
     if (!style) {
@@ -71,38 +90,103 @@ function initNavInject(){
 
     var template = [
       '<div class="wrap">',
-      '  <a class="qs-brand" href="index.html"><span class="qs-logo">QS</span><span class="qs-title">Plataforma QS</span></a>',
-      '  <nav class="qs-tabs" aria-label="Navegación">',
-      '    <a class="qs-btn" href="materiales.html">Materiales</a>',
-      '    <a class="qs-btn" href="asistencia.html">Asistencia</a>',
-      '    <a class="qs-btn" href="calificaciones.html">Calificaciones</a>',
-      '    <a class="qs-btn" href="Foro.html">Foro</a>',
-      '    <a class="qs-btn teacher-only" href="paneldocente.html">Panel</a>',
-      '  </nav>',
-      '  <div class="qs-actions">',
-      '    <button class="qs-auth-icon" type="button" aria-label="Iniciar sesión" title="Iniciar sesión">',
-      '      <span class="qs-auth-icon-symbol" aria-hidden="true">🔐</span>',
-      '    </button>',
+      '  <a class="qs-brand" href="' + prefix + 'index.html">',
+      '    <span class="qs-logo">QS</span>',
+      '    <span class="qs-brand-text">',
+      '      <span class="qs-title">Plataforma QS</span>',
+      '      <span class="qs-subtitle">Calidad de Software</span>',
+      '    </span>',
+      '  </a>',
+      '  <button class="qs-menu-toggle" type="button" aria-expanded="false" aria-controls="qs-nav-links">',
+      '    <span class="qs-menu-icon" aria-hidden="true"></span>',
+      '    <span class="sr-only">Abrir menú</span>',
+      '  </button>',
+      '  <div class="qs-links-region">',
+      '    <nav class="qs-tabs" id="qs-nav-links" aria-label="Navegación principal">',
+      '      <a class="qs-btn" href="' + prefix + 'materiales.html">Materiales</a>',
+      '      <a class="qs-btn" href="' + prefix + 'asistencia.html">Asistencia</a>',
+      '      <a class="qs-btn" href="' + prefix + 'calificaciones.html">Calificaciones</a>',
+      '      <a class="qs-btn" href="' + prefix + 'Foro.html">Foro</a>',
+      '      <a class="qs-btn teacher-only" href="' + prefix + 'paneldocente.html">Panel</a>',
+      '    </nav>',
+      '    <div class="qs-actions" data-auth-slot>',
+      '      <a class="qs-cta" href="' + prefix + 'login.html" data-default-auth-link>Iniciar sesión</a>',
+      '    </div>',
       '  </div>',
       '</div>'
     ].join('');
 
+    var NAV_VERSION = '2024-11-revamp';
     var nav = document.querySelector('.qs-nav');
     if (!nav) {
       nav = document.createElement('div');
       nav.className = 'qs-nav';
       nav.innerHTML = template;
       nav.setAttribute('data-role','main-nav');
+      nav.setAttribute('data-nav-version', NAV_VERSION);
       document.body.prepend(nav);
     } else {
       nav.classList.add('qs-nav');
       nav.setAttribute('data-role','main-nav');
-      var hasBrand = !!nav.querySelector('.qs-brand');
-      var hasTabs = !!nav.querySelector('.qs-tabs');
-      var hasActions = !!nav.querySelector('.qs-actions .qs-auth-icon');
-      if (!hasBrand || !hasTabs || !hasActions || !nav.children || nav.children.length === 0) {
+      if (nav.getAttribute('data-nav-version') !== NAV_VERSION) {
         nav.innerHTML = template;
+        nav.setAttribute('data-nav-version', NAV_VERSION);
       }
+    }
+
+    applyInitialAuthAppearance(nav);
+
+    function ensureNavToggle(navEl){
+      if (!navEl || navEl.__qsToggleBound) return;
+      try {
+        var toggle = navEl.querySelector('.qs-menu-toggle');
+        var region = navEl.querySelector('.qs-links-region');
+        if (!toggle || !region) return;
+        navEl.__qsToggleBound = true;
+        function setState(open){
+          if (open) navEl.classList.add('is-open');
+          else navEl.classList.remove('is-open');
+          toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+          region.setAttribute('data-open', open ? 'true' : 'false');
+        }
+        setState(false);
+        toggle.addEventListener('click', function(){
+          setState(!navEl.classList.contains('is-open'));
+        });
+        region.addEventListener('click', function(evt){
+          var anchor = evt.target && evt.target.closest ? evt.target.closest('a[href]') : null;
+          if (anchor) setState(false);
+        });
+        window.addEventListener('resize', function(){
+          if (window.innerWidth > 960) setState(false);
+        });
+      } catch (_) {}
+    }
+    if (!window.setupQsNavToggle) {
+      window.setupQsNavToggle = ensureNavToggle;
+    }
+    (window.setupQsNavToggle || ensureNavToggle)(nav);
+
+    function applyInitialAuthAppearance(navEl){
+      if (!navEl) return;
+      try {
+        var actions = navEl.querySelector('.qs-actions');
+        if (!actions) return;
+        var defaultLink = actions.querySelector('[data-default-auth-link]');
+        if (!defaultLink) return;
+        var state = getStoredAuthState();
+        var isSignedIn = state === 'signed-in';
+        defaultLink.textContent = isSignedIn ? 'Cerrar sesión' : 'Iniciar sesión';
+        defaultLink.setAttribute('aria-label', isSignedIn ? 'Cerrar sesión' : 'Iniciar sesión');
+        defaultLink.title = isSignedIn ? 'Cerrar sesión' : 'Iniciar sesión';
+        defaultLink.setAttribute('data-awaiting-auth', isSignedIn ? 'signed-in' : 'signed-out');
+        if (isSignedIn && !defaultLink.__qsAwaitPrevent) {
+          defaultLink.__qsAwaitPrevent = true;
+          defaultLink.addEventListener('click', function(evt){
+            try { evt.preventDefault(); } catch (_) {}
+          });
+        }
+      } catch (_) {}
     }
 
     function getStoredAuthState(){
@@ -237,33 +321,79 @@ function initNavInject(){
             const firebaseModule = await import(importPath);
             const { onAuth, signInWithGoogleOpen, signOutCurrent, isTeacherEmail, isTeacherByDoc } = firebaseModule;
             const navTabs = document.querySelector('.qs-tabs');
-            const actions = document.querySelector('.qs-auth-icon');
+            const actions = document.querySelector('.qs-actions');
             if (!navTabs || !actions) return;
-            const iconSpan = actions.querySelector('.qs-auth-icon-symbol') || actions;
+            const defaultLink = actions.querySelector('[data-default-auth-link]');
+            if (defaultLink) defaultLink.remove();
+            const existingButtons = Array.from(actions.querySelectorAll('.qs-auth-btn'));
+            let btn = existingButtons[0] || null;
+            if (existingButtons.length > 1) {
+              for (let i = 1; i < existingButtons.length; i++) {
+                existingButtons[i].remove();
+              }
+            }
+            if (!btn) {
+              btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'qs-cta qs-auth-btn';
+              actions.appendChild(btn);
+            }
             // Localiza el enlace al panel docente (Panel).  Puede estar ausente si no se inyectó la pestaña.
             const panelLink = navTabs.querySelector('a[href$="paneldocente.html"]');
 
+            const AUTH_STORAGE_KEY = 'qs_auth_state';
+            const readStoredAuthState = () => {
+              try {
+                const sessionValue = sessionStorage.getItem(AUTH_STORAGE_KEY);
+                if (sessionValue) return sessionValue;
+              } catch (_) {}
+              try {
+                const localValue = localStorage.getItem(AUTH_STORAGE_KEY);
+                if (localValue) return localValue;
+              } catch (_) {}
+              try {
+                if (window.__qsAuthState) return window.__qsAuthState;
+              } catch (_) {}
+              return '';
+            };
+
+            const persistAuthState = (state) => {
+              try { sessionStorage.setItem(AUTH_STORAGE_KEY, state); } catch (_) {}
+              try { localStorage.setItem(AUTH_STORAGE_KEY, state); } catch (_) {}
+              try { window.__qsAuthState = state; } catch (_) {}
+            };
+
             function setSignInAppearance() {
-              iconSpan.textContent = '🔐';
-              actions.setAttribute('aria-label', 'Iniciar sesión');
-              actions.title = 'Iniciar sesión';
+              btn.textContent = 'Iniciar sesión';
+              btn.setAttribute('aria-label', 'Iniciar sesión');
+              btn.title = 'Iniciar sesión';
             }
 
             function setSignOutAppearance() {
-              iconSpan.textContent = '⎋';
-              actions.setAttribute('aria-label', 'Cerrar sesión');
-              actions.title = 'Cerrar sesión';
+              btn.textContent = 'Cerrar sesión';
+              btn.setAttribute('aria-label', 'Cerrar sesión');
+              btn.title = 'Cerrar sesión';
             }
 
-            setSignInAppearance();
-            actions.onclick = () => signInWithGoogleOpen();
+            const applyStateAppearance = (state) => {
+              if (state === 'signed-in') {
+                setSignOutAppearance();
+                btn.onclick = () => signOutCurrent();
+              } else {
+                setSignInAppearance();
+                btn.onclick = () => signInWithGoogleOpen();
+              }
+            };
+
+            applyStateAppearance(readStoredAuthState());
 
             // Escucha cambios de autenticación para ajustar el botón y ocultar el enlace de panel
             onAuth(async (user) => {
               const root = document.documentElement;
               if (user) {
+                persistAuthState('signed-in');
                 setSignOutAppearance();
-                actions.onclick = () => signOutCurrent();
+                btn.onclick = () => signOutCurrent();
                 // Ocultar el panel docente a usuarios que no sean profesores.
                 let okTeacher = false;
                 try {
@@ -284,8 +414,9 @@ function initNavInject(){
                   panelLink.style.display = okTeacher ? '' : 'none';
                 }
               } else {
+                persistAuthState('signed-out');
                 setSignInAppearance();
-                actions.onclick = () => signInWithGoogleOpen();
+                btn.onclick = () => signInWithGoogleOpen();
                 if (root) {
                   root.classList.remove('role-teacher');
                   root.classList.add('role-student');
