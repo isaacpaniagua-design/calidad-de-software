@@ -7,10 +7,15 @@ import { initFirebase, getDb, getAuthInstance, onAuth } from './firebase.js';
 const $ = (s, r=document)=>r.querySelector(s);
 const $id = (id)=>document.getElementById(id);
 
-function ready(){ return new Promise(r=>{
-  if(/complete|interactive/.test(document.readyState)) r();
-  else document.addEventListener('DOMContentLoaded', r, {once:true});
-});}
+function ready(){
+  return new Promise((resolve) => {
+    if (/complete|interactive/.test(document.readyState)) {
+      resolve();
+    } else {
+      document.addEventListener('DOMContentLoaded', resolve, { once: true });
+    }
+  });
+}
 
 function clampPct(n){ n = Number(n)||0; return Math.max(0, Math.min(100, n)); }
 function fmtPct(n){ return (Number(n)||0).toFixed(2) + '%'; }

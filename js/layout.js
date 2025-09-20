@@ -11,12 +11,23 @@
   } catch (_) {}
 })();
 
-
+function initLayout() {
   const p = location.pathname;
   const pLow = p.toLowerCase();
   const inSesiones =
     /(^|\/)sesiones\//.test(pLow) || /(^|\/)sesion[\w-]*\.html$/.test(pLow);
   const base = inSesiones ? "../" : "";
+
+  // Asegura un favicon para evitar errores 404 en navegadores.
+  try {
+    const hasIcon = document.querySelector("link[rel*='icon']");
+    if (!hasIcon) {
+      const icon = document.createElement("link");
+      icon.rel = "icon";
+      icon.href = base + "favicon.ico";
+      document.head.appendChild(icon);
+    }
+  } catch (_) {}
 
   // ====== PÁGINAS NORMALES (no sesiones): nav + footer global ======
   if (!inSesiones) {

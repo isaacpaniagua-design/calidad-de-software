@@ -13,8 +13,7 @@
     }
   } catch (_) {}
 })();
-
-
+function initNavInject(){
   try{
     var prefix = '';
     try {
@@ -24,6 +23,17 @@
     } catch (_) {
       prefix = '';
     }
+
+    // Garantiza favicon disponible para evitar peticiones 404.
+    try {
+      var hasIcon = document.querySelector("link[rel*='icon']");
+      if (!hasIcon) {
+        var icon = document.createElement('link');
+        icon.rel = 'icon';
+        icon.href = prefix + 'favicon.ico';
+        document.head && document.head.appendChild(icon);
+      }
+    } catch (_) {}
 
     try {
       var hasLayout = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).some(function(link){

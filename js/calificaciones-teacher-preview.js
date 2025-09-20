@@ -7,10 +7,15 @@ const $ = (s, r=document)=>r.querySelector(s);
 const $id = (id)=>document.getElementById(id);
 window.__teacherPreviewLoaded = true;
 
-function ready(){ return new Promise(r=>{
-  if(/complete|interactive/.test(document.readyState)) r();
-  else document.addEventListener('DOMContentLoaded', r, {once:true});
-});}
+function ready(){
+  return new Promise((resolve) => {
+    if (/complete|interactive/.test(document.readyState)) {
+      resolve();
+    } else {
+      document.addEventListener('DOMContentLoaded', resolve, { once: true });
+    }
+  });
+}
 
 function fmtPct(n){ return (Number(n)||0).toFixed(2) + '%'; }
 function clampPct(n){ n = Number(n)||0; return Math.max(0, Math.min(100, n)); }
@@ -47,8 +52,14 @@ function ensureUI(root){
         <tbody id="qsp-tbody"><tr><td class="qsc-muted" colspan="6">Selecciona un alumno…</td></tr></tbody>
       </table>
     </div>`;
-  const anchor = root.querySelector('.qsc-wrap') || root;
-  anchor.after(wrap);
+  const anchor = root.querySelector('.qsc-wrap');
+  if (anchor && anchor.parentNode) {
+    anchor.parentNode.replaceChild(wrap, anchor);
+  } else if (root && typeof root.appendChild === 'function') {
+    root.appendChild(wrap);
+  } else {
+    document.body.appendChild(wrap);
+  }
 }
 
 function renderQsp(items){
