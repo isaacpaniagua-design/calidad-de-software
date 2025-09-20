@@ -145,6 +145,29 @@ html:not(.role-teacher) .teacher-only{display:none !important;}
       }
     }
 
+    function ensureUnifiedFooter(){
+      try {
+        var year = new Date().getFullYear();
+        var version = '2024-unified';
+        var footerMarkup = '<div class="footer-content">© ' +
+          year + ' · Plataforma QS - Calidad de Software | Isaac Paniagua</div>';
+        var footer = document.querySelector('footer.footer');
+        if (!footer) {
+          footer = document.createElement('footer');
+          footer.className = 'footer';
+          document.body.appendChild(footer);
+        } else {
+          footer.classList.add('footer');
+        }
+        if ((footer.innerHTML || '').trim() !== footerMarkup) {
+          footer.innerHTML = footerMarkup;
+        }
+        footer.setAttribute('data-footer-version', version);
+      } catch (_) {}
+    }
+
+    ensureUnifiedFooter();
+
 
     function ensureNavToggle(navEl){
       if (!navEl || navEl.__qsToggleBound) return;
