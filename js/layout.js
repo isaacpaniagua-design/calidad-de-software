@@ -79,29 +79,15 @@ function bootstrapLayout() {
 function computeBasePath(doc) {
   try {
     const script = doc.currentScript || doc.querySelector("script[src*='layout.js']");
-    if (!script) return "./";
-    const src = script.getAttribute("src") || "layout.js";
+    if (!script) return './';
+    const src = script.getAttribute('src') || 'layout.js';
     const scriptUrl = new URL(src, location.href);
-    const scriptParts = scriptUrl.pathname.split("/").filter(Boolean);
-    if (scriptParts.length) scriptParts.pop();
-    const pageParts = location.pathname.split("/").filter(Boolean);
-    if (pageParts.length) pageParts.pop();
-
-    let commonIndex = 0;
-    while (
-      commonIndex < scriptParts.length &&
-      commonIndex < pageParts.length &&
-      scriptParts[commonIndex] === pageParts[commonIndex]
-    ) {
-      commonIndex += 1;
-    }
-
-    const ups = pageParts.slice(commonIndex).map(() => "..");
-    const downs = scriptParts.slice(commonIndex);
-    const relative = ups.concat(downs).join("/");
-    return relative ? relative + "/" : "./";
+    if (scriptUrl.protocol === 'file:') return './';
+    const baseUrl = new URL('../', scriptUrl);
+    const href = baseUrl.href;
+    return href.endsWith('/') ? href : href + '/';
   } catch (_) {
-    return "./";
+    return './';
   }
 }
 
