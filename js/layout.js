@@ -1,6 +1,16 @@
 // Inicializa el layout global de la plataforma QS.
 // Se encarga de inyectar/normalizar la barra de navegación, footer y rutinas
 // auxiliares que dependen del estado de autenticación.
+(function initializeLoadingOverlay() {
+  ensureLoadingOverlay();
+  try {
+    const root = document.documentElement;
+    if (!root) return;
+    root.classList.add("qs-loading");
+    root.classList.remove("qs-loaded");
+  } catch (_) {}
+})();
+
 (function syncRoleFromStorage() {
   try {
     const root = document.documentElement;
@@ -64,6 +74,7 @@ function bootstrapLayout() {
   window.__qsLayoutPersistAuthState = persistAuthState;
   window.__qsLayoutPersistRole = persistRole;
   window.__qsLayoutToggleTeacherNavLinks = toggleTeacherNavLinks;
+
 
   function computeBasePath() {
     try {
@@ -300,6 +311,54 @@ function bootstrapLayout() {
     `;
 
 }
+
+function ensureLoadingOverlay() {
+  try {
+    const doc = document;
+    if (!doc) return;
+    if (doc.querySelector("[data-qs-loader]")) return;
+    const overlay = doc.createElement("div");
+    overlay.className = "qs-loading-overlay";
+    overlay.setAttribute("data-qs-loader", "true");
+    overlay.innerHTML = `
+      <div class="qs-loading-card" role="status" aria-live="polite" aria-busy="true">
+        <span class="qs-loading-spinner" aria-hidden="true"></span>
+        <p class="qs-loading-text">Cargando plataforma…</p>
+      </div>
+    `;
+    const target = doc.body || doc.documentElement;
+    target.appendChild(overlay);
+  } catch (_) {}
+}
+
+function markLayoutReady() {
+  try {
+    const root = document.documentElement;
+    if (root) {
+      root.classList.remove("qs-loading");
+      root.classList.add("qs-loaded");
+    }
+    const loader = document.querySelector("[data-qs-loader]");
+    if (loader && !loader.hasAttribute("data-qs-loader-dismissed")) {
+      loader.setAttribute("data-qs-loader-dismissed", "true");
+      const hide = () => {
+        loader.classList.add("is-hidden");
+        window.setTimeout(() => {
+          try {
+            loader.remove();
+          } catch (_) {}
+        }, 320);
+      };
+      if (typeof requestAnimationFrame === "function") {
+        requestAnimationFrame(hide);
+      } else {
+        hide();
+      }
+    }
+  } catch (_) {}
+}
+
+window.addEventListener("load", markLayoutReady, { once: true });
 
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", bootstrapLayout, {
