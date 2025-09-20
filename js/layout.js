@@ -99,7 +99,7 @@ function bootstrapLayout() {
       const ups = new Array(from.length).fill("..");
       const downs = to;
       const prefix = ups.concat(downs).join("/");
-      return prefix ? prefix + "/" : "";
+      return prefix ? prefix + "/" : "./";
     } catch (_) {
       return "";
     }
