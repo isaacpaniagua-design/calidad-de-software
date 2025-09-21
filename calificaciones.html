@@ -462,7 +462,21 @@
 
         <!-- Botón para mostrar la vista de alumno: cuando se pulsa, desplaza la página hacia la vista de estudiante (student-preview). -->
 
-        <div class="mt-4">
+        <div class="mt-4 flex flex-wrap items-center gap-3">
+
+          <button
+
+            id="saveGradesBtn"
+
+            class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+
+            type="button"
+
+          >
+
+            Guardar cambios
+
+          </button>
 
           <button
 
@@ -477,6 +491,16 @@
             Vista de alumno
 
           </button>
+
+          <p
+
+            id="saveGradesStatus"
+
+            class="text-sm text-emerald-600 hidden"
+
+            aria-live="polite"
+
+          ></p>
 
         </div>
 
@@ -3197,6 +3221,72 @@
         });
 
       });
+
+
+
+      // Manual save button for docentes
+
+      (function setupSaveButton() {
+
+        const saveButton = document.getElementById("saveGradesBtn");
+
+        const statusEl = document.getElementById("saveGradesStatus");
+
+        if (!saveButton) return;
+
+        let hideTimer = null;
+
+        function showStatus(message, isError) {
+
+          if (!statusEl) return;
+
+          statusEl.textContent = message;
+
+          statusEl.classList.remove("hidden");
+
+          statusEl.classList.toggle("text-red-600", !!isError);
+
+          statusEl.classList.toggle("text-emerald-600", !isError);
+
+          if (hideTimer) {
+
+            clearTimeout(hideTimer);
+
+            hideTimer = null;
+
+          }
+
+          hideTimer = setTimeout(() => {
+
+            statusEl.classList.add("hidden");
+
+            hideTimer = null;
+
+          }, 4000);
+
+        }
+
+        saveButton.addEventListener("click", () => {
+
+          const studentInput = document.getElementById("studentId");
+
+          const studentId = studentInput ? studentInput.value : "";
+
+          if (!studentId) {
+
+            showStatus("Selecciona un estudiante antes de guardar.", true);
+
+            return;
+
+          }
+
+          saveStudentGrades(studentId);
+
+          showStatus("Calificaciones guardadas correctamente.", false);
+
+        });
+
+      })();
 
 
 
