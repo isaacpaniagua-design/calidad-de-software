@@ -1,5 +1,5 @@
 // js/calificaciones-backend.js
-import { initFirebase, getDb, getAuthInstance, onAuth } from './firebase.js';
+import { initFirebase, getDb, onAuth } from './firebase.js';
 import { buildCandidateDocIds } from './calificaciones-helpers.js';
 import { collection, doc, getDoc, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 
@@ -33,9 +33,9 @@ function escPct(n) {
 function inferUnidad(it) {
   if (it && it.unidad != null) return Number(it.unidad);
   const n = String((it && (it.nombre || it.title)) || '').toLowerCase();
-  if (/u1|unidad\s*1/.test(n)) return 1;
-  if (/u2|unidad\s*2/.test(n)) return 2;
-  if (/u3|unidad\s*3/.test(n)) return 3;
+  if (/u(?:nidad)?\s*1/.test(n)) return 1;
+  if (/u(?:nidad)?\s*2/.test(n)) return 2;
+  if (/u(?:nidad)?\s*3/.test(n)) return 3;
   return 0;
 }
 
@@ -44,35 +44,42 @@ function normalizeItems(source) {
   if (!Array.isArray(source)) return out;
   for (let i = 0; i < source.length; i++) {
     const it = source[i] || {};
-    const rawMaxSource = (it.rawMaxPuntos !== undefined && it.rawMaxPuntos !== null) ? it.rawMaxPuntos : it.maxPuntos;
-    const rawMax = Number(rawMaxSource) || 0;
-    const storedMax = Number(it.maxPuntos) || 0;
-    const storedPoints = Number(it.puntos) || 0;
-    const rawPointsSource = (it.rawPuntos !== undefined && it.rawPuntos !== null) ? it.rawPuntos : it.puntos;
-    const rawPoints = Number(rawPointsSource) || 0;
+    const normalizedMaxRaw = Number(it.maxPuntos);
+    const normalizedMax = Number.isFinite(normalizedMaxRaw) ? normalizedMaxRaw : 0;
+    const normalizedPointsRaw = Number(it.puntos);
+    const normalizedPoints = Number.isFinite(normalizedPointsRaw) ? normalizedPointsRaw : 0;
+    const maxForRatio = normalizedMax > 0 ? normalizedMax : 0;
+    const clampedNormalizedPoints =
+      maxForRatio > 0 ? Math.max(0, Math.min(normalizedPoints, maxForRatio)) : Math.max(0, normalizedPoints);
+    const normalizedRatio = maxForRatio > 0 ? clampedNormalizedPoints / maxForRatio : 0;
 
-    const hasRaw = rawMax > 0;
-    const baseMax = hasRaw ? rawMax : (storedMax > 0 ? storedMax : 10);
+    const rawMaxValue = it.rawMaxPuntos;
+    const rawPointsValue = it.rawPuntos;
+    const hasRawMax = rawMaxValue !== undefined && rawMaxValue !== null && rawMaxValue !== '';
+    const hasRawPoints = rawPointsValue !== undefined && rawPointsValue !== null && rawPointsValue !== '';
+    const rawMax = hasRawMax ? Number(rawMaxValue) : NaN;
+    const rawPoints = hasRawPoints ? Number(rawPointsValue) : NaN;
 
-    const clampedRaw = baseMax > 0 ? Math.max(0, Math.min(rawPoints, baseMax)) : 0;
-    let ratio;
-    if (baseMax > 0) ratio = clampedRaw / baseMax;
-    else if (storedMax > 0) ratio = Math.max(0, Math.min(storedPoints, storedMax)) / storedMax;
-    else ratio = 0;
+    let displayMax = Number.isFinite(rawMax) && rawMax > 0 ? rawMax : null;
+    if (displayMax == null) displayMax = maxForRatio > 0 ? maxForRatio : 10;
 
-    ratio = Math.max(0, Math.min(ratio, 1));
-    const normalizedMax = 10;
-    const normalizedPoints = ratio * normalizedMax;
-    const displayMax = baseMax;
-    const displayPoints = ratio * displayMax;
+    let displayPoints;
+    if (Number.isFinite(rawPoints)) displayPoints = rawPoints;
+    else displayPoints = normalizedRatio * displayMax;
+    if (displayMax > 0) displayPoints = Math.max(0, Math.min(displayPoints, displayMax));
+    else displayPoints = Math.max(0, displayPoints);
+
+    const estaCalificado = hasRawPoints
+      ? true
+      : (it.puntos !== undefined && it.puntos !== null && it.puntos !== '');
 
     out.push(Object.assign({}, it, {
-      normalizedRatio: ratio,
-      maxPuntos: normalizedMax,
-      puntos: Number(normalizedPoints.toFixed(3)),
+      normalizedRatio: Math.max(0, Math.min(normalizedRatio, 1)),
+      normalizedMax: Number(maxForRatio.toFixed(3)),
+      normalizedPuntos: Number(clampedNormalizedPoints.toFixed(3)),
       displayMax: Number(displayMax.toFixed(2)),
       displayPuntos: Number(displayPoints.toFixed(2)),
-      estaCalificado: ratio > 0,
+      estaCalificado: !!estaCalificado,
     }));
   }
   return out;
@@ -128,12 +135,15 @@ function renderAlumno(items) {
         const tipo = it.tipo || it.category || '-';
         const uni = ((it.unidad !== undefined && it.unidad !== null) ? it.unidad : inferUnidad(it)) || '-';
         const max = Number(it.displayMax) || 0;
-        const pts = Number(it.displayPuntos) || 0;
+        const rawPts = Number(it.displayPuntos);
+        const hasDisplayPts = !Number.isNaN(rawPts);
+        const calificada = Boolean(it.estaCalificado);
+        const ptsText = calificada && hasDisplayPts ? rawPts.toFixed(2) : '-';
         const pnd = Number(it.ponderacion) || 0;
         const ratio = Number(it.normalizedRatio) || 0;
         const aporta = ratio * pnd;
-        const escala = max > 0 ? escPct(100 * ratio) : '-';
-        const statusBadge = ratio > 0
+        const escala = calificada && max > 0 ? escPct(100 * ratio) : '-';
+        const statusBadge = calificada
           ? '<span class="qsc-status qsc-status--done">Calificada</span>'
           : '<span class="qsc-status qsc-status--pending">Pendiente</span>';
         let fecha = '-';
@@ -152,7 +162,7 @@ function renderAlumno(items) {
             </td>
             <td>${tipo}</td>
             <td>${uni}</td>
-            <td style="text-align:right">${pts.toFixed(2)}</td>
+            <td style="text-align:right">${ptsText}</td>
             <td style="text-align:right">${max ? max.toFixed(2) : '-'}</td>
             <td style="text-align:right">${pnd}%</td>
             <td style="text-align:right">${fmtPct(aporta)}</td>
@@ -194,8 +204,6 @@ function setStatusMessage(message) {
 }
 
 async function obtenerItemsAlumno(db, grupoId, profile){
-  const { collection, doc, getDoc, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js');
-
   const candidates = buildCandidateDocIds(profile);
   for (let i = 0; i < candidates.length; i++) {
     try {
