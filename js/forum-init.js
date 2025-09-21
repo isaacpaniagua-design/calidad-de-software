@@ -9,6 +9,12 @@ let currentTopicId = null;
 let unsubscribeReplies = null;
 let unsubscribeTopics = null;
 
+function updateLayoutColumns(showAdminPanel) {
+  if (!layoutShell) return;
+  layoutShell.classList.remove('lg:grid-cols-2', 'lg:grid-cols-1');
+  layoutShell.classList.add(showAdminPanel ? 'lg:grid-cols-2' : 'lg:grid-cols-1');
+}
+
 const el = (id) => document.getElementById(id);
 
 const userRoleEl = el('userRole');
@@ -16,6 +22,7 @@ const userNameEl = el('userName');
 const adminPanel = el('adminPanel');
 const authBtn = el('authBtn');
 const topicsList = el('topicsList');
+const layoutShell = el('forumLayout');
 
 function formatWhen(ts){
   try {
@@ -77,6 +84,7 @@ onAuth(async user => {
   if (userRoleEl) userRoleEl.textContent = user ? (isTeacher ? 'Docente' : 'Estudiante') : 'No autenticado';
   if (userNameEl) userNameEl.textContent = user?.displayName || (user?.email || '-') || '-';
   if (adminPanel) adminPanel.style.display = (user && isTeacher) ? 'block' : 'none';
+  updateLayoutColumns(user && isTeacher);
   if (authBtn) authBtn.textContent = user ? 'Cerrar sesión' : 'Iniciar sesión';
 
   const isPotros = !!email && /@potros\.itson\.edu\.mx$/i.test(email);
