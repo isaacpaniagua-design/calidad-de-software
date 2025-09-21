@@ -517,7 +517,9 @@
       .session-card {
         position: relative;
         display: grid;
-        gap: 26px;
+        gap: clamp(22px, 3vw, 28px);
+        width: 100%;
+        grid-column: 1 / -1;
         background: rgba(255, 255, 255, 0.9);
         border: 1px solid rgba(148, 163, 184, 0.3);
         border-radius: var(--radius-xl);
@@ -541,11 +543,34 @@
         z-index: 1;
       }
 
-      .session-card header {
+      .session-card__summary {
+        position: relative;
         display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
         gap: 18px;
         align-items: start;
+        grid-template-columns: minmax(0, 1fr);
+        cursor: pointer;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        padding-right: 44px;
+        border: none;
+        background: none;
+      }
+
+      .session-card__summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .session-card__summary:focus-visible {
+        outline: 3px solid rgba(99, 102, 241, 0.35);
+        outline-offset: 6px;
+      }
+
+      @media (min-width: 780px) {
+        .session-card__summary {
+          grid-template-columns: minmax(0, 1fr) auto;
+        }
       }
 
       .session-summary {
@@ -572,6 +597,52 @@
         margin: 0;
         color: var(--text-secondary);
         font-size: 1rem;
+      }
+
+      .session-card__body {
+        display: grid;
+        gap: 20px;
+        padding-top: clamp(12px, 2.5vw, 20px);
+        border-top: 1px solid rgba(148, 163, 184, 0.24);
+      }
+
+      .session-card__chevron {
+        position: absolute;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(99, 102, 241, 0.12);
+        color: var(--accent-hover);
+        transition: background 0.2s ease;
+        pointer-events: none;
+      }
+
+      .session-card__chevron::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: rotate(45deg);
+        transition: transform 0.25s ease;
+      }
+
+      .session-card__summary:hover .session-card__chevron,
+      .session-card__summary:focus-visible .session-card__chevron {
+        background: rgba(99, 102, 241, 0.18);
+      }
+
+      .session-card[open] .session-card__chevron {
+        background: rgba(99, 102, 241, 0.18);
+      }
+
+      .session-card[open] .session-card__chevron::before {
+        transform: rotate(-135deg);
       }
 
       .session-legend {
@@ -1064,10 +1135,6 @@
           grid-template-columns: 1fr;
         }
 
-        .session-card header {
-          grid-template-columns: 1fr;
-        }
-
         .hero-actions {
           justify-content: flex-start;
         }
@@ -1377,9 +1444,9 @@
 
       <div class="dashboard-grid">
 
-        <section class="session-card">
+        <details class="session-card" id="sessionCard">
 
-          <header>
+          <summary class="session-card__summary">
 
             <div class="session-summary">
               <span class="session-card__eyebrow">Progreso del curso</span>
@@ -1397,15 +1464,21 @@
 
             </div>
 
-          </header>
+            <span class="session-card__chevron" aria-hidden="true"></span>
 
-          <div class="sessions-grid" id="sessionsGrid">
+          </summary>
 
-            <!-- Las sesiones se generarán dinámicamente -->
+          <div class="session-card__body">
+
+            <div class="sessions-grid" id="sessionsGrid">
+
+              <!-- Las sesiones se generarán dinámicamente -->
+
+            </div>
 
           </div>
 
-        </section>
+        </details>
 
 
         <section class="student-uploads" id="studentUploadsSection">
