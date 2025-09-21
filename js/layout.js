@@ -36,6 +36,15 @@ const SESSION_STATUS_STATES = Object.freeze([
   { id: "completed", label: "Realizada" },
 ]);
 
+
+try {
+  if (typeof window !== "undefined") {
+    window.__QS_SESSION_STATUS_PREFIX = SESSION_STATUS_STORAGE_PREFIX;
+    window.__QS_SESSION_STATUS_STATES = SESSION_STATUS_STATES;
+  }
+} catch (_) {}
+
+
 function bootstrapLayout() {
   if (window.__qsLayoutBooted) return;
   window.__qsLayoutBooted = true;
@@ -53,15 +62,18 @@ function bootstrapLayout() {
   const basePath = computeBasePath(doc);
   ensureFavicon(doc, basePath);
 
-  if (isSessionPage) {
-    decorateSessionPage(doc, html, body);
-  }
 
   const nav = ensureNavigation(doc, body, basePath);
   const footer = ensureFooter(doc, body);
 
-  toggleTeacherNavLinks(nav, html.classList.contains("role-teacher"));
-  observeRoleClassChanges(html, (isTeacher) => toggleTeacherNavLinks(nav, isTeacher));
+  const isTeacher = html?.classList.contains("role-teacher");
+  toggleTeacherNavLinks(nav, isTeacher);
+  setupSessionStatusControl(doc, currentPage, isTeacher);
+  observeRoleClassChanges(html, (nextIsTeacher) => {
+    toggleTeacherNavLinks(nav, nextIsTeacher);
+    setupSessionStatusControl(doc, currentPage, nextIsTeacher);
+  });
+
 
   updateAuthAppearance(nav, readStoredAuthState());
   bindNavAuthRedirect(nav, basePath);
@@ -69,7 +81,7 @@ function bootstrapLayout() {
   highlightActiveLink(nav, currentPage);
   refreshNavSpacing(nav);
   observeNavHeight(nav);
-  setupSessionStatusControl(doc, currentPage);
+
 
   if (!isLogin && !isNotFound) {
     injectAuthGuard(doc, basePath);
@@ -84,7 +96,10 @@ function bootstrapLayout() {
 
   window.__qsLayoutReadAuthState = readStoredAuthState;
   window.__qsLayoutPersistAuthState = persistAuthState;
-  window.__qsLayoutPersistRole = (role) => persistRole(role, nav);
+  window.__qsLayoutPersistRole = (role) => {
+    persistRole(role, nav);
+    setupSessionStatusControl(doc, currentPage, role === "docente");
+  };
   window.__qsLayoutToggleTeacherNavLinks = (isTeacher) => toggleTeacherNavLinks(nav, isTeacher);
 }
 
@@ -425,13 +440,27 @@ function persistAuthState(state) {
   window.__qsAuthState = state;
 }
 
+
 function persistRole(role, nav) {
   try {
     if (role) localStorage.setItem(ROLE_STORAGE_KEY, role);
     else localStorage.removeItem(ROLE_STORAGE_KEY);
   } catch (_) {}
+  const root = document.documentElement;
+  if (root) {
+    if (!role) {
+      root.classList.remove("role-teacher", "role-student");
+    } else if (role === "docente") {
+      root.classList.add("role-teacher");
+      root.classList.remove("role-student");
+    } else {
+      root.classList.add("role-student");
+      root.classList.remove("role-teacher");
+    }
+  }
   toggleTeacherNavLinks(nav, role === "docente");
 }
+
 
 function toggleTeacherNavLinks(nav, isTeacher) {
   if (!nav) return;
@@ -449,7 +478,9 @@ function toggleTeacherNavLinks(nav, isTeacher) {
   } catch (_) {}
 }
 
-function setupSessionStatusControl(doc, currentPage) {
+
+function setupSessionStatusControl(doc, currentPage, isTeacher) {
+
   try {
     if (!doc) return;
     const page = (currentPage || "").toLowerCase();
@@ -459,19 +490,41 @@ function setupSessionStatusControl(doc, currentPage) {
 
     const toolbarCard = doc.querySelector(".session-toolbar-card");
     if (!toolbarCard) return;
-    if (toolbarCard.querySelector("[data-role='session-status']")) return;
+
+
+    const existingControl = toolbarCard.querySelector("[data-role='session-status']");
+
+    if (!isTeacher) {
+      if (existingControl && existingControl.parentNode === toolbarCard) {
+        toolbarCard.removeChild(existingControl);
+      }
+      return;
+    }
+
 
     ensureSessionStatusStyles(doc);
 
     const slideToolbar = toolbarCard.querySelector(".slide-toolbar");
+
+    const sessionId = page.replace(/\.html$/, "");
+    const storageKey = `${SESSION_STATUS_STORAGE_PREFIX}${sessionId}`;
+
+    if (existingControl) {
+      existingControl.removeAttribute("hidden");
+      existingControl.__qsSessionStatusStorageKey = storageKey;
+      refreshSessionStatusControl(existingControl, storageKey);
+      return;
+    }
+
+
     const container = doc.createElement("div");
     container.className = "session-status-control";
     container.setAttribute("data-role", "session-status");
     container.setAttribute("role", "group");
     container.setAttribute("aria-label", "Estado de la sesión");
 
-    const sessionId = page.replace(/\.html$/, "");
-    const storageKey = `${SESSION_STATUS_STORAGE_PREFIX}${sessionId}`;
+    container.setAttribute("data-session-id", sessionId);
+
 
     const label = doc.createElement("span");
     const labelId = `session-status-label-${sessionId}`;
@@ -537,11 +590,20 @@ function setupSessionStatusControl(doc, currentPage) {
       const state = applyState(nextIndex);
       if (state && state.id) {
         persistSessionStatus(storageKey, state.id);
+
+        announceSessionStatusChange(doc, sessionId, state.id);
+
       }
     });
 
     container.appendChild(label);
     container.appendChild(button);
+
+
+    container.__qsSessionStatusControl = {
+      applyState,
+    };
+    container.__qsSessionStatusStorageKey = storageKey;
 
     if (slideToolbar && slideToolbar.parentNode === toolbarCard) {
       toolbarCard.insertBefore(container, slideToolbar);
@@ -550,6 +612,21 @@ function setupSessionStatusControl(doc, currentPage) {
     }
   } catch (_) {}
 }
+
+
+function refreshSessionStatusControl(container, storageKey) {
+  try {
+    if (!container) return;
+    const control = container.__qsSessionStatusControl;
+    if (!control || typeof control.applyState !== "function") return;
+    const key = storageKey || container.__qsSessionStatusStorageKey;
+    const storedState = readStoredSessionStatus(key);
+    let index = SESSION_STATUS_STATES.findIndex((state) => state && state.id === storedState);
+    if (index < 0) index = 0;
+    control.applyState(index);
+  } catch (_) {}
+}
+
 
 function ensureSessionStatusStyles(doc) {
   try {
@@ -675,6 +752,21 @@ function persistSessionStatus(key, value) {
     }
   } catch (_) {}
 }
+
+
+function announceSessionStatusChange(doc, sessionId, state) {
+  try {
+    const detail = { sessionId, state };
+    const event = new CustomEvent("qs:session-status-change", { detail });
+    if (doc && typeof doc.dispatchEvent === "function") {
+      doc.dispatchEvent(event);
+    }
+    if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+      window.dispatchEvent(event);
+    }
+  } catch (_) {}
+}
+
 
 function observeRoleClassChanges(html, callback) {
   if (!html || !window.MutationObserver) return;
