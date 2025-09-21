@@ -221,11 +221,37 @@ function resumenGlobal(items) {
   };
 }
 
+function isProjectRubricItem(it) {
+  if (!it || typeof it !== 'object') return false;
+  const key = String(it.key || '');
+  if (key.startsWith('p-')) return true;
+  const tipo = String(it.tipo || '').toLowerCase();
+  if (tipo === 'proyecto final') return true;
+  const nombre = String(it.nombre || it.title || '').toLowerCase();
+  if (!nombre) return false;
+  if (nombre.includes('rúbrica') && nombre.includes('proyecto')) return true;
+  return false;
+}
+
+function isProjectPhaseSummaryItem(it) {
+  if (!it || typeof it !== 'object') return false;
+  const nombre = String(it.nombre || it.title || '').toLowerCase();
+  if (!nombre) return false;
+  if (!nombre.includes('proyecto final')) return false;
+  if (nombre.includes('rúbrica')) return false;
+  if (nombre.includes('examen')) return false;
+  return true;
+}
+
 function bucketsPorUnidad(items) {
-  const B = { 1: [], 2: [], 3: [] };
+  const B = { 1: [], 2: [], 3: [], unit3Rubric: [] };
   for (let i = 0; i < items.length; i++) {
     const it = items[i];
     const u = inferUnidad(it);
+    if (u === 3 && isProjectRubricItem(it)) {
+      B.unit3Rubric.push(it);
+      continue;
+    }
     if (u === 1 || u === 2 || u === 3) B[u].push(it);
   }
   return B;
@@ -308,17 +334,36 @@ function renderAlumno(items) {
   }
 
   const buckets = bucketsPorUnidad(normalized);
-  const unidad1 = scoreUnidad(buckets[1]);
-  const unidad2 = scoreUnidad(buckets[2]);
-  const unidad3 = scoreUnidad(buckets[3]);
+  const unidad1 = scoreUnidad(buckets[1] || []);
+  const unidad2 = scoreUnidad(buckets[2] || []);
+  const bucket3Items = Array.isArray(buckets[3]) ? buckets[3] : [];
+  const unidad3Rubric = Array.isArray(buckets.unit3Rubric) ? buckets.unit3Rubric : [];
+  const hasUnit3Summary = bucket3Items.some((item) => isProjectPhaseSummaryItem(item));
+
+  let unidad3 = scoreUnidad(bucket3Items);
+  if (!hasUnit3Summary && unidad3Rubric.length) {
+    const rubricScore = scoreUnidad(unidad3Rubric);
+    unidad3 = {
+      aporte: (Number(unidad3.aporte) || 0) + (Number(rubricScore.aporte) || 0),
+      ponderacion: (Number(unidad3.ponderacion) || 0) + (Number(rubricScore.ponderacion) || 0),
+    };
+  }
 
   const aporteU1 = Number.isFinite(unidad1.aporte) ? unidad1.aporte : 0;
   const aporteU2 = Number.isFinite(unidad2.aporte) ? unidad2.aporte : 0;
   const aporteU3 = Number.isFinite(unidad3.aporte) ? unidad3.aporte : 0;
   const totalUnits = aporteU1 + aporteU2 + aporteU3;
-  const globalAvance = Number.isFinite(stats.avance) ? stats.avance : (Number.isFinite(stats.porcentaje) ? stats.porcentaje : 0);
-  const extras = Math.max(0, globalAvance - totalUnits);
-  const finalPct = final3040(unidad1, unidad2, unidad3, extras);
+  const globalAvance = Number.isFinite(stats.avance)
+    ? stats.avance
+    : (Number.isFinite(stats.porcentaje) ? stats.porcentaje : 0);
+  const rubricTotals = unidad3Rubric.length ? weightedTotals(unidad3Rubric) : { avance: 0 };
+  const rubricAvance = Number.isFinite(rubricTotals.avance) ? rubricTotals.avance : 0;
+  let extras = Number.isFinite(globalAvance) ? globalAvance - totalUnits : 0;
+  if (hasUnit3Summary && rubricAvance > 0) extras -= rubricAvance;
+  if (!Number.isFinite(extras)) extras = 0;
+  if (extras < 0) extras = Math.abs(extras) < 1e-6 ? 0 : extras;
+  const extrasClamped = extras > 0 ? extras : 0;
+  const finalPct = final3040(unidad1, unidad2, unidad3, extrasClamped);
   const finalValor = Number.isFinite(finalPct) ? finalPct : 0;
 
   if ($id('unit1Grade')) $id('unit1Grade').textContent = aporteU1.toFixed(1);
