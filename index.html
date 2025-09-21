@@ -1,40 +1,23 @@
 <!DOCTYPE html>
-
-<html lang="es" data-layout="global">
-
+<html lang="es">
   <head>
-
     <meta charset="utf-8" />
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <title>Plataforma QS · Calidad de Software</title>
-
     <link rel="stylesheet" href="css/layout.css" />
-    <script>
-      UPLOADCARE_PUBLIC_KEY = "85eb5471d305dcd08e71";
-      UPLOADCARE_LOCALE = "es";
-    </script>
-    <script
-      src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"
-      charset="utf-8"
-      defer
-    ></script>
-
     <style>
       :root {
-        --page-max-width: min(1100px, 92vw);
+        --page-max-width: min(1020px, 92vw);
         --accent: #2563eb;
-        --accent-hover: #1d4ed8;
-        --accent-soft: #dbeafe;
+        --accent-muted: #dbeafe;
+        --bg: #f8fafc;
+        --surface: #ffffff;
+        --surface-alt: #eef2ff;
         --text-primary: #0f172a;
         --text-secondary: #475569;
-        --surface: #ffffff;
-        --surface-alt: #f8fafc;
         --border: #e2e8f0;
-        --radius-lg: 24px;
-        --radius-md: 18px;
-        --shadow-sm: 0 10px 30px rgba(15, 23, 42, 0.06);
+        --radius: 18px;
+        --shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
       }
 
       *,
@@ -45,11 +28,10 @@
 
       body {
         margin: 0;
-        font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: var(--surface-alt);
+        font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
         color: var(--text-primary);
+        background: var(--bg);
         line-height: 1.6;
-        -webkit-font-smoothing: antialiased;
       }
 
       a {
@@ -61,99 +43,107 @@
         display: block;
       }
 
-      button,
-      input,
-      select,
-      textarea {
-        font: inherit;
+      .container {
+        width: var(--page-max-width);
+        margin: 0 auto;
+        padding: 0 clamp(18px, 4vw, 28px);
+      }
+
+      .site-header {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .site-header__inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: clamp(16px, 4vw, 26px) 0;
+        gap: 16px;
+      }
+
+      .site-logo {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        font-size: 1.1rem;
+        color: var(--accent);
+      }
+
+      .site-logo__mark {
+        width: 36px;
+        height: 36px;
+        display: grid;
+        place-items: center;
+        background: var(--accent);
+        color: #fff;
+        border-radius: 12px;
+        font-weight: 700;
+      }
+
+      .site-nav {
+        display: inline-flex;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+
+      .site-nav a {
+        text-decoration: none;
+        color: var(--text-secondary);
+        font-weight: 600;
+        font-size: 0.95rem;
+        padding: 8px 14px;
+        border-radius: 999px;
+        transition: background 0.2s ease, color 0.2s ease;
+      }
+
+      .site-nav a:hover,
+      .site-nav a:focus-visible {
+        background: var(--accent-muted);
+        color: var(--accent);
       }
 
       main {
-        display: flex;
-        justify-content: center;
+        padding: clamp(48px, 6vw, 72px) 0 80px;
       }
 
-      .page-shell {
-        width: var(--page-max-width);
-        margin: calc(var(--nav-h, 74px) + 40px) auto 96px;
-        padding: 0 10px;
-        display: flex;
-        flex-direction: column;
-        gap: clamp(32px, 5vw, 56px);
-      }
-
-      .hero-card {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: clamp(24px, 4vw, 40px);
-        padding: clamp(32px, 6vw, 56px);
-        border-radius: var(--radius-lg);
+      .hero {
         background: var(--surface);
+        border-radius: var(--radius);
+        padding: clamp(32px, 6vw, 48px);
+        box-shadow: var(--shadow);
         border: 1px solid var(--border);
-        box-shadow: var(--shadow-sm);
-        align-items: start;
-      }
-
-      .hero-content {
         display: grid;
-        gap: 20px;
-        align-content: start;
+        gap: clamp(24px, 4vw, 32px);
       }
 
       .hero-meta {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 4px 12px;
+        padding: 6px 14px;
         border-radius: 999px;
-        background: var(--accent-soft);
+        background: var(--accent-muted);
         color: var(--accent);
-        font-size: 0.75rem;
         font-weight: 600;
+        font-size: 0.75rem;
         letter-spacing: 0.12em;
         text-transform: uppercase;
       }
 
-      .hero-title {
+      .hero h1 {
         margin: 0;
-        font-size: clamp(2.4rem, 5vw, 3.1rem);
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        line-height: 1.1;
+        font-size: clamp(2.3rem, 5vw, 3rem);
+        letter-spacing: -0.03em;
       }
 
-      .hero-description {
+      .hero p {
         margin: 0;
         color: var(--text-secondary);
+        max-width: 620px;
         font-size: 1.05rem;
-        max-width: 520px;
-      }
-
-      .hero-highlights {
-        margin: 0;
-        padding: 0;
-        list-style: none;
-        display: grid;
-        gap: 12px;
-      }
-
-      .hero-highlights li {
-        position: relative;
-        padding-left: 20px;
-        color: var(--text-secondary);
-        font-weight: 500;
-      }
-
-      .hero-highlights li::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0.6em;
-        width: 6px;
-        height: 6px;
-        border-radius: 999px;
-        background: var(--accent);
-        transform: translateY(-50%);
       }
 
       .hero-actions {
@@ -162,1297 +152,451 @@
         gap: 12px;
       }
 
-      .hero-link {
+      .hero-actions a {
+        text-decoration: none;
+        font-weight: 600;
+        padding: 12px 22px;
+        border-radius: 999px;
         display: inline-flex;
         align-items: center;
-        gap: 10px;
-        padding: 12px 20px;
-        border-radius: 999px;
-        font-weight: 600;
-        text-decoration: none;
-        transition: background 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        gap: 8px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
       }
 
-      .hero-link--primary {
+      .hero-actions a.primary {
         background: var(--accent);
-        color: #ffffff;
-        box-shadow: 0 10px 24px rgba(37, 99, 235, 0.25);
+        color: #fff;
+        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.3);
       }
 
-      .hero-link--primary:hover,
-      .hero-link--primary:focus-visible {
-        background: var(--accent-hover);
+      .hero-actions a.primary:hover,
+      .hero-actions a.primary:focus-visible {
         transform: translateY(-2px);
-        box-shadow: 0 14px 32px rgba(37, 99, 235, 0.3);
+        box-shadow: 0 16px 28px rgba(37, 99, 235, 0.35);
       }
 
-      .hero-link--secondary {
+      .hero-actions a.secondary {
         border: 1px solid var(--border);
         color: var(--text-primary);
-        background: transparent;
+        background: #fff;
       }
 
-      .hero-link--secondary:hover,
-      .hero-link--secondary:focus-visible {
-        background: var(--surface-alt);
-        border-color: rgba(37, 99, 235, 0.35);
+      .hero-actions a.secondary:hover,
+      .hero-actions a.secondary:focus-visible {
+        background: var(--accent-muted);
         color: var(--accent);
       }
 
-      .hero-visual {
+      .section {
+        margin-top: clamp(48px, 8vw, 72px);
         display: grid;
-        gap: 16px;
-        align-content: start;
+        gap: clamp(20px, 4vw, 28px);
       }
 
-      .hero-cardlet {
-        display: grid;
-        gap: 6px;
-        padding: 18px 20px;
-        border-radius: var(--radius-md);
-        background: var(--surface-alt);
-        border: 1px solid var(--border);
-      }
-
-      .hero-cardlet--alt {
-        background: rgba(219, 234, 254, 0.6);
-        border-color: rgba(37, 99, 235, 0.25);
-      }
-
-      .hero-cardlet-label {
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        color: var(--text-secondary);
-      }
-
-      .hero-cardlet-value {
-        font-size: clamp(2rem, 4vw, 2.6rem);
-        font-weight: 700;
+      .section h2 {
+        margin: 0;
+        font-size: clamp(1.8rem, 3.6vw, 2.3rem);
         letter-spacing: -0.02em;
       }
 
-      .hero-cardlet-foot {
+      .section p {
+        margin: 0;
         color: var(--text-secondary);
-        font-size: 0.9rem;
+        max-width: 620px;
       }
 
-      .quick-links {
+      .feature-grid {
         display: grid;
+        gap: 18px;
         grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 20px;
       }
 
-      .quick-link-card {
-        display: grid;
-        gap: 16px;
-        padding: 24px;
-        border-radius: var(--radius-lg);
+      .feature-card {
         background: var(--surface);
+        border-radius: var(--radius);
+        padding: 24px;
         border: 1px solid var(--border);
-        text-decoration: none;
-        color: inherit;
-        box-shadow: var(--shadow-sm);
-        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+        display: grid;
+        gap: 12px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
       }
 
-      .quick-link-card:hover,
-      .quick-link-card:focus-visible {
-        transform: translateY(-3px);
-        border-color: rgba(37, 99, 235, 0.35);
-        box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+      .feature-card:hover,
+      .feature-card:focus-within {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
       }
 
-      .quick-link-card__icon {
-        width: 52px;
-        height: 52px;
-        border-radius: 16px;
+      .feature-card__icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: var(--accent-muted);
+        color: var(--accent);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         font-size: 1.5rem;
-        background: var(--accent-soft);
-        color: var(--accent);
-      }
-
-      .quick-link-card__body {
-        display: grid;
-        gap: 12px;
-      }
-
-      .quick-link-card__title {
-        margin: 0;
-        font-size: 1.1rem;
-        font-weight: 600;
-      }
-
-      .quick-link-card__description {
-        margin: 0;
-        color: var(--text-secondary);
-        line-height: 1.6;
-      }
-
-      .quick-link-card__cta {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-weight: 600;
-        color: var(--accent);
-      }
-
-      .dashboard-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        gap: clamp(24px, 4vw, 32px);
-        align-items: start;
-      }
-
-      .session-card {
-        display: grid;
-        gap: 24px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        padding: clamp(28px, 4.5vw, 40px);
-        box-shadow: var(--shadow-sm);
-      }
-
-      .session-card header {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 16px;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin: 0;
-      }
-
-      .session-summary {
-        max-width: 520px;
-        display: grid;
-        gap: 8px;
-      }
-
-      .session-card h2 {
-        margin: 0;
-        font-size: clamp(1.6rem, 3vw, 2.1rem);
         font-weight: 700;
       }
 
-      .session-card p {
-        margin: 0;
-        color: var(--text-secondary);
-        font-size: 1rem;
-      }
-
-      .session-legend {
-        display: inline-flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        align-items: center;
-      }
-
-      .legend-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 12px;
-        border-radius: 999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        background: var(--surface-alt);
-        border: 1px solid var(--border);
-        color: var(--text-secondary);
-      }
-
-      .legend-pill::before {
-        content: "";
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-      }
-
-      .legend-pill--completed {
-        border-color: rgba(74, 222, 128, 0.6);
-        color: #047857;
-        background: #f0fdf4;
-      }
-
-      .legend-pill--completed::before {
-        background: #22c55e;
-      }
-
-      .legend-pill--next {
-        border-color: rgba(249, 115, 22, 0.5);
-        color: #c2410c;
-        background: #fff7ed;
-      }
-
-      .legend-pill--next::before {
-        background: #f97316;
-      }
-
-      .sessions-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-        gap: 14px;
-      }
-
-      .session-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 16px;
-        border-radius: 16px;
-        background: var(--surface-alt);
-        border: 1px solid var(--border);
-        color: var(--text-primary);
-        font-weight: 600;
+      .feature-card a {
         text-decoration: none;
-        transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-      }
-
-      .session-btn:hover,
-      .session-btn:focus-visible {
-        transform: translateY(-2px);
-        border-color: rgba(37, 99, 235, 0.4);
-        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
-        background: var(--surface);
-      }
-
-      .session-btn.completed {
-        background: #ecfdf5;
-        border-color: rgba(74, 222, 128, 0.6);
-        color: #047857;
-        box-shadow: none;
-      }
-
-      .session-btn.current {
-        border-color: rgba(37, 99, 235, 0.6);
-        background: var(--accent-soft);
+        font-weight: 600;
         color: var(--accent);
       }
 
-      .student-uploads {
-        display: grid;
-        gap: 24px;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: var(--radius-lg);
-        padding: clamp(28px, 5vw, 40px);
-        box-shadow: var(--shadow-sm);
-      }
-
-      .student-uploads__header {
+      .resource-list {
         display: grid;
         gap: 12px;
-      }
-
-      .student-uploads__title {
+        padding: 0;
         margin: 0;
-        font-size: clamp(1.6rem, 3vw, 2rem);
-        font-weight: 600;
+        list-style: none;
       }
 
-      .student-uploads__description {
-        margin: 0;
-        color: var(--text-secondary);
-      }
-
-      .student-uploads__grid {
-        display: grid;
-        gap: 20px;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-        align-items: start;
-      }
-
-      .student-uploads__form,
-      .student-uploads__records {
-        background: var(--surface-alt);
+      .resource-item {
+        background: var(--surface);
+        border-radius: var(--radius);
         border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        padding: 24px;
+        padding: 18px 22px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .resource-item span {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+      }
+
+      .resource-item a {
+        text-decoration: none;
+        font-weight: 600;
+        color: var(--accent);
+      }
+
+      .session-groups {
         display: grid;
         gap: 16px;
       }
 
-      .student-uploads__form {
-        transition: opacity 0.2s ease;
-      }
-
-      .student-uploads__form.is-submitting {
-        opacity: 0.65;
-      }
-
-      .student-uploads__form .field {
-        display: grid;
-        gap: 8px;
-      }
-
-      .student-uploads__form label {
-        font-weight: 600;
-        color: var(--text-primary);
-        font-size: 0.95rem;
-      }
-
-      .student-uploads__form input[type="text"],
-      .student-uploads__form select,
-      .student-uploads__form textarea {
-        width: 100%;
-        padding: 12px 14px;
-        border-radius: 12px;
+      details {
         border: 1px solid var(--border);
-        background: #ffffff;
-        font-size: 1rem;
-        color: var(--text-primary);
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        border-radius: var(--radius);
+        background: var(--surface);
+        padding: 0 22px;
+        transition: box-shadow 0.2s ease;
       }
 
-      .student-uploads__form input[type="text"]:focus,
-      .student-uploads__form select:focus,
-      .student-uploads__form textarea:focus {
-        outline: none;
-        border-color: rgba(37, 99, 235, 0.6);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+      details[open] {
+        box-shadow: var(--shadow);
       }
 
-      .student-uploads__form textarea {
-        min-height: 120px;
-        resize: vertical;
-      }
-
-      .student-uploads__help {
-        margin: 0;
-        font-size: 0.85rem;
-        color: var(--text-secondary);
-      }
-
-      .student-uploads__form .uploadcare--widget {
-        width: 100%;
-      }
-
-      .student-uploads__actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-      }
-
-      .student-uploads__submit {
-        background: var(--accent);
-        color: #ffffff;
-        padding: 12px 24px;
-        border-radius: 999px;
-        border: none;
-        cursor: pointer;
-        font-weight: 600;
-        transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-        box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18);
-      }
-
-      .student-uploads__submit:hover:not(:disabled),
-      .student-uploads__submit:focus-visible:not(:disabled) {
-        background: var(--accent-hover);
-        transform: translateY(-2px);
-        box-shadow: 0 16px 30px rgba(37, 99, 235, 0.22);
-      }
-
-      .student-uploads__submit:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-      }
-
-      .student-uploads__reset {
-        background: transparent;
-        color: var(--text-secondary);
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        padding: 12px 22px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-      }
-
-      .student-uploads__reset:hover:not(:disabled),
-      .student-uploads__reset:focus-visible:not(:disabled) {
-        color: var(--accent);
-        border-color: rgba(37, 99, 235, 0.5);
-        background: var(--accent-soft);
-      }
-
-      .student-uploads__reset:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-
-      .student-uploads__records-header {
+      summary {
+        list-style: none;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 12px;
-      }
-
-      .student-uploads__records-title {
-        margin: 0;
-        font-size: 1.1rem;
+        gap: 16px;
+        padding: 18px 0;
+        cursor: pointer;
         font-weight: 600;
       }
 
-      .student-uploads__count {
+      summary::marker {
+        content: "";
+      }
+
+      .summary-icon {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 32px;
-        height: 32px;
-        padding: 0 10px;
-        border-radius: 999px;
-        background: var(--accent-soft);
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: var(--accent-muted);
         color: var(--accent);
-        font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+        transition: transform 0.2s ease;
       }
 
-      .student-uploads__empty {
-        margin: 0;
-        color: var(--text-secondary);
+      details[open] .summary-icon {
+        transform: rotate(90deg);
       }
 
-      .student-uploads__list {
+      .session-links {
+        padding: 0 0 20px;
+      }
+
+      .session-links ul {
         list-style: none;
         margin: 0;
         padding: 0;
         display: grid;
-        gap: 16px;
-      }
-
-      .student-uploads__item {
-        border: 1px solid var(--border);
-        border-radius: var(--radius-md);
-        padding: 16px;
-        display: grid;
-        gap: 12px;
-        background: #ffffff;
-        transition: border-color 0.2s ease, transform 0.2s ease;
-      }
-
-      .student-uploads__item:hover,
-      .student-uploads__item:focus-within {
-        border-color: rgba(37, 99, 235, 0.4);
-        transform: translateY(-2px);
-      }
-
-      .student-uploads__item-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
         gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
       }
 
-      .student-uploads__item-title {
-        font-weight: 600;
-      }
-
-      .student-uploads__item-chip {
-        display: inline-flex;
-        align-items: center;
-        padding: 4px 10px;
-        border-radius: 999px;
-        background: var(--accent-soft);
-        color: var(--accent);
-        font-weight: 600;
-        font-size: 0.75rem;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-      }
-
-      .student-uploads__item-meta {
-        margin: 0;
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-      }
-
-      .student-uploads__item-description {
-        margin: 0;
-        color: var(--text-primary);
-        font-size: 0.95rem;
-      }
-
-      .student-uploads__item-actions {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      .student-uploads__item-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 18px;
-        border-radius: 999px;
-        background: var(--accent);
-        color: #ffffff;
+      .session-links a {
         text-decoration: none;
-        font-weight: 600;
-        transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-        box-shadow: 0 10px 22px rgba(37, 99, 235, 0.2);
-      }
-
-      .student-uploads__item-link:hover,
-      .student-uploads__item-link:focus-visible {
-        background: var(--accent-hover);
-        transform: translateY(-2px);
-        box-shadow: 0 14px 26px rgba(37, 99, 235, 0.24);
-      }
-
-      .student-uploads__item-link[aria-disabled="true"] {
-        pointer-events: none;
-        opacity: 0.6;
-        background: var(--surface-alt);
-        color: var(--text-secondary);
-        box-shadow: none;
-      }
-
-      .student-uploads__status {
-        border-radius: var(--radius-md);
-        padding: 14px 18px;
-        font-size: 0.95rem;
-        font-weight: 500;
-        display: flex;
-        align-items: center;
-        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 12px;
         border: 1px solid var(--border);
-        background: var(--surface);
-        color: var(--text-secondary);
+        color: var(--text-primary);
+        font-weight: 600;
+        background: #fff;
+        text-align: center;
+        transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
       }
 
-      .student-uploads__status[hidden] {
-        display: none !important;
-      }
-
-      .student-uploads__status.is-success {
-        border-color: rgba(74, 222, 128, 0.6);
-        background: #f0fdf4;
-        color: #166534;
-      }
-
-      .student-uploads__status.is-error {
-        border-color: rgba(248, 113, 113, 0.6);
-        background: #fef2f2;
-        color: #b91c1c;
-      }
-
-      .student-uploads__status.is-info {
-        border-color: rgba(37, 99, 235, 0.35);
-        background: var(--accent-soft);
+      .session-links a:hover,
+      .session-links a:focus-visible {
+        background: var(--accent-muted);
+        border-color: rgba(37, 99, 235, 0.45);
         color: var(--accent);
       }
 
-      .student-uploads__status.is-warning {
-        border-color: rgba(251, 191, 36, 0.6);
-        background: #fffbeb;
-        color: #92400e;
-      }
-
-      .footer {
-        margin: 80px 0 32px;
+      footer {
+        padding: 48px 0 32px;
         text-align: center;
         color: var(--text-secondary);
         font-size: 0.9rem;
       }
 
-      .footer-content {
-        padding: 12px 16px;
-      }
-
-      @media (max-width: 960px) {
-        .hero-card {
-          grid-template-columns: 1fr;
-        }
-
-        .dashboard-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .student-uploads__grid {
-          grid-template-columns: 1fr;
-        }
-
-        .hero-actions {
-          justify-content: flex-start;
-        }
-      }
-
       @media (max-width: 720px) {
-        .page-shell {
-          margin: calc(var(--nav-h, 74px) + 28px) auto 72px;
-        }
-
-        .hero-card {
-          padding: 28px 24px;
-        }
-
-        .quick-links {
-          grid-template-columns: 1fr;
-          gap: 16px;
-        }
-
-        .sessions-grid {
-          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-        }
-
-        .student-uploads__form,
-        .student-uploads__records {
-          padding: 20px;
-        }
-
-        .student-uploads__actions {
-          flex-direction: column;
-        }
-
-        .student-uploads__submit,
-        .student-uploads__reset {
-          width: 100%;
-          justify-content: center;
-        }
-
-        .student-uploads__records-header {
+        .site-header__inner {
           flex-direction: column;
           align-items: flex-start;
         }
-      }
 
-    </style>
-
-
-
-    <style>
-
-      @supports not (position: sticky) {
-
-        .qs-nav {
-
-          position: fixed;
-
-          top: 0;
-
-          left: 0;
-
-          right: 0;
-
+        .hero-actions {
+          width: 100%;
         }
 
+        .hero-actions a {
+          flex: 1 1 auto;
+          justify-content: center;
+        }
+
+        .resource-item {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        summary {
+          flex-wrap: wrap;
+        }
       }
-
     </style>
-
-
-
-    <style>
-
-      .session-btn.completed::after {
-
-        content: "✔";
-
-        color: #047857;
-
-        font-weight: 800;
-
-        opacity: 0.95;
-
-      }
-
-    </style>
-
   </head>
-
   <body>
-
-    <!-- Navegación -->
-
-    <div class="qs-nav" data-role="main-nav">
-
-      <div class="wrap">
-
-        <div class="qs-brand-shell">
-
-          <div class="qs-brand-region">
-
-            <a class="qs-brand" href="index.html">
-
-              <span class="qs-logo" aria-hidden="true">QS</span>
-
-              <span class="qs-brand-text">
-
-                <span class="qs-title">Calidad de Software</span>
-
-                <span class="qs-subtitle">Campus QS</span>
-
-              </span>
-
-            </a>
-
-            <span class="qs-chip">Edición 2024</span>
-
-          </div>
-
-          <button
-
-            class="qs-menu-toggle"
-
-            type="button"
-
-            aria-expanded="false"
-
-            aria-controls="qs-nav-links"
-
-          >
-
-            <span class="qs-menu-icon" aria-hidden="true"></span>
-
-            <span class="sr-only">Abrir menú</span>
-
-          </button>
-
-        </div>
-
-        <div class="qs-links-region">
-
-          <nav
-
-            class="qs-tabs"
-
-            id="qs-nav-links"
-
-            aria-label="Navegación principal"
-
-          >
-
-            <a class="qs-btn" href="materiales.html">Materiales</a>
-
-            <a class="qs-btn" href="asistencia.html">Asistencia</a>
-
-            <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
-
-            <a class="qs-btn" href="Foro.html">Foro</a>
-
-            <a class="qs-btn teacher-only" href="paneldocente.html" hidden aria-hidden="true">Panel</a>
-
-          </nav>
-
-        </div>
-
+    <header class="site-header">
+      <div class="container site-header__inner">
+        <a class="site-logo" href="index.html">
+          <span class="site-logo__mark" aria-hidden="true">QS</span>
+          <span>Calidad de Software</span>
+        </a>
+        <nav class="site-nav" aria-label="Navegación principal">
+          <a href="login.html">Ingreso</a>
+          <a href="paneldocente.html">Panel docente</a>
+          <a href="status.html">Estado del curso</a>
+        </nav>
       </div>
+    </header>
 
-    </div>
-
-
-
-    <!-- Contenido principal -->
-
-    <main class="page-shell">
-
-      <section class="hero-card">
-
-        <div class="hero-content">
-
-          <span class="hero-meta">Edición 2024-II</span>
-
-          <h1 class="hero-title">Tu campus digital de Calidad de Software</h1>
-
-          <p class="hero-description">
-
-            Centraliza materiales, asistencia y evaluaciones de la asignatura en un
-
-            entorno moderno, accesible y pensado tanto para estudiantes como para el
-
-            equipo docente.
-
+    <main>
+      <div class="container page">
+        <section class="hero">
+          <span class="hero-meta">Edición 2024</span>
+          <h1>Tu punto de partida para toda la experiencia QS</h1>
+          <p>
+            Explora las sesiones, materiales y entregables del curso de Calidad de Software en un solo lugar.
+            Consulta recursos clave y mantén el control de tu avance con un diseño ligero y fácil de navegar.
           </p>
-
-          <ul class="hero-highlights">
-
-            <li>Materiales organizados por cada sesión del curso.</li>
-
-            <li>Control de asistencia y entregables en un solo lugar.</li>
-
-            <li>Panel dedicado para coordinación y seguimiento docente.</li>
-
-          </ul>
-
           <div class="hero-actions">
-
-            <a class="hero-link hero-link--primary" href="materiales.html"
-
-              >Explorar materiales</a
-
-            >
-
-            <a class="hero-link hero-link--secondary" href="calificaciones.html"
-
-              >Revisar calificaciones</a
-
-            >
-
+            <a class="primary" href="sesion1.html">Comenzar ahora</a>
+            <a class="secondary" href="materiales.html">Ver materiales</a>
           </div>
-
-        </div>
-
-        <div class="hero-visual" aria-hidden="true">
-
-          <div class="hero-cardlet">
-
-            <span class="hero-cardlet-label">Sesiones completadas</span>
-
-            <strong class="hero-cardlet-value" data-hero-progress>00</strong>
-
-            <span class="hero-cardlet-foot">Actualizado en vivo</span>
-
-          </div>
-
-          <div class="hero-cardlet hero-cardlet--alt">
-
-            <span class="hero-cardlet-label">Próxima sesión</span>
-
-            <strong class="hero-cardlet-value" data-hero-next>Sesión 01</strong>
-
-            <span class="hero-cardlet-foot">Lista para repasar</span>
-
-          </div>
-
-        </div>
-
-       </section>
-
-
-
-      <section class="quick-links" aria-label="Accesos rápidos">
-
-        <a class="quick-link-card" href="materiales.html">
-
-          <span class="quick-link-card__icon" aria-hidden="true">📚</span>
-
-          <div class="quick-link-card__body">
-
-            <span class="quick-link-card__title">Materiales del curso</span>
-
-            <p class="quick-link-card__description">
-
-              Encuentra las guías, diapositivas y recursos organizados por sesión.
-
-            </p>
-
-            <span class="quick-link-card__cta">Abrir materiales &rarr;</span>
-
-          </div>
-
-        </a>
-
-        <a class="quick-link-card" href="asistencia.html">
-
-          <span class="quick-link-card__icon" aria-hidden="true">🗓️</span>
-
-          <div class="quick-link-card__body">
-
-            <span class="quick-link-card__title">Control de asistencia</span>
-
-            <p class="quick-link-card__description">
-
-              Registra tu participación y consulta el historial por cada encuentro.
-
-            </p>
-
-            <span class="quick-link-card__cta">Ir a asistencia &rarr;</span>
-
-          </div>
-
-        </a>
-
-        <a class="quick-link-card" href="calificaciones.html">
-
-          <span class="quick-link-card__icon" aria-hidden="true">📊</span>
-
-          <div class="quick-link-card__body">
-
-            <span class="quick-link-card__title">Calificaciones y feedback</span>
-
-            <p class="quick-link-card__description">
-
-              Revisa tus resultados y los comentarios del equipo docente en tiempo real.
-
-            </p>
-
-            <span class="quick-link-card__cta">Ver calificaciones &rarr;</span>
-
-          </div>
-
-        </a>
-
-        <a class="quick-link-card" href="Foro.html">
-
-          <span class="quick-link-card__icon" aria-hidden="true">💬</span>
-
-          <div class="quick-link-card__body">
-
-            <span class="quick-link-card__title">Foro colaborativo</span>
-
-            <p class="quick-link-card__description">
-
-              Comparte dudas, soluciones y anuncios con toda la comunidad del curso.
-
-            </p>
-
-            <span class="quick-link-card__cta">Visitar el foro &rarr;</span>
-
-          </div>
-
-        </a>
-
-      </section>
-
-
-
-      <div class="dashboard-grid">
-
-        <section class="session-card">
-
-          <header>
-
-            <div class="session-summary">
-
-              <h2>Sesiones 1–45</h2>
-
-              <p>
-
-                Selecciona una sesión para acceder a recursos, registrar asistencia y comprobar
-
-                entregables en cuestión de segundos.
-
-              </p>
-
-            </div>
-
-            <div class="session-legend">
-
-              <span class="legend-pill legend-pill--completed">Realizada</span>
-
-              <span class="legend-pill legend-pill--next">En curso</span>
-
-            </div>
-
-          </header>
-
-          <div class="sessions-grid" id="sessionsGrid">
-
-            <!-- Las sesiones se generarán dinámicamente -->
-
-          </div>
-
         </section>
 
-
-        <section class="student-uploads" id="studentUploadsSection">
-
-          <div class="student-uploads__header">
-
-            <h2 class="student-uploads__title">Entrega tus actividades y tareas</h2>
-
-            <p class="student-uploads__description">
-
-              Comparte tus avances con el equipo docente sin salir de la vista principal. Cada archivo que
-
-              subas quedará asociado a tu cuenta para que puedas consultarlo cuando lo necesites.
-
+        <section class="section" aria-labelledby="section-herramientas">
+          <div>
+            <h2 id="section-herramientas">Herramientas esenciales</h2>
+            <p>
+              Accede rápidamente a los recursos que utilizamos con mayor frecuencia durante el curso.
             </p>
-
           </div>
-
-          <div class="student-uploads__grid">
-
-            <form class="student-uploads__form" id="studentUploadForm" autocomplete="off">
-
-              <div class="field">
-
-                <label for="studentUploadTitle">Título de la entrega</label>
-
-                <input
-
-                  type="text"
-
-                  id="studentUploadTitle"
-
-                  name="studentUploadTitle"
-
-                  placeholder="Ejemplo: Actividad 3 · Matriz de trazabilidad"
-
-                  required
-
-                />
-
+          <div class="feature-grid">
+            <article class="feature-card">
+              <span class="feature-card__icon" aria-hidden="true">📝</span>
+              <div>
+                <h3>Plan de pruebas</h3>
+                <p>Guía paso a paso para documentar tu estrategia y alcance de pruebas.</p>
               </div>
-
-              <div class="field">
-
-                <label for="studentUploadType">Tipo de evidencia</label>
-
-                <select id="studentUploadType" name="studentUploadType">
-
-                  <option value="activity">Actividad</option>
-
-                  <option value="homework">Tarea</option>
-
-                  <option value="evidence">Evidencia</option>
-
-                </select>
-
+              <a href="1planpruebas.html">Abrir plantilla &rarr;</a>
+            </article>
+            <article class="feature-card">
+              <span class="feature-card__icon" aria-hidden="true">🐞</span>
+              <div>
+                <h3>Registro de bugs</h3>
+                <p>Registra hallazgos y haz seguimiento del estado de cada incidencia.</p>
               </div>
-
-              <div class="field">
-
-                <label for="studentUploadDescription">Descripción (opcional)</label>
-
-                <textarea
-
-                  id="studentUploadDescription"
-
-                  name="studentUploadDescription"
-
-                  rows="3"
-
-                  placeholder="Describe brevemente qué contiene tu archivo o a qué sesión corresponde"
-
-                ></textarea>
-
+              <a href="2registrobugs.html">Registrar incidencia &rarr;</a>
+            </article>
+            <article class="feature-card">
+              <span class="feature-card__icon" aria-hidden="true">✅</span>
+              <div>
+                <h3>Checklist de calidad</h3>
+                <p>Confirma criterios antes de cada entrega y comparte avances con el equipo.</p>
               </div>
-
-              <div class="field">
-
-                <label for="studentUploadFile">Archivo</label>
-
-                <input
-
-                  type="hidden"
-
-                  role="uploadcare-uploader"
-
-                  id="studentUploadFile"
-
-                  name="studentUploadFile"
-
-                  data-multiple="false"
-
-                />
-
-                <p class="student-uploads__help">
-
-                  Acepta formatos comunes como PDF, DOCX, PPTX o ZIP de hasta 100&nbsp;MB.
-
-                </p>
-
-              </div>
-
-              <div class="student-uploads__actions">
-
-                <button type="submit" class="student-uploads__submit">Enviar entrega</button>
-
-                <button type="button" class="student-uploads__reset" id="studentUploadReset">
-
-                  Limpiar formulario
-
-                </button>
-
-              </div>
-
-            </form>
-
-            <div class="student-uploads__records">
-
-              <div class="student-uploads__records-header">
-
-                <h3 class="student-uploads__records-title">Tus últimas entregas</h3>
-
-                <span class="student-uploads__count" data-upload-count>0</span>
-
-              </div>
-
-              <p class="student-uploads__empty" id="studentUploadEmpty">
-
-                Todavía no registras evidencias. Cuando subas actividades aparecerán en este espacio.
-
-              </p>
-
-              <ul class="student-uploads__list" id="studentUploadList" aria-live="polite"></ul>
-
-            </div>
-
+              <a href="3formatogap.html">Ver checklist &rarr;</a>
+            </article>
           </div>
-
-          <div
-
-            class="student-uploads__status is-info"
-
-            id="studentUploadStatus"
-
-            role="status"
-
-            aria-live="polite"
-
-            hidden
-
-          >
-
-            Listo para registrar tus actividades.
-
-          </div>
-
         </section>
 
+        <section class="section" aria-labelledby="section-recursos">
+          <div>
+            <h2 id="section-recursos">Recursos complementarios</h2>
+            <p>Materiales de apoyo para profundizar en la metodología y en la gestión del curso.</p>
+          </div>
+          <ul class="resource-list">
+            <li class="resource-item">
+              <div>
+                <strong>Roadmap del curso</strong>
+                <span>Visualiza la ruta de trabajo para toda la edición.</span>
+              </div>
+              <a href="4roadmap.html">Ver roadmap</a>
+            </li>
+            <li class="resource-item">
+              <div>
+                <strong>Materiales descargables</strong>
+                <span>Documentos y guías para cada sesión.</span>
+              </div>
+              <a href="materiales.html">Explorar materiales</a>
+            </li>
+            <li class="resource-item">
+              <div>
+                <strong>Foro colaborativo</strong>
+                <span>Comparte dudas y resuelve desafíos con la comunidad.</span>
+              </div>
+              <a href="Foro.html">Ir al foro</a>
+            </li>
+          </ul>
+        </section>
+
+        <section class="section" aria-labelledby="section-sesiones">
+          <div>
+            <h2 id="section-sesiones">Sesiones del curso</h2>
+            <p>
+              Elige el bloque que necesites y despliega el listado para acceder rápidamente a cada sesión.
+            </p>
+          </div>
+          <div class="session-groups">
+            <details open>
+              <summary>
+                Sesiones 1 – 9
+                <span class="summary-icon" aria-hidden="true">➜</span>
+              </summary>
+              <div class="session-links">
+                <ul>
+                  <li><a href="sesion1.html">Sesión 1</a></li>
+                  <li><a href="sesion2.html">Sesión 2</a></li>
+                  <li><a href="sesion3.html">Sesión 3</a></li>
+                  <li><a href="sesion4.html">Sesión 4</a></li>
+                  <li><a href="sesion5.html">Sesión 5</a></li>
+                  <li><a href="sesion6.html">Sesión 6</a></li>
+                  <li><a href="sesion7.html">Sesión 7</a></li>
+                  <li><a href="sesion8.html">Sesión 8</a></li>
+                  <li><a href="sesion9.html">Sesión 9</a></li>
+                </ul>
+              </div>
+            </details>
+            <details>
+              <summary>
+                Sesiones 10 – 18
+                <span class="summary-icon" aria-hidden="true">➜</span>
+              </summary>
+              <div class="session-links">
+                <ul>
+                  <li><a href="sesion10.html">Sesión 10</a></li>
+                  <li><a href="sesion11.html">Sesión 11</a></li>
+                  <li><a href="sesion12.html">Sesión 12</a></li>
+                  <li><a href="sesion13.html">Sesión 13</a></li>
+                  <li><a href="sesion14.html">Sesión 14</a></li>
+                  <li><a href="sesion15.html">Sesión 15</a></li>
+                  <li><a href="sesion16.html">Sesión 16</a></li>
+                  <li><a href="sesion17.html">Sesión 17</a></li>
+                  <li><a href="sesion18.html">Sesión 18</a></li>
+                </ul>
+              </div>
+            </details>
+            <details>
+              <summary>
+                Sesiones 19 – 27
+                <span class="summary-icon" aria-hidden="true">➜</span>
+              </summary>
+              <div class="session-links">
+                <ul>
+                  <li><a href="sesion19.html">Sesión 19</a></li>
+                  <li><a href="sesion20.html">Sesión 20</a></li>
+                  <li><a href="sesion21.html">Sesión 21</a></li>
+                  <li><a href="sesion22.html">Sesión 22</a></li>
+                  <li><a href="sesion23.html">Sesión 23</a></li>
+                  <li><a href="sesion24.html">Sesión 24</a></li>
+                  <li><a href="sesion25.html">Sesión 25</a></li>
+                  <li><a href="sesion26.html">Sesión 26</a></li>
+                  <li><a href="sesion27.html">Sesión 27</a></li>
+                </ul>
+              </div>
+            </details>
+            <details>
+              <summary>
+                Sesiones 28 – 36
+                <span class="summary-icon" aria-hidden="true">➜</span>
+              </summary>
+              <div class="session-links">
+                <ul>
+                  <li><a href="sesion28.html">Sesión 28</a></li>
+                  <li><a href="sesion29.html">Sesión 29</a></li>
+                  <li><a href="sesion30.html">Sesión 30</a></li>
+                  <li><a href="sesion31.html">Sesión 31</a></li>
+                  <li><a href="sesion32.html">Sesión 32</a></li>
+                  <li><a href="sesion33.html">Sesión 33</a></li>
+                  <li><a href="sesion34.html">Sesión 34</a></li>
+                  <li><a href="sesion35.html">Sesión 35</a></li>
+                  <li><a href="sesion36.html">Sesión 36</a></li>
+                </ul>
+              </div>
+            </details>
+            <details>
+              <summary>
+                Sesiones 37 – 45
+                <span class="summary-icon" aria-hidden="true">➜</span>
+              </summary>
+              <div class="session-links">
+                <ul>
+                  <li><a href="sesion37.html">Sesión 37</a></li>
+                  <li><a href="sesion38.html">Sesión 38</a></li>
+                  <li><a href="sesion39.html">Sesión 39</a></li>
+                  <li><a href="sesion40.html">Sesión 40</a></li>
+                  <li><a href="sesion41.html">Sesión 41</a></li>
+                  <li><a href="sesion42.html">Sesión 42</a></li>
+                  <li><a href="sesion43.html">Sesión 43</a></li>
+                  <li><a href="sesion44.html">Sesión 44</a></li>
+                  <li><a href="sesion45.html">Sesión 45</a></li>
+                </ul>
+              </div>
+            </details>
+          </div>
+        </section>
       </div>
-
     </main>
 
-
-    <!-- Pie de página -->
-
-    <footer class="footer" data-footer-version="2024-unified">
-
-      <div class="footer-content">© 2024 · Plataforma QS - Calidad de Software | Isaac Paniagua</div>
-
+    <footer>
+      <div class="container">
+        © 2024 Plataforma QS · Calidad de Software
+      </div>
     </footer>
-
-
-
-    <script>
-
-      document.addEventListener("DOMContentLoaded", async function () {
-
-        const grid = document.getElementById("sessionsGrid");
-
-        const progressEl = document.querySelector("[data-hero-progress]");
-
-        const nextEl = document.querySelector("[data-hero-next]");
-
-        if (!grid) return;
-
-        grid.innerHTML = "";
-
-
-
-        const updateHero = (completed, current, total) => {
-
-          if (progressEl) {
-
-            const safeCompleted = Math.max(0, Math.min(completed, total));
-
-            progressEl.textContent = String(safeCompleted).padStart(2, "0");
-
-          }
-
-          if (nextEl) {
-
-            const safeCurrent = Math.max(1, Math.min(current, total));
-
-            nextEl.textContent = "Sesión " + String(safeCurrent).padStart(2, "0");
-
-          }
-
-        };
-
-
-
-        const fallbackTotal = 45;
-
-
-
-        try {
-
-          const res = await fetch("checklist.json", { cache: "no-store" });
-
-          const data = await res.json();
-
-          const total = Array.isArray(data.items) && data.items.length ? data.items.length : fallbackTotal;
-
-          const estados = {};
-
-          let completed = 0;
-
-          for (const it of data.items || []) {
-
-            estados[it.sesion] = it.estado;
-
-            if (it.estado === "REAL") completed += 1;
-
-          }
-
-          let current = null;
-
-          for (let i = 1; i <= total; i++) {
-
-            if (estados[i] !== "REAL") {
-
-              current = i;
-
-              break;
-
-            }
-
-          }
-
-          if (!current) current = total;
-
-          updateHero(completed, current, total);
-
-          for (let i = 1; i <= total; i++) {
-
-            const a = document.createElement("a");
-
-            a.href = "sesion" + i + ".html";
-
-            a.className = "session-btn";
-
-            a.textContent = "Sesión " + i;
-
-            if (estados[i] === "REAL") a.classList.add("completed");
-
-            if (i === current && estados[i] !== "REAL") a.classList.add("current");
-
-            grid.appendChild(a);
-
-          }
-
-        } catch (e) {
-
-          updateHero(0, 1, fallbackTotal);
-
-          for (let i = 1; i <= fallbackTotal; i++) {
-
-            const a = document.createElement("a");
-
-            a.href = "sesion" + i + ".html";
-
-            a.className = "session-btn";
-
-            a.textContent = "Sesión " + i;
-
-            grid.appendChild(a);
-
-          }
-
-        }
-
-      });
-
-    </script>
-
-    <script type="module" src="js/index-student-uploads.js"></script>
-    <script defer src="js/back-home.js"></script>
-
-    <script defer src="js/nav-inject.js"></script>
-
   </body>
-
 </html>
-
-
