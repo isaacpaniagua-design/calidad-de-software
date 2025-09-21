@@ -1,8 +1,10 @@
-﻿import { initFirebase, getDb, getAuthInstance, onAuth } from './firebase.js';
+// js/calificaciones-backend.js
+import { initFirebase, getDb, getAuthInstance, onAuth } from './firebase.js';
 import { buildCandidateDocIds } from './calificaciones-helpers.js';
+import { collection, doc, getDoc, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
-const  = (id) => document.getElementById(id);
+const $id = (id) => document.getElementById(id);
 
 function ready() {
   return new Promise((resolve) => {
@@ -31,9 +33,9 @@ function escPct(n) {
 function inferUnidad(it) {
   if (it && it.unidad != null) return Number(it.unidad);
   const n = String((it && (it.nombre || it.title)) || '').toLowerCase();
-  if (/\bu1\b|unidad\s*1/.test(n)) return 1;
-  if (/\bu2\b|unidad\s*2/.test(n)) return 2;
-  if (/\bu3\b|unidad\s*3/.test(n)) return 3;
+  if (/u1|unidad\s*1/.test(n)) return 1;
+  if (/u2|unidad\s*2/.test(n)) return 2;
+  if (/u3|unidad\s*3/.test(n)) return 3;
   return 0;
 }
 
@@ -58,6 +60,7 @@ function normalizeItems(source) {
     else if (storedMax > 0) ratio = Math.max(0, Math.min(storedPoints, storedMax)) / storedMax;
     else ratio = 0;
 
+    ratio = Math.max(0, Math.min(ratio, 1));
     const normalizedMax = 10;
     const normalizedPoints = ratio * normalizedMax;
     const displayMax = baseMax;
@@ -99,15 +102,15 @@ function bucketsPorUnidad(items) {
   return B;
 }
 function scoreUnidad(arr) { if (!arr.length) return 0; return resumenGlobal(arr).porcentaje; }
-function final3040(u1, u2, u3) { return clampPct(u1 * 0.3 + u2 * 0.3 + u3 * 0.4); }
+function final3040(u1,u2,u3) { return clampPct(u1*0.3 + u2*0.3 + u3*0.4); }
 
 function renderAlumno(items) {
   const normalized = normalizeItems(items || []);
-  const tbody = ('qsc-tbody');
-  const kpiTotal = ('qsc-kpi-total');
-  const kpiItems = ('qsc-kpi-items');
-  const kpiPond = ('qsc-kpi-pond');
-  const bar = ('qsc-bar-fill');
+  const tbody = $id('qsc-tbody');
+  const kpiTotal = $id('qsc-kpi-total');
+  const kpiItems = $id('qsc-kpi-items');
+  const kpiPond = $id('qsc-kpi-pond');
+  const bar = $id('qsc-bar-fill');
 
   const stats = resumenGlobal(normalized);
   if (kpiTotal) kpiTotal.textContent = fmtPct(stats.porcentaje);
@@ -139,23 +142,23 @@ function renderAlumno(items) {
           if (f && typeof f.toDate === 'function') fecha = f.toDate().toLocaleDateString();
           else if (f instanceof Date) fecha = f.toLocaleDateString();
         } catch (_) {}
-        tbody.insertAdjacentHTML('beforeend', 
+        tbody.insertAdjacentHTML('beforeend', `
           <tr>
             <td>
               <div class="qsc-cell-main">
-                <span></span>
-                
+                <span>${it.nombre || it.title || 'Actividad'}</span>
+                ${statusBadge}
               </div>
             </td>
-            <td></td>
-            <td></td>
-            <td style="text-align:right"></td>
-            <td style="text-align:right"></td>
-            <td style="text-align:right">%</td>
-            <td style="text-align:right"></td>
-            <td style="text-align:center"></td>
-            <td style="text-align:center"></td>
-          </tr>);
+            <td>${tipo}</td>
+            <td>${uni}</td>
+            <td style="text-align:right">${pts.toFixed(2)}</td>
+            <td style="text-align:right">${max ? max.toFixed(2) : '-'}</td>
+            <td style="text-align:right">${pnd}%</td>
+            <td style="text-align:right">${fmtPct(aporta)}</td>
+            <td style="text-align:center">${escala}</td>
+            <td style="text-align:center">${fecha}</td>
+          </tr>`);
       }
     }
   }
@@ -167,13 +170,13 @@ function renderAlumno(items) {
   const fin = final3040(u1, u2, u3);
   const to5 = (p) => (p * 0.05).toFixed(1);
 
-  if (('unit1Grade')) ('unit1Grade').textContent = to5(u1);
-  if (('unit2Grade')) ('unit2Grade').textContent = to5(u2);
-  if (('unit3Grade')) ('unit3Grade').textContent = to5(u3);
-  if (('finalGrade')) ('finalGrade').textContent = to5(fin);
+  if ($id('unit1Grade')) $id('unit1Grade').textContent = to5(u1);
+  if ($id('unit2Grade')) $id('unit2Grade').textContent = to5(u2);
+  if ($id('unit3Grade')) $id('unit3Grade').textContent = to5(u3);
+  if ($id('finalGrade')) $id('finalGrade').textContent = to5(fin);
 
-  if (('progressPercent')) ('progressPercent').textContent = String(Math.round(fin)) + '%';
-  const pbar = ('progressBar');
+  if ($id('progressPercent')) $id('progressPercent').textContent = String(Math.round(fin)) + '%';
+  const pbar = $id('progressBar');
   if (pbar) {
     pbar.style.width = fin + '%';
     pbar.className = 'h-3 rounded-full progress-bar';
@@ -185,7 +188,7 @@ function renderAlumno(items) {
 }
 
 function setStatusMessage(message) {
-  const el = ('qsc-msg');
+  const el = $id('qsc-msg');
   if (!el) return;
   el.textContent = message ? String(message) : '';
 }
@@ -226,7 +229,7 @@ async function main(){
   await ready();
   initFirebase();
   const db = getDb();
-  const root = ('calificaciones-root') || document.body;
+  const root = $id('calificaciones-root') || document.body;
   const params = new URLSearchParams(location.search);
   const dataset = root && root.dataset ? root.dataset : {};
   const grupoAttr = dataset && dataset.grupo ? dataset.grupo : null;
