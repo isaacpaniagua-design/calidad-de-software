@@ -379,28 +379,11 @@ export async function fetchAttendancesByDateRangeByUser(
   startDateStr,
   endDateStr
 ) {
-  const db = getDb();
-  const qy = query(
-    collection(db, "attendances"),
-    where("email", "==", (email || "").toLowerCase()),
-    where("date", ">=", startDateStr),
-    where("date", "<=", endDateStr),
-    orderBy("date", "asc")
+  const lowerEmail = (email || "").toLowerCase();
+  const items = await fetchAttendancesByDateRange(startDateStr, endDateStr);
+  return items.filter(
+    (item) => (item.email || "").toLowerCase() === lowerEmail
   );
-  const snap = await getDocs(qy);
-  const items = [];
-  snap.forEach((docSnap) => {
-    const data = docSnap.data();
-    items.push({
-      id: docSnap.id,
-      name: data.name,
-      email: data.email,
-      type: data.type,
-      date: data.date,
-      timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date(),
-    });
-  });
-  return items;
 }
 
 // ====== Calificaciones (Grades) ======
