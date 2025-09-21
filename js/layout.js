@@ -122,10 +122,9 @@ function buildNavTemplate(basePath) {
             <span class="qs-logo" aria-hidden="true">QS</span>
             <span class="qs-brand-text">
               <span class="qs-title">Calidad de Software</span>
-              <span class="qs-subtitle">Campus QS</span>
+              <span class="qs-subtitle">ITSON</span>
             </span>
           </a>
-          <span class="qs-chip">Edicion 2024</span>
         </div>
         <button class="qs-menu-toggle" type="button" aria-expanded="false" aria-controls="qs-nav-links">
           <span class="qs-menu-icon" aria-hidden="true"></span>
