@@ -124,6 +124,14 @@ function clampForInput(input, value) {
   return result;
 }
 
+function hasNumericTextContent(el) {
+  if (!el) return false;
+  const text = el.textContent;
+  if (typeof text !== 'string') return false;
+  const parsed = parseFloat(text.replace(',', '.'));
+  return Number.isFinite(parsed);
+}
+
 function syncGradeInputsFromItems(items) {
   const gradeInputs = Array.from(document.querySelectorAll('.grade-input'));
   const projectInputs = Array.from(document.querySelectorAll('.project-grade-input'));
@@ -366,14 +374,31 @@ function renderAlumno(items) {
   const finalPct = final3040(unidad1, unidad2, unidad3, extrasClamped);
   const finalValor = Number.isFinite(finalPct) ? finalPct : 0;
 
-  if ($id('unit1Grade')) $id('unit1Grade').textContent = aporteU1.toFixed(1);
-  if ($id('unit2Grade')) $id('unit2Grade').textContent = aporteU2.toFixed(1);
-  if ($id('unit3Grade')) $id('unit3Grade').textContent = aporteU3.toFixed(1);
-  if ($id('finalGrade')) $id('finalGrade').textContent = finalValor.toFixed(1);
+  const hasTeacherCalculator = typeof window.calculateGrades === 'function';
 
-  if ($id('progressPercent')) $id('progressPercent').textContent = String(Math.round(finalValor)) + '%';
+  const unit1El = $id('unit1Grade');
+  if (unit1El && (!hasTeacherCalculator || !hasNumericTextContent(unit1El))) {
+    unit1El.textContent = aporteU1.toFixed(1);
+  }
+  const unit2El = $id('unit2Grade');
+  if (unit2El && (!hasTeacherCalculator || !hasNumericTextContent(unit2El))) {
+    unit2El.textContent = aporteU2.toFixed(1);
+  }
+  const unit3El = $id('unit3Grade');
+  if (unit3El && (!hasTeacherCalculator || !hasNumericTextContent(unit3El))) {
+    unit3El.textContent = aporteU3.toFixed(1);
+  }
+  const finalEl = $id('finalGrade');
+  if (finalEl && (!hasTeacherCalculator || !hasNumericTextContent(finalEl))) {
+    finalEl.textContent = finalValor.toFixed(1);
+  }
+
+  const progressEl = $id('progressPercent');
+  if (progressEl && (!hasTeacherCalculator || !/\d/.test(progressEl.textContent || ''))) {
+    progressEl.textContent = String(Math.round(finalValor)) + '%';
+  }
   const pbar = $id('progressBar');
-  if (pbar) {
+  if (pbar && (!hasTeacherCalculator || !pbar.style.width)) {
     const pct = Math.max(0, Math.min(finalValor, 100));
     pbar.style.width = pct.toFixed(2) + '%';
     pbar.className = 'h-3 rounded-full progress-bar';
