@@ -63,22 +63,20 @@ function normalizeItems(source) {
     let displayMax = Number.isFinite(rawMax) && rawMax > 0 ? rawMax : null;
     if (displayMax == null) displayMax = maxForRatio > 0 ? maxForRatio : 10;
 
-    let displayPoints;
-    if (Number.isFinite(rawPoints)) displayPoints = rawPoints;
-    else displayPoints = normalizedRatio * displayMax;
-    if (displayMax > 0) displayPoints = Math.max(0, Math.min(displayPoints, displayMax));
-    else displayPoints = Math.max(0, displayPoints);
+    let displayPoints = Number.isFinite(rawPoints) ? rawPoints : NaN;
+    if (Number.isFinite(displayPoints)) {
+      if (displayMax > 0) displayPoints = Math.max(0, Math.min(displayPoints, displayMax));
+      else displayPoints = Math.max(0, displayPoints);
+    }
 
-    const estaCalificado = hasRawPoints
-      ? true
-      : (it.puntos !== undefined && it.puntos !== null && it.puntos !== '');
+    const estaCalificado = Number.isFinite(rawPoints);
 
     out.push(Object.assign({}, it, {
       normalizedRatio: Math.max(0, Math.min(normalizedRatio, 1)),
       normalizedMax: Number(maxForRatio.toFixed(3)),
       normalizedPuntos: Number(clampedNormalizedPoints.toFixed(3)),
       displayMax: Number(displayMax.toFixed(2)),
-      displayPuntos: Number(displayPoints.toFixed(2)),
+      displayPuntos: Number.isFinite(displayPoints) ? Number(displayPoints.toFixed(2)) : NaN,
       estaCalificado: !!estaCalificado,
     }));
   }
@@ -163,11 +161,8 @@ function syncGradeInputsFromItems(items) {
       input.value = '';
       return;
     }
-    let value = Number(item.displayPuntos);
-    if (!Number.isFinite(value) && item.rawPuntos != null) {
-      const raw = Number(item.rawPuntos);
-      if (Number.isFinite(raw)) value = raw;
-    }
+    const raw = Number(item.rawPuntos);
+    let value = Number.isFinite(raw) ? raw : Number(item.displayPuntos);
     if (!Number.isFinite(value)) {
       input.value = '';
       return;
