@@ -360,7 +360,7 @@ if (localClear) {
   };
 }
 
-const flushButtons = ['calculateBtn', 'exportBtn'];
+const flushButtons = ['calculateBtn', 'exportBtn', 'saveGradesBtn'];
 flushButtons.forEach((id) => {
   const btn = document.getElementById(id);
   if (!btn) return;
