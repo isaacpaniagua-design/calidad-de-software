@@ -104,7 +104,8 @@ const gradeMetas = gradeInputs.map((input, index) => {
     nombre,
     tipo: inferTipo(nombre, unidad, false),
     ponderacion: parseFloat(input.dataset.weight || input.getAttribute('data-weight')) || 0,
-    maxPuntos: parseFloat(input.getAttribute('max')) || 10,
+    scale: 10,
+    maxPuntos: 10,
   };
 });
 const gradeMetaMap = new Map(gradeMetas.map((meta) => [meta.key, meta]));
@@ -118,12 +119,15 @@ const projectMetas = projectInputs.map((input, index) => {
     nombre,
     tipo: inferTipo(nombre, 3, true),
     ponderacion: parseFloat(input.dataset.weight || input.getAttribute('data-weight')) || 0,
-    maxPuntos: parseFloat(input.getAttribute('max')) || 10,
+    scale: 10,
+    maxPuntos: 10,
   };
 });
 const projectMetaMap = new Map(projectMetas.map((meta) => [meta.key, meta]));
 
-function setInputValue(input, value) {
+function setInputValue(meta, value) {
+  const input = meta?.input;
+  if (!input) return;
   if (value == null || value === '') {
     input.value = '';
     return;
@@ -133,15 +137,17 @@ function setInputValue(input, value) {
     input.value = '';
     return;
   }
-  input.value = String(num);
+  const scale = Number(meta.scale || 10) || 10;
+  const clamped = Math.max(0, Math.min(num, scale));
+  input.value = String(clamped);
 }
 
 function resetInputs() {
   gradeMetas.forEach((meta) => {
-    meta.input.value = '';
+    if (meta && meta.input) meta.input.value = '';
   });
   projectMetas.forEach((meta) => {
-    meta.input.value = '';
+    if (meta && meta.input) meta.input.value = '';
   });
 }
 
@@ -153,7 +159,7 @@ function applyItemsToInputs(items) {
     if (!item || typeof item !== 'object') continue;
     const meta = gradeMetaMap.get(item.key) || projectMetaMap.get(item.key);
     if (!meta) continue;
-    setInputValue(meta.input, item.puntos);
+    setInputValue(meta, item.puntos);
   }
   if (typeof window.calculateProjectGrades === 'function') {
     window.calculateProjectGrades();
@@ -167,35 +173,39 @@ function collectItemsForFirestore() {
   const items = [];
   for (let i = 0; i < gradeMetas.length; i++) {
     const meta = gradeMetas[i];
+    if (!meta || !meta.input) continue;
     const raw = meta.input.value;
     if (raw === '' || raw == null) continue;
     const puntos = Number(raw);
     if (!Number.isFinite(puntos)) continue;
+    const scale = Number(meta.scale || meta.maxPuntos || 10) || 10;
     items.push({
       key: meta.key,
       nombre: meta.nombre,
       tipo: meta.tipo,
       unidad: meta.unidad,
       ponderacion: meta.ponderacion,
-      maxPuntos: meta.maxPuntos,
-      puntos,
+      maxPuntos: scale,
+      puntos: Math.max(0, Math.min(puntos, scale)),
       fecha: null,
     });
   }
   for (let i = 0; i < projectMetas.length; i++) {
     const meta = projectMetas[i];
+    if (!meta || !meta.input) continue;
     const raw = meta.input.value;
     if (raw === '' || raw == null) continue;
     const puntos = Number(raw);
     if (!Number.isFinite(puntos)) continue;
+    const scale = Number(meta.scale || meta.maxPuntos || 10) || 10;
     items.push({
       key: meta.key,
       nombre: meta.nombre,
       tipo: meta.tipo,
       unidad: meta.unidad,
       ponderacion: meta.ponderacion,
-      maxPuntos: meta.maxPuntos,
-      puntos,
+      maxPuntos: scale,
+      puntos: Math.max(0, Math.min(puntos, scale)),
       fecha: null,
     });
   }

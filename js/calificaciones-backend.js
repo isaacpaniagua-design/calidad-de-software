@@ -34,53 +34,14 @@ function inferUnidad(it){
 function resumenGlobal(items){
   let porc=0, pond=0;
   for(const it of items){
-    const max=Number(it.maxPuntos)||0;
-    const pts=Number(it.puntos)||0;
-    const pnd=Number(it.ponderacion)||0;
-    if (max>0) porc += (pts/max)*pnd;
-    pond += pnd;
-  }
-  return { porcentaje: clampPct(porc), pondSum: clampPct(pond) };
-}
-function bucketsPorUnidad(items){
-  const B={1:[],2:[],3:[]};
-  for(const it of items){ const u=inferUnidad(it); if(u===1||u===2||u===3) B[u].push(it); }
-  return B;
-}
-function scoreUnidad(arr){ if(!arr.length) return 0; return resumenGlobal(arr).porcentaje; }
-function final3040(u1,u2,u3){ return clampPct(u1*0.3 + u2*0.3 + u3*0.4); }
-
-// === Render alumno ===
-function renderAlumno(items){
-  // KPIs y barra (sección "Mis calificaciones")
-  const tbody = $id('qsc-tbody');
-  const kpiTotal = $id('qsc-kpi-total');
-  const kpiItems = $id('qsc-kpi-items');
-  const kpiPond  = $id('qsc-kpi-pond');
-  const bar      = $id('qsc-bar-fill');
-
-  const { porcentaje, pondSum } = resumenGlobal(items);
-  if (kpiTotal) kpiTotal.textContent = fmtPct(porcentaje);
-  if (kpiItems) kpiItems.textContent = String(items.length);
-  if (kpiPond)  kpiPond.textContent  = fmtPct(pondSum);
-  if (bar) bar.style.width = porcentaje.toFixed(2) + '%';
-
-  if (tbody){
-    tbody.innerHTML = '';
-    if (!items.length){
-      tbody.innerHTML = `<tr><td class="qsc-muted" colspan="9">Sin actividades registradas aún.</td></tr>`;
-    } else {
-      for(const it of items){
-        const tipo = it.tipo || it.category || '—';
-        // Evitar el uso de nullish coalescing (??) para compatibilidad con navegadores
-        // que no soportan esa sintaxis. Preferimos la propiedad "unidad" si existe
-        // (no es null ni undefined); de lo contrario, inferimos la unidad a partir del nombre.
-        const uni  = ((it.unidad !== undefined && it.unidad !== null) ? it.unidad : inferUnidad(it)) || '—';
-        const max  = Number(it.maxPuntos)||0;
-        const pts  = Number(it.puntos)||0;
-        const pnd  = Number(it.ponderacion)||0;
-        const aporta = max>0 ? (pts/max)*pnd : 0;
-        const escala = max>0 ? escPct(100*(pts/max)) : '—';
+        const rawMax  = Number(it.maxPuntos) || 0;
+        const normalizedMax = rawMax > 0 && rawMax < 10 ? 10 : rawMax;
+        const pts  = Number(it.puntos) || 0;
+        const clampedPts = normalizedMax > 0 ? Math.max(0, Math.min(pts, normalizedMax)) : pts;
+        const pnd  = Number(it.ponderacion) || 0;
+        const ratio = normalizedMax > 0 ? clampedPts / normalizedMax : 0;
+        const aporta = ratio * pnd;
+        const escala = normalizedMax > 0 ? escPct(100 * ratio) : '–';
         // Evitar optional chaining (?.) por compatibilidad. Convertimos la fecha
         // a Date sólo si el objeto tiene un método toDate; de lo contrario,
         // utilizamos el objeto si ya es una instancia de Date.
@@ -104,7 +65,7 @@ function renderAlumno(items){
             <td>${tipo}</td>
             <td>${uni}</td>
             <td style="text-align:right">${pts}</td>
-            <td style="text-align:right">${max}</td>
+            <td style="text-align:right">${normalizedMax || "–"}</td>
             <td style="text-align:right">${pnd}%</td>
             <td style="text-align:right">${fmtPct(aporta)}</td>
             <td style="text-align:center">${escala}</td>
