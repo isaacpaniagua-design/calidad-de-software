@@ -97,6 +97,7 @@ const projectInputs = Array.from(
 const gradeMetas = gradeInputs.map((input, index) => {
   const unidad = detectUnidad(input);
   const nombre = getLabelText(input) || `Actividad ${index + 1}`;
+  const inputMax = parseFloat(input.getAttribute('max')) || 10;
   return {
     key: `g-${index}`,
     input,
@@ -105,13 +106,14 @@ const gradeMetas = gradeInputs.map((input, index) => {
     tipo: inferTipo(nombre, unidad, false),
     ponderacion: parseFloat(input.dataset.weight || input.getAttribute('data-weight')) || 0,
     scale: 10,
-    maxPuntos: 10,
+    inputMax,
   };
 });
 const gradeMetaMap = new Map(gradeMetas.map((meta) => [meta.key, meta]));
 
 const projectMetas = projectInputs.map((input, index) => {
   const nombre = getLabelText(input) || `Rúbrica ${index + 1}`;
+  const inputMax = parseFloat(input.getAttribute('max')) || 10;
   return {
     key: `p-${index}`,
     input,
@@ -120,26 +122,34 @@ const projectMetas = projectInputs.map((input, index) => {
     tipo: inferTipo(nombre, 3, true),
     ponderacion: parseFloat(input.dataset.weight || input.getAttribute('data-weight')) || 0,
     scale: 10,
-    maxPuntos: 10,
+    inputMax,
   };
 });
 const projectMetaMap = new Map(projectMetas.map((meta) => [meta.key, meta]));
 
-function setInputValue(meta, value) {
-  const input = meta?.input;
+function setInputValue(meta, item) {
+  const input = meta && meta.input;
   if (!input) return;
-  if (value == null || value === '') {
-    input.value = '';
-    return;
-  }
-  const num = Number(value);
-  if (!Number.isFinite(num)) {
+  if (!item || (item.puntos == null && item.rawPuntos == null)) {
     input.value = '';
     return;
   }
   const scale = Number(meta.scale || 10) || 10;
-  const clamped = Math.max(0, Math.min(num, scale));
-  input.value = String(clamped);
+  const inputMax = Number(meta.inputMax || scale) || scale;
+  let rawValue = null;
+  if (item.rawPuntos != null) {
+    rawValue = Number(item.rawPuntos);
+  } else {
+    const normalized = Number(item.puntos) || 0;
+    const clampedNormalized = Math.max(0, Math.min(normalized, scale));
+    const ratio = scale > 0 ? clampedNormalized / scale : 0;
+    rawValue = ratio * inputMax;
+  }
+  if (!Number.isFinite(rawValue)) {
+    input.value = '';
+    return;
+  }
+  input.value = String(Number(rawValue.toFixed(2)));
 }
 
 function resetInputs() {
@@ -159,7 +169,7 @@ function applyItemsToInputs(items) {
     if (!item || typeof item !== 'object') continue;
     const meta = gradeMetaMap.get(item.key) || projectMetaMap.get(item.key);
     if (!meta) continue;
-    setInputValue(meta, item.puntos);
+    setInputValue(meta, item);
   }
   if (typeof window.calculateProjectGrades === 'function') {
     window.calculateProjectGrades();
@@ -176,9 +186,13 @@ function collectItemsForFirestore() {
     if (!meta || !meta.input) continue;
     const raw = meta.input.value;
     if (raw === '' || raw == null) continue;
-    const puntos = Number(raw);
-    if (!Number.isFinite(puntos)) continue;
-    const scale = Number(meta.scale || meta.maxPuntos || 10) || 10;
+    const rawValue = Number(raw);
+    if (!Number.isFinite(rawValue)) continue;
+    const inputMax = Number(meta.inputMax || 10) || 10;
+    const scale = Number(meta.scale || 10) || 10;
+    const clampedRaw = Math.max(0, Math.min(rawValue, inputMax));
+    const ratio = inputMax > 0 ? clampedRaw / inputMax : 0;
+    const normalized = ratio * scale;
     items.push({
       key: meta.key,
       nombre: meta.nombre,
@@ -186,7 +200,9 @@ function collectItemsForFirestore() {
       unidad: meta.unidad,
       ponderacion: meta.ponderacion,
       maxPuntos: scale,
-      puntos: Math.max(0, Math.min(puntos, scale)),
+      puntos: Number(normalized.toFixed(3)),
+      rawPuntos: Number(clampedRaw.toFixed(2)),
+      rawMaxPuntos: inputMax,
       fecha: null,
     });
   }
@@ -195,9 +211,13 @@ function collectItemsForFirestore() {
     if (!meta || !meta.input) continue;
     const raw = meta.input.value;
     if (raw === '' || raw == null) continue;
-    const puntos = Number(raw);
-    if (!Number.isFinite(puntos)) continue;
-    const scale = Number(meta.scale || meta.maxPuntos || 10) || 10;
+    const rawValue = Number(raw);
+    if (!Number.isFinite(rawValue)) continue;
+    const inputMax = Number(meta.inputMax || 10) || 10;
+    const scale = Number(meta.scale || 10) || 10;
+    const clampedRaw = Math.max(0, Math.min(rawValue, inputMax));
+    const ratio = inputMax > 0 ? clampedRaw / inputMax : 0;
+    const normalized = ratio * scale;
     items.push({
       key: meta.key,
       nombre: meta.nombre,
@@ -205,7 +225,9 @@ function collectItemsForFirestore() {
       unidad: meta.unidad,
       ponderacion: meta.ponderacion,
       maxPuntos: scale,
-      puntos: Math.max(0, Math.min(puntos, scale)),
+      puntos: Number(normalized.toFixed(3)),
+      rawPuntos: Number(clampedRaw.toFixed(2)),
+      rawMaxPuntos: inputMax,
       fecha: null,
     });
   }
