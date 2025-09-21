@@ -81,10 +81,19 @@
       }
 
       .deliverable-card {
-        background: white;
-        border-radius: 1rem;
-        padding: 1.5rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        background: white;      .progress-fill {
+        background: linear-gradient(90deg, #10b981, #3b82f6);
+        height: 100%;
+        border-radius: 1rem;
+        transition: width 0.3s ease;
+      }
+
+      .student-progress-fill {
+        height: 100%;
+        border-radius: 1rem;
+        transition: width 0.3s ease;
+      }
+
         border-left: 6px solid;
         margin: 1rem 0;
         transition: all 0.3s ease;
@@ -1470,28 +1479,92 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2"
                   >Seleccionar estudiante/equipo:</label
                 >
-                <select
-                  id="student-select"
-                  class="w-full p-3 border border-gray-300 rounded-lg"
-                >
-                  <option value="">Seleccionar...</option>
-                  <option value="equipo1">
-                    Equipo 1 - Innovatech Startup (6 estudiantes)
-                  </option>
-                  <option value="equipo2">
-                    Equipo 2 - Legacy Corp (6 estudiantes)
-                  </option>
-                  <option value="equipo3">
-                    Equipo 3 - GovWare Solutions (6 estudiantes)
-                  </option>
-                  <option value="equipo4">
-                    Equipo 4 - DataFlow Systems (7 estudiantes)
-                  </option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2"
-                  >Calificación calculada:</label
+                <select      function getProgressGradient(percentage) {
+        if (percentage >= 90) {
+          return "linear-gradient(90deg, #22c55e, #16a34a)";
+        }
+
+        if (percentage >= 70) {
+          return "linear-gradient(90deg, #eab308, #ca8a04)";
+        }
+
+        if (percentage >= 60) {
+          return "linear-gradient(90deg, #f97316, #ea580c)";
+        }
+
+        return "linear-gradient(90deg, #ef4444, #dc2626)";
+      }
+
+      function applyStudentProgressStyles(element, percentage) {
+        if (!element) return;
+
+        const capped = Math.max(0, Math.min(percentage, 100));
+        element.style.width = `${capped}%`;
+        element.style.background = getProgressGradient(capped);
+      }
+
+      function loadStudents(filteredStudents = null) {
+        const container = document.getElementById("students-container");
+        container.innerHTML = "";
+
+        const students = filteredStudents || studentsData;
+
+        students.forEach((student) => {
+          const averageValue =
+            typeof student.average === "number" ? student.average : 0;
+          const progressPercent = Math.max(
+            0,
+            Math.min(averageValue, 100)
+          );
+          const progressDisplay = Math.round(progressPercent);
+          const averageDisplay = averageValue.toFixed(1);
+
+          const statusColor =
+            student.status === "excellent"
+              ? "green"
+              : student.status === "good"
+              ? "blue"
+              : "red";
+
+          const card = document.createElement("div");
+          card.className = "student-card";
+          card.innerHTML = `
+                            <div class="text-2xl font-bold text-${statusColor}-600">${
+                              averageDisplay
+                            }</div>
+                            <div class="text-xs text-gray-500">Promedio</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-3">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="flex justify-between text-xs text-gray-500 mb-1">
+                            <span>Progreso del curso</span>
+                            <span class="font-semibold text-gray-700">${
+                              progressDisplay
+                            }%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="student-progress-fill" data-progress="${
+                              progressPercent.toFixed(1)
+                            }"></div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs px-2 py-1 rounded-full bg-${statusColor}-100 text-${statusColor}-800">
+                            ${
+                    </div>
+                `;
+
+          const progressFill = card.querySelector(".student-progress-fill");
+          applyStudentProgressStyles(progressFill, progressPercent);
+          container.appendChild(card);
+        });
+      }
                 >
                 <div
                   class="text-3xl font-bold text-blue-600"
