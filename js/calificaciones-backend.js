@@ -85,6 +85,122 @@ function normalizeItems(source) {
   return out;
 }
 
+function sanitizeLabelKey(label) {
+  if (!label) return '';
+  return String(label)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function getInputLabel(input) {
+  if (!input) return '';
+  const container = input.closest('.grade-item, .rubric-item');
+  if (!container) return '';
+  const heading = container.querySelector('h1, h2, h3, h4, h5, h6, strong');
+  return heading ? heading.textContent.trim() : '';
+}
+
+function decimalsForInput(input) {
+  if (!input) return 2;
+  const stepAttr = input.getAttribute('step');
+  if (!stepAttr || stepAttr === 'any') return 2;
+  const str = String(stepAttr).trim();
+  if (!str) return 2;
+  if (str.includes('.')) {
+    const decimals = str.split('.')[1].replace(/[^0-9]/g, '').length;
+    return Math.min(decimals || 1, 4);
+  }
+  return 0;
+}
+
+function clampForInput(input, value) {
+  if (!input || !Number.isFinite(value)) return value;
+  const maxAttr = Number(input.getAttribute('max'));
+  const minAttr = Number(input.getAttribute('min'));
+  let result = value;
+  if (Number.isFinite(maxAttr)) result = Math.min(result, maxAttr);
+  if (Number.isFinite(minAttr)) result = Math.max(result, minAttr);
+  return result;
+}
+
+function syncGradeInputsFromItems(items) {
+  const gradeInputs = Array.from(document.querySelectorAll('.grade-input'));
+  const projectInputs = Array.from(document.querySelectorAll('.project-grade-input'));
+  if (!gradeInputs.length && !projectInputs.length) return;
+
+  const byKey = new Map();
+  const byLabel = new Map();
+  if (Array.isArray(items)) {
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (!item || typeof item !== 'object') continue;
+      if (item.key) {
+        const keyStr = String(item.key);
+        if (keyStr) byKey.set(keyStr, item);
+      }
+      const labelKey = sanitizeLabelKey(item.nombre || item.title || item.descripcion || item.key);
+      if (labelKey && !byLabel.has(labelKey)) {
+        byLabel.set(labelKey, item);
+      }
+    }
+  }
+
+  function assignValue(input, index, prefix) {
+    if (!input) return;
+    const key = `${prefix}${index}`;
+    let item = byKey.get(key);
+    if (!item) {
+      const label = getInputLabel(input);
+      if (label) {
+        const labelKey = sanitizeLabelKey(label);
+        if (labelKey) item = byLabel.get(labelKey) || null;
+      }
+    }
+    if (!item || !item.estaCalificado) {
+      input.value = '';
+      return;
+    }
+    let value = Number(item.displayPuntos);
+    if (!Number.isFinite(value) && item.rawPuntos != null) {
+      const raw = Number(item.rawPuntos);
+      if (Number.isFinite(raw)) value = raw;
+    }
+    if (!Number.isFinite(value)) {
+      input.value = '';
+      return;
+    }
+    const clamped = clampForInput(input, value);
+    const decimals = decimalsForInput(input);
+    const digits = Number.isFinite(decimals) ? Math.max(0, Math.min(decimals, 3)) : 2;
+    input.value = clamped.toFixed(digits);
+  }
+
+  for (let i = 0; i < gradeInputs.length; i++) {
+    assignValue(gradeInputs[i], i, 'g-');
+  }
+  for (let i = 0; i < projectInputs.length; i++) {
+    assignValue(projectInputs[i], i, 'p-');
+  }
+
+  if (typeof window.calculateProjectGrades === 'function') {
+    try {
+      window.calculateProjectGrades();
+    } catch (err) {
+      console.warn('[calificaciones-backend] calculateProjectGrades()', err);
+    }
+  }
+  if (typeof window.calculateGrades === 'function') {
+    try {
+      window.calculateGrades();
+    } catch (err) {
+      console.warn('[calificaciones-backend] calculateGrades()', err);
+    }
+  }
+}
+
 function weightedTotals(items) {
   let avance = 0;
   let ponderacion = 0;
@@ -135,6 +251,7 @@ function final3040(u1, u2, u3, extra = 0) {
 
 function renderAlumno(items) {
   const normalized = normalizeItems(items || []);
+  syncGradeInputsFromItems(normalized);
   const tbody = $id('qsc-tbody');
   const kpiTotal = $id('qsc-kpi-total');
   const kpiItems = $id('qsc-kpi-items');
