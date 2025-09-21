@@ -342,7 +342,17 @@
 
                     </button>
 
-                    
+                    <button
+                        id="myHistoryBtn"
+                        type="button"
+                        class="student-only hidden mt-4 w-full border-2 border-indigo-100 text-indigo-600 font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:ring-offset-2"
+                    >
+                        Ver mi historial de asistencia
+                    </button>
+
+                    <p class="student-only text-xs text-gray-500 mt-2 hidden" id="myHistoryHint">
+                        Consulta tus asistencias registradas desde este botón en cualquier momento.
+                    </p>
 
                     <p class="text-sm text-gray-500 mt-4">
 
@@ -504,7 +514,7 @@
                             </button>
                         </div>
                     </div>
-                    <div id="historySummary" class="text-sm text-gray-500">Selecciona un estudiante para consultar sus registros.</div>
+                    <div id="historySummary" class="text-sm text-gray-500">Selecciona un estudiante o consulta tu historial personal.</div>
                     <div id="historyContent" class="bg-gray-50 border border-gray-100 rounded-xl p-4 max-h-80 overflow-y-auto text-sm text-gray-700">
                         <div class="text-center text-gray-400">No hay datos para mostrar.</div>
                     </div>
@@ -818,13 +828,13 @@
         }
 
         function resetHistoryContent(summaryMessage, contentMessage) {
-            const summary = summaryMessage || 'Selecciona un estudiante para consultar sus registros.';
+            const summary = summaryMessage || 'Selecciona un estudiante o consulta tu historial personal.';
             const content = contentMessage || summary;
             if (historySummary) historySummary.textContent = summary;
             if (historyContent) historyContent.innerHTML = '<div class="text-center text-gray-400">' + content + '</div>';
         }
 
-        resetHistoryContent('Selecciona un estudiante para consultar sus registros.', 'No hay datos para mostrar.');
+        resetHistoryContent('Selecciona un estudiante o consulta tu historial personal.', 'No hay datos para mostrar.');
 
         function openAttendanceHistory(target) {
             if (!target || !target.email) {
@@ -834,8 +844,14 @@
             }
 
             currentHistoryTarget = target;
-            if (historyTitle) historyTitle.textContent = `Historial de asistencia`;
+            const isSelfHistory = !!target.self;
+            if (historyTitle) historyTitle.textContent = isSelfHistory ? `Mi historial de asistencia` : `Historial de asistencia`;
             if (historyEmail) historyEmail.textContent = `${target.name || ''} · ${target.email}`;
+            if (historySummary) {
+                historySummary.textContent = isSelfHistory
+                    ? 'Consulta tus asistencias registradas en el rango seleccionado.'
+                    : 'Consulta las asistencias del estudiante seleccionado en el rango elegido.';
+            }
 
             const todayIso = new Date().toISOString().slice(0, 10);
             if (historyEndInput && !historyEndInput.value) historyEndInput.value = todayIso;
@@ -851,12 +867,12 @@
         function closeAttendanceHistory() {
             toggleHistoryModal(false);
             currentHistoryTarget = null;
-            resetHistoryContent('Selecciona un estudiante para consultar sus registros.', 'No hay datos para mostrar.');
+            resetHistoryContent('Selecciona un estudiante o consulta tu historial personal.', 'No hay datos para mostrar.');
         }
 
         async function refreshAttendanceHistory() {
             if (!currentHistoryTarget || !currentHistoryTarget.email) {
-                resetHistoryContent('Selecciona un estudiante para consultar sus registros.');
+                resetHistoryContent('Selecciona un estudiante o consulta tu historial personal.');
                 return;
             }
             if (!historyStartInput || !historyEndInput || !historyContent) return;
@@ -1309,12 +1325,13 @@
   const manualWarning = document.getElementById('manualAttendanceWarning'); // se ocultará
 
   const manualNotice = document.getElementById('manualAttendanceNotice');   // se ocultará
-
-
+  const myHistoryBtn = document.getElementById('myHistoryBtn');
+  const myHistoryHint = document.getElementById('myHistoryHint');
 
   // Estado
 
   let unsubscribeAttendance = null;
+  let currentUserProfile = null;
 
 
 
@@ -1351,6 +1368,48 @@
       el.style.display = target === 'docente' ? 'none' : '';
 
     });
+
+  }
+
+  function findRosterEntry(email){
+
+    if (!email) return null;
+
+    const normalized = (email || '').toLowerCase();
+
+    const roster = Array.isArray(window.students) ? window.students : [];
+
+    return roster.find((item) => (item.email || '').toLowerCase() === normalized) || null;
+
+  }
+
+  function toggleStudentHistoryVisibility(show){
+
+    const visible = !!show;
+
+    if (myHistoryBtn) {
+
+      myHistoryBtn.classList.toggle('hidden', !visible);
+
+      myHistoryBtn.disabled = !visible;
+
+      if (visible) {
+
+        myHistoryBtn.setAttribute('aria-disabled', 'false');
+
+      } else {
+
+        myHistoryBtn.setAttribute('aria-disabled', 'true');
+
+      }
+
+    }
+
+    if (myHistoryHint) {
+
+      myHistoryHint.classList.toggle('hidden', !visible);
+
+    }
 
   }
 
@@ -1402,7 +1461,7 @@
 
   }
 
-
+  toggleStudentHistoryVisibility(false);
 
   // Autenticación
 
@@ -1421,6 +1480,54 @@
   if (signOutBtn) {
 
     signOutBtn.addEventListener('click', async () => { await signOutCurrent(); });
+
+  }
+
+  if (myHistoryBtn) {
+
+    myHistoryBtn.addEventListener('click', (event) => {
+
+      event.preventDefault();
+
+      const profile = currentUserProfile;
+
+      if (!profile || !profile.email) {
+
+        alert('Inicia sesión con tu cuenta @' + allowedEmailDomain + ' para consultar tu historial.');
+
+        return;
+
+      }
+
+      if (profile.isTeacher) {
+
+        alert('Esta consulta está disponible únicamente para estudiantes.');
+
+        return;
+
+      }
+
+      if (typeof window.openAttendanceHistory === 'function') {
+
+        window.openAttendanceHistory({
+
+          name: profile.name,
+
+          email: profile.email,
+
+          type: profile.type || 'student',
+
+          self: true
+
+        });
+
+      } else {
+
+        alert('El historial no está disponible en este momento.');
+
+      }
+
+    });
 
   }
 
@@ -1608,6 +1715,10 @@
 
   onAuth(async (user) => {
 
+    currentUserProfile = null;
+
+    toggleStudentHistoryVisibility(false);
+
     // Oculta todo manual y preview siempre
 
     if (manualCard) { manualCard.classList.add('hidden'); manualCard.style.display = 'none'; }
@@ -1622,9 +1733,15 @@
 
       const normalizedEmail = user.email.toLowerCase();
 
+      const rosterEntry = findRosterEntry(normalizedEmail);
+
+      const displayName = rosterEntry?.name || user.displayName || user.email;
+
+      const rosterType = rosterEntry?.type || 'student';
+
       // UI de usuario
 
-      if (userName) userName.textContent = user.displayName || user.email;
+      if (userName) userName.textContent = displayName;
 
       if (userPhoto) {
 
@@ -1649,6 +1766,20 @@
       const teacherByAllowlist = isTeacherEmail(normalizedEmail) || normalizedEmail === 'isaac.paniagua@potros.itson.edu.mx';
 
       const isTeacher = !!(teacherByDoc || teacherByAllowlist);
+
+      currentUserProfile = {
+
+        email: normalizedEmail,
+
+        name: displayName,
+
+        type: isTeacher ? 'teacher' : (rosterType || 'student'),
+
+        isTeacher
+
+      };
+
+      toggleStudentHistoryVisibility(!isTeacher);
 
       applyRoleVisibility(isTeacher ? 'docente' : 'estudiante');
 
