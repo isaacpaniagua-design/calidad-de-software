@@ -85,18 +85,29 @@ function normalizeItems(source) {
   return out;
 }
 
-function resumenGlobal(items) {
-  let porc = 0;
-  let pond = 0;
+function weightedTotals(items) {
+  let avance = 0;
+  let ponderacion = 0;
   for (let i = 0; i < items.length; i++) {
     const it = items[i] || {};
-    const ratio = Number(it.normalizedRatio) || 0;
-    const pnd = Number(it.ponderacion) || 0;
+    const peso = Number(it.ponderacion);
+    const ratio = Number(it.normalizedRatio);
+    if (!Number.isFinite(peso) || peso <= 0) continue;
+    if (!Number.isFinite(ratio)) continue;
     const safeRatio = Math.max(0, Math.min(ratio, 1));
-    porc += safeRatio * pnd;
-    pond += pnd;
+    avance += safeRatio * peso;
+    ponderacion += peso;
   }
-  return { porcentaje: clampPct(porc), pondSum: clampPct(pond) };
+  return { avance, ponderacion };
+}
+
+function resumenGlobal(items) {
+  const totals = weightedTotals(items);
+  return {
+    porcentaje: clampPct(totals.avance),
+    pondSum: Math.max(0, Math.min(totals.ponderacion, 100)),
+    avance: totals.avance,
+  };
 }
 
 function bucketsPorUnidad(items) {
@@ -108,8 +119,19 @@ function bucketsPorUnidad(items) {
   }
   return B;
 }
-function scoreUnidad(arr) { if (!arr.length) return 0; return resumenGlobal(arr).porcentaje; }
-function final3040(u1,u2,u3) { return clampPct(u1*0.3 + u2*0.3 + u3*0.4); }
+function scoreUnidad(arr) {
+  if (!arr.length) return { aporte: 0, ponderacion: 0 };
+  const totals = weightedTotals(arr);
+  return {
+    aporte: Math.max(0, Math.min(totals.avance, totals.ponderacion || totals.avance)),
+    ponderacion: totals.ponderacion,
+  };
+}
+
+function final3040(u1, u2, u3, extra = 0) {
+  const total = (u1?.aporte || 0) + (u2?.aporte || 0) + (u3?.aporte || 0) + (Number(extra) || 0);
+  return clampPct(total);
+}
 
 function renderAlumno(items) {
   const normalized = normalizeItems(items || []);
@@ -174,25 +196,33 @@ function renderAlumno(items) {
   }
 
   const buckets = bucketsPorUnidad(normalized);
-  const u1 = scoreUnidad(buckets[1]);
-  const u2 = scoreUnidad(buckets[2]);
-  const u3 = scoreUnidad(buckets[3]);
-  const fin = final3040(u1, u2, u3);
-  const to5 = (p) => (p * 0.05).toFixed(1);
+  const unidad1 = scoreUnidad(buckets[1]);
+  const unidad2 = scoreUnidad(buckets[2]);
+  const unidad3 = scoreUnidad(buckets[3]);
 
-  if ($id('unit1Grade')) $id('unit1Grade').textContent = to5(u1);
-  if ($id('unit2Grade')) $id('unit2Grade').textContent = to5(u2);
-  if ($id('unit3Grade')) $id('unit3Grade').textContent = to5(u3);
-  if ($id('finalGrade')) $id('finalGrade').textContent = to5(fin);
+  const aporteU1 = Number.isFinite(unidad1.aporte) ? unidad1.aporte : 0;
+  const aporteU2 = Number.isFinite(unidad2.aporte) ? unidad2.aporte : 0;
+  const aporteU3 = Number.isFinite(unidad3.aporte) ? unidad3.aporte : 0;
+  const totalUnits = aporteU1 + aporteU2 + aporteU3;
+  const globalAvance = Number.isFinite(stats.avance) ? stats.avance : (Number.isFinite(stats.porcentaje) ? stats.porcentaje : 0);
+  const extras = Math.max(0, globalAvance - totalUnits);
+  const finalPct = final3040(unidad1, unidad2, unidad3, extras);
+  const finalValor = Number.isFinite(finalPct) ? finalPct : 0;
 
-  if ($id('progressPercent')) $id('progressPercent').textContent = String(Math.round(fin)) + '%';
+  if ($id('unit1Grade')) $id('unit1Grade').textContent = aporteU1.toFixed(1);
+  if ($id('unit2Grade')) $id('unit2Grade').textContent = aporteU2.toFixed(1);
+  if ($id('unit3Grade')) $id('unit3Grade').textContent = aporteU3.toFixed(1);
+  if ($id('finalGrade')) $id('finalGrade').textContent = finalValor.toFixed(1);
+
+  if ($id('progressPercent')) $id('progressPercent').textContent = String(Math.round(finalValor)) + '%';
   const pbar = $id('progressBar');
   if (pbar) {
-    pbar.style.width = fin + '%';
+    const pct = Math.max(0, Math.min(finalValor, 100));
+    pbar.style.width = pct.toFixed(2) + '%';
     pbar.className = 'h-3 rounded-full progress-bar';
-    if (fin >= 90) pbar.classList.add('bg-gradient-to-r','from-green-500','to-green-600');
-    else if (fin >= 70) pbar.classList.add('bg-gradient-to-r','from-yellow-500','to-yellow-600');
-    else if (fin >= 60) pbar.classList.add('bg-gradient-to-r','from-orange-500','to-orange-600');
+    if (finalValor >= 90) pbar.classList.add('bg-gradient-to-r','from-green-500','to-green-600');
+    else if (finalValor >= 70) pbar.classList.add('bg-gradient-to-r','from-yellow-500','to-yellow-600');
+    else if (finalValor >= 60) pbar.classList.add('bg-gradient-to-r','from-orange-500','to-orange-600');
     else pbar.classList.add('bg-gradient-to-r','from-red-500','to-red-600');
   }
 }
