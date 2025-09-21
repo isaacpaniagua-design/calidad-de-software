@@ -29,6 +29,12 @@ const NAV_VERSION = "2024.12.clean";
 const FOOTER_VERSION = "2024.12.clean";
 const AUTH_STORAGE_KEY = "qs_auth_state";
 const ROLE_STORAGE_KEY = "qs_role";
+const SESSION_STATUS_STORAGE_PREFIX = "qs_session_status:";
+const SESSION_STATUS_STATES = Object.freeze([
+  { id: "not-started", label: "No realizada" },
+  { id: "in-progress", label: "En curso" },
+  { id: "completed", label: "Realizada" },
+]);
 
 function bootstrapLayout() {
   if (window.__qsLayoutBooted) return;
@@ -58,6 +64,7 @@ function bootstrapLayout() {
   highlightActiveLink(nav, currentPage);
   refreshNavSpacing(nav);
   observeNavHeight(nav);
+  setupSessionStatusControl(doc, currentPage);
 
   if (!isLogin && !isNotFound) {
     injectAuthGuard(doc, basePath);
@@ -321,6 +328,233 @@ function toggleTeacherNavLinks(nav, isTeacher) {
         link.setAttribute("aria-hidden", "true");
       }
     });
+  } catch (_) {}
+}
+
+function setupSessionStatusControl(doc, currentPage) {
+  try {
+    if (!doc) return;
+    const page = (currentPage || "").toLowerCase();
+    if (!/^sesion\d+\.html$/.test(page)) return;
+    if (!Array.isArray(SESSION_STATUS_STATES) || SESSION_STATUS_STATES.length === 0)
+      return;
+
+    const toolbarCard = doc.querySelector(".session-toolbar-card");
+    if (!toolbarCard) return;
+    if (toolbarCard.querySelector("[data-role='session-status']")) return;
+
+    ensureSessionStatusStyles(doc);
+
+    const slideToolbar = toolbarCard.querySelector(".slide-toolbar");
+    const container = doc.createElement("div");
+    container.className = "session-status-control";
+    container.setAttribute("data-role", "session-status");
+    container.setAttribute("role", "group");
+    container.setAttribute("aria-label", "Estado de la sesión");
+
+    const sessionId = page.replace(/\.html$/, "");
+    const storageKey = `${SESSION_STATUS_STORAGE_PREFIX}${sessionId}`;
+
+    const label = doc.createElement("span");
+    const labelId = `session-status-label-${sessionId}`;
+    label.className = "session-status-label";
+    label.id = labelId;
+    label.textContent = "Estado de la sesión";
+
+    const button = doc.createElement("button");
+    button.type = "button";
+    button.className = "qs-session-status-btn";
+    button.setAttribute("data-role", "session-status-toggle");
+    button.setAttribute("aria-describedby", labelId);
+
+    const storedState = readStoredSessionStatus(storageKey);
+    let currentIndex = SESSION_STATUS_STATES.findIndex(
+      (state) => state && state.id === storedState,
+    );
+    if (currentIndex < 0) currentIndex = 0;
+
+    const applyState = (index) => {
+      if (!Array.isArray(SESSION_STATUS_STATES) || SESSION_STATUS_STATES.length === 0)
+        return null;
+      const total = SESSION_STATUS_STATES.length;
+      const normalizedIndex = ((index % total) + total) % total;
+      const state = SESSION_STATUS_STATES[normalizedIndex] || SESSION_STATUS_STATES[0];
+      currentIndex = normalizedIndex;
+
+      while (button.firstChild) button.removeChild(button.firstChild);
+
+      button.dataset.state = state.id;
+      button.setAttribute("data-state", state.id);
+
+      const dot = doc.createElement("span");
+      dot.className = "qs-session-status-dot";
+      dot.setAttribute("aria-hidden", "true");
+
+      const text = doc.createElement("span");
+      text.className = "qs-session-status-text";
+      text.textContent = state.label;
+
+      button.appendChild(dot);
+      button.appendChild(text);
+
+      const nextState = SESSION_STATUS_STATES[(normalizedIndex + 1) % total] || state;
+      const nextLabel = nextState.label || state.label;
+
+      button.setAttribute(
+        "aria-label",
+        `Estado de la sesión: ${state.label}. Activa para cambiar a ${nextLabel}.`,
+      );
+      button.setAttribute(
+        "title",
+        `Estado actual: ${state.label}. Haz clic para marcar como ${nextLabel}.`,
+      );
+
+      return state;
+    };
+
+    applyState(currentIndex);
+
+    button.addEventListener("click", () => {
+      const nextIndex = (currentIndex + 1) % SESSION_STATUS_STATES.length;
+      const state = applyState(nextIndex);
+      if (state && state.id) {
+        persistSessionStatus(storageKey, state.id);
+      }
+    });
+
+    container.appendChild(label);
+    container.appendChild(button);
+
+    if (slideToolbar && slideToolbar.parentNode === toolbarCard) {
+      toolbarCard.insertBefore(container, slideToolbar);
+    } else {
+      toolbarCard.appendChild(container);
+    }
+  } catch (_) {}
+}
+
+function ensureSessionStatusStyles(doc) {
+  try {
+    if (!doc || doc.querySelector("style[data-session-status-styles]") || !doc.createElement)
+      return;
+
+    const style = doc.createElement("style");
+    style.type = "text/css";
+    style.setAttribute("data-session-status-styles", "true");
+    style.textContent = `
+      .session-toolbar-card {
+        flex-wrap: wrap;
+      }
+      .session-toolbar-card .slide-toolbar {
+        order: 3;
+      }
+      .session-status-control {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.4rem 0.85rem;
+        border-radius: 9999px;
+        border: 1px solid rgba(99, 102, 241, 0.18);
+        background: rgba(255, 255, 255, 0.92);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85),
+          0 12px 30px rgba(79, 70, 229, 0.12);
+        order: 2;
+        margin-left: auto;
+      }
+      .session-status-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #475569;
+        white-space: nowrap;
+      }
+      .qs-session-status-btn {
+        border: none;
+        border-radius: 9999px;
+        padding: 0.45rem 1rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        cursor: pointer;
+        background: #eef2ff;
+        color: #4338ca;
+        box-shadow: 0 12px 30px rgba(79, 70, 229, 0.18);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease,
+          color 0.2s ease;
+      }
+      .qs-session-status-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 18px 40px rgba(79, 70, 229, 0.25);
+      }
+      .qs-session-status-btn:focus-visible {
+        outline: 2px solid rgba(99, 102, 241, 0.6);
+        outline-offset: 3px;
+      }
+      .qs-session-status-btn .qs-session-status-dot {
+        width: 0.65rem;
+        height: 0.65rem;
+        border-radius: 9999px;
+        background: currentColor;
+        opacity: 0.9;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.85);
+      }
+      .qs-session-status-btn .qs-session-status-text {
+        white-space: nowrap;
+      }
+      .qs-session-status-btn[data-state='not-started'] {
+        background: #fee2e2;
+        color: #b91c1c;
+        box-shadow: 0 14px 32px rgba(239, 68, 68, 0.22);
+      }
+      .qs-session-status-btn[data-state='in-progress'] {
+        background: #fef3c7;
+        color: #b45309;
+        box-shadow: 0 14px 32px rgba(245, 158, 11, 0.22);
+      }
+      .qs-session-status-btn[data-state='completed'] {
+        background: #dcfce7;
+        color: #047857;
+        box-shadow: 0 14px 32px rgba(16, 185, 129, 0.22);
+      }
+      @media (max-width: 900px) {
+        .session-status-control {
+          width: 100%;
+          margin-left: 0;
+          justify-content: space-between;
+        }
+        .session-status-label {
+          font-size: 0.7rem;
+        }
+      }
+    `;
+
+    const head = doc.head || doc.getElementsByTagName("head")[0] || doc.documentElement;
+    if (head && head.appendChild) {
+      head.appendChild(style);
+    }
+  } catch (_) {}
+}
+
+function readStoredSessionStatus(key) {
+  if (!key) return null;
+  try {
+    return localStorage.getItem(key);
+  } catch (_) {
+    return null;
+  }
+}
+
+function persistSessionStatus(key, value) {
+  if (!key) return;
+  try {
+    if (value) {
+      localStorage.setItem(key, value);
+    } else {
+      localStorage.removeItem(key);
+    }
   } catch (_) {}
 }
 
