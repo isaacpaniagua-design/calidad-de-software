@@ -124,6 +124,14 @@ function clampForInput(input, value) {
   return result;
 }
 
+function hasNumericTextContent(el) {
+  if (!el) return false;
+  const text = el.textContent;
+  if (typeof text !== 'string') return false;
+  const parsed = parseFloat(text.replace(',', '.'));
+  return Number.isFinite(parsed);
+}
+
 function syncGradeInputsFromItems(items) {
   const gradeInputs = Array.from(document.querySelectorAll('.grade-input'));
   const projectInputs = Array.from(document.querySelectorAll('.project-grade-input'));
@@ -221,11 +229,37 @@ function resumenGlobal(items) {
   };
 }
 
+function isProjectRubricItem(it) {
+  if (!it || typeof it !== 'object') return false;
+  const key = String(it.key || '');
+  if (key.startsWith('p-')) return true;
+  const tipo = String(it.tipo || '').toLowerCase();
+  if (tipo === 'proyecto final') return true;
+  const nombre = String(it.nombre || it.title || '').toLowerCase();
+  if (!nombre) return false;
+  if (nombre.includes('rúbrica') && nombre.includes('proyecto')) return true;
+  return false;
+}
+
+function isProjectPhaseSummaryItem(it) {
+  if (!it || typeof it !== 'object') return false;
+  const nombre = String(it.nombre || it.title || '').toLowerCase();
+  if (!nombre) return false;
+  if (!nombre.includes('proyecto final')) return false;
+  if (nombre.includes('rúbrica')) return false;
+  if (nombre.includes('examen')) return false;
+  return true;
+}
+
 function bucketsPorUnidad(items) {
-  const B = { 1: [], 2: [], 3: [] };
+  const B = { 1: [], 2: [], 3: [], unit3Rubric: [] };
   for (let i = 0; i < items.length; i++) {
     const it = items[i];
     const u = inferUnidad(it);
+    if (u === 3 && isProjectRubricItem(it)) {
+      B.unit3Rubric.push(it);
+      continue;
+    }
     if (u === 1 || u === 2 || u === 3) B[u].push(it);
   }
   return B;
@@ -308,27 +342,63 @@ function renderAlumno(items) {
   }
 
   const buckets = bucketsPorUnidad(normalized);
-  const unidad1 = scoreUnidad(buckets[1]);
-  const unidad2 = scoreUnidad(buckets[2]);
-  const unidad3 = scoreUnidad(buckets[3]);
+  const unidad1 = scoreUnidad(buckets[1] || []);
+  const unidad2 = scoreUnidad(buckets[2] || []);
+  const bucket3Items = Array.isArray(buckets[3]) ? buckets[3] : [];
+  const unidad3Rubric = Array.isArray(buckets.unit3Rubric) ? buckets.unit3Rubric : [];
+  const hasUnit3Summary = bucket3Items.some((item) => isProjectPhaseSummaryItem(item));
+
+  let unidad3 = scoreUnidad(bucket3Items);
+  if (!hasUnit3Summary && unidad3Rubric.length) {
+    const rubricScore = scoreUnidad(unidad3Rubric);
+    unidad3 = {
+      aporte: (Number(unidad3.aporte) || 0) + (Number(rubricScore.aporte) || 0),
+      ponderacion: (Number(unidad3.ponderacion) || 0) + (Number(rubricScore.ponderacion) || 0),
+    };
+  }
 
   const aporteU1 = Number.isFinite(unidad1.aporte) ? unidad1.aporte : 0;
   const aporteU2 = Number.isFinite(unidad2.aporte) ? unidad2.aporte : 0;
   const aporteU3 = Number.isFinite(unidad3.aporte) ? unidad3.aporte : 0;
   const totalUnits = aporteU1 + aporteU2 + aporteU3;
-  const globalAvance = Number.isFinite(stats.avance) ? stats.avance : (Number.isFinite(stats.porcentaje) ? stats.porcentaje : 0);
-  const extras = Math.max(0, globalAvance - totalUnits);
-  const finalPct = final3040(unidad1, unidad2, unidad3, extras);
+  const globalAvance = Number.isFinite(stats.avance)
+    ? stats.avance
+    : (Number.isFinite(stats.porcentaje) ? stats.porcentaje : 0);
+  const rubricTotals = unidad3Rubric.length ? weightedTotals(unidad3Rubric) : { avance: 0 };
+  const rubricAvance = Number.isFinite(rubricTotals.avance) ? rubricTotals.avance : 0;
+  let extras = Number.isFinite(globalAvance) ? globalAvance - totalUnits : 0;
+  if (hasUnit3Summary && rubricAvance > 0) extras -= rubricAvance;
+  if (!Number.isFinite(extras)) extras = 0;
+  if (extras < 0) extras = Math.abs(extras) < 1e-6 ? 0 : extras;
+  const extrasClamped = extras > 0 ? extras : 0;
+  const finalPct = final3040(unidad1, unidad2, unidad3, extrasClamped);
   const finalValor = Number.isFinite(finalPct) ? finalPct : 0;
 
-  if ($id('unit1Grade')) $id('unit1Grade').textContent = aporteU1.toFixed(1);
-  if ($id('unit2Grade')) $id('unit2Grade').textContent = aporteU2.toFixed(1);
-  if ($id('unit3Grade')) $id('unit3Grade').textContent = aporteU3.toFixed(1);
-  if ($id('finalGrade')) $id('finalGrade').textContent = finalValor.toFixed(1);
+  const hasTeacherCalculator = typeof window.calculateGrades === 'function';
 
-  if ($id('progressPercent')) $id('progressPercent').textContent = String(Math.round(finalValor)) + '%';
+  const unit1El = $id('unit1Grade');
+  if (unit1El && (!hasTeacherCalculator || !hasNumericTextContent(unit1El))) {
+    unit1El.textContent = aporteU1.toFixed(1);
+  }
+  const unit2El = $id('unit2Grade');
+  if (unit2El && (!hasTeacherCalculator || !hasNumericTextContent(unit2El))) {
+    unit2El.textContent = aporteU2.toFixed(1);
+  }
+  const unit3El = $id('unit3Grade');
+  if (unit3El && (!hasTeacherCalculator || !hasNumericTextContent(unit3El))) {
+    unit3El.textContent = aporteU3.toFixed(1);
+  }
+  const finalEl = $id('finalGrade');
+  if (finalEl && (!hasTeacherCalculator || !hasNumericTextContent(finalEl))) {
+    finalEl.textContent = finalValor.toFixed(1);
+  }
+
+  const progressEl = $id('progressPercent');
+  if (progressEl && (!hasTeacherCalculator || !/\d/.test(progressEl.textContent || ''))) {
+    progressEl.textContent = String(Math.round(finalValor)) + '%';
+  }
   const pbar = $id('progressBar');
-  if (pbar) {
+  if (pbar && (!hasTeacherCalculator || !pbar.style.width)) {
     const pct = Math.max(0, Math.min(finalValor, 100));
     pbar.style.width = pct.toFixed(2) + '%';
     pbar.className = 'h-3 rounded-full progress-bar';
