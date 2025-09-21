@@ -36,12 +36,14 @@ const SESSION_STATUS_STATES = Object.freeze([
   { id: "completed", label: "Realizada" },
 ]);
 
+
 try {
   if (typeof window !== "undefined") {
     window.__QS_SESSION_STATUS_PREFIX = SESSION_STATUS_STORAGE_PREFIX;
     window.__QS_SESSION_STATUS_STATES = SESSION_STATUS_STATES;
   }
 } catch (_) {}
+
 
 function bootstrapLayout() {
   if (window.__qsLayoutBooted) return;
@@ -55,9 +57,11 @@ function bootstrapLayout() {
   const currentPage = (location.pathname.split("/").pop() || "index.html").toLowerCase();
   const isLogin = currentPage === "login.html";
   const isNotFound = currentPage === "404.html";
+  const isSessionPage = /^sesion\d+\.html$/.test(currentPage);
 
   const basePath = computeBasePath(doc);
   ensureFavicon(doc, basePath);
+
 
   const nav = ensureNavigation(doc, body, basePath);
   const footer = ensureFooter(doc, body);
@@ -70,12 +74,14 @@ function bootstrapLayout() {
     setupSessionStatusControl(doc, currentPage, nextIsTeacher);
   });
 
+
   updateAuthAppearance(nav, readStoredAuthState());
   bindNavAuthRedirect(nav, basePath);
   setupNavToggle(nav);
   highlightActiveLink(nav, currentPage);
   refreshNavSpacing(nav);
   observeNavHeight(nav);
+
 
   if (!isLogin && !isNotFound) {
     injectAuthGuard(doc, basePath);
@@ -160,9 +166,122 @@ function buildNavTemplate(basePath) {
           <a class="qs-btn" href="${basePath}Foro.html">Foro</a>
           <a class="qs-btn teacher-only" data-route="panel" href="${basePath}paneldocente.html" hidden aria-hidden="true">Panel</a>
         </nav>
+        <div class="qs-actions">
+          <a
+            class="qs-cta"
+            data-default-auth-link
+            href="${basePath}login.html"
+            aria-label="Ir a iniciar sesion"
+          >
+            Iniciar sesion
+          </a>
+        </div>
       </div>
     </div>
   `;
+}
+
+function decorateSessionPage(doc, html, body) {
+  if (!doc || !html || !body) return;
+  try {
+    if (!html.getAttribute("data-layout")) {
+      html.setAttribute("data-layout", "session");
+    }
+    html.classList.add("qs-session-root");
+    body.classList.add("qs-session-page");
+    ensureSessionPageStyles(doc);
+
+    const shell =
+      doc.querySelector(".qs-page-wrap") ||
+      doc.querySelector("main") ||
+      doc.querySelector("[class~='max-w-7xl']") ||
+      doc.querySelector("[class~='max-w-6xl']");
+
+    if (shell) {
+      shell.classList.add("qs-session-shell");
+    }
+  } catch (_) {}
+}
+
+function ensureSessionPageStyles(doc) {
+  try {
+    if (!doc || doc.getElementById("qs-session-style")) return;
+    const style = doc.createElement("style");
+    style.id = "qs-session-style";
+    style.textContent = `
+      html[data-layout='session'] body.qs-session-page {
+        background:
+          radial-gradient(circle at 12% 18%, rgba(129, 140, 248, 0.25), transparent 55%),
+          radial-gradient(circle at 85% 12%, rgba(59, 130, 246, 0.22), transparent 52%),
+          linear-gradient(165deg, #f8fafc 0%, #eef2ff 55%, #fdf2f8 100%);
+        color: #0f172a;
+      }
+
+      html[data-layout='session'] body.qs-session-page::before,
+      html[data-layout='session'] body.qs-session-page::after {
+        content: '';
+        position: fixed;
+        z-index: -1;
+        filter: blur(96px);
+        opacity: 0.45;
+        pointer-events: none;
+        transition: opacity var(--motion-duration) var(--motion-easing);
+      }
+
+      html[data-layout='session'] body.qs-session-page::before {
+        inset: -30% 42% auto -28%;
+        height: 420px;
+        background: radial-gradient(circle at center, rgba(99, 102, 241, 0.28), transparent 70%);
+      }
+
+      html[data-layout='session'] body.qs-session-page::after {
+        inset: auto -32% -22% 22%;
+        height: 360px;
+        background: radial-gradient(circle at center, rgba(16, 185, 129, 0.2), transparent 74%);
+      }
+
+      html[data-layout='session'] .qs-session-shell {
+        width: var(--page-max-width);
+        margin: 0 auto;
+        padding: clamp(32px, 5vw, 60px) clamp(18px, 5vw, 32px) clamp(96px, 8vw, 140px);
+        position: relative;
+        z-index: 0;
+      }
+
+      html[data-layout='session'] .qs-session-shell > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      html[data-layout='session'] .qs-session-shell::before {
+        content: '';
+        position: absolute;
+        inset: clamp(12px, 3vw, 24px);
+        border-radius: clamp(24px, 5vw, 36px);
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: 0 40px 90px rgba(15, 23, 42, 0.18);
+        z-index: 0;
+        pointer-events: none;
+        opacity: 0.85;
+      }
+
+      html[data-layout='session'] .qs-session-shell > *:first-child {
+        margin-top: clamp(12px, 4vw, 20px);
+      }
+
+      @media (max-width: 960px) {
+        html[data-layout='session'] .qs-session-shell {
+          padding: clamp(24px, 5vw, 40px) clamp(16px, 6vw, 28px) clamp(80px, 8vw, 120px);
+        }
+
+        html[data-layout='session'] .qs-session-shell::before {
+          inset: clamp(8px, 4vw, 22px);
+        }
+      }
+    `;
+    const head = doc.head || doc.documentElement;
+    if (head && head.appendChild) head.appendChild(style);
+  } catch (_) {}
 }
 
 function ensureFooter(doc, body) {
@@ -321,6 +440,7 @@ function persistAuthState(state) {
   window.__qsAuthState = state;
 }
 
+
 function persistRole(role, nav) {
   try {
     if (role) localStorage.setItem(ROLE_STORAGE_KEY, role);
@@ -341,6 +461,7 @@ function persistRole(role, nav) {
   toggleTeacherNavLinks(nav, role === "docente");
 }
 
+
 function toggleTeacherNavLinks(nav, isTeacher) {
   if (!nav) return;
   try {
@@ -357,7 +478,9 @@ function toggleTeacherNavLinks(nav, isTeacher) {
   } catch (_) {}
 }
 
+
 function setupSessionStatusControl(doc, currentPage, isTeacher) {
+
   try {
     if (!doc) return;
     const page = (currentPage || "").toLowerCase();
@@ -368,6 +491,7 @@ function setupSessionStatusControl(doc, currentPage, isTeacher) {
     const toolbarCard = doc.querySelector(".session-toolbar-card");
     if (!toolbarCard) return;
 
+
     const existingControl = toolbarCard.querySelector("[data-role='session-status']");
 
     if (!isTeacher) {
@@ -377,9 +501,11 @@ function setupSessionStatusControl(doc, currentPage, isTeacher) {
       return;
     }
 
+
     ensureSessionStatusStyles(doc);
 
     const slideToolbar = toolbarCard.querySelector(".slide-toolbar");
+
     const sessionId = page.replace(/\.html$/, "");
     const storageKey = `${SESSION_STATUS_STORAGE_PREFIX}${sessionId}`;
 
@@ -390,12 +516,15 @@ function setupSessionStatusControl(doc, currentPage, isTeacher) {
       return;
     }
 
+
     const container = doc.createElement("div");
     container.className = "session-status-control";
     container.setAttribute("data-role", "session-status");
     container.setAttribute("role", "group");
     container.setAttribute("aria-label", "Estado de la sesión");
+
     container.setAttribute("data-session-id", sessionId);
+
 
     const label = doc.createElement("span");
     const labelId = `session-status-label-${sessionId}`;
@@ -461,12 +590,15 @@ function setupSessionStatusControl(doc, currentPage, isTeacher) {
       const state = applyState(nextIndex);
       if (state && state.id) {
         persistSessionStatus(storageKey, state.id);
+
         announceSessionStatusChange(doc, sessionId, state.id);
+
       }
     });
 
     container.appendChild(label);
     container.appendChild(button);
+
 
     container.__qsSessionStatusControl = {
       applyState,
@@ -481,6 +613,7 @@ function setupSessionStatusControl(doc, currentPage, isTeacher) {
   } catch (_) {}
 }
 
+
 function refreshSessionStatusControl(container, storageKey) {
   try {
     if (!container) return;
@@ -493,6 +626,7 @@ function refreshSessionStatusControl(container, storageKey) {
     control.applyState(index);
   } catch (_) {}
 }
+
 
 function ensureSessionStatusStyles(doc) {
   try {
@@ -619,6 +753,7 @@ function persistSessionStatus(key, value) {
   } catch (_) {}
 }
 
+
 function announceSessionStatusChange(doc, sessionId, state) {
   try {
     const detail = { sessionId, state };
@@ -631,6 +766,7 @@ function announceSessionStatusChange(doc, sessionId, state) {
     }
   } catch (_) {}
 }
+
 
 function observeRoleClassChanges(html, callback) {
   if (!html || !window.MutationObserver) return;
