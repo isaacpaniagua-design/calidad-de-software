@@ -20,6 +20,16 @@ const typeLabels = {
   evidence: "Evidencia",
 };
 
+const statusLabels = {
+  enviado: "Enviado",
+  aceptado: "Aceptado",
+  calificado: "Calificado",
+  rechazado: "Rechazado",
+};
+
+const knownStatuses = new Map();
+let statusesInitialized = false;
+
 const dateFormatter = new Intl.DateTimeFormat("es-MX", {
   dateStyle: "medium",
   timeStyle: "short",
@@ -93,24 +103,96 @@ function formatSize(bytes) {
   return `${value.toFixed(precision)} ${units[unitIndex]}`;
 }
 
+function normalizeStatus(status) {
+  return (status || "enviado").toString().toLowerCase();
+}
+
+function notifyStatusChanges(items) {
+  if (!Array.isArray(items)) {
+    knownStatuses.clear();
+    statusesInitialized = false;
+    return false;
+  }
+
+  const ids = new Set();
+  const notifications = [];
+
+  items.forEach((item) => {
+    if (!item || !item.id) return;
+    const status = normalizeStatus(item.status);
+    const previous = knownStatuses.get(item.id);
+    if (
+      statusesInitialized &&
+      previous &&
+      previous !== status &&
+      (status === "aceptado" || status === "calificado")
+    ) {
+      notifications.push({ item, status });
+    }
+    knownStatuses.set(item.id, status);
+    ids.add(item.id);
+  });
+
+  knownStatuses.forEach((_, key) => {
+    if (!ids.has(key)) knownStatuses.delete(key);
+  });
+
+  statusesInitialized = true;
+
+  if (!notifications.length) return false;
+
+  const latest = notifications[notifications.length - 1];
+  const title = latest.item?.title || "Entrega";
+  let message = "";
+  if (latest.status === "calificado") {
+    const gradeText =
+      typeof latest.item?.grade === "number" && !Number.isNaN(latest.item.grade)
+        ? ` con calificación ${latest.item.grade}`
+        : "";
+    message = `🎉 Tu entrega "${title}" fue calificada${gradeText}`;
+  } else {
+    message = `✅ Tu entrega "${title}" fue aceptada`;
+  }
+  const reviewer = latest.item?.gradedBy || latest.item?.reviewedBy;
+  const reviewerName = reviewer?.displayName || reviewer?.email || "";
+  if (reviewerName) {
+    message += ` por ${reviewerName}`;
+  } else {
+    message += " por tu docente";
+  }
+  message += ".";
+  if (latest.status === "calificado" && latest.item?.teacherFeedback) {
+    message += ` Comentarios del docente: "${latest.item.teacherFeedback}".`;
+  }
+  setStatus(message, "success");
+  return true;
+}
+
 function renderList(items) {
-  if (!listEl || !emptyEl) return;
+  if (!listEl || !emptyEl) return false;
+  const safeItems = Array.isArray(items) ? items : [];
   listEl.innerHTML = "";
-  if (!Array.isArray(items) || items.length === 0) {
+
+  const notified = notifyStatusChanges(safeItems);
+
+  if (safeItems.length === 0) {
     emptyEl.hidden = false;
     if (countEl) countEl.textContent = "0";
-    return;
+    return notified;
   }
 
   emptyEl.hidden = true;
-  if (countEl) countEl.textContent = String(items.length);
+  if (countEl) countEl.textContent = String(safeItems.length);
 
-  items.forEach((item) => {
+  safeItems.forEach((item) => {
     const li = document.createElement("li");
     li.className = "student-uploads__item";
 
     const header = document.createElement("div");
     header.className = "student-uploads__item-header";
+
+    const titleWrap = document.createElement("div");
+    titleWrap.className = "student-uploads__item-heading";
 
     const titleEl = document.createElement("div");
     titleEl.className = "student-uploads__item-title";
@@ -120,8 +202,15 @@ function renderList(items) {
     chip.className = "student-uploads__item-chip";
     chip.textContent = typeLabels[item.kind] || "Entrega";
 
-    header.appendChild(titleEl);
-    header.appendChild(chip);
+    titleWrap.appendChild(titleEl);
+    titleWrap.appendChild(chip);
+    header.appendChild(titleWrap);
+
+    const status = normalizeStatus(item.status);
+    const statusBadge = document.createElement("span");
+    statusBadge.className = `student-uploads__item-status student-uploads__item-status--${status}`;
+    statusBadge.textContent = statusLabels[status] || statusLabels.enviado;
+    header.appendChild(statusBadge);
     li.appendChild(header);
 
     const submittedDate =
@@ -149,6 +238,20 @@ function renderList(items) {
       li.appendChild(desc);
     }
 
+    if (typeof item.grade === "number" && !Number.isNaN(item.grade)) {
+      const gradeEl = document.createElement("div");
+      gradeEl.className = "student-uploads__item-grade";
+      gradeEl.textContent = `Calificación: ${item.grade} / 100`;
+      li.appendChild(gradeEl);
+    }
+
+    if (item.teacherFeedback) {
+      const feedbackEl = document.createElement("p");
+      feedbackEl.className = "student-uploads__item-feedback";
+      feedbackEl.textContent = `Comentarios del docente: ${item.teacherFeedback}`;
+      li.appendChild(feedbackEl);
+    }
+
     const actions = document.createElement("div");
     actions.className = "student-uploads__item-actions";
     const link = document.createElement("a");
@@ -167,6 +270,8 @@ function renderList(items) {
 
     listEl.appendChild(li);
   });
+
+  return notified;
 }
 
 if (form) {
@@ -193,8 +298,8 @@ if (form) {
     unsubscribe = observeStudentUploads(
       user.uid,
       (items) => {
-        renderList(items);
-        if (!submitting && !justSubmitted) {
+        const notified = renderList(items);
+        if (!submitting && !justSubmitted && !notified) {
           setStatus(
             items.length
               ? "Tus entregas se sincronizan en tiempo real."
