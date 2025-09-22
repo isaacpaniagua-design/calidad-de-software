@@ -911,11 +911,13 @@ export function subscribeLatestForumReplies(limitOrOptions, onChange, onError) {
       }
     },
     (error) => {
+
       if (isPermissionDenied(error)) {
         console.warn("subscribeLatestForumReplies:permission-denied", error);
       } else {
         console.error("subscribeLatestForumReplies:error", error);
       }
+
       if (typeof onError === "function") {
         try {
           onError(error);
