@@ -27,6 +27,14 @@
 
   if (document.querySelector("script[data-qs='layout-loader']")) return;
 
+  const hasLayoutScript = Array.from(document.querySelectorAll("script[src]"))
+    .filter((script) => script !== currentScript)
+    .some((script) => {
+      const src = script.getAttribute("src") || "";
+      return /(?:^|\/|\\)layout\.js(?:$|[?#])/.test(src);
+    });
+  if (hasLayoutScript) return;
+
   const loader = document.createElement("script");
   loader.defer = true;
   loader.src = layoutSrc;
