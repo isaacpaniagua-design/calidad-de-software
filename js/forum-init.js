@@ -548,12 +548,14 @@ window.openTopic = function(topicId){
   };
   btnCancel.onclick = () => area.classList.add('hidden');
 
+
   if (typeof unsubscribeReplies === 'function') unsubscribeReplies();
   if (responsesList) responsesList.innerHTML = '';
   lastRepliesSnapshot = [];
   unsubscribeReplies = subscribeForumReplies(topicId, (items) => {
     lastRepliesSnapshot = Array.isArray(items) ? items : [];
     renderReplies(lastRepliesSnapshot);
+
   });
 
   modal.classList.remove('hidden');
