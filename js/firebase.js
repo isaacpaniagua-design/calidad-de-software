@@ -9,7 +9,6 @@ import {
 import {
   getFirestore,
   collection,
-  collectionGroup,
   doc,
   setDoc,
   addDoc,
@@ -757,6 +756,12 @@ export async function createForumTopic({
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     repliesCount: 0,
+    lastReplyId: null,
+    lastReplyText: null,
+    lastReplyAuthorName: null,
+    lastReplyAuthorEmail: null,
+    lastReplyParentId: null,
+    lastReplyCreatedAt: null,
   });
   return { id: docRef.id };
 }
@@ -804,9 +809,10 @@ export async function addForumReply(
   const db = getDb();
   if (!topicId) throw new Error("topicId requerido");
   if (!text || !text.trim()) throw new Error("Texto requerido");
+  const trimmedText = text.trim();
   const repliesCol = collection(db, "forum_topics", topicId, "replies");
-  await addDoc(repliesCol, {
-    text: text.trim(),
+  const replyRef = await addDoc(repliesCol, {
+    text: trimmedText,
     authorName: authorName || null,
     authorEmail: authorEmail || null,
     createdAt: serverTimestamp(),
@@ -822,6 +828,48 @@ export async function addForumReply(
     await updateDoc(topicRef, {
       repliesCount: increment(1),
       updatedAt: serverTimestamp(),
+      lastReplyId: replyRef.id,
+      lastReplyText: trimmedText,
+      lastReplyAuthorName: authorName || null,
+      lastReplyAuthorEmail: authorEmail || null,
+      lastReplyParentId: parentId || null,
+      lastReplyCreatedAt: serverTimestamp(),
+    });
+  } catch (_) {}
+}
+
+async function refreshTopicLastReply(topicId) {
+  if (!topicId) return;
+  const db = getDb();
+  try {
+    const topicRef = doc(collection(db, "forum_topics"), topicId);
+    const repliesCol = collection(db, "forum_topics", topicId, "replies");
+    const latestQuery = query(
+      repliesCol,
+      orderBy("createdAt", "desc"),
+      limit(1)
+    );
+    const latestSnap = await getDocs(latestQuery);
+    if (latestSnap.empty) {
+      await updateDoc(topicRef, {
+        lastReplyId: null,
+        lastReplyText: null,
+        lastReplyAuthorName: null,
+        lastReplyAuthorEmail: null,
+        lastReplyParentId: null,
+        lastReplyCreatedAt: null,
+      });
+      return;
+    }
+    const latestDoc = latestSnap.docs[0];
+    const latestData = latestDoc.data() || {};
+    await updateDoc(topicRef, {
+      lastReplyId: latestDoc.id,
+      lastReplyText: latestData.text || null,
+      lastReplyAuthorName: latestData.authorName || null,
+      lastReplyAuthorEmail: latestData.authorEmail || null,
+      lastReplyParentId: latestData.parentId || null,
+      lastReplyCreatedAt: latestData.createdAt || null,
     });
   } catch (_) {}
 }
@@ -849,6 +897,9 @@ export async function deleteForumReply(topicId, replyId) {
     if (deletions.length) {
       await Promise.allSettled(deletions);
     }
+  } catch (_) {}
+  try {
+    await refreshTopicLastReply(topicId);
   } catch (_) {}
 }
 
@@ -884,9 +935,11 @@ export function subscribeLatestForumReplies(limitOrOptions, onChange, onError) {
     }
   }
 
+  const topicsCol = collection(db, "forum_topics");
   const qy = query(
-    collectionGroup(db, "replies"),
-    orderBy("createdAt", "desc"),
+    topicsCol,
+    orderBy("lastReplyCreatedAt", "desc"),
+    orderBy("updatedAt", "desc"),
     limit(max)
   );
 
@@ -895,16 +948,42 @@ export function subscribeLatestForumReplies(limitOrOptions, onChange, onError) {
     (snap) => {
       const items = [];
       snap.forEach((docSnap) => {
-        const data = docSnap.data();
-        const ref = docSnap.ref;
-        const repliesCol = ref.parent;
-        const topicRef = repliesCol?.parent || null;
-        items.push({
-          id: docSnap.id,
-          topicId: topicRef?.id || null,
-          topicPath: topicRef?.path || null,
-          ...data,
-        });
+        const data = docSnap.data() || {};
+        const lastReplyId = data.lastReplyId || data.lastReply?.id || null;
+        const createdAt =
+          data.lastReplyCreatedAt || data.lastReply?.createdAt || null;
+        if (!lastReplyId || !createdAt) {
+          return;
+        }
+        const replyText = data.lastReplyText ?? data.lastReply?.text ?? "";
+        const authorName =
+          data.lastReplyAuthorName ?? data.lastReply?.authorName ?? null;
+        const authorEmail =
+          data.lastReplyAuthorEmail ?? data.lastReply?.authorEmail ?? null;
+        const parentId =
+          data.lastReplyParentId ?? data.lastReply?.parentId ?? null;
+        const reactions =
+          data.lastReplyReactions ?? data.lastReply?.reactions ?? null;
+
+        const payload = {
+          id: lastReplyId,
+          topicId: docSnap.id,
+          topicPath: docSnap.ref.path,
+          createdAt,
+          text: typeof replyText === "string" ? replyText : "",
+          authorName: authorName || null,
+          authorEmail: authorEmail || null,
+        };
+
+        if (parentId) {
+          payload.parentId = parentId;
+        }
+
+        if (reactions && typeof reactions === "object") {
+          payload.reactions = reactions;
+        }
+
+        items.push(payload);
       });
       if (typeof onChange === "function") {
         onChange(items);
@@ -938,6 +1017,21 @@ export async function fetchForumTopicSummary(topicId) {
     return { id: snap.id, ...data };
   } catch (error) {
     console.error("fetchForumTopicSummary:error", error);
+    return null;
+  }
+}
+
+export async function fetchForumReply(topicId, replyId) {
+  if (!topicId || !replyId) return null;
+  const db = getDb();
+  try {
+    const ref = doc(collection(db, "forum_topics", topicId, "replies"), replyId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+    const data = snap.data();
+    return { id: snap.id, ...data };
+  } catch (error) {
+    console.error("fetchForumReply:error", error);
     return null;
   }
 }

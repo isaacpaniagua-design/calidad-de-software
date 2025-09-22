@@ -7,8 +7,9 @@ import {
   ensureTeacherDocForUser,
   subscribeLatestForumReplies,
   fetchForumTopicSummary,
+  fetchForumReply,
 } from "./firebase.js";
-import { observeAllStudentUploads } from "./student-uploads.js";
+import { observeAllStudentUploads, observeStudentUploads } from "./student-uploads.js";
 
 import { allowedEmailDomain } from "./firebase-config.js";
 
@@ -617,15 +618,25 @@ function initRealtimeNotifications() {
     let authUnsubscribe = null;
     let uploadsUnsubscribe = null;
     let repliesUnsubscribe = null;
+    let studentUploadsUnsubscribe = null;
+    let studentRepliesUnsubscribe = null;
     let teacherActive = false;
+    let studentActive = false;
     let teacherCheckToken = 0;
     let currentTeacherEmail = "";
+    let currentStudentEmail = "";
+    let currentStudentUid = "";
     let uploadsInitialized = false;
     let repliesInitialized = false;
+    let studentUploadsInitialized = false;
+    let studentRepliesInitialized = false;
     const seenUploads = new Set();
     const seenReplies = new Set();
+    const studentUploadSnapshot = new Map();
+    const studentSeenReplies = new Set();
+    const studentReactionState = new Map();
     const topicCache = new Map();
-
+    const replyCache = new Map();
 
     const canUseRealtimeWithEmail = (email) => {
       const normalized = (email || "").toLowerCase().trim();
@@ -636,6 +647,15 @@ function initRealtimeNotifications() {
       return isTeacherEmail(normalized);
     };
 
+    const canStudentUseRealtime = (email) => {
+      const normalized = (email || "").toLowerCase().trim();
+      if (!normalized) return false;
+      if (normalizedAllowedDomain) {
+        return normalized.endsWith(`@${normalizedAllowedDomain}`);
+      }
+      return true;
+    };
+
     const isPermissionError = (error) => {
       if (!error) return false;
       const code = typeof error.code === "string" ? error.code.toLowerCase() : "";
@@ -644,10 +664,14 @@ function initRealtimeNotifications() {
       return /missing or insufficient permissions/i.test(message);
     };
 
-    const showPermissionWarning = () => {
+    const showPermissionWarning = (role = "general") => {
+      const message =
+        role === "teacher"
+          ? `Mostrando demo: inicia sesión con ${domainHint} para ver entregas y respuestas reales.`
+          : `Mostrando demo: inicia sesión con ${domainHint} para ver tus alertas en tiempo real.`;
       setStatusOverride({
         icon: "🔒",
-        message: `Mostrando demo: inicia sesión con ${domainHint} para ver entregas y respuestas reales.`,
+        message,
         enabled: false,
       });
     };
@@ -660,39 +684,52 @@ function initRealtimeNotifications() {
       });
     };
 
-    const showLiveStatus = () => {
+    const showLiveStatus = (role = "teacher") => {
+      const message =
+        role === "student" ? "Alertas de alumno en vivo activas." : "Alertas docentes en vivo activas.";
       setStatusOverride({
         icon: "🟢",
-        message: "Alertas docentes en vivo activas.",
+        message,
         enabled: true,
       });
     };
 
+    const clearCaches = () => {
+      topicCache.clear();
+      replyCache.clear();
+    };
 
     const evaluateSimulationState = () => {
-      if (!teacherActive) {
+      const hasTeacherStreams = teacherActive && Boolean(uploadsUnsubscribe || repliesUnsubscribe);
+      const hasStudentStreams =
+        studentActive && Boolean(studentUploadsUnsubscribe || studentRepliesUnsubscribe);
+
+      if (!teacherActive && !studentActive) {
         setSimulationEnabled(true);
         return;
       }
-      const hasRealtimeStreams = Boolean(uploadsUnsubscribe || repliesUnsubscribe);
-      setSimulationEnabled(!hasRealtimeStreams ? true : false);
+
+      setSimulationEnabled(!(hasTeacherStreams || hasStudentStreams));
     };
 
-    const resetTracking = () => {
+    const resetTeacherTracking = () => {
       uploadsInitialized = false;
       repliesInitialized = false;
       seenUploads.clear();
       seenReplies.clear();
     };
 
-    const clearTopicCache = () => {
-      topicCache.clear();
+    const resetStudentTracking = () => {
+      studentUploadsInitialized = false;
+      studentRepliesInitialized = false;
+      studentUploadSnapshot.clear();
+      studentSeenReplies.clear();
+      studentReactionState.clear();
     };
 
     const handleUploadsError = (error) => {
-
       if (isPermissionError(error)) {
-        showPermissionWarning();
+        showPermissionWarning("teacher");
       } else {
         showConnectionIssue();
         console.error("observeAllStudentUploads:error", error);
@@ -708,9 +745,8 @@ function initRealtimeNotifications() {
     };
 
     const handleRepliesError = (error) => {
-
       if (isPermissionError(error)) {
-        showPermissionWarning();
+        showPermissionWarning("teacher");
       } else {
         showConnectionIssue();
         console.error("subscribeLatestForumReplies:error", error);
@@ -725,31 +761,67 @@ function initRealtimeNotifications() {
       evaluateSimulationState();
     };
 
+    const handleStudentUploadsError = (error) => {
+      if (isPermissionError(error)) {
+        showPermissionWarning("student");
+      } else {
+        showConnectionIssue();
+        console.error("observeStudentUploads:error", error);
+      }
+
+      if (studentUploadsUnsubscribe) {
+        try {
+          studentUploadsUnsubscribe();
+        } catch (_) {}
+      }
+      studentUploadsUnsubscribe = null;
+      evaluateSimulationState();
+    };
+
+    const handleStudentRepliesError = (error) => {
+      if (isPermissionError(error)) {
+        showPermissionWarning("student");
+      } else {
+        showConnectionIssue();
+        console.error("subscribeLatestForumReplies:student-error", error);
+      }
+
+      if (studentRepliesUnsubscribe) {
+        try {
+          studentRepliesUnsubscribe();
+        } catch (_) {}
+      }
+      studentRepliesUnsubscribe = null;
+      evaluateSimulationState();
+    };
+
     const startTeacherSubscriptions = (email) => {
       const normalizedEmail = (email || "").toLowerCase();
 
       if (!canUseRealtimeWithEmail(normalizedEmail)) {
         teacherActive = false;
         currentTeacherEmail = "";
-        showPermissionWarning();
+        if (!studentActive) {
+          showPermissionWarning("teacher");
+        }
         evaluateSimulationState();
         return;
       }
       if (teacherActive) {
         currentTeacherEmail = normalizedEmail;
-        showLiveStatus();
-
+        showLiveStatus("teacher");
         evaluateSimulationState();
         return;
       }
 
       teacherActive = true;
       currentTeacherEmail = normalizedEmail;
-      resetTracking();
-      clearTopicCache();
+      resetTeacherTracking();
+      if (!studentActive) {
+        clearCaches();
+      }
 
       setStatusOverride(null);
-
 
       try {
         uploadsUnsubscribe = observeAllStudentUploads(handleUploads, handleUploadsError);
@@ -762,7 +834,12 @@ function initRealtimeNotifications() {
         repliesUnsubscribe = subscribeLatestForumReplies(
           { limit: 40 },
           (items) => {
-            handleReplies(items);
+            Promise.resolve(handleReplies(items)).catch((error) => {
+              console.error(
+                "Realtime notifications: fallo al procesar respuestas en vivo",
+                error
+              );
+            });
           },
           handleRepliesError
         );
@@ -771,11 +848,9 @@ function initRealtimeNotifications() {
         repliesUnsubscribe = null;
       }
 
-
       if (uploadsUnsubscribe || repliesUnsubscribe) {
-        showLiveStatus();
+        showLiveStatus("teacher");
       }
-
 
       evaluateSimulationState();
     };
@@ -798,10 +873,107 @@ function initRealtimeNotifications() {
         } catch (_) {}
         repliesUnsubscribe = null;
       }
-      resetTracking();
-      clearTopicCache();
+      resetTeacherTracking();
+      if (!studentActive) {
+        clearCaches();
+        setStatusOverride(null);
+      }
+
+      evaluateSimulationState();
+    };
+
+    const startStudentSubscriptions = (user) => {
+      const uid = user?.uid || "";
+      const normalizedEmail = (user?.email || "").toLowerCase();
+
+      if (!uid || !canStudentUseRealtime(normalizedEmail)) {
+        studentActive = false;
+        currentStudentEmail = "";
+        currentStudentUid = "";
+        if (!teacherActive) {
+          showPermissionWarning("student");
+        }
+        evaluateSimulationState();
+        return;
+      }
+
+      if (studentActive && currentStudentUid === uid) {
+        currentStudentEmail = normalizedEmail;
+        showLiveStatus("student");
+        evaluateSimulationState();
+        return;
+      }
+
+      studentActive = true;
+      currentStudentUid = uid;
+      currentStudentEmail = normalizedEmail;
+      resetStudentTracking();
+      if (!teacherActive) {
+        clearCaches();
+      }
 
       setStatusOverride(null);
+
+      try {
+        studentUploadsUnsubscribe = observeStudentUploads(uid, handleStudentUploads, handleStudentUploadsError);
+      } catch (error) {
+        console.error("No se pudo observar entregas del alumno", error);
+        studentUploadsUnsubscribe = null;
+      }
+
+      try {
+        studentRepliesUnsubscribe = subscribeLatestForumReplies(
+          { limit: 40 },
+          (items) => {
+            Promise.resolve(handleStudentReplies(items)).catch((error) => {
+              console.error(
+                "Realtime notifications: fallo al procesar respuestas para alumnos",
+                error
+              );
+            });
+          },
+          handleStudentRepliesError
+        );
+      } catch (error) {
+        console.error("No se pudo observar respuestas del foro para alumnos", error);
+        studentRepliesUnsubscribe = null;
+      }
+
+      if (studentUploadsUnsubscribe || studentRepliesUnsubscribe) {
+        showLiveStatus("student");
+      }
+
+      evaluateSimulationState();
+    };
+
+    const stopStudentSubscriptions = () => {
+      if (!studentActive && !studentUploadsUnsubscribe && !studentRepliesUnsubscribe) {
+        return;
+      }
+
+      studentActive = false;
+      currentStudentEmail = "";
+      currentStudentUid = "";
+
+      if (studentUploadsUnsubscribe) {
+        try {
+          studentUploadsUnsubscribe();
+        } catch (_) {}
+        studentUploadsUnsubscribe = null;
+      }
+
+      if (studentRepliesUnsubscribe) {
+        try {
+          studentRepliesUnsubscribe();
+        } catch (_) {}
+        studentRepliesUnsubscribe = null;
+      }
+
+      resetStudentTracking();
+      if (!teacherActive) {
+        clearCaches();
+        setStatusOverride(null);
+      }
 
       evaluateSimulationState();
     };
@@ -870,6 +1042,95 @@ function initRealtimeNotifications() {
           console.error("Realtime notifications: no se pudo procesar respuesta", error);
         }
       }
+    }
+
+    function handleStudentUploads(items) {
+      const safeItems = Array.isArray(items) ? items : [];
+      if (!studentUploadsInitialized) {
+        safeItems.forEach((item) => {
+          if (item && item.id) {
+            studentUploadSnapshot.set(item.id, snapshotUploadState(item));
+          }
+        });
+        studentUploadsInitialized = true;
+        return;
+      }
+
+      const events = [];
+
+      safeItems.forEach((item) => {
+        if (!item || !item.id) return;
+        const previous = studentUploadSnapshot.get(item.id) || null;
+        const nextSnapshot = snapshotUploadState(item);
+        studentUploadSnapshot.set(item.id, nextSnapshot);
+        if (!previous) {
+          return;
+        }
+
+        const acceptedEvent = maybeBuildStudentAcceptedEvent(item, previous, nextSnapshot);
+        if (acceptedEvent) {
+          events.push(acceptedEvent);
+        }
+
+        const gradedEvent = maybeBuildStudentGradedEvent(item, previous, nextSnapshot);
+        if (gradedEvent) {
+          events.push(gradedEvent);
+        }
+      });
+
+      events.forEach((event) => publishEvent(event));
+    }
+
+    async function handleStudentReplies(items) {
+      const safeItems = Array.isArray(items) ? items : [];
+      if (!studentRepliesInitialized) {
+        safeItems.forEach((item) => {
+          if (!item || !item.id) return;
+          studentSeenReplies.add(item.id);
+          if (isOwnReply(item)) {
+            studentReactionState.set(item.id, normalizeReactions(item.reactions));
+          }
+        });
+        studentRepliesInitialized = true;
+        return;
+      }
+
+      const events = [];
+
+      for (const reply of safeItems) {
+        if (!reply || !reply.id) continue;
+
+        if (isOwnReply(reply)) {
+          try {
+            const reactionEvent = await maybeBuildReactionEvent(reply);
+            if (reactionEvent) {
+              events.push(reactionEvent);
+            }
+          } catch (error) {
+            console.error("Realtime notifications: no se pudo procesar reacciones del foro", error);
+          }
+        }
+
+        if (studentSeenReplies.has(reply.id)) {
+          continue;
+        }
+        studentSeenReplies.add(reply.id);
+
+        if (isOwnReply(reply)) {
+          continue;
+        }
+
+        try {
+          const replyEvent = await maybeBuildStudentReplyEvent(reply);
+          if (replyEvent) {
+            events.push(replyEvent);
+          }
+        } catch (error) {
+          console.error("Realtime notifications: no se pudo procesar respuesta dirigida al alumno", error);
+        }
+      }
+
+      events.forEach((event) => publishEvent(event));
     }
 
     function getTimestampValue(ts) {
@@ -970,6 +1231,233 @@ function initRealtimeNotifications() {
       };
     }
 
+    function getUploadTitle(upload) {
+      const title = typeof upload?.title === "string" ? upload.title.trim() : "";
+      return title || "Entrega";
+    }
+
+    function getUploadNoun(kind) {
+      const normalized = (kind || "").toLowerCase();
+      if (normalized === "homework") return "tarea";
+      if (normalized === "activity") return "actividad";
+      return "evidencia";
+    }
+
+    function extractTeacherName(upload) {
+      const candidates = [upload?.gradedBy, upload?.reviewedBy];
+      for (const candidate of candidates) {
+        if (candidate && typeof candidate === "object") {
+          const displayName = typeof candidate.displayName === "string" ? candidate.displayName.trim() : "";
+          if (displayName) return displayName;
+          const email = typeof candidate.email === "string" ? candidate.email.trim() : "";
+          if (email) return email;
+        }
+      }
+      return "";
+    }
+
+    function isEvidenceKind(kind) {
+      const normalized = (kind || "").toLowerCase();
+      return normalized === "evidence" || normalized === "evidencia";
+    }
+
+    function snapshotUploadState(upload) {
+      return {
+        status: typeof upload?.status === "string" ? upload.status.toLowerCase() : "",
+        acceptedAt: getTimestampValue(upload?.acceptedAt),
+        gradedAt: getTimestampValue(upload?.gradedAt),
+        grade: Number.isFinite(Number(upload?.grade)) ? Number(upload.grade) : null,
+      };
+    }
+
+    function maybeBuildStudentAcceptedEvent(upload, previous, current) {
+      if (!isEvidenceKind(upload?.kind)) return null;
+      if (current.status !== "aceptado") return null;
+
+      const becameAccepted = previous.status !== "aceptado" && current.status === "aceptado";
+      const timestampBecameAvailable =
+        previous.status === "aceptado" && current.status === "aceptado" &&
+        previous.acceptedAt <= 0 &&
+        current.acceptedAt > 0;
+
+      if (!becameAccepted && !timestampBecameAvailable) {
+        return null;
+      }
+
+      const option = OPTION_LOOKUP.get("evidence-student");
+      const icon = option?.icon || "📤";
+      const title = getUploadTitle(upload);
+      const teacherName = extractTeacherName(upload);
+      const message = teacherName
+        ? `Tu evidencia “${title}” fue aceptada por ${teacherName}.`
+        : `Tu evidencia “${title}” fue aceptada.`;
+      const feedback = truncateText(upload?.teacherFeedback || upload?.feedback, 140);
+      return {
+        type: "evidence-student",
+        icon,
+        message,
+        detail: feedback ? feedback : null,
+      };
+    }
+
+    function maybeBuildStudentGradedEvent(upload, previous, current) {
+      if (current.status !== "calificado") {
+        return null;
+      }
+
+      const becameGraded = previous.status !== "calificado" && current.status === "calificado";
+      const gradeValueChanged = current.grade !== null && current.grade !== previous.grade;
+      const timestampBecameAvailable =
+        previous.status === "calificado" &&
+        current.status === "calificado" &&
+        previous.gradedAt <= 0 &&
+        current.gradedAt > 0;
+
+      if (!becameGraded && !gradeValueChanged && !timestampBecameAvailable) {
+        return null;
+      }
+
+      const option = OPTION_LOOKUP.get("activity-graded");
+      const icon = option?.icon || "✅";
+      const noun = getUploadNoun(upload?.kind);
+      const title = getUploadTitle(upload);
+      const gradeValue = current.grade;
+      const teacherName = extractTeacherName(upload);
+      const message = gradeValue !== null
+        ? `Tu ${noun} “${title}” fue calificado con ${gradeValue}.`
+        : `Tu ${noun} “${title}” fue calificado.`;
+      const details = [];
+      if (teacherName) details.push(`Docente: ${teacherName}`);
+      const feedback = truncateText(upload?.teacherFeedback || upload?.feedback, 140);
+      if (feedback) details.push(feedback);
+      return {
+        type: "activity-graded",
+        icon,
+        message,
+        detail: details.length ? details.join(" · ") : null,
+      };
+    }
+
+    function normalizeReactions(reactions) {
+      if (!reactions || typeof reactions !== "object") return {};
+      const normalized = {};
+      for (const [key, value] of Object.entries(reactions)) {
+        const num = Number(value);
+        if (Number.isFinite(num) && num > 0) {
+          normalized[key] = num;
+        }
+      }
+      return normalized;
+    }
+
+    function formatReactionFragment(type, delta) {
+      const labels = {
+        like: { singular: "aplauso", plural: "aplausos" },
+      };
+      const labelSet = labels[type] || { singular: "reacción", plural: "reacciones" };
+      const label = delta === 1 ? labelSet.singular : labelSet.plural;
+      return `${delta} ${label}`;
+    }
+
+    function buildReactionSummary(deltas) {
+      if (!deltas.length) return "nuevas reacciones";
+      const parts = deltas.map((entry) => formatReactionFragment(entry.type, entry.delta));
+      if (parts.length === 1) return parts[0];
+      return `${parts.slice(0, -1).join(", ")} y ${parts[parts.length - 1]}`;
+    }
+
+    function isOwnReply(reply) {
+      if (!currentStudentEmail) return false;
+      const email = (reply?.authorEmail || "").toLowerCase();
+      return email === currentStudentEmail;
+    }
+
+    async function maybeBuildReactionEvent(reply) {
+      if (!isOwnReply(reply)) {
+        return null;
+      }
+      const current = normalizeReactions(reply?.reactions);
+      const previous = studentReactionState.get(reply.id);
+      studentReactionState.set(reply.id, current);
+      if (!previous) {
+        return null;
+      }
+
+      const deltas = [];
+      for (const [type, value] of Object.entries(current)) {
+        const prevValue = previous[type] || 0;
+        if (value > prevValue) {
+          deltas.push({ type, delta: value - prevValue });
+        }
+      }
+      if (!deltas.length) {
+        return null;
+      }
+
+      const topic = await getTopicInfo(reply.topicId);
+      const topicTitle = topic?.title ? String(topic.title) : "tu tema";
+      const option = OPTION_LOOKUP.get("forum-reaction");
+      const icon = option?.icon || "👏";
+      const summary = buildReactionSummary(deltas);
+      const detail = truncateText(reply?.text, 180);
+      return {
+        type: "forum-reaction",
+        icon,
+        message: `Tu aporte en “${topicTitle}” recibió ${summary}.`,
+        detail: detail || null,
+      };
+    }
+
+    async function maybeBuildStudentReplyEvent(reply) {
+      const option = OPTION_LOOKUP.get("forum-reply");
+      const icon = option?.icon || "💬";
+      const normalizedEmail = currentStudentEmail;
+      if (!normalizedEmail) return null;
+
+      let topicTitle = "tu tema";
+      let topicAuthorEmail = "";
+      try {
+        const topic = await getTopicInfo(reply.topicId);
+        if (topic) {
+          if (topic.title) topicTitle = String(topic.title);
+          if (topic.authorEmail) topicAuthorEmail = String(topic.authorEmail).toLowerCase();
+        }
+      } catch (error) {
+        console.error("Realtime notifications: no se pudo obtener tema para notificación de alumno", error);
+      }
+
+      const authorName = (reply.authorName || "").trim() || reply.authorEmail || "Alguien";
+      const detail = truncateText(reply.text, 180) || null;
+
+      if (!reply.parentId && topicAuthorEmail && topicAuthorEmail === normalizedEmail) {
+        return {
+          type: "forum-reply",
+          icon,
+          message: `${authorName} comentó tu tema “${topicTitle}”.`,
+          detail,
+        };
+      }
+
+      if (reply.parentId) {
+        try {
+          const parent = await getReplyInfo(reply.topicId, reply.parentId);
+          const parentEmail = (parent?.authorEmail || "").toLowerCase();
+          if (parentEmail && parentEmail === normalizedEmail) {
+            return {
+              type: "forum-reply",
+              icon,
+              message: `${authorName} respondió a tu mensaje en “${topicTitle}”.`,
+              detail,
+            };
+          }
+        } catch (error) {
+          console.error("Realtime notifications: no se pudo obtener respuesta padre", error);
+        }
+      }
+
+      return null;
+    }
+
     async function getTopicInfo(topicId) {
       if (!topicId) return null;
       if (topicCache.has(topicId)) {
@@ -977,6 +1465,17 @@ function initRealtimeNotifications() {
       }
       const info = await fetchForumTopicSummary(topicId);
       topicCache.set(topicId, info || null);
+      return info || null;
+    }
+
+    async function getReplyInfo(topicId, replyId) {
+      if (!topicId || !replyId) return null;
+      const key = `${topicId}__${replyId}`;
+      if (replyCache.has(key)) {
+        return replyCache.get(key);
+      }
+      const info = await fetchForumReply(topicId, replyId);
+      replyCache.set(key, info || null);
       return info || null;
     }
 
@@ -1011,16 +1510,26 @@ function initRealtimeNotifications() {
         const token = teacherCheckToken;
         const teacher = await determineTeacher(user);
         if (token !== teacherCheckToken) return;
+
+        if (!user) {
+          stopTeacherSubscriptions();
+          stopStudentSubscriptions();
+          return;
+        }
+
         if (teacher) {
+          stopStudentSubscriptions();
           startTeacherSubscriptions(user?.email || "");
         } else {
           stopTeacherSubscriptions();
+          startStudentSubscriptions(user);
         }
       });
     } catch (error) {
       console.error("Realtime notifications: no se pudo vincular autenticación", error);
     }
   }
+
 
 }
 
