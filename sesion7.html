@@ -60,46 +60,6 @@
         }
       }
 
-      .navigation {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 10px;
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        padding: 15px 20px;
-        border-radius: 50px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        z-index: 1000;
-      }
-
-      .nav-button {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        border: none;
-        padding: 12px 20px;
-        border-radius: 25px;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 14px;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(118, 75, 162, 0.3);
-      }
-
-      .nav-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(118, 75, 162, 0.4);
-      }
-
-      .nav-button:disabled {
-        background: #9ca3af;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-      }
-
       .slide-counter {
         position: fixed;
         top: 20px;
@@ -1028,13 +988,6 @@
       </div>
     </main>
 
-    <!-- Navigation -->
-    <div class="navigation" hidden>
-      <button class="nav-button" onclick="previousSlide()">⬅️ Anterior</button>
-      <button class="nav-button" onclick="resetAll()">🔄 Reiniciar</button>
-      <button class="nav-button" onclick="nextSlide()">Siguiente ➡️</button>
-    </div>
-
     <script>
       let currentSlide = 1;
       const totalSlides = 4;
@@ -1067,15 +1020,20 @@
       }
 
       function updateNavigationButtons() {
-        const prevButton = document.querySelector(
-          ".navigation button:first-child"
-        );
-        const nextButton = document.querySelector(
-          ".navigation button:last-child"
-        );
+        const navigation = document.querySelector(".navigation");
+        if (!navigation) {
+          return;
+        }
 
-        prevButton.disabled = currentSlide === 1;
-        nextButton.disabled = currentSlide === totalSlides;
+        const prevButton = navigation.querySelector("button:first-child");
+        const nextButton = navigation.querySelector("button:last-child");
+
+        if (prevButton) {
+          prevButton.disabled = currentSlide === 1;
+        }
+        if (nextButton) {
+          nextButton.disabled = currentSlide === totalSlides;
+        }
       }
 
       function previousSlide() {

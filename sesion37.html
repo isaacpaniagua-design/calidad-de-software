@@ -256,41 +256,6 @@
         color: #9ca3af;
       }
 
-      .navigation {
-        position: fixed;
-        bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 15px;
-        z-index: 1000;
-      }
-
-      .nav-btn {
-        background: rgba(255, 255, 255, 0.9);
-        border: none;
-        padding: 15px 25px;
-        border-radius: 50px;
-        cursor: pointer;
-        font-weight: 600;
-        color: #4f46e5;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-      }
-
-      .nav-btn:hover {
-        background: white;
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-      }
-
-      .nav-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        transform: none;
-      }
-
       .slide-indicator {
         position: fixed;
         bottom: 100px;
@@ -495,10 +460,6 @@
           gap: 15px;
         }
 
-        .navigation {
-          bottom: 20px;
-        }
-
         .slide-indicator {
           bottom: 80px;
         }
@@ -652,16 +613,6 @@
       </div>
     </div>
 
-    <!-- Navigation -->
-    <div class="navigation" hidden>
-      <button class="nav-btn" onclick="previousSlide()" id="prevBtn">
-        ← Anterior
-      </button>
-      <button class="nav-btn" onclick="nextSlide()" id="nextBtn">
-        Siguiente →
-      </button>
-    </div>
-
     <!-- Slide Indicators -->
     <div class="slide-indicator">
       <div class="indicator-dot active" onclick="goToSlide(0)"></div>
@@ -674,6 +625,8 @@
       let currentSlide = 0;
       const slides = document.querySelectorAll(".slide");
       const totalSlides = slides.length;
+      const prevButton = document.getElementById("prevBtn");
+      const nextButton = document.getElementById("nextBtn");
       let timerInterval;
       let timeLeft = 1200; // 20 minutes in seconds
       let isTimerRunning = false;
@@ -688,9 +641,12 @@
         slides[currentSlide].classList.add("active");
 
         // Update navigation buttons
-        document.getElementById("prevBtn").disabled = currentSlide === 0;
-        document.getElementById("nextBtn").disabled =
-          currentSlide === totalSlides - 1;
+        if (prevButton) {
+          prevButton.disabled = currentSlide === 0;
+        }
+        if (nextButton) {
+          nextButton.disabled = currentSlide === totalSlides - 1;
+        }
 
         // Update indicators
         document.querySelectorAll(".indicator-dot").forEach((dot, index) => {

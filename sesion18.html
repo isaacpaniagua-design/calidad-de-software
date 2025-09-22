@@ -221,41 +221,6 @@
         border-radius: 5px;
       }
 
-      .navigation {
-        position: fixed;
-        bottom: 30px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 15px;
-        z-index: 1000;
-      }
-
-      .nav-button {
-        background: rgba(255, 255, 255, 0.9);
-        border: none;
-        padding: 15px 25px;
-        border-radius: 25px;
-        cursor: pointer;
-        font-size: 16px;
-        font-weight: bold;
-        color: #667eea;
-        transition: all 0.3s ease;
-        backdrop-filter: blur(10px);
-      }
-
-      .nav-button:hover {
-        background: white;
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-      }
-
-      .nav-button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        transform: none;
-      }
-
       .slide-counter {
         position: fixed;
         top: 30px;
@@ -878,14 +843,6 @@
         <div class="indicator" onclick="goToSlide(4)"></div>
       </div>
 
-      <div class="navigation" hidden>
-        <button class="nav-button" id="prevBtn" onclick="previousSlide()">
-          ← Anterior
-        </button>
-        <button class="nav-button" id="nextBtn" onclick="nextSlide()">
-          Siguiente →
-        </button>
-      </div>
     </div>
 
     <script>
@@ -893,6 +850,9 @@
       const slides = document.querySelectorAll(".slide");
       const indicators = document.querySelectorAll(".indicator");
       const totalSlides = slides.length;
+      const currentSlideLabel = document.getElementById("currentSlide");
+      const prevButton = document.getElementById("prevBtn");
+      const nextButton = document.getElementById("nextBtn");
 
       function updateSlideDisplay() {
         slides.forEach((slide, index) => {
@@ -912,11 +872,15 @@
           indicator.classList.toggle("active", index === currentSlideIndex);
         });
 
-        document.getElementById("currentSlide").textContent =
-          currentSlideIndex + 1;
-        document.getElementById("prevBtn").disabled = currentSlideIndex === 0;
-        document.getElementById("nextBtn").disabled =
-          currentSlideIndex === totalSlides - 1;
+        if (currentSlideLabel) {
+          currentSlideLabel.textContent = currentSlideIndex + 1;
+        }
+        if (prevButton) {
+          prevButton.disabled = currentSlideIndex === 0;
+        }
+        if (nextButton) {
+          nextButton.disabled = currentSlideIndex === totalSlides - 1;
+        }
       }
 
       function nextSlide() {
