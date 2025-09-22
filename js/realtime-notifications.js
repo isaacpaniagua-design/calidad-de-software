@@ -398,12 +398,16 @@ function initRealtimeNotifications() {
     if (enabledCount > 0) {
       statusEl.innerHTML = `
         <span aria-hidden="true">🟢</span>
-        <span> Recibirás ${enabledCount} de ${OPTIONS.length} tipos en tiempo real.</span>
+
+        <span>Recibirás ${enabledCount} de ${OPTIONS.length} tipos en tiempo real.</span>
+
       `;
     } else {
       statusEl.innerHTML = `
         <span aria-hidden="true">⚪</span>
-        <span> Activa al menos un tipo para reanudar las alertas en tiempo real.</span>
+
+        <span>Activa al menos un tipo para reanudar las alertas en tiempo real.</span>
+
       `;
     }
   }
