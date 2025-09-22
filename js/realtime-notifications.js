@@ -174,6 +174,7 @@ function initRealtimeNotifications() {
   window[BOOT_FLAG] = true;
 
   const doc = document;
+
   const center = doc.querySelector("[data-realtime-center]");
   if (!center) {
     return;
@@ -182,7 +183,9 @@ function initRealtimeNotifications() {
   const toggleButton = center.querySelector("[data-realtime-toggle]");
   const panel = center.querySelector("[data-realtime-panel]");
   const optionsList = center.querySelector("[data-realtime-options]");
+
   const hasOptionsList = Boolean(optionsList);
+
   const feedList = center.querySelector("[data-realtime-feed]");
   const statusEl = center.querySelector("[data-realtime-status]");
   const emptyEl = center.querySelector("[data-realtime-empty]");
@@ -190,7 +193,9 @@ function initRealtimeNotifications() {
   const closeButton = center.querySelector("[data-realtime-close]");
   const toggleLabel = center.querySelector("[data-realtime-toggle-label]");
 
+
   if (!feedList || !toggleButton || !panel) {
+
     return;
   }
 
@@ -211,6 +216,7 @@ function initRealtimeNotifications() {
     }
   });
 
+
   if (!hasOptionsList) {
     OPTIONS.forEach((option) => {
       if (state[option.id] !== true) {
@@ -219,6 +225,7 @@ function initRealtimeNotifications() {
       }
     });
   }
+
 
   if (shouldPersist) {
     persistPreferences(state);
@@ -233,6 +240,7 @@ function initRealtimeNotifications() {
 
   let queue = [];
   let timerId = null;
+
   let unreadCount = 0;
   let isPanelOpen = false;
   let hideTimeoutId = null;
@@ -269,10 +277,12 @@ function initRealtimeNotifications() {
     }
   });
 
+
   renderOptions();
   updateStatus();
   filterFeedItems();
   scheduleNextEvent();
+
 
   function updateToggleLabel(open) {
     const labelText = open ? "Cerrar centro de notificaciones" : "Abrir centro de notificaciones";
@@ -340,8 +350,10 @@ function initRealtimeNotifications() {
     }
   }
 
+
   function renderOptions() {
     if (!optionsList) return;
+
     optionsList.innerHTML = "";
     OPTIONS.forEach((option) => {
       const li = doc.createElement("li");
@@ -403,12 +415,16 @@ function initRealtimeNotifications() {
     if (enabledCount > 0) {
       statusEl.innerHTML = `
         <span aria-hidden="true">🟢</span>
+
         <span>Recibirás ${enabledCount} de ${OPTIONS.length} tipos en tiempo real.</span>
+
       `;
     } else {
       statusEl.innerHTML = `
         <span aria-hidden="true">⚪</span>
+
         <span>Activa al menos un tipo para reanudar las alertas en tiempo real.</span>
+
       `;
     }
   }
@@ -476,10 +492,12 @@ function initRealtimeNotifications() {
 
     feedList.prepend(card);
 
+
     if (!isPanelOpen) {
       unreadCount = Math.min(unreadCount + 1, 99);
       updateBadge();
     }
+
 
     requestAnimationFrame(() => {
       card.classList.add("is-visible");
