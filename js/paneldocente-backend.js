@@ -24,6 +24,7 @@ function escHtml(str){ return String(str==null? '': str).replace(/[&<>"']/g, fun
 function escAttr(str){ return escHtml(str); }
 function updateSyncStamp(){ var now=new Date(); setText('pd-summary-sync', fmtDate(now)+' '+now.toLocaleTimeString()); }
 
+
 function showStatusBanner(title, message, variant){
   var banner = $id('pd-status-banner');
   if (!banner) return;
@@ -60,6 +61,7 @@ async function computeTeacherState(user){
   }
   return { user: user || null, email: email, isTeacher: !!teacher };
 }
+
 
 // ===== Cálculo de calificaciones =====
 function inferUnidad(it){
@@ -436,11 +438,14 @@ async function loadDataForGroup(db, grupo, state){
   renderDeliverablesList(state.deliverables);
   var exams = await fetchExams(db, grupo);
   renderExams(exams);
+
   renderStudentsTable(state.students, metrics);
+
   updateSyncStamp();
 
   var rub = await getRubric(db, grupo);
   if ($id('pd-rubric-text')) $id('pd-rubric-text').value = rub && rub.content ? rub.content : '';
+
 
   bindRubricSave(db, grupo);
   bindDeliverableForm(db, grupo, state);
@@ -451,6 +456,7 @@ async function loadDataForGroup(db, grupo, state){
   renderGanttTable(gantt);
   await populateAssignments(db, grupo);
 }
+
 
 // ===== Main =====
 async function main(){
@@ -482,6 +488,7 @@ async function main(){
       body.classList.toggle('teacher-yes', !!info.isTeacher);
       body.classList.toggle('teacher-no', !info.isTeacher);
     }
+
 
     if (!info.isTeacher){
       hasLoaded = false;
@@ -525,6 +532,7 @@ async function main(){
       lastLoadedUid = null;
     } finally {
       isLoading = false;
+
     }
   }
 }
