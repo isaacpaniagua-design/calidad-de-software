@@ -1,4 +1,4 @@
-import { initFirebase, onAuth, getAuthInstance, signInWithGooglePotros, signOutCurrent, isTeacherEmail, isTeacherByDoc, ensureTeacherDocForUser, subscribeForumTopics, createForumTopic, subscribeForumReplies, addForumReply, updateForumTopic, deleteForumTopic, deleteForumReply } from './firebase.js';
+import { initFirebase, onAuth, getAuthInstance, signInWithGooglePotros, signOutCurrent, isTeacherEmail, isTeacherByDoc, ensureTeacherDocForUser, subscribeForumTopics, createForumTopic, subscribeForumReplies, addForumReply, updateForumTopic, deleteForumTopic, deleteForumReply, reactToForumReply } from './firebase.js';
 
 initFirebase();
 
@@ -307,6 +307,23 @@ window.openTopic = function(topicId){
       div.className = 'border-l-4 border-green-400 pl-4 py-2';
       const canDel = !!currentUser && (isTeacher || ((r.authorEmail||'').toLowerCase() === (currentUser.email||'').toLowerCase()));
       const delBtn = canDel ? '<button data-role="del-reply" class="text-xs text-red-600 hover:text-red-700 ml-2">Eliminar</button>' : '';
+      const likeCount = (() => {
+        const val = r?.reactions?.like ?? r?.likes ?? 0;
+        const num = Number(val);
+        return Number.isFinite(num) && num > 0 ? num : 0;
+      })();
+      const reactBtn = `
+        <button
+          type="button"
+          data-role="react-like"
+          class="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
+          title="Aplaudir esta respuesta"
+        >
+          <span aria-hidden="true">👏</span>
+          <span>${likeCount}</span>
+          <span class="sr-only">Aplausos recibidos</span>
+        </button>
+      `;
       div.innerHTML = `
         <div class="flex items-center space-x-2 mb-2">
           <span class="font-medium text-gray-800">${r.authorName || r.authorEmail || 'Anónimo'}</span>
@@ -314,6 +331,9 @@ window.openTopic = function(topicId){
           ${delBtn}
         </div>
         <p class="text-gray-700">${r.text || ''}</p>
+        <div class="mt-2 flex items-center gap-3 text-gray-500">
+          ${reactBtn}
+        </div>
       `;
       if (canDel) {
         const btn = div.querySelector('[data-role="del-reply"]');
@@ -321,6 +341,36 @@ window.openTopic = function(topicId){
           e.stopPropagation();
           if (!confirm('¿Eliminar esta respuesta?')) return;
           try { await deleteForumReply(topicId, r.id); } catch(e){ alert(e.message || e); }
+        });
+      }
+      const btnReact = div.querySelector('[data-role="react-like"]');
+      if (btnReact){
+        if (!currentUser){
+          btnReact.classList.add('opacity-50', 'cursor-not-allowed');
+          btnReact.setAttribute('disabled', 'true');
+          btnReact.setAttribute('title', 'Inicia sesión para reaccionar');
+        } else {
+          btnReact.classList.remove('opacity-50', 'cursor-not-allowed');
+          btnReact.removeAttribute('disabled');
+          btnReact.setAttribute('title', 'Aplaudir esta respuesta');
+        }
+        btnReact.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (!currentUser){
+            alert('Inicia sesión para reaccionar');
+            return;
+          }
+          if (btnReact.dataset.loading === '1') return;
+          btnReact.dataset.loading = '1';
+          btnReact.classList.add('opacity-50');
+          try {
+            await reactToForumReply(topicId, r.id, 'like');
+          } catch (err) {
+            alert(err?.message || err || 'No fue posible registrar tu reacción');
+          } finally {
+            delete btnReact.dataset.loading;
+            btnReact.classList.remove('opacity-50');
+          }
         });
       }
       responsesList.appendChild(div);
