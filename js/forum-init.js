@@ -78,7 +78,7 @@ function renderSignedOutState(){
   topicsList.appendChild(div);
 }
 
-function buildReplyTree(items = []){
+function buildRepliesTree(items = []){
   const map = new Map();
   const roots = [];
   items.forEach(item => {
@@ -323,7 +323,7 @@ function renderReplies(items = []){
     responsesList.appendChild(empty);
     return;
   }
-  const tree = buildReplyTree(items);
+  const tree = buildRepliesTree(items);
   tree.forEach(reply => {
     responsesList.appendChild(createReplyElement(reply, 0));
   });
