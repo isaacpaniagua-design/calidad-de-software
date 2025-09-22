@@ -1,14 +1,18 @@
-import { initFirebase, onAuth, getAuthInstance, signInWithGooglePotros, signOutCurrent, isTeacherEmail, isTeacherByDoc, ensureTeacherDocForUser, subscribeForumTopics, createForumTopic, subscribeForumReplies, addForumReply, updateForumTopic, deleteForumTopic, deleteForumReply, reactToForumReply } from './firebase.js';
+
+import { initFirebase, onAuth, getAuthInstance, signInWithGooglePotros, signOutCurrent, isTeacherEmail, isTeacherByDoc, ensureTeacherDocForUser, subscribeForumTopics, createForumTopic, subscribeForumReplies, addForumReply, updateForumTopic, deleteForumTopic, deleteForumReply, registerForumReplyReaction } from './firebase.js';
+
 
 initFirebase();
 
 let currentUser = null;
 let isTeacher = false;
+
 let topicsCache = [];
 let currentTopicId = null;
 let unsubscribeReplies = null;
 let unsubscribeTopics = null;
 let lastRepliesSnapshot = [];
+
 
 function updateLayoutColumns(showAdminPanel) {
   if (!layoutShell) return;
@@ -17,6 +21,7 @@ function updateLayoutColumns(showAdminPanel) {
 }
 
 const el = (id) => document.getElementById(id);
+
 
 const userRoleEl = el('userRole');
 const userNameEl = el('userName');
@@ -30,6 +35,7 @@ const modalCategory = el('modalCategory');
 const modalContent = el('modalContent');
 const responsesList = el('responsesList');
 const responseText = el('responseText');
+
 
 function formatWhen(ts){
   try {
@@ -70,6 +76,255 @@ function renderSignedOutState(){
   div.className = 'p-6 text-gray-500';
   div.textContent = 'Inicia sesión con tu cuenta @potros.itson.edu.mx para ver los temas.';
   topicsList.appendChild(div);
+}
+
+function buildReplyTree(items = []){
+  const map = new Map();
+  const roots = [];
+  items.forEach(item => {
+    if (!item || !item.id) return;
+    map.set(item.id, { ...item, children: [] });
+  });
+  items.forEach(item => {
+    if (!item || !item.id) return;
+    const node = map.get(item.id);
+    const parentId = item.parentId || null;
+    if (parentId && map.has(parentId)) {
+      const parent = map.get(parentId);
+      parent.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  });
+  return roots;
+}
+
+function createReplyElement(reply, depth = 0){
+  const wrapper = document.createElement('div');
+  wrapper.className = 'space-y-3';
+  if (depth > 0) {
+    wrapper.style.marginLeft = `${Math.min(depth, 6) * 1.5}rem`;
+  }
+
+  const card = document.createElement('div');
+  const baseClasses = ['border-l-4', 'border-green-400', 'pl-4', 'py-3', 'rounded-lg', 'bg-white', 'shadow-sm'];
+  if (depth > 0) {
+    baseClasses.push('bg-gray-50', 'border-green-300');
+  }
+  card.className = baseClasses.join(' ');
+
+  const canDelete = !!currentUser && (isTeacher || ((reply?.authorEmail || '').toLowerCase() === (currentUser.email || '').toLowerCase()));
+  const likeCountRaw = reply?.reactions?.like ?? reply?.likes ?? 0;
+  const likeNumeric = Number(likeCountRaw);
+  const likeCount = Number.isFinite(likeNumeric) && likeNumeric > 0 ? likeNumeric : 0;
+  const when = timeAgo(reply?.createdAt);
+  const delBtn = canDelete ? '<button data-role="del-reply" class="text-xs text-red-600 hover:text-red-700 ml-2">Eliminar</button>' : '';
+  const reactBtnClasses = [
+    'inline-flex',
+    'items-center',
+    'gap-1',
+    'text-xs',
+    'font-medium',
+    'text-indigo-600',
+    'hover:text-indigo-700',
+    'transition-colors'
+  ];
+  if (!currentUser) {
+    reactBtnClasses.push('opacity-50', 'cursor-not-allowed');
+  }
+  const replyBtnClasses = [
+    'inline-flex',
+    'items-center',
+    'gap-1',
+    'text-xs',
+    'font-medium',
+    'transition-colors'
+  ];
+  if (currentUser) {
+    replyBtnClasses.push('text-gray-600', 'hover:text-indigo-600');
+  } else {
+    replyBtnClasses.push('text-gray-400', 'cursor-not-allowed');
+  }
+  const reactTitle = currentUser ? 'Aplaudir esta respuesta' : 'Inicia sesión para reaccionar';
+  const replyTitle = currentUser ? 'Responder a este comentario' : 'Inicia sesión para responder';
+
+  const textContent = reply?.text ? reply.text : '';
+
+  card.innerHTML = `
+    <div class="flex items-center space-x-2 mb-2">
+      <span class="font-medium text-gray-800">${reply?.authorName || reply?.authorEmail || 'Anónimo'}</span>
+      <span class="text-xs text-gray-500">${when}</span>
+      ${delBtn}
+    </div>
+    <p class="text-gray-700 whitespace-pre-line">${textContent}</p>
+    <div class="mt-2 flex items-center gap-3 text-gray-500 flex-wrap">
+      <button
+        type="button"
+        data-role="react-like"
+        class="${reactBtnClasses.join(' ')}"
+        title="${reactTitle}"
+      >
+        <span aria-hidden="true">👏</span>
+        <span>${likeCount}</span>
+        <span class="sr-only">Aplausos recibidos</span>
+      </button>
+      <button
+        type="button"
+        data-role="reply-child"
+        class="${replyBtnClasses.join(' ')}"
+        title="${replyTitle}"
+      >
+        <span aria-hidden="true">💬</span>
+        <span>Responder</span>
+      </button>
+    </div>
+    <div data-role="child-reply-form" class="mt-3 hidden">
+      <textarea
+        rows="2"
+        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent mb-2"
+        placeholder="Escribe tu respuesta..."
+      ></textarea>
+      <div class="flex gap-2">
+        <button type="button" data-role="submit-child" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg text-sm font-medium">Enviar</button>
+        <button type="button" data-role="cancel-child" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-1.5 rounded-lg text-sm font-medium">Cancelar</button>
+      </div>
+    </div>
+  `;
+
+  if (canDelete) {
+    const btn = card.querySelector('[data-role="del-reply"]');
+    if (btn) {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (!confirm('¿Eliminar esta respuesta?')) return;
+        try {
+          await deleteForumReply(currentTopicId, reply.id);
+        } catch (err) {
+          alert(err?.message || err);
+        }
+      });
+    }
+  }
+
+  const btnReact = card.querySelector('[data-role="react-like"]');
+  if (btnReact) {
+    if (!currentUser) {
+      btnReact.setAttribute('disabled', 'true');
+    } else {
+      btnReact.removeAttribute('disabled');
+    }
+    btnReact.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!currentUser) {
+        alert('Inicia sesión para reaccionar');
+        return;
+      }
+      if (btnReact.dataset.loading === '1') return;
+      btnReact.dataset.loading = '1';
+      btnReact.classList.add('opacity-50');
+      try {
+        await registerForumReplyReaction(currentTopicId, reply.id, 'like');
+      } catch (err) {
+        alert(err?.message || err || 'No fue posible registrar tu reacción');
+      } finally {
+        delete btnReact.dataset.loading;
+        btnReact.classList.remove('opacity-50');
+      }
+    });
+  }
+
+  const replyBtn = card.querySelector('[data-role="reply-child"]');
+  const childForm = card.querySelector('[data-role="child-reply-form"]');
+  const childTextarea = childForm ? childForm.querySelector('textarea') : null;
+  const submitChild = childForm ? childForm.querySelector('[data-role="submit-child"]') : null;
+  const cancelChild = childForm ? childForm.querySelector('[data-role="cancel-child"]') : null;
+
+  if (replyBtn) {
+    if (!currentUser) {
+      replyBtn.setAttribute('disabled', 'true');
+    } else {
+      replyBtn.removeAttribute('disabled');
+    }
+    replyBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!currentUser) {
+        alert('Inicia sesión para responder');
+        return;
+      }
+      if (!childForm) return;
+      childForm.classList.toggle('hidden');
+      if (!childForm.classList.contains('hidden') && childTextarea) {
+        childTextarea.focus();
+      }
+    });
+  }
+
+  if (cancelChild && childForm) {
+    cancelChild.addEventListener('click', (e) => {
+      e.stopPropagation();
+      childForm.classList.add('hidden');
+      if (childTextarea) childTextarea.value = '';
+    });
+  }
+
+  if (submitChild && childTextarea) {
+    submitChild.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (!currentUser) {
+        alert('Inicia sesión para responder');
+        return;
+      }
+      const txt = childTextarea.value.trim();
+      if (!txt) {
+        alert('Escribe tu respuesta');
+        return;
+      }
+      if (submitChild.dataset.loading === '1') return;
+      submitChild.dataset.loading = '1';
+      submitChild.classList.add('opacity-70');
+      try {
+        await addForumReply(currentTopicId, {
+          text: txt,
+          authorName: currentUser.displayName || null,
+          authorEmail: currentUser.email || null,
+          parentId: reply.id,
+        });
+        childTextarea.value = '';
+        childForm.classList.add('hidden');
+      } catch (err) {
+        alert(err?.message || err);
+      } finally {
+        delete submitChild.dataset.loading;
+        submitChild.classList.remove('opacity-70');
+      }
+    });
+  }
+
+  wrapper.appendChild(card);
+
+  if (Array.isArray(reply?.children) && reply.children.length) {
+    reply.children.forEach((child) => {
+      wrapper.appendChild(createReplyElement(child, depth + 1));
+    });
+  }
+
+  return wrapper;
+}
+
+function renderReplies(items = []){
+  if (!responsesList) return;
+  responsesList.innerHTML = '';
+  if (!items.length) {
+    const empty = document.createElement('p');
+    empty.className = 'text-sm text-gray-500';
+    empty.textContent = 'Aún no hay respuestas. ¡Sé la primera persona en participar!';
+    responsesList.appendChild(empty);
+    return;
+  }
+  const tree = buildReplyTree(items);
+  tree.forEach(reply => {
+    responsesList.appendChild(createReplyElement(reply, 0));
+  });
 }
 
 function buildReplyTree(items = []){
@@ -361,12 +616,14 @@ onAuth(async user => {
       }
     );
   } else {
+
     renderSignedOutState();
   }
   if (modal && !modal.classList.contains('hidden') && currentTopicId) {
     renderReplies(lastRepliesSnapshot);
   }
 });
+
 
 if (authBtn) authBtn.addEventListener('click', async () => {
   const auth = getAuthInstance();
@@ -461,7 +718,9 @@ window.createTopic = async function(){
   } catch(e){ alert(e.message || e); }
 }
 
+
 function ensureHeaderControls(){
+
   const header = modal?.querySelector('.bg-gradient-to-r.from-indigo-600.to-purple-600') || modal?.querySelector('.bg-gradient-to-r');
   if (!header) return { editBtn: null, delBtn: null };
   let editBtn = header.querySelector('[data-role="edit-topic"]');
@@ -555,11 +814,12 @@ window.openTopic = function(topicId){
   unsubscribeReplies = subscribeForumReplies(topicId, (items) => {
     lastRepliesSnapshot = Array.isArray(items) ? items : [];
     renderReplies(lastRepliesSnapshot);
-
   });
+
 
   modal.classList.remove('hidden');
 }
+
 
 window.closeTopic = function(){
   if (typeof unsubscribeReplies === 'function') {
@@ -580,6 +840,7 @@ window.addResponse = async function(){
   if (!txt) { alert('Escribe tu respuesta'); return; }
   try{
     await addForumReply(currentTopicId, { text: txt, authorName: currentUser.displayName || null, authorEmail: currentUser.email || null });
+
     if (responseText) responseText.value = '';
   } catch(e){ alert(e.message || e); }
 }

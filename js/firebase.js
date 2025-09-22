@@ -842,22 +842,12 @@ export async function deleteForumReply(topicId, replyId) {
   } catch (_) {}
 }
 
-export async function reactToForumReply(topicId, replyId, reaction = "like") {
-  const db = getDb();
-  if (!topicId || !replyId) {
-    throw new Error("topicId y replyId requeridos");
-  }
-  if (!reaction) {
-    throw new Error("Tipo de reacción requerido");
-  }
-  const ref = doc(collection(db, "forum_topics", topicId, "replies"), replyId);
-  const fieldPath = `reactions.${reaction}`;
-  await updateDoc(ref, {
-    [fieldPath]: increment(1),
-  });
-}
+export async function registerForumReplyReaction(
+  topicId,
+  replyId,
+  reaction = "like"
+) {
 
-export async function reactToForumReply(topicId, replyId, reaction = "like") {
   const db = getDb();
   if (!topicId || !replyId) {
     throw new Error("topicId y replyId requeridos");
