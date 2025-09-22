@@ -174,6 +174,7 @@ function initRealtimeNotifications() {
   window[BOOT_FLAG] = true;
 
   const doc = document;
+
   const center = doc.querySelector("[data-realtime-center]");
   if (!center) {
     return;
@@ -190,6 +191,7 @@ function initRealtimeNotifications() {
   const toggleLabel = center.querySelector("[data-realtime-toggle-label]");
 
   if (!optionsList || !feedList || !toggleButton || !panel) {
+
     return;
   }
 
@@ -223,6 +225,7 @@ function initRealtimeNotifications() {
 
   let queue = [];
   let timerId = null;
+
   let unreadCount = 0;
   let isPanelOpen = false;
   let hideTimeoutId = null;
@@ -259,10 +262,12 @@ function initRealtimeNotifications() {
     }
   });
 
+
   renderOptions();
   updateStatus();
   filterFeedItems();
   scheduleNextEvent();
+
 
   function updateToggleLabel(open) {
     const labelText = open ? "Cerrar centro de notificaciones" : "Abrir centro de notificaciones";
@@ -330,6 +335,7 @@ function initRealtimeNotifications() {
     }
   }
 
+
   function renderOptions() {
     optionsList.innerHTML = "";
     OPTIONS.forEach((option) => {
@@ -392,12 +398,16 @@ function initRealtimeNotifications() {
     if (enabledCount > 0) {
       statusEl.innerHTML = `
         <span aria-hidden="true">🟢</span>
+
         <span>Recibirás ${enabledCount} de ${OPTIONS.length} tipos en tiempo real.</span>
+
       `;
     } else {
       statusEl.innerHTML = `
         <span aria-hidden="true">⚪</span>
+
         <span>Activa al menos un tipo para reanudar las alertas en tiempo real.</span>
+
       `;
     }
   }
@@ -465,10 +475,12 @@ function initRealtimeNotifications() {
 
     feedList.prepend(card);
 
+
     if (!isPanelOpen) {
       unreadCount = Math.min(unreadCount + 1, 99);
       updateBadge();
     }
+
 
     requestAnimationFrame(() => {
       card.classList.add("is-visible");
