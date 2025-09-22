@@ -183,6 +183,9 @@ function initRealtimeNotifications() {
   const toggleButton = center.querySelector("[data-realtime-toggle]");
   const panel = center.querySelector("[data-realtime-panel]");
   const optionsList = center.querySelector("[data-realtime-options]");
+
+  const hasOptionsList = Boolean(optionsList);
+
   const feedList = center.querySelector("[data-realtime-feed]");
   const statusEl = center.querySelector("[data-realtime-status]");
   const emptyEl = center.querySelector("[data-realtime-empty]");
@@ -190,7 +193,8 @@ function initRealtimeNotifications() {
   const closeButton = center.querySelector("[data-realtime-close]");
   const toggleLabel = center.querySelector("[data-realtime-toggle-label]");
 
-  if (!optionsList || !feedList || !toggleButton || !panel) {
+
+  if (!feedList || !toggleButton || !panel) {
 
     return;
   }
@@ -211,6 +215,17 @@ function initRealtimeNotifications() {
       shouldPersist = true;
     }
   });
+
+
+  if (!hasOptionsList) {
+    OPTIONS.forEach((option) => {
+      if (state[option.id] !== true) {
+        state[option.id] = true;
+        shouldPersist = true;
+      }
+    });
+  }
+
 
   if (shouldPersist) {
     persistPreferences(state);
@@ -337,6 +352,8 @@ function initRealtimeNotifications() {
 
 
   function renderOptions() {
+    if (!optionsList) return;
+
     optionsList.innerHTML = "";
     OPTIONS.forEach((option) => {
       const li = doc.createElement("li");
