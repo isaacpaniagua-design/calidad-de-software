@@ -1,2226 +1,766 @@
-<!DOCTYPE html>
-<html lang="es" data-layout="global">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="stylesheet" href="./css/layout.css" />
-
-    <script>
-      window.firebaseConfig = {
-        apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
-        authDomain: "calidad-de-software-v2.firebaseapp.com",
-        projectId: "calidad-de-software-v2",
-        storageBucket: "calidad-de-software-v2.firebasestorage.app",
-        messagingSenderId: "220818066383",
-        appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
-      };
-    </script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>📑 Panel del Maestro - Calidad de Software</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
-      body {
-        font-family: "Inter", sans-serif;
-      }
-
-      /* Align the teacher dashboard canvas with the global navbar width and keep the shared nav theme. */
-      :root {
-        --page-max-width: min(1280px, 92vw);
-        --nav-bg: rgba(15, 23, 42, 0.86);
-        --nav-border: rgba(148, 163, 184, 0.25);
-        --nav-shadow: 0 20px 48px rgba(15, 23, 42, 0.22);
-        --nav-text: #e0e7ff;
-        --nav-subtitle: rgba(226, 232, 240, 0.8);
-        --nav-chip-bg: rgba(99, 102, 241, 0.18);
-        --nav-chip-text: #ede9fe;
-        --nav-pill-bg: rgba(15, 23, 42, 0.45);
-        --nav-pill-outline: rgba(148, 163, 184, 0.25);
-        --nav-accent-from: #6366f1;
-        --nav-accent-to: #22d3ee;
-        --nav-cta-bg: linear-gradient(135deg, #f8fafc, #e0e7ff);
-        --nav-cta-text: #0f172a;
-        --nav-cta-shadow: 0 20px 46px rgba(99, 102, 241, 0.35);
-      }
-
-      /* Keep dashboard sections centered beneath the fixed navbar. */
-      .teacher-shell {
-        width: min(var(--page-max-width), 100%);
-        margin: clamp(32px, 6vw, 64px) auto clamp(96px, 12vw, 144px);
-      }
-
-      @media (max-width: 960px) {
-        .teacher-shell {
-          margin-top: clamp(24px, 10vw, 48px);
-          margin-bottom: clamp(72px, 16vw, 120px);
-          padding-inline: clamp(16px, 4vw, 24px);
-        }
-      }
-
-      .tab-content {
-        display: none;
-        opacity: 0;
-        transform: translateY(20px);
-        transition: all 0.3s ease;
-      }
-
-      .tab-content.active {
-        display: block;
-        opacity: 1;
-        transform: translateY(0);
-      }
-
-      .tab-button {
-        transition: all 0.3s ease;
-        border-bottom: 3px solid transparent;
-      }
-
-      .tab-button.active {
-        background: white;
-        border-bottom-color: #3b82f6;
-        color: #3b82f6;
-      }
-
-      .deliverable-card {
-        background: white;      .progress-fill {
-        background: linear-gradient(90deg, #10b981, #3b82f6);
-        height: 100%;
-        border-radius: 1rem;
-        transition: width 0.3s ease;
+<!DOCTYPE html>
+<html lang="es" data-layout="global">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Panel del Maestro · Calidad de Software</title>
+    <link rel="stylesheet" href="./css/layout.css" />
+    <script>
+      window.firebaseConfig = {
+        apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
+        authDomain: "calidad-de-software-v2.firebaseapp.com",
+        projectId: "calidad-de-software-v2",
+        storageBucket: "calidad-de-software-v2.firebasestorage.app",
+        messagingSenderId: "220818066383",
+        appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
+      };
+    </script>
+    <style>
+      :root {
+        --pd-shell-width: min(1160px, 94vw);
+        --pd-card-bg: rgba(255, 255, 255, 0.92);
+        --pd-card-border: rgba(148, 163, 184, 0.35);
+        --pd-card-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        --pd-muted: #64748b;
+        --pd-accent: #2563eb;
+        --pd-accent-soft: rgba(37, 99, 235, 0.08);
+        --pd-surface: rgba(248, 250, 252, 0.9);
+      body {
+        color: #0f172a;
+      main.pd-shell {
+        width: var(--pd-shell-width);
+        margin: clamp(36px, 6vw, 72px) auto clamp(96px, 12vw, 140px);
+        display: grid;
+        gap: clamp(28px, 5vw, 44px);
+      .pd-hero {
+        display: flex;
+        flex-wrap: wrap;
+        gap: clamp(18px, 4vw, 32px);
+        align-items: flex-start;
+        justify-content: space-between;
+        padding: clamp(24px, 5vw, 36px);
+        border-radius: 28px;
+        background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 64, 175, 0.88));
+        color: #e2e8f0;
+        box-shadow: 0 28px 60px rgba(15, 23, 42, 0.35);
+        overflow: hidden;
+      .pd-hero::after {
+        content: "";
+        position: absolute;
+        inset: -25% 45% auto -12%;
+        min-height: 320px;
+        background: radial-gradient(circle at center, rgba(59, 130, 246, 0.38), transparent 68%);
+        filter: blur(48px);
+        opacity: 0.7;
       }
 
-      .student-progress-fill {
-        height: 100%;
-        border-radius: 1rem;
-        transition: width 0.3s ease;
+      .pd-hero h1 {
+        margin: 0;
+        font-size: clamp(1.9rem, 5vw, 2.6rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
       }
 
-        border-left: 6px solid;
-        margin: 1rem 0;
-        transition: all 0.3s ease;
-      }
-
-      .deliverable-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-      }
-
-      .phase-1 {
-        border-left-color: #10b981;
-      }
-      .phase-2 {
-        border-left-color: #f59e0b;
-      }
-      .phase-3 {
-        border-left-color: #3b82f6;
-      }
-      .phase-4 {
-        border-left-color: #8b5cf6;
-      }
-      .phase-5 {
-        border-left-color: #ef4444;
-      }
-
-      .assignment-card {
-        background: white;
-      .notification-info {
-        border-left-color: #3b82f6;
+      .pd-hero p {
+        margin: 0;
+        max-width: 48ch;
+        color: rgba(226, 232, 240, 0.88);
+        font-size: clamp(1rem, 2.5vw, 1.1rem);
       }
 
-      .teacher-alert-wrapper {
-        position: relative;
+      .pd-chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: clamp(6px, 2vw, 12px);
       }
 
-      .teacher-alert-button {
-        position: relative;
+      .pd-chip {
+        gap: 8px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.45);
+        border: 1px solid rgba(226, 232, 240, 0.22);
+        font-size: 0.85rem;
+        font-weight: 500;
+      .pd-hero-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        min-width: 200px;
+      .pd-button {
+        display: inline-flex;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        border-radius: 999px;
+        border: none;
+        cursor: pointer;
+        padding: 12px 18px;
+        transition: transform 0.2s var(--motion-easing), box-shadow 0.2s var(--motion-easing);
+      .pd-button.primary {
+        color: white;
+        background: linear-gradient(135deg, #2563eb, #7c3aed);
+        box-shadow: 0 18px 38px rgba(59, 130, 246, 0.35);
+      .pd-button.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 22px 48px rgba(59, 130, 246, 0.4);
+      .pd-button.secondary {
+        background: rgba(226, 232, 240, 0.16);
+        color: #e0e7ff;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+      .pd-button.secondary:hover {
+        transform: translateY(-1px);
+        background: rgba(226, 232, 240, 0.22);
+      }
+
+      .pd-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.6);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        box-shadow: var(--pd-card-shadow);
+      }
+
+      .pd-tab {
+        appearance: none;
+        border: none;
+        background: transparent;
+        color: var(--pd-muted);
+        font-weight: 600;
+        padding: 10px 18px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: background var(--motion-duration) var(--motion-easing),
+          color var(--motion-duration) var(--motion-easing);
+      .pd-tab[aria-pressed="true"] {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(147, 51, 234, 0.18));
+        color: #1d4ed8;
+      }
+
+      .pd-tab:focus-visible {
+        outline: 3px solid rgba(59, 130, 246, 0.4);
+        outline-offset: 2px;
+      }
+
+      .pd-panel {
+        display: none;
+        padding: clamp(24px, 4vw, 32px);
+        border-radius: 24px;
+        background: var(--pd-card-bg);
+        border: 1px solid var(--pd-card-border);
+        box-shadow: var(--pd-card-shadow);
+      .pd-panel.active {
+        display: grid;
+        gap: clamp(18px, 3vw, 28px);
+      }
+
+        .pd-panel h2 {
+          margin: 0;
+          font-size: clamp(1.35rem, 3vw, 1.7rem);
+        }
+
+        .pd-subtitle {
+          margin: 0;
+          color: var(--pd-muted);
+          font-size: 0.95rem;
+        }
+
+        .pd-alert {
+          display: flex;
+          gap: 12px;
+          align-items: flex-start;
+          padding: 16px 20px;
+          border-radius: 18px;
+          background: rgba(255, 255, 255, 0.75);
+          border: 1px solid rgba(148, 163, 184, 0.4);
+          box-shadow: var(--pd-card-shadow);
+          color: #0f172a;
+          font-size: 0.95rem;
+        }
+
+        .pd-alert strong {
+          font-weight: 700;
+          min-width: max-content;
+        }
+
+        .pd-alert[data-variant="warning"] {
+          background: rgba(254, 243, 199, 0.75);
+          border-color: rgba(217, 119, 6, 0.45);
+          color: #92400e;
+        }
+
+        .pd-alert[data-variant="error"] {
+          background: rgba(254, 226, 226, 0.78);
+          border-color: rgba(220, 38, 38, 0.5);
+          color: #991b1b;
+        }
+
+        .pd-alert[hidden] {
+          display: none !important;
+        main.pd-shell[data-locked="true"] .pd-tabs,
+        main.pd-shell[data-locked="true"] .pd-panel {
+          pointer-events: none;
+          opacity: 0.45;
+      .pd-grid {
+        display: grid;
+        gap: clamp(16px, 3vw, 24px);
+      .pd-grid.cols-4 {
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      .pd-card {
+        background: var(--pd-surface);
+        border-radius: 22px;
+        padding: clamp(18px, 3vw, 24px);
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+        display: grid;
+        gap: 6px;
+      .pd-card strong {
+        font-size: clamp(1.6rem, 4vw, 2rem);
+        color: #1d4ed8;
+      .pd-card small {
+        color: var(--pd-muted);
+      .pd-table-wrap {
+        overflow-x: auto;
+        border-radius: 18px;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+      }
+
+      table.pd-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 640px;
+        background: white;
+      }
+      table.pd-table th,
+      table.pd-table td {
+        padding: 14px 16px;
+        text-align: left;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        font-size: 0.95rem;
+      }
+
+      table.pd-table th {
+        background: rgba(241, 245, 249, 0.7);
+        font-weight: 600;
+        color: #0f172a;
+      }
+
+      table.pd-table tbody tr:hover {
+        background: rgba(248, 250, 252, 0.7);
+      }
+
+      .pd-table .pd-col-select {
+        width: 48px;
+        text-align: center;
+      }
+
+      .pd-table input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+      }
+
+      .pd-empty {
+        padding: 32px 20px;
+        text-align: center;
+        color: var(--pd-muted);
+        font-style: italic;
+      }
+
+      .pd-form {
+        display: grid;
+        gap: 16px;
+        margin-top: 12px;
+      }
+
+      .pd-form-row {
+        display: grid;
+        gap: 16px;
+      }
+
+      .pd-form-row.cols-2 {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      label.pd-field {
+        display: grid;
+        gap: 6px;
+        font-weight: 600;
+        color: #0f172a;
+      }
+
+      .pd-field input,
+      .pd-field textarea,
+      .pd-field select {
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: rgba(255, 255, 255, 0.9);
+        font: inherit;
+        resize: vertical;
+        transition: border-color var(--motion-duration) var(--motion-easing),
+          box-shadow var(--motion-duration) var(--motion-easing);
+      }
+
+      .pd-field input:focus,
+      .pd-field textarea:focus,
+      .pd-field select:focus {
+        outline: none;
+        border-color: rgba(59, 130, 246, 0.6);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+      }
+
+      textarea#pd-rubric-text {
+        min-height: 220px;
+      }
+
+      .pd-inline-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: flex-end;
+      }
+
+      .pd-tag {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        width: 42px;
-        height: 42px;
-        border-radius: 9999px;
+        gap: 8px;
+        padding: 8px 14px;
+        border-radius: 999px;
         background: rgba(59, 130, 246, 0.12);
         color: #1d4ed8;
-        border: 1px solid rgba(59, 130, 246, 0.25);
-        transition: all 0.2s ease;
-      }
-
-      .teacher-alert-button:hover {
-        background: rgba(59, 130, 246, 0.2);
-        box-shadow: 0 12px 24px rgba(59, 130, 246, 0.18);
-      }
-
-      .teacher-alert-badge {
-        position: absolute;
-        top: -6px;
-        right: -6px;
-        background: #ef4444;
-        color: white;
-        font-size: 0.65rem;
-        font-weight: 700;
-        border-radius: 9999px;
-        min-width: 1.1rem;
-        height: 1.1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 0.25rem;
-        box-shadow: 0 0 0 2px white;
-      }
-
-      .teacher-alert-panel {
-        position: absolute;
-        top: 120%;
-        right: 0;
-        width: min(320px, 82vw);
-        background: white;
-        border-radius: 0.75rem;
-        box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
-        border: 1px solid rgba(148, 163, 184, 0.18);
-        padding: 1rem;
-        z-index: 1200;
-      }
-
-      .teacher-alert-item {
-        border-radius: 0.75rem;
-        border: 1px solid rgba(148, 163, 184, 0.18);
-        padding: 0.75rem;
-        transition: all 0.2s ease;
-        background: white;
-      }
-
-      .teacher-alert-item.unread {
-        border-left: 4px solid #3b82f6;
-        background: #eff6ff;
-      }
-
-      .teacher-alert-item + .teacher-alert-item {
-        margin-top: 0.75rem;
-      }
-
-      .teacher-alert-time {
-        font-size: 0.75rem;
-        color: #64748b;
-        white-space: nowrap;
-      }
-
-      .teacher-alert-empty {
-        text-align: center;
-        padding: 1.5rem 0.75rem;
-        color: #94a3b8;
+        font-weight: 600;
         font-size: 0.9rem;
       }
 
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
+      .pd-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(59, 130, 246, 0.35);
+        background: rgba(59, 130, 246, 0.08);
+        color: #1d4ed8;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background var(--motion-duration) var(--motion-easing);
+      }
 
-        transition: all 0.3s ease;
-      }
-
-      .assignment-card:hover {
-        transform: translateX(5px);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-      }
-
-      .exam-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 1rem;
-        padding: 1.5rem;
-        margin: 1rem 0;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        transition: all 0.3s ease;
-      }
-
-      .exam-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-      }
-
-      .rubric-table {
-                <span class="qs-title">Calidad de Software</span>
-                <span class="qs-subtitle">ITSON</span>
-              </span>
-            </a>
+      .pd-action-btn:hover {
+        background: rgba(59, 130, 246, 0.16);
+      }
+
+      @media (max-width: 920px) {
+        .pd-hero {
+          border-radius: 24px;
+        main.pd-shell {
+          margin-top: clamp(28px, 10vw, 48px);
+          margin-bottom: clamp(80px, 14vw, 120px);
+        .pd-tabs {
+          border-radius: 18px;
+        }
+      @media (max-width: 640px) {
+        .pd-hero-actions {
+          width: 100%;
+          flex-direction: row;
+          flex-wrap: wrap;
+          justify-content: flex-start;
+        }
+        .pd-button {
+          flex: 1 1 180px;
+        }
+        table.pd-table {
+          min-width: 520px;
+        }
+    </style>
+  </head>
+  <body>
+      <main id="paneldocente-root" data-grupo="calidad-2025" class="pd-shell">
+        <header class="pd-hero">
+          <div class="pd-hero-text">
+            <h1>Panel del Maestro</h1>
+            <p>
+            Un tablero integral para monitorear entregas, calificaciones y el avance
+            de cada estudiante del grupo.
+          </p>
+          <div class="pd-chip-row" aria-hidden="true">
+            <span class="pd-chip">📆 Semana actual <strong id="pd-week-display">—</strong></span>
+            <span class="pd-chip">🧑‍🏫 Docente activo</span>
           </div>
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      }
-
-      .rubric-table th {
-        background: #f8fafc;
-        padding: 1rem;
-        font-weight: bold;
-        text-align: center;
-        border-bottom: 2px solid #e5e7eb;
-      }
-
-      .rubric-table td {
-        padding: 0.75rem;
-        border-bottom: 1px solid #e5e7eb;
-        text-align: center;
-      }
-        <div class="flex justify-between items-center">
-          <div class="flex items-center space-x-4">
-            <h1 class="text-2xl font-bold text-gray-800">
-              📑 Panel del Maestro
-            </h1>
+        </div>
+        <div class="pd-hero-actions">
+          <button id="pd-remind-selected" class="pd-button primary" type="button">
+            📧 Enviar recordatorio
+          </button>
+          <a id="pd-exam-u1-link" class="pd-button secondary" href="#" aria-disabled="true">
+            📘 Examen Unidad I
+          </a>
+          <a id="pd-exam-u2-link" class="pd-button secondary" href="#" aria-disabled="true">
+            📗 Examen Unidad II
+          </a>
           </div>
-          <div class="flex items-center space-x-4">
-            <div class="text-sm text-gray-600">
-              <span class="font-semibold">Semana actual:</span>
-              <span id="current-week" class="text-blue-600 font-bold">8</span> /
-              15
-            </div>
-            <div id="teacher-alert-wrapper" class="teacher-alert-wrapper">
-              <button
-                type="button"
-                class="teacher-alert-button"
-                onclick="toggleNotificationPanel(event)"
-                aria-label="Notificaciones de entregas"
-              >
-                <span class="text-xl">🔔</span>
-                <span
-                  id="teacher-alert-badge"
-                  class="teacher-alert-badge hidden"
-                ></span>
-              </button>
-              <div
-                id="teacher-alert-panel"
-                class="teacher-alert-panel hidden"
-                role="dialog"
-                aria-labelledby="teacher-alert-title"
-              >
-                <div class="flex items-center justify-between mb-3">
-                  <h4
-                    id="teacher-alert-title"
-                    class="text-sm font-semibold text-gray-700"
-                  >
-                    Entregas recientes
-                  </h4>
-                  <button
-                    type="button"
-                    onclick="markAllNotificationsAsRead(event)"
-                    class="text-xs font-medium text-blue-600 hover:text-blue-800"
-                  >
-                    Marcar como revisadas
-                  </button>
-                </div>
-                <div
-                  id="teacher-alert-list"
-                  class="space-y-3 max-h-72 overflow-y-auto pr-1"
-                ></div>
-              </div>
-            </div>
-            <button
-              onclick="exportGrades()"
-              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-            >
-              📊 Exportar Calificaciones
+        </header>
 
-      .grade-good {
-        background: #dbeafe;
-        color: #1e40af;
-      }
-      .grade-sufficient {
-        background: #fef3c7;
-        color: #92400e;
-      }
-      .grade-deficient {
-        background: #fee2e2;
-        color: #991b1b;
-      }
-
-      .progress-bar {
-        background: #e5e7eb;
-        border-radius: 1rem;
-        height: 0.5rem;
-        overflow: hidden;
-      }
-
-      .progress-fill {
-        background: linear-gradient(90deg, #10b981, #3b82f6);
-        height: 100%;
-        border-radius: 1rem;
-        transition: width 0.3s ease;
-      }
-
-      .student-card {
-        background: white;
-        border-radius: 0.75rem;
-        padding: 1rem;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        margin: 0.5rem 0;
-        transition: all 0.3s ease;
-      }
-
-      .student-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-      }
-
-      .status-pending {
-        color: #f59e0b;
-      }
-      .status-submitted {
-        color: #10b981;
-      }
-      .status-graded {
-        color: #3b82f6;
-      }
-      .status-late {
-        color: #ef4444;
-      }
-
-      .notification {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: white;
-        border-radius: 0.5rem;
-        padding: 1rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        border-left: 4px solid;
-        z-index: 1000;
-        transform: translateX(400px);
-        transition: transform 0.3s ease;
-      }
-
-      .notification.show {
-        transform: translateX(0);
-      }
-
-      .notification-success {
-        border-left-color: #10b981;
-      }
-      .notification-warning {
-        border-left-color: #f59e0b;
-      }
-      .notification-info {
-        border-left-color: #3b82f6;
-      }
-
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .fade-in-up {
-        animation: fadeInUp 0.6s ease forwards;
-      }
-
-      .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 0.5rem;
-      }
-
-      .calendar-day {
-        aspect-ratio: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 0.5rem;
-        cursor: pointer;
-        transition: all 0.3s ease;
-      }
-
-      .calendar-day:hover {
-        background: #f3f4f6;
-      }
-
-      .calendar-day.has-event {
-        background: #dbeafe;
-        color: #1e40af;
-        font-weight: bold;
-      }
-
-      .calendar-day.deadline {
-        background: #fee2e2;
-        color: #991b1b;
-        font-weight: bold;
-      }
-    </style>
-  </head>
-  <body class="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        <div class="qs-nav" data-role="main-nav">
-      <div class="wrap">
-        <div class="qs-brand-shell">
-          <div class="qs-brand-region">
-            <a class="qs-brand" href="index.html">
-              <span class="qs-logo" aria-hidden="true">QS</span>
-              <span class="qs-brand-text">
-                <span class="qs-title">Calidad de Software</span>
-                <span class="qs-subtitle">Campus QS</span>
-              </span>
-            </a>
-            <span class="qs-chip">Edición 2024</span>
-          </div>
-          <button
-            class="qs-menu-toggle"
-            type="button"
-            aria-expanded="false"
-            aria-controls="qs-nav-links"
-          >
-            <span class="qs-menu-icon" aria-hidden="true"></span>
-            <span class="sr-only">Abrir menú</span>
-          </button>
-        </div>
-        <div class="qs-links-region" data-open="false">
-          <nav
-            class="qs-tabs"
-            id="qs-nav-links"
-            aria-label="Navegación principal"
-          >
-            <a class="qs-btn" href="materiales.html">Materiales</a>
-            <a class="qs-btn" href="asistencia.html">Asistencia</a>
-            <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
-            <a class="qs-btn" href="Foro.html">Foro</a>
-            <a class="qs-btn teacher-only" href="paneldocente.html" hidden aria-hidden="true" aria-current="page">Panel</a>
-          </nav>
-        </div>
-      </div>
-    </div>
-    <div class="teacher-shell">
-    <!-- Header -->
-    <header class="bg-white shadow-lg">
-      <div class="max-w-7xl mx-auto px-6 py-4">
-        <div class="flex justify-between items-center">
-          <div class="flex items-center space-x-4">
-            <h1 class="text-2xl font-bold text-gray-800">
-              📑 Panel del Maestro
-            </h1>
-            <span class="text-sm text-gray-600"
-              >Calidad de Software - Semestre 2024</span
-            >
-          </div>
-          <div class="flex items-center space-x-4">
-            <div class="text-sm text-gray-600">
-              <span class="font-semibold">Semana actual:</span>
-              <span id="current-week" class="text-blue-600 font-bold">8</span> /
-              15
-            </div>
-            <button
-              onclick="exportGrades()"
-              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-            >
-              📊 Exportar Calificaciones
-            </button>
-          </div>
-        </div>
-      </div>
-    </header>
-    <div id="paneldocente-root" data-grupo="calidad-2025"></div>
-
-    <!-- Navigation Tabs -->
-    <nav class="bg-white border-b">
-      <div class="max-w-7xl mx-auto px-6">
-        <div class="flex space-x-8">
-          <button
-            class="tab-button active px-4 py-4 text-sm font-medium"
-            onclick="showTab('overview')"
-          >
-            📊 Resumen General
-          </button>
-          <button
-            class="tab-button px-4 py-4 text-sm font-medium"
-            onclick="showTab('deliverables')"
-          >
-            📋 Entregables
-          </button>
-          <button
-            class="tab-button px-4 py-4 text-sm font-medium"
-            onclick="showTab('assignments')"
-          >
-            📝 Asignaciones
-          </button>
-          <button
-            class="tab-button px-4 py-4 text-sm font-medium"
-            onclick="showTab('exams')"
-          >
-            📚 Exámenes
-          </button>
-          <button
-            class="tab-button px-4 py-4 text-sm font-medium"
-            onclick="showTab('rubric')"
-          >
-            📏 Rúbrica
-          </button>
-          <button
-            class="tab-button px-4 py-4 text-sm font-medium"
-            onclick="showTab('students')"
-          >
-            👥 Estudiantes
-          </button>
-          <button
-            class="tab-button px-4 py-4 text-sm font-medium"
-            onclick="showTab('calendar')"
-          >
-            📊 Cronograma Gantt
-          </button>
-        </div>
-      </div>
-    </nav>
-
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-6 py-8">
-      <!-- Overview Tab -->
-      <div id="overview" class="tab-content active">
-        <div class="mb-8">
-          <h2 class="text-3xl font-bold text-gray-800 mb-4">
-            📊 Resumen General del Curso
-          </h2>
-
-          <!-- Quick Stats -->
-          <div class="grid md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-xl p-6 shadow-lg text-center">
-              <div class="text-3xl mb-2">👥</div>
-              <div class="text-2xl font-bold text-blue-600" id="total-students">
-                25
-              </div>
-              <div class="text-sm text-gray-600">Estudiantes</div>
-            </div>
-            <div class="bg-white rounded-xl p-6 shadow-lg text-center">
-              <div class="text-3xl mb-2">📋</div>
-              <div
-                class="text-2xl font-bold text-green-600"
-                id="completed-assignments"
-              >
-                42
-              </div>
-              <div class="text-sm text-gray-600">Entregas Completadas</div>
-            </div>
-            <div class="bg-white rounded-xl p-6 shadow-lg text-center">
-              <div class="text-3xl mb-2">⏰</div>
-              <div
-                class="text-2xl font-bold text-orange-600"
-                id="pending-grades"
-              >
-                15
-              </div>
-              <div class="text-sm text-gray-600">Por Calificar</div>
-            </div>
-            <div class="bg-white rounded-xl p-6 shadow-lg text-center">
-              <div class="text-3xl mb-2">📈</div>
-              <div
-                class="text-2xl font-bold text-purple-600"
-                id="average-grade"
-              >
-                85.2
-              </div>
-              <div class="text-sm text-gray-600">Promedio General</div>
-            </div>
-          </div>
-
-          <!-- Progress Overview -->
-          <div class="bg-white rounded-xl p-6 shadow-lg mb-8">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">
-              📈 Progreso del Semestre
-            </h3>
-            <div class="space-y-4">
-              <div>
-                <div class="flex justify-between mb-2">
-                  <span class="text-sm font-medium text-gray-700"
-                    >Unidad I - Fundamentos</span
-                  >
-                  <span class="text-sm text-gray-600">100%</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 100%"></div>
-                </div>
-              </div>
-              <div>
-                <div class="flex justify-between mb-2">
-                  <span class="text-sm font-medium text-gray-700"
-                    >Unidad II - Modelos y Estándares</span
-                  >
-                  <span class="text-sm text-gray-600">75%</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 75%"></div>
-                </div>
-              </div>
-              <div>
-                <div class="flex justify-between mb-2">
-                  <span class="text-sm font-medium text-gray-700"
-                    >Unidad III - Proyecto Final</span
-                  >
-                  <span class="text-sm text-gray-600">45%</span>
-                </div>
-                <div class="progress-bar">
-                  <div class="progress-fill" style="width: 45%"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Upcoming Deadlines -->
-          <div class="bg-white rounded-xl p-6 shadow-lg">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">
-              ⏰ Próximas Fechas Límite del Proyecto
-            </h3>
-            <div class="space-y-3">
-              <div
-                class="flex items-center justify-between p-3 bg-red-50 rounded-lg border-l-4 border-red-500"
-              >
-                <div>
-                  <div class="font-semibold text-red-800">
-                    Entrega: Registro de Defectos
-                  </div>
-                  <div class="text-sm text-red-600">
-                    Bug Report con ejemplos ficticios
-                  </div>
-                </div>
-                <div class="text-red-600 font-bold">17 Nov</div>
-              </div>
-              <div
-                class="flex items-center justify-between p-3 bg-orange-50 rounded-lg border-l-4 border-orange-500"
-              >
-                <div>
-                  <div class="font-semibold text-orange-800">
-                    Entrega: Gap Analysis
-                  </div>
-                  <div class="text-sm text-orange-600">
-                    Tabla con 3-5 brechas detectadas
-                  </div>
-                </div>
-                <div class="text-orange-600 font-bold">24 Nov</div>
-              </div>
-              <div
-                class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border-l-4 border-yellow-500"
-              >
-                <div>
-                  <div class="font-semibold text-yellow-800">
-                    Entrega: Roadmap
-                  </div>
-                  <div class="text-sm text-yellow-600">
-                    Cronograma de fases, hitos y responsables
-                  </div>
-                </div>
-                <div class="text-yellow-600 font-bold">1 Dic</div>
-              </div>
-              <div
-                class="flex items-center justify-between p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500"
-              >
-                <div>
-                  <div class="font-semibold text-blue-800">
-                    Presentaciones Finales
-                  </div>
-                  <div class="text-sm text-blue-600">
-                    Exposición 15 min + 5 min Q&A
-                  </div>
-                </div>
-                <div class="text-blue-600 font-bold">4-6 Dic</div>
-              </div>
-              <div
-                class="flex items-center justify-between p-3 bg-purple-50 rounded-lg border-l-4 border-purple-500"
-              >
-                <div>
-                  <div class="font-semibold text-purple-800">
-                    Entrega Final Integrada
-                  </div>
-                  <div class="text-sm text-purple-600">
-                    Documento completo del proyecto
-                  </div>
-                </div>
-                <div class="text-purple-600 font-bold">8 Dic</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Deliverables Tab -->
-      <div id="deliverables" class="tab-content">
-        <div class="mb-8">
-          <h2 class="text-3xl font-bold text-gray-800 mb-4">
-            📋 Entregables del Proyecto Final
-          </h2>
-          <p class="text-gray-600 mb-6">
-            Unidad III - Fases del proyecto de certificación
-          </p>
-
-          <div class="space-y-6">
-            <!-- Fase 1 -->
-            <div class="deliverable-card phase-1 fade-in-up">
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-4">
-                  <div class="text-4xl">🔍</div>
-                  <div>
-                    <h3 class="text-xl font-bold text-green-600">
-                      Fase 1: Diagnóstico y Selección del Modelo
-                    </h3>
-                    <p class="text-gray-600">Semanas 10-11</p>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <div class="text-sm text-gray-500">Peso: 20%</div>
-                  <div class="text-lg font-bold text-green-600">Completado</div>
-                </div>
-              </div>
-
-              <div class="bg-green-50 p-4 rounded-lg mb-4">
-                <h4 class="font-semibold text-green-800 mb-2">
-                  📄 Entregable Principal:
-                </h4>
-                <p class="text-green-700 mb-3">
-                  Documento de Diagnóstico + Cultura de la Calidad y Gurús
-                </p>
-
-                <div
-                  class="mb-4 p-3 bg-white rounded border-l-4 border-green-500"
-                >
-                  <h5 class="font-bold text-green-800 mb-2">
-                    📋 Formato del Entregable:
-                  </h5>
-
-                  <div class="text-sm text-green-700 space-y-2">
-                    <div><strong>1. Datos generales</strong></div>
-                    <div class="ml-4">
-                      • Empresa caso: [Innovatech / Legacy / GovWare]
-                    </div>
-                    <div class="ml-4">• Equipo: [Integrantes]</div>
-                    <div class="ml-4">• Fecha: [dd/mm/aaaa]</div>
-                    <div class="ml-4">• Versión: [V1.0]</div>
-
-                    <div class="pt-2">
-                      <strong>2. Diagnóstico inicial de la empresa</strong>
-                    </div>
-                    <div class="ml-4">
-                      • Contexto actual (tamaño, sector, procesos)
-                    </div>
-                    <div class="ml-4">• Problemas detectados</div>
-                    <div class="ml-4">• Nivel de madurez estimado</div>
-                    <div class="ml-4">• Necesidades prioritarias</div>
-
-                    <div class="pt-2">
-                      <strong>3. Modelo de calidad propuesto</strong>
-                    </div>
-                    <div class="ml-4">
-                      • Modelo seleccionado: [ISO 9001/25010/CMMI/MoProSoft]
-                    </div>
-                    <div class="ml-4">• Justificación de la elección</div>
-                    <div class="ml-4">• Beneficios esperados</div>
-
-                    <div class="pt-2">
-                      <strong
-                        >4. Cultura de la calidad en la organización</strong
-                      >
-                    </div>
-                    <div class="ml-4">
-                      • ¿Calidad como "departamento" o parte de todos?
-                    </div>
-                    <div class="ml-4">
-                      • Prácticas actuales de mejora continua
-                    </div>
-                    <div class="ml-4">• Ejemplos de cultura organizacional</div>
-
-                    <div class="pt-2">
-                      <strong>5. Influencia de los Gurús de la Calidad</strong>
-                    </div>
-                    <div class="ml-4">• Deming (PDCA, mejora continua)</div>
-                    <div class="ml-4">• Juran (adecuación al uso)</div>
-                    <div class="ml-4">• Crosby (cero defectos)</div>
-                    <div class="ml-4">
-                      • Ishikawa (causa-efecto, calidad total)
-                    </div>
-
-                    <div class="pt-2">
-                      <strong>6. Conclusiones del diagnóstico</strong>
-                    </div>
-                    <div class="ml-4">• Fortalezas detectadas</div>
-                    <div class="ml-4">• Debilidades críticas</div>
-                    <div class="ml-4">• Oportunidades de mejora</div>
-                  </div>
-                </div>
-
-                <div class="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <h5 class="font-medium text-green-800 mb-2">
-                      ✅ Debe incluir:
-                    </h5>
-                    <ul class="text-sm text-green-700 space-y-1">
-                      <li>• Análisis del contexto organizacional</li>
-                      <li>• Comparación de modelos disponibles</li>
-                      <li>• Justificación técnica y económica</li>
-                      <li>• Reflexión sobre gurús de la calidad</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h5 class="font-medium text-green-800 mb-2">
-                      📊 Criterios de evaluación:
-                    </h5>
-                    <ul class="text-sm text-green-700 space-y-1">
-                      <li>• Profundidad del análisis (40%)</li>
-                      <li>• Solidez de la justificación (35%)</li>
-                      <li>• Calidad de la documentación (25%)</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-between items-center">
-                <div class="text-sm text-gray-600">
-                  <span class="font-medium">Equipos completados:</span> 8/8
-                </div>
-                <button
-                  onclick="viewSubmissions('fase1')"
-                  class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm"
-                >
-                  Ver Entregas
-                </button>
-              </div>
-            </div>
-
-            <!-- Fase 2 -->
-            <div
-              class="deliverable-card phase-2 fade-in-up"
-              style="animation-delay: 0.1s"
-            >
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-4">
-                  <div class="text-4xl">📊</div>
-                  <div>
-                    <h3 class="text-xl font-bold text-orange-600">
-                      Fase 2: Gap Analysis
-                    </h3>
-                    <p class="text-gray-600">Semana 12-13</p>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <div class="text-sm text-gray-500">Peso: 25%</div>
-                  <div class="text-lg font-bold text-orange-600">
-                    En Progreso
-                  </div>
-                </div>
-              </div>
-
-              <div class="bg-orange-50 p-4 rounded-lg mb-4">
-                <h4 class="font-semibold text-orange-800 mb-2">
-                  📋 Entregable Principal:
-                </h4>
-                <p class="text-orange-700 mb-3">
-                  Tabla detallada de hallazgos y brechas identificadas
-                </p>
-
-                <div class="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <h5 class="font-medium text-orange-800 mb-2">
-                      🔍 Componentes requeridos:
-                    </h5>
-                    <ul class="text-sm text-orange-700 space-y-1">
-                      <li>• Evaluación del estado actual</li>
-                      <li>• Identificación de brechas críticas</li>
-                      <li>• Priorización de hallazgos</li>
-                      <li>• Estimación de esfuerzo por brecha</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h5 class="font-medium text-orange-800 mb-2">
-                      ⚡ Herramientas sugeridas:
-                    </h5>
-                    <ul class="text-sm text-orange-700 space-y-1">
-                      <li>• Matriz de madurez</li>
-                      <li>• Checklist de cumplimiento</li>
-                      <li>• Análisis de riesgos</li>
-                      <li>• Matriz de impacto-esfuerzo</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-between items-center">
-                <div class="text-sm text-gray-600">
-                  <span class="font-medium">Equipos completados:</span> 3/8
-                </div>
-                <button
-                  onclick="viewSubmissions('fase2')"
-                  class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm"
-                >
-                  Ver Progreso
-                </button>
-              </div>
-            </div>
-
-            <!-- Fase 3 -->
-            <div
-              class="deliverable-card phase-3 fade-in-up"
-              style="animation-delay: 0.2s"
-            >
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-4">
-                  <div class="text-4xl">🗺️</div>
-                  <div>
-                    <h3 class="text-xl font-bold text-blue-600">
-                      Fase 3: Roadmap de Implementación
-                    </h3>
-                    <p class="text-gray-600">Semana 14</p>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <div class="text-sm text-gray-500">Peso: 25%</div>
-                  <div class="text-lg font-bold text-gray-500">Pendiente</div>
-                </div>
-              </div>
-
-              <div class="bg-blue-50 p-4 rounded-lg mb-4">
-                <h4 class="font-semibold text-blue-800 mb-2">
-                  📅 Entregable Principal:
-                </h4>
-                <p class="text-blue-700 mb-3">
-                  Cronograma detallado con hitos, actividades y responsables
-                </p>
-
-                <div class="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <h5 class="font-medium text-blue-800 mb-2">
-                      📋 Elementos del roadmap:
-                    </h5>
-                    <ul class="text-sm text-blue-700 space-y-1">
-                      <li>• Fases de implementación</li>
-                      <li>• Hitos y entregables</li>
-                      <li>• Asignación de recursos</li>
-                      <li>• Dependencias críticas</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h5 class="font-medium text-blue-800 mb-2">
-                      ⏱️ Consideraciones temporales:
-                    </h5>
-                    <ul class="text-sm text-blue-700 space-y-1">
-                      <li>• Duración realista (6-18 meses)</li>
-                      <li>• Puntos de control mensuales</li>
-                      <li>• Buffers para contingencias</li>
-                      <li>• Fechas de auditorías</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-between items-center">
-                <div class="text-sm text-gray-600">
-                  <span class="font-medium">Fecha límite:</span> Viernes 15 Nov
-                </div>
-                <button
-                  onclick="viewSubmissions('fase3')"
-                  class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
-                >
-                  Configurar
-                </button>
-              </div>
-            </div>
-
-            <!-- Fase 4 -->
-            <div
-              class="deliverable-card phase-4 fade-in-up"
-              style="animation-delay: 0.3s"
-            >
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-4">
-                  <div class="text-4xl">👥</div>
-                  <div>
-                    <h3 class="text-xl font-bold text-purple-600">
-                      Fase 4: Gestión del Cambio
-                    </h3>
-                    <p class="text-gray-600">Semana 15</p>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <div class="text-sm text-gray-500">Peso: 15%</div>
-                  <div class="text-lg font-bold text-gray-500">Pendiente</div>
-                </div>
-              </div>
-
-              <div class="bg-purple-50 p-4 rounded-lg mb-4">
-                <h4 class="font-semibold text-purple-800 mb-2">
-                  📢 Entregable Principal:
-                </h4>
-                <p class="text-purple-700 mb-3">
-                  Plan integral de comunicación y capacitación
-                </p>
-
-                <div class="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <h5 class="font-medium text-purple-800 mb-2">
-                      📢 Plan de comunicación:
-                    </h5>
-                    <ul class="text-sm text-purple-700 space-y-1">
-                      <li>• Estrategia de comunicación</li>
-                      <li>• Audiencias objetivo</li>
-                      <li>• Canales y frecuencia</li>
-                      <li>• Mensajes clave por fase</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h5 class="font-medium text-purple-800 mb-2">
-                      🎓 Plan de capacitación:
-                    </h5>
-                    <ul class="text-sm text-purple-700 space-y-1">
-                      <li>• Necesidades de entrenamiento</li>
-                      <li>• Programas por rol</li>
-                      <li>• Cronograma de capacitación</li>
-                      <li>• Métricas de efectividad</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-between items-center">
-                <div class="text-sm text-gray-600">
-                  <span class="font-medium">Fecha límite:</span> Viernes 22 Nov
-                </div>
-                <button
-                  onclick="viewSubmissions('fase4')"
-                  class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm"
-                >
-                  Configurar
-                </button>
-              </div>
-            </div>
-
-            <!-- Entrega Final -->
-            <div
-              class="deliverable-card phase-5 fade-in-up"
-              style="animation-delay: 0.4s"
-            >
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-4">
-                  <div class="text-4xl">🎯</div>
-                  <div>
-                    <h3 class="text-xl font-bold text-red-600">
-                      Entrega Final Integrada
-                    </h3>
-                    <p class="text-gray-600">Semana 16</p>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <div class="text-sm text-gray-500">Peso: 15%</div>
-                  <div class="text-lg font-bold text-gray-500">Pendiente</div>
-                </div>
-              </div>
-
-              <div class="bg-red-50 p-4 rounded-lg mb-4">
-                <h4 class="font-semibold text-red-800 mb-2">
-                  📚 Entregables Finales:
-                </h4>
-
-                <div class="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <h5 class="font-medium text-red-800 mb-2">
-                      📄 Documento integrado:
-                    </h5>
-                    <ul class="text-sm text-red-700 space-y-1">
-                      <li>• Consolidación de todas las fases</li>
-                      <li>• Plan completo de certificación</li>
-                      <li>• Anexos y documentación soporte</li>
-                      <li>• Resumen ejecutivo</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h5 class="font-medium text-red-800 mb-2">
-                      🎤 Presentación oral:
-                    </h5>
-                    <ul class="text-sm text-red-700 space-y-1">
-                      <li>• 15 minutos de exposición</li>
-                      <li>• 5 minutos de preguntas</li>
-                      <li>• Todos los miembros participan</li>
-                      <li>• Defensa del plan propuesto</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-between items-center">
-                <div class="text-sm text-gray-600">
-                  <span class="font-medium">Presentaciones:</span> 29 Nov - 1
-                  Dic
-                </div>
-                <button
-                  onclick="schedulePresentation()"
-                  class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm"
-                >
-                  Programar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Assignments Tab -->
-      <div id="assignments" class="tab-content">
-        <div class="mb-8">
-          <h2 class="text-3xl font-bold text-gray-800 mb-4">
-            📝 Asignaciones Intermedias
-          </h2>
-          <p class="text-gray-600 mb-6">
-            Actividades distribuidas a lo largo del semestre
-          </p>
-
-          <div class="grid md:grid-cols-2 gap-6">
-            <!-- Asignación 1 -->
-            <div class="assignment-card">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-lg font-bold text-gray-800">📊 Asignación 1</h3>
-                <span
-                  class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full"
-                  >Completada</span
-                >
-              </div>
-              <div class="mb-3">
-                <h4 class="font-semibold text-gray-700 mb-1">
-                  Métricas en Apps Reales
-                </h4>
-                <p class="text-sm text-gray-600 mb-2">
-                  Semana 2 - Análisis de métricas aplicadas
-                </p>
-                <p class="text-xs text-gray-500">
-                  Ejemplo práctico de métricas de calidad en aplicaciones
-                  comerciales
-                </p>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">28/28 entregas</span>
-                <button
-                  onclick="viewAssignment(1)"
-                  class="text-blue-600 hover:text-blue-800 text-sm"
-                >
-                  Ver detalles
-                </button>
-              </div>
-            </div>
-
-            <!-- Asignación 2 -->
-            <div class="assignment-card">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-lg font-bold text-gray-800">📋 Asignación 2</h3>
-                <span
-                  class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full"
-                  >Completada</span
-                >
-              </div>
-              <div class="mb-3">
-                <h4 class="font-semibold text-gray-700 mb-1">
-                  Mini-SQAP en Equipos
-                </h4>
-                <p class="text-sm text-gray-600 mb-2">
-                  Semana 3 - Plan de aseguramiento
-                </p>
-                <p class="text-xs text-gray-500">
-                  Desarrollo colaborativo de un plan básico de QA
-                </p>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">8/8 equipos</span>
-                <button
-                  onclick="viewAssignment(2)"
-                  class="text-blue-600 hover:text-blue-800 text-sm"
-                >
-                  Ver detalles
-                </button>
-              </div>
-            </div>
-
-            <!-- Asignación 3 -->
-            <div class="assignment-card">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-lg font-bold text-gray-800">🔍 Asignación 3</h3>
-                <span
-                  class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full"
-                  >Completada</span
-                >
-              </div>
-              <div class="mb-3">
-                <h4 class="font-semibold text-gray-700 mb-1">
-                  Simulación de Revisión Técnica
-                </h4>
-                <p class="text-sm text-gray-600 mb-2">
-                  Semana 4 - Proceso de revisión
-                </p>
-                <p class="text-xs text-gray-500">
-                  Práctica de técnicas de revisión e inspección de código
-                </p>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">28/28 entregas</span>
-                <button
-                  onclick="viewAssignment(3)"
-                  class="text-blue-600 hover:text-blue-800 text-sm"
-                >
-                  Ver detalles
-                </button>
-              </div>
-            </div>
-
-            <!-- Asignación 4 -->
-            <div class="assignment-card">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-lg font-bold text-gray-800">⚖️ Asignación 4</h3>
-                <span
-                  class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full"
-                  >Completada</span
-                >
-              </div>
-              <div class="mb-3">
-                <h4 class="font-semibold text-gray-700 mb-1">
-                  Informe Comparativo de Modelos
-                </h4>
-                <p class="text-sm text-gray-600 mb-2">
-                  Semana 9 - ISO, CMMI, MoProSoft
-                </p>
-                <p class="text-xs text-gray-500">
-                  Análisis detallado y comparación de los tres modelos
-                  principales
-                </p>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">28/28 entregas</span>
-                <button
-                  onclick="viewAssignment(4)"
-                  class="text-blue-600 hover:text-blue-800 text-sm"
-                >
-                  Ver detalles
-                </button>
-              </div>
-            </div>
-
-            <!-- Asignación 5 -->
-            <div class="assignment-card border-l-orange-500">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-lg font-bold text-gray-800">📊 Asignación 5</h3>
-                <span
-                  class="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded-full"
-                  >En Progreso</span
-                >
-              </div>
-              <div class="mb-3">
-                <h4 class="font-semibold text-gray-700 mb-1">
-                  Gap Analysis Empresa Ficticia
-                </h4>
-                <p class="text-sm text-gray-600 mb-2">
-                  Semana 13 - Análisis de brechas
-                </p>
-                <p class="text-xs text-gray-500">
-                  Evaluación detallada del estado actual vs. modelo objetivo
-                </p>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">15/28 entregas</span>
-                <button
-                  onclick="viewAssignment(5)"
-                  class="text-orange-600 hover:text-orange-800 text-sm"
-                >
-                  Monitorear
-                </button>
-              </div>
-            </div>
-
-            <!-- Asignación 6 -->
-            <div class="assignment-card border-l-red-500">
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-lg font-bold text-gray-800">🗺️ Asignación 6</h3>
-                <span
-                  class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full"
-                  >Pendiente</span
-                >
-              </div>
-              <div class="mb-3">
-                <h4 class="font-semibold text-gray-700 mb-1">
-                  Roadmap de Implementación
-                </h4>
-                <p class="text-sm text-gray-600 mb-2">
-                  Semana 14 - Plan detallado
-                </p>
-                <p class="text-xs text-gray-500">
-                  Cronograma realista con hitos y recursos asignados
-                </p>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-600">Fecha límite: 15 Nov</span>
-                <button
-                  onclick="viewAssignment(6)"
-                  class="text-red-600 hover:text-red-800 text-sm"
-                >
-                  Configurar
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Assignment Statistics -->
-          <div class="mt-8 bg-white rounded-xl p-6 shadow-lg">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">
-              📈 Estadísticas de Asignaciones
-            </h3>
-            <div class="grid md:grid-cols-3 gap-6">
-              <div class="text-center">
-                <div class="text-3xl font-bold text-green-600 mb-2">4/6</div>
-                <div class="text-sm text-gray-600">
-                  Asignaciones Completadas
-                </div>
-              </div>
-              <div class="text-center">
-                <div class="text-3xl font-bold text-blue-600 mb-2">87.5%</div>
-                <div class="text-sm text-gray-600">Promedio de Entregas</div>
-              </div>
-              <div class="text-center">
-                <div class="text-3xl font-bold text-purple-600 mb-2">84.2</div>
-                <div class="text-sm text-gray-600">Calificación Promedio</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Exams Tab -->
-      <div id="exams" class="tab-content">
-        <div class="mb-8">
-          <h2 class="text-3xl font-bold text-gray-800 mb-4">
-            📚 Exámenes del Curso
-          </h2>
-          <p class="text-gray-600 mb-6">
-            Evaluaciones parciales y final integrador
-          </p>
-
-          <div class="space-y-6">
-            <!-- Examen Unidad I -->
-            <div class="exam-card">
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-4">
-                  <div class="text-4xl">📖</div>
-                  <div>
-                    <h3 class="text-2xl font-bold text-white">
-                      Examen Unidad I
-                    </h3>
-                    <p class="text-blue-100">
-                      Semana 5 - Fundamentos de Calidad
-                    </p>
-                  </div>      // Academic events data - Cronograma detallado del Proyecto Final
-      let academicEvents = [
-        // Semana 10 - Lanzamiento del Proyecto Final
-        {
-          id: 1,
-                  <div class="text-sm text-blue-100">Peso: 20%</div>
-                  <div class="text-lg font-bold text-white">Completado</div>
-                </div>
-              </div>
-
-              <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4 mb-4">
-                <h4 class="font-semibold text-white mb-3">
-                  📋 Temas Evaluados:
-                </h4>
-                <div class="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <ul class="text-sm text-blue-100 space-y-1">
-                      <li>• Fundamentos de calidad de software</li>
-                      <li>• Métricas y mediciones</li>
-                      <li>• Conceptos de QA y QC</li>
-                      <li>• Técnicas de V&V</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <ul class="text-sm text-blue-100 space-y-1">
-                      <li>• Tipos de pruebas</li>
-                      <li>• Estrategias de testing</li>
-                      <li>• Herramientas de calidad</li>
-                      <li>• Casos prácticos</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-between items-center">
-                <div class="text-sm text-blue-100">
-                  <span class="font-medium">Promedio del grupo:</span> 82.4 /
-                  100
-                </div>
-                <button
-                  onclick="viewExamResults(1)"
-                  class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm"
-                >
-                  Ver Resultados
-                </button>
-              </div>
-            </div>
-
-            <!-- Examen Unidad II -->
-            <div class="exam-card">
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-4">
-                  <div class="text-4xl">🏗️</div>
-                  <div>
-                    <h3 class="text-2xl font-bold text-white">
-                      Examen Unidad II
-                    </h3>
-                    <p class="text-blue-100">Semana 9 - Modelos y Estándares</p>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <div class="text-sm text-blue-100">Peso: 25%</div>
-                  <div class="text-lg font-bold text-white">Completado</div>
-                </div>
-              </div>
-
-              <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4 mb-4">
-                <h4 class="font-semibold text-white mb-3">
-                  📋 Temas Evaluados:
-                </h4>
-                <div class="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <ul class="text-sm text-blue-100 space-y-1">
-                      <li>• ISO 9001 y familia ISO</li>
-                      <li>• CMMI y niveles de madurez</li>
-                      <li>• MoProSoft para PyMEs</li>
-                      <li>• Comparación de modelos</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <ul class="text-sm text-blue-100 space-y-1">
-                      <li>• Procesos de certificación</li>
-                      <li>• Auditorías y evaluaciones</li>
-                      <li>• Costos y beneficios</li>
-                      <li>• Casos de implementación</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-between items-center">
-                <div class="text-sm text-blue-100">
-                  <span class="font-medium">Promedio del grupo:</span> 79.8 /
-                  100
-                </div>
-                <button
-                  onclick="viewExamResults(2)"        },
-      ];
+        <div
+          id="pd-status-banner"
+          class="pd-alert"
+          role="alert"
+          aria-live="polite"
+          data-variant="info"
+          hidden
+        >
+          <strong id="pd-status-title">Acceso restringido.</strong>
+          <span id="pd-status-message"
+            >Inicia sesión con una cuenta de docente para ver este panel.</span
+          >
+        </div>
 
-      const submissionNotifications = [
-        {
-          id: "notif-1",
-          team: "Innovatech",
-          student: "Arana Guerrero, Danett Itzanami",
-          item: "Entrega: Diagnóstico inicial",
-          fileName: "diagnostico_innovatech.pdf",
-          type: "deliverable",
-          submittedAt: "2024-11-17T10:45:00",
-          read: false,
-        },
-        {
-          id: "notif-2",
-          team: "LegacySoft",
-          student: "Inzunza Jurado, Fernando",
-          item: "Asignación 6 - Roadmap de Implementación",
-          fileName: "roadmap_legacysoft.docx",
-          type: "assignment",
-          submittedAt: "2024-11-17T09:20:00",
-          read: true,
-        },
-        {
-          id: "notif-3",
-          team: "GovWare",
-          student: "Llamas Moreno, Carlos Manuel",
-          item: "Entrega: Gap Analysis",
-          fileName: "gap_govware.pdf",
-          type: "deliverable",
-          submittedAt: "2024-11-16T18:35:00",
-          read: false,
-        },
-      ];
+        <nav class="pd-tabs" aria-label="Secciones del panel">
+          <button
+            id="tab-btn-overview"
+            class="pd-tab"
+          type="button"
+          data-tab-target="overview"
+          aria-controls="tab-overview"
+          aria-pressed="true"
+        >
+          Resumen
+        </button>
+        <button
+          id="tab-btn-deliverables"
+          class="pd-tab"
+          type="button"
+          data-tab-target="deliverables"
+          aria-controls="tab-deliverables"
+          aria-pressed="false"
+        >
+          Entregables
+        </button>
+        <button
+          id="tab-btn-evaluations"
+          class="pd-tab"
+          type="button"
+          data-tab-target="evaluations"
+          aria-controls="tab-evaluations"
+          aria-pressed="false"
+        >
+          Evaluaciones
+        </button>
+        <button
+          id="tab-btn-rubric"
+          class="pd-tab"
+          type="button"
+          data-tab-target="rubric"
+          aria-controls="tab-rubric"
+          aria-pressed="false"
+        >
+          Rúbrica
+        </button>
+        <button
+          id="tab-btn-students"
+          class="pd-tab"
+          type="button"
+          data-tab-target="students"
+          aria-controls="tab-students"
+          aria-pressed="false"
+        >
+          Estudiantes
+        </button>
+        <button
+          id="tab-btn-gantt"
+          class="pd-tab"
+          type="button"
+          data-tab-target="gantt"
+          aria-controls="tab-gantt"
+          aria-pressed="false"
+        >
+          Cronograma
+        </button>
+      </nav>
 
-      function formatSubmissionRelativeTime(dateInput) {
-        const date = new Date(dateInput);
-        if (Number.isNaN(date.getTime())) return "";
+      <section
+        id="tab-overview"
+        class="pd-panel active"
+        role="tabpanel"
+        aria-labelledby="tab-btn-overview"
+      >
+        <div>
+          <h2>Resumen general</h2>
+          <p class="pd-subtitle">
+            Estos indicadores se calculan automáticamente a partir de la información en Firebase.
+          </p>
+        </div>
+        <div class="pd-grid cols-4">
+          <article class="pd-card">
+            <span class="pd-subtitle">Estudiantes registrados</span>
+            <strong id="pd-summary-total-students">0</strong>
+          </article>
+          <article class="pd-card">
+            <span class="pd-subtitle">Promedio final (escala 5)</span>
+            <strong id="pd-summary-avg-final">0.0</strong>
+          </article>
+          <article class="pd-card">
+            <span class="pd-subtitle">Entregables activos</span>
+            <strong id="pd-summary-active-deliverables">—</strong>
+            <small>Se actualiza al crear o archivar entregables.</small>
+          </article>
+          <article class="pd-card">
+            <span class="pd-subtitle">Última sincronización</span>
+            <strong id="pd-summary-sync">En curso</strong>
+            <small>La información se recarga automáticamente al abrir el panel.</small>
+          </article>
+        </div>
+      </section>
 
-        const diffMs = Date.now() - date.getTime();
-        const diffMinutes = Math.max(0, Math.round(diffMs / 60000));
+      <section
+        id="tab-deliverables"
+        class="pd-panel"
+        role="tabpanel"
+        aria-labelledby="tab-btn-deliverables"
+        hidden
+      >
+        <div>
+          <h2>Gestión de entregables</h2>
+          <p class="pd-subtitle">
+            Visualiza, edita y crea entregables que alimentan el cálculo de calificaciones del curso.
+          </p>
+        </div>
+        <div class="pd-table-wrap" role="region" aria-live="polite">
+          <table class="pd-table">
+            <thead>
+              <tr>
+                <th scope="col">Título</th>
+                <th scope="col">Descripción</th>
+                <th scope="col">Unidad</th>
+                <th scope="col">Ponderación</th>
+                <th scope="col">Entrega</th>
+                <th scope="col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="pd-deliverables-tbody">
+              <tr><td colspan="6" class="pd-empty">Cargando entregables…</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <form id="pd-new-deliverable-form" class="pd-form" autocomplete="off">
+          <h3>Registrar nuevo entregable</h3>
+          <div class="pd-form-row cols-2">
+            <label class="pd-field">
+              Título
+              <input id="pd-deliv-title" type="text" name="title" placeholder="Ej. Informe de avances" required />
+            </label>
+            <label class="pd-field">
+              Unidad
+              <select id="pd-deliv-unidad" name="unidad">
+                <option value="">Selecciona…</option>
+                <option value="1">Unidad I</option>
+                <option value="2">Unidad II</option>
+                <option value="3">Unidad III</option>
+              </select>
+            </label>
+          </div>
+          <label class="pd-field">
+            Descripción
+            <textarea id="pd-deliv-desc" name="description" placeholder="Objetivo, materiales requeridos o notas adicionales."></textarea>
+          </label>
+          <div class="pd-form-row cols-2">
+            <label class="pd-field">
+              Ponderación (%)
+              <input id="pd-deliv-weight" type="number" min="0" max="100" step="1" name="weight" />
+            </label>
+            <label class="pd-field">
+              Fecha de entrega
+              <input id="pd-deliv-due" type="date" name="due" />
+            </label>
+          </div>
+          <div class="pd-inline-actions">
+            <button class="pd-button primary" type="submit">Guardar entregable</button>
+          </div>
+        </form>
+      </section>
 
-        if (diffMinutes < 1) return "Hace un momento";
-        if (diffMinutes < 60) return `Hace ${diffMinutes} min`;
+      <section
+        id="tab-evaluations"
+        class="pd-panel"
+        role="tabpanel"
+        aria-labelledby="tab-btn-evaluations"
+        hidden
+      >
+        <div>
+          <h2>Evaluaciones del curso</h2>
+          <p class="pd-subtitle">
+            Los enlaces a exámenes se habilitan al registrar la URL correspondiente en la colección de Firebase.
+          </p>
+        </div>
+        <div class="pd-grid cols-4">
+          <article class="pd-card">
+            <span class="pd-subtitle">Examen Unidad I</span>
+            <small>El botón del encabezado apunta al formulario disponible.</small>
+          </article>
+          <article class="pd-card">
+            <span class="pd-subtitle">Examen Unidad II</span>
+            <small>Utiliza el botón del encabezado para abrir el enlace.</small>
+          </article>
+        </div>
+        <div class="pd-table-wrap">
+          <table class="pd-table">
+            <thead>
+              <tr>
+                <th scope="col">Asignación</th>
+                <th scope="col">Unidad</th>
+                <th scope="col">Ponderación</th>
+                <th scope="col">Clave</th>
+                <th scope="col">Descripción</th>
+              </tr>
+            </thead>
+            <tbody id="pd-assignments-tbody">
+              <tr><td colspan="5" class="pd-empty">Sin asignaciones registradas.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-        const diffHours = Math.round(diffMinutes / 60);
-        if (diffHours < 24) return `Hace ${diffHours} h`;
+      <section
+        id="tab-rubric"
+        class="pd-panel"
+        role="tabpanel"
+        aria-labelledby="tab-btn-rubric"
+        hidden
+      >
+        <div>
+          <h2>Rúbrica de evaluación</h2>
+          <p class="pd-subtitle">
+            Personaliza la rúbrica utilizada para evaluar entregables y exámenes. Se almacena directamente en Firebase.
+          </p>
+        </div>
+        <label class="pd-field">
+          Contenido de la rúbrica
+          <textarea id="pd-rubric-text" name="rubric" placeholder="Define los criterios, niveles de desempeño y pesos por unidad."></textarea>
+        </label>
+        <div class="pd-inline-actions">
+          <button id="pd-rubric-save" class="pd-button primary" type="button">Guardar rúbrica</button>
+        </div>
+      </section>
 
-        const diffDays = Math.round(diffHours / 24);
-        if (diffDays === 1) return "Hace 1 día";
-        if (diffDays < 7) return `Hace ${diffDays} días`;
+      <section
+        id="tab-students"
+        class="pd-panel"
+        role="tabpanel"
+        aria-labelledby="tab-btn-students"
+        hidden
+      >
+        <div>
+          <h2>Seguimiento de estudiantes</h2>
+          <p class="pd-subtitle">
+            Consulta los promedios por unidad y selecciona estudiantes para enviar recordatorios personalizados.
+          </p>
+        </div>
+        <div class="pd-table-wrap" role="region" aria-live="polite">
+          <table class="pd-table">
+            <thead>
+              <tr>
+                <th scope="col" class="pd-col-select">&nbsp;</th>
+                <th scope="col">Nombre</th>
+                <th scope="col">Correo</th>
+                <th scope="col">Unidad I</th>
+                <th scope="col">Unidad II</th>
+                <th scope="col">Unidad III</th>
+                <th scope="col">Final</th>
+              </tr>
+            </thead>
+            <tbody id="pd-students-tbody">
+              <tr><td colspan="7" class="pd-empty">Preparando información de estudiantes…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-        return date.toLocaleDateString("es-MX", {
-          day: "numeric",
-          month: "short",
+      <section
+        id="tab-gantt"
+        class="pd-panel"
+        role="tabpanel"
+        aria-labelledby="tab-btn-gantt"
+        hidden
+      >
+        <div>
+          <h2>Cronograma de actividades</h2>
+          <p class="pd-subtitle">
+            Las filas se construyen desde la colección <code>gantt</code> del grupo en Firebase.
+          </p>
+        </div>
+        <div class="pd-table-wrap" role="region" aria-live="polite">
+          <table class="pd-table">
+            <thead>
+              <tr>
+                <th scope="col">Actividad</th>
+                <th scope="col">Inicio</th>
+                <th scope="col">Fin</th>
+                <th scope="col">Responsable</th>
+                <th scope="col">Estado</th>
+              </tr>
+            </thead>
+            <tbody id="pd-gantt-tbody">
+              <tr><td colspan="5" class="pd-empty">Sin actividades programadas.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          var tabs = document.querySelectorAll('.pd-tab');
+          var panels = document.querySelectorAll('.pd-panel');
+          var weekEl = document.getElementById('pd-week-display');
+
+          if (weekEl) {
+            try {
+              var now = new Date();
+              var yearStart = new Date(now.getFullYear(), 0, 1);
+              var pastDays = Math.floor((now - yearStart) / 86400000);
+              var weekNumber = Math.max(
+                1,
+                Math.ceil((pastDays + yearStart.getDay() + 1) / 7)
+              );
+              weekEl.textContent = String(weekNumber);
+            } catch (err) {
+              weekEl.textContent = '—';
+            }
+          }
+
+          function activate(targetId) {
+            if (!targetId) return;
+            Array.prototype.forEach.call(panels, function (panel) {
+              var isActive = panel.id === 'tab-' + targetId;
+              panel.classList.toggle('active', isActive);
+              panel.hidden = !isActive;
+            });
+            Array.prototype.forEach.call(tabs, function (tab) {
+              var tabTarget = tab.getAttribute('data-tab-target') || '';
+              var isActive = tabTarget === targetId;
+              tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+          }
+
+          Array.prototype.forEach.call(tabs, function (tab) {
+            tab.addEventListener('click', function () {
+              activate(tab.getAttribute('data-tab-target'));
+            });
+
+          activate('overview');
         });
-      }
+      </script>
+      <script type="module" src="./js/paneldocente-backend.js"></script>
+      <script type="module" src="./js/role-gate.js"></script>
+      <script defer src="./js/layout.js"></script>
+      <script defer src="js/back-home.js"></script>
+    </body>
+  </html>
 
-      function renderSubmissionNotifications() {
-        const list = document.getElementById("teacher-alert-list");
-        const badge = document.getElementById("teacher-alert-badge");
-        if (!list || !badge) return;
-
-        const unreadCount = submissionNotifications.filter((n) => !n.read).length;
-        if (unreadCount > 0) {
-          badge.textContent = unreadCount > 9 ? "9+" : unreadCount;
-          badge.classList.remove("hidden");
-        } else {
-          badge.classList.add("hidden");
-        }
-
-        if (!submissionNotifications.length) {
-          list.innerHTML =
-            '<div class="teacher-alert-empty">Sin entregas pendientes</div>';
-          return;
-        }
-
-        list.innerHTML = submissionNotifications
-          .map((notification) => {
-            const icon =
-              notification.type === "deliverable"
-                ? "📁"
-                : notification.type === "assignment"
-                ? "📝"
-                : "📥";
-            const timeAgo = formatSubmissionRelativeTime(
-              notification.submittedAt
-            );
-            const readClass = notification.read ? "" : "unread";
-            const fileLabel = notification.fileName
-              ? `<p class="text-xs text-gray-500 mt-1">Archivo: ${notification.fileName}</p>`
-              : "";
-
-            return `
-              <div class="teacher-alert-item ${readClass}">
-                <div class="flex items-start justify-between gap-3">
-                  <div>
-                    <div class="text-sm font-semibold text-gray-800">
-                      ${icon} ${notification.team}
-                    </div>
-                    <p class="text-xs text-gray-600 mt-1">
-                      ${notification.student} entregó ${notification.item}.
-                    </p>
-                    ${fileLabel}
-                  </div>
-                  <span class="teacher-alert-time">${timeAgo}</span>
-                </div>
-                <button
-                  type="button"
-                  class="mt-3 text-xs font-medium text-blue-600 hover:text-blue-800"
-                  onclick="openSubmissionNotification('${notification.id}', event)"
-                >
-                  Ver entrega
-                </button>
-              </div>
-            `;
-          })
-          .join("");
-      }
-
-      function toggleNotificationPanel(event) {
-        event?.stopPropagation();
-        const panel = document.getElementById("teacher-alert-panel");
-        if (!panel) return;
-        renderSubmissionNotifications();
-        panel.classList.toggle("hidden");
-      }
-
-      function markAllNotificationsAsRead(event) {
-        event?.stopPropagation();
-        submissionNotifications.forEach((notification) => {
-          notification.read = true;
-        });
-        renderSubmissionNotifications();
-      }
-
-      function openSubmissionNotification(id, event) {
-        event?.stopPropagation();
-        const notification = submissionNotifications.find((n) => n.id === id);
-        if (!notification) return;
-        notification.read = true;
-        renderSubmissionNotifications();
-        const message = `📥 ${notification.team}: ${notification.student} entregó ${notification.item}`;
-        showNotification(message, "info");
-      }
-
-      function addSubmissionNotification(notification) {
-        const payload = Object.assign(
-          {
-            id: `notif-${Date.now()}`,
-            read: false,
-            submittedAt: new Date().toISOString(),
-            type: "deliverable",
-          },
-          notification
-        );
-
-        submissionNotifications.unshift(payload);
-        renderSubmissionNotifications();
-        const toastMessage = `✅ ${payload.team} registró ${payload.item}`;
-        showNotification(toastMessage, "success");
-      }
-
-      document.addEventListener("click", (event) => {
-        const wrapper = document.getElementById("teacher-alert-wrapper");
-        const panel = document.getElementById("teacher-alert-panel");
-        if (!wrapper || !panel || panel.classList.contains("hidden")) return;
-        if (!wrapper.contains(event.target)) {
-          panel.classList.add("hidden");
-        }
-      });
-
-      // Real student data
-      const studentsData = [
-                  Ver Resultados
-                </button>
-              </div>
-            </div>
-
-            <!-- Examen Final -->
-            <div
-              class="exam-card"
-              style="
-                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-              "
-            >
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-4">
-                  <div class="text-4xl">🎯</div>
-                  <div>
-                    <h3 class="text-2xl font-bold text-white">
-                      Examen Final Integrador
-                    </h3>
-                    <p class="text-pink-100">Semana 15 - Caso Completo</p>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <div class="text-sm text-pink-100">Peso: 30%</div>
-                  <div class="text-lg font-bold text-white">Programado</div>
-                </div>
-              </div>
-
-              <div class="bg-white/20 backdrop-blur-sm rounded-lg p-4 mb-4">
-                <h4 class="font-semibold text-white mb-3">
-                  🎯 Evaluación Integral:
-                </h4>
-                <div class="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <h5 class="font-medium text-white mb-2">
-                      📊 Componentes del caso:
-                    </h5>
-                    <ul class="text-sm text-pink-100 space-y-1">
-                      <li>• Diagnóstico organizacional completo</li>
-                      <li>• Selección justificada de modelo</li>
-                      <li>• Gap analysis detallado</li>
-                      <li>• Roadmap de implementación</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h5 class="font-medium text-white mb-2">
-                      🔍 Habilidades evaluadas:
-                    </h5>
-                    <ul class="text-sm text-pink-100 space-y-1">
-                      <li>• Análisis crítico y síntesis</li>
-                      <li>• Aplicación práctica de conceptos</li>
-                      <li>• Toma de decisiones fundamentadas</li>
-                      <li>• Planificación estratégica</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex justify-between items-center">
-                <div class="text-sm text-pink-100">
-                  <span class="font-medium">Fecha programada:</span> Viernes 29
-                  Nov, 10:00 AM
-                </div>
-                <button
-                  onclick="configureExam(3)"
-                  class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm"
-                >
-                  Configurar
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Exam Statistics -->
-          <div class="mt-8 bg-white rounded-xl p-6 shadow-lg">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">
-              📊 Estadísticas de Exámenes
-            </h3>
-            <div class="grid md:grid-cols-4 gap-6">
-              <div class="text-center">
-                <div class="text-3xl font-bold text-green-600 mb-2">2/3</div>
-                <div class="text-sm text-gray-600">Exámenes Completados</div>
-              </div>
-              <div class="text-center">
-                <div class="text-3xl font-bold text-blue-600 mb-2">81.1</div>
-                <div class="text-sm text-gray-600">Promedio General</div>
-              </div>
-              <div class="text-center">
-                <div class="text-3xl font-bold text-purple-600 mb-2">92%</div>
-                <div class="text-sm text-gray-600">Tasa de Aprobación</div>
-              </div>
-              <div class="text-center">
-                <div class="text-3xl font-bold text-orange-600 mb-2">2</div>
-                <div class="text-sm text-gray-600">Estudiantes en Riesgo</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Rubric Tab -->
-      <div id="rubric" class="tab-content">
-        <div class="mb-8">
-          <h2 class="text-3xl font-bold text-gray-800 mb-4">
-            📏 Rúbrica de Evaluación del Proyecto Final
-          </h2>
-          <p class="text-gray-600 mb-6">
-            Criterios detallados para la evaluación integral
-          </p>
-
-          <!-- Rubric Calculator -->
-          <div class="bg-white rounded-xl p-6 shadow-lg mb-8">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">
-              🧮 Calculadora de Calificación
-            </h3>
-            <div class="grid md:grid-cols-2 gap-6">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2"
-                  >Seleccionar estudiante/equipo:</label
-                >
-                <select      function getProgressGradient(percentage) {
-        if (percentage >= 90) {
-          return "linear-gradient(90deg, #22c55e, #16a34a)";
-        }
-
-        if (percentage >= 70) {
-          return "linear-gradient(90deg, #eab308, #ca8a04)";
-        }
-
-        if (percentage >= 60) {
-          return "linear-gradient(90deg, #f97316, #ea580c)";
-        }
-
-        return "linear-gradient(90deg, #ef4444, #dc2626)";
-      }
-
-      function applyStudentProgressStyles(element, percentage) {
-        if (!element) return;
-
-        const capped = Math.max(0, Math.min(percentage, 100));
-        element.style.width = `${capped}%`;
-        element.style.background = getProgressGradient(capped);
-      }
-
-      function loadStudents(filteredStudents = null) {
-        const container = document.getElementById("students-container");
-        container.innerHTML = "";
-
-        const students = filteredStudents || studentsData;
-
-        students.forEach((student) => {
-          const averageValue =
-            typeof student.average === "number" ? student.average : 0;
-          const progressPercent = Math.max(
-            0,
-            Math.min(averageValue, 100)
-          );
-          const progressDisplay = Math.round(progressPercent);
-          const averageDisplay = averageValue.toFixed(1);
-
-          const statusColor =
-            student.status === "excellent"
-              ? "green"
-              : student.status === "good"
-              ? "blue"
-              : "red";
-
-          const card = document.createElement("div");
-          card.className = "student-card";
-          card.innerHTML = `
-                            <div class="text-2xl font-bold text-${statusColor}-600">${
-                              averageDisplay
-                            }</div>
-                            <div class="text-xs text-gray-500">Promedio</div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-4 mb-3">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <div class="flex justify-between text-xs text-gray-500 mb-1">
-                            <span>Progreso del curso</span>
-                            <span class="font-semibold text-gray-700">${
-                              progressDisplay
-                            }%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="student-progress-fill" data-progress="${
-                              progressPercent.toFixed(1)
-                            }"></div>
-                        </div>
-                    </div>
-
-                    <div class="flex justify-between items-center">
-                        <span class="text-xs px-2 py-1 rounded-full bg-${statusColor}-100 text-${statusColor}-800">
-                            ${
-                    </div>
-                `;
-
-          const progressFill = card.querySelector(".student-progress-fill");
-          applyStudentProgressStyles(progressFill, progressPercent);
-          container.appendChild(card);
-        });
-      }
-                >
-                <div
-                  class="text-3xl font-bold text-blue-600"
-                  id="calculated-grade"
-                >
-                  --
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Detailed Rubric -->
-          <div class="rubric-table">
-            <table class="w-full">
-              <thead>
-                <tr>
-                  <th class="text-left">Criterio</th>
-                  <th>Peso</th>
-                  <th class="grade-excellent">Excelente<br />(90-100)</th>
-                  <th class="grade-good">Bueno<br />(80-89)</th>
-                  <th class="grade-sufficient">Suficiente<br />(70-79)</th>
-                  <th class="grade-deficient">Deficiente<br />(&lt;70)</th>
-                  <th>Calificación</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="font-semibold text-left">
-                    🔍 Diagnóstico inicial
-                  </td>
-                  <td class="font-bold">20%</td>
-                  <td class="text-sm">
-                    Preciso, basado en evidencias, metodología clara
-                  </td>
-                  <td class="text-sm">Correcto, con pocos vacíos menores</td>
-                  <td class="text-sm">Superficial, sin evidencia suficiente</td>
-                  <td class="text-sm">Incompleto o incorrecto</td>
-                  <td>
-                    <select
-                      class="rubric-grade w-full p-2 border rounded"
-                      data-weight="20"
-                    >
-                      <option value="">--</option>
-                      <option value="95">95</option>
-                      <option value="85">85</option>
-                      <option value="75">75</option>
-                      <option value="60">60</option>
-                    </select>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="font-semibold text-left">
-                    ⚖️ Justificación del modelo
-                  </td>
-                  <td class="font-bold">15%</td>
-                  <td class="text-sm">
-                    Muy bien argumentada, con referencias sólidas
-                  </td>
-                  <td class="text-sm">Correcta, aunque poco profunda</td>
-                  <td class="text-sm">Débil, con vacíos argumentativos</td>
-                  <td class="text-sm">Ausente o incorrecta</td>
-                  <td>
-                    <select
-                      class="rubric-grade w-full p-2 border rounded"
-                      data-weight="15"
-                    >
-                      <option value="">--</option>
-                      <option value="95">95</option>
-                      <option value="85">85</option>
-                      <option value="75">75</option>
-                      <option value="60">60</option>
-                    </select>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="font-semibold text-left">📊 Gap Analysis</td>
-                  <td class="font-bold">20%</td>
-                  <td class="text-sm">
-                    Completo, bien estructurado, prioridades claras
-                  </td>
-                  <td class="text-sm">Correcto, con pocos errores</td>
-                  <td class="text-sm">Brechas poco claras o incompletas</td>
-                  <td class="text-sm">Incompleto o mal estructurado</td>
-                  <td>
-                    <select
-                      class="rubric-grade w-full p-2 border rounded"
-                      data-weight="20"
-                    >
-                      <option value="">--</option>
-                      <option value="95">95</option>
-                      <option value="85">85</option>
-                      <option value="75">75</option>
-                      <option value="60">60</option>
-                    </select>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="font-semibold text-left">
-                    🗺️ Roadmap de implementación
-                  </td>
-                  <td class="font-bold">20%</td>
-                  <td class="text-sm">Detallado, realista y alcanzable</td>
-                  <td class="text-sm">Claro pero con limitaciones menores</td>
-                  <td class="text-sm">Poco realista o incompleto</td>
-                  <td class="text-sm">Ausente o no factible</td>
-                  <td>
-                    <select
-                      class="rubric-grade w-full p-2 border rounded"
-                      data-weight="20"
-                    >
-                      <option value="">--</option>
-                      <option value="95">95</option>
-                      <option value="85">85</option>
-                      <option value="75">75</option>
-                      <option value="60">60</option>
-                    </select>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="font-semibold text-left">
-                    👥 Plan de gestión del cambio
-                  </td>
-                  <td class="font-bold">10%</td>
-                  <td class="text-sm">
-                    Acciones claras y alineadas al contexto
-                  </td>
-                  <td class="text-sm">Aceptable pero incompleto</td>
-                  <td class="text-sm">Muy básico o superficial</td>
-                  <td class="text-sm">Ausente o inadecuado</td>
-                  <td>
-                    <select
-                      class="rubric-grade w-full p-2 border rounded"
-                      data-weight="10"
-                    >
-                      <option value="">--</option>
-                      <option value="95">95</option>
-                      <option value="85">85</option>
-                      <option value="75">75</option>
-                      <option value="60">60</option>
-                    </select>
-                  </td>
-                </tr>
-                <tr>
-                  <td class="font-semibold text-left">🎤 Presentación oral</td>
-                  <td class="font-bold">15%</td>
-                  <td class="text-sm">
-                    Clara, dinámica, uso adecuado de slides y tiempo
-                  </td>
-                  <td class="text-sm">Clara pero con fallos menores</td>
-                  <td class="text-sm">Confusa o poco estructurada</td>
-                  <td class="text-sm">Deficiente o incompleta</td>
-                  <td>
-                    <select
-                      class="rubric-grade w-full p-2 border rounded"
-                      data-weight="15"
-                    >
-                      <option value="">--</option>
-                      <option value="95">95</option>
-                      <option value="85">85</option>
-                      <option value="75">75</option>
-                      <option value="60">60</option>
-                    </select>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Rubric Actions -->
-          <div class="mt-6 flex justify-between items-center">
-            <div class="space-x-4">
-              <button
-                onclick="saveRubricGrade()"
-                class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg"
-              >
-                💾 Guardar Calificación
-              </button>
-              <button
-                onclick="resetRubric()"
-                class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-lg"
-              >
-                🔄 Limpiar
-              </button>
-            </div>
-            <div class="text-right">
-              <div class="text-sm text-gray-600 mb-1">Calificación final:</div>
-              <div class="text-3xl font-bold text-blue-600" id="final-grade">
-                --
-              </div>
-            </div>
-          </div>
-
-          <!-- Comments Section -->
-          <div class="mt-8 bg-white rounded-xl p-6 shadow-lg">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">
-              💬 Comentarios y Retroalimentación
-            </h3>
-            <textarea
-              id="feedback-comments"
-              class="w-full p-4 border border-gray-300 rounded-lg"
-              rows="4"
-              placeholder="Escriba comentarios detallados para el equipo..."
-            ></textarea>
-            <div class="mt-4 flex justify-between items-center">
-              <div class="space-x-2">
-                <button
-                  onclick="addQuickComment('Excelente trabajo')"
-                  class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm"
-                >
-                  ✅ Excelente trabajo
-                </button>
-                <button
-                  onclick="addQuickComment('Necesita mejorar')"
-                  class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm"
-                >
-                  ⚠️ Necesita mejorar
-                </button>
-                <button
-                  onclick="addQuickComment('Revisar y reenviar')"
-                  class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm"
-                >
-                  🔄 Revisar y reenviar
-                </button>
-              </div>
-              <button
-                onclick="saveComments()"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
-              >
-                💾 Guardar Comentarios
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Students Tab -->
-      <div id="students" class="tab-content">
-        <div class="mb-8">
-          <h2 class="text-3xl font-bold text-gray-800 mb-4">
-            👥 Seguimiento de Estudiantes
-          </h2>
-          <p class="text-gray-600 mb-6">Progreso individual y por equipos</p>
-
-          <!-- Search and Filter -->
-          <div class="bg-white rounded-xl p-6 shadow-lg mb-8">
-            <div class="grid md:grid-cols-3 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2"
-                  >Buscar estudiante:</label
-                >
-                <input
-                  type="text"
-                  id="student-search"
-                  class="w-full p-3 border border-gray-300 rounded-lg"
-                  placeholder="Nombre o matrícula..."
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2"
-                  >Filtrar por equipo:</label
-                >
-                <select
-                  id="team-filter"
-                  class="w-full p-3 border border-gray-300 rounded-lg"
-                >
-                  <option value="">Todos los equipos</option>
-                  <option value="1">
-                    Equipo 1 - Innovatech (6 estudiantes)
-                  </option>
-                  <option value="2">
-                    Equipo 2 - Legacy Corp (6 estudiantes)
-                  </option>
-                  <option value="3">Equipo 3 - GovWare (6 estudiantes)</option>
-                  <option value="4">Equipo 4 - DataFlow (7 estudiantes)</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2"
-                  >Estado:</label
-                >
-                <select
-                  id="status-filter"
-                  class="w-full p-3 border border-gray-300 rounded-lg"
-                >
-                  <option value="">Todos</option>
-                  <option value="excellent">Excelente (90+)</option>
-                  <option value="good">Bueno (80-89)</option>
-                  <option value="risk">En riesgo (&lt;70)</option>
-                </select>
-        // Load initial content
-        loadStudents();
-        renderCalendar();
-        renderSubmissionNotifications();
-
-        // Simulate a fresh submission arriving after load
-        setTimeout(() => {
-          addSubmissionNotification({
-            team: "DataFlow",
-            student: "Villegas Sosa, Ramsés Mauricio",
-            item: "Entrega: Roadmap",
-            fileName: "roadmap_dataflow.pdf",
-            type: "deliverable",
-          });
-        }, 8000);
-
-        // Show welcome notification
-        setTimeout(() => {
-          showNotification(
-            "👋 Bienvenido al Panel del Maestro. Semana 8 de 15 en progreso.",
-          <!-- Students List -->
-          <div class="grid md:grid-cols-2 gap-6" id="students-container">
-            <!-- Student cards will be generated here -->
-          </div>
-
-          <!-- Team Performance Summary -->
-          <div class="mt-8 bg-white rounded-xl p-6 shadow-lg">
-            <h3 class="text-xl font-bold text-gray-800 mb-4">
-              📊 Resumen por Equipos
-            </h3>
-            <div class="grid md:grid-cols-4 gap-6">
-              <div class="text-center p-4 bg-green-50 rounded-lg">
-                <div class="text-2xl mb-2">🏢</div>
-                <h4 class="font-bold text-green-600">Equipo 1</h4>
-                <p class="text-sm text-gray-600 mb-2">Innovatech Startup (6)</p>
-                <div class="text-xl font-bold text-green-600">87.9</div>
-                <div class="text-xs text-gray-500">Promedio</div>
-              </div>
-              <div class="text-center p-4 bg-blue-50 rounded-lg">
-                <div class="text-2xl mb-2">🏛️</div>
-                <h4 class="font-bold text-blue-600">Equipo 2</h4>
-                <p class="text-sm text-gray-600 mb-2">Legacy Corp (6)</p>
-                <div class="text-xl font-bold text-blue-600">85.3</div>
-                <div class="text-xs text-gray-500">Promedio</div>
-              </div>
-              <div class="text-center p-4 bg-purple-50 rounded-lg">
-                <div class="text-2xl mb-2">🏛️</div>
-                <h4 class="font-bold text-purple-600">Equipo 3</h4>
-                <p class="text-sm text-gray-600 mb-2">GovWare Solutions (6)</p>
-                <div class="text-xl font-bold text-purple-600">88.0</div>
-                <div class="text-xs text-gray-500">Promedio</div>
-              </div>
-              <div class="text-center p-4 bg-orange-50 rounded-lg">
                 <div class="text-2xl mb-2">💾</div>
                 <h4 class="font-bold text-orange-600">Equipo 4</h4>
                 <p class="text-sm text-gray-600 mb-2">DataFlow Systems (7)</p>
