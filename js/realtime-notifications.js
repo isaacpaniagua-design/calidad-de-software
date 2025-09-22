@@ -1,3 +1,18 @@
+
+import {
+  initFirebase,
+  onAuth,
+  isTeacherEmail,
+  isTeacherByDoc,
+  ensureTeacherDocForUser,
+  subscribeLatestForumReplies,
+  fetchForumTopicSummary,
+} from "./firebase.js";
+import { observeAllStudentUploads } from "./student-uploads.js";
+
+initFirebase();
+
+
 const STORAGE_KEY = "qs:realtime-notifications";
 const BOOT_FLAG = "__qsRealtimeNotificationsBooted";
 let storageUnavailable = false;
@@ -134,6 +149,16 @@ const FEED_EVENTS = [
   },
 ];
 
+
+const OPTION_LOOKUP = new Map(OPTIONS.map((option) => [option.id, option]));
+
+const UPLOAD_KIND_TO_TYPE = Object.freeze({
+  activity: "activity-received",
+  homework: "homework",
+  evidence: "evidence-student",
+});
+
+
 function loadPreferences() {
   if (typeof window === "undefined" || typeof window.localStorage === "undefined") {
     return {};
@@ -244,6 +269,8 @@ function initRealtimeNotifications() {
   let unreadCount = 0;
   let isPanelOpen = false;
   let hideTimeoutId = null;
+  let simulationEnabled = true;
+
 
   updateToggleLabel(false);
   updateBadge();
@@ -283,6 +310,7 @@ function initRealtimeNotifications() {
   filterFeedItems();
   scheduleNextEvent();
 
+  setupPlatformBindings();
 
   function updateToggleLabel(open) {
     const labelText = open ? "Cerrar centro de notificaciones" : "Abrir centro de notificaciones";
@@ -523,14 +551,366 @@ function initRealtimeNotifications() {
     return queue.shift();
   }
 
+
+  function setSimulationEnabled(enabled) {
+    const desired = Boolean(enabled);
+    if (simulationEnabled === desired) return;
+    simulationEnabled = desired;
+    if (!simulationEnabled) {
+      if (timerId) {
+        window.clearTimeout(timerId);
+        timerId = null;
+      }
+      return;
+    }
+    scheduleNextEvent();
+  }
+
   function scheduleNextEvent() {
     clearTimeout(timerId);
+    if (!simulationEnabled) {
+      timerId = null;
+      return;
+    }
+
     timerId = window.setTimeout(() => {
       const next = dequeueEvent();
       publishEvent(next);
       scheduleNextEvent();
     }, nextDelay());
   }
+
+
+  function setupPlatformBindings() {
+    let authUnsubscribe = null;
+    let uploadsUnsubscribe = null;
+    let repliesUnsubscribe = null;
+    let teacherActive = false;
+    let teacherCheckToken = 0;
+    let currentTeacherEmail = "";
+    let uploadsInitialized = false;
+    let repliesInitialized = false;
+    const seenUploads = new Set();
+    const seenReplies = new Set();
+    const topicCache = new Map();
+
+    const evaluateSimulationState = () => {
+      if (!teacherActive) {
+        setSimulationEnabled(true);
+        return;
+      }
+      const hasRealtimeStreams = Boolean(uploadsUnsubscribe || repliesUnsubscribe);
+      setSimulationEnabled(!hasRealtimeStreams ? true : false);
+    };
+
+    const resetTracking = () => {
+      uploadsInitialized = false;
+      repliesInitialized = false;
+      seenUploads.clear();
+      seenReplies.clear();
+    };
+
+    const clearTopicCache = () => {
+      topicCache.clear();
+    };
+
+    const handleUploadsError = (error) => {
+      console.error("observeAllStudentUploads:error", error);
+      if (uploadsUnsubscribe) {
+        try {
+          uploadsUnsubscribe();
+        } catch (_) {}
+      }
+      uploadsUnsubscribe = null;
+      evaluateSimulationState();
+    };
+
+    const handleRepliesError = (error) => {
+      console.error("subscribeLatestForumReplies:error", error);
+      if (repliesUnsubscribe) {
+        try {
+          repliesUnsubscribe();
+        } catch (_) {}
+      }
+      repliesUnsubscribe = null;
+      evaluateSimulationState();
+    };
+
+    const startTeacherSubscriptions = (email) => {
+      const normalizedEmail = (email || "").toLowerCase();
+      if (teacherActive) {
+        currentTeacherEmail = normalizedEmail;
+        evaluateSimulationState();
+        return;
+      }
+
+      teacherActive = true;
+      currentTeacherEmail = normalizedEmail;
+      resetTracking();
+      clearTopicCache();
+
+      try {
+        uploadsUnsubscribe = observeAllStudentUploads(handleUploads, handleUploadsError);
+      } catch (error) {
+        console.error("No se pudo observar entregas en tiempo real", error);
+        uploadsUnsubscribe = null;
+      }
+
+      try {
+        repliesUnsubscribe = subscribeLatestForumReplies(
+          { limit: 40 },
+          (items) => {
+            handleReplies(items);
+          },
+          handleRepliesError
+        );
+      } catch (error) {
+        console.error("No se pudo observar respuestas del foro", error);
+        repliesUnsubscribe = null;
+      }
+
+      evaluateSimulationState();
+    };
+
+    const stopTeacherSubscriptions = () => {
+      if (!teacherActive && !uploadsUnsubscribe && !repliesUnsubscribe) {
+        return;
+      }
+      teacherActive = false;
+      currentTeacherEmail = "";
+      if (uploadsUnsubscribe) {
+        try {
+          uploadsUnsubscribe();
+        } catch (_) {}
+        uploadsUnsubscribe = null;
+      }
+      if (repliesUnsubscribe) {
+        try {
+          repliesUnsubscribe();
+        } catch (_) {}
+        repliesUnsubscribe = null;
+      }
+      resetTracking();
+      clearTopicCache();
+      evaluateSimulationState();
+    };
+
+    function handleUploads(items) {
+      const safeItems = Array.isArray(items) ? items : [];
+      if (!uploadsInitialized) {
+        safeItems.forEach((item) => {
+          if (item && item.id) {
+            seenUploads.add(item.id);
+          }
+        });
+        uploadsInitialized = true;
+        return;
+      }
+
+      const fresh = [];
+      safeItems.forEach((item) => {
+        if (!item || !item.id || seenUploads.has(item.id)) return;
+        seenUploads.add(item.id);
+        fresh.push(item);
+      });
+
+      if (!fresh.length) return;
+
+      fresh.sort((a, b) => getTimestampValue(a?.submittedAt) - getTimestampValue(b?.submittedAt));
+
+      fresh.forEach((item) => {
+        const event = buildUploadEvent(item);
+        if (event) {
+          publishEvent(event);
+        }
+      });
+    }
+
+    async function handleReplies(items) {
+      const safeItems = Array.isArray(items) ? items : [];
+      if (!repliesInitialized) {
+        safeItems.forEach((item) => {
+          if (item && item.id) {
+            seenReplies.add(item.id);
+          }
+        });
+        repliesInitialized = true;
+        return;
+      }
+
+      const fresh = [];
+      safeItems.forEach((item) => {
+        if (!item || !item.id || seenReplies.has(item.id)) return;
+        seenReplies.add(item.id);
+        fresh.push(item);
+      });
+
+      if (!fresh.length) return;
+
+      fresh.sort((a, b) => getTimestampValue(a?.createdAt) - getTimestampValue(b?.createdAt));
+
+      for (const reply of fresh) {
+        try {
+          const event = await buildForumReplyEvent(reply);
+          if (event) {
+            publishEvent(event);
+          }
+        } catch (error) {
+          console.error("Realtime notifications: no se pudo procesar respuesta", error);
+        }
+      }
+    }
+
+    function getTimestampValue(ts) {
+      if (!ts) return 0;
+      try {
+        if (typeof ts.toDate === "function") {
+          const dateObj = ts.toDate();
+          return dateObj instanceof Date && !Number.isNaN(dateObj.getTime()) ? dateObj.getTime() : 0;
+        }
+        if (ts instanceof Date) {
+          return !Number.isNaN(ts.getTime()) ? ts.getTime() : 0;
+        }
+        const parsed = new Date(ts);
+        return !Number.isNaN(parsed.getTime()) ? parsed.getTime() : 0;
+      } catch (_) {
+        return 0;
+      }
+    }
+
+    function formatSize(bytes) {
+      const numeric = Number(bytes);
+      if (!Number.isFinite(numeric) || numeric <= 0) return "";
+      const units = ["B", "KB", "MB", "GB", "TB"];
+      let value = numeric;
+      let unitIndex = 0;
+      while (value >= 1024 && unitIndex < units.length - 1) {
+        value /= 1024;
+        unitIndex += 1;
+      }
+      const precision = value >= 10 || unitIndex === 0 ? 0 : 1;
+      return `${value.toFixed(precision)} ${units[unitIndex]}`;
+    }
+
+    function truncateText(text, maxLength = 160) {
+      if (!text && text !== 0) return "";
+      const str = String(text).trim();
+      if (!str) return "";
+      if (str.length <= maxLength) return str;
+      return `${str.slice(0, Math.max(0, maxLength - 1))}…`;
+    }
+
+    function buildUploadEvent(item) {
+      if (!item) return null;
+      const kind = (item.kind || "").toLowerCase();
+      const type = UPLOAD_KIND_TO_TYPE[kind] || UPLOAD_KIND_TO_TYPE.evidence;
+      const option = OPTION_LOOKUP.get(type);
+      const icon = option?.icon || "📤";
+      const student = item.student || {};
+      const studentEmail = (student.email || "").toLowerCase();
+      if (currentTeacherEmail && studentEmail && studentEmail === currentTeacherEmail) {
+        return null;
+      }
+      const studentName = (student.displayName || "").trim() || student.email || "Estudiante";
+      const title = item.title || "Entrega sin título";
+      const noun =
+        kind === "homework" ? "una tarea" : kind === "activity" ? "una actividad" : "evidencia";
+      const message = `${studentName} subió ${noun} “${title}”.`;
+      const details = [];
+      if (item.fileName) details.push(item.fileName);
+      const sizeText = formatSize(item.fileSize);
+      if (sizeText) details.push(sizeText);
+      const description = truncateText(item.description, 140);
+      if (description) details.push(description);
+      return {
+        type,
+        icon,
+        message,
+        detail: details.join(" · ") || null,
+      };
+    }
+
+    async function buildForumReplyEvent(reply) {
+      if (!reply) return null;
+      const type = "forum-reply";
+      const option = OPTION_LOOKUP.get(type);
+      const icon = option?.icon || "💬";
+      const authorEmail = (reply.authorEmail || "").toLowerCase();
+      if (currentTeacherEmail && authorEmail && authorEmail === currentTeacherEmail) {
+        return null;
+      }
+      const authorName = (reply.authorName || "").trim() || reply.authorEmail || "Estudiante";
+      let topicTitle = "un tema del foro";
+      try {
+        const topic = await getTopicInfo(reply.topicId);
+        if (topic && topic.title) {
+          topicTitle = String(topic.title);
+        }
+      } catch (error) {
+        console.error("Realtime notifications: no se pudo obtener tema del foro", error);
+      }
+      const message = `${authorName} comentó en “${topicTitle}”.`;
+      const detail = truncateText(reply.text, 180);
+      return {
+        type,
+        icon,
+        message,
+        detail: detail || null,
+      };
+    }
+
+    async function getTopicInfo(topicId) {
+      if (!topicId) return null;
+      if (topicCache.has(topicId)) {
+        return topicCache.get(topicId);
+      }
+      const info = await fetchForumTopicSummary(topicId);
+      topicCache.set(topicId, info || null);
+      return info || null;
+    }
+
+    async function determineTeacher(user) {
+      if (!user) return false;
+      const email = (user.email || "").toLowerCase();
+      let teacher = false;
+      if (user.uid) {
+        try {
+          teacher = await isTeacherByDoc(user.uid);
+        } catch (_) {}
+      }
+      if (!teacher && email) {
+        teacher = isTeacherEmail(email);
+      }
+      if (!teacher && user?.uid && email && isTeacherEmail(email)) {
+        try {
+          const ensured = await ensureTeacherDocForUser({
+            uid: user.uid,
+            email,
+            displayName: user.displayName || "",
+          });
+          if (ensured) teacher = true;
+        } catch (_) {}
+      }
+      return teacher;
+    }
+
+    try {
+      authUnsubscribe = onAuth(async (user) => {
+        teacherCheckToken += 1;
+        const token = teacherCheckToken;
+        const teacher = await determineTeacher(user);
+        if (token !== teacherCheckToken) return;
+        if (teacher) {
+          startTeacherSubscriptions(user?.email || "");
+        } else {
+          stopTeacherSubscriptions();
+        }
+      });
+    } catch (error) {
+      console.error("Realtime notifications: no se pudo vincular autenticación", error);
+    }
+  }
+
 }
 
 if (document.readyState === "loading") {
