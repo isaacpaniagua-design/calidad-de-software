@@ -91,46 +91,6 @@
         border-radius: 8px;
       }
 
-      .navigation {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px 60px;
-        background: #f8f9fa;
-        border-top: 1px solid #e2e8f0;
-      }
-
-      .nav-button {
-        background: #667eea;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1rem;
-        font-weight: 600;
-        transition: all 0.3s ease;
-      }
-
-      .nav-button:hover {
-        background: #5a67d8;
-        transform: translateY(-2px);
-      }
-
-      .nav-button:disabled {
-        background: #cbd5e0;
-        cursor: not-allowed;
-        transform: none;
-      }
-
-      .slide-counter {
-        background: #667eea;
-        color: white;
-        padding: 8px 16px;
-        border-radius: 20px;
-        font-weight: 600;
-      }
-
       .teacher-notes {
         background: #e6fffa;
         border: 2px solid #38b2ac;
@@ -921,10 +881,6 @@
           font-size: 1.8rem;
         }
 
-        .navigation {
-          padding: 15px 30px;
-        }
-
         .breakdown-content {
           margin-left: 0;
           margin-top: 15px;
@@ -1506,17 +1462,6 @@
         </div>
       </div>
 
-      <div class="navigation" hidden>
-        <button class="nav-button" id="prevBtn" onclick="changeSlide(-1)">
-          ← Anterior
-        </button>
-        <div class="slide-counter">
-          <span id="currentSlide">1</span> / <span id="totalSlides">4</span>
-        </div>
-        <button class="nav-button" id="nextBtn" onclick="changeSlide(1)">
-          Siguiente →
-        </button>
-      </div>
     </div>
 
     <script>
@@ -1524,15 +1469,28 @@
       const slides = document.querySelectorAll(".slide");
       const totalSlides = slides.length;
 
-      document.getElementById("totalSlides").textContent = totalSlides;
+      const currentSlideLabel = document.getElementById("currentSlide");
+      const totalSlideLabel = document.getElementById("totalSlides");
+      const prevButton = document.getElementById("prevBtn");
+      const nextButton = document.getElementById("nextBtn");
+
+      if (totalSlideLabel) {
+        totalSlideLabel.textContent = totalSlides;
+      }
 
       function showSlide(index) {
         slides.forEach((slide) => slide.classList.remove("active"));
         slides[index].classList.add("active");
 
-        document.getElementById("currentSlide").textContent = index + 1;
-        document.getElementById("prevBtn").disabled = index === 0;
-        document.getElementById("nextBtn").disabled = index === totalSlides - 1;
+        if (currentSlideLabel) {
+          currentSlideLabel.textContent = index + 1;
+        }
+        if (prevButton) {
+          prevButton.disabled = index === 0;
+        }
+        if (nextButton) {
+          nextButton.disabled = index === totalSlides - 1;
+        }
 
         // Scroll to top smoothly when changing slides
         window.scrollTo({
