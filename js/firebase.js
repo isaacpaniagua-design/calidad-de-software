@@ -789,7 +789,7 @@ export function subscribeForumReplies(topicId, cb) {
 
 export async function addForumReply(
   topicId,
-  { text, authorName, authorEmail }
+  { text, authorName, authorEmail, parentId = null }
 ) {
   const db = getDb();
   if (!topicId) throw new Error("topicId requerido");
@@ -800,6 +800,10 @@ export async function addForumReply(
     authorName: authorName || null,
     authorEmail: authorEmail || null,
     createdAt: serverTimestamp(),
+    parentId: parentId || null,
+    reactions: {
+      like: 0,
+    },
   });
   try {
     const topicRef = doc(collection(db, "forum_topics"), topicId);
@@ -822,4 +826,31 @@ export async function deleteForumReply(topicId, replyId) {
       updatedAt: serverTimestamp(),
     });
   } catch (_) {}
+  try {
+    const repliesCol = collection(db, "forum_topics", topicId, "replies");
+    const childrenQuery = query(repliesCol, where("parentId", "==", replyId));
+    const childrenSnap = await getDocs(childrenQuery);
+    const deletions = [];
+    childrenSnap.forEach((childDoc) => {
+      deletions.push(deleteForumReply(topicId, childDoc.id));
+    });
+    if (deletions.length) {
+      await Promise.allSettled(deletions);
+    }
+  } catch (_) {}
+}
+
+export async function reactToForumReply(topicId, replyId, reaction = "like") {
+  const db = getDb();
+  if (!topicId || !replyId) {
+    throw new Error("topicId y replyId requeridos");
+  }
+  if (!reaction) {
+    throw new Error("Tipo de reacción requerido");
+  }
+  const ref = doc(collection(db, "forum_topics", topicId, "replies"), replyId);
+  const fieldPath = `reactions.${reaction}`;
+  await updateDoc(ref, {
+    [fieldPath]: increment(1),
+  });
 }
