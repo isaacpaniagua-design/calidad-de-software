@@ -800,7 +800,9 @@ export async function addForumReply(
     authorName: authorName || null,
     authorEmail: authorEmail || null,
     createdAt: serverTimestamp(),
+
     parentId: parentId || null,
+
     reactions: {
       like: 0,
     },
@@ -845,6 +847,7 @@ export async function registerForumReplyReaction(
   replyId,
   reaction = "like"
 ) {
+
   const db = getDb();
   if (!topicId || !replyId) {
     throw new Error("topicId y replyId requeridos");
