@@ -122,11 +122,100 @@
 
       .assignment-card {
         background: white;
-        border-radius: 0.75rem;
-        padding: 1rem;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        margin: 0.5rem 0;
-        border-left: 4px solid #6b7280;
+      .notification-info {
+        border-left-color: #3b82f6;
+      }
+
+      .teacher-alert-wrapper {
+        position: relative;
+      }
+
+      .teacher-alert-button {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 9999px;
+        background: rgba(59, 130, 246, 0.12);
+        color: #1d4ed8;
+        border: 1px solid rgba(59, 130, 246, 0.25);
+        transition: all 0.2s ease;
+      }
+
+      .teacher-alert-button:hover {
+        background: rgba(59, 130, 246, 0.2);
+        box-shadow: 0 12px 24px rgba(59, 130, 246, 0.18);
+      }
+
+      .teacher-alert-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        background: #ef4444;
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 700;
+        border-radius: 9999px;
+        min-width: 1.1rem;
+        height: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 0.25rem;
+        box-shadow: 0 0 0 2px white;
+      }
+
+      .teacher-alert-panel {
+        position: absolute;
+        top: 120%;
+        right: 0;
+        width: min(320px, 82vw);
+        background: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 24px 48px rgba(15, 23, 42, 0.18);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        padding: 1rem;
+        z-index: 1200;
+      }
+
+      .teacher-alert-item {
+        border-radius: 0.75rem;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        padding: 0.75rem;
+        transition: all 0.2s ease;
+        background: white;
+      }
+
+      .teacher-alert-item.unread {
+        border-left: 4px solid #3b82f6;
+        background: #eff6ff;
+      }
+
+      .teacher-alert-item + .teacher-alert-item {
+        margin-top: 0.75rem;
+      }
+
+      .teacher-alert-time {
+        font-size: 0.75rem;
+        color: #64748b;
+        white-space: nowrap;
+      }
+
+      .teacher-alert-empty {
+        text-align: center;
+        padding: 1.5rem 0.75rem;
+        color: #94a3b8;
+        font-size: 0.9rem;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+
         transition: all 0.3s ease;
       }
 
@@ -172,15 +261,64 @@
         border-bottom: 1px solid #e5e7eb;
         text-align: center;
       }
-
-      .rubric-table tr:hover {
-        background: #f8fafc;
-      }
-
-      .grade-excellent {
-        background: #dcfce7;
-        color: #166534;
-      }
+        <div class="flex justify-between items-center">
+          <div class="flex items-center space-x-4">
+            <h1 class="text-2xl font-bold text-gray-800">
+              📑 Panel del Maestro
+            </h1>
+          </div>
+          <div class="flex items-center space-x-4">
+            <div class="text-sm text-gray-600">
+              <span class="font-semibold">Semana actual:</span>
+              <span id="current-week" class="text-blue-600 font-bold">8</span> /
+              15
+            </div>
+            <div id="teacher-alert-wrapper" class="teacher-alert-wrapper">
+              <button
+                type="button"
+                class="teacher-alert-button"
+                onclick="toggleNotificationPanel(event)"
+                aria-label="Notificaciones de entregas"
+              >
+                <span class="text-xl">🔔</span>
+                <span
+                  id="teacher-alert-badge"
+                  class="teacher-alert-badge hidden"
+                ></span>
+              </button>
+              <div
+                id="teacher-alert-panel"
+                class="teacher-alert-panel hidden"
+                role="dialog"
+                aria-labelledby="teacher-alert-title"
+              >
+                <div class="flex items-center justify-between mb-3">
+                  <h4
+                    id="teacher-alert-title"
+                    class="text-sm font-semibold text-gray-700"
+                  >
+                    Entregas recientes
+                  </h4>
+                  <button
+                    type="button"
+                    onclick="markAllNotificationsAsRead(event)"
+                    class="text-xs font-medium text-blue-600 hover:text-blue-800"
+                  >
+                    Marcar como revisadas
+                  </button>
+                </div>
+                <div
+                  id="teacher-alert-list"
+                  class="space-y-3 max-h-72 overflow-y-auto pr-1"
+                ></div>
+              </div>
+            </div>
+            <button
+              onclick="exportGrades()"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+            >
+              📊 Exportar Calificaciones
+
       .grade-good {
         background: #dbeafe;
         color: #1e40af;
@@ -1264,9 +1402,11 @@
                     <p class="text-blue-100">
                       Semana 5 - Fundamentos de Calidad
                     </p>
-                  </div>
-                </div>
-                <div class="text-right">
+                  </div>      // Academic events data - Cronograma detallado del Proyecto Final
+      let academicEvents = [
+        // Semana 10 - Lanzamiento del Proyecto Final
+        {
+          id: 1,
                   <div class="text-sm text-blue-100">Peso: 20%</div>
                   <div class="text-lg font-bold text-white">Completado</div>
                 </div>
@@ -1358,9 +1498,181 @@
                   100
                 </div>
                 <button
-                  onclick="viewExamResults(2)"
-                  class="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm"
-                >
+                  onclick="viewExamResults(2)"        },
+      ];
+
+      const submissionNotifications = [
+        {
+          id: "notif-1",
+          team: "Innovatech",
+          student: "Arana Guerrero, Danett Itzanami",
+          item: "Entrega: Diagnóstico inicial",
+          fileName: "diagnostico_innovatech.pdf",
+          type: "deliverable",
+          submittedAt: "2024-11-17T10:45:00",
+          read: false,
+        },
+        {
+          id: "notif-2",
+          team: "LegacySoft",
+          student: "Inzunza Jurado, Fernando",
+          item: "Asignación 6 - Roadmap de Implementación",
+          fileName: "roadmap_legacysoft.docx",
+          type: "assignment",
+          submittedAt: "2024-11-17T09:20:00",
+          read: true,
+        },
+        {
+          id: "notif-3",
+          team: "GovWare",
+          student: "Llamas Moreno, Carlos Manuel",
+          item: "Entrega: Gap Analysis",
+          fileName: "gap_govware.pdf",
+          type: "deliverable",
+          submittedAt: "2024-11-16T18:35:00",
+          read: false,
+        },
+      ];
+
+      function formatSubmissionRelativeTime(dateInput) {
+        const date = new Date(dateInput);
+        if (Number.isNaN(date.getTime())) return "";
+
+        const diffMs = Date.now() - date.getTime();
+        const diffMinutes = Math.max(0, Math.round(diffMs / 60000));
+
+        if (diffMinutes < 1) return "Hace un momento";
+        if (diffMinutes < 60) return `Hace ${diffMinutes} min`;
+
+        const diffHours = Math.round(diffMinutes / 60);
+        if (diffHours < 24) return `Hace ${diffHours} h`;
+
+        const diffDays = Math.round(diffHours / 24);
+        if (diffDays === 1) return "Hace 1 día";
+        if (diffDays < 7) return `Hace ${diffDays} días`;
+
+        return date.toLocaleDateString("es-MX", {
+          day: "numeric",
+          month: "short",
+        });
+      }
+
+      function renderSubmissionNotifications() {
+        const list = document.getElementById("teacher-alert-list");
+        const badge = document.getElementById("teacher-alert-badge");
+        if (!list || !badge) return;
+
+        const unreadCount = submissionNotifications.filter((n) => !n.read).length;
+        if (unreadCount > 0) {
+          badge.textContent = unreadCount > 9 ? "9+" : unreadCount;
+          badge.classList.remove("hidden");
+        } else {
+          badge.classList.add("hidden");
+        }
+
+        if (!submissionNotifications.length) {
+          list.innerHTML =
+            '<div class="teacher-alert-empty">Sin entregas pendientes</div>';
+          return;
+        }
+
+        list.innerHTML = submissionNotifications
+          .map((notification) => {
+            const icon =
+              notification.type === "deliverable"
+                ? "📁"
+                : notification.type === "assignment"
+                ? "📝"
+                : "📥";
+            const timeAgo = formatSubmissionRelativeTime(
+              notification.submittedAt
+            );
+            const readClass = notification.read ? "" : "unread";
+            const fileLabel = notification.fileName
+              ? `<p class="text-xs text-gray-500 mt-1">Archivo: ${notification.fileName}</p>`
+              : "";
+
+            return `
+              <div class="teacher-alert-item ${readClass}">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <div class="text-sm font-semibold text-gray-800">
+                      ${icon} ${notification.team}
+                    </div>
+                    <p class="text-xs text-gray-600 mt-1">
+                      ${notification.student} entregó ${notification.item}.
+                    </p>
+                    ${fileLabel}
+                  </div>
+                  <span class="teacher-alert-time">${timeAgo}</span>
+                </div>
+                <button
+                  type="button"
+                  class="mt-3 text-xs font-medium text-blue-600 hover:text-blue-800"
+                  onclick="openSubmissionNotification('${notification.id}', event)"
+                >
+                  Ver entrega
+                </button>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function toggleNotificationPanel(event) {
+        event?.stopPropagation();
+        const panel = document.getElementById("teacher-alert-panel");
+        if (!panel) return;
+        renderSubmissionNotifications();
+        panel.classList.toggle("hidden");
+      }
+
+      function markAllNotificationsAsRead(event) {
+        event?.stopPropagation();
+        submissionNotifications.forEach((notification) => {
+          notification.read = true;
+        });
+        renderSubmissionNotifications();
+      }
+
+      function openSubmissionNotification(id, event) {
+        event?.stopPropagation();
+        const notification = submissionNotifications.find((n) => n.id === id);
+        if (!notification) return;
+        notification.read = true;
+        renderSubmissionNotifications();
+        const message = `📥 ${notification.team}: ${notification.student} entregó ${notification.item}`;
+        showNotification(message, "info");
+      }
+
+      function addSubmissionNotification(notification) {
+        const payload = Object.assign(
+          {
+            id: `notif-${Date.now()}`,
+            read: false,
+            submittedAt: new Date().toISOString(),
+            type: "deliverable",
+          },
+          notification
+        );
+
+        submissionNotifications.unshift(payload);
+        renderSubmissionNotifications();
+        const toastMessage = `✅ ${payload.team} registró ${payload.item}`;
+        showNotification(toastMessage, "success");
+      }
+
+      document.addEventListener("click", (event) => {
+        const wrapper = document.getElementById("teacher-alert-wrapper");
+        const panel = document.getElementById("teacher-alert-panel");
+        if (!wrapper || !panel || panel.classList.contains("hidden")) return;
+        if (!wrapper.contains(event.target)) {
+          panel.classList.add("hidden");
+        }
+      });
+
+      // Real student data
+      const studentsData = [
                   Ver Resultados
                 </button>
               </div>
@@ -1856,10 +2168,26 @@
                   <option value="good">Bueno (80-89)</option>
                   <option value="risk">En riesgo (&lt;70)</option>
                 </select>
-              </div>
-            </div>
-          </div>
-
+        // Load initial content
+        loadStudents();
+        renderCalendar();
+        renderSubmissionNotifications();
+
+        // Simulate a fresh submission arriving after load
+        setTimeout(() => {
+          addSubmissionNotification({
+            team: "DataFlow",
+            student: "Villegas Sosa, Ramsés Mauricio",
+            item: "Entrega: Roadmap",
+            fileName: "roadmap_dataflow.pdf",
+            type: "deliverable",
+          });
+        }, 8000);
+
+        // Show welcome notification
+        setTimeout(() => {
+          showNotification(
+            "👋 Bienvenido al Panel del Maestro. Semana 8 de 15 en progreso.",
           <!-- Students List -->
           <div class="grid md:grid-cols-2 gap-6" id="students-container">
             <!-- Student cards will be generated here -->
