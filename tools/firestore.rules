@@ -119,5 +119,55 @@ service cloud.firestore {
     }
 
     // NOTE: Merge these forum rules into your existing rules if you already have them.
+
+    match /users/{userId} {
+      allow read: if isTeacher();
+      allow write: if false;
+    }
+
+    match /grupos/{grupoId} {
+      allow read: if isTeacher();
+      allow create, update, delete: if false;
+
+      match /members/{memberId} {
+        allow read: if isTeacher();
+        allow write: if false;
+      }
+
+      match /calificaciones/{studentId} {
+        allow read: if isTeacher();
+        allow create, update, delete: if false;
+
+        match /items/{itemId} {
+          allow read: if isTeacher();
+          allow create, update, delete: if isTeacher();
+        }
+      }
+
+      match /deliverables/{deliverableId} {
+        allow read: if isTeacher();
+        allow create, update, delete: if isTeacher();
+      }
+
+      match /exams/{examId} {
+        allow read: if isTeacher();
+        allow create, update, delete: if isTeacher();
+      }
+
+      match /gantt/{rowId} {
+        allow read: if isTeacher();
+        allow create, update, delete: if isTeacher();
+      }
+
+      match /rubric/{rubricId} {
+        allow read: if isTeacher();
+        allow create, update, delete: if isTeacher();
+      }
+
+      match /assignments/{assignmentId} {
+        allow read: if isTeacher();
+        allow create, update, delete: if isTeacher();
+      }
+    }
   }
 }
