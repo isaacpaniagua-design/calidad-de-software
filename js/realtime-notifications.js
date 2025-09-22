@@ -174,6 +174,7 @@ function initRealtimeNotifications() {
   window[BOOT_FLAG] = true;
 
   const doc = document;
+
   const center = doc.querySelector("[data-realtime-center]");
   if (!center) {
     return;
@@ -190,6 +191,7 @@ function initRealtimeNotifications() {
   const toggleLabel = center.querySelector("[data-realtime-toggle-label]");
 
   if (!optionsList || !feedList || !toggleButton || !panel) {
+
     return;
   }
 
@@ -223,6 +225,7 @@ function initRealtimeNotifications() {
 
   let queue = [];
   let timerId = null;
+
   let unreadCount = 0;
   let isPanelOpen = false;
   let hideTimeoutId = null;
@@ -259,10 +262,12 @@ function initRealtimeNotifications() {
     }
   });
 
+
   renderOptions();
   updateStatus();
   filterFeedItems();
   scheduleNextEvent();
+
 
   function updateToggleLabel(open) {
     const labelText = open ? "Cerrar centro de notificaciones" : "Abrir centro de notificaciones";
@@ -329,6 +334,7 @@ function initRealtimeNotifications() {
       toggleButton.focus();
     }
   }
+
 
   function renderOptions() {
     optionsList.innerHTML = "";
@@ -465,10 +471,12 @@ function initRealtimeNotifications() {
 
     feedList.prepend(card);
 
+
     if (!isPanelOpen) {
       unreadCount = Math.min(unreadCount + 1, 99);
       updateBadge();
     }
+
 
     requestAnimationFrame(() => {
       card.classList.add("is-visible");
