@@ -341,94 +341,119 @@ function setupSessionStatusControl(doc, currentPage) {
 
     const toolbarCard = doc.querySelector(".session-toolbar-card");
     if (!toolbarCard) return;
-    if (toolbarCard.querySelector("[data-role='session-status']")) return;
-
-    ensureSessionStatusStyles(doc);
 
     const slideToolbar = toolbarCard.querySelector(".slide-toolbar");
-    const container = doc.createElement("div");
-    container.className = "session-status-control";
-    container.setAttribute("data-role", "session-status");
-    container.setAttribute("role", "group");
-    container.setAttribute("aria-label", "Estado de la sesión");
+    const html = doc.documentElement;
 
-    const sessionId = page.replace(/\.html$/, "");
-    const storageKey = `${SESSION_STATUS_STORAGE_PREFIX}${sessionId}`;
+    const mountControl = () => {
+      if (toolbarCard.querySelector("[data-role='session-status']")) return;
 
-    const label = doc.createElement("span");
-    const labelId = `session-status-label-${sessionId}`;
-    label.className = "session-status-label";
-    label.id = labelId;
-    label.textContent = "Estado de la sesión";
+      ensureSessionStatusStyles(doc);
 
-    const button = doc.createElement("button");
-    button.type = "button";
-    button.className = "qs-session-status-btn";
-    button.setAttribute("data-role", "session-status-toggle");
-    button.setAttribute("aria-describedby", labelId);
+      const container = doc.createElement("div");
+      container.className = "session-status-control";
+      container.setAttribute("data-role", "session-status");
+      container.setAttribute("role", "group");
+      container.setAttribute("aria-label", "Estado de la sesión");
 
-    const storedState = readStoredSessionStatus(storageKey);
-    let currentIndex = SESSION_STATUS_STATES.findIndex(
-      (state) => state && state.id === storedState,
-    );
-    if (currentIndex < 0) currentIndex = 0;
+      const sessionId = page.replace(/\.html$/, "");
+      const storageKey = `${SESSION_STATUS_STORAGE_PREFIX}${sessionId}`;
 
-    const applyState = (index) => {
-      if (!Array.isArray(SESSION_STATUS_STATES) || SESSION_STATUS_STATES.length === 0)
-        return null;
-      const total = SESSION_STATUS_STATES.length;
-      const normalizedIndex = ((index % total) + total) % total;
-      const state = SESSION_STATUS_STATES[normalizedIndex] || SESSION_STATUS_STATES[0];
-      currentIndex = normalizedIndex;
+      const label = doc.createElement("span");
+      const labelId = `session-status-label-${sessionId}`;
+      label.className = "session-status-label";
+      label.id = labelId;
+      label.textContent = "Estado de la sesión";
 
-      while (button.firstChild) button.removeChild(button.firstChild);
+      const button = doc.createElement("button");
+      button.type = "button";
+      button.className = "qs-session-status-btn";
+      button.setAttribute("data-role", "session-status-toggle");
+      button.setAttribute("aria-describedby", labelId);
 
-      button.dataset.state = state.id;
-      button.setAttribute("data-state", state.id);
-
-      const dot = doc.createElement("span");
-      dot.className = "qs-session-status-dot";
-      dot.setAttribute("aria-hidden", "true");
-
-      const text = doc.createElement("span");
-      text.className = "qs-session-status-text";
-      text.textContent = state.label;
-
-      button.appendChild(dot);
-      button.appendChild(text);
-
-      const nextState = SESSION_STATUS_STATES[(normalizedIndex + 1) % total] || state;
-      const nextLabel = nextState.label || state.label;
-
-      button.setAttribute(
-        "aria-label",
-        `Estado de la sesión: ${state.label}. Activa para cambiar a ${nextLabel}.`,
+      const storedState = readStoredSessionStatus(storageKey);
+      let currentIndex = SESSION_STATUS_STATES.findIndex(
+        (state) => state && state.id === storedState,
       );
-      button.setAttribute(
-        "title",
-        `Estado actual: ${state.label}. Haz clic para marcar como ${nextLabel}.`,
-      );
+      if (currentIndex < 0) currentIndex = 0;
 
-      return state;
+      const applyState = (index) => {
+        if (!Array.isArray(SESSION_STATUS_STATES) || SESSION_STATUS_STATES.length === 0)
+          return null;
+        const total = SESSION_STATUS_STATES.length;
+        const normalizedIndex = ((index % total) + total) % total;
+        const state = SESSION_STATUS_STATES[normalizedIndex] || SESSION_STATUS_STATES[0];
+        currentIndex = normalizedIndex;
+
+        while (button.firstChild) button.removeChild(button.firstChild);
+
+        button.dataset.state = state.id;
+        button.setAttribute("data-state", state.id);
+
+        const dot = doc.createElement("span");
+        dot.className = "qs-session-status-dot";
+        dot.setAttribute("aria-hidden", "true");
+
+        const text = doc.createElement("span");
+        text.className = "qs-session-status-text";
+        text.textContent = state.label;
+
+        button.appendChild(dot);
+        button.appendChild(text);
+
+        const nextState = SESSION_STATUS_STATES[(normalizedIndex + 1) % total] || state;
+        const nextLabel = nextState.label || state.label;
+
+        button.setAttribute(
+          "aria-label",
+          `Estado de la sesión: ${state.label}. Activa para cambiar a ${nextLabel}.`,
+        );
+        button.setAttribute(
+          "title",
+          `Estado actual: ${state.label}. Haz clic para marcar como ${nextLabel}.`,
+        );
+
+        return state;
+      };
+
+      applyState(currentIndex);
+
+      button.addEventListener("click", () => {
+        const nextIndex = (currentIndex + 1) % SESSION_STATUS_STATES.length;
+        const state = applyState(nextIndex);
+        if (state && state.id) {
+          persistSessionStatus(storageKey, state.id);
+        }
+      });
+
+      container.appendChild(label);
+      container.appendChild(button);
+
+      if (slideToolbar && slideToolbar.parentNode === toolbarCard) {
+        toolbarCard.insertBefore(container, slideToolbar);
+      } else {
+        toolbarCard.appendChild(container);
+      }
     };
 
-    applyState(currentIndex);
-
-    button.addEventListener("click", () => {
-      const nextIndex = (currentIndex + 1) % SESSION_STATUS_STATES.length;
-      const state = applyState(nextIndex);
-      if (state && state.id) {
-        persistSessionStatus(storageKey, state.id);
+    const unmountControl = () => {
+      const existing = toolbarCard.querySelector("[data-role='session-status']");
+      if (existing && typeof existing.remove === "function") {
+        existing.remove();
       }
-    });
+    };
 
-    container.appendChild(label);
-    container.appendChild(button);
+    const handleRoleChange = (isTeacher) => {
+      if (isTeacher) {
+        mountControl();
+      } else {
+        unmountControl();
+      }
+    };
 
-    if (slideToolbar && slideToolbar.parentNode === toolbarCard) {
-      toolbarCard.insertBefore(container, slideToolbar);
-    } else {
-      toolbarCard.appendChild(container);
+    handleRoleChange(!!(html && html.classList.contains("role-teacher")));
+    if (html) {
+      observeRoleClassChanges(html, handleRoleChange);
     }
   } catch (_) {}
 }
