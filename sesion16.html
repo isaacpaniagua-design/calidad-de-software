@@ -1822,13 +1822,23 @@
     </main>
 
     <!-- Navigation -->
-    <div class="navigation">
-      <button class="nav-button" onclick="previousSlide()">⬅️ Anterior</button>
-      <button class="nav-button" onclick="resetAll()">🔄 Reiniciar</button>
-      <button class="nav-button" onclick="nextSlide()">Siguiente ➡️</button>
-    </div>
-
     <script>
+      const ensureLayoutNavButton = (id) => {
+        let button = document.getElementById(id);
+        if (button) return button;
+        button = document.createElement("button");
+        button.type = "button";
+        button.id = id;
+        button.hidden = true;
+        button.setAttribute("aria-hidden", "true");
+        button.tabIndex = -1;
+        document.body.appendChild(button);
+        return button;
+      };
+
+      const prevNavButton = ensureLayoutNavButton("prevBtn");
+      const nextNavButton = ensureLayoutNavButton("nextBtn");
+
       let currentSlide = 1;
       const totalSlides = 5;
 
@@ -1860,15 +1870,12 @@
       }
 
       function updateNavigationButtons() {
-        const prevButton = document.querySelector(
-          ".navigation button:first-child"
-        );
-        const nextButton = document.querySelector(
-          ".navigation button:last-child"
-        );
-
-        prevButton.disabled = currentSlide === 1;
-        nextButton.disabled = currentSlide === totalSlides;
+        if (prevNavButton) {
+          prevNavButton.disabled = currentSlide === 1;
+        }
+        if (nextNavButton) {
+          nextNavButton.disabled = currentSlide === totalSlides;
+        }
       }
 
       function previousSlide() {
@@ -1963,6 +1970,13 @@
         setTimeout(() => {
           element.style.animation = "pulse 1s ease-in-out";
         }, 10);
+      }
+
+      if (prevNavButton) {
+        prevNavButton.addEventListener("click", previousSlide);
+      }
+      if (nextNavButton) {
+        nextNavButton.addEventListener("click", nextSlide);
       }
 
       // Keyboard navigation

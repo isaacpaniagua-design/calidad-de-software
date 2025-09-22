@@ -822,18 +822,26 @@
         <div class="indicator" onclick="goToSlide(4)"></div>
         <div class="indicator" onclick="goToSlide(5)"></div>
       </div>
-
-      <div class="navigation">
-        <button class="nav-button" id="prevBtn" onclick="previousSlide()">
-          ← Anterior
-        </button>
-        <button class="nav-button" id="nextBtn" onclick="nextSlide()">
-          Siguiente →
-        </button>
-      </div>
     </div>
 
     <script>
+      const ensureLayoutNavButton = (id) => {
+        let button = document.getElementById(id);
+        if (button) return button;
+        button = document.createElement("button");
+        button.type = "button";
+        button.id = id;
+        button.hidden = true;
+        button.setAttribute("aria-hidden", "true");
+        button.tabIndex = -1;
+        document.body.appendChild(button);
+        return button;
+      };
+
+      const prevBtn = ensureLayoutNavButton("prevBtn");
+      const nextBtn = ensureLayoutNavButton("nextBtn");
+      const slideCounter = document.getElementById("currentSlide");
+
       let currentSlideIndex = 0;
       const slides = document.querySelectorAll(".slide");
       const indicators = document.querySelectorAll(".indicator");
@@ -853,11 +861,16 @@
           indicator.classList.toggle("active", index === currentSlideIndex);
         });
 
-        document.getElementById("currentSlide").textContent =
-          currentSlideIndex + 1;
-        document.getElementById("prevBtn").disabled = currentSlideIndex === 0;
-        document.getElementById("nextBtn").disabled =
-          currentSlideIndex === totalSlides - 1;
+        if (slideCounter) {
+          slideCounter.textContent = currentSlideIndex + 1;
+        }
+
+        if (prevBtn) {
+          prevBtn.disabled = currentSlideIndex === 0;
+        }
+        if (nextBtn) {
+          nextBtn.disabled = currentSlideIndex === totalSlides - 1;
+        }
       }
 
       function nextSlide() {
@@ -877,6 +890,29 @@
       function goToSlide(index) {
         currentSlideIndex = index;
         updateSlideDisplay();
+      }
+
+      const handleLayoutPrev = () => {
+        if (typeof previousSlide === "function") {
+          previousSlide();
+        } else if (typeof changeSlide === "function") {
+          changeSlide(-1);
+        }
+      };
+
+      const handleLayoutNext = () => {
+        if (typeof nextSlide === "function") {
+          nextSlide();
+        } else if (typeof changeSlide === "function") {
+          changeSlide(1);
+        }
+      };
+
+      if (prevBtn) {
+        prevBtn.addEventListener("click", handleLayoutPrev);
+      }
+      if (nextBtn) {
+        nextBtn.addEventListener("click", handleLayoutNext);
       }
 
       // Keyboard navigation

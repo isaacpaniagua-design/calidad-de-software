@@ -261,22 +261,7 @@
             Diapositiva <span id="currentSlide">1</span> de 5
           </span>
         </div>
-        <div class="flex space-x-2">
-          <button
-            onclick="previousSlide()"
-            id="prevBtn"
-            class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg transition-colors"
-          >
-            ← Anterior
-          </button>
-          <button
-            onclick="nextSlide()"
-            id="nextBtn"
-            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
-          >
-            Siguiente →
-          </button>
-        </div>
+
       </div>
       <div class="w-full bg-gray-200 rounded-full h-2 mt-3">
         <div
@@ -1208,6 +1193,24 @@
     </div>
 
     <script>
+      const ensureLayoutNavButton = (id) => {
+        let button = document.getElementById(id);
+        if (button) return button;
+        button = document.createElement("button");
+        button.type = "button";
+        button.id = id;
+        button.hidden = true;
+        button.setAttribute("aria-hidden", "true");
+        button.tabIndex = -1;
+        document.body.appendChild(button);
+        return button;
+      };
+
+      const prevBtn = ensureLayoutNavButton("prevBtn");
+      const nextBtn = ensureLayoutNavButton("nextBtn");
+      const slideCounter = document.getElementById("currentSlide");
+
+
       let currentSlideIndex = 0;
       const totalSlides = 5;
       let debateTimerInterval = null;
@@ -1222,30 +1225,29 @@
 
         document.getElementById(`slide${index + 1}`).classList.add("active");
 
-        document.getElementById("currentSlide").textContent = index + 1;
-        document.getElementById("prevBtn").disabled = index === 0;
-        document.getElementById("nextBtn").disabled = index === totalSlides - 1;
+        if (slideCounter) {
+          slideCounter.textContent = index + 1;
+        }
+
+        prevBtn.disabled = index === 0;
+        nextBtn.disabled = index === totalSlides - 1;
 
         const progress = ((index + 1) / totalSlides) * 100;
         document.getElementById("progressBar").style.width = progress + "%";
 
         if (index === 0) {
-          document
-            .getElementById("prevBtn")
+          prevBtn
             .classList.add("opacity-50", "cursor-not-allowed");
         } else {
-          document
-            .getElementById("prevBtn")
+          prevBtn
             .classList.remove("opacity-50", "cursor-not-allowed");
         }
 
         if (index === totalSlides - 1) {
-          document
-            .getElementById("nextBtn")
+          nextBtn
             .classList.add("opacity-50", "cursor-not-allowed");
         } else {
-          document
-            .getElementById("nextBtn")
+          nextBtn
             .classList.remove("opacity-50", "cursor-not-allowed");
         }
       }
@@ -1418,6 +1420,29 @@
 
       // Initialize
       showSlide(0);
+
+      const handleLayoutPrev = () => {
+        if (typeof previousSlide === "function") {
+          previousSlide();
+        } else if (typeof changeSlide === "function") {
+          changeSlide(-1);
+        }
+      };
+
+      const handleLayoutNext = () => {
+        if (typeof nextSlide === "function") {
+          nextSlide();
+        } else if (typeof changeSlide === "function") {
+          changeSlide(1);
+        }
+      };
+
+      if (prevBtn) {
+        prevBtn.addEventListener("click", handleLayoutPrev);
+      }
+      if (nextBtn) {
+        nextBtn.addEventListener("click", handleLayoutNext);
+      }
 
       // Keyboard navigation
       document.addEventListener("keydown", (e) => {

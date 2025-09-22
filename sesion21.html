@@ -846,20 +846,27 @@
         </div>
       </div>
 
-      <div class="navigation">
-        <button class="nav-button" id="prevBtn" onclick="changeSlide(-1)">
-          ← Anterior
-        </button>
-        <div class="slide-counter">
-          <span id="currentSlide">1</span> / <span id="totalSlides">5</span>
-        </div>
-        <button class="nav-button" id="nextBtn" onclick="changeSlide(1)">
-          Siguiente →
-        </button>
       </div>
     </div>
 
     <script>
+      const ensureLayoutNavButton = (id) => {
+        let button = document.getElementById(id);
+        if (button) return button;
+        button = document.createElement("button");
+        button.type = "button";
+        button.id = id;
+        button.hidden = true;
+        button.setAttribute("aria-hidden", "true");
+        button.tabIndex = -1;
+        document.body.appendChild(button);
+        return button;
+      };
+
+      const prevBtn = ensureLayoutNavButton("prevBtn");
+      const nextBtn = ensureLayoutNavButton("nextBtn");
+      const slideCounter = document.getElementById("currentSlide");
+
       let currentSlideIndex = 0;
       const slides = document.querySelectorAll(".slide");
       const totalSlides = slides.length;
@@ -870,9 +877,12 @@
         slides.forEach((slide) => slide.classList.remove("active"));
         slides[index].classList.add("active");
 
-        document.getElementById("currentSlide").textContent = index + 1;
-        document.getElementById("prevBtn").disabled = index === 0;
-        document.getElementById("nextBtn").disabled = index === totalSlides - 1;
+        if (slideCounter) {
+          slideCounter.textContent = index + 1;
+        }
+
+        prevBtn.disabled = index === 0;
+        nextBtn.disabled = index === totalSlides - 1;
 
         // Scroll to top smoothly when changing slides
         window.scrollTo({
@@ -887,6 +897,29 @@
           currentSlideIndex = newIndex;
           showSlide(currentSlideIndex);
         }
+      }
+
+      const handleLayoutPrev = () => {
+        if (typeof previousSlide === "function") {
+          previousSlide();
+        } else if (typeof changeSlide === "function") {
+          changeSlide(-1);
+        }
+      };
+
+      const handleLayoutNext = () => {
+        if (typeof nextSlide === "function") {
+          nextSlide();
+        } else if (typeof changeSlide === "function") {
+          changeSlide(1);
+        }
+      };
+
+      if (prevBtn) {
+        prevBtn.addEventListener("click", handleLayoutPrev);
+      }
+      if (nextBtn) {
+        nextBtn.addEventListener("click", handleLayoutNext);
       }
 
       // Keyboard navigation
