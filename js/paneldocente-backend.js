@@ -3,7 +3,7 @@
 
 import { initFirebase, getDb, onAuth, isTeacherByDoc, isTeacherEmail } from './firebase.js';
 import {
-  collection, collectionGroup, doc, getDoc, getDocs, setDoc, updateDoc, addDoc,
+  collection, doc, getDoc, getDocs, setDoc, updateDoc, addDoc,
   query, where, orderBy, limit, serverTimestamp, Timestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
@@ -23,6 +23,45 @@ var ESC_MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#
 function escHtml(str){ return String(str==null? '': str).replace(/[&<>"']/g, function(ch){ return ESC_MAP[ch] || ch; }); }
 function escAttr(str){ return escHtml(str); }
 function updateSyncStamp(){ var now=new Date(); setText('pd-summary-sync', fmtDate(now)+' '+now.toLocaleTimeString()); }
+
+
+function showStatusBanner(title, message, variant){
+  var banner = $id('pd-status-banner');
+  if (!banner) return;
+  var titleEl = $id('pd-status-title');
+  var msgEl = $id('pd-status-message');
+  if (titleEl) titleEl.textContent = title || '';
+  if (msgEl) msgEl.textContent = message || '';
+  banner.setAttribute('data-variant', variant || 'info');
+  banner.hidden = false;
+}
+
+function hideStatusBanner(){
+  var banner = $id('pd-status-banner');
+  if (banner) banner.hidden = true;
+}
+
+function setPanelLocked(root, locked){
+  var target = root || $id('paneldocente-root');
+  if (!target) return;
+  if (locked) target.setAttribute('data-locked', 'true');
+  else target.removeAttribute('data-locked');
+}
+
+async function computeTeacherState(user){
+  var email = user && user.email ? user.email : '';
+  var teacher = false;
+  if (user && user.uid){
+    try { teacher = await isTeacherByDoc(user.uid); }
+    catch(_){ teacher = false; }
+  }
+  if (!teacher && email){
+    try { teacher = isTeacherEmail(email); }
+    catch(_){ teacher = false; }
+  }
+  return { user: user || null, email: email, isTeacher: !!teacher };
+}
+
 
 // ===== Cálculo de calificaciones =====
 function inferUnidad(it){
@@ -73,28 +112,53 @@ async function fetchStudents(db, grupoId){
   return out;
 }
 async function fetchCalifItems(db, grupoId, uid){
-  var snap = await getDocs(query(collection(db, 'grupos', grupoId, 'calificaciones', uid, 'items'), orderBy('fecha','asc')));
-  var arr=[]; snap.forEach(function(d){ var o=d.data(); o.id=d.id; arr.push(o); });
-  return arr;
+  try {
+    var snap = await getDocs(query(collection(db, 'grupos', grupoId, 'calificaciones', uid, 'items'), orderBy('fecha','asc')));
+    var arr=[]; snap.forEach(function(d){ var o=d.data(); o.id=d.id; arr.push(o); });
+    return arr;
+  } catch (e) {
+    console.error('Error al obtener calificaciones para', uid, e);
+    return [];
+  }
 }
 async function fetchDeliverables(db, grupoId){
-  var snap = await getDocs(query(collection(db, 'grupos', grupoId, 'deliverables'), orderBy('dueAt','asc')));
-  var arr=[]; snap.forEach(function(d){ var o=d.data(); o.id=d.id; arr.push(o); });
-  return arr;
+  try {
+    var snap = await getDocs(query(collection(db, 'grupos', grupoId, 'deliverables'), orderBy('dueAt','asc')));
+    var arr=[]; snap.forEach(function(d){ var o=d.data(); o.id=d.id; arr.push(o); });
+    return arr;
+  } catch (e) {
+    console.error('Error al obtener entregables', e);
+    return [];
+  }
 }
 async function fetchExams(db, grupoId){
-  var snap = await getDocs(query(collection(db, 'grupos', grupoId, 'exams')));
-  var map={}; snap.forEach(function(d){ map[d.id]=d.data(); });
-  return map; // u1/u2
+  try {
+    var snap = await getDocs(query(collection(db, 'grupos', grupoId, 'exams')));
+    var map={}; snap.forEach(function(d){ map[d.id]=d.data(); });
+    return map; // u1/u2
+  } catch (e) {
+    console.error('Error al obtener ligas de exámenes', e);
+    return {};
+  }
 }
 async function fetchGantt(db, grupoId){
-  var snap = await getDocs(query(collection(db, 'grupos', grupoId, 'gantt'), orderBy('startAt','asc')));
-  var arr=[]; snap.forEach(function(d){ var o=d.data(); o.id=d.id; arr.push(o); });
-  return arr;
+  try {
+    var snap = await getDocs(query(collection(db, 'grupos', grupoId, 'gantt'), orderBy('startAt','asc')));
+    var arr=[]; snap.forEach(function(d){ var o=d.data(); o.id=d.id; arr.push(o); });
+    return arr;
+  } catch (e) {
+    console.error('Error al obtener el cronograma', e);
+    return [];
+  }
 }
 async function getRubric(db, grupoId){
-  var r = await getDoc(doc(db, 'grupos', grupoId, 'rubric', 'main'));
-  return r.exists() ? r.data() : { content: '' };
+  try {
+    var r = await getDoc(doc(db, 'grupos', grupoId, 'rubric', 'main'));
+    return r.exists() ? r.data() : { content: '' };
+  } catch (e) {
+    console.error('Error al obtener la rúbrica', e);
+    return { content: '' };
+  }
 }
 async function saveRubric(db, grupoId, content){
   await setDoc(doc(db, 'grupos', grupoId, 'rubric', 'main'), { content: content, updatedAt: serverTimestamp() }, { merge: true });
@@ -179,6 +243,58 @@ function renderExams(exams){
   if (a2 && u2 && u2.url) { a2.href = u2.url; a2.removeAttribute('aria-disabled'); }
 }
 
+function renderGanttTable(rows){
+  var ganttTbody = $id('pd-gantt-tbody');
+  if (!ganttTbody) return;
+  ganttTbody.innerHTML='';
+  if (!Array.isArray(rows) || !rows.length){
+    ganttTbody.innerHTML = '<tr><td colspan="5" class="pd-empty">Sin actividades programadas.</td></tr>';
+    return;
+  }
+  for (var i=0;i<rows.length;i++){
+    var t = rows[i] || {};
+    var s = toDate(t.startAt);
+    var e = toDate(t.endAt);
+    var row='\
+      <tr>\
+        <td>'+ escHtml(t.title||'Tarea') +'</td>\
+        <td>'+ escHtml(s?fmtDate(s):'—') +'</td>\
+        <td>'+ escHtml(e?fmtDate(e):'—') +'</td>\
+        <td>'+ escHtml(t.owner||'—') +'</td>\
+        <td>'+ escHtml(t.status||'pendiente') +'</td>\
+      </tr>';
+    ganttTbody.insertAdjacentHTML('beforeend', row);
+  }
+}
+
+async function populateAssignments(db, grupoId){
+  var asgTbody = $id('pd-assignments-tbody');
+  if (!asgTbody) return;
+  try {
+    var asnap = await getDocs(query(collection(db, 'grupos', grupoId, 'assignments'), orderBy('unidad','asc')));
+    asgTbody.innerHTML='';
+    if (asnap.empty){
+      asgTbody.innerHTML = '<tr><td colspan="5" class="pd-empty">Sin asignaciones.</td></tr>';
+      return;
+    }
+    asnap.forEach(function(d){
+      var a = d.data() || {};
+      var row='\
+        <tr>\
+          <td>'+ escHtml(a.title||'Asignación') +'</td>\
+          <td style="text-align:center">'+ escHtml(a.unidad||'—') +'</td>\
+          <td style="text-align:right">'+ ((a.ponderacion!=null)? escHtml(a.ponderacion+'%') : '—') +'</td>\
+          <td>'+ escHtml(a.calItemKey||'—') +'</td>\
+          <td>'+ escHtml(a.description||'—') +'</td>\
+        </tr>';
+      asgTbody.insertAdjacentHTML('beforeend', row);
+    });
+  } catch (e) {
+    console.error('Error al obtener asignaciones', e);
+    asgTbody.innerHTML = '<tr><td colspan="5" class="pd-empty">No fue posible cargar las asignaciones.</td></tr>';
+  }
+}
+
 // ===== Mailto =====
 function openMailTo(list, subject, body){
   if (!list || !list.length) return;
@@ -189,6 +305,158 @@ function openMailTo(list, subject, body){
     '&body=' + encodeURIComponent(body||'Hola, este es un recordatorio.');
   window.location.href = mailto;
 }
+
+function bindRubricSave(db, grupo){
+  var btn = $id('pd-rubric-save');
+  if (!btn || btn.__pdBound) return;
+  btn.__pdBound = true;
+  btn.addEventListener('click', async function(){
+    var textarea = $id('pd-rubric-text');
+    var val = textarea && textarea.value ? textarea.value : '';
+    try {
+      await saveRubric(db, grupo, val);
+      alert('Rúbrica guardada.');
+    } catch (err) {
+      console.error('No se pudo guardar la rúbrica', err);
+      alert('No se pudo guardar la rúbrica: ' + (err && err.message ? err.message : err));
+    }
+  });
+}
+
+function bindDeliverableForm(db, grupo, state){
+  var form = $id('pd-new-deliverable-form');
+  if (!form || form.__pdBound) return;
+  form.__pdBound = true;
+  form.addEventListener('submit', async function(ev){
+    ev.preventDefault();
+    var title = ($id('pd-deliv-title') && $id('pd-deliv-title').value) || '';
+    var desc  = ($id('pd-deliv-desc') && $id('pd-deliv-desc').value) || '';
+    var unidad= ($id('pd-deliv-unidad') && $id('pd-deliv-unidad').value) || '';
+    var weight= Number(($id('pd-deliv-weight') && $id('pd-deliv-weight').value) || 0);
+    var due   = toDate(($id('pd-deliv-due') && $id('pd-deliv-due').value) || '');
+    var payload = { title:title, description:desc, unidad: unidad? Number(unidad):null, weight:weight };
+    if (due) payload.dueAt = Timestamp.fromDate(due);
+    try {
+      await createDeliverable(db, grupo, payload);
+      state.deliverables = await fetchDeliverables(db, grupo);
+      renderDeliverablesList(state.deliverables);
+      updateSyncStamp();
+      if ($id('pd-deliv-title')) $id('pd-deliv-title').value='';
+      if ($id('pd-deliv-desc')) $id('pd-deliv-desc').value='';
+      if ($id('pd-deliv-unidad')) $id('pd-deliv-unidad').value='';
+      if ($id('pd-deliv-weight')) $id('pd-deliv-weight').value='';
+      if ($id('pd-deliv-due')) $id('pd-deliv-due').value='';
+    } catch (err) {
+      console.error('No se pudo crear el entregable', err);
+      alert('No se pudo crear el entregable: ' + (err && err.message ? err.message : err));
+    }
+  });
+}
+
+function bindDeliverableTable(db, grupo, state){
+  var delTbody = $id('pd-deliverables-tbody');
+  if (!delTbody || delTbody.__pdBound) return;
+  delTbody.__pdBound = true;
+  delTbody.addEventListener('click', async function(ev){
+    var btn = ev.target;
+    var tr = btn && btn.closest ? btn.closest('tr[data-id]') : null;
+    var id = tr ? tr.getAttribute('data-id') : null;
+    if (!id) return;
+    if (btn.classList.contains('pd-deliv-del')){
+      if (!confirm('¿Eliminar entregable?')) return;
+      try {
+        await deleteDeliverable(db, grupo, id);
+        state.deliverables = await fetchDeliverables(db, grupo);
+        renderDeliverablesList(state.deliverables);
+        updateSyncStamp();
+      } catch (err) {
+        console.error('No se pudo eliminar el entregable', err);
+        alert('No se pudo eliminar el entregable: ' + (err && err.message ? err.message : err));
+      }
+    } else if (btn.classList.contains('pd-deliv-edit')){
+      var firstCell = tr ? tr.querySelector('td') : null;
+      var nuevo = prompt('Nuevo título:', firstCell ? firstCell.textContent : '');
+      if (nuevo && nuevo.trim()){
+        var trimmed = nuevo.trim();
+        try {
+          await updateDeliverable(db, grupo, id, { title: trimmed });
+          if (firstCell) firstCell.textContent = trimmed;
+          updateSyncStamp();
+        } catch (err) {
+          console.error('No se pudo actualizar el entregable', err);
+          alert('No se pudo actualizar el entregable: ' + (err && err.message ? err.message : err));
+        }
+      }
+    }
+  });
+}
+
+function bindReminder(state){
+  var remindBtn = $id('pd-remind-selected');
+  if (!remindBtn || remindBtn.__pdBound) return;
+  remindBtn.__pdBound = true;
+  remindBtn.addEventListener('click', function(){
+    var checks = document.querySelectorAll('.pd-student-check:checked');
+    var list = [];
+    for (var i=0;i<checks.length;i++){
+      var em = checks[i].getAttribute('data-email') || '';
+      if (em) list.push({ email: em });
+    }
+    if (!list.length) list = state.students || [];
+    openMailTo(list, 'Recordatorio del curso', 'Hola, este es un recordatorio del curso de Calidad.');
+  });
+}
+
+async function loadDataForGroup(db, grupo, state){
+  state.students = await fetchStudents(db, grupo);
+  var metrics = {};
+  state.metrics = metrics;
+  var CONC=5, idx=0;
+  async function nextBatch(){
+    var batch=[];
+    for (var k=0; k<CONC && idx<state.students.length; k++, idx++){
+      (function(s){
+        batch.push((async function(){
+          try {
+            var items = await fetchCalifItems(db, grupo, s.uid);
+            metrics[s.uid] = computeMetricsFromItems(items);
+          } catch (err) {
+            console.error('No se pudieron calcular métricas para', s.uid, err);
+            metrics[s.uid] = { u1:0, u2:0, u3:0, finalPct:0 };
+          }
+        })());
+      })(state.students[idx]);
+    }
+    if (!batch.length) return;
+    await Promise.all(batch);
+    if (idx < state.students.length) return nextBatch();
+  }
+  await nextBatch();
+
+  renderSummaryStats(state.students, metrics);
+  state.deliverables = await fetchDeliverables(db, grupo);
+  renderDeliverablesList(state.deliverables);
+  var exams = await fetchExams(db, grupo);
+  renderExams(exams);
+
+  renderStudentsTable(state.students, metrics);
+
+  updateSyncStamp();
+
+  var rub = await getRubric(db, grupo);
+  if ($id('pd-rubric-text')) $id('pd-rubric-text').value = rub && rub.content ? rub.content : '';
+
+
+  bindRubricSave(db, grupo);
+  bindDeliverableForm(db, grupo, state);
+  bindDeliverableTable(db, grupo, state);
+  bindReminder(state);
+
+  var gantt = await fetchGantt(db, grupo);
+  renderGanttTable(gantt);
+  await populateAssignments(db, grupo);
+}
+
 
 // ===== Main =====
 async function main(){
@@ -201,149 +469,70 @@ async function main(){
   var dataset = root && root.dataset ? root.dataset : {};
   var grupo = (dataset && dataset.grupo ? dataset.grupo : (params.get('grupo') || 'calidad-2025')).trim();
 
-  // Autorización mínima (para UI)
-  var isTeacher = false;
-  onAuth(async function(user){
-    var email = user && user.email ? user.email : '';
-    isTeacher = user && user.uid ? (await isTeacherByDoc(user.uid) || isTeacherEmail(email)) : false;
-    var b = document.body;
-    if (b) { b.classList.toggle('teacher-yes', !!isTeacher); b.classList.toggle('teacher-no', !isTeacher); }
+  var state = { students: [], deliverables: [], metrics: {} };
+  var isLoading = false;
+  var hasLoaded = false;
+  var lastLoadedUid = null;
+
+  setPanelLocked(root, true);
+  showStatusBanner('Preparando panel…', 'Esperando autenticación.', 'info');
+
+  onAuth(function(user){
+    handleAuthChange(user).catch(function(err){ console.error(err); });
   });
 
-  // Datos base
-  var students = await fetchStudents(db, grupo);
-
-  // Métricas por alumno
-  var metrics = {}; var CONC=5, idx=0;
-  async function nextBatch(){
-    var batch=[];
-    for (var k=0; k<CONC && idx<students.length; k++, idx++){
-      (function(s){
-        batch.push((async function(){
-          var items = await fetchCalifItems(db, grupo, s.uid);
-          metrics[s.uid] = computeMetricsFromItems(items);
-        })());
-      })(students[idx]);
+  async function handleAuthChange(user){
+    var info = await computeTeacherState(user);
+    var body = document.body;
+    if (body) {
+      body.classList.toggle('teacher-yes', !!info.isTeacher);
+      body.classList.toggle('teacher-no', !info.isTeacher);
     }
-    await Promise.all(batch);
-    if (idx < students.length) return nextBatch();
-  }
-  await nextBatch();
 
-  // Renderizado
-  renderSummaryStats(students, metrics);
-  var deliverables = await fetchDeliverables(db, grupo);
-  renderDeliverablesList(deliverables);
-  var exams = await fetchExams(db, grupo);
-  renderExams(exams);
-  renderStudentsTable(students, metrics);
-  updateSyncStamp();
 
-  // Rúbrica
-  var rub = await getRubric(db, grupo);
-  if ($id('pd-rubric-text')) $id('pd-rubric-text').value = rub && rub.content ? rub.content : '';
-  if ($id('pd-rubric-save')){
-    $id('pd-rubric-save').addEventListener('click', async function(){
-      var val = ($id('pd-rubric-text') && $id('pd-rubric-text').value) || '';
-      await saveRubric(db, grupo, val);
-      alert('Rúbrica guardada.');
-    });
-  }
-
-  // CRUD entregables
-  var form = $id('pd-new-deliverable-form');
-  if (form){
-    form.addEventListener('submit', async function(ev){
-      ev.preventDefault();
-      var title = ($id('pd-deliv-title') && $id('pd-deliv-title').value) || '';
-      var desc  = ($id('pd-deliv-desc') && $id('pd-deliv-desc').value) || '';
-      var unidad= ($id('pd-deliv-unidad') && $id('pd-deliv-unidad').value) || '';
-      var weight= Number(($id('pd-deliv-weight') && $id('pd-deliv-weight').value) || 0);
-      var due   = toDate(($id('pd-deliv-due') && $id('pd-deliv-due').value) || '');
-      var payload = { title:title, description:desc, unidad: unidad? Number(unidad):null, weight:weight };
-      if (due) payload.dueAt = Timestamp.fromDate(due);
-      await createDeliverable(db, grupo, payload);
-      deliverables = await fetchDeliverables(db, grupo);
-      renderDeliverablesList(deliverables);
-      updateSyncStamp();
-      if ($id('pd-deliv-title')) $id('pd-deliv-title').value='';
-      if ($id('pd-deliv-desc')) $id('pd-deliv-desc').value='';
-      if ($id('pd-deliv-unidad')) $id('pd-deliv-unidad').value='';
-      if ($id('pd-deliv-weight')) $id('pd-deliv-weight').value='';
-      if ($id('pd-deliv-due')) $id('pd-deliv-due').value='';
-    });
-  }
-
-  var delTbody = $id('pd-deliverables-tbody');
-  if (delTbody){
-    delTbody.addEventListener('click', async function(ev){
-      var btn = ev.target;
-      var tr = btn && btn.closest ? btn.closest('tr[data-id]') : null;
-      var id = tr ? tr.getAttribute('data-id') : null;
-      if (!id) return;
-      if (btn.classList.contains('pd-deliv-del')){
-        if (!confirm('¿Eliminar entregable?')) return;
-        await deleteDeliverable(db, grupo, id);
-        deliverables = await fetchDeliverables(db, grupo);
-        renderDeliverablesList(deliverables);
-        updateSyncStamp();
-      } else if (btn.classList.contains('pd-deliv-edit')){
-        var nuevo = prompt('Nuevo título:', tr.querySelector('td').textContent);
-        if (nuevo){ await updateDeliverable(db, grupo, id, { title:nuevo }); tr.querySelector('td').textContent = nuevo; updateSyncStamp(); }
-      }
-    });
-  }
-
-  // Recordatorios manuales
-  var remindBtn = $id('pd-remind-selected');
-  if (remindBtn){
-    remindBtn.addEventListener('click', function(){
-      var checks = document.querySelectorAll('.pd-student-check:checked');
-      var list = [];
-      for (var i=0;i<checks.length;i++){ var em = checks[i].getAttribute('data-email') || ''; list.push({ email: em }); }
-      if (!list.length) list = students;
-      openMailTo(list, 'Recordatorio del curso', 'Hola, este es un recordatorio del curso de Calidad.');
-    });
-  }
-
-  // Gantt
-  var gantt = await fetchGantt(db, grupo);
-  var ganttTbody = $id('pd-gantt-tbody');
-  if (ganttTbody){
-    ganttTbody.innerHTML='';
-    for (var i=0;i<gantt.length;i++){
-      var t = gantt[i];
-      var s = toDate(t.startAt), e = toDate(t.endAt);
-      var row = '\
-        <tr>\
-          <td>'+ (t.title||'Tarea') +'</td>\
-          <td>'+ (s?fmtDate(s):'—') +'</td>\
-          <td>'+ (e?fmtDate(e):'—') +'</td>\
-          <td>'+ (t.owner||'—') +'</td>\
-          <td>'+ (t.status||'pendiente') +'</td>\
-        </tr>';
-      ganttTbody.insertAdjacentHTML('beforeend', row);
+    if (!info.isTeacher){
+      hasLoaded = false;
+      lastLoadedUid = null;
+      setPanelLocked(root, true);
+      showStatusBanner(
+        user ? 'Sin privilegios de docente' : 'Autenticación requerida',
+        user
+          ? 'Tu cuenta no tiene permisos para ver este panel. Solicita acceso al coordinador.'
+          : 'Inicia sesión con tu cuenta institucional de docente para revisar este panel.',
+        user ? 'warning' : 'info'
+      );
+      return;
     }
-  }
 
-  // Asignaciones (si existen)
-  var asgTbody = $id('pd-assignments-tbody');
-  if (asgTbody){
-    var asnap = await getDocs(query(collection(db, 'grupos', grupo, 'assignments'), orderBy('unidad','asc')));
-    asgTbody.innerHTML='';
-    if (asnap.empty){ asgTbody.innerHTML = '<tr><td colspan="5" class="pd-empty">Sin asignaciones.</td></tr>'; }
-    else{
-      asnap.forEach(function(d){
-        var a = d.data(); var row='\
-          <tr>\
-            <td>'+ (a.title||'Asignación') +'</td>\
-            <td style="text-align:center">'+ (a.unidad||'—') +'</td>\
-            <td style="text-align:right">'+ ((a.ponderacion!=null)? (a.ponderacion+'%') : '—') +'</td>\
-            <td>'+ (a.calItemKey||'—') +'</td>\
-            <td>'+ (a.description||'—') +'</td>\
-          </tr>';
-        asgTbody.insertAdjacentHTML('beforeend', row);
-      });
+    var uid = user && user.uid ? user.uid : null;
+    if (hasLoaded && lastLoadedUid === uid){
+      hideStatusBanner();
+      setPanelLocked(root, false);
+      return;
+    }
+
+    if (isLoading) return;
+    isLoading = true;
+    showStatusBanner('Cargando información del grupo…', 'Obteniendo datos desde Firebase.', 'info');
+    try {
+      await loadDataForGroup(db, grupo, state);
+      hideStatusBanner();
+      setPanelLocked(root, false);
+      hasLoaded = true;
+      lastLoadedUid = uid;
+    } catch (err) {
+      console.error('No se pudo cargar la información del panel', err);
+      showStatusBanner(
+        'No se pudieron cargar los datos',
+        'Verifica tu conexión o permisos e intenta nuevamente.',
+        'error'
+      );
+      setPanelLocked(root, true);
+      hasLoaded = false;
+      lastLoadedUid = null;
+    } finally {
+      isLoading = false;
+
     }
   }
 }
