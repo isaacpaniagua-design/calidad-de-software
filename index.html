@@ -1006,147 +1006,248 @@
         border-left-color: #fbbf24;
       }
 
-      .realtime-notifications {
-        position: relative;
-        display: grid;
-        gap: clamp(28px, 4vw, 38px);
-        grid-column: 1 / -1;
-        background: rgba(255, 255, 255, 0.92);
-        border: 1px solid rgba(148, 163, 184, 0.3);
-        border-radius: var(--radius-xl);
-        padding: clamp(32px, 5vw, 44px);
-        box-shadow: var(--shadow-sm);
-        overflow: hidden;
-        isolation: isolate;
-      }
 
-      .realtime-notifications::before {
-        content: "";
-        position: absolute;
-        inset: auto -120px -200px auto;
-        width: 420px;
-        height: 420px;
-        border-radius: 50%;
-        background: radial-gradient(circle, rgba(99, 102, 241, 0.14), transparent 70%);
-        opacity: 0.7;
-        pointer-events: none;
-      }
-
-      .realtime-notifications > * {
-        position: relative;
-        z-index: 1;
-      }
-
-      .realtime-notifications__header {
-        display: grid;
+      .realtime-center {
+        position: fixed;
+        top: clamp(16px, 3vw, 32px);
+        right: clamp(16px, 3vw, 40px);
+        z-index: 1200;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
         gap: 12px;
-        max-width: 640px;
       }
 
-      .realtime-notifications__eyebrow {
-        font-size: 0.75rem;
+      .realtime-toggle {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        border-radius: 999px;
+        border: 1px solid rgba(99, 102, 241, 0.32);
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.96), rgba(79, 70, 229, 0.96));
+        color: #ffffff;
+        font-size: 26px;
+        cursor: pointer;
+        box-shadow: 0 22px 45px rgba(15, 23, 42, 0.28);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .realtime-toggle:hover,
+      .realtime-toggle:focus-visible {
+        transform: translateY(-2px) scale(1.02);
+        box-shadow: 0 24px 52px rgba(79, 70, 229, 0.35);
+        outline: none;
+      }
+
+      .realtime-toggle.has-unread {
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.28), 0 24px 52px rgba(79, 70, 229, 0.35);
+      }
+
+      .realtime-toggle__icon {
+        line-height: 1;
+        filter: drop-shadow(0 6px 12px rgba(15, 23, 42, 0.25));
+      }
+
+      .realtime-toggle__badge {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: #f97316;
+        color: #ffffff;
+        font-size: 0.7rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 6px 12px rgba(249, 115, 22, 0.35);
+      }
+
+      .realtime-panel {
+        width: min(380px, 92vw);
+        padding: clamp(20px, 4vw, 28px);
+        border-radius: var(--radius-lg);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-card);
+        backdrop-filter: blur(16px);
+        display: grid;
+        gap: 18px;
+        opacity: 0;
+        transform: translateY(-12px) scale(0.98);
+        pointer-events: none;
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+
+      .realtime-panel.is-open {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        pointer-events: auto;
+      }
+
+      .realtime-panel__header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .realtime-panel__eyebrow {
+        display: block;
+        font-size: 0.72rem;
         text-transform: uppercase;
-        letter-spacing: 0.12em;
+        letter-spacing: 0.14em;
+
         font-weight: 600;
         color: var(--accent-hover);
       }
 
-      .realtime-notifications__title {
-        margin: 0;
-        font-size: clamp(1.6rem, 3vw, 2rem);
+
+      .realtime-panel__title {
+        margin: 4px 0 0;
+        font-size: 1.25rem;
         font-weight: 600;
       }
 
-      .realtime-notifications__description {
-        margin: 0;
-        color: var(--text-secondary);
-        font-size: 1rem;
+      .realtime-panel__close {
+        border: none;
+        background: rgba(99, 102, 241, 0.12);
+        color: var(--accent-hover);
+        width: 32px;
+        height: 32px;
+        border-radius: 999px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        transition: background 0.2s ease, transform 0.2s ease;
       }
 
-      .realtime-notifications__note {
-        margin: 0;
-        font-size: 0.85rem;
-        color: var(--text-secondary);
+      .realtime-panel__close:hover,
+      .realtime-panel__close:focus-visible {
+        background: rgba(99, 102, 241, 0.18);
+        transform: scale(1.05);
+        outline: none;
       }
 
-      .realtime-notifications__status {
+      .realtime-panel__description {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+      }
+
+      .realtime-panel__status {
+
+
         display: inline-flex;
         align-items: center;
         gap: 8px;
         padding: 8px 16px;
         border-radius: 999px;
         font-weight: 600;
-        font-size: 0.85rem;
+
+        font-size: 0.82rem;
         background: rgba(34, 197, 94, 0.12);
         color: #047857;
         box-shadow: inset 0 0 0 1px rgba(34, 197, 94, 0.25);
+        width: fit-content;
       }
 
-      .realtime-notifications__status::before {
+      .realtime-panel__status::before {
+
         content: "";
         width: 10px;
         height: 10px;
         border-radius: 50%;
         background: #22c55e;
-        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.15);
+
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18);
       }
 
-      .realtime-notifications__status[data-enabled="false"] {
-        background: rgba(148, 163, 184, 0.18);
+      .realtime-panel__status[data-enabled="false"] {
+        background: rgba(148, 163, 184, 0.2);
+
         color: var(--text-secondary);
         box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.35);
       }
 
-      .realtime-notifications__status[data-enabled="false"]::before {
-        background: rgba(148, 163, 184, 0.75);
+
+      .realtime-panel__status[data-enabled="false"]::before {
+        background: rgba(148, 163, 184, 0.8);
         box-shadow: none;
       }
 
-      .realtime-notifications__layout {
-        display: grid;
-        gap: clamp(24px, 4vw, 36px);
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        align-items: start;
-      }
-
-      .realtime-notifications__options {
+      .realtime-panel__content {
         display: grid;
         gap: 18px;
+      }
+
+      .realtime-panel__options {
+        display: grid;
+        gap: 12px;
+      }
+
+      .realtime-panel__section-title {
+        margin: 0;
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent-hover);
+      }
+
+      .realtime-panel__note {
+        margin: 0;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
       }
 
       .realtime-notifications__list {
-        list-style: none;
         margin: 0;
         padding: 0;
+        list-style: none;
         display: grid;
-        gap: 18px;
+        gap: 10px;
+        max-height: 180px;
+        overflow-y: auto;
+        padding-right: 4px;
       }
 
       .realtime-option {
-        display: flex;
+        display: grid;
+        grid-template-columns: 1fr auto;
         align-items: center;
-        gap: 18px;
-        padding: 18px 20px;
-        border-radius: var(--radius-lg);
+        gap: 14px;
+        padding: 12px 14px;
+        border-radius: var(--radius-md);
         background: rgba(248, 250, 252, 0.92);
-        border: 1px solid rgba(148, 163, 184, 0.28);
-        box-shadow: 0 12px 22px rgba(15, 23, 42, 0.08);
-        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+
       }
 
       .realtime-option:hover,
       .realtime-option:focus-within {
+
+        border-color: rgba(99, 102, 241, 0.35);
+        background: rgba(238, 242, 255, 0.9);
         transform: translateY(-2px);
-        border-color: rgba(99, 102, 241, 0.4);
-        box-shadow: 0 18px 32px rgba(15, 23, 42, 0.12);
+
       }
 
       .realtime-option__leading {
         display: flex;
-        align-items: flex-start;
-        gap: 14px;
-        flex: 1;
-        min-width: 0;
+
+        align-items: center;
+        gap: 12px;
+
       }
 
       .realtime-option__icon {
@@ -1156,103 +1257,119 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
-        background: var(--accent-soft);
+
+        font-size: 1.3rem;
+        background: rgba(99, 102, 241, 0.16);
         color: var(--accent-hover);
-        flex-shrink: 0;
+
       }
 
       .realtime-option__content {
         display: grid;
-        gap: 6px;
-        min-width: 0;
+
+        gap: 4px;
+
       }
 
       .realtime-option__title {
         margin: 0;
         font-weight: 600;
-        font-size: 1.02rem;
+
+        font-size: 0.96rem;
+
       }
 
       .realtime-option__description {
         margin: 0;
+
+        font-size: 0.8rem;
         color: var(--text-secondary);
-        font-size: 0.92rem;
       }
 
       .realtime-option__switch {
-        width: 52px;
-        height: 30px;
-        border-radius: 999px;
-        border: none;
-        background: rgba(148, 163, 184, 0.35);
         position: relative;
+        width: 44px;
+        height: 24px;
+        border-radius: 999px;
+        background: rgba(148, 163, 184, 0.35);
+        border: none;
         cursor: pointer;
-        transition: background 0.2s ease, box-shadow 0.2s ease;
-        flex-shrink: 0;
+        transition: background 0.2s ease;
+
       }
 
       .realtime-option__switch::after {
         content: "";
         position: absolute;
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        background: #ffffff;
+
         top: 3px;
         left: 3px;
-        transform: translateX(0);
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #ffffff;
+        box-shadow: 0 6px 14px rgba(15, 23, 42, 0.15);
         transition: transform 0.2s ease;
-        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18);
+
       }
 
       .realtime-option__switch[aria-checked="true"] {
         background: var(--accent);
-        box-shadow: 0 16px 28px rgba(99, 102, 241, 0.25);
+
       }
 
       .realtime-option__switch[aria-checked="true"]::after {
-        transform: translateX(22px);
+        transform: translateX(20px);
+
       }
 
       .realtime-feed {
         display: grid;
-        gap: 18px;
+
+        gap: 12px;
+        border-radius: var(--radius-md);
         background: rgba(248, 250, 252, 0.92);
-        border: 1px solid rgba(148, 163, 184, 0.28);
-        border-radius: var(--radius-lg);
-        padding: 26px 28px;
-        min-height: 260px;
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        padding: 16px;
+
       }
 
       .realtime-feed__header {
         display: grid;
-        gap: 6px;
+
+        gap: 4px;
+
       }
 
       .realtime-feed__title {
         margin: 0;
-        font-size: 1.1rem;
+
+        font-size: 1rem;
+
         font-weight: 600;
       }
 
       .realtime-feed__description {
         margin: 0;
-        font-size: 0.92rem;
+
+        font-size: 0.82rem;
+
         color: var(--text-secondary);
       }
 
       .realtime-feed__empty {
-        margin: 10px 0 0;
+
         display: grid;
         gap: 4px;
-        text-align: center;
-        justify-items: center;
-        padding: 20px 16px;
-        border-radius: var(--radius-md);
-        border: 1px dashed rgba(148, 163, 184, 0.4);
+        align-items: center;
+        justify-items: start;
+        font-size: 0.86rem;
         color: var(--text-secondary);
-        font-size: 0.92rem;
+        padding: 18px;
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px dashed rgba(148, 163, 184, 0.4);
+
       }
 
       .realtime-feed__empty[hidden] {
@@ -1261,20 +1378,27 @@
 
       .realtime-feed__list {
         display: grid;
-        gap: 14px;
+
+        gap: 12px;
+        max-height: 260px;
+        overflow-y: auto;
+        padding-right: 4px;
+
       }
 
       .realtime-feed__item {
         display: grid;
-        gap: 12px;
-        padding: 18px 20px;
+
+        gap: 8px;
+        padding: 14px;
         border-radius: var(--radius-md);
-        background: rgba(255, 255, 255, 0.96);
+        background: #ffffff;
+        border: 1px solid rgba(148, 163, 184, 0.24);
         border-left: 4px solid var(--accent);
-        box-shadow: 0 16px 26px rgba(15, 23, 42, 0.12);
         opacity: 0;
-        transform: translateY(14px);
-        transition: opacity 0.3s ease, transform 0.3s ease;
+        transform: translateY(6px);
+        transition: opacity 0.25s ease, transform 0.25s ease;
+
       }
 
       .realtime-feed__item.is-visible {
@@ -1285,6 +1409,9 @@
       .realtime-feed__item-header {
         display: flex;
         align-items: center;
+
+        justify-content: space-between;
+
         gap: 12px;
       }
 
@@ -1292,61 +1419,85 @@
         display: flex;
         align-items: center;
         gap: 12px;
-        flex: 1;
-        min-width: 0;
+
       }
 
       .realtime-feed__icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 14px;
+        width: 42px;
+        height: 42px;
+        border-radius: 16px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.2rem;
-        background: var(--accent-soft);
+        font-size: 1.4rem;
+        background: rgba(99, 102, 241, 0.16);
         color: var(--accent-hover);
-        flex-shrink: 0;
       }
 
       .realtime-feed__item-info {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        min-width: 0;
+        display: grid;
+        gap: 2px;
       }
 
       .realtime-feed__tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-weight: 600;
         font-size: 0.75rem;
+        font-weight: 600;
+
         text-transform: uppercase;
         letter-spacing: 0.08em;
         background: rgba(99, 102, 241, 0.16);
         color: var(--accent-hover);
+
+        padding: 2px 8px;
+        border-radius: 999px;
+
         width: fit-content;
       }
 
       .realtime-feed__meta {
-        font-size: 0.8rem;
+
+        font-size: 0.78rem;
+
         color: var(--text-secondary);
       }
 
       .realtime-feed__message {
         margin: 0;
         color: var(--text-primary);
-        font-size: 0.95rem;
+
+        font-size: 0.92rem;
+
       }
 
       .realtime-feed__detail {
         margin: 0;
-        font-size: 0.85rem;
+
+        font-size: 0.82rem;
         color: var(--text-secondary);
       }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      @media (max-width: 720px) {
+        .realtime-center {
+          right: clamp(12px, 4vw, 20px);
+        }
+
+        .realtime-panel {
+          width: min(94vw, 420px);
+        }
+      }
+
 
       .realtime-option[data-type="activity-received"] .realtime-option__icon,
       .realtime-feed__item[data-type="activity-received"] .realtime-feed__icon {
@@ -1470,9 +1621,8 @@
           justify-content: flex-start;
         }
 
-        .realtime-notifications__layout {
-          grid-template-columns: 1fr;
-        }
+
+
       }
 
       @media (max-width: 640px) {
@@ -1486,6 +1636,11 @@
         .student-uploads,
         .realtime-notifications {
           padding: 26px 22px;
+        }
+
+        .realtime-panel {
+          width: min(96vw, 420px);
+          padding: 20px 18px;
         }
 
         .student-uploads__actions {
@@ -1504,16 +1659,20 @@
         }
 
         .realtime-option {
-          flex-direction: column;
+
+          grid-template-columns: 1fr;
+
           align-items: flex-start;
         }
 
         .realtime-option__switch {
-          align-self: flex-end;
+
+          justify-self: end;
         }
 
         .realtime-feed {
-          padding: 22px 20px;
+          padding: 20px 18px;
+
         }
       }
     </style>
@@ -1639,6 +1798,67 @@
 
     </div>
 
+    <div class="realtime-center" data-realtime-center>
+      <button
+        class="realtime-toggle"
+        type="button"
+        aria-haspopup="true"
+        aria-expanded="false"
+        aria-controls="realtimePanel"
+        data-realtime-toggle
+      >
+        <span class="realtime-toggle__icon" aria-hidden="true">🔔</span>
+        <span class="sr-only" data-realtime-toggle-label>Abrir centro de notificaciones</span>
+        <span class="realtime-toggle__badge" data-realtime-badge hidden></span>
+      </button>
+
+      <section
+        class="realtime-panel"
+        id="realtimePanel"
+        role="dialog"
+        aria-label="Notificaciones en tiempo real"
+        tabindex="-1"
+        data-realtime-panel
+        hidden
+      >
+        <header class="realtime-panel__header">
+          <div>
+            <span class="realtime-panel__eyebrow">Alertas inteligentes</span>
+            <h2 class="realtime-panel__title">Notificaciones en tiempo real</h2>
+          </div>
+          <button type="button" class="realtime-panel__close" data-realtime-close aria-label="Cerrar notificaciones">
+            <span aria-hidden="true">×</span>
+            <span class="sr-only">Cerrar centro de notificaciones</span>
+          </button>
+        </header>
+        <p class="realtime-panel__description">
+          Personaliza qué eventos generan avisos al instante y revisa el historial simulado de entregas, calificaciones y foro.
+        </p>
+        <div class="realtime-panel__status" data-realtime-status data-enabled="true">
+          Notificaciones en tiempo real activas.
+        </div>
+        <div class="realtime-panel__content">
+          <div class="realtime-panel__options">
+            <h3 class="realtime-panel__section-title">Tipos de alerta</h3>
+            <ul class="realtime-notifications__list" data-realtime-options></ul>
+            <p class="realtime-panel__note">Tus preferencias se guardan en este dispositivo.</p>
+          </div>
+          <div class="realtime-feed">
+            <div class="realtime-feed__header">
+              <h3 class="realtime-feed__title">Actividad en vivo</h3>
+              <p class="realtime-feed__description">
+                Vista previa de cómo aparecerán las alertas en la plataforma.
+              </p>
+            </div>
+            <div class="realtime-feed__empty" data-realtime-empty>
+              <strong data-empty-title>Esperando actividad…</strong>
+              <span data-empty-message>Activa al menos un tipo para previsualizar las notificaciones en vivo.</span>
+            </div>
+            <div class="realtime-feed__list" data-realtime-feed></div>
+          </div>
+        </div>
+      </section>
+    </div>
 
 
     <!-- Contenido principal -->
@@ -1901,53 +2121,8 @@
 
         </section>
 
-        <section class="realtime-notifications" id="realtimeNotifications">
-          <div class="realtime-notifications__header">
-            <span class="realtime-notifications__eyebrow">Alertas inteligentes</span>
-            <h2 class="realtime-notifications__title">Configura tus notificaciones en tiempo real</h2>
-            <p class="realtime-notifications__description">
-              Decide qué eventos deben avisarte al instante: entregas recibidas, calificaciones publicadas,
-              evidencias compartidas por alumnos o docentes y actividad del foro colaborativo.
-            </p>
-            <p class="realtime-notifications__note">
-              Tus preferencias se guardan en este dispositivo y sincronizan la experiencia de alumnos y docentes
-              en toda la plataforma.
-            </p>
-            <div
-              class="realtime-notifications__status"
-              role="status"
-              aria-live="polite"
-              data-realtime-status
-              data-enabled="true"
-            >
-              Notificaciones en tiempo real activas.
-            </div>
-          </div>
 
-          <div class="realtime-notifications__layout">
-            <div class="realtime-notifications__options">
-              <ul class="realtime-notifications__list" data-realtime-options></ul>
-              <p class="realtime-notifications__note">
-                Marca solo los tipos necesarios para mantener enfocadas tus alertas en paneles, entregas y foro.
-              </p>
-            </div>
 
-            <div class="realtime-feed">
-              <div class="realtime-feed__header">
-                <h3 class="realtime-feed__title">Actividad en vivo</h3>
-                <p class="realtime-feed__description">
-                  Visualiza una simulación de cómo aparecerán las alertas cuando Firebase o el foro generen
-                  movimientos en tiempo real.
-                </p>
-              </div>
-              <div class="realtime-feed__empty" data-realtime-empty>
-                <strong data-empty-title>Esperando actividad…</strong>
-                <span data-empty-message>Activa al menos un tipo para previsualizar las notificaciones en vivo.</span>
-              </div>
-              <div class="realtime-feed__list" data-realtime-feed></div>
-            </div>
-          </div>
-        </section>
 
       </div>
 

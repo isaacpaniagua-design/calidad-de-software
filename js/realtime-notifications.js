@@ -174,12 +174,24 @@ function initRealtimeNotifications() {
   window[BOOT_FLAG] = true;
 
   const doc = document;
-  const optionsList = doc.querySelector("[data-realtime-options]");
-  const feedList = doc.querySelector("[data-realtime-feed]");
-  const statusEl = doc.querySelector("[data-realtime-status]");
-  const emptyEl = doc.querySelector("[data-realtime-empty]");
 
-  if (!optionsList || !feedList) {
+  const center = doc.querySelector("[data-realtime-center]");
+  if (!center) {
+    return;
+  }
+
+  const toggleButton = center.querySelector("[data-realtime-toggle]");
+  const panel = center.querySelector("[data-realtime-panel]");
+  const optionsList = center.querySelector("[data-realtime-options]");
+  const feedList = center.querySelector("[data-realtime-feed]");
+  const statusEl = center.querySelector("[data-realtime-status]");
+  const emptyEl = center.querySelector("[data-realtime-empty]");
+  const badgeEl = center.querySelector("[data-realtime-badge]");
+  const closeButton = center.querySelector("[data-realtime-close]");
+  const toggleLabel = center.querySelector("[data-realtime-toggle-label]");
+
+  if (!optionsList || !feedList || !toggleButton || !panel) {
+
     return;
   }
 
@@ -214,10 +226,115 @@ function initRealtimeNotifications() {
   let queue = [];
   let timerId = null;
 
+  let unreadCount = 0;
+  let isPanelOpen = false;
+  let hideTimeoutId = null;
+
+  updateToggleLabel(false);
+  updateBadge();
+  toggleButton.setAttribute("aria-expanded", "false");
+
+  toggleButton.addEventListener("click", () => {
+    if (isPanelOpen) {
+      closePanel();
+    } else {
+      openPanel();
+    }
+  });
+
+  if (closeButton) {
+    closeButton.addEventListener("click", () => closePanel({ focusToggle: true }));
+  }
+
+  doc.addEventListener("pointerdown", (event) => {
+    if (!isPanelOpen) return;
+    const target = event.target;
+    if (target && typeof target === "object" && "nodeType" in target && center.contains(target)) {
+      return;
+    }
+    closePanel();
+  });
+
+  doc.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && isPanelOpen) {
+      event.preventDefault();
+      closePanel({ focusToggle: true });
+    }
+  });
+
+
   renderOptions();
   updateStatus();
   filterFeedItems();
   scheduleNextEvent();
+
+
+  function updateToggleLabel(open) {
+    const labelText = open ? "Cerrar centro de notificaciones" : "Abrir centro de notificaciones";
+    if (toggleLabel) {
+      toggleLabel.textContent = labelText;
+    }
+    toggleButton.setAttribute("aria-label", labelText);
+  }
+
+  function updateBadge() {
+    if (!badgeEl) return;
+    if (unreadCount > 0) {
+      badgeEl.hidden = false;
+      badgeEl.textContent = unreadCount > 9 ? "9+" : String(unreadCount);
+      toggleButton.classList.add("has-unread");
+    } else {
+      badgeEl.hidden = true;
+      badgeEl.textContent = "";
+      toggleButton.classList.remove("has-unread");
+    }
+  }
+
+  function openPanel() {
+    if (isPanelOpen) return;
+    if (hideTimeoutId) {
+      window.clearTimeout(hideTimeoutId);
+      hideTimeoutId = null;
+    }
+    panel.hidden = false;
+    requestAnimationFrame(() => {
+      panel.classList.add("is-open");
+    });
+    isPanelOpen = true;
+    toggleButton.setAttribute("aria-expanded", "true");
+    updateToggleLabel(true);
+    unreadCount = 0;
+    updateBadge();
+    if (typeof panel.focus === "function") {
+      panel.focus({ preventScroll: true });
+    }
+  }
+
+  function closePanel({ focusToggle = false } = {}) {
+    if (!isPanelOpen) return;
+    panel.classList.remove("is-open");
+    isPanelOpen = false;
+    toggleButton.setAttribute("aria-expanded", "false");
+    updateToggleLabel(false);
+    const handleTransitionEnd = () => {
+      if (!isPanelOpen) {
+        panel.hidden = true;
+      }
+    };
+    panel.addEventListener("transitionend", handleTransitionEnd, { once: true });
+    if (hideTimeoutId) {
+      window.clearTimeout(hideTimeoutId);
+    }
+    hideTimeoutId = window.setTimeout(() => {
+      if (!isPanelOpen) {
+        panel.hidden = true;
+      }
+    }, 220);
+    if (focusToggle) {
+      toggleButton.focus();
+    }
+  }
+
 
   function renderOptions() {
     optionsList.innerHTML = "";
@@ -353,6 +470,13 @@ function initRealtimeNotifications() {
     `;
 
     feedList.prepend(card);
+
+
+    if (!isPanelOpen) {
+      unreadCount = Math.min(unreadCount + 1, 99);
+      updateBadge();
+    }
+
 
     requestAnimationFrame(() => {
       card.classList.add("is-visible");
