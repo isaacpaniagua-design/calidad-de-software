@@ -19,6 +19,10 @@ function toDate(v){
 }
 function clamp100(n){ n = Number(n)||0; if(n<0) return 0; if(n>100) return 100; return n; }
 function toEscala5(p){ return (Number(p||0)*0.05).toFixed(1); }
+var ESC_MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" };
+function escHtml(str){ return String(str==null? '': str).replace(/[&<>"']/g, function(ch){ return ESC_MAP[ch] || ch; }); }
+function escAttr(str){ return escHtml(str); }
+function updateSyncStamp(){ var now=new Date(); setText('pd-summary-sync', fmtDate(now)+' '+now.toLocaleTimeString()); }
 
 // ===== Cálculo de calificaciones =====
 function inferUnidad(it){
@@ -118,41 +122,49 @@ function renderSummaryStats(students, metrics){
 function renderDeliverablesList(arr){
   var tbody = $id('pd-deliverables-tbody'); if (!tbody) return;
   tbody.innerHTML='';
-  if (!arr.length){ tbody.innerHTML = '<tr><td colspan="6" class="qsc-muted">Sin entregables.</td></tr>'; return; }
+  var countActive = 0;
+  if (!Array.isArray(arr) || !arr.length){
+    setText('pd-summary-active-deliverables', 0);
+    tbody.innerHTML = '<tr><td colspan="6" class="pd-empty">Sin entregables.</td></tr>';
+    return;
+  }
   for (var i=0;i<arr.length;i++){
     var d = arr[i];
     var due = toDate(d.dueAt);
     var dueTxt = due ? fmtDate(due) : '—';
     var w = (d.weight!=null) ? (d.weight+'%') : '—';
+    if (!d.deleted) countActive++;
     var deleted = d.deleted ? ' (eliminado)' : '';
     var row = '\
-      <tr data-id="'+d.id+'">\
-        <td>'+ (d.title||'Entregable') + deleted +'</td>\
-        <td>'+ (d.description||'—') +'</td>\
-        <td style="text-align:center">'+ (d.unidad||'—') +'</td>\
-        <td style="text-align:right">'+ w +'</td>\
-        <td style="text-align:center">'+ dueTxt +'</td>\
-        <td style="text-align:right"><button class="pd-deliv-edit action-btn">Editar</button> <button class="pd-deliv-del action-btn">Eliminar</button></td>\
+      <tr data-id="'+ escAttr(d.id) +'">\
+        <td>'+ escHtml(d.title||'Entregable') + deleted +'</td>\
+        <td>'+ escHtml(d.description||'—') +'</td>\
+        <td style="text-align:center">'+ escHtml(d.unidad||'—') +'</td>\
+        <td style="text-align:right">'+ escHtml(w) +'</td>\
+        <td style="text-align:center">'+ escHtml(dueTxt) +'</td>\
+        <td style="text-align:right"><button class="pd-deliv-edit pd-action-btn">Editar</button> <button class="pd-deliv-del pd-action-btn">Eliminar</button></td>\
       </tr>';
     tbody.insertAdjacentHTML('beforeend', row);
   }
+  setText('pd-summary-active-deliverables', countActive);
 }
 
 function renderStudentsTable(students, metrics){
   var tbody = $id('pd-students-tbody'); if (!tbody) return;
   tbody.innerHTML='';
-  if (!students.length){ tbody.innerHTML = '<tr><td colspan="6" class="qsc-muted">Sin estudiantes.</td></tr>'; return; }
+  if (!students.length){ tbody.innerHTML = '<tr><td colspan="7" class="pd-empty">Sin estudiantes.</td></tr>'; return; }
   for (var i=0;i<students.length;i++){
     var s = students[i];
     var m = metrics[s.uid] || { u1:0,u2:0,u3:0, finalPct:0 };
     var row = '\
       <tr>\
-        <td>'+(s.displayName||'Alumno')+'</td>\
-        <td>'+(s.email||'')+'</td>\
-        <td style="text-align:right">'+ toEscala5(m.u1) +'</td>\
-        <td style="text-align:right">'+ toEscala5(m.u2) +'</td>\
-        <td style="text-align:right">'+ toEscala5(m.u3) +'</td>\
-        <td style="text-align:right; font-weight:700">'+ toEscala5(m.finalPct) +'</td>\
+        <td style="text-align:center"><input type="checkbox" class="pd-student-check" data-email="'+ escAttr(s.email||'') +'" aria-label="Seleccionar estudiante" /></td>\
+        <td>'+ escHtml(s.displayName||'Alumno') +'</td>\
+        <td>'+ escHtml(s.email||'') +'</td>\
+        <td style="text-align:right">'+ escHtml(toEscala5(m.u1)) +'</td>\
+        <td style="text-align:right">'+ escHtml(toEscala5(m.u2)) +'</td>\
+        <td style="text-align:right">'+ escHtml(toEscala5(m.u3)) +'</td>\
+        <td style="text-align:right; font-weight:700">'+ escHtml(toEscala5(m.finalPct)) +'</td>\
       </tr>';
     tbody.insertAdjacentHTML('beforeend', row);
   }
@@ -225,6 +237,7 @@ async function main(){
   var exams = await fetchExams(db, grupo);
   renderExams(exams);
   renderStudentsTable(students, metrics);
+  updateSyncStamp();
 
   // Rúbrica
   var rub = await getRubric(db, grupo);
@@ -252,6 +265,7 @@ async function main(){
       await createDeliverable(db, grupo, payload);
       deliverables = await fetchDeliverables(db, grupo);
       renderDeliverablesList(deliverables);
+      updateSyncStamp();
       if ($id('pd-deliv-title')) $id('pd-deliv-title').value='';
       if ($id('pd-deliv-desc')) $id('pd-deliv-desc').value='';
       if ($id('pd-deliv-unidad')) $id('pd-deliv-unidad').value='';
@@ -272,9 +286,10 @@ async function main(){
         await deleteDeliverable(db, grupo, id);
         deliverables = await fetchDeliverables(db, grupo);
         renderDeliverablesList(deliverables);
+        updateSyncStamp();
       } else if (btn.classList.contains('pd-deliv-edit')){
         var nuevo = prompt('Nuevo título:', tr.querySelector('td').textContent);
-        if (nuevo){ await updateDeliverable(db, grupo, id, { title:nuevo }); tr.querySelector('td').textContent = nuevo; }
+        if (nuevo){ await updateDeliverable(db, grupo, id, { title:nuevo }); tr.querySelector('td').textContent = nuevo; updateSyncStamp(); }
       }
     });
   }
@@ -316,7 +331,7 @@ async function main(){
   if (asgTbody){
     var asnap = await getDocs(query(collection(db, 'grupos', grupo, 'assignments'), orderBy('unidad','asc')));
     asgTbody.innerHTML='';
-    if (asnap.empty){ asgTbody.innerHTML = '<tr><td colspan="6" class="qsc-muted">Sin asignaciones.</td></tr>'; }
+    if (asnap.empty){ asgTbody.innerHTML = '<tr><td colspan="5" class="pd-empty">Sin asignaciones.</td></tr>'; }
     else{
       asnap.forEach(function(d){
         var a = d.data(); var row='\
