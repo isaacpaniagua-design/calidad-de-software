@@ -9,6 +9,7 @@ import {
 import {
   getFirestore,
   collection,
+  collectionGroup,
   doc,
   setDoc,
   addDoc,
@@ -20,6 +21,7 @@ import {
   query,
   where,
   orderBy,
+  limit,
   serverTimestamp,
   increment,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
@@ -38,6 +40,14 @@ import {
   driveFolderId,
   allowedTeacherEmails,
 } from "./firebase-config.js";
+
+function isPermissionDenied(error) {
+  if (!error) return false;
+  const code = typeof error.code === "string" ? error.code.toLowerCase() : "";
+  if (code === "permission-denied") return true;
+  const message = typeof error.message === "string" ? error.message : "";
+  return /missing or insufficient permissions/i.test(message);
+}
 
 let app;
 let auth;
@@ -860,4 +870,72 @@ export async function registerForumReplyReaction(
   await updateDoc(ref, {
     [fieldPath]: increment(1),
   });
+}
+
+export function subscribeLatestForumReplies(limitOrOptions, onChange, onError) {
+  const db = getDb();
+  let max = 25;
+  if (typeof limitOrOptions === "number" && Number.isFinite(limitOrOptions)) {
+    max = Math.max(1, Math.min(100, Math.trunc(limitOrOptions)));
+  } else if (limitOrOptions && typeof limitOrOptions === "object") {
+    const candidate = Number(limitOrOptions.limit);
+    if (Number.isFinite(candidate) && candidate > 0) {
+      max = Math.max(1, Math.min(100, Math.trunc(candidate)));
+    }
+  }
+
+  const qy = query(
+    collectionGroup(db, "replies"),
+    orderBy("createdAt", "desc"),
+    limit(max)
+  );
+
+  return onSnapshot(
+    qy,
+    (snap) => {
+      const items = [];
+      snap.forEach((docSnap) => {
+        const data = docSnap.data();
+        const ref = docSnap.ref;
+        const repliesCol = ref.parent;
+        const topicRef = repliesCol?.parent || null;
+        items.push({
+          id: docSnap.id,
+          topicId: topicRef?.id || null,
+          topicPath: topicRef?.path || null,
+          ...data,
+        });
+      });
+      if (typeof onChange === "function") {
+        onChange(items);
+      }
+    },
+    (error) => {
+      if (isPermissionDenied(error)) {
+        console.warn("subscribeLatestForumReplies:permission-denied", error);
+      } else {
+        console.error("subscribeLatestForumReplies:error", error);
+      }
+      if (typeof onError === "function") {
+        try {
+          onError(error);
+        } catch (_) {}
+      }
+    }
+  );
+}
+
+export async function fetchForumTopicSummary(topicId) {
+  if (!topicId) return null;
+  const db = getDb();
+  try {
+    const ref = doc(collection(db, "forum_topics"), topicId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+    const data = snap.data();
+    return { id: snap.id, ...data };
+  } catch (error) {
+    console.error("fetchForumTopicSummary:error", error);
+    return null;
+  }
 }

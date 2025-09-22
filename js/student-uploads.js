@@ -15,6 +15,22 @@ initFirebase();
 const db = getDb();
 const uploadsCollection = collection(db, "studentUploads");
 
+function isPermissionDenied(error) {
+  if (!error) return false;
+  const code = typeof error.code === "string" ? error.code.toLowerCase() : "";
+  if (code === "permission-denied") return true;
+  const message = typeof error.message === "string" ? error.message : "";
+  return /missing or insufficient permissions/i.test(message);
+}
+
+function logSnapshotError(context, error) {
+  if (isPermissionDenied(error)) {
+    console.warn(`${context}:permission-denied`, error);
+  } else {
+    console.error(`${context}:error`, error);
+  }
+}
+
 /**
  * Registra una entrega de estudiante.
  * @param {Object} payload
@@ -92,7 +108,7 @@ export function observeStudentUploads(uid, onChange, onError) {
       if (typeof onChange === "function") onChange(items);
     },
     (error) => {
-      console.error("observeStudentUploads:error", error);
+      logSnapshotError("observeStudentUploads", error);
       if (typeof onError === "function") onError(error);
     }
   );
@@ -118,7 +134,7 @@ export function observeAllStudentUploads(onChange, onError) {
       if (typeof onChange === "function") onChange(items);
     },
     (error) => {
-      console.error("observeAllStudentUploads:error", error);
+      logSnapshotError("observeAllStudentUploads", error);
       if (typeof onError === "function") onError(error);
     }
   );
