@@ -1020,3 +1020,18 @@ export async function fetchForumTopicSummary(topicId) {
     return null;
   }
 }
+
+export async function fetchForumReply(topicId, replyId) {
+  if (!topicId || !replyId) return null;
+  const db = getDb();
+  try {
+    const ref = doc(collection(db, "forum_topics", topicId, "replies"), replyId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+    const data = snap.data();
+    return { id: snap.id, ...data };
+  } catch (error) {
+    console.error("fetchForumReply:error", error);
+    return null;
+  }
+}
