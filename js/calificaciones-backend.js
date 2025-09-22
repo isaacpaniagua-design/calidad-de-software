@@ -286,10 +286,6 @@ function renderAlumno(items) {
   const kpiItems = $id('qsc-kpi-items');
   const kpiPond = $id('qsc-kpi-pond');
   const bar = $id('qsc-bar-fill');
-  const deliveryList = $id('activityDeliveryList');
-  const pendingCountEl = $id('deliveryPendingCount');
-  const completedCountEl = $id('deliveryCompletedCount');
-  const completionPctEl = $id('deliveryCompletionPercent');
 
   const stats = resumenGlobal(normalized);
   if (kpiTotal) kpiTotal.textContent = fmtPct(stats.porcentaje);
@@ -297,155 +293,51 @@ function renderAlumno(items) {
   if (kpiPond) kpiPond.textContent = fmtPct(stats.pondSum);
   if (bar) bar.style.width = stats.porcentaje.toFixed(2) + '%';
 
-  const deliveries = [];
-  let pendingCount = 0;
-  let completedCount = 0;
-  const tableRows = [];
-
-  if (!normalized.length) {
-    tableRows.push('<tr><td class="qsc-muted" colspan="10">Sin actividades registradas aun.</td></tr>');
-  } else {
-    for (let i = 0; i < normalized.length; i++) {
-      const it = normalized[i] || {};
-      const nombre = it.nombre || it.title || 'Actividad';
-      const tipo = it.tipo || it.category || '-';
-      const uni = ((it.unidad !== undefined && it.unidad !== null) ? it.unidad : inferUnidad(it)) || '-';
-      const max = Number(it.displayMax) || 0;
-      const maxText = max ? max.toFixed(2) : '-';
-      const rawPts = Number(it.displayPuntos);
-      const hasDisplayPts = !Number.isNaN(rawPts);
-      const calificada = Boolean(it.estaCalificado);
-      const ptsText = calificada && hasDisplayPts ? rawPts.toFixed(2) : '-';
-      const pnd = Number(it.ponderacion) || 0;
-      const ratio = Number(it.normalizedRatio) || 0;
-      const aporta = ratio * pnd;
-      const escala = calificada && max > 0 ? escPct(100 * ratio) : '-';
-      const statusBadge = calificada
-        ? '<span class="qsc-status qsc-status--done">Calificada</span>'
-        : '<span class="qsc-status qsc-status--pending">Pendiente</span>';
-      let fecha = '-';
-      let fechaValue = Number.NaN;
-      try {
-        const f = it.fecha;
-        if (f && typeof f.toDate === 'function') {
-          const date = f.toDate();
-          fecha = date.toLocaleDateString();
-          fechaValue = date.getTime();
-        } else if (f instanceof Date) {
-          fecha = f.toLocaleDateString();
-          fechaValue = f.getTime();
-        } else if (typeof f === 'string') {
-          const parsed = Date.parse(f);
-          if (!Number.isNaN(parsed)) {
-            const date = new Date(parsed);
-            fecha = date.toLocaleDateString();
-            fechaValue = parsed;
-          }
-        }
-      } catch (_) {}
-      tableRows.push(`
+  if (tbody) {
+    tbody.innerHTML = '';
+    if (!normalized.length) {
+      tbody.innerHTML = '<tr><td class="qsc-muted" colspan="10">Sin actividades registradas aun.</td></tr>';
+    } else {
+      for (let i = 0; i < normalized.length; i++) {
+        const it = normalized[i] || {};
+        const tipo = it.tipo || it.category || '-';
+        const uni = ((it.unidad !== undefined && it.unidad !== null) ? it.unidad : inferUnidad(it)) || '-';
+        const max = Number(it.displayMax) || 0;
+        const rawPts = Number(it.displayPuntos);
+        const hasDisplayPts = !Number.isNaN(rawPts);
+        const calificada = Boolean(it.estaCalificado);
+        const ptsText = calificada && hasDisplayPts ? rawPts.toFixed(2) : '-';
+        const pnd = Number(it.ponderacion) || 0;
+        const ratio = Number(it.normalizedRatio) || 0;
+        const aporta = ratio * pnd;
+        const escala = calificada && max > 0 ? escPct(100 * ratio) : '-';
+        const statusBadge = calificada
+          ? '<span class="qsc-status qsc-status--done">Calificada</span>'
+          : '<span class="qsc-status qsc-status--pending">Pendiente</span>';
+        let fecha = '-';
+        try {
+          const f = it.fecha;
+          if (f && typeof f.toDate === 'function') fecha = f.toDate().toLocaleDateString();
+          else if (f instanceof Date) fecha = f.toLocaleDateString();
+        } catch (_) {}
+        tbody.insertAdjacentHTML('beforeend', `
           <tr>
             <td>
               <div class="qsc-cell-main">
-                <span>${nombre}</span>
+                <span>${it.nombre || it.title || 'Actividad'}</span>
                 ${statusBadge}
               </div>
             </td>
             <td>${tipo}</td>
             <td>${uni}</td>
             <td style="text-align:right">${ptsText}</td>
-            <td style="text-align:right">${maxText}</td>
+            <td style="text-align:right">${max ? max.toFixed(2) : '-'}</td>
             <td style="text-align:right">${pnd}%</td>
             <td style="text-align:right">${fmtPct(aporta)}</td>
             <td style="text-align:center">${escala}</td>
             <td style="text-align:center">${fecha}</td>
           </tr>`);
-      if (calificada) completedCount++;
-      else pendingCount++;
-      deliveries.push({
-        nombre,
-        tipo,
-        unidad: uni,
-        ponderacion: pnd,
-        aporta,
-        calificada,
-        hasDisplayPts,
-        rawPoints: rawPts,
-        max,
-        escala,
-        fecha,
-        fechaValue,
-      });
-    }
-  }
-
-  if (tbody) {
-    tbody.innerHTML = tableRows.join('');
-  }
-
-  if (pendingCountEl) pendingCountEl.textContent = String(pendingCount);
-  if (completedCountEl) completedCountEl.textContent = String(completedCount);
-  const completionPct = normalized.length ? Math.round((completedCount / normalized.length) * 100) : 0;
-  if (completionPctEl) completionPctEl.textContent = completionPct + '%';
-
-  if (deliveryList) {
-    if (!normalized.length) {
-      deliveryList.innerHTML = '<li class="delivery-empty">Sin actividades registradas aun.</li>';
-    } else {
-      const sorted = deliveries.slice().sort((a, b) => {
-        if (a.calificada !== b.calificada) return a.calificada ? 1 : -1;
-        const timeA = Number.isFinite(a.fechaValue) ? a.fechaValue : Number.MAX_SAFE_INTEGER;
-        const timeB = Number.isFinite(b.fechaValue) ? b.fechaValue : Number.MAX_SAFE_INTEGER;
-        if (timeA !== timeB) return timeA - timeB;
-        const nameA = a.nombre || '';
-        const nameB = b.nombre || '';
-        return nameA.localeCompare(nameB, 'es', { sensitivity: 'base' });
-      });
-      const fragments = [];
-      for (let i = 0; i < sorted.length; i++) {
-        const item = sorted[i];
-        const metaParts = [];
-        if (item.tipo && item.tipo !== '-') metaParts.push(item.tipo);
-        if (item.unidad && item.unidad !== '-') metaParts.push('Unidad ' + item.unidad);
-        if (Number(item.ponderacion)) metaParts.push('Peso ' + fmtPct(item.ponderacion));
-        const meta = metaParts.join(' · ') || 'Sin detalles adicionales';
-        const statusClass = item.calificada ? 'done' : 'pending';
-        const statusText = item.calificada ? 'Entregada' : 'Pendiente';
-        const fechaLabel = item.fecha !== '-' ? item.fecha : 'Sin fecha registrada';
-        const maxDisplay = item.max > 0 ? item.max.toFixed(2) : '—';
-        let scoreText;
-        if (item.calificada && item.hasDisplayPts && Number.isFinite(item.rawPoints)) {
-          const maxValue = item.max > 0 ? item.max.toFixed(2) : '--';
-          scoreText = `${item.rawPoints.toFixed(2)} / ${maxValue} pts`;
-        } else if (item.max > 0) {
-          scoreText = `Máximo ${maxDisplay} pts`;
-        } else {
-          scoreText = 'Sin información de puntaje';
-        }
-        const extraSegments = [`<span class="delivery-score">${scoreText}</span>`];
-        if (Number(item.ponderacion)) extraSegments.push(`<span>Peso: ${fmtPct(item.ponderacion)}</span>`);
-        if (item.calificada && Number.isFinite(item.aporta) && item.aporta > 0.001) {
-          extraSegments.push(`<span>Aporta: ${fmtPct(item.aporta)}</span>`);
-        }
-        if (item.escala && item.escala !== '-') {
-          extraSegments.push(`<span>${item.calificada ? 'Escala' : 'Escala estimada'}: ${item.escala}</span>`);
-        }
-        fragments.push(`
-          <li class="delivery-item ${item.calificada ? 'delivery-item--done' : 'delivery-item--pending'}">
-            <div class="delivery-item-main">
-              <div>
-                <p class="delivery-item-title">${item.nombre}</p>
-                <p class="delivery-item-meta">${meta}</p>
-              </div>
-              <div class="delivery-item-status">
-                <span class="delivery-pill ${statusClass}">${statusText}</span>
-                <span class="delivery-date">Entrega: ${fechaLabel}</span>
-              </div>
-            </div>
-            <div class="delivery-item-extra">${extraSegments.join('')}</div>
-          </li>`);
       }
-      deliveryList.innerHTML = fragments.join('');
     }
   }
 
