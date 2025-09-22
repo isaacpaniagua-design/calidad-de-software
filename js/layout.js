@@ -65,6 +65,7 @@ function bootstrapLayout() {
   refreshNavSpacing(nav);
   observeNavHeight(nav);
   setupSessionStatusControl(doc, currentPage);
+  setupSlideAssist(doc);
 
   if (!isLogin && !isNotFound) {
     injectAuthGuard(doc, basePath);
@@ -680,6 +681,282 @@ function ensureLoadingOverlay() {
     `;
     const target = doc.body || doc.documentElement;
     target.appendChild(overlay);
+  } catch (_) {}
+}
+
+function setupSlideAssist(doc) {
+  try {
+    if (!doc) return;
+    const init = () => {
+      try {
+        const body = doc.body || doc.documentElement;
+        if (!body) return;
+
+        const prevBtn =
+          doc.getElementById("prevBtn") ||
+          doc.querySelector('[data-slide-prev]') ||
+          doc.querySelector('[data-action="slide-prev"]');
+        const nextBtn =
+          doc.getElementById("nextBtn") ||
+          doc.querySelector('[data-slide-next]') ||
+          doc.querySelector('[data-action="slide-next"]');
+        const slideCounter =
+          doc.getElementById("currentSlide") ||
+          doc.querySelector('[data-slide-current]');
+
+        decorateSlideNavigation(doc, prevBtn, slideCounter);
+        ensureSlideFloatingControls(doc, {
+          prevBtn,
+          nextBtn,
+          slideCounter,
+        });
+      } catch (_) {}
+    };
+
+    if (doc.readyState === "loading") {
+      doc.addEventListener("DOMContentLoaded", init, { once: true });
+    } else {
+      init();
+    }
+  } catch (_) {}
+}
+
+function decorateSlideNavigation(doc, prevBtn, slideCounter) {
+  try {
+    const nav = findSlideControlBar(doc, prevBtn, slideCounter);
+    if (!nav) return;
+
+    const view = doc.defaultView;
+    const isFixed =
+      view && nav
+        ? view.getComputedStyle(nav).position === "fixed"
+        : false;
+
+    if (isFixed && doc.body) {
+      doc.body.classList.add("has-slide-nav");
+      nav.classList.add("session-slide-nav");
+    }
+  } catch (_) {}
+}
+
+function findSlideControlBar(doc, prevBtn, slideCounter) {
+  const candidates = [];
+  if (prevBtn) candidates.push(prevBtn);
+  if (slideCounter) candidates.push(slideCounter);
+
+  for (const el of candidates) {
+    let node = el;
+    while (node && node !== doc.body && node !== doc.documentElement) {
+      if (node.classList && node.classList.contains("qs-nav")) break;
+      if (node.hasAttribute && node.hasAttribute("data-slide-nav")) return node;
+      if (node.tagName === "NAV" || node.tagName === "HEADER") return node;
+      if (node.classList) {
+        if (node.classList.contains("fixed")) return node;
+        if (node.classList.contains("navigation")) return node;
+        if (node.classList.contains("slide-control")) return node;
+      }
+      node = node.parentElement;
+    }
+  }
+  return null;
+}
+
+function ensureSlideFloatingControls(doc, refs) {
+  try {
+    if (!doc || !refs) return;
+    if (!detectSlideDeck(doc)) return;
+    const body = doc.body || doc.documentElement;
+    if (!body || body.querySelector(".qs-slide-fab")) return;
+
+    body.classList.add("has-slide-floating-controls");
+
+    const container = doc.createElement("div");
+    container.className = "qs-slide-fab";
+    container.innerHTML = `
+      <button type="button" class="qs-slide-fab__btn is-prev" data-slide-direction="prev" aria-label="Diapositiva anterior">
+        <span aria-hidden="true">&#8592;</span>
+      </button>
+      <button type="button" class="qs-slide-fab__btn is-next" data-slide-direction="next" aria-label="Diapositiva siguiente">
+        <span aria-hidden="true">&#8594;</span>
+      </button>
+    `;
+
+    body.appendChild(container);
+
+    const prevFab = container.querySelector('[data-slide-direction="prev"]');
+    const nextFab = container.querySelector('[data-slide-direction="next"]');
+
+    if (!prevFab || !nextFab) return;
+
+    const updateFabState = () => {
+      syncSlideFabState(prevFab, refs.prevBtn);
+      syncSlideFabState(nextFab, refs.nextBtn);
+    };
+
+    const scheduleUpdate = () => {
+      try {
+        if (typeof requestAnimationFrame === "function") {
+          requestAnimationFrame(updateFabState);
+        } else {
+          window.setTimeout(updateFabState, 16);
+        }
+      } catch (_) {
+        try {
+          window.setTimeout(updateFabState, 16);
+        } catch (_) {}
+      }
+    };
+
+    const invokeNative = (direction) => {
+      try {
+        const nativeBtn = direction === "prev" ? refs.prevBtn : refs.nextBtn;
+        if (nativeBtn && !isNativeDisabled(nativeBtn)) {
+          nativeBtn.click();
+          return;
+        }
+        const fnName = direction === "prev" ? "previousSlide" : "nextSlide";
+        const view = doc.defaultView;
+        const fn = view && typeof view[fnName] === "function" ? view[fnName] : null;
+        if (fn) fn.call(view);
+      } catch (_) {}
+    };
+
+    const handleClick = (direction, fab) => (event) => {
+      try {
+        if (event) event.preventDefault();
+      } catch (_) {}
+      if (!fab || fab.disabled || fab.classList.contains("is-disabled")) return;
+      invokeNative(direction);
+      scheduleUpdate();
+    };
+
+    prevFab.addEventListener("click", handleClick("prev", prevFab));
+    nextFab.addEventListener("click", handleClick("next", nextFab));
+
+    const Observer = doc.defaultView && doc.defaultView.MutationObserver;
+    if (Observer) {
+      if (refs.prevBtn) {
+        new Observer(scheduleUpdate).observe(refs.prevBtn, {
+          attributes: true,
+          attributeFilter: ["disabled", "aria-disabled", "class"],
+        });
+      }
+      if (refs.nextBtn) {
+        new Observer(scheduleUpdate).observe(refs.nextBtn, {
+          attributes: true,
+          attributeFilter: ["disabled", "aria-disabled", "class"],
+        });
+      }
+      if (refs.slideCounter) {
+        new Observer(scheduleUpdate).observe(refs.slideCounter, {
+          characterData: true,
+          childList: true,
+          subtree: true,
+        });
+      }
+    }
+
+    if (refs.prevBtn) {
+      refs.prevBtn.addEventListener("click", scheduleUpdate);
+    }
+    if (refs.nextBtn) {
+      refs.nextBtn.addEventListener("click", scheduleUpdate);
+    }
+
+    wrapSlideFunction("nextSlide", scheduleUpdate);
+    wrapSlideFunction("previousSlide", scheduleUpdate);
+    wrapSlideFunction("goToSlide", scheduleUpdate);
+    wrapSlideFunction("resetSlides", scheduleUpdate);
+    wrapSlideFunction("resetAll", scheduleUpdate);
+
+    updateFabState();
+  } catch (_) {}
+}
+
+function detectSlideDeck(doc) {
+  try {
+    const selectors = [
+      ".slide",
+      ".slide-transition",
+      "[data-slide]",
+      "[data-slide-index]",
+      "[data-role='slide']",
+    ];
+    for (const sel of selectors) {
+      const nodes = doc.querySelectorAll(sel);
+      if (nodes && nodes.length > 1) return true;
+    }
+
+    const idMatches = doc.querySelectorAll('[id^="slide"], [id^="lamina"]');
+    if (idMatches && idMatches.length) {
+      let count = 0;
+      idMatches.forEach((el) => {
+        if (!el || !el.id) return;
+        if (/^slide\d+$/i.test(el.id) || /^lamina\d+$/i.test(el.id)) {
+          count += 1;
+        }
+      });
+      if (count > 1) return true;
+    }
+  } catch (_) {}
+  return false;
+}
+
+function syncSlideFabState(fab, nativeBtn) {
+  if (!fab) return;
+  let disabled = false;
+  try {
+    if (nativeBtn) {
+      disabled =
+        !!nativeBtn.disabled ||
+        nativeBtn.getAttribute("aria-disabled") === "true" ||
+        (nativeBtn.classList &&
+          (nativeBtn.classList.contains("opacity-50") ||
+            nativeBtn.classList.contains("cursor-not-allowed") ||
+            nativeBtn.classList.contains("disabled")));
+    }
+  } catch (_) {}
+
+  fab.disabled = disabled;
+  if (disabled) {
+    fab.classList.add("is-disabled");
+    fab.setAttribute("aria-disabled", "true");
+  } else {
+    fab.classList.remove("is-disabled");
+    fab.removeAttribute("aria-disabled");
+  }
+}
+
+function isNativeDisabled(btn) {
+  try {
+    if (!btn) return false;
+    if (btn.disabled) return true;
+    if (btn.getAttribute && btn.getAttribute("aria-disabled") === "true") return true;
+    if (btn.classList) {
+      if (btn.classList.contains("opacity-50")) return true;
+      if (btn.classList.contains("cursor-not-allowed")) return true;
+      if (btn.classList.contains("disabled")) return true;
+    }
+  } catch (_) {}
+  return false;
+}
+
+function wrapSlideFunction(name, onAfter) {
+  try {
+    const view = window;
+    if (!view || typeof onAfter !== "function") return;
+    const original = view[name];
+    if (typeof original !== "function") return;
+    if (original.__qsWrapped) return;
+    const wrapped = function (...args) {
+      const result = original.apply(this, args);
+      try {
+        onAfter();
+      } catch (_) {}
+      return result;
+    };
+    wrapped.__qsWrapped = true;
+    view[name] = wrapped;
   } catch (_) {}
 }
 
