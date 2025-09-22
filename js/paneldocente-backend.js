@@ -3,6 +3,11 @@
 
 import { initFirebase, getDb, onAuth, isTeacherByDoc, isTeacherEmail } from './firebase.js';
 import {
+  observeAllStudentUploads,
+  markStudentUploadAccepted,
+  gradeStudentUpload,
+} from './student-uploads.js';
+import {
   collection, doc, getDoc, getDocs, setDoc, updateDoc, addDoc,
   query, where, orderBy, limit, serverTimestamp, Timestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
@@ -23,6 +28,193 @@ var ESC_MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#
 function escHtml(str){ return String(str==null? '': str).replace(/[&<>"']/g, function(ch){ return ESC_MAP[ch] || ch; }); }
 function escAttr(str){ return escHtml(str); }
 function updateSyncStamp(){ var now=new Date(); setText('pd-summary-sync', fmtDate(now)+' '+now.toLocaleTimeString()); }
+
+function formatSize(bytes){
+  var numeric = Number(bytes);
+  if (!numeric || isNaN(numeric)) return '';
+  var units = ['B','KB','MB','GB','TB'];
+  var value = numeric;
+  var unitIndex = 0;
+  while (value >= 1024 && unitIndex < units.length - 1){
+    value = value / 1024;
+    unitIndex += 1;
+  }
+  var precision = (value >= 10 || unitIndex === 0) ? 0 : 1;
+  return value.toFixed(precision) + ' ' + units[unitIndex];
+}
+
+var UPLOAD_KIND_LABELS = {
+  activity: 'Actividad',
+  homework: 'Tarea',
+  evidence: 'Evidencia',
+};
+
+var UPLOAD_KIND_TITLES = {
+  activity: 'Actividades',
+  homework: 'Tareas',
+  evidence: 'Evidencias',
+  other: 'Otros envíos',
+};
+
+var UPLOAD_KIND_ORDER = ['activity', 'homework', 'evidence', 'other'];
+
+function normalizeKind(value){
+  var key = (value == null ? '' : String(value)).toLowerCase().trim();
+  if (key === 'activity' || key === 'homework' || key === 'evidence') return key;
+  return 'other';
+}
+
+function getKindTitle(key){
+  return UPLOAD_KIND_TITLES[key] || 'Otros envíos';
+}
+
+function countUploadsByKind(list){
+  var counts = { activity: 0, homework: 0, evidence: 0, other: 0, total: 0 };
+  if (!Array.isArray(list)) return counts;
+  for (var i=0;i<list.length;i++){
+    var kindKey = normalizeKind(list[i] && list[i].kind);
+    if (!counts.hasOwnProperty(kindKey)) counts[kindKey] = 0;
+    counts[kindKey] += 1;
+    counts.total += 1;
+  }
+  return counts;
+}
+
+function groupUploadsByKind(list){
+  var groups = { activity: [], homework: [], evidence: [], other: [] };
+  if (Array.isArray(list)){
+    for (var i=0;i<list.length;i++){
+      var upload = list[i];
+      var key = normalizeKind(upload && upload.kind);
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(upload);
+    }
+  }
+  var sections = [];
+  for (var j=0;j<UPLOAD_KIND_ORDER.length;j++){
+    var key = UPLOAD_KIND_ORDER[j];
+    var arr = groups[key] || [];
+    if (!arr.length) continue;
+    sections.push({ key: key, title: getKindTitle(key), uploads: arr });
+  }
+  return sections;
+}
+
+var UPLOAD_STATUS_LABELS = {
+  enviado: 'Enviado',
+  aceptado: 'Aceptado',
+  calificado: 'Calificado',
+  rechazado: 'Rechazado',
+};
+
+function normalizeStatus(value){
+  var status = value == null ? 'enviado' : String(value);
+  status = status.toLowerCase().trim();
+  if (!UPLOAD_STATUS_LABELS[status]) return 'enviado';
+  return status;
+}
+
+function formatDateTime(value){
+  var date = toDate(value);
+  if (!date) return '';
+  var result = fmtDate(date);
+  try {
+    var time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (time) result += ' · ' + time;
+  } catch (_err) {}
+  return result;
+}
+
+function formatReviewInfo(upload){
+  if (!upload) return '';
+  var reviewer = upload.gradedBy || upload.reviewedBy || null;
+  var parts = [];
+  if (reviewer && (reviewer.displayName || reviewer.email)){
+    parts.push('por ' + (reviewer.displayName || reviewer.email));
+  }
+  var when = toDate(upload.gradedAt || upload.acceptedAt || upload.reviewedAt || upload.updatedAt);
+  if (when){
+    try {
+      var tm = when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      parts.push('el ' + fmtDate(when) + ' · ' + tm);
+    } catch (_err) {
+      parts.push('el ' + fmtDate(when));
+    }
+  }
+  if (!parts.length) return '';
+  return 'Revisado ' + parts.join(' ');
+}
+
+function countPendingUploads(list){
+  if (!Array.isArray(list)) return 0;
+  var pending = 0;
+  for (var i=0;i<list.length;i++){
+    var status = normalizeStatus(list[i] && list[i].status);
+    if (status !== 'calificado') pending += 1;
+  }
+  return pending;
+}
+
+function getUploadStudentEntries(state){
+  var entries = [];
+  var grouped = state && state.uploadGroups ? state.uploadGroups : {};
+  var students = state && state.students ? state.students : [];
+  var seen = {};
+  for (var i=0;i<students.length;i++){
+    var stu = students[i] || {};
+    var uid = stu.uid || '';
+    var group = grouped[uid] || { uploads: [] };
+    entries.push({
+      uid: uid,
+      displayName: stu.displayName || stu.nombre || 'Alumno',
+      email: stu.email || '',
+      uploads: group.uploads || [],
+      pending: countPendingUploads(group.uploads || []),
+    });
+    if (uid) seen[uid] = true;
+  }
+  var keys = Object.keys(grouped);
+  for (var j=0;j<keys.length;j++){
+    var uidKey = keys[j];
+    if (seen[uidKey]) continue;
+    var g = grouped[uidKey] || {};
+    var info = g.student || {};
+    entries.push({
+      uid: uidKey,
+      displayName: info.displayName || info.nombre || info.email || 'Estudiante',
+      email: info.email || '',
+      uploads: g.uploads || [],
+      pending: countPendingUploads(g.uploads || []),
+    });
+  }
+  entries.sort(function(a,b){
+    var an = a.displayName || '';
+    var bn = b.displayName || '';
+    return an.localeCompare(bn, 'es', { sensitivity: 'base' });
+  });
+  return entries;
+}
+
+function ensureUploadSelection(state, entries){
+  var list = entries || getUploadStudentEntries(state);
+  if (state.selectedUploadStudent){
+    for (var i=0;i<list.length;i++){
+      if (list[i].uid === state.selectedUploadStudent) return list;
+    }
+  }
+  var choice = null;
+  for (var j=0;j<list.length;j++){
+    if (list[j].pending > 0){ choice = list[j]; break; }
+  }
+  if (!choice && list.length){
+    for (var k=0;k<list.length;k++){
+      if ((list[k].uploads || []).length){ choice = list[k]; break; }
+    }
+  }
+  if (!choice && list.length) choice = list[0];
+  state.selectedUploadStudent = choice ? choice.uid : null;
+  return list;
+}
 
 
 function showStatusBanner(title, message, variant){
@@ -234,6 +426,177 @@ function renderStudentsTable(students, metrics){
   }
 }
 
+function renderUploadStudentsList(state, providedEntries){
+  var listEl = $id('pd-upload-student-list');
+  var emptyEl = $id('pd-upload-empty');
+  if (!listEl) return;
+  var entries = providedEntries || getUploadStudentEntries(state);
+  if (!entries.length){
+    listEl.innerHTML='';
+    listEl.hidden = true;
+    if (emptyEl){
+      emptyEl.hidden = false;
+      emptyEl.textContent = 'No hay evidencias registradas todavía.';
+    }
+    return;
+  }
+  listEl.hidden = false;
+  if (emptyEl) emptyEl.hidden = true;
+
+  var html='';
+  for (var i=0;i<entries.length;i++){
+    var entry = entries[i];
+    var pressed = state.selectedUploadStudent === entry.uid ? 'true' : 'false';
+    var breakdown = countUploadsByKind(entry.uploads);
+    html += '\
+      <li class="pd-uploads__student">\
+        <button type="button" data-uid="'+ escAttr(entry.uid||'') +'" aria-pressed="'+ pressed +'">\
+          <span class="pd-uploads__student-name">'+ escHtml(entry.displayName || entry.email || 'Estudiante') +'</span>';
+    if (entry.email){
+      html += '<span class="pd-uploads__student-email">'+ escHtml(entry.email) +'</span>';
+    }
+    html += '<span class="pd-uploads__student-counts">\
+        <span class="pd-uploads__student-count" title="Total de entregas">'+ escHtml(String((entry.uploads||[]).length)) +'</span>';
+    if (entry.pending > 0){
+      html += '<span class="pd-uploads__student-pending">'+ escHtml(entry.pending===1 ? '1 pendiente' : entry.pending + ' pendientes') +'</span>';
+    }
+    html += '</span>\
+          ';
+    if (breakdown.total > 0){
+      html += '<span class="pd-uploads__student-breakdown">';
+      if (breakdown.activity > 0){
+        html += '<span class="pd-uploads__student-chip" title="Actividades">A: '+ escHtml(String(breakdown.activity)) +'</span>';
+      }
+      if (breakdown.homework > 0){
+        html += '<span class="pd-uploads__student-chip" title="Tareas">T: '+ escHtml(String(breakdown.homework)) +'</span>';
+      }
+      if (breakdown.evidence > 0){
+        html += '<span class="pd-uploads__student-chip" title="Evidencias">E: '+ escHtml(String(breakdown.evidence)) +'</span>';
+      }
+      if (breakdown.other > 0){
+        html += '<span class="pd-uploads__student-chip" title="Otros envíos">O: '+ escHtml(String(breakdown.other)) +'</span>';
+      }
+      html += '</span>';
+    }
+    html += '\
+        </button>\
+      </li>';
+  }
+  listEl.innerHTML = html;
+}
+
+function buildUploadCard(upload){
+  if (!upload) return '';
+  var status = normalizeStatus(upload.status);
+  var statusClass = 'pd-uploads__item-status--' + status;
+  if (!UPLOAD_STATUS_LABELS[status]){
+    status = 'enviado';
+    statusClass = 'pd-uploads__item-status--enviado';
+  }
+  var statusLabel = UPLOAD_STATUS_LABELS[status] || 'Enviado';
+  var kind = UPLOAD_KIND_LABELS[(upload.kind || '').toLowerCase()] || 'Entrega';
+  var metaParts = [];
+  var submittedTxt = formatDateTime(upload.submittedAt || upload.createdAt || upload.updatedAt);
+  if (submittedTxt) metaParts.push('Enviado: ' + submittedTxt);
+  if (upload.fileName) metaParts.push(upload.fileName);
+  var sizeTxt = formatSize(upload.fileSize);
+  if (sizeTxt) metaParts.push(sizeTxt);
+  var description = (upload.description || '').trim();
+  var hasGrade = typeof upload.grade === 'number' && !isNaN(upload.grade);
+  var gradeTxt = hasGrade ? 'Calificación: ' + upload.grade + ' / 100' : 'Sin calificación registrada';
+  var reviewInfo = formatReviewInfo(upload);
+
+  var html = '\
+    <article class="pd-uploads__item" data-id="'+ escAttr(upload.id||'') +'">\
+      <header class="pd-uploads__item-header">\
+        <div class="pd-uploads__item-heading">\
+          <h4>'+ escHtml(upload.title || 'Entrega sin título') +'</h4>\
+          <span class="pd-uploads__item-chip">'+ escHtml(kind) +'</span>\
+        </div>\
+        <span class="pd-uploads__item-status '+ escAttr(statusClass) +'">'+ escHtml(statusLabel) +'</span>\
+      </header>';
+
+  if (metaParts.length){
+    html += '<p class="pd-uploads__item-meta">'+ escHtml(metaParts.join(' · ')) +'</p>';
+  }
+  if (description){
+    html += '<p class="pd-uploads__item-description">'+ escHtml(description) +'</p>';
+  }
+  if (gradeTxt){
+    var gradeClass = hasGrade ? 'pd-uploads__item-grade' : 'pd-uploads__item-grade pd-uploads__item-grade--pending';
+    html += '<p class="'+ gradeClass +'">'+ escHtml(gradeTxt) +'</p>';
+  }
+  if (upload.teacherFeedback){
+    html += '<p class="pd-uploads__item-feedback"><strong>Comentarios:</strong> '+ escHtml(upload.teacherFeedback) +'</p>';
+  }
+  if (reviewInfo){
+    html += '<p class="pd-uploads__item-reviewer">'+ escHtml(reviewInfo) +'</p>';
+  }
+
+  html += '<div class="pd-uploads__item-actions">';
+  if (upload.fileUrl){
+    html += '<a class="pd-action-btn" href="'+ escAttr(upload.fileUrl) +'" target="_blank" rel="noopener">Abrir archivo</a>';
+  } else {
+    html += '<span class="pd-uploads__item-link-disabled">Archivo no disponible</span>';
+  }
+  var disableAccept = status === 'aceptado' || status === 'calificado';
+  html += '<button type="button" class="pd-action-btn pd-uploads__action" data-action="accept"'+ (disableAccept ? ' disabled' : '') +'>Marcar como aceptada</button>';
+  var gradeLabel = hasGrade ? 'Actualizar calificación' : 'Registrar calificación';
+  html += '<button type="button" class="pd-action-btn pd-uploads__action" data-action="grade">'+ escHtml(gradeLabel) +'</button>';
+  html += '</div>';
+
+  html += '</article>';
+  return html;
+}
+
+function renderUploadDetail(state, providedEntries){
+  var container = $id('pd-upload-detail');
+  if (!container) return;
+  var entries = providedEntries || getUploadStudentEntries(state);
+  var uid = state.selectedUploadStudent;
+  container.innerHTML='';
+  if (!uid){
+    container.insertAdjacentHTML('beforeend', '<p class="pd-empty">Selecciona un estudiante para revisar sus evidencias.</p>');
+    return;
+  }
+  var grouped = state.uploadGroups || {};
+  var group = grouped[uid] || null;
+  var info = (state.studentIndex && state.studentIndex[uid]) || (group && group.student) || {};
+  var header = '\
+    <div class="pd-uploads__detail-header">\
+      <h3>'+ escHtml(info.displayName || info.nombre || info.email || 'Estudiante') +'</h3>';
+  if (info.email){
+    header += '<span>'+ escHtml(info.email) +'</span>';
+  }
+  header += '</div>';
+  container.insertAdjacentHTML('beforeend', header);
+
+  if (!group || !group.uploads || !group.uploads.length){
+    container.insertAdjacentHTML('beforeend', '<p class="pd-empty">Este estudiante aún no registra entregas.</p>');
+    return;
+  }
+
+  var sections = groupUploadsByKind(group.uploads);
+  for (var si=0; si<sections.length; si++){
+    var section = sections[si];
+    var count = section.uploads.length;
+    var badge = count === 1 ? '1 entrega' : count + ' entregas';
+    var secHtml = '\
+      <section class="pd-uploads__kind-section" data-kind="'+ escAttr(section.key) +'">\
+        <header class="pd-uploads__kind-header">\
+          <h4 class="pd-uploads__kind-heading">'+ escHtml(section.title) +'</h4>\
+          <span class="pd-uploads__kind-badge">'+ escHtml(badge) +'</span>\
+        </header>\
+        <div class="pd-uploads__kind-list">';
+    for (var ui=0; ui<section.uploads.length; ui++){
+      secHtml += buildUploadCard(section.uploads[ui]);
+    }
+    secHtml += '</div>\
+      </section>';
+    container.insertAdjacentHTML('beforeend', secHtml);
+  }
+}
+
 function renderExams(exams){
   var u1 = exams['u1'] || exams['unidad1'];
   var u2 = exams['u2'] || exams['unidad2'];
@@ -292,6 +655,138 @@ async function populateAssignments(db, grupoId){
   } catch (e) {
     console.error('Error al obtener asignaciones', e);
     asgTbody.innerHTML = '<tr><td colspan="5" class="pd-empty">No fue posible cargar las asignaciones.</td></tr>';
+  }
+}
+
+function clearUploadsState(state){
+  if (!state) return;
+  state.uploads = [];
+  state.uploadGroups = {};
+  state.uploadIndex = {};
+  state.selectedUploadStudent = null;
+  renderUploadStudentsList(state, []);
+  renderUploadDetail(state, []);
+}
+
+function handleUploadsSnapshot(state, items){
+  if (!state) return;
+  var docs = Array.isArray(items) ? items.slice() : [];
+  state.uploads = docs;
+  var grouped = {};
+  var index = {};
+  for (var i=0;i<docs.length;i++){
+    var upload = docs[i];
+    if (!upload || !upload.id) continue;
+    index[upload.id] = upload;
+    var uid = (upload.student && upload.student.uid) ? upload.student.uid : '__sinuid__';
+    if (!grouped[uid]) grouped[uid] = { uploads: [], student: upload.student || null };
+    grouped[uid].uploads.push(upload);
+    if (!grouped[uid].student && upload.student) grouped[uid].student = upload.student;
+  }
+  var keys = Object.keys(grouped);
+  for (var j=0;j<keys.length;j++){
+    var arr = grouped[keys[j]].uploads || [];
+    arr.sort(function(a,b){
+      var ad = toDate(a && (a.submittedAt || a.gradedAt || a.acceptedAt || a.updatedAt));
+      var bd = toDate(b && (b.submittedAt || b.gradedAt || b.acceptedAt || b.updatedAt));
+      var at = ad ? ad.getTime() : 0;
+      var bt = bd ? bd.getTime() : 0;
+      return bt - at;
+    });
+  }
+  state.uploadGroups = grouped;
+  state.uploadIndex = index;
+  var entries = getUploadStudentEntries(state);
+  entries = ensureUploadSelection(state, entries);
+  renderUploadStudentsList(state, entries);
+  renderUploadDetail(state, entries);
+}
+
+function bindUploadStudentList(state){
+  var listEl = $id('pd-upload-student-list');
+  if (!listEl || listEl.__pdBound) return;
+  listEl.__pdBound = true;
+  listEl.addEventListener('click', function(ev){
+    var btn = ev.target && ev.target.closest ? ev.target.closest('button[data-uid]') : null;
+    if (!btn) return;
+    var uid = btn.getAttribute('data-uid');
+    if (!uid || state.selectedUploadStudent === uid) return;
+    state.selectedUploadStudent = uid;
+    var entries = getUploadStudentEntries(state);
+    renderUploadStudentsList(state, entries);
+    renderUploadDetail(state, entries);
+  });
+}
+
+function bindUploadDetail(state){
+  var container = $id('pd-upload-detail');
+  if (!container || container.__pdBound) return;
+  container.__pdBound = true;
+  container.addEventListener('click', function(ev){
+    var btn = ev.target && ev.target.closest ? ev.target.closest('button[data-action]') : null;
+    if (!btn) return;
+    var action = btn.getAttribute('data-action');
+    var item = btn.closest ? btn.closest('.pd-uploads__item') : null;
+    var uploadId = item ? item.getAttribute('data-id') : null;
+    if (!uploadId) return;
+    if (action === 'accept'){
+      handleAcceptAction(state, uploadId, btn);
+    } else if (action === 'grade'){
+      handleGradeAction(state, uploadId, btn);
+    }
+  });
+}
+
+async function handleAcceptAction(state, uploadId, btn){
+  var teacher = state && state.currentTeacher ? state.currentTeacher : null;
+  if (!teacher){
+    alert('No se pudo identificar al docente autenticado.');
+    return;
+  }
+  if (btn && !btn.disabled) btn.disabled = true;
+  try {
+    await markStudentUploadAccepted(uploadId, teacher);
+    alert('Entrega marcada como aceptada. El estudiante verá la actualización en su panel.');
+    updateSyncStamp();
+  } catch (err) {
+    console.error('markStudentUploadAccepted:error', err);
+    alert('No se pudo marcar la entrega como aceptada: ' + (err && err.message ? err.message : err));
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function handleGradeAction(state, uploadId, btn){
+  var teacher = state && state.currentTeacher ? state.currentTeacher : null;
+  if (!teacher){
+    alert('No se pudo identificar al docente autenticado.');
+    return;
+  }
+  var current = state && state.uploadIndex ? state.uploadIndex[uploadId] : null;
+  var defaultGrade = (current && typeof current.grade === 'number' && !isNaN(current.grade)) ? String(current.grade) : '';
+  var gradeInput = window.prompt('Calificación (0-100):', defaultGrade);
+  if (gradeInput === null) return;
+  var grade = Number(gradeInput);
+  if (!isFinite(grade) || grade < 0 || grade > 100){
+    alert('Ingresa una calificación numérica entre 0 y 100.');
+    return;
+  }
+  var defaultFeedback = current && current.teacherFeedback ? current.teacherFeedback : '';
+  var feedbackInput = window.prompt('Comentarios para el estudiante (opcional):', defaultFeedback);
+  if (feedbackInput === null) feedbackInput = defaultFeedback;
+  if (btn && !btn.disabled) btn.disabled = true;
+  try {
+    if (!current || normalizeStatus(current.status) === 'enviado'){
+      await markStudentUploadAccepted(uploadId, teacher);
+    }
+    await gradeStudentUpload(uploadId, { grade: grade, feedback: feedbackInput, teacher: teacher });
+    alert('Calificación registrada. El estudiante recibirá la notificación en su panel.');
+    updateSyncStamp();
+  } catch (err) {
+    console.error('gradeStudentUpload:error', err);
+    alert('No se pudo registrar la calificación: ' + (err && err.message ? err.message : err));
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -409,6 +904,11 @@ function bindReminder(state){
 
 async function loadDataForGroup(db, grupo, state){
   state.students = await fetchStudents(db, grupo);
+  state.studentIndex = {};
+  for (var si=0; si<state.students.length; si++){
+    var stu = state.students[si];
+    if (stu && stu.uid) state.studentIndex[stu.uid] = stu;
+  }
   var metrics = {};
   state.metrics = metrics;
   var CONC=5, idx=0;
@@ -441,6 +941,8 @@ async function loadDataForGroup(db, grupo, state){
 
   renderStudentsTable(state.students, metrics);
 
+  handleUploadsSnapshot(state, state.uploads);
+
   updateSyncStamp();
 
   var rub = await getRubric(db, grupo);
@@ -469,10 +971,24 @@ async function main(){
   var dataset = root && root.dataset ? root.dataset : {};
   var grupo = (dataset && dataset.grupo ? dataset.grupo : (params.get('grupo') || 'calidad-2025')).trim();
 
-  var state = { students: [], deliverables: [], metrics: {} };
+  var state = {
+    students: [],
+    deliverables: [],
+    metrics: {},
+    studentIndex: {},
+    uploads: [],
+    uploadGroups: {},
+    uploadIndex: {},
+    selectedUploadStudent: null,
+    unsubscribeUploads: null,
+    currentTeacher: null,
+  };
   var isLoading = false;
   var hasLoaded = false;
   var lastLoadedUid = null;
+
+  bindUploadStudentList(state);
+  bindUploadDetail(state);
 
   setPanelLocked(root, true);
   showStatusBanner('Preparando panel…', 'Esperando autenticación.', 'info');
@@ -493,6 +1009,9 @@ async function main(){
     if (!info.isTeacher){
       hasLoaded = false;
       lastLoadedUid = null;
+      if (state.unsubscribeUploads){ state.unsubscribeUploads(); state.unsubscribeUploads = null; }
+      state.currentTeacher = null;
+      clearUploadsState(state);
       setPanelLocked(root, true);
       showStatusBanner(
         user ? 'Sin privilegios de docente' : 'Autenticación requerida',
@@ -505,6 +1024,19 @@ async function main(){
     }
 
     var uid = user && user.uid ? user.uid : null;
+    state.currentTeacher = {
+      uid: uid || '',
+      email: user && user.email ? user.email : '',
+      displayName: user && user.displayName ? user.displayName : '',
+    };
+
+    if (!state.unsubscribeUploads){
+      state.unsubscribeUploads = observeAllStudentUploads(
+        function(items){ handleUploadsSnapshot(state, items); },
+        function(err){ console.error('observeAllStudentUploads:error', err); }
+      );
+    }
+
     if (hasLoaded && lastLoadedUid === uid){
       hideStatusBanner();
       setPanelLocked(root, false);

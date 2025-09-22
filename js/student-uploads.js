@@ -7,6 +7,8 @@ import {
   where,
   orderBy,
   onSnapshot,
+  doc,
+  updateDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 initFirebase();
@@ -94,4 +96,100 @@ export function observeStudentUploads(uid, onChange, onError) {
       if (typeof onError === "function") onError(error);
     }
   );
+}
+
+/**
+ * Observa todas las entregas registradas por los estudiantes.
+ * Pensado para la vista de docentes.
+ * @param {(items: Array<Object>) => void} onChange
+ * @param {(error: Error) => void} [onError]
+ * @returns {() => void}
+ */
+export function observeAllStudentUploads(onChange, onError) {
+  const q = query(uploadsCollection, orderBy("submittedAt", "desc"));
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const items = snapshot.docs.map((docSnap) => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      }));
+      if (typeof onChange === "function") onChange(items);
+    },
+    (error) => {
+      console.error("observeAllStudentUploads:error", error);
+      if (typeof onError === "function") onError(error);
+    }
+  );
+}
+
+function buildTeacherInfo(teacher = {}) {
+  if (!teacher || typeof teacher !== "object") return null;
+  const uid = teacher.uid ? String(teacher.uid).trim() : "";
+  const email = teacher.email ? String(teacher.email).trim() : "";
+  const displayName = teacher.displayName ? String(teacher.displayName).trim() : "";
+  if (!uid && !email && !displayName) return null;
+  return {
+    uid,
+    email,
+    displayName,
+  };
+}
+
+/**
+ * Marca una entrega como aceptada por el docente.
+ * @param {string} uploadId
+ * @param {{uid?: string, email?: string, displayName?: string}} [teacher]
+ */
+export async function markStudentUploadAccepted(uploadId, teacher = {}) {
+  if (!uploadId) throw new Error("Falta el identificador de la entrega");
+  const ref = doc(uploadsCollection, uploadId);
+  const teacherInfo = buildTeacherInfo(teacher);
+  const payload = {
+    status: "aceptado",
+    acceptedAt: serverTimestamp(),
+    reviewedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+  if (teacherInfo) payload.reviewedBy = teacherInfo;
+  await updateDoc(ref, payload);
+}
+
+/**
+ * Registra o actualiza la calificación de una entrega.
+ * @param {string} uploadId
+ * @param {{
+ *   grade: number,
+ *   feedback?: string,
+ *   teacher?: {uid?: string, email?: string, displayName?: string},
+ * }} options
+ */
+export async function gradeStudentUpload(uploadId, options = {}) {
+  if (!uploadId) throw new Error("Falta el identificador de la entrega");
+  const grade = Number(options.grade);
+  if (!Number.isFinite(grade)) {
+    throw new Error("La calificación debe ser un número");
+  }
+  if (grade < 0 || grade > 100) {
+    throw new Error("La calificación debe estar entre 0 y 100");
+  }
+
+  const teacherInfo = buildTeacherInfo(options.teacher);
+  const feedback = options.feedback ? String(options.feedback).trim() : "";
+  const ref = doc(uploadsCollection, uploadId);
+  const payload = {
+    status: "calificado",
+    grade,
+    teacherFeedback: feedback,
+    gradedAt: serverTimestamp(),
+    reviewedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+  if (teacherInfo) {
+    payload.gradedBy = teacherInfo;
+    payload.reviewedBy = teacherInfo;
+  }
+
+  await updateDoc(ref, payload);
 }
