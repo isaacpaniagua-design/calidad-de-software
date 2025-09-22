@@ -223,6 +223,8 @@ function createReplyElement(reply, depth = 0){
       btnReact.dataset.loading = '1';
       btnReact.classList.add('opacity-50');
       try {
+
+
         await registerForumReplyReaction(currentTopicId, reply.id, 'like');
       } catch (err) {
         alert(err?.message || err || 'No fue posible registrar tu reacción');
