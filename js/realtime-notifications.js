@@ -10,6 +10,8 @@ import {
 } from "./firebase.js";
 import { observeAllStudentUploads } from "./student-uploads.js";
 
+import { allowedEmailDomain } from "./firebase-config.js";
+
 initFirebase();
 
 
@@ -220,9 +222,12 @@ function initRealtimeNotifications() {
 
 
   if (!feedList || !toggleButton || !panel) {
-
     return;
   }
+
+  const normalizedAllowedDomain = (allowedEmailDomain || "").toLowerCase();
+  const domainHint = normalizedAllowedDomain ? `@${normalizedAllowedDomain}` : "tu correo institucional";
+
 
   const emptyTitleEl = emptyEl?.querySelector("[data-empty-title]") || null;
   const emptyMessageEl = emptyEl?.querySelector("[data-empty-message]") || null;
@@ -270,6 +275,8 @@ function initRealtimeNotifications() {
   let isPanelOpen = false;
   let hideTimeoutId = null;
   let simulationEnabled = true;
+
+  let statusOverride = null;
 
 
   updateToggleLabel(false);
@@ -436,8 +443,33 @@ function initRealtimeNotifications() {
     return OPTIONS.filter((option) => isEnabled(option.id)).map((option) => option.id);
   }
 
+
+  function setStatusOverride(override) {
+    if (!statusEl) return;
+    if (override && typeof override === "object") {
+      statusOverride = {
+        icon: override.icon || null,
+        message: override.message || "",
+        enabled: override.enabled !== false,
+      };
+    } else {
+      statusOverride = null;
+    }
+    updateStatus();
+  }
+
   function updateStatus() {
     if (!statusEl) return;
+    if (statusOverride) {
+      statusEl.setAttribute("data-enabled", statusOverride.enabled ? "true" : "false");
+      const icon = statusOverride.icon || (statusOverride.enabled ? "🟢" : "⚠️");
+      statusEl.innerHTML = `
+        <span aria-hidden="true">${icon}</span>
+        <span>${statusOverride.message || ""}</span>
+      `;
+      return;
+    }
+
     const enabledCount = getEnabledOptionIds().length;
     statusEl.setAttribute("data-enabled", enabledCount > 0 ? "true" : "false");
     if (enabledCount > 0) {
@@ -594,6 +626,49 @@ function initRealtimeNotifications() {
     const seenReplies = new Set();
     const topicCache = new Map();
 
+
+    const canUseRealtimeWithEmail = (email) => {
+      const normalized = (email || "").toLowerCase().trim();
+      if (!normalized) return false;
+      if (normalizedAllowedDomain && normalized.endsWith(`@${normalizedAllowedDomain}`)) {
+        return true;
+      }
+      return isTeacherEmail(normalized);
+    };
+
+    const isPermissionError = (error) => {
+      if (!error) return false;
+      const code = typeof error.code === "string" ? error.code.toLowerCase() : "";
+      if (code === "permission-denied") return true;
+      const message = typeof error.message === "string" ? error.message : "";
+      return /missing or insufficient permissions/i.test(message);
+    };
+
+    const showPermissionWarning = () => {
+      setStatusOverride({
+        icon: "🔒",
+        message: `Mostrando demo: inicia sesión con ${domainHint} para ver entregas y respuestas reales.`,
+        enabled: false,
+      });
+    };
+
+    const showConnectionIssue = () => {
+      setStatusOverride({
+        icon: "⚠️",
+        message: "Mostrando demo por un problema de conexión con Firebase. Intenta más tarde.",
+        enabled: false,
+      });
+    };
+
+    const showLiveStatus = () => {
+      setStatusOverride({
+        icon: "🟢",
+        message: "Alertas docentes en vivo activas.",
+        enabled: true,
+      });
+    };
+
+
     const evaluateSimulationState = () => {
       if (!teacherActive) {
         setSimulationEnabled(true);
@@ -615,7 +690,14 @@ function initRealtimeNotifications() {
     };
 
     const handleUploadsError = (error) => {
-      console.error("observeAllStudentUploads:error", error);
+
+      if (isPermissionError(error)) {
+        showPermissionWarning();
+      } else {
+        showConnectionIssue();
+        console.error("observeAllStudentUploads:error", error);
+      }
+
       if (uploadsUnsubscribe) {
         try {
           uploadsUnsubscribe();
@@ -626,7 +708,14 @@ function initRealtimeNotifications() {
     };
 
     const handleRepliesError = (error) => {
-      console.error("subscribeLatestForumReplies:error", error);
+
+      if (isPermissionError(error)) {
+        showPermissionWarning();
+      } else {
+        showConnectionIssue();
+        console.error("subscribeLatestForumReplies:error", error);
+      }
+
       if (repliesUnsubscribe) {
         try {
           repliesUnsubscribe();
@@ -638,8 +727,18 @@ function initRealtimeNotifications() {
 
     const startTeacherSubscriptions = (email) => {
       const normalizedEmail = (email || "").toLowerCase();
+
+      if (!canUseRealtimeWithEmail(normalizedEmail)) {
+        teacherActive = false;
+        currentTeacherEmail = "";
+        showPermissionWarning();
+        evaluateSimulationState();
+        return;
+      }
       if (teacherActive) {
         currentTeacherEmail = normalizedEmail;
+        showLiveStatus();
+
         evaluateSimulationState();
         return;
       }
@@ -648,6 +747,9 @@ function initRealtimeNotifications() {
       currentTeacherEmail = normalizedEmail;
       resetTracking();
       clearTopicCache();
+
+      setStatusOverride(null);
+
 
       try {
         uploadsUnsubscribe = observeAllStudentUploads(handleUploads, handleUploadsError);
@@ -668,6 +770,12 @@ function initRealtimeNotifications() {
         console.error("No se pudo observar respuestas del foro", error);
         repliesUnsubscribe = null;
       }
+
+
+      if (uploadsUnsubscribe || repliesUnsubscribe) {
+        showLiveStatus();
+      }
+
 
       evaluateSimulationState();
     };
@@ -692,6 +800,9 @@ function initRealtimeNotifications() {
       }
       resetTracking();
       clearTopicCache();
+
+      setStatusOverride(null);
+
       evaluateSimulationState();
     };
 

@@ -41,6 +41,14 @@ import {
   allowedTeacherEmails,
 } from "./firebase-config.js";
 
+function isPermissionDenied(error) {
+  if (!error) return false;
+  const code = typeof error.code === "string" ? error.code.toLowerCase() : "";
+  if (code === "permission-denied") return true;
+  const message = typeof error.message === "string" ? error.message : "";
+  return /missing or insufficient permissions/i.test(message);
+}
+
 let app;
 let auth;
 let db;
@@ -903,7 +911,13 @@ export function subscribeLatestForumReplies(limitOrOptions, onChange, onError) {
       }
     },
     (error) => {
-      console.error("subscribeLatestForumReplies:error", error);
+
+      if (isPermissionDenied(error)) {
+        console.warn("subscribeLatestForumReplies:permission-denied", error);
+      } else {
+        console.error("subscribeLatestForumReplies:error", error);
+      }
+
       if (typeof onError === "function") {
         try {
           onError(error);
