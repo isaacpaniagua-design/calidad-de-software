@@ -634,10 +634,37 @@
         z-index: 1;
       }
 
+      .student-uploads__summary {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: clamp(16px, 3vw, 28px);
+        cursor: pointer;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        width: 100%;
+      }
+
+      .student-uploads__summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .student-uploads__summary::marker {
+        display: none;
+      }
+
+      .student-uploads__summary:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 6px;
+        border-radius: var(--radius-md);
+      }
+
       .student-uploads__header {
         display: grid;
         gap: 12px;
         width: 100%;
+        flex: 1;
       }
 
       .student-uploads__eyebrow {
@@ -657,6 +684,50 @@
       .student-uploads__description {
         margin: 0;
         color: var(--text-secondary);
+      }
+
+      .student-uploads__chevron {
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: rgba(99, 102, 241, 0.12);
+        color: var(--accent-hover);
+        transition: background 0.2s ease;
+        pointer-events: none;
+      }
+
+      .student-uploads__chevron::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        border-right: 2px solid currentColor;
+        border-bottom: 2px solid currentColor;
+        transform: rotate(45deg);
+        transition: transform 0.25s ease;
+      }
+
+      .student-uploads__summary:hover .student-uploads__chevron,
+      .student-uploads__summary:focus-visible .student-uploads__chevron {
+        background: rgba(99, 102, 241, 0.18);
+      }
+
+      .student-uploads[open] .student-uploads__chevron {
+        background: rgba(99, 102, 241, 0.18);
+      }
+
+      .student-uploads[open] .student-uploads__chevron::before {
+        transform: rotate(-135deg);
+      }
+
+      .student-uploads__body {
+        display: grid;
+        gap: var(--dashboard-grid-gap);
+        margin-top: clamp(20px, 4vw, 32px);
+        padding-top: clamp(12px, 2.5vw, 20px);
+        border-top: 1px solid rgba(148, 163, 184, 0.24);
       }
 
       .student-uploads__grid {
@@ -1939,17 +2010,22 @@
         </details>
 
 
-        <section class="student-uploads" id="studentUploadsSection">
+        <details class="student-uploads" id="studentUploadsSection">
 
-          <div class="student-uploads__header">
-            <span class="student-uploads__eyebrow">Evidencias en línea</span>
-            <h2 class="student-uploads__title">Entrega tus actividades y tareas</h2>
-            <p class="student-uploads__description">
-              Comparte tus avances con el equipo docente sin salir de la vista principal. Cada archivo que subas quedará asociado a tu cuenta para que puedas consultarlo cuando lo necesites.
-            </p>
-          </div>
+          <summary class="student-uploads__summary">
+            <div class="student-uploads__header">
+              <span class="student-uploads__eyebrow">Evidencias en línea</span>
+              <h2 class="student-uploads__title">Entrega tus actividades y tareas</h2>
+              <p class="student-uploads__description">
+                Comparte tus avances con el equipo docente sin salir de la vista principal. Cada archivo que subas quedará asociado a tu cuenta para que puedas consultarlo cuando lo necesites.
+              </p>
+            </div>
+            <span class="student-uploads__chevron" aria-hidden="true"></span>
+          </summary>
 
-          <div class="student-uploads__grid">
+          <div class="student-uploads__body">
+
+            <div class="student-uploads__grid">
 
             <form class="student-uploads__form" id="studentUploadForm" autocomplete="off">
 
@@ -2069,25 +2145,27 @@
 
           </div>
 
-          <div
+            <div
 
-            class="student-uploads__status is-info"
+              class="student-uploads__status is-info"
 
-            id="studentUploadStatus"
+              id="studentUploadStatus"
 
-            role="status"
+              role="status"
 
-            aria-live="polite"
+              aria-live="polite"
 
-            hidden
+              hidden
 
-          >
+            >
 
-            Listo para registrar tus actividades.
+              Listo para registrar tus actividades.
+
+            </div>
 
           </div>
 
-        </section>
+        </details>
 
 
 
