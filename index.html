@@ -2188,7 +2188,7 @@
 
     <script>
 
-      document.addEventListener("DOMContentLoaded", async function () {
+      document.addEventListener("DOMContentLoaded", () => {
 
         const grid = document.getElementById("sessionsGrid");
 
@@ -2198,9 +2198,21 @@
 
         if (!grid) return;
 
-        grid.innerHTML = "";
+        const fallbackTotal = 45;
 
+        const STORAGE_PREFIX = "qs_session_status:";
 
+        const STATUS_LABELS = {
+
+          "completed": "Realizada",
+
+          "in-progress": "En curso",
+
+          "not-started": "No realizada",
+
+        };
+
+        const VALID_SESSION_STATES = new Set(Object.keys(STATUS_LABELS));
 
         const updateHero = (completed, current, total) => {
 
@@ -2222,85 +2234,235 @@
 
         };
 
+        const readStoredState = (sessionNumber) => {
 
+          const key = `${STORAGE_PREFIX}sesion${sessionNumber}`;
 
-        const fallbackTotal = 45;
+          try {
 
+            const value = localStorage.getItem(key);
 
+            if (VALID_SESSION_STATES.has(value)) return value;
 
-        try {
+          } catch (_) {}
 
-          const res = await fetch("checklist.json", { cache: "no-store" });
+          return null;
 
-          const data = await res.json();
+        };
 
-          const total = Array.isArray(data.items) && data.items.length ? data.items.length : fallbackTotal;
+        const normalizeChecklistState = (state) => {
 
-          const estados = {};
+          if (state == null) return null;
 
-          let completed = 0;
+          const normalized = String(state).trim().toLowerCase();
 
-          for (const it of data.items || []) {
+          if (!normalized) return null;
 
-            estados[it.sesion] = it.estado;
+          if (["real", "completed", "completada", "realizada", "done"].includes(normalized))
 
-            if (it.estado === "REAL") completed += 1;
+            return "completed";
 
-          }
+          if (["in-progress", "in progress", "en curso", "curso", "next"].includes(normalized))
 
-          let current = null;
+            return "in-progress";
+
+          return null;
+
+        };
+
+        const resolveState = (sessionNumber, baseStates) => {
+
+          const stored = readStoredState(sessionNumber);
+
+          if (stored) return stored;
+
+          const baseValue = baseStates.get(sessionNumber);
+
+          const normalized = normalizeChecklistState(baseValue);
+
+          if (normalized) return normalized;
+
+          return "not-started";
+
+        };
+
+        let latestChecklist = {
+
+          total: fallbackTotal,
+
+          states: new Map(),
+
+        };
+
+        const renderSessions = (payload) => {
+
+          const totalCandidate = Number(payload?.total);
+
+          const total = Number.isFinite(totalCandidate) && totalCandidate > 0 ? totalCandidate : fallbackTotal;
+
+          const baseStates = payload?.states instanceof Map ? payload.states : new Map();
+
+          const resolvedStates = [];
+
+          let completedCount = 0;
+
+          let firstInProgress = null;
+
+          let firstPending = null;
 
           for (let i = 1; i <= total; i++) {
 
-            if (estados[i] !== "REAL") {
+            const state = resolveState(i, baseStates);
 
-              current = i;
+            resolvedStates[i] = state;
 
-              break;
+            if (state === "completed") {
+
+              completedCount += 1;
+
+            } else {
+
+              if (state === "in-progress" && firstInProgress === null) {
+
+                firstInProgress = i;
+
+              }
+
+              if (firstPending === null) {
+
+                firstPending = i;
+
+              }
 
             }
 
           }
 
-          if (!current) current = total;
+          const currentSession = firstInProgress ?? firstPending ?? total;
 
-          updateHero(completed, current, total);
+          grid.innerHTML = "";
 
           for (let i = 1; i <= total; i++) {
 
-            const a = document.createElement("a");
+            const state = resolvedStates[i] || "not-started";
 
-            a.href = "sesion" + i + ".html";
+            const link = document.createElement("a");
 
-            a.className = "session-btn";
+            link.href = `sesion${i}.html`;
 
-            a.textContent = "Sesión " + i;
+            link.className = "session-btn";
 
-            if (estados[i] === "REAL") a.classList.add("completed");
+            link.textContent = `Sesión ${i}`;
 
-            if (i === current && estados[i] !== "REAL") a.classList.add("current");
+            link.dataset.status = state;
 
-            grid.appendChild(a);
+            const label = STATUS_LABELS[state] || "Sin estado";
+
+            link.setAttribute("aria-label", `Sesión ${i}. Estado: ${label}.`);
+
+            link.title = `Estado: ${label}`;
+
+            if (state === "completed") {
+
+              link.classList.add("completed");
+
+            }
+
+            if (state === "in-progress" || (i === currentSession && state !== "completed")) {
+
+              link.classList.add("current");
+
+            }
+
+            grid.appendChild(link);
 
           }
 
-        } catch (e) {
+          updateHero(completedCount, currentSession, total);
 
-          updateHero(0, 1, fallbackTotal);
+        };
 
-          for (let i = 1; i <= fallbackTotal; i++) {
+        const rebuildFromLatest = () => {
 
-            const a = document.createElement("a");
+          renderSessions(latestChecklist);
 
-            a.href = "sesion" + i + ".html";
+        };
 
-            a.className = "session-btn";
+        const loadChecklist = async () => {
 
-            a.textContent = "Sesión " + i;
+          try {
 
-            grid.appendChild(a);
+            const res = await fetch("checklist.json", { cache: "no-store" });
+
+            const data = await res.json();
+
+            const items = Array.isArray(data?.items) ? data.items : [];
+
+            let total = Number(data?.total);
+
+            if (!Number.isFinite(total) || total <= 0) {
+
+              total = items.length || fallbackTotal;
+
+            }
+
+            const states = new Map();
+
+            for (const item of items) {
+
+              const sessionNumber = Number(item?.sesion ?? item?.session ?? item?.id);
+
+              if (Number.isFinite(sessionNumber) && sessionNumber > 0) {
+
+                states.set(sessionNumber, item?.estado ?? item?.status ?? null);
+
+              }
+
+            }
+
+            latestChecklist = { total, states };
+
+            renderSessions(latestChecklist);
+
+          } catch (_) {
+
+            latestChecklist = { total: fallbackTotal, states: new Map() };
+
+            renderSessions(latestChecklist);
 
           }
+
+        };
+
+        const isSessionStatusKey = (key) => typeof key === "string" && key.startsWith(STORAGE_PREFIX);
+
+        const handleCustomStatusEvent = (event) => {
+
+          if (!event || !event.detail) return;
+
+          if (!isSessionStatusKey(event.detail.key)) return;
+
+          rebuildFromLatest();
+
+        };
+
+        const handleStorageEvent = (event) => {
+
+          if (!event || !isSessionStatusKey(event.key)) return;
+
+          rebuildFromLatest();
+
+        };
+
+        renderSessions(latestChecklist);
+
+        loadChecklist();
+
+        if (typeof window !== "undefined" && window.addEventListener) {
+
+          window.addEventListener("qs:session-status-changed", handleCustomStatusEvent);
+
+          window.addEventListener("storage", handleStorageEvent);
 
         }
 

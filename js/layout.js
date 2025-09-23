@@ -345,9 +345,29 @@ function setupSessionStatusControl(doc, currentPage) {
 
     const slideToolbar = toolbarCard.querySelector(".slide-toolbar");
     const html = doc.documentElement;
+    let cleanupFns = [];
+
+    const registerCleanup = (fn) => {
+      if (typeof fn === "function") {
+        cleanupFns.push(fn);
+      }
+    };
+
+    const runCleanups = () => {
+      if (!cleanupFns.length) return;
+      const fns = cleanupFns.slice();
+      cleanupFns = [];
+      for (const fn of fns) {
+        try {
+          fn();
+        } catch (_) {}
+      }
+    };
 
     const mountControl = () => {
       if (toolbarCard.querySelector("[data-role='session-status']")) return;
+
+      runCleanups();
 
       ensureSessionStatusStyles(doc);
 
@@ -427,6 +447,55 @@ function setupSessionStatusControl(doc, currentPage) {
         }
       });
 
+      const syncStateFromValue = (value) => {
+        if (!Array.isArray(SESSION_STATUS_STATES) || SESSION_STATUS_STATES.length === 0)
+          return;
+        if (!value) {
+          applyState(0);
+          return;
+        }
+        const idx = SESSION_STATUS_STATES.findIndex((state) => state && state.id === value);
+        if (idx >= 0) {
+          applyState(idx);
+        } else {
+          applyState(0);
+        }
+      };
+
+      const handleStorage = (event) => {
+        try {
+          if (!event || event.key !== storageKey) return;
+          syncStateFromValue(event.newValue);
+        } catch (_) {}
+      };
+
+      const handleCustomEvent = (event) => {
+        try {
+          if (!event || !event.detail) return;
+          if (event.detail.key !== storageKey) return;
+          if (Object.prototype.hasOwnProperty.call(event.detail, "value")) {
+            syncStateFromValue(event.detail.value);
+          } else {
+            syncStateFromValue(readStoredSessionStatus(storageKey));
+          }
+        } catch (_) {}
+      };
+
+      if (typeof window !== "undefined" && window.addEventListener) {
+        window.addEventListener("storage", handleStorage);
+        registerCleanup(() => {
+          try {
+            window.removeEventListener("storage", handleStorage);
+          } catch (_) {}
+        });
+        window.addEventListener("qs:session-status-changed", handleCustomEvent);
+        registerCleanup(() => {
+          try {
+            window.removeEventListener("qs:session-status-changed", handleCustomEvent);
+          } catch (_) {}
+        });
+      }
+
       container.appendChild(label);
       container.appendChild(button);
 
@@ -438,6 +507,7 @@ function setupSessionStatusControl(doc, currentPage) {
     };
 
     const unmountControl = () => {
+      runCleanups();
       const existing = toolbarCard.querySelector("[data-role='session-status']");
       if (existing && typeof existing.remove === "function") {
         existing.remove();
@@ -575,11 +645,40 @@ function readStoredSessionStatus(key) {
 
 function persistSessionStatus(key, value) {
   if (!key) return;
+  let previousValue = null;
+  try {
+    previousValue = localStorage.getItem(key);
+  } catch (_) {}
+  let success = false;
   try {
     if (value) {
       localStorage.setItem(key, value);
     } else {
       localStorage.removeItem(key);
+    }
+    success = true;
+  } catch (_) {}
+  try {
+    if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+      const detail = {
+        key,
+        value: value || null,
+        previousValue,
+        success,
+        sessionId: key.startsWith(SESSION_STATUS_STORAGE_PREFIX)
+          ? key.slice(SESSION_STATUS_STORAGE_PREFIX.length)
+          : key,
+      };
+      let event = null;
+      if (typeof window.CustomEvent === "function") {
+        event = new CustomEvent("qs:session-status-changed", { detail });
+      } else if (typeof document !== "undefined" && document.createEvent) {
+        event = document.createEvent("CustomEvent");
+        event.initCustomEvent("qs:session-status-changed", false, false, detail);
+      }
+      if (event) {
+        window.dispatchEvent(event);
+      }
     }
   } catch (_) {}
 }
