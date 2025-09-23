@@ -340,11 +340,8 @@ function setupSessionStatusControl(doc, currentPage) {
     if (!Array.isArray(SESSION_STATUS_STATES) || SESSION_STATUS_STATES.length === 0)
       return;
 
-    const toolbarCard = doc.querySelector(".session-toolbar-card");
-    if (!toolbarCard) return;
-
-    const slideToolbar = toolbarCard.querySelector(".slide-toolbar");
-    const html = doc.documentElement;
+    const toolbarCard = doc.querySelector(".session-toolbar-card") || null;
+    const slideToolbar = toolbarCard ? toolbarCard.querySelector(".slide-toolbar") : null;
     let cleanupFns = [];
 
     const registerCleanup = (fn) => {
@@ -364,33 +361,95 @@ function setupSessionStatusControl(doc, currentPage) {
       }
     };
 
-    const mountControl = () => {
-      if (toolbarCard.querySelector("[data-role='session-status']")) return;
+    const sessionId = page.replace(/\.html$/, "");
+    const storageKey = `${SESSION_STATUS_STORAGE_PREFIX}${sessionId}`;
+    const labelId = `session-status-label-${sessionId}`;
 
-      runCleanups();
-
+    const resolveStructure = () => {
       ensureSessionStatusStyles(doc);
 
-      const container = doc.createElement("div");
-      container.className = "session-status-control";
+      let container = null;
+      if (toolbarCard) {
+        container = toolbarCard.querySelector("[data-role='session-status']");
+      }
+      if (!container) {
+        container = doc.querySelector("[data-role='session-status']");
+      }
+      if (!container && toolbarCard) {
+        container = doc.createElement("div");
+        container.className = "session-status-control";
+        container.setAttribute("data-role", "session-status");
+        container.setAttribute("role", "group");
+        container.setAttribute("aria-label", "Estado de la sesión");
+
+        const label = doc.createElement("span");
+        label.className = "session-status-label";
+        container.appendChild(label);
+
+        const button = doc.createElement("button");
+        button.type = "button";
+        button.className = "qs-session-status-btn";
+        button.setAttribute("data-role", "session-status-toggle");
+        container.appendChild(button);
+
+        if (slideToolbar && slideToolbar.parentNode === toolbarCard) {
+          toolbarCard.insertBefore(container, slideToolbar);
+        } else {
+          toolbarCard.appendChild(container);
+        }
+      }
+
+      if (!container) return null;
+
+      container.classList.add("session-status-control");
       container.setAttribute("data-role", "session-status");
       container.setAttribute("role", "group");
       container.setAttribute("aria-label", "Estado de la sesión");
 
-      const sessionId = page.replace(/\.html$/, "");
-      const storageKey = `${SESSION_STATUS_STORAGE_PREFIX}${sessionId}`;
+      if (toolbarCard && container.parentNode === toolbarCard && slideToolbar) {
+        try {
+          const nextElement = container.nextElementSibling;
+          if (nextElement !== slideToolbar) {
+            toolbarCard.insertBefore(container, slideToolbar);
+          }
+        } catch (_) {}
+      }
 
-      const label = doc.createElement("span");
-      const labelId = `session-status-label-${sessionId}`;
+      let label = container.querySelector(".session-status-label");
+      if (!label) {
+        label = doc.createElement("span");
+        container.insertBefore(label, container.firstChild || null);
+      }
       label.className = "session-status-label";
       label.id = labelId;
       label.textContent = "Estado de la sesión";
 
-      const button = doc.createElement("button");
+      let button = container.querySelector("[data-role='session-status-toggle']");
+      if (!button) {
+        button = doc.createElement("button");
+        container.appendChild(button);
+      }
       button.type = "button";
       button.className = "qs-session-status-btn";
       button.setAttribute("data-role", "session-status-toggle");
       button.setAttribute("aria-describedby", labelId);
+
+      if (label.nextSibling !== button) {
+        try {
+          container.insertBefore(button, label.nextSibling);
+        } catch (_) {}
+      }
+
+      return { container, label, button };
+    };
+
+    const mountControl = () => {
+      runCleanups();
+
+      const structure = resolveStructure();
+      if (!structure) return;
+
+      const { button } = structure;
 
       const storedState = readStoredSessionStatus(storageKey);
       let currentIndex = SESSION_STATUS_STATES.findIndex(
@@ -439,12 +498,19 @@ function setupSessionStatusControl(doc, currentPage) {
 
       applyState(currentIndex);
 
-      button.addEventListener("click", () => {
+      const handleClick = () => {
         const nextIndex = (currentIndex + 1) % SESSION_STATUS_STATES.length;
         const state = applyState(nextIndex);
         if (state && state.id) {
           persistSessionStatus(storageKey, state.id);
         }
+      };
+
+      button.addEventListener("click", handleClick);
+      registerCleanup(() => {
+        try {
+          button.removeEventListener("click", handleClick);
+        } catch (_) {}
       });
 
       const syncStateFromValue = (value) => {
@@ -495,37 +561,9 @@ function setupSessionStatusControl(doc, currentPage) {
           } catch (_) {}
         });
       }
-
-      container.appendChild(label);
-      container.appendChild(button);
-
-      if (slideToolbar && slideToolbar.parentNode === toolbarCard) {
-        toolbarCard.insertBefore(container, slideToolbar);
-      } else {
-        toolbarCard.appendChild(container);
-      }
     };
 
-    const unmountControl = () => {
-      runCleanups();
-      const existing = toolbarCard.querySelector("[data-role='session-status']");
-      if (existing && typeof existing.remove === "function") {
-        existing.remove();
-      }
-    };
-
-    const handleRoleChange = (isTeacher) => {
-      if (isTeacher) {
-        mountControl();
-      } else {
-        unmountControl();
-      }
-    };
-
-    handleRoleChange(!!(html && html.classList.contains("role-teacher")));
-    if (html) {
-      observeRoleClassChanges(html, handleRoleChange);
-    }
+    mountControl();
   } catch (_) {}
 }
 
