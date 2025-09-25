@@ -56,20 +56,20 @@ function bootstrapLayout() {
   if (window.__qsLayoutBooted) return;
   window.__qsLayoutBooted = true;
 
-  const doc = document;
-  if (!doc) return;
+  const pageDoc = document;
+  if (!pageDoc) return;
 
-  const html = doc.documentElement;
-  const body = doc.body || doc.documentElement;
+  const html = pageDoc.documentElement;
+  const body = pageDoc.body || pageDoc.documentElement;
   const currentPage = (location.pathname.split("/").pop() || "index.html").toLowerCase();
   const isLogin = currentPage === "login.html";
   const isNotFound = currentPage === "404.html";
 
-  const basePath = computeBasePath(doc);
-  ensureFavicon(doc, basePath);
+  const basePath = computeBasePath(pageDoc);
+  ensureFavicon(pageDoc, basePath);
 
-  const nav = ensureNavigation(doc, body, basePath);
-  const footer = ensureFooter(doc, body);
+  const nav = ensureNavigation(pageDoc, body, basePath);
+  const footer = ensureFooter(pageDoc, body);
 
   toggleTeacherNavLinks(nav, html.classList.contains("role-teacher"));
   observeRoleClassChanges(html, (isTeacher) => toggleTeacherNavLinks(nav, isTeacher));
@@ -80,12 +80,12 @@ function bootstrapLayout() {
   highlightActiveLink(nav, currentPage);
   refreshNavSpacing(nav);
   observeNavHeight(nav);
-  setupSessionStatusControl(doc, currentPage);
-  setupSlideAssist(doc);
+  setupSessionStatusControl(pageDoc, currentPage);
+  setupSlideAssist(pageDoc);
 
   if (!isLogin && !isNotFound) {
-    injectAuthGuard(doc, basePath);
-    injectAuthIntegration(doc, basePath, nav);
+    injectAuthGuard(pageDoc, basePath);
+    injectAuthIntegration(pageDoc, basePath, nav);
   }
 
   window.QSLayout = Object.freeze({
