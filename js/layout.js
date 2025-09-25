@@ -348,15 +348,15 @@ function toggleTeacherNavLinks(nav, isTeacher) {
   } catch (_) {}
 }
 
-function setupSessionStatusControl(doc, currentPage) {
+function setupSessionStatusControl(pageDoc, currentPage) {
   try {
-    if (!doc) return;
+    if (!pageDoc) return;
     const page = (currentPage || "").toLowerCase();
     if (!/^sesion\d+\.html$/.test(page)) return;
     if (!Array.isArray(SESSION_STATUS_STATES) || SESSION_STATUS_STATES.length === 0)
       return;
 
-    const toolbarCard = doc.querySelector(".session-toolbar-card") || null;
+    const toolbarCard = pageDoc.querySelector(".session-toolbar-card") || null;
     const slideToolbar = toolbarCard ? toolbarCard.querySelector(".slide-toolbar") : null;
     let cleanupFns = [];
 
@@ -382,27 +382,27 @@ function setupSessionStatusControl(doc, currentPage) {
     const labelId = `session-status-label-${sessionId}`;
 
     const resolveStructure = () => {
-      ensureSessionStatusStyles(doc);
+      ensureSessionStatusStyles(pageDoc);
 
       let container = null;
       if (toolbarCard) {
         container = toolbarCard.querySelector("[data-role='session-status']");
       }
       if (!container) {
-        container = doc.querySelector("[data-role='session-status']");
+        container = pageDoc.querySelector("[data-role='session-status']");
       }
       if (!container && toolbarCard) {
-        container = doc.createElement("div");
+        container = pageDoc.createElement("div");
         container.className = "session-status-control";
         container.setAttribute("data-role", "session-status");
         container.setAttribute("role", "group");
         container.setAttribute("aria-label", "Estado de la sesión");
 
-        const label = doc.createElement("span");
+        const label = pageDoc.createElement("span");
         label.className = "session-status-label";
         container.appendChild(label);
 
-        const button = doc.createElement("button");
+        const button = pageDoc.createElement("button");
         button.type = "button";
         button.className = "qs-session-status-btn";
         button.setAttribute("data-role", "session-status-toggle");
@@ -433,7 +433,7 @@ function setupSessionStatusControl(doc, currentPage) {
 
       let label = container.querySelector(".session-status-label");
       if (!label) {
-        label = doc.createElement("span");
+        label = pageDoc.createElement("span");
         container.insertBefore(label, container.firstChild || null);
       }
       label.className = "session-status-label";
@@ -442,7 +442,7 @@ function setupSessionStatusControl(doc, currentPage) {
 
       let button = container.querySelector("[data-role='session-status-toggle']");
       if (!button) {
-        button = doc.createElement("button");
+        button = pageDoc.createElement("button");
         container.appendChild(button);
       }
       button.type = "button";
@@ -524,11 +524,11 @@ function setupSessionStatusControl(doc, currentPage) {
         button.dataset.state = state.id;
         button.setAttribute("data-state", state.id);
 
-        const dot = doc.createElement("span");
+        const dot = pageDoc.createElement("span");
         dot.className = "qs-session-status-dot";
         dot.setAttribute("aria-hidden", "true");
 
-        const text = doc.createElement("span");
+        const text = pageDoc.createElement("span");
         text.className = "qs-session-status-text";
         text.textContent = state.label;
 
