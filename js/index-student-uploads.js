@@ -1,8 +1,11 @@
 import { onAuth } from "./firebase.js";
+import { initializeFileViewer, openFileViewer } from "./file-viewer.js";
 import {
   observeStudentUploads,
   createStudentUpload,
 } from "./student-uploads.js";
+
+initializeFileViewer();
 
 const titleInput = document.getElementById("studentUploadTitle");
 const typeSelect = document.getElementById("studentUploadType");
@@ -254,13 +257,28 @@ function renderList(items) {
 
     const actions = document.createElement("div");
     actions.className = "student-uploads__item-actions";
+    if (item.fileUrl) {
+      const previewBtn = document.createElement("button");
+      previewBtn.type = "button";
+      previewBtn.className = "student-uploads__item-button";
+      previewBtn.textContent = "Visualizar archivo";
+      previewBtn.addEventListener("click", () => {
+        openFileViewer(item.fileUrl, {
+          title: item.title || "Entrega sin título",
+          downloadUrl: item.fileUrl,
+          fileName: item.fileName || "",
+        });
+      });
+      actions.appendChild(previewBtn);
+    }
+
     const link = document.createElement("a");
     link.className = "student-uploads__item-link";
     if (item.fileUrl) {
       link.href = item.fileUrl;
       link.target = "_blank";
       link.rel = "noopener";
-      link.textContent = "Abrir archivo";
+      link.textContent = "Abrir en pestaña nueva";
     } else {
       link.setAttribute("aria-disabled", "true");
       link.textContent = "Archivo no disponible";

@@ -2,6 +2,7 @@
 // Backend para paneldocente.html (docente). Firebase 10.12.3 · ES2015.
 
 import { initFirebase, getDb, onAuth, isTeacherByDoc, isTeacherEmail } from './firebase.js';
+import { initializeFileViewer, openFileViewer } from './file-viewer.js';
 import {
   observeAllStudentUploads,
   markStudentUploadAccepted,
@@ -535,7 +536,11 @@ function buildUploadCard(upload){
 
   html += '<div class="pd-uploads__item-actions">';
   if (upload.fileUrl){
-    html += '<a class="pd-action-btn" href="'+ escAttr(upload.fileUrl) +'" target="_blank" rel="noopener">Abrir archivo</a>';
+    var fileUrlAttr = escAttr(upload.fileUrl);
+    var fileTitleAttr = escAttr(upload.title || 'Entrega sin título');
+    var fileNameAttr = escAttr(upload.fileName || '');
+    html += '<button type="button" class="pd-action-btn pd-uploads__action" data-action="preview" data-file-url="'+ fileUrlAttr +'" data-file-title="'+ fileTitleAttr +'" data-file-name="'+ fileNameAttr +'">Visualizar</button>';
+    html += '<a class="pd-action-btn" href="'+ fileUrlAttr +'" target="_blank" rel="noopener">Abrir en pestaña nueva</a>';
   } else {
     html += '<span class="pd-uploads__item-link-disabled">Archivo no disponible</span>';
   }
@@ -729,6 +734,14 @@ function bindUploadDetail(state){
     var item = btn.closest ? btn.closest('.pd-uploads__item') : null;
     var uploadId = item ? item.getAttribute('data-id') : null;
     if (!uploadId) return;
+    if (action === 'preview'){
+      var url = btn.getAttribute('data-file-url');
+      if (!url) return;
+      var title = btn.getAttribute('data-file-title') || 'Entrega';
+      var fileName = btn.getAttribute('data-file-name') || '';
+      openFileViewer(url, { title: title, downloadUrl: url, fileName: fileName });
+      return;
+    }
     if (action === 'accept'){
       handleAcceptAction(state, uploadId, btn);
     } else if (action === 'grade'){
@@ -963,6 +976,7 @@ async function loadDataForGroup(db, grupo, state){
 // ===== Main =====
 async function main(){
   await ready();
+  initializeFileViewer();
   initFirebase();
   var db = getDb();
 
