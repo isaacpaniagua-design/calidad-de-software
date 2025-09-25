@@ -118,6 +118,12 @@ service cloud.firestore {
       allow update, delete: if isTeacher();
     }
 
+    match /session-status/{sessionId} {
+      allow read: if isPotros();
+      allow create, update: if isTeacher();
+      allow delete: if false;
+    }
+
     // NOTE: Merge these forum rules into your existing rules if you already have them.
 
     match /users/{userId} {
