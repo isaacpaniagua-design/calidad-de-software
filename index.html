@@ -2514,6 +2514,26 @@
         let realtimeStates = new Map();
         let realtimeHighestSession = 0;
         let unsubscribeRealtime = null;
+        let realtimeSyncDisabled = false;
+
+        const stopRealtimeSync = () => {
+          if (typeof unsubscribeRealtime === "function") {
+            try {
+              unsubscribeRealtime();
+            } catch (_) {}
+          }
+          unsubscribeRealtime = null;
+        };
+
+        const isPermissionDenied = (error) => {
+          if (!error) return false;
+          const code =
+            typeof error.code === "string" ? error.code.toLowerCase() : "";
+          if (code === "permission-denied") return true;
+          const message =
+            typeof error.message === "string" ? error.message : "";
+          return /missing or insufficient permissions/i.test(message);
+        };
 
         const combineStates = () => {
           const combined = new Map();
@@ -2689,7 +2709,7 @@
         };
 
         const startRealtimeSync = async () => {
-          if (unsubscribeRealtime) return;
+          if (realtimeSyncDisabled || unsubscribeRealtime) return;
           try {
             initFirebase();
           } catch (_) {}
@@ -2726,11 +2746,33 @@
                 renderSessions();
               },
               (error) => {
-                console.error("No se pudo sincronizar el estado de las sesiones", error);
+                if (isPermissionDenied(error)) {
+                  console.warn(
+                    "Sin permisos para sincronizar el estado de las sesiones",
+                    error,
+                  );
+                  realtimeStates = new Map();
+                  realtimeHighestSession = 0;
+                  realtimeSyncDisabled = true;
+                  stopRealtimeSync();
+                  renderSessions();
+                  return;
+                }
+                console.error(
+                  "No se pudo sincronizar el estado de las sesiones",
+                  error,
+                );
               },
             );
           } catch (error) {
             console.error("No se pudo iniciar la sincronización de estados", error);
+            stopRealtimeSync();
+            if (isPermissionDenied(error)) {
+              realtimeStates = new Map();
+              realtimeHighestSession = 0;
+              realtimeSyncDisabled = true;
+              renderSessions();
+            }
           }
         };
 
