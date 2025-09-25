@@ -848,12 +848,13 @@
       .student-uploads__grid {
         display: grid;
         gap: var(--dashboard-grid-gap);
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         align-items: start;
       }
 
       .student-uploads__form,
-      .student-uploads__records {
+      .student-uploads__records,
+      .student-uploads__reference {
         background: rgba(248, 250, 252, 0.92);
         border: 1px solid rgba(148, 163, 184, 0.28);
         border-radius: var(--radius-lg);
@@ -861,6 +862,104 @@
         display: grid;
         gap: 18px;
         backdrop-filter: blur(6px);
+      }
+
+      .student-uploads__reference {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .student-uploads__reference::before {
+        content: "";
+        position: absolute;
+        inset: -30% 40% auto -25%;
+        height: 240px;
+        background: radial-gradient(circle at center, rgba(99, 102, 241, 0.14), transparent 70%);
+        opacity: 0.8;
+        pointer-events: none;
+      }
+
+      .student-uploads__reference-header {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        gap: 6px;
+      }
+
+      .student-uploads__reference-title {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .student-uploads__reference-description {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+      }
+
+      .student-uploads__reference-list {
+        position: relative;
+        z-index: 1;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        gap: 14px;
+      }
+
+      .student-uploads__reference-item {
+        display: grid;
+        gap: 4px;
+      }
+
+      .student-uploads__reference-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        color: var(--accent-strong);
+        text-decoration: none;
+      }
+
+      .student-uploads__reference-link::after {
+        content: "↗";
+        font-size: 0.85em;
+        opacity: 0.75;
+        transition: transform 0.2s ease;
+      }
+
+      .student-uploads__reference-link:focus-visible,
+      .student-uploads__reference-link:hover {
+        color: var(--accent);
+      }
+
+      .student-uploads__reference-link:focus-visible::after,
+      .student-uploads__reference-link:hover::after {
+        transform: translate3d(2px, -2px, 0);
+      }
+
+      .student-uploads__reference-badge {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+      }
+
+      .student-uploads__reference-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(99, 102, 241, 0.12);
+        color: var(--accent-strong);
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.75rem;
+        letter-spacing: 0.02em;
       }
 
       .student-uploads__form {
@@ -2178,6 +2277,74 @@
           <div class="student-uploads__body">
 
             <div class="student-uploads__grid">
+
+            <section
+              class="student-uploads__reference"
+              aria-labelledby="studentUploadReferenceTitle"
+            >
+              <div class="student-uploads__reference-header">
+                <h3
+                  class="student-uploads__reference-title"
+                  id="studentUploadReferenceTitle"
+                >
+                  Actividades calificables
+                </h3>
+                <p class="student-uploads__reference-description">
+                  Consulta el resumen de actividades evaluadas en la sección de
+                  calificaciones antes de subir tu evidencia.
+                </p>
+              </div>
+              <ul class="student-uploads__reference-list">
+                <li class="student-uploads__reference-item">
+                  <a
+                    class="student-uploads__reference-link"
+                    href="calificaciones.html#unit1"
+                  >
+                    Unidad I · Fundamentos
+                  </a>
+                  <div class="student-uploads__reference-badge">
+                    <span class="student-uploads__reference-pill">30&nbsp;% del curso</span>
+                    <span>Foro de Métricas, Taller de Complejidad Ciclomática, Plan de Pruebas y más.</span>
+                  </div>
+                </li>
+                <li class="student-uploads__reference-item">
+                  <a
+                    class="student-uploads__reference-link"
+                    href="calificaciones.html#unit2"
+                  >
+                    Unidad II · Modelos y estándares
+                  </a>
+                  <div class="student-uploads__reference-badge">
+                    <span class="student-uploads__reference-pill">30&nbsp;% del curso</span>
+                    <span>Role-Playing de Auditoría, Informe comparativo de modelos y actividades colaborativas.</span>
+                  </div>
+                </li>
+                <li class="student-uploads__reference-item">
+                  <a
+                    class="student-uploads__reference-link"
+                    href="calificaciones.html#unit3"
+                  >
+                    Unidad III · Plan de certificación
+                  </a>
+                  <div class="student-uploads__reference-badge">
+                    <span class="student-uploads__reference-pill">40&nbsp;% del curso</span>
+                    <span>Proyecto final por fases, presentación y examen integrador.</span>
+                  </div>
+                </li>
+                <li class="student-uploads__reference-item">
+                  <a
+                    class="student-uploads__reference-link"
+                    href="calificaciones.html#project"
+                  >
+                    Rúbrica del proyecto final
+                  </a>
+                  <div class="student-uploads__reference-badge">
+                    <span class="student-uploads__reference-pill">Consulta criterios</span>
+                    <span>Detalla los entregables y ponderaciones del proyecto integrador.</span>
+                  </div>
+                </li>
+              </ul>
+            </section>
 
             <form class="student-uploads__form" id="studentUploadForm" autocomplete="off">
 
