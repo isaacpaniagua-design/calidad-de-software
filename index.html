@@ -2413,6 +2413,7 @@
         const fallbackTotal = 45;
 
         const STORAGE_PREFIX = "qs_session_status:";
+        const ROLE_STORAGE_KEY = "qs_role";
 
         const STATUS_LABELS = {
 
@@ -2515,6 +2516,17 @@
         let realtimeHighestSession = 0;
         let unsubscribeRealtime = null;
         let realtimeSyncDisabled = false;
+
+        const hasRealtimeAccess = () => {
+          try {
+            const html = document.documentElement;
+            if (html?.classList?.contains("role-teacher")) return true;
+          } catch (_) {}
+          try {
+            return localStorage.getItem(ROLE_STORAGE_KEY) === "docente";
+          } catch (_) {}
+          return false;
+        };
 
         const stopRealtimeSync = () => {
           if (typeof unsubscribeRealtime === "function") {
@@ -2776,6 +2788,33 @@
           }
         };
 
+        const syncRealtimeAccess = () => {
+          const allowed = hasRealtimeAccess();
+          if (allowed) {
+            if (!realtimeSyncDisabled && !unsubscribeRealtime) {
+              try {
+                startRealtimeSync();
+              } catch (_) {}
+            }
+          } else if (unsubscribeRealtime) {
+            stopRealtimeSync();
+            realtimeStates = new Map();
+            realtimeHighestSession = 0;
+            renderSessions();
+          }
+        };
+
+        const observeRoleChanges = () => {
+          const html = document.documentElement;
+          if (!html || typeof window === "undefined" || !window.MutationObserver) return;
+          try {
+            const observer = new MutationObserver(() => {
+              syncRealtimeAccess();
+            });
+            observer.observe(html, { attributes: true, attributeFilter: ["class"] });
+          } catch (_) {}
+        };
+
         const isSessionStatusKey = (key) => typeof key === "string" && key.startsWith(STORAGE_PREFIX);
 
         const handleCustomStatusEvent = (event) => {
@@ -2790,7 +2829,17 @@
 
         const handleStorageEvent = (event) => {
 
-          if (!event || !isSessionStatusKey(event.key)) return;
+          if (!event) return;
+
+          if (event.key === ROLE_STORAGE_KEY) {
+
+            syncRealtimeAccess();
+
+            return;
+
+          }
+
+          if (!isSessionStatusKey(event.key)) return;
 
           rebuildFromLatest();
 
@@ -2800,7 +2849,9 @@
 
         loadChecklist();
 
-        startRealtimeSync();
+        observeRoleChanges();
+
+        syncRealtimeAccess();
 
         if (typeof window !== "undefined" && window.addEventListener) {
 
