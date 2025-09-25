@@ -2394,7 +2394,9 @@
     </div>
 
 
-    <script>
+    <script type="module">
+      import { initFirebase, getDb } from "./js/firebase.js";
+      import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
       document.addEventListener("DOMContentLoaded", () => {
 
@@ -2505,20 +2507,56 @@
         };
 
         let latestChecklist = {
-
           total: fallbackTotal,
-
           states: new Map(),
-
         };
 
-        const renderSessions = (payload) => {
+        let realtimeStates = new Map();
+        let realtimeHighestSession = 0;
+        let unsubscribeRealtime = null;
 
-          const totalCandidate = Number(payload?.total);
+        const combineStates = () => {
+          const combined = new Map();
+          if (latestChecklist?.states instanceof Map) {
+            for (const [key, value] of latestChecklist.states.entries()) {
+              const num = Number(key);
+              if (Number.isFinite(num) && num > 0) {
+                combined.set(num, value);
+              }
+            }
+          }
+          if (realtimeStates instanceof Map) {
+            for (const [key, value] of realtimeStates.entries()) {
+              if (Number.isFinite(key) && key > 0) {
+                combined.set(key, value);
+              }
+            }
+          }
+          return combined;
+        };
 
-          const total = Number.isFinite(totalCandidate) && totalCandidate > 0 ? totalCandidate : fallbackTotal;
+        const resolveTotal = (combinedStates) => {
+          let total = fallbackTotal;
+          const checklistTotal = Number(latestChecklist?.total);
+          if (Number.isFinite(checklistTotal) && checklistTotal > total) {
+            total = checklistTotal;
+          }
+          if (Number.isFinite(realtimeHighestSession) && realtimeHighestSession > total) {
+            total = realtimeHighestSession;
+          }
+          if (combinedStates?.size) {
+            for (const key of combinedStates.keys()) {
+              if (Number.isFinite(key) && key > total) {
+                total = key;
+              }
+            }
+          }
+          return total;
+        };
 
-          const baseStates = payload?.states instanceof Map ? payload.states : new Map();
+        const renderSessions = () => {
+          const baseStates = combineStates();
+          const total = resolveTotal(baseStates);
 
           const resolvedStates = [];
 
@@ -2601,9 +2639,7 @@
         };
 
         const rebuildFromLatest = () => {
-
-          renderSessions(latestChecklist);
-
+          renderSessions();
         };
 
         const loadChecklist = async () => {
@@ -2640,16 +2676,62 @@
 
             latestChecklist = { total, states };
 
-            renderSessions(latestChecklist);
+            renderSessions();
 
           } catch (_) {
 
             latestChecklist = { total: fallbackTotal, states: new Map() };
 
-            renderSessions(latestChecklist);
+            renderSessions();
 
           }
 
+        };
+
+        const startRealtimeSync = async () => {
+          if (unsubscribeRealtime) return;
+          try {
+            initFirebase();
+          } catch (_) {}
+          let db = null;
+          try {
+            db = getDb();
+          } catch (_) {
+            db = null;
+          }
+          if (!db) return;
+          try {
+            const ref = collection(db, "session-status");
+            unsubscribeRealtime = onSnapshot(
+              ref,
+              (snapshot) => {
+                const nextStates = new Map();
+                let highest = 0;
+                snapshot.forEach((docSnap) => {
+                  const docId = docSnap.id || "";
+                  const match = docId.match(/(\d+)/);
+                  if (!match) return;
+                  const sessionNumber = Number(match[1]);
+                  if (!Number.isFinite(sessionNumber) || sessionNumber <= 0) return;
+                  const data = docSnap.data() || {};
+                  const normalized = normalizeChecklistState(
+                    data.state ?? data.status ?? data.estado ?? null,
+                  );
+                  if (!normalized) return;
+                  nextStates.set(sessionNumber, normalized);
+                  if (sessionNumber > highest) highest = sessionNumber;
+                });
+                realtimeStates = nextStates;
+                realtimeHighestSession = highest;
+                renderSessions();
+              },
+              (error) => {
+                console.error("No se pudo sincronizar el estado de las sesiones", error);
+              },
+            );
+          } catch (error) {
+            console.error("No se pudo iniciar la sincronización de estados", error);
+          }
         };
 
         const isSessionStatusKey = (key) => typeof key === "string" && key.startsWith(STORAGE_PREFIX);
@@ -2672,9 +2754,11 @@
 
         };
 
-        renderSessions(latestChecklist);
+        renderSessions();
 
         loadChecklist();
+
+        startRealtimeSync();
 
         if (typeof window !== "undefined" && window.addEventListener) {
 
