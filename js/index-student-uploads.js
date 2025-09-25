@@ -4,10 +4,15 @@ import {
   observeStudentUploads,
   createStudentUpload,
 } from "./student-uploads.js";
+import {
+  courseActivities,
+  getActivityById,
+  findActivityByTitle,
+} from "./course-activities.js";
 
 initializeFileViewer();
 
-const titleInput = document.getElementById("studentUploadTitle");
+const activitySelect = document.getElementById("studentUploadTitle");
 const typeSelect = document.getElementById("studentUploadType");
 const descriptionInput = document.getElementById("studentUploadDescription");
 const statusEl = document.getElementById("studentUploadStatus");
@@ -44,6 +49,41 @@ let unsubscribe = null;
 let submitting = false;
 let justSubmitted = false;
 let submissionTimer = null;
+
+function populateActivitySelect() {
+  if (!activitySelect) return;
+  const selectedValue = activitySelect.value;
+  activitySelect.innerHTML = "";
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  placeholder.textContent = "Selecciona la actividad o asignación";
+  activitySelect.appendChild(placeholder);
+
+  courseActivities.forEach((unit) => {
+    if (!unit || !Array.isArray(unit.items) || !unit.items.length) return;
+    const group = document.createElement("optgroup");
+    group.label = unit.unitLabel || unit.shortLabel || "Unidad";
+    unit.items.forEach((item) => {
+      if (!item || !item.id) return;
+      const option = document.createElement("option");
+      option.value = item.id;
+      option.textContent = item.title || "Actividad";
+      option.dataset.unitId = unit.unitId || "";
+      option.dataset.unitLabel = unit.unitLabel || "";
+      if (item.id === selectedValue) {
+        option.selected = true;
+        placeholder.selected = false;
+      }
+      group.appendChild(option);
+    });
+    activitySelect.appendChild(group);
+  });
+}
+
+populateActivitySelect();
 
 function ensureWidget() {
   if (widget || typeof uploadcare === "undefined") return;
@@ -83,6 +123,9 @@ function setSubmittingState(isSubmitting) {
 
 function resetForm() {
   if (form) form.reset();
+  if (activitySelect) {
+    activitySelect.selectedIndex = 0;
+  }
   if (widget) {
     try {
       widget.value(null);
@@ -191,6 +234,13 @@ function renderList(items) {
     const li = document.createElement("li");
     li.className = "student-uploads__item";
 
+    const activityInfo =
+      getActivityById(item?.extra?.activityId) ||
+      (item?.extra?.unitId
+        ? findActivityByTitle(item?.title, item.extra.unitId)
+        : null) ||
+      findActivityByTitle(item?.title);
+
     const header = document.createElement("div");
     header.className = "student-uploads__item-header";
 
@@ -199,7 +249,7 @@ function renderList(items) {
 
     const titleEl = document.createElement("div");
     titleEl.className = "student-uploads__item-title";
-    titleEl.textContent = item.title || "Entrega sin título";
+    titleEl.textContent = activityInfo?.title || item.title || "Entrega sin título";
 
     const chip = document.createElement("span");
     chip.className = "student-uploads__item-chip";
@@ -228,6 +278,7 @@ function renderList(items) {
     const meta = document.createElement("div");
     meta.className = "student-uploads__item-meta";
     const metaParts = [];
+    if (activityInfo?.unitLabel) metaParts.push(activityInfo.unitLabel);
     if (dateValid) metaParts.push(`Enviado el ${dateFormatter.format(submittedDate)}`);
     if (sizeText) metaParts.push(sizeText);
     if (item.fileName) metaParts.push(item.fileName);
@@ -264,7 +315,7 @@ function renderList(items) {
       previewBtn.textContent = "Visualizar archivo";
       previewBtn.addEventListener("click", () => {
         openFileViewer(item.fileUrl, {
-          title: item.title || "Entrega sin título",
+          title: activityInfo?.title || item.title || "Entrega sin título",
           downloadUrl: item.fileUrl,
           fileName: item.fileName || "",
         });
@@ -350,15 +401,18 @@ if (form) {
       return;
     }
 
-    const title = titleInput.value.trim();
+    const activityId = activitySelect ? activitySelect.value : "";
+    const activityInfo = getActivityById(activityId);
     const kind = typeSelect.value;
     const description = descriptionInput.value.trim();
 
-    if (!title) {
-      setStatus("Indica un título para identificar tu entrega.", "warning");
-      titleInput.focus();
+    if (!activityInfo) {
+      setStatus("Selecciona una actividad para identificar tu entrega.", "warning");
+      if (activitySelect) activitySelect.focus();
       return;
     }
+
+    const title = activityInfo.title;
 
     const fileInfo = widget.value();
     if (!fileInfo) {
@@ -383,6 +437,11 @@ if (form) {
               file.mimeType ||
               (file.contentInfo && file.contentInfo.mime) ||
               "",
+            extra: {
+              activityId: activityInfo.id,
+              unitId: activityInfo.unitId,
+              unitLabel: activityInfo.unitLabel,
+            },
             student: {
               uid: currentUser.uid,
               email: currentUser.email || "",

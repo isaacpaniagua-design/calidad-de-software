@@ -2669,179 +2669,9 @@
 
 
 
+    <script type="module" src="js/calificaciones-uploads-ui.js"></script>
+
     <script>
-
-      const UPLOAD_STORAGE_KEY = "qs-calificaciones-uploads";
-
-      function loadUploadState() {
-        if (typeof window === "undefined" || !window.localStorage) {
-          return {};
-        }
-        try {
-          const stored = window.localStorage.getItem(UPLOAD_STORAGE_KEY);
-          return stored ? JSON.parse(stored) : {};
-        } catch (error) {
-          console.warn(
-            "No fue posible cargar el historial de entregas desde el navegador.",
-            error
-          );
-          return {};
-        }
-      }
-
-      function saveUploadState(state) {
-        if (typeof window === "undefined" || !window.localStorage) {
-          return;
-        }
-        try {
-          window.localStorage.setItem(
-            UPLOAD_STORAGE_KEY,
-            JSON.stringify(state)
-          );
-        } catch (error) {
-          console.warn(
-            "No fue posible guardar el estado de entregas en el navegador.",
-            error
-          );
-        }
-      }
-
-      function initializeUploadControls() {
-        const gradeItems = document.querySelectorAll(
-          "#calificaciones-root .grade-item"
-        );
-        if (!gradeItems.length) {
-          return;
-        }
-
-        const state = loadUploadState();
-        const activeKeys = new Set();
-        const defaultStatus = "Sin archivo cargado";
-
-        gradeItems.forEach((item, index) => {
-          if (item.querySelector(".grade-actions")) {
-            return;
-          }
-
-          const gradeInput =
-            item.querySelector(".grade-input") ||
-            item.querySelector(".project-grade-input");
-          if (!gradeInput) {
-            return;
-          }
-
-          const titleEl = item.querySelector("h3, h4, h5, h6");
-          const activityTitle = titleEl
-            ? titleEl.textContent.trim()
-            : `Actividad ${index + 1}`;
-          const unitWrapper = item.closest(".unit-content");
-          const unitId = (unitWrapper && unitWrapper.id) || "general";
-          const activityKey = `${unitId}::${activityTitle}`;
-          activeKeys.add(activityKey);
-
-          const actions = document.createElement("div");
-          actions.className = "grade-actions";
-
-          const uploadWrapper = document.createElement("div");
-          uploadWrapper.className = "upload-control";
-
-          const fileInput = document.createElement("input");
-          const uploadId = `upload-${index}`;
-          fileInput.type = "file";
-          fileInput.id = uploadId;
-          fileInput.className = "upload-input";
-          fileInput.hidden = true;
-
-          const status = document.createElement("span");
-          status.className = "upload-status";
-          status.id = `upload-status-${index}`;
-          status.setAttribute("aria-live", "polite");
-          status.textContent = defaultStatus;
-
-          const buttonsWrapper = document.createElement("div");
-          buttonsWrapper.className = "upload-control-buttons";
-
-          const triggerButton = document.createElement("button");
-          triggerButton.type = "button";
-          triggerButton.className = "upload-trigger";
-          triggerButton.textContent = "Subir actividad";
-          triggerButton.setAttribute("aria-controls", uploadId);
-
-          const resetButton = document.createElement("button");
-          resetButton.type = "button";
-          resetButton.className = "upload-reset upload-reset--hidden";
-          resetButton.textContent = "Quitar archivo";
-          resetButton.setAttribute("aria-controls", uploadId);
-
-          function setUploadedState(fileName) {
-            status.textContent = `Archivo cargado: ${fileName}`;
-            status.title = fileName;
-            status.classList.add("upload-status--uploaded");
-            resetButton.classList.remove("upload-reset--hidden");
-          }
-
-          function setDefaultState() {
-            status.textContent = defaultStatus;
-            status.title = "";
-            status.classList.remove("upload-status--uploaded");
-            resetButton.classList.add("upload-reset--hidden");
-          }
-
-          const storedInfo = state[activityKey];
-          if (storedInfo && storedInfo.fileName) {
-            setUploadedState(storedInfo.fileName);
-          }
-
-          triggerButton.addEventListener("click", () => {
-            fileInput.click();
-          });
-
-          fileInput.addEventListener("change", () => {
-            const selected = fileInput.files && fileInput.files[0];
-            if (selected) {
-              setUploadedState(selected.name);
-              state[activityKey] = {
-                fileName: selected.name,
-                updatedAt: new Date().toISOString(),
-              };
-              saveUploadState(state);
-            } else {
-              delete state[activityKey];
-              saveUploadState(state);
-              setDefaultState();
-            }
-          });
-
-          resetButton.addEventListener("click", () => {
-            fileInput.value = "";
-            delete state[activityKey];
-            saveUploadState(state);
-            setDefaultState();
-          });
-
-          buttonsWrapper.appendChild(triggerButton);
-          buttonsWrapper.appendChild(resetButton);
-          uploadWrapper.appendChild(fileInput);
-          uploadWrapper.appendChild(buttonsWrapper);
-          uploadWrapper.appendChild(status);
-
-          gradeInput.setAttribute("aria-describedby", status.id);
-
-          actions.appendChild(gradeInput);
-          actions.appendChild(uploadWrapper);
-          item.appendChild(actions);
-        });
-
-        const staleKeys = Object.keys(state).filter(
-          (key) => !activeKeys.has(key)
-        );
-        if (staleKeys.length) {
-          staleKeys.forEach((key) => delete state[key]);
-          saveUploadState(state);
-        }
-      }
-
-      document.addEventListener("DOMContentLoaded", initializeUploadControls);
 
       // Student data
 
@@ -3098,6 +2928,10 @@
         },
 
       ];
+
+      if (typeof window !== "undefined") {
+        window.students = students;
+      }
 
 
 

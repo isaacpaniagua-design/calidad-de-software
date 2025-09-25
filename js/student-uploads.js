@@ -53,6 +53,14 @@ export async function createStudentUpload(payload = {}) {
     throw new Error("Falta el identificador del estudiante");
   }
 
+  const emailRaw = payload.student.email ? String(payload.student.email).trim() : "";
+  const emailLower = emailRaw ? emailRaw.toLowerCase() : "";
+
+  let extraPayload = null;
+  if (payload.extra && typeof payload.extra === "object") {
+    extraPayload = { ...payload.extra };
+  }
+
   const submission = {
     title: (payload.title || "").trim() || "Entrega sin título",
     description: (payload.description || "").trim(),
@@ -67,15 +75,16 @@ export async function createStudentUpload(payload = {}) {
     status: payload.status || "enviado",
     student: {
       uid: payload.student.uid,
-      email: payload.student.email || "",
+      email: emailRaw,
+      emailLower,
       displayName: payload.student.displayName || "",
     },
     submittedAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
 
-  if (payload.extra && typeof payload.extra === "object") {
-    submission.extra = payload.extra;
+  if (extraPayload) {
+    submission.extra = extraPayload;
   }
 
   const ref = await addDoc(uploadsCollection, submission);
@@ -112,6 +121,117 @@ export function observeStudentUploads(uid, onChange, onError) {
       if (typeof onError === "function") onError(error);
     }
   );
+}
+
+export function observeStudentUploadsByEmail(email, onChange, onError) {
+  const raw = typeof email === "string" ? email.trim() : "";
+  if (!raw) {
+    if (typeof onChange === "function") onChange([]);
+    return () => {};
+  }
+
+  const variants = [];
+  const seen = new Set();
+
+  const pushVariant = (field, value) => {
+    if (!field || !value) return;
+    const key = `${field}::${value}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    variants.push({ field, value, key });
+  };
+
+  pushVariant("student.email", raw);
+  const lower = raw.toLowerCase();
+  if (lower) {
+    pushVariant("student.email", lower);
+    pushVariant("student.emailLower", lower);
+  }
+
+  if (!variants.length) {
+    if (typeof onChange === "function") onChange([]);
+    return () => {};
+  }
+
+  const toTimestamp = (input) => {
+    if (!input) return 0;
+    if (typeof input.toMillis === "function") {
+      try {
+        return input.toMillis();
+      } catch (_) {
+        return 0;
+      }
+    }
+    if (typeof input.toDate === "function") {
+      try {
+        const date = input.toDate();
+        return date instanceof Date && !Number.isNaN(date.getTime())
+          ? date.getTime()
+          : 0;
+      } catch (_) {
+        return 0;
+      }
+    }
+    const date = input instanceof Date ? input : new Date(input);
+    return date instanceof Date && !Number.isNaN(date.getTime()) ? date.getTime() : 0;
+  };
+
+  const variantState = new Map();
+  const unsubscribers = [];
+
+  const emitCombined = () => {
+    const combined = new Map();
+    variantState.forEach((map) => {
+      map.forEach((value, key) => {
+        combined.set(key, value);
+      });
+    });
+    const items = Array.from(combined.values());
+    items.sort((a, b) => toTimestamp(b?.submittedAt) - toTimestamp(a?.submittedAt));
+    if (typeof onChange === "function") onChange(items);
+  };
+
+  const handleError = (error) => {
+    logSnapshotError("observeStudentUploadsByEmail", error);
+    if (typeof onError === "function") onError(error);
+  };
+
+  variants.forEach(({ field, value, key }) => {
+    try {
+      const q = query(
+        uploadsCollection,
+        where(field, "==", value),
+        orderBy("submittedAt", "desc")
+      );
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const map = new Map();
+          snapshot.docs.forEach((docSnap) => {
+            map.set(docSnap.id, { id: docSnap.id, ...docSnap.data() });
+          });
+          variantState.set(key, map);
+          emitCombined();
+        },
+        handleError
+      );
+      unsubscribers.push(unsubscribe);
+    } catch (error) {
+      handleError(error);
+    }
+  });
+
+  return () => {
+    while (unsubscribers.length) {
+      const fn = unsubscribers.pop();
+      if (typeof fn === "function") {
+        try {
+          fn();
+        } catch (_) {}
+      }
+    }
+    variantState.clear();
+  };
 }
 
 /**
