@@ -1316,11 +1316,42 @@
       </div>
     </main>
 
+    <div class="qs-slide-fab">
+      <button
+        type="button"
+        class="qs-slide-fab__btn is-prev"
+        data-slide-direction="prev"
+        aria-label="Diapositiva anterior"
+      >
+        <span aria-hidden="true">←</span>
+      </button>
+      <button
+        type="button"
+        class="qs-slide-fab__btn is-next"
+        data-slide-direction="next"
+        aria-label="Diapositiva siguiente"
+      >
+        <span aria-hidden="true">→</span>
+      </button>
+    </div>
+
     <script>
       const slideButtons = Array.from(
         document.querySelectorAll('.slide-toolbar [id$="-btn"]')
       );
-      const totalSlides = slideButtons.length;
+      const slides = Array.from(
+        document.querySelectorAll('main [id^="slide"]')
+      ).filter((element) => /^slide\d+$/i.test(element.id));
+      const fabButtons = Array.from(
+        document.querySelectorAll('.qs-slide-fab__btn')
+      );
+      const prevFab =
+        fabButtons.find((button) => button.dataset.slideDirection === 'prev') ||
+        null;
+      const nextFab =
+        fabButtons.find((button) => button.dataset.slideDirection === 'next') ||
+        null;
+      const totalSlides = Math.max(slides.length, slideButtons.length);
       const prefersReducedMotion = (() => {
         try {
           return (
@@ -1333,13 +1364,52 @@
       })();
       let currentSlide = 1;
 
+      function updateFabState() {
+        if (!prevFab && !nextFab) return;
+        const isSingleSlide = totalSlides <= 1;
+        const atStart = isSingleSlide || currentSlide <= 1;
+        const atEnd = isSingleSlide || currentSlide >= totalSlides;
+
+        if (prevFab) {
+          prevFab.disabled = atStart;
+          prevFab.classList.toggle('is-disabled', atStart);
+          if (atStart) {
+            prevFab.setAttribute('aria-disabled', 'true');
+          } else {
+            prevFab.removeAttribute('aria-disabled');
+          }
+        }
+
+        if (nextFab) {
+          nextFab.disabled = atEnd;
+          nextFab.classList.toggle('is-disabled', atEnd);
+          if (atEnd) {
+            nextFab.setAttribute('aria-disabled', 'true');
+          } else {
+            nextFab.removeAttribute('aria-disabled');
+          }
+        }
+      }
+
       function showSlide(slideNumber) {
-        if (slideNumber < 1 || slideNumber > totalSlides) return;
+        if (totalSlides === 0) {
+          updateFabState();
+          return;
+        }
+
+        const targetSlide = Math.min(Math.max(slideNumber, 1), totalSlides);
+
+        slides.forEach(function (slide, index) {
+          if (!slide) return;
+          const isActive = index + 1 === targetSlide;
+          slide.classList.toggle('hidden', !isActive);
+        });
 
         slideButtons.forEach(function (button, index) {
           const displayIndex = index + 1;
-          const slideElement = document.getElementById('slide' + displayIndex);
-          const isActive = displayIndex === slideNumber;
+          const isActive = displayIndex === targetSlide;
+          const slideElement = slides[index] ||
+            document.getElementById('slide' + displayIndex);
 
           if (slideElement) {
             slideElement.classList.toggle('hidden', !isActive);
@@ -1351,7 +1421,7 @@
         });
 
         const activeButton = document.getElementById(
-          'slide' + slideNumber + '-btn'
+          'slide' + targetSlide + '-btn'
         );
 
         if (activeButton) {
@@ -1371,21 +1441,56 @@
           }
         }
 
-        currentSlide = slideNumber;
+        currentSlide = targetSlide;
+        updateFabState();
+      }
+
+      function nextSlide() {
+        if (totalSlides === 0) return;
+        showSlide(currentSlide + 1);
+      }
+
+      function previousSlide() {
+        if (totalSlides === 0) return;
+        showSlide(currentSlide - 1);
+      }
+
+      function goToSlide(slideNumber) {
+        showSlide(slideNumber);
       }
 
       // Keyboard navigation
       document.addEventListener('keydown', function (e) {
-        if (e.key === 'ArrowLeft' && currentSlide > 1) {
-          showSlide(currentSlide - 1);
-        } else if (e.key === 'ArrowRight' && currentSlide < totalSlides) {
-          showSlide(currentSlide + 1);
+        if (e.key === 'ArrowLeft') {
+          previousSlide();
+        } else if (e.key === 'ArrowRight') {
+          nextSlide();
+        }
+      });
+
+      fabButtons.forEach(function (button) {
+        const direction = button.dataset.slideDirection;
+        if (direction === 'prev') {
+          button.addEventListener('click', function () {
+            previousSlide();
+          });
+        } else if (direction === 'next') {
+          button.addEventListener('click', function () {
+            nextSlide();
+          });
         }
       });
 
       if (totalSlides > 0) {
         showSlide(1);
+      } else {
+        updateFabState();
       }
+
+      window.showSlide = showSlide;
+      window.nextSlide = nextSlide;
+      window.previousSlide = previousSlide;
+      window.goToSlide = goToSlide;
     </script>
 
     <script defer src="js/back-home.js"></script>
