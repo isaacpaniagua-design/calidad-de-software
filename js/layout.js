@@ -1,3 +1,18 @@
+import {
+  initFirebase,
+  getDb,
+  onAuth,
+  isTeacherByDoc,
+  isTeacherEmail,
+} from "./firebase.js";
+import {
+  collection,
+  doc,
+  onSnapshot,
+  setDoc,
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
 // Unified layout bootstrap for the QS platform.
 // Creates the navigation bar, footer, and login integrations used across pages.
 
@@ -35,6 +50,7 @@ const SESSION_STATUS_STATES = Object.freeze([
   { id: "in-progress", label: "En curso" },
   { id: "completed", label: "Realizada" },
 ]);
+const SESSION_STATUS_COLLECTION = "session-status";
 
 function bootstrapLayout() {
   if (window.__qsLayoutBooted) return;
@@ -451,11 +467,48 @@ function setupSessionStatusControl(doc, currentPage) {
 
       const { button } = structure;
 
-      const storedState = readStoredSessionStatus(storageKey);
-      let currentIndex = SESSION_STATUS_STATES.findIndex(
-        (state) => state && state.id === storedState,
-      );
-      if (currentIndex < 0) currentIndex = 0;
+      let currentIndex = 0;
+      let currentStateId = null;
+      let lastRemoteState = null;
+      let snapshotStarted = false;
+      let unsubscribeSnapshot = null;
+      let unsubscribeAuth = null;
+      let sessionDocRef = null;
+      let authUser = null;
+      let teacherByAuth = false;
+
+      const canEdit = () => !!teacherByAuth;
+
+      const updateButtonAccess = () => {
+        if (!button) return;
+        const teacher = canEdit();
+        const stateLabel =
+          button.getAttribute("data-state-label-text") || "Estado de la sesión";
+        const nextLabel = button.getAttribute("data-next-label-text") || "";
+        if (teacher) {
+          button.disabled = false;
+          button.classList.remove("session-status-readonly");
+          button.removeAttribute("aria-disabled");
+          const ariaLabel = nextLabel
+            ? `Estado de la sesión: ${stateLabel}. Activa para cambiar a ${nextLabel}.`
+            : `Estado de la sesión: ${stateLabel}.`;
+          const titleText = nextLabel
+            ? `Estado actual: ${stateLabel}. Haz clic para marcar como ${nextLabel}.`
+            : `Estado actual: ${stateLabel}.`;
+          button.setAttribute("aria-label", ariaLabel);
+          button.setAttribute("title", titleText);
+        } else {
+          button.disabled = true;
+          button.classList.add("session-status-readonly");
+          button.setAttribute("aria-disabled", "true");
+          const ariaLabel = `Estado de la sesión: ${stateLabel}. Solo el docente puede actualizarlo.`;
+          button.setAttribute("aria-label", ariaLabel);
+          button.setAttribute(
+            "title",
+            `Estado actual: ${stateLabel}. Solo el docente puede actualizarlo.`,
+          );
+        }
+      };
 
       const applyState = (index) => {
         if (!Array.isArray(SESSION_STATUS_STATES) || SESSION_STATUS_STATES.length === 0)
@@ -464,6 +517,7 @@ function setupSessionStatusControl(doc, currentPage) {
         const normalizedIndex = ((index % total) + total) % total;
         const state = SESSION_STATUS_STATES[normalizedIndex] || SESSION_STATUS_STATES[0];
         currentIndex = normalizedIndex;
+        currentStateId = state.id || null;
 
         while (button.firstChild) button.removeChild(button.firstChild);
 
@@ -483,26 +537,159 @@ function setupSessionStatusControl(doc, currentPage) {
 
         const nextState = SESSION_STATUS_STATES[(normalizedIndex + 1) % total] || state;
         const nextLabel = nextState.label || state.label;
-
-        button.setAttribute(
-          "aria-label",
-          `Estado de la sesión: ${state.label}. Activa para cambiar a ${nextLabel}.`,
-        );
-        button.setAttribute(
-          "title",
-          `Estado actual: ${state.label}. Haz clic para marcar como ${nextLabel}.`,
-        );
+        button.setAttribute("data-state-label-text", state.label || "Estado de la sesión");
+        button.setAttribute("data-next-label-text", nextLabel || "");
+        updateButtonAccess();
 
         return state;
       };
 
-      applyState(currentIndex);
+      const persistLocalState = (stateId) => {
+        if (!storageKey) return;
+        persistSessionStatus(storageKey, stateId || null);
+      };
 
-      const handleClick = () => {
+      const syncStateFromValue = (value) => {
+        if (!Array.isArray(SESSION_STATUS_STATES) || SESSION_STATUS_STATES.length === 0)
+          return;
+        let targetIndex = 0;
+        if (value) {
+          const idx = SESSION_STATUS_STATES.findIndex((state) => state && state.id === value);
+          if (idx >= 0) targetIndex = idx;
+        }
+        const candidate = SESSION_STATUS_STATES[targetIndex] || SESSION_STATUS_STATES[0];
+        if (!candidate) return;
+        if (candidate.id === currentStateId) {
+          lastRemoteState = candidate.id || null;
+          persistLocalState(candidate.id || null);
+          return;
+        }
+        const applied = applyState(targetIndex);
+        if (applied && applied.id) {
+          lastRemoteState = applied.id;
+          persistLocalState(applied.id);
+        }
+      };
+
+      const storedState = readStoredSessionStatus(storageKey);
+      if (storedState) {
+        syncStateFromValue(storedState);
+      } else {
+        const initial = applyState(0);
+        if (initial && initial.id) {
+          lastRemoteState = initial.id;
+          persistLocalState(initial.id);
+        }
+      }
+
+      const ensureSessionDocRef = () => {
+        if (sessionDocRef) return sessionDocRef;
+        try {
+          initFirebase();
+        } catch (_) {}
+        try {
+          const db = getDb();
+          if (!db) return null;
+          const coll = collection(db, SESSION_STATUS_COLLECTION);
+          sessionDocRef = doc(coll, sessionId);
+          return sessionDocRef;
+        } catch (error) {
+          console.error("No se pudo preparar la referencia del estado de sesión", error);
+          return null;
+        }
+      };
+
+      const startSnapshot = () => {
+        if (snapshotStarted) return;
+        const ref = ensureSessionDocRef();
+        if (!ref) return;
+        snapshotStarted = true;
+        try {
+          unsubscribeSnapshot = onSnapshot(
+            ref,
+            (snap) => {
+              try {
+                if (!snap || !snap.exists()) {
+                  lastRemoteState = null;
+                  syncStateFromValue(null);
+                  return;
+                }
+                const data = snap.data() || {};
+                const value = typeof data.state === "string" ? data.state : null;
+                lastRemoteState = value || null;
+                syncStateFromValue(value);
+              } catch (err) {
+                console.error("Error al sincronizar el estado de la sesión", err);
+              }
+            },
+            (error) => {
+              snapshotStarted = false;
+              if (unsubscribeSnapshot) {
+                try {
+                  unsubscribeSnapshot();
+                } catch (_) {}
+                unsubscribeSnapshot = null;
+              }
+              if (error?.code === "permission-denied") {
+                console.warn("Permiso denegado al leer estado de la sesión", sessionId);
+              } else {
+                console.error("Error al observar el estado de la sesión", error);
+              }
+            },
+          );
+        } catch (error) {
+          snapshotStarted = false;
+          console.error("No se pudo observar el estado de la sesión", error);
+        }
+
+        registerCleanup(() => {
+          snapshotStarted = false;
+          if (unsubscribeSnapshot) {
+            try {
+              unsubscribeSnapshot();
+            } catch (_) {}
+            unsubscribeSnapshot = null;
+          }
+        });
+      };
+
+      const persistRemoteState = async (stateId) => {
+        if (!stateId) return;
+        const ref = ensureSessionDocRef();
+        if (!ref) return;
+        try {
+          await setDoc(
+            ref,
+            {
+              state: stateId,
+              updatedAt: serverTimestamp(),
+              updatedBy: authUser
+                ? {
+                    uid: authUser.uid || null,
+                    displayName: authUser.displayName || null,
+                    email: authUser.email || null,
+                  }
+                : null,
+            },
+            { merge: true },
+          );
+        } catch (error) {
+          console.error("No se pudo actualizar el estado de la sesión", error);
+          if (lastRemoteState != null) {
+            syncStateFromValue(lastRemoteState);
+          } else {
+            syncStateFromValue(null);
+          }
+        }
+      };
+
+      const handleClick = async () => {
+        if (!canEdit()) return;
         const nextIndex = (currentIndex + 1) % SESSION_STATUS_STATES.length;
         const state = applyState(nextIndex);
         if (state && state.id) {
-          persistSessionStatus(storageKey, state.id);
+          persistLocalState(state.id);
+          await persistRemoteState(state.id);
         }
       };
 
@@ -513,58 +700,50 @@ function setupSessionStatusControl(doc, currentPage) {
         } catch (_) {}
       });
 
-      const syncStateFromValue = (value) => {
-        if (!Array.isArray(SESSION_STATUS_STATES) || SESSION_STATUS_STATES.length === 0)
-          return;
-        if (!value) {
-          applyState(0);
-          return;
-        }
-        const idx = SESSION_STATUS_STATES.findIndex((state) => state && state.id === value);
-        if (idx >= 0) {
-          applyState(idx);
-        } else {
-          applyState(0);
-        }
-      };
+      updateButtonAccess();
 
-      const handleStorage = (event) => {
-        try {
-          if (!event || event.key !== storageKey) return;
-          syncStateFromValue(event.newValue);
-        } catch (_) {}
-      };
-
-      const handleCustomEvent = (event) => {
-        try {
-          if (!event || !event.detail) return;
-          if (event.detail.key !== storageKey) return;
-          if (Object.prototype.hasOwnProperty.call(event.detail, "value")) {
-            syncStateFromValue(event.detail.value);
-          } else {
-            syncStateFromValue(readStoredSessionStatus(storageKey));
+      try {
+        unsubscribeAuth = onAuth(async (user) => {
+          authUser = user || null;
+          let teacher = false;
+          if (user?.uid) {
+            try {
+              teacher = await isTeacherByDoc(user.uid);
+            } catch (_) {
+              teacher = false;
+            }
           }
-        } catch (_) {}
-      };
+          if (!teacher && user?.email) {
+            teacher = isTeacherEmail(user.email);
+          }
+          teacherByAuth = !!teacher;
+          updateButtonAccess();
+          if (user) {
+            startSnapshot();
+          }
+        });
+      } catch (error) {
+        console.error("No se pudo observar el estado de autenticación", error);
+      }
 
-      if (typeof window !== "undefined" && window.addEventListener) {
-        window.addEventListener("storage", handleStorage);
+      if (typeof unsubscribeAuth === "function") {
         registerCleanup(() => {
           try {
-            window.removeEventListener("storage", handleStorage);
+            unsubscribeAuth();
           } catch (_) {}
+          unsubscribeAuth = null;
         });
-        window.addEventListener("qs:session-status-changed", handleCustomEvent);
-        registerCleanup(() => {
-          try {
-            window.removeEventListener("qs:session-status-changed", handleCustomEvent);
-          } catch (_) {}
-        });
+      }
+
+      if (authUser) {
+        startSnapshot();
       }
     };
 
     mountControl();
-  } catch (_) {}
+  } catch (error) {
+    console.error("No se pudo inicializar el control de estado de sesión", error);
+  }
 }
 
 function ensureSessionStatusStyles(doc) {
@@ -618,6 +797,13 @@ function ensureSessionStatusStyles(doc) {
         box-shadow: 0 12px 30px rgba(79, 70, 229, 0.18);
         transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease,
           color 0.2s ease;
+      }
+      .qs-session-status-btn.session-status-readonly,
+      .qs-session-status-btn:disabled {
+        cursor: default;
+        pointer-events: none;
+        opacity: 0.7;
+        box-shadow: none;
       }
       .qs-session-status-btn:hover {
         transform: translateY(-1px);

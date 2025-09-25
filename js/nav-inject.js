@@ -36,7 +36,7 @@
   if (hasLayoutScript) return;
 
   const loader = document.createElement("script");
-  loader.defer = true;
+  loader.type = "module";
   loader.src = layoutSrc;
   loader.setAttribute("data-qs", "layout-loader");
   loader.addEventListener("error", () => {
