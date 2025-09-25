@@ -348,6 +348,8 @@ function initRealtimeNotifications() {
       hideTimeoutId = null;
     }
     panel.hidden = false;
+    panel.style.removeProperty("display");
+    panel.removeAttribute("aria-hidden");
     requestAnimationFrame(() => {
       panel.classList.add("is-open");
     });
@@ -367,20 +369,18 @@ function initRealtimeNotifications() {
     isPanelOpen = false;
     toggleButton.setAttribute("aria-expanded", "false");
     updateToggleLabel(false);
-    const handleTransitionEnd = () => {
+    const finalizeHide = () => {
       if (!isPanelOpen) {
         panel.hidden = true;
+        panel.style.display = "none";
+        panel.setAttribute("aria-hidden", "true");
       }
     };
-    panel.addEventListener("transitionend", handleTransitionEnd, { once: true });
+    panel.addEventListener("transitionend", finalizeHide, { once: true });
     if (hideTimeoutId) {
       window.clearTimeout(hideTimeoutId);
     }
-    hideTimeoutId = window.setTimeout(() => {
-      if (!isPanelOpen) {
-        panel.hidden = true;
-      }
-    }, 220);
+    hideTimeoutId = window.setTimeout(finalizeHide, 220);
     if (focusToggle) {
       toggleButton.focus();
     }
