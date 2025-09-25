@@ -661,40 +661,263 @@
           font-size: 1.5em;
         }
       }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .session-toolbar {
+        position: sticky;
+        top: calc(var(--nav-h, 72px) + 16px);
+        z-index: 40;
+        margin-bottom: 24px;
+      }
+
+      .session-toolbar-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+        padding: 1rem 1.5rem;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        box-shadow: 0 20px 40px rgba(67, 56, 202, 0.15);
+        backdrop-filter: blur(14px) saturate(120%);
+      }
+
+      .session-toolbar-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: #1a202c;
+      }
+
+      .session-toolbar-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+        color: #fff;
+        box-shadow: 0 12px 25px rgba(118, 75, 162, 0.35);
+      }
+
+      .session-toolbar-kicker {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #5a67d8;
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+      }
+
+      .session-toolbar-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin: 0;
+      }
+
+      .slide-toolbar {
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.35);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8),
+          0 10px 25px rgba(102, 126, 234, 0.2);
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+      }
+
+      .slide-toolbar::-webkit-scrollbar {
+        display: none;
+      }
+
+      .slide-tab {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.45rem 1.1rem;
+        border-radius: 9999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #3730a3;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid rgba(99, 102, 241, 0.2);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9),
+          0 6px 16px rgba(79, 70, 229, 0.15);
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease,
+          background 0.2s ease, color 0.2s ease;
+        white-space: nowrap;
+        scroll-snap-align: center;
+      }
+
+      .slide-tab:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(79, 70, 229, 0.25);
+        background: rgba(255, 255, 255, 1);
+      }
+
+      .slide-tab:focus-visible {
+        outline: 2px solid rgba(99, 102, 241, 0.6);
+        outline-offset: 3px;
+      }
+
+      .slide-tab-active {
+        color: #fff;
+        background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        border-color: transparent;
+        box-shadow: 0 16px 32px rgba(79, 70, 229, 0.35);
+      }
+
+      .slide-tab-active::after {
+        content: "";
+        position: absolute;
+        left: 20%;
+        right: 20%;
+        bottom: -6px;
+        height: 4px;
+        border-radius: 9999px;
+        background: rgba(255, 255, 255, 0.8);
+      }
+
+      @media (max-width: 768px) {
+        .session-toolbar-card {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .slide-toolbar {
+          width: 100%;
+        }
+      }
     </style>
   </head>
   <body>
-      <div class="session-status-control" data-role="session-status" role="group" aria-label="Estado de la sesión">
-        <span class="session-status-label" id="session-status-label-sesion3">Estado de la sesión</span>
-        <button type="button" class="qs-session-status-btn" data-role="session-status-toggle" aria-describedby="session-status-label-sesion3" data-state="not-started" aria-label="Estado de la sesión: No realizada. Activa para cambiar a En curso." title="Estado actual: No realizada. Haz clic para marcar como En curso.">
-          <span class="qs-session-status-dot" aria-hidden="true"></span>
-          <span class="qs-session-status-text">No realizada</span>
-        </button>
-      </div>
 
-    <div class="container">
-      <!-- Slide Navigation -->
-      <div class="slide-navigation">
-        <button class="slide-nav-button active" onclick="showSlide(1)">
-          1. Título
-        </button>
-        <button class="slide-nav-button" onclick="showSlide(2)">
-          2. Naturaleza del Software
-        </button>
-        <button class="slide-nav-button" onclick="showSlide(3)">
-          3. Calidad de Producto
-        </button>
-        <button class="slide-nav-button" onclick="showSlide(4)">
-          4. Calidad de Proceso
-        </button>
-        <button class="slide-nav-button" onclick="showSlide(5)">
-          5. Proceso → Producto
-        </button>
-        <button class="slide-nav-button" onclick="showSlide(6)">
-          6. Caso Ariane 5
-        </button>
-      </div>
+    <main class="container" role="main">
 
+      <header class="session-toolbar" aria-label="Navegación de la sesión 3">
+        <div class="session-toolbar-card">
+          <div class="session-toolbar-info">
+            <div class="session-toolbar-badge">3</div>
+            <div>
+              <p class="session-toolbar-kicker">Sesión 3</p>
+              <h1 class="session-toolbar-title">Calidad en el Mundo del Software</h1>
+            </div>
+          </div>
+          <div
+            class="session-status-control"
+            data-role="session-status"
+            role="group"
+            aria-label="Estado de la sesión"
+          >
+            <span class="session-status-label" id="session-status-label-sesion3"
+              >Estado de la sesión</span
+            >
+            <button
+              type="button"
+              class="qs-session-status-btn"
+              data-role="session-status-toggle"
+              aria-describedby="session-status-label-sesion3"
+              data-state="not-started"
+              aria-label="Estado de la sesión: No realizada. Activa para cambiar a En curso."
+              title="Estado actual: No realizada. Haz clic para marcar como En curso."
+            >
+              <span class="qs-session-status-dot" aria-hidden="true"></span>
+              <span class="qs-session-status-text">No realizada</span>
+            </button>
+          </div>
+        </div>
+        <nav
+          class="slide-toolbar"
+          role="tablist"
+          aria-label="Diapositivas de la sesión 3"
+        >
+          <button
+            type="button"
+            id="slide1-btn"
+            class="slide-tab slide-tab-active"
+            role="tab"
+            aria-selected="true"
+            aria-controls="slide1"
+            tabindex="0"
+            onclick="showSlide(1)"
+          >
+            1. Título
+          </button>
+          <button
+            type="button"
+            id="slide2-btn"
+            class="slide-tab"
+            role="tab"
+            aria-selected="false"
+            aria-controls="slide2"
+            tabindex="-1"
+            onclick="showSlide(2)"
+          >
+            2. Naturaleza del Software
+          </button>
+          <button
+            type="button"
+            id="slide3-btn"
+            class="slide-tab"
+            role="tab"
+            aria-selected="false"
+            aria-controls="slide3"
+            tabindex="-1"
+            onclick="showSlide(3)"
+          >
+            3. Calidad de Producto
+          </button>
+          <button
+            type="button"
+            id="slide4-btn"
+            class="slide-tab"
+            role="tab"
+            aria-selected="false"
+            aria-controls="slide4"
+            tabindex="-1"
+            onclick="showSlide(4)"
+          >
+            4. Calidad de Proceso
+          </button>
+          <button
+            type="button"
+            id="slide5-btn"
+            class="slide-tab"
+            role="tab"
+            aria-selected="false"
+            aria-controls="slide5"
+            tabindex="-1"
+            onclick="showSlide(5)"
+          >
+            5. Proceso → Producto
+          </button>
+          <button
+            type="button"
+            id="slide6-btn"
+            class="slide-tab"
+            role="tab"
+            aria-selected="false"
+            aria-controls="slide6"
+            tabindex="-1"
+            onclick="showSlide(6)"
+          >
+            6. Caso Ariane 5
+          </button>
+        </nav>
+      </header>
       <!-- Slide 1: Title -->
       <div id="slide1" class="slide">
         <div class="header">
@@ -725,7 +948,7 @@
       </div>
 
       <!-- Slide 2: Why Software is Different -->
-      <div id="slide2" class="slide" style="display: none">
+      <div id="slide2" class="slide hidden" aria-hidden="true">
         <div class="content-section">
           <div class="section-title">La Naturaleza Única del Software</div>
 
@@ -849,7 +1072,7 @@
       </div>
 
       <!-- Slide 3: Product Quality -->
-      <div id="slide3" class="slide" style="display: none">
+      <div id="slide3" class="slide hidden" aria-hidden="true">
         <div class="content-section">
           <div class="section-title">
             La Calidad que el Usuario Experimenta: Calidad de Producto
@@ -1071,7 +1294,7 @@
       </div>
 
       <!-- Slide 4: Process Quality -->
-      <div id="slide4" class="slide" style="display: none">
+      <div id="slide4" class="slide hidden" aria-hidden="true">
         <div class="content-section">
           <div class="section-title">
             La Calidad Detrás de Escena: Calidad de Proceso
@@ -1267,7 +1490,7 @@
       </div>
 
       <!-- Slide 5: Process to Product Connection -->
-      <div id="slide5" class="slide" style="display: none">
+      <div id="slide5" class="slide hidden" aria-hidden="true">
         <div class="content-section">
           <div class="section-title">
             Causa y Efecto en la Calidad del Software
@@ -1383,7 +1606,7 @@
       </div>
 
       <!-- Slide 6: Ariane 5 Case Study -->
-      <div id="slide6" class="slide" style="display: none">
+      <div id="slide6" class="slide hidden" aria-hidden="true">
         <div class="content-section">
           <div class="section-title">
             Estudio de Caso: Cuando la Calidad Falla Espectacularmente
@@ -1521,133 +1744,322 @@
         </div>
       </div>
 
-    </div>
+    </main>
 
+    <div class="qs-slide-fab">
+      <button
+        type="button"
+        class="qs-slide-fab__btn is-prev"
+        data-slide-direction="prev"
+        aria-label="Diapositiva anterior"
+      >
+        <span aria-hidden="true">←</span>
+      </button>
+      <button
+        type="button"
+        class="qs-slide-fab__btn is-next"
+        data-slide-direction="next"
+        aria-label="Diapositiva siguiente"
+      >
+        <span aria-hidden="true">→</span>
+      </button>
+    </div>
     <script>
+      const slideButtons = Array.from(
+        document.querySelectorAll('.slide-toolbar .slide-tab')
+      );
+      const slides = Array.from(
+        document.querySelectorAll('main [id^="slide"]')
+      ).filter((element) => /^slide\d+$/i.test(element.id));
+      const mainContent = document.querySelector('main');
+      const fabButtons = Array.from(
+        document.querySelectorAll('.qs-slide-fab__btn')
+      );
+      const prevFab =
+        fabButtons.find((button) => button.dataset.slideDirection === 'prev') ||
+        null;
+      const nextFab =
+        fabButtons.find((button) => button.dataset.slideDirection === 'next') ||
+        null;
+      const totalSlides = Math.max(slides.length, slideButtons.length);
+      const prefersReducedMotion = (() => {
+        try {
+          return (
+            window.matchMedia &&
+            window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          );
+        } catch (_) {
+          return false;
+        }
+      })();
       let currentSlide = 1;
 
-      // Initialize the presentation
-      document.addEventListener("DOMContentLoaded", function () {
-        showSlide(1);
-        updateSlideNavigation();
-      });
+      function updateFabState() {
+        if (!prevFab && !nextFab) return;
+        const isSingleSlide = totalSlides <= 1;
+        const atStart = isSingleSlide || currentSlide <= 1;
+        const atEnd = isSingleSlide || currentSlide >= totalSlides;
+
+        if (prevFab) {
+          prevFab.disabled = atStart;
+          prevFab.classList.toggle('is-disabled', atStart);
+          if (atStart) {
+            prevFab.setAttribute('aria-disabled', 'true');
+          } else {
+            prevFab.removeAttribute('aria-disabled');
+          }
+        }
+
+        if (nextFab) {
+          nextFab.disabled = atEnd;
+          nextFab.classList.toggle('is-disabled', atEnd);
+          if (atEnd) {
+            nextFab.setAttribute('aria-disabled', 'true');
+          } else {
+            nextFab.removeAttribute('aria-disabled');
+          }
+        }
+      }
 
       function showSlide(slideNumber) {
-        // Hide all slides
-        document.querySelectorAll(".slide").forEach((slide) => {
-          slide.style.display = "none";
+        if (totalSlides === 0) {
+          updateFabState();
+          return;
+        }
+
+        const targetSlide = Math.min(Math.max(slideNumber, 1), totalSlides);
+
+        slides.forEach((slide, index) => {
+          if (!slide) return;
+          const isActive = index + 1 === targetSlide;
+          slide.classList.toggle('hidden', !isActive);
+          slide.setAttribute('aria-hidden', isActive ? 'false' : 'true');
         });
 
-        // Show selected slide
-        const targetSlide = document.getElementById("slide" + slideNumber);
-        if (targetSlide) {
-          targetSlide.style.display = "block";
-          currentSlide = slideNumber;
-          updateSlideNavigation();
+        slideButtons.forEach((button, index) => {
+          const displayIndex = index + 1;
+          const isActive = displayIndex === targetSlide;
+          const slideElement = slides[index] ||
+            document.getElementById('slide' + displayIndex);
+
+          if (slideElement) {
+            slideElement.classList.toggle('hidden', !isActive);
+            slideElement.setAttribute('aria-hidden', isActive ? 'false' : 'true');
+          }
+
+          button.classList.toggle('slide-tab-active', isActive);
+          button.setAttribute('aria-selected', isActive ? 'true' : 'false');
+          button.setAttribute('tabindex', isActive ? '0' : '-1');
+        });
+
+        const activeButton = document.getElementById(
+          'slide' + targetSlide + '-btn'
+        );
+
+        if (activeButton) {
+          const behavior = prefersReducedMotion ? 'auto' : 'smooth';
+          try {
+            requestAnimationFrame(() => {
+              activeButton.scrollIntoView({
+                behavior,
+                block: 'nearest',
+                inline: 'center',
+              });
+            });
+          } catch (_) {
+            if (!prefersReducedMotion) {
+              activeButton.scrollIntoView();
+            }
+          }
+        }
+
+        currentSlide = targetSlide;
+        updateFabState();
+
+        if (mainContent) {
+          const behavior = prefersReducedMotion ? 'auto' : 'smooth';
+          const rect = mainContent.getBoundingClientRect();
+          const scrollTop =
+            typeof window.scrollY === 'number'
+              ? window.scrollY
+              : window.pageYOffset || 0;
+
+          const resolveAnchorOffset = () => {
+            let computedOffset = 0;
+            try {
+              const docEl = document.documentElement;
+              if (docEl && typeof window.getComputedStyle === 'function') {
+                const value = window
+                  .getComputedStyle(docEl)
+                  .getPropertyValue('--anchor-offset');
+                const parsed = parseFloat(value);
+                if (!Number.isNaN(parsed) && Number.isFinite(parsed)) {
+                  computedOffset = Math.max(0, parsed);
+                }
+              }
+            } catch (_) {}
+
+            if (computedOffset) return computedOffset;
+
+            try {
+              const nav = document.querySelector('.qs-nav');
+              if (nav) {
+                const navRect = nav.getBoundingClientRect();
+                if (navRect && navRect.height) {
+                  computedOffset = Math.max(0, Math.round(navRect.height) + 12);
+                }
+              }
+            } catch (_) {}
+
+            return computedOffset;
+          };
+
+          const anchorOffset = resolveAnchorOffset();
+          const targetTop = Math.max(0, rect.top + scrollTop - anchorOffset);
+
+          if (typeof window.scrollTo === 'function') {
+            try {
+              window.scrollTo({ top: targetTop, behavior });
+            } catch (_) {
+              window.scrollTo(0, targetTop);
+            }
+          } else {
+            window.scrollTo(0, targetTop);
+          }
         }
       }
 
       function nextSlide() {
-        if (currentSlide < 6) {
-          showSlide(currentSlide + 1);
-        }
+        if (totalSlides === 0) return;
+        showSlide(currentSlide + 1);
       }
 
       function previousSlide() {
-        if (currentSlide > 1) {
-          showSlide(currentSlide - 1);
-        }
+        if (totalSlides === 0) return;
+        showSlide(currentSlide - 1);
       }
 
-      function updateSlideNavigation() {
-        document
-          .querySelectorAll(".slide-nav-button")
-          .forEach((button, index) => {
-            button.classList.remove("active");
-            if (index + 1 === currentSlide) {
-              button.classList.add("active");
-            }
-          });
+      function goToSlide(slideNumber) {
+        showSlide(slideNumber);
       }
 
-      function toggleCharacteristic(characteristic) {
-        const details = document.getElementById(characteristic + "-details");
-        details.classList.toggle("active");
-      }
-
-      function toggleAttribute(attribute) {
-        const example = document.getElementById(attribute + "-example");
-        example.classList.toggle("active");
-      }
-
-      function showSpotifyScenario(type) {
-        // Hide all scenarios
-        document.querySelectorAll(".scenario-result").forEach((el) => {
-          el.classList.remove("active");
-        });
-
-        // Show selected scenario
-        document.getElementById("spotify-" + type).classList.add("active");
-      }
-
-      function showProcessScenario(type) {
-        // Hide all scenarios
-        document.querySelectorAll(".scenario-result").forEach((el) => {
-          el.classList.remove("active");
-        });
-
-        // Show selected scenario
-        document.getElementById("process-" + type).classList.add("active");
-      }
-
-      function toggleCauseEffect(item) {
-        const details = document.getElementById(item + "-details");
-        details.classList.toggle("active");
-      }
-
-      function toggleDebateArgument(type) {
-        const argument = document.getElementById(type + "-argument");
-        argument.classList.toggle("active");
-      }
-
-      function resetAll() {
-        document.querySelectorAll(".characteristic-details").forEach((el) => {
-          el.classList.remove("active");
-        });
-        document.querySelectorAll(".attribute-example").forEach((el) => {
-          el.classList.remove("active");
-        });
-        document.querySelectorAll(".scenario-result").forEach((el) => {
-          el.classList.remove("active");
-        });
-        document.querySelectorAll(".cause-effect-details").forEach((el) => {
-          el.classList.remove("active");
-        });
-        document.querySelectorAll(".argument-details").forEach((el) => {
-          el.classList.remove("active");
-        });
-      }
-
-      // Keyboard navigation
-      document.addEventListener("keydown", function (e) {
-        if (e.key === "ArrowRight" || e.key === " ") {
-          e.preventDefault();
-          nextSlide();
-        } else if (e.key === "ArrowLeft") {
-          e.preventDefault();
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft') {
+          event.preventDefault();
           previousSlide();
-        } else if (e.key >= "1" && e.key <= "6") {
-          e.preventDefault();
-          showSlide(parseInt(e.key));
+        } else if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          nextSlide();
+        } else if (event.key === ' ' || event.key === 'Spacebar') {
+          event.preventDefault();
+          nextSlide();
+        } else if (/^[1-6]$/.test(event.key)) {
+          event.preventDefault();
+          showSlide(parseInt(event.key, 10));
         }
       });
 
-      // Add click animation to buttons
-      document.addEventListener("click", function (e) {
-        if (e.target.tagName === "BUTTON") {
-          e.target.style.transform = "scale(0.95)";
+      slideButtons.forEach((button, index) => {
+        button.addEventListener('click', () => {
+          showSlide(index + 1);
+        });
+      });
+
+      fabButtons.forEach((button) => {
+        const direction = button.dataset.slideDirection;
+        if (direction === 'prev') {
+          button.addEventListener('click', () => {
+            previousSlide();
+          });
+        } else if (direction === 'next') {
+          button.addEventListener('click', () => {
+            nextSlide();
+          });
+        }
+      });
+
+      if (totalSlides > 0) {
+        showSlide(1);
+      } else {
+        updateFabState();
+      }
+
+      window.showSlide = showSlide;
+      window.nextSlide = nextSlide;
+      window.previousSlide = previousSlide;
+      window.goToSlide = goToSlide;
+
+      function toggleCharacteristic(characteristic) {
+        const details = document.getElementById(characteristic + '-details');
+        if (details) {
+          details.classList.toggle('active');
+        }
+      }
+
+      function toggleAttribute(attribute) {
+        const example = document.getElementById(attribute + '-example');
+        if (example) {
+          example.classList.toggle('active');
+        }
+      }
+
+      function showSpotifyScenario(type) {
+        document.querySelectorAll('.scenario-result').forEach((el) => {
+          el.classList.remove('active');
+        });
+        const target = document.getElementById('spotify-' + type);
+        if (target) {
+          target.classList.add('active');
+        }
+      }
+
+      function showProcessScenario(type) {
+        document.querySelectorAll('.scenario-result').forEach((el) => {
+          el.classList.remove('active');
+        });
+        const target = document.getElementById('process-' + type);
+        if (target) {
+          target.classList.add('active');
+        }
+      }
+
+      function toggleCauseEffect(item) {
+        const details = document.getElementById(item + '-details');
+        if (details) {
+          details.classList.toggle('active');
+        }
+      }
+
+      function toggleDebateArgument(type) {
+        const argument = document.getElementById(type + '-argument');
+        if (argument) {
+          argument.classList.toggle('active');
+        }
+      }
+
+      function resetAll() {
+        document.querySelectorAll('.characteristic-details').forEach((el) => {
+          el.classList.remove('active');
+        });
+        document.querySelectorAll('.attribute-example').forEach((el) => {
+          el.classList.remove('active');
+        });
+        document.querySelectorAll('.scenario-result').forEach((el) => {
+          el.classList.remove('active');
+        });
+        document.querySelectorAll('.cause-effect-details').forEach((el) => {
+          el.classList.remove('active');
+        });
+        document.querySelectorAll('.argument-details').forEach((el) => {
+          el.classList.remove('active');
+        });
+      }
+
+      document.addEventListener('click', (event) => {
+        if (event.target.tagName === 'BUTTON') {
+          event.target.style.transform = 'scale(0.95)';
           setTimeout(() => {
-            e.target.style.transform = "";
+            event.target.style.transform = '';
           }, 150);
         }
       });
