@@ -350,6 +350,7 @@ function initRealtimeNotifications() {
     panel.hidden = false;
     panel.style.removeProperty("display");
     panel.removeAttribute("aria-hidden");
+    center.classList.add("is-panel-open");
     requestAnimationFrame(() => {
       panel.classList.add("is-open");
     });
@@ -366,6 +367,7 @@ function initRealtimeNotifications() {
   function closePanel({ focusToggle = false } = {}) {
     if (!isPanelOpen) return;
     panel.classList.remove("is-open");
+    center.classList.remove("is-panel-open");
     isPanelOpen = false;
     toggleButton.setAttribute("aria-expanded", "false");
     updateToggleLabel(false);
