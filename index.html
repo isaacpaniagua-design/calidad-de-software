@@ -691,6 +691,89 @@
         gap: 16px;
       }
 
+      .session-card {
+        position: relative;
+        min-height: 100%;
+      }
+
+      .session-card__link {
+        display: block;
+        height: 100%;
+      }
+
+      .session-card__status {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 2;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.35rem;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        background: rgba(248, 250, 252, 0.95);
+        color: var(--text-secondary);
+        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.16);
+        pointer-events: none;
+        user-select: none;
+      }
+
+      .session-card__status[data-state="not-started"] {
+        background: #fee2e2;
+        color: #b91c1c;
+        box-shadow: 0 14px 32px rgba(239, 68, 68, 0.22);
+      }
+
+      .session-card__status[data-state="in-progress"] {
+        background: #fef3c7;
+        color: #b45309;
+        box-shadow: 0 14px 32px rgba(245, 158, 11, 0.22);
+      }
+
+      .session-card__status[data-state="completed"] {
+        background: #dcfce7;
+        color: #047857;
+        box-shadow: 0 14px 32px rgba(16, 185, 129, 0.22);
+      }
+
+      .session-card__status--action {
+        border: none;
+        pointer-events: auto;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        background-image: none;
+      }
+
+      .session-card__status--action:hover,
+      .session-card__status--action:focus-visible {
+        transform: translateY(-1px);
+        box-shadow: 0 18px 36px rgba(15, 23, 42, 0.2);
+        outline: none;
+      }
+
+      .session-card__status--action:focus-visible {
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35), 0 18px 36px rgba(15, 23, 42, 0.2);
+      }
+
+      .session-card__status--action:disabled,
+      .session-card__status--action.is-syncing {
+        cursor: wait;
+        opacity: 0.78;
+        transform: none;
+        box-shadow: 0 10px 24px rgba(148, 163, 184, 0.2);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .session-card__status--action {
+          transition: none;
+        }
+      }
+
       .session-btn {
         display: flex;
         align-items: center;
@@ -2500,8 +2583,14 @@
 
 
     <script type="module">
-      import { initFirebase, getDb } from "./js/firebase.js";
-      import { collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+      import { initFirebase, getDb, onAuth } from "./js/firebase.js";
+      import {
+        collection,
+        doc,
+        onSnapshot,
+        setDoc,
+        serverTimestamp,
+      } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
       document.addEventListener("DOMContentLoaded", () => {
 
@@ -2531,6 +2620,22 @@
         };
 
         const VALID_SESSION_STATES = new Set(Object.keys(STATUS_LABELS));
+
+        const SESSION_STATE_SEQUENCE = ["not-started", "in-progress", "completed"];
+
+        const getSessionId = (sessionNumber) => `sesion${sessionNumber}`;
+
+        const getStorageKey = (sessionNumber) => `${STORAGE_PREFIX}sesion${sessionNumber}`;
+
+        let teacherMode = document.documentElement.classList.contains("role-teacher");
+
+        const isTeacherRole = () => teacherMode;
+
+        const getNextState = (state) => {
+          const index = SESSION_STATE_SEQUENCE.indexOf(state);
+          const nextIndex = index >= 0 ? (index + 1) % SESSION_STATE_SEQUENCE.length : 0;
+          return SESSION_STATE_SEQUENCE[nextIndex];
+        };
 
         const updateHero = (completed, current, total) => {
 
@@ -2562,7 +2667,7 @@
 
         const readStoredState = (sessionNumber) => {
 
-          const key = `${STORAGE_PREFIX}sesion${sessionNumber}`;
+          const key = getStorageKey(sessionNumber);
 
           try {
 
@@ -2621,6 +2726,98 @@
         let realtimeHighestSession = 0;
         let unsubscribeRealtime = null;
         let realtimeSyncDisabled = false;
+
+        let authUser = null;
+        const pendingSaves = new Set();
+
+        const persistLocalState = (sessionNumber, value) => {
+          const key = getStorageKey(sessionNumber);
+          if (!key) return false;
+          let previousValue = null;
+          try {
+            previousValue = localStorage.getItem(key);
+          } catch (_) {}
+          let success = false;
+          try {
+            if (value) {
+              localStorage.setItem(key, value);
+            } else {
+              localStorage.removeItem(key);
+            }
+            success = true;
+          } catch (_) {}
+          try {
+            if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
+              const detail = {
+                key,
+                value: value || null,
+                previousValue,
+                success,
+                sessionId: getSessionId(sessionNumber),
+              };
+              let event = null;
+              if (typeof window.CustomEvent === "function") {
+                event = new CustomEvent("qs:session-status-changed", { detail });
+              } else if (typeof document !== "undefined" && document.createEvent) {
+                event = document.createEvent("CustomEvent");
+                event.initCustomEvent("qs:session-status-changed", false, false, detail);
+              }
+              if (event) {
+                window.dispatchEvent(event);
+              }
+            }
+          } catch (_) {}
+          return success;
+        };
+
+        const applyRealtimeState = (sessionNumber, state, options = {}) => {
+          const source = realtimeStates instanceof Map ? realtimeStates : new Map();
+          const next = new Map(source);
+          if (options.remove) {
+            next.delete(sessionNumber);
+          } else if (state != null) {
+            next.set(sessionNumber, state);
+          } else {
+            next.delete(sessionNumber);
+          }
+          realtimeStates = next;
+        };
+
+        const createStatusControl = (sessionNumber, state, label, teacher) => {
+          const control = teacher
+            ? document.createElement("button")
+            : document.createElement("span");
+          control.className = "session-card__status";
+          control.dataset.state = state;
+          control.dataset.stateLabel = label;
+          control.textContent = label;
+          if (teacher) {
+            control.classList.add("session-card__status--action");
+            control.type = "button";
+            control.dataset.action = "cycle-status";
+            control.dataset.session = String(sessionNumber);
+            control.dataset.state = state;
+            const nextState = getNextState(state);
+            const nextLabel = STATUS_LABELS[nextState] || "Sin estado";
+            control.setAttribute(
+              "aria-label",
+              `Sesión ${sessionNumber}. Estado: ${label}. Activa para cambiar a ${nextLabel}.`,
+            );
+            control.setAttribute(
+              "title",
+              `Estado actual: ${label}. Haz clic para marcar como ${nextLabel}.`,
+            );
+            control.setAttribute("data-next-state-label", nextLabel);
+            if (pendingSaves.has(sessionNumber)) {
+              control.disabled = true;
+              control.classList.add("is-syncing");
+              control.setAttribute("aria-busy", "true");
+            }
+          } else {
+            control.setAttribute("aria-hidden", "true");
+          }
+          return control;
+        };
 
         const hasRealtimeAccess = () => {
           if (realtimeSyncDisabled) return false;
@@ -2728,23 +2925,28 @@
           const currentSession = firstInProgress ?? firstPending ?? total;
 
           grid.innerHTML = "";
+          const teacher = isTeacherRole();
+          grid.classList.toggle("sessions-grid--teacher", teacher);
 
           for (let i = 1; i <= total; i++) {
 
             const state = resolvedStates[i] || "not-started";
+            const label = STATUS_LABELS[state] || "Sin estado";
+
+            const card = document.createElement("div");
+            card.className = "session-card";
+            card.dataset.state = state;
+            card.dataset.session = String(i);
 
             const link = document.createElement("a");
-
             link.href = `sesion${i}.html`;
-
-            link.className = "session-btn";
-
+            link.className = "session-card__link session-btn";
             link.textContent = `Sesión ${i}`;
             link.dataset.status = state;
-            const label = STATUS_LABELS[state] || "Sin estado";
             link.dataset.statusLabel = label;
             link.setAttribute("aria-label", `Sesión ${i}. Estado: ${label}.`);
             link.title = `Estado: ${label}`;
+
             if (state === "completed") {
               link.classList.add("completed");
             } else if (state === "in-progress") {
@@ -2752,18 +2954,34 @@
             } else {
               link.classList.add("not-started");
             }
+
             const isCurrent =
               state === "in-progress" || (i === currentSession && state !== "completed");
             if (isCurrent) {
               link.classList.add("current");
             }
 
-            grid.appendChild(link);
+            card.appendChild(link);
+
+            const statusControl = createStatusControl(i, state, label, teacher);
+            if (statusControl) {
+              card.appendChild(statusControl);
+            }
+
+            grid.appendChild(card);
 
           }
 
           updateHero(completedCount, currentSession, total);
 
+        };
+
+        const syncTeacherMode = () => {
+          const next = document.documentElement.classList.contains("role-teacher");
+          if (teacherMode !== next) {
+            teacherMode = next;
+            renderSessions();
+          }
         };
 
         const rebuildFromLatest = () => {
@@ -2884,6 +3102,80 @@
           }
         };
 
+        const persistRemoteState = async (sessionNumber, stateId) => {
+          if (!stateId || !Number.isFinite(sessionNumber) || sessionNumber <= 0) return;
+          try {
+            initFirebase();
+          } catch (_) {}
+          let db = null;
+          try {
+            db = getDb();
+          } catch (_) {
+            db = null;
+          }
+          if (!db) {
+            throw new Error("Firestore no disponible");
+          }
+          const ref = doc(collection(db, "session-status"), getSessionId(sessionNumber));
+          const payload = {
+            state: stateId,
+            updatedAt: serverTimestamp(),
+          };
+          if (authUser) {
+            payload.updatedBy = {
+              uid: authUser.uid || null,
+              displayName: authUser.displayName || null,
+              email: authUser.email || null,
+            };
+          } else {
+            payload.updatedBy = null;
+          }
+          await setDoc(ref, payload, { merge: true });
+        };
+
+        const handleStatusClick = async (event) => {
+          const target = event.target.closest("[data-action='cycle-status']");
+          if (!target) return;
+          if (!isTeacherRole()) return;
+
+          event.preventDefault();
+          event.stopPropagation();
+
+          const sessionNumber = Number(target.dataset.session);
+          if (!Number.isFinite(sessionNumber) || sessionNumber <= 0) return;
+          if (pendingSaves.has(sessionNumber)) return;
+
+          const currentState = target.dataset.state || "not-started";
+          const nextState = getNextState(currentState);
+
+          const previousRemoteValue =
+            realtimeStates instanceof Map ? realtimeStates.get(sessionNumber) : undefined;
+          const hadRemoteValue =
+            realtimeStates instanceof Map && realtimeStates.has(sessionNumber);
+
+          pendingSaves.add(sessionNumber);
+          applyRealtimeState(sessionNumber, nextState);
+          persistLocalState(sessionNumber, nextState);
+          renderSessions();
+
+          try {
+            await persistRemoteState(sessionNumber, nextState);
+          } catch (error) {
+            console.error("No se pudo actualizar el estado de la sesión", error);
+            if (hadRemoteValue) {
+              applyRealtimeState(sessionNumber, previousRemoteValue ?? null, {
+                remove: previousRemoteValue == null,
+              });
+            } else {
+              applyRealtimeState(sessionNumber, null, { remove: true });
+            }
+            persistLocalState(sessionNumber, currentState);
+          } finally {
+            pendingSaves.delete(sessionNumber);
+            renderSessions();
+          }
+        };
+
         const syncRealtimeAccess = () => {
           const allowed = hasRealtimeAccess();
           if (allowed) {
@@ -2905,6 +3197,7 @@
           if (!html || typeof window === "undefined" || !window.MutationObserver) return;
           try {
             const observer = new MutationObserver(() => {
+              syncTeacherMode();
               syncRealtimeAccess();
             });
             observer.observe(html, { attributes: true, attributeFilter: ["class"] });
@@ -2929,6 +3222,7 @@
 
           if (event.key === ROLE_STORAGE_KEY) {
 
+            syncTeacherMode();
             syncRealtimeAccess();
 
             return;
@@ -2940,6 +3234,15 @@
           rebuildFromLatest();
 
         };
+
+        try {
+          initFirebase();
+          onAuth((user) => {
+            authUser = user || null;
+          });
+        } catch (_) {}
+
+        grid.addEventListener("click", handleStatusClick);
 
         renderSessions();
 
