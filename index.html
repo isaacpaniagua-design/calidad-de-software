@@ -2821,6 +2821,8 @@
 
         const hasRealtimeAccess = () => {
           if (realtimeSyncDisabled) return false;
+          if (!authUser) return false;
+          if (!isTeacherRole()) return false;
           return true;
         };
 
@@ -3137,6 +3139,12 @@
           const target = event.target.closest("[data-action='cycle-status']");
           if (!target) return;
           if (!isTeacherRole()) return;
+          if (!hasRealtimeAccess()) {
+            console.warn(
+              "Para actualizar el estado de las sesiones necesitas iniciar sesión como docente.",
+            );
+            return;
+          }
 
           event.preventDefault();
           event.stopPropagation();
@@ -3184,11 +3192,18 @@
                 startRealtimeSync();
               } catch (_) {}
             }
-          } else if (unsubscribeRealtime) {
-            stopRealtimeSync();
-            realtimeStates = new Map();
-            realtimeHighestSession = 0;
-            renderSessions();
+          } else {
+            if (unsubscribeRealtime) {
+              stopRealtimeSync();
+            }
+            const hadStates =
+              (realtimeStates instanceof Map && realtimeStates.size > 0) ||
+              realtimeHighestSession > 0;
+            if (hadStates) {
+              realtimeStates = new Map();
+              realtimeHighestSession = 0;
+              renderSessions();
+            }
           }
         };
 
@@ -3239,6 +3254,12 @@
           initFirebase();
           onAuth((user) => {
             authUser = user || null;
+            if (!authUser) {
+              realtimeStates = new Map();
+              realtimeHighestSession = 0;
+              renderSessions();
+            }
+            syncRealtimeAccess();
           });
         } catch (_) {}
 
