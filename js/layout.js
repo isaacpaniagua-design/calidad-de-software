@@ -143,6 +143,9 @@ function buildNavTemplate(basePath) {
           <a class="qs-btn teacher-only" data-route="panel" href="${basePath}paneldocente.html" hidden aria-hidden="true">Panel</a>
         </nav>
       </div>
+      <div class="qs-actions">
+        <a class="qs-cta" data-default-auth-link href="${basePath}login.html">Iniciar sesion</a>
+      </div>
     </div>
   `;
 }
