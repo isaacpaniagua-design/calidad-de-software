@@ -2598,15 +2598,15 @@
 
         const resolveState = (sessionNumber, baseStates) => {
 
-          const stored = readStoredState(sessionNumber);
-
-          if (stored) return stored;
-
           const baseValue = baseStates.get(sessionNumber);
 
           const normalized = normalizeChecklistState(baseValue);
 
           if (normalized) return normalized;
+
+          const stored = readStoredState(sessionNumber);
+
+          if (stored) return stored;
 
           return "not-started";
 
@@ -2623,14 +2623,8 @@
         let realtimeSyncDisabled = false;
 
         const hasRealtimeAccess = () => {
-          try {
-            const html = document.documentElement;
-            if (html?.classList?.contains("role-teacher")) return true;
-          } catch (_) {}
-          try {
-            return localStorage.getItem(ROLE_STORAGE_KEY) === "docente";
-          } catch (_) {}
-          return false;
+          if (realtimeSyncDisabled) return false;
+          return true;
         };
 
         const stopRealtimeSync = () => {
