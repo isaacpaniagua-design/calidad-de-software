@@ -13,8 +13,22 @@ service cloud.firestore {
         'isaac.paniagua@potros.itson.edu.mx',
       ];
     }
+    function teacherAllowlistDocPath() {
+      return /databases/$(database)/documents/config/teacherAllowlist;
+    }
+    function dynamicTeacherEmails() {
+      return (
+        exists(teacherAllowlistDocPath()) &&
+        get(teacherAllowlistDocPath()).data.emails is list
+      )
+        ? get(teacherAllowlistDocPath()).data.emails
+        : [];
+    }
     function isAllowedTeacherEmail() {
-      return isPotros() && allowedTeacherEmails().hasAny([request.auth.token.email]);
+      return isPotros() && (
+        allowedTeacherEmails().hasAny([request.auth.token.email]) ||
+        dynamicTeacherEmails().hasAny([request.auth.token.email])
+      );
     }
     // Mark teachers by creating a doc at /teachers/{uid}
     function isTeacher() {
@@ -122,6 +136,11 @@ service cloud.firestore {
       allow read: if isPotros();
       allow create, update: if isTeacher();
       allow delete: if false;
+    }
+
+    match /config/{configId} {
+      allow read: if isPotros();
+      allow write: if false;
     }
 
     // NOTE: Merge these forum rules into your existing rules if you already have them.

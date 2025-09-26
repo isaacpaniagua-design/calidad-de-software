@@ -162,9 +162,13 @@
         background: linear-gradient(135deg, #ea580c, #c2410c);
       }
       .file-icon.default {
-        background: linear-gradient(135deg, #6b7280, #4b5563);
-      }
-      .material-title {
+      import { onAuth, isTeacherEmail, ensureTeacherAllowlistLoaded } from "./js/firebase.js";
+      onAuth(async (user) => {
+        if (user) {
+          await ensureTeacherAllowlistLoaded();
+          currentUser = user;
+          isCurrentUserTeacher = isTeacherEmail(user.email);
+          await initializeApp();
         font-size: 1.1rem;
         font-weight: 700;
       }

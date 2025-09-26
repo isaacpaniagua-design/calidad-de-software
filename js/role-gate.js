@@ -10,6 +10,7 @@ import {
   isTeacherEmail,
   isTeacherByDoc,
   ensureTeacherDocForUser,
+  ensureTeacherAllowlistLoaded,
 } from "./firebase.js";
 
 initFirebase();
@@ -99,6 +100,7 @@ function applyGradesRole(isTeacher) {
 onAuth(async (user) => {
   const email = user?.email || "";
   let teacher = false;
+  await ensureTeacherAllowlistLoaded();
   if (user?.uid) {
     try {
       teacher = await isTeacherByDoc(user.uid);

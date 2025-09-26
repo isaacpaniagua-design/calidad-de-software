@@ -38,6 +38,7 @@ import {
   useStorage,
   driveFolderId,
   allowedTeacherEmails,
+  teacherAllowlistDocPath,
 } from "./firebase-config.js";
 
 function isPermissionDenied(error) {
@@ -53,6 +54,60 @@ let auth;
 let db;
 let storage;
 let driveAccessToken = null;
+
+const normalizeEmail = (email) =>
+  typeof email === "string" ? email.trim().toLowerCase() : "";
+
+const baseTeacherEmails = Array.isArray(allowedTeacherEmails)
+  ? allowedTeacherEmails.map(normalizeEmail).filter(Boolean)
+  : [];
+
+const teacherAllowlistSet = new Set(baseTeacherEmails);
+let teacherAllowlistLoaded = false;
+let teacherAllowlistPromise = null;
+
+function getTeacherAllowlistPathSegments() {
+  if (typeof teacherAllowlistDocPath !== "string") return [];
+  return teacherAllowlistDocPath
+    .split("/")
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+}
+
+async function fetchTeacherAllowlistFromFirestore() {
+  const segments = getTeacherAllowlistPathSegments();
+  if (segments.length < 2) return [];
+  const db = getDb();
+  const ref = doc(db, ...segments);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return [];
+  const data = snap.data() || {};
+  const raw = Array.isArray(data.emails) ? data.emails : [];
+  return raw.map(normalizeEmail).filter(Boolean);
+}
+
+export async function ensureTeacherAllowlistLoaded() {
+  if (teacherAllowlistLoaded) return teacherAllowlistSet;
+  if (!teacherAllowlistPromise) {
+    teacherAllowlistPromise = (async () => {
+      try {
+        const dynamicEmails = await fetchTeacherAllowlistFromFirestore();
+        dynamicEmails.forEach((email) => teacherAllowlistSet.add(email));
+      } catch (error) {
+        if (!isPermissionDenied(error)) {
+          console.warn(
+            "No se pudo cargar la lista dinámica de docentes autorizados:",
+            error
+          );
+        }
+      } finally {
+        teacherAllowlistLoaded = true;
+      }
+      return teacherAllowlistSet;
+    })();
+  }
+  return teacherAllowlistPromise;
+}
 
 export function initFirebase() {
   if (!app) {
@@ -171,12 +226,9 @@ export function onAuth(cb) {
 
 // ====== Roles ======
 export function isTeacherEmail(email) {
-  if (!email) return false;
-  const em = (email || "").toLowerCase().trim();
-  return (
-    Array.isArray(allowedTeacherEmails) &&
-    allowedTeacherEmails.map((e) => (e || "").toLowerCase().trim()).includes(em)
-  );
+  const normalized = normalizeEmail(email);
+  if (!normalized) return false;
+  return teacherAllowlistSet.has(normalized);
 }
 
 export async function isTeacherByDoc(uid) {
@@ -201,6 +253,7 @@ export async function ensureTeacherDocForUser({ uid, email, displayName }) {
     if (snap.exists()) {
       return true;
     }
+    await ensureTeacherAllowlistLoaded();
     if (!isTeacherEmail(lower)) {
       // No intentamos crear el documento si el correo no tiene privilegios de docente.
       return false;

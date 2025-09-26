@@ -22,6 +22,11 @@ export const allowedTeacherEmails = [
   "isaac.paniagua@potros.itson.edu.mx"
 ];
 
+// Documento en Firestore que puede contener correos adicionales autorizados
+// como docentes. Debe incluir un arreglo `emails` en minúsculas. Los correos
+// declarados aquí se combinan con la lista estática anterior.
+export const teacherAllowlistDocPath = "config/teacherAllowlist";
+
 // Habilitar o deshabilitar Firebase Storage.
 // Si no puedes crear un bucket en tu región, déjalo en false.
 export const useStorage = false;
