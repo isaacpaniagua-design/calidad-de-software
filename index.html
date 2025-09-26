@@ -587,6 +587,17 @@
         border-top: 1px solid rgba(148, 163, 184, 0.24);
       }
 
+      .session-permission-warning {
+        margin: 0;
+        border-radius: 16px;
+        padding: clamp(12px, 4vw, 16px) clamp(16px, 4vw, 20px);
+        background: rgba(248, 113, 113, 0.12);
+        color: #7f1d1d;
+        font-size: clamp(0.9rem, 2.6vw, 1rem);
+        font-weight: 500;
+        border: 1px solid rgba(248, 113, 113, 0.35);
+      }
+
       .session-card__chevron {
         position: absolute;
         top: 50%;
@@ -2608,6 +2619,9 @@
 
         const STORAGE_PREFIX = "qs_session_status:";
         const ROLE_STORAGE_KEY = "qs_role";
+        const PERMISSION_WARNING_ID = "sessionStatusPermissionWarning";
+        const PERMISSION_WARNING_MESSAGE =
+          "Tu cuenta no tiene permisos para sincronizar el estado de las sesiones. Los cambios solo se guardarán en este dispositivo.";
 
         const STATUS_LABELS = {
 
@@ -2630,6 +2644,41 @@
         let teacherMode = document.documentElement.classList.contains("role-teacher");
 
         const isTeacherRole = () => teacherMode;
+
+        const canEditSessionState = () => {
+          if (!authUser) return false;
+          if (!isTeacherRole()) return false;
+          return true;
+        };
+
+        const getPermissionWarning = () =>
+          typeof document === "undefined"
+            ? null
+            : document.getElementById(PERMISSION_WARNING_ID);
+
+        const showPermissionWarning = (message) => {
+          if (!grid) return;
+          const container = grid.parentElement;
+          if (!container) return;
+          let warning = getPermissionWarning();
+          if (!warning) {
+            warning = document.createElement("p");
+            warning.id = PERMISSION_WARNING_ID;
+            warning.className = "session-permission-warning";
+            warning.setAttribute("role", "alert");
+            warning.setAttribute("aria-live", "polite");
+            container.insertBefore(warning, container.firstChild);
+          }
+          warning.textContent = message;
+          warning.hidden = false;
+        };
+
+        const hidePermissionWarning = () => {
+          const warning = getPermissionWarning();
+          if (warning) {
+            warning.hidden = true;
+          }
+        };
 
         const getNextState = (state) => {
           const index = SESSION_STATE_SEQUENCE.indexOf(state);
@@ -3083,6 +3132,7 @@
                   realtimeHighestSession = 0;
                   realtimeSyncDisabled = true;
                   stopRealtimeSync();
+                  showPermissionWarning(PERMISSION_WARNING_MESSAGE);
                   renderSessions();
                   return;
                 }
@@ -3099,6 +3149,7 @@
               realtimeStates = new Map();
               realtimeHighestSession = 0;
               realtimeSyncDisabled = true;
+              showPermissionWarning(PERMISSION_WARNING_MESSAGE);
               renderSessions();
             }
           }
@@ -3139,7 +3190,15 @@
           const target = event.target.closest("[data-action='cycle-status']");
           if (!target) return;
           if (!isTeacherRole()) return;
-          if (!hasRealtimeAccess()) {
+          if (!canEditSessionState()) {
+            console.warn(
+              "Para actualizar el estado de las sesiones necesitas iniciar sesión como docente.",
+            );
+            return;
+          }
+
+          const realtimeAllowed = hasRealtimeAccess();
+          if (!realtimeAllowed && !realtimeSyncDisabled) {
             console.warn(
               "Para actualizar el estado de las sesiones necesitas iniciar sesión como docente.",
             );
@@ -3167,17 +3226,27 @@
           renderSessions();
 
           try {
-            await persistRemoteState(sessionNumber, nextState);
+            if (realtimeAllowed) {
+              await persistRemoteState(sessionNumber, nextState);
+            } else {
+              showPermissionWarning(PERMISSION_WARNING_MESSAGE);
+            }
           } catch (error) {
             console.error("No se pudo actualizar el estado de la sesión", error);
-            if (hadRemoteValue) {
-              applyRealtimeState(sessionNumber, previousRemoteValue ?? null, {
-                remove: previousRemoteValue == null,
-              });
+            if (isPermissionDenied(error)) {
+              realtimeSyncDisabled = true;
+              stopRealtimeSync();
+              showPermissionWarning(PERMISSION_WARNING_MESSAGE);
             } else {
-              applyRealtimeState(sessionNumber, null, { remove: true });
+              if (hadRemoteValue) {
+                applyRealtimeState(sessionNumber, previousRemoteValue ?? null, {
+                  remove: previousRemoteValue == null,
+                });
+              } else {
+                applyRealtimeState(sessionNumber, null, { remove: true });
+              }
+              persistLocalState(sessionNumber, currentState);
             }
-            persistLocalState(sessionNumber, currentState);
           } finally {
             pendingSaves.delete(sessionNumber);
             renderSessions();
@@ -3192,6 +3261,7 @@
                 startRealtimeSync();
               } catch (_) {}
             }
+            hidePermissionWarning();
           } else {
             if (unsubscribeRealtime) {
               stopRealtimeSync();
@@ -3203,6 +3273,9 @@
               realtimeStates = new Map();
               realtimeHighestSession = 0;
               renderSessions();
+            }
+            if (!realtimeSyncDisabled) {
+              hidePermissionWarning();
             }
           }
         };
@@ -3257,6 +3330,9 @@
             if (!authUser) {
               realtimeStates = new Map();
               realtimeHighestSession = 0;
+              realtimeSyncDisabled = false;
+              hidePermissionWarning();
+              stopRealtimeSync();
               renderSessions();
             }
             syncRealtimeAccess();
