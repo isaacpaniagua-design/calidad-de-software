@@ -637,69 +637,16 @@
         transform: rotate(-135deg);
       }
 
-      .session-legend {
-        display: inline-flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        align-items: center;
-      }
-
-      .legend-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 14px;
-        border-radius: 999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        background: rgba(255, 255, 255, 0.9);
-        border: 1px solid rgba(148, 163, 184, 0.35);
-        color: var(--text-secondary);
-      }
-
-      .legend-pill::before {
-        content: "";
-        width: 10px;
-        height: 10px;
-        border-radius: 50%;
-      }
-
-      .legend-pill--completed {
-        border-color: rgba(74, 222, 128, 0.6);
-        color: #047857;
-        background: rgba(240, 253, 244, 0.9);
-      }
-
-      .legend-pill--completed::before {
-        background: #22c55e;
-      }
-
-      .legend-pill--next {
-        border-color: rgba(249, 115, 22, 0.55);
-        color: #c2410c;
-        background: rgba(255, 247, 237, 0.9);
-      }
-
-      .legend-pill--next::before {
-        background: #f97316;
-      }
-
-      .legend-pill--pending {
-        border-color: rgba(148, 163, 184, 0.45);
-        color: var(--text-secondary);
-        background: rgba(248, 250, 252, 0.92);
-      }
-
-      .legend-pill--pending::before {
-        background: rgba(148, 163, 184, 0.7);
-      }
-
       .sessions-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
         gap: 16px;
+      }
+
+      .session-status-note {
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+        color: var(--text-secondary);
       }
 
       .session-card {
@@ -710,79 +657,6 @@
       .session-card__link {
         display: block;
         height: 100%;
-      }
-
-      .session-card__status {
-        position: absolute;
-        top: 12px;
-        right: 12px;
-        z-index: 2;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 0.35rem;
-        padding: 6px 12px;
-        border-radius: 999px;
-        font-size: 0.7rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        background: rgba(248, 250, 252, 0.95);
-        color: var(--text-secondary);
-        box-shadow: 0 12px 26px rgba(15, 23, 42, 0.16);
-        pointer-events: none;
-        user-select: none;
-      }
-
-      .session-card__status[data-state="not-started"] {
-        background: #fee2e2;
-        color: #b91c1c;
-        box-shadow: 0 14px 32px rgba(239, 68, 68, 0.22);
-      }
-
-      .session-card__status[data-state="in-progress"] {
-        background: #fef3c7;
-        color: #b45309;
-        box-shadow: 0 14px 32px rgba(245, 158, 11, 0.22);
-      }
-
-      .session-card__status[data-state="completed"] {
-        background: #dcfce7;
-        color: #047857;
-        box-shadow: 0 14px 32px rgba(16, 185, 129, 0.22);
-      }
-
-      .session-card__status--action {
-        border: none;
-        pointer-events: auto;
-        cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-        background-image: none;
-      }
-
-      .session-card__status--action:hover,
-      .session-card__status--action:focus-visible {
-        transform: translateY(-1px);
-        box-shadow: 0 18px 36px rgba(15, 23, 42, 0.2);
-        outline: none;
-      }
-
-      .session-card__status--action:focus-visible {
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.35), 0 18px 36px rgba(15, 23, 42, 0.2);
-      }
-
-      .session-card__status--action:disabled,
-      .session-card__status--action.is-syncing {
-        cursor: wait;
-        opacity: 0.78;
-        transform: none;
-        box-shadow: 0 10px 24px rgba(148, 163, 184, 0.2);
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        .session-card__status--action {
-          transition: none;
-        }
       }
 
       .session-btn {
@@ -813,58 +687,6 @@
         border-color: rgba(99, 102, 241, 0.45);
         box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
         background: rgba(255, 255, 255, 0.95);
-      }
-
-      .session-btn.completed {
-        background: linear-gradient(135deg, rgba(236, 253, 245, 0.95), rgba(187, 247, 208, 0.9));
-        border-color: rgba(74, 222, 128, 0.6);
-        color: #047857;
-        box-shadow: 0 8px 22px rgba(34, 197, 94, 0.15);
-      }
-
-      .session-btn.in-progress {
-        background: linear-gradient(135deg, rgba(238, 242, 255, 0.95), rgba(224, 231, 255, 0.92));
-        border-color: rgba(99, 102, 241, 0.65);
-        color: var(--accent-hover);
-        box-shadow: 0 12px 28px rgba(99, 102, 241, 0.2);
-        animation: sessionPulse 1.8s ease-in-out infinite;
-      }
-
-      .session-btn.not-started {
-        background: rgba(248, 250, 252, 0.9);
-        border-color: rgba(148, 163, 184, 0.32);
-        color: var(--text-secondary);
-      }
-
-      .session-btn.current:not(.completed):not(.in-progress) {
-        border-color: rgba(99, 102, 241, 0.45);
-        box-shadow: 0 10px 24px rgba(99, 102, 241, 0.15);
-      }
-
-      .session-btn.not-started.current {
-        background: rgba(248, 250, 252, 0.98);
-        color: var(--text-primary);
-      }
-
-      @keyframes sessionPulse {
-        0%,
-        100% {
-          box-shadow: 0 12px 28px rgba(99, 102, 241, 0.18), 0 0 0 0 rgba(99, 102, 241, 0.2);
-        }
-
-        50% {
-          box-shadow: 0 12px 36px rgba(99, 102, 241, 0.25), 0 0 0 12px rgba(99, 102, 241, 0);
-        }
-      }
-
-      @media (prefers-reduced-motion: reduce) {
-        .session-btn {
-          transition: none;
-        }
-
-        .session-btn.in-progress {
-          animation: none;
-        }
       }
 
       .student-uploads {
@@ -2279,13 +2101,13 @@
           <article class="hero-insight hero-insight--progress">
             <span class="hero-insight__label">Sesiones completadas</span>
             <div class="hero-insight__value" aria-live="polite">
-              <span class="hero-insight__number" data-hero-progress>00</span>
+              <span class="hero-insight__number" data-hero-progress>—</span>
               <span class="hero-insight__suffix">
                 de <span data-hero-total>45</span>
               </span>
             </div>
             <p class="hero-insight__description">
-              Avance basado en el checklist oficial de actividades.
+              Seguimiento temporalmente deshabilitado.
             </p>
           </article>
           <article class="hero-insight hero-insight--next">
@@ -2363,16 +2185,6 @@
               </p>
             </div>
 
-            <div class="session-legend">
-
-              <span class="legend-pill legend-pill--completed">Realizada</span>
-
-              <span class="legend-pill legend-pill--next">En curso</span>
-
-              <span class="legend-pill legend-pill--pending">No realizada</span>
-
-            </div>
-
             <span class="session-card__chevron" aria-hidden="true"></span>
 
           </summary>
@@ -2380,7 +2192,11 @@
 
           <div class="session-card__body">
 
-            <div class="sessions-grid" id="sessionsGrid">
+            <p class="session-status-note">
+              El seguimiento del estado de las sesiones se deshabilitó temporalmente para evitar conflictos.
+            </p>
+
+            <div class="sessions-grid" id="sessionsGrid" data-total-sessions="45">
 
 
               <!-- Las sesiones se generarán dinámicamente -->
@@ -2591,777 +2407,50 @@
         </p>
       </div>
     </div>
-
-
-    <script type="module">
-      import { initFirebase, getDb, onAuth } from "./js/firebase.js";
-      import {
-        collection,
-        doc,
-        onSnapshot,
-        setDoc,
-        serverTimestamp,
-      } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
-
+    <script>
       document.addEventListener("DOMContentLoaded", () => {
-
         const grid = document.getElementById("sessionsGrid");
-
+        const parsedTotal = Number(grid?.dataset?.totalSessions);
+        const totalSessions = Number.isFinite(parsedTotal) && parsedTotal > 0 ? parsedTotal : 45;
         const progressEl = document.querySelector("[data-hero-progress]");
-
         const totalEl = document.querySelector("[data-hero-total]");
-
         const nextEl = document.querySelector("[data-hero-next]");
+
+        if (totalEl) {
+          totalEl.textContent = String(totalSessions);
+        }
+
+        if (progressEl) {
+          progressEl.textContent = "—";
+        }
+
+        if (nextEl) {
+          const nextSession = totalSessions > 0 ? 1 : null;
+          nextEl.textContent = nextSession
+            ? "Sesión " + String(nextSession).padStart(2, "0")
+            : "Sin sesiones";
+        }
 
         if (!grid) return;
 
-        const fallbackTotal = 45;
-
-        const STORAGE_PREFIX = "qs_session_status:";
-        const ROLE_STORAGE_KEY = "qs_role";
-        const PERMISSION_WARNING_ID = "sessionStatusPermissionWarning";
-        const PERMISSION_WARNING_MESSAGE =
-
-          "Tu cuenta no tiene permisos para sincronizar el estado de las sesiones. Solo las cuentas @potros registradas como docentes en Firestore (colección teachers o lista de correos autorizados en config/teacherAllowlist) pueden hacerlo. Si eres docente, solicita que den de alta tu UID o autoricen tu correo institucional.";
-
-
-        const STATUS_LABELS = {
-
-          "completed": "Realizada",
-
-          "in-progress": "En curso",
-
-          "not-started": "No realizada",
-
-        };
-
-        const VALID_SESSION_STATES = new Set(Object.keys(STATUS_LABELS));
-
-        const SESSION_STATE_SEQUENCE = ["not-started", "in-progress", "completed"];
-
-        const getSessionId = (sessionNumber) => `sesion${sessionNumber}`;
-
-        const getStorageKey = (sessionNumber) => `${STORAGE_PREFIX}sesion${sessionNumber}`;
-
-        let teacherMode = document.documentElement.classList.contains("role-teacher");
-
-        const isTeacherRole = () => teacherMode;
-
-        const canEditSessionState = () => {
-          if (!authUser) return false;
-          if (!isTeacherRole()) return false;
-          return true;
-        };
-
-        const getPermissionWarning = () =>
-          typeof document === "undefined"
-            ? null
-            : document.getElementById(PERMISSION_WARNING_ID);
-
-        const showPermissionWarning = (message) => {
-          if (!grid) return;
-          const container = grid.parentElement;
-          if (!container) return;
-          let warning = getPermissionWarning();
-          if (!warning) {
-            warning = document.createElement("p");
-            warning.id = PERMISSION_WARNING_ID;
-            warning.className = "session-permission-warning";
-            warning.setAttribute("role", "alert");
-            warning.setAttribute("aria-live", "polite");
-            container.insertBefore(warning, container.firstChild);
-          }
-          warning.textContent = message;
-          warning.hidden = false;
-        };
-
-        const hidePermissionWarning = () => {
-          const warning = getPermissionWarning();
-          if (warning) {
-            warning.hidden = true;
-          }
-        };
-
-        const getNextState = (state) => {
-          const index = SESSION_STATE_SEQUENCE.indexOf(state);
-          const nextIndex = index >= 0 ? (index + 1) % SESSION_STATE_SEQUENCE.length : 0;
-          return SESSION_STATE_SEQUENCE[nextIndex];
-        };
-
-        const updateHero = (completed, current, total) => {
-
-          if (progressEl) {
-
-            const safeCompleted = Math.max(0, Math.min(completed, total));
-
-            progressEl.textContent = String(safeCompleted).padStart(2, "0");
-
-          }
-
-          if (totalEl) {
-
-            const safeTotal = Math.max(0, Number.isFinite(total) ? total : fallbackTotal);
-
-            totalEl.textContent = String(safeTotal);
-
-          }
-
-          if (nextEl) {
-
-            const safeCurrent = Math.max(1, Math.min(current, total));
-
-            nextEl.textContent = "Sesión " + String(safeCurrent).padStart(2, "0");
-
-          }
-
-        };
-
-        const readStoredState = (sessionNumber) => {
-
-          const key = getStorageKey(sessionNumber);
-
-          try {
-
-            const value = localStorage.getItem(key);
-
-            if (VALID_SESSION_STATES.has(value)) return value;
-
-          } catch (_) {}
-
-          return null;
-
-        };
-
-        const normalizeChecklistState = (state) => {
-
-          if (state == null) return null;
-
-          const normalized = String(state).trim().toLowerCase();
-
-          if (!normalized) return null;
-
-          if (["real", "completed", "completada", "realizada", "done"].includes(normalized))
-
-            return "completed";
-
-          if (["in-progress", "in progress", "en curso", "curso", "next"].includes(normalized))
-
-            return "in-progress";
-
-          return null;
-
-        };
-
-        const resolveState = (sessionNumber, baseStates) => {
-
-          const baseValue = baseStates.get(sessionNumber);
-
-          const normalized = normalizeChecklistState(baseValue);
-
-          if (normalized) return normalized;
-
-          const stored = readStoredState(sessionNumber);
-
-          if (stored) return stored;
-
-          return "not-started";
-
-        };
-
-        let latestChecklist = {
-          total: fallbackTotal,
-          states: new Map(),
-        };
-
-        let realtimeStates = new Map();
-        let realtimeHighestSession = 0;
-        let unsubscribeRealtime = null;
-        let realtimeSyncDisabled = false;
-
-        let authUser = null;
-        const pendingSaves = new Set();
-
-        const persistLocalState = (sessionNumber, value) => {
-          const key = getStorageKey(sessionNumber);
-          if (!key) return false;
-          let previousValue = null;
-          try {
-            previousValue = localStorage.getItem(key);
-          } catch (_) {}
-          let success = false;
-          try {
-            if (value) {
-              localStorage.setItem(key, value);
-            } else {
-              localStorage.removeItem(key);
-            }
-            success = true;
-          } catch (_) {}
-          try {
-            if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
-              const detail = {
-                key,
-                value: value || null,
-                previousValue,
-                success,
-                sessionId: getSessionId(sessionNumber),
-              };
-              let event = null;
-              if (typeof window.CustomEvent === "function") {
-                event = new CustomEvent("qs:session-status-changed", { detail });
-              } else if (typeof document !== "undefined" && document.createEvent) {
-                event = document.createEvent("CustomEvent");
-                event.initCustomEvent("qs:session-status-changed", false, false, detail);
-              }
-              if (event) {
-                window.dispatchEvent(event);
-              }
-            }
-          } catch (_) {}
-          return success;
-        };
-
-        const applyRealtimeState = (sessionNumber, state, options = {}) => {
-          const source = realtimeStates instanceof Map ? realtimeStates : new Map();
-          const next = new Map(source);
-          if (options.remove) {
-            next.delete(sessionNumber);
-          } else if (state != null) {
-            next.set(sessionNumber, state);
-          } else {
-            next.delete(sessionNumber);
-          }
-          realtimeStates = next;
-        };
-
-        const createStatusControl = (sessionNumber, state, label, teacher) => {
-          const control = teacher
-            ? document.createElement("button")
-            : document.createElement("span");
-          control.className = "session-card__status";
-          control.dataset.state = state;
-          control.dataset.stateLabel = label;
-          control.textContent = label;
-          if (teacher) {
-            control.classList.add("session-card__status--action");
-            control.type = "button";
-            control.dataset.action = "cycle-status";
-            control.dataset.session = String(sessionNumber);
-            control.dataset.state = state;
-            const nextState = getNextState(state);
-            const nextLabel = STATUS_LABELS[nextState] || "Sin estado";
-            control.setAttribute(
-              "aria-label",
-              `Sesión ${sessionNumber}. Estado: ${label}. Activa para cambiar a ${nextLabel}.`,
-            );
-            control.setAttribute(
-              "title",
-              `Estado actual: ${label}. Haz clic para marcar como ${nextLabel}.`,
-            );
-            control.setAttribute("data-next-state-label", nextLabel);
-            if (pendingSaves.has(sessionNumber)) {
-              control.disabled = true;
-              control.classList.add("is-syncing");
-              control.setAttribute("aria-busy", "true");
-            }
-          } else {
-            control.setAttribute("aria-hidden", "true");
-          }
-          return control;
-        };
-
-        const hasRealtimeAccess = () => {
-          if (realtimeSyncDisabled) return false;
-          if (!authUser) return false;
-          if (!isTeacherRole()) return false;
-          return true;
-        };
-
-        const stopRealtimeSync = () => {
-          if (typeof unsubscribeRealtime === "function") {
-            try {
-              unsubscribeRealtime();
-            } catch (_) {}
-          }
-          unsubscribeRealtime = null;
-        };
-
-        const isPermissionDenied = (error) => {
-          if (!error) return false;
-          const code =
-            typeof error.code === "string" ? error.code.toLowerCase() : "";
-          if (code === "permission-denied") return true;
-          const message =
-            typeof error.message === "string" ? error.message : "";
-          return /missing or insufficient permissions/i.test(message);
-        };
-
-        const combineStates = () => {
-          const combined = new Map();
-          if (latestChecklist?.states instanceof Map) {
-            for (const [key, value] of latestChecklist.states.entries()) {
-              const num = Number(key);
-              if (Number.isFinite(num) && num > 0) {
-                combined.set(num, value);
-              }
-            }
-          }
-          if (realtimeStates instanceof Map) {
-            for (const [key, value] of realtimeStates.entries()) {
-              if (Number.isFinite(key) && key > 0) {
-                combined.set(key, value);
-              }
-            }
-          }
-          return combined;
-        };
-
-        const resolveTotal = (combinedStates) => {
-          let total = fallbackTotal;
-          const checklistTotal = Number(latestChecklist?.total);
-          if (Number.isFinite(checklistTotal) && checklistTotal > total) {
-            total = checklistTotal;
-          }
-          if (Number.isFinite(realtimeHighestSession) && realtimeHighestSession > total) {
-            total = realtimeHighestSession;
-          }
-          if (combinedStates?.size) {
-            for (const key of combinedStates.keys()) {
-              if (Number.isFinite(key) && key > total) {
-                total = key;
-              }
-            }
-          }
-          return total;
-        };
-
-        const renderSessions = () => {
-          const baseStates = combineStates();
-          const total = resolveTotal(baseStates);
-
-          const resolvedStates = [];
-
-          let completedCount = 0;
-
-          let firstInProgress = null;
-
-          let firstPending = null;
-
-          for (let i = 1; i <= total; i++) {
-
-            const state = resolveState(i, baseStates);
-
-            resolvedStates[i] = state;
-
-            if (state === "completed") {
-
-              completedCount += 1;
-
-            } else {
-
-              if (state === "in-progress" && firstInProgress === null) {
-
-                firstInProgress = i;
-
-              }
-
-              if (firstPending === null) {
-
-                firstPending = i;
-
-              }
-
-            }
-
-          }
-
-          const currentSession = firstInProgress ?? firstPending ?? total;
-
-          grid.innerHTML = "";
-          const teacher = isTeacherRole();
-          grid.classList.toggle("sessions-grid--teacher", teacher);
-
-          for (let i = 1; i <= total; i++) {
-
-            const state = resolvedStates[i] || "not-started";
-            const label = STATUS_LABELS[state] || "Sin estado";
-
-            const card = document.createElement("div");
-            card.className = "session-card";
-            card.dataset.state = state;
-            card.dataset.session = String(i);
-
-            const link = document.createElement("a");
-            link.href = `sesion${i}.html`;
-            link.className = "session-card__link session-btn";
-            link.textContent = `Sesión ${i}`;
-            link.dataset.status = state;
-            link.dataset.statusLabel = label;
-            link.setAttribute("aria-label", `Sesión ${i}. Estado: ${label}.`);
-            link.title = `Estado: ${label}`;
-
-            if (state === "completed") {
-              link.classList.add("completed");
-            } else if (state === "in-progress") {
-              link.classList.add("in-progress");
-            } else {
-              link.classList.add("not-started");
-            }
-
-            const isCurrent =
-              state === "in-progress" || (i === currentSession && state !== "completed");
-            if (isCurrent) {
-              link.classList.add("current");
-            }
-
-            card.appendChild(link);
-
-            const statusControl = createStatusControl(i, state, label, teacher);
-            if (statusControl) {
-              card.appendChild(statusControl);
-            }
-
-            grid.appendChild(card);
-
-          }
-
-          updateHero(completedCount, currentSession, total);
-
-        };
-
-        const syncTeacherMode = () => {
-          const next = document.documentElement.classList.contains("role-teacher");
-          if (teacherMode !== next) {
-            teacherMode = next;
-            renderSessions();
-          }
-        };
-
-        const rebuildFromLatest = () => {
-          renderSessions();
-        };
-
-        const loadChecklist = async () => {
-
-          try {
-
-            const res = await fetch("checklist.json", { cache: "no-store" });
-
-            const data = await res.json();
-
-            const items = Array.isArray(data?.items) ? data.items : [];
-
-            let total = Number(data?.total);
-
-            if (!Number.isFinite(total) || total <= 0) {
-
-              total = items.length || fallbackTotal;
-
-            }
-
-            const states = new Map();
-
-            for (const item of items) {
-
-              const sessionNumber = Number(item?.sesion ?? item?.session ?? item?.id);
-
-              if (Number.isFinite(sessionNumber) && sessionNumber > 0) {
-
-                states.set(sessionNumber, item?.estado ?? item?.status ?? null);
-
-              }
-
-            }
-
-            latestChecklist = { total, states };
-
-            renderSessions();
-
-          } catch (_) {
-
-            latestChecklist = { total: fallbackTotal, states: new Map() };
-
-            renderSessions();
-
-          }
-
-        };
-
-        const startRealtimeSync = async () => {
-          if (realtimeSyncDisabled || unsubscribeRealtime) return;
-          try {
-            initFirebase();
-          } catch (_) {}
-          let db = null;
-          try {
-            db = getDb();
-          } catch (_) {
-            db = null;
-          }
-          if (!db) return;
-          try {
-            const ref = collection(db, "session-status");
-            unsubscribeRealtime = onSnapshot(
-              ref,
-              (snapshot) => {
-                const nextStates = new Map();
-                let highest = 0;
-                snapshot.forEach((docSnap) => {
-                  const docId = docSnap.id || "";
-                  const match = docId.match(/(\d+)/);
-                  if (!match) return;
-                  const sessionNumber = Number(match[1]);
-                  if (!Number.isFinite(sessionNumber) || sessionNumber <= 0) return;
-                  const data = docSnap.data() || {};
-                  const normalized = normalizeChecklistState(
-                    data.state ?? data.status ?? data.estado ?? null,
-                  );
-                  if (!normalized) return;
-                  nextStates.set(sessionNumber, normalized);
-                  if (sessionNumber > highest) highest = sessionNumber;
-                });
-                realtimeStates = nextStates;
-                realtimeHighestSession = highest;
-                renderSessions();
-              },
-              (error) => {
-                if (isPermissionDenied(error)) {
-                  console.warn(
-                    "Sin permisos para sincronizar el estado de las sesiones",
-                    error,
-                  );
-                  realtimeStates = new Map();
-                  realtimeHighestSession = 0;
-                  realtimeSyncDisabled = true;
-                  stopRealtimeSync();
-                  showPermissionWarning(PERMISSION_WARNING_MESSAGE);
-                  renderSessions();
-                  return;
-                }
-                console.error(
-                  "No se pudo sincronizar el estado de las sesiones",
-                  error,
-                );
-              },
-            );
-          } catch (error) {
-            console.error("No se pudo iniciar la sincronización de estados", error);
-            stopRealtimeSync();
-            if (isPermissionDenied(error)) {
-              realtimeStates = new Map();
-              realtimeHighestSession = 0;
-              realtimeSyncDisabled = true;
-              showPermissionWarning(PERMISSION_WARNING_MESSAGE);
-              renderSessions();
-            }
-          }
-        };
-
-        const persistRemoteState = async (sessionNumber, stateId) => {
-          if (!stateId || !Number.isFinite(sessionNumber) || sessionNumber <= 0) return;
-          try {
-            initFirebase();
-          } catch (_) {}
-          let db = null;
-          try {
-            db = getDb();
-          } catch (_) {
-            db = null;
-          }
-          if (!db) {
-            throw new Error("Firestore no disponible");
-          }
-          const ref = doc(collection(db, "session-status"), getSessionId(sessionNumber));
-          const payload = {
-            state: stateId,
-            updatedAt: serverTimestamp(),
-          };
-          if (authUser) {
-            payload.updatedBy = {
-              uid: authUser.uid || null,
-              displayName: authUser.displayName || null,
-              email: authUser.email || null,
-            };
-          } else {
-            payload.updatedBy = null;
-          }
-          await setDoc(ref, payload, { merge: true });
-        };
-
-        const handleStatusClick = async (event) => {
-          const target = event.target.closest("[data-action='cycle-status']");
-          if (!target) return;
-          if (!isTeacherRole()) return;
-          if (!canEditSessionState()) {
-            console.warn(
-              "Para actualizar el estado de las sesiones necesitas iniciar sesión como docente.",
-            );
-            return;
-          }
-
-          const realtimeAllowed = hasRealtimeAccess();
-          if (!realtimeAllowed && !realtimeSyncDisabled) {
-            console.warn(
-              "Para actualizar el estado de las sesiones necesitas iniciar sesión como docente.",
-            );
-            return;
-          }
-
-          event.preventDefault();
-          event.stopPropagation();
-
-          const sessionNumber = Number(target.dataset.session);
-          if (!Number.isFinite(sessionNumber) || sessionNumber <= 0) return;
-          if (pendingSaves.has(sessionNumber)) return;
-
-          const currentState = target.dataset.state || "not-started";
-          const nextState = getNextState(currentState);
-
-          const previousRemoteValue =
-            realtimeStates instanceof Map ? realtimeStates.get(sessionNumber) : undefined;
-          const hadRemoteValue =
-            realtimeStates instanceof Map && realtimeStates.has(sessionNumber);
-
-          pendingSaves.add(sessionNumber);
-          applyRealtimeState(sessionNumber, nextState);
-          persistLocalState(sessionNumber, nextState);
-          renderSessions();
-
-          try {
-            if (realtimeAllowed) {
-              await persistRemoteState(sessionNumber, nextState);
-            } else {
-              showPermissionWarning(PERMISSION_WARNING_MESSAGE);
-            }
-          } catch (error) {
-            console.error("No se pudo actualizar el estado de la sesión", error);
-            if (isPermissionDenied(error)) {
-              realtimeSyncDisabled = true;
-              stopRealtimeSync();
-              showPermissionWarning(PERMISSION_WARNING_MESSAGE);
-            } else {
-              if (hadRemoteValue) {
-                applyRealtimeState(sessionNumber, previousRemoteValue ?? null, {
-                  remove: previousRemoteValue == null,
-                });
-              } else {
-                applyRealtimeState(sessionNumber, null, { remove: true });
-              }
-              persistLocalState(sessionNumber, currentState);
-            }
-          } finally {
-            pendingSaves.delete(sessionNumber);
-            renderSessions();
-          }
-        };
-
-        const syncRealtimeAccess = () => {
-          const allowed = hasRealtimeAccess();
-          if (allowed) {
-            if (!realtimeSyncDisabled && !unsubscribeRealtime) {
-              try {
-                startRealtimeSync();
-              } catch (_) {}
-            }
-            hidePermissionWarning();
-          } else {
-            if (unsubscribeRealtime) {
-              stopRealtimeSync();
-            }
-            const hadStates =
-              (realtimeStates instanceof Map && realtimeStates.size > 0) ||
-              realtimeHighestSession > 0;
-            if (hadStates) {
-              realtimeStates = new Map();
-              realtimeHighestSession = 0;
-              renderSessions();
-            }
-            if (!realtimeSyncDisabled) {
-              hidePermissionWarning();
-            }
-          }
-        };
-
-        const observeRoleChanges = () => {
-          const html = document.documentElement;
-          if (!html || typeof window === "undefined" || !window.MutationObserver) return;
-          try {
-            const observer = new MutationObserver(() => {
-              syncTeacherMode();
-              syncRealtimeAccess();
-            });
-            observer.observe(html, { attributes: true, attributeFilter: ["class"] });
-          } catch (_) {}
-        };
-
-        const isSessionStatusKey = (key) => typeof key === "string" && key.startsWith(STORAGE_PREFIX);
-
-        const handleCustomStatusEvent = (event) => {
-
-          if (!event || !event.detail) return;
-
-          if (!isSessionStatusKey(event.detail.key)) return;
-
-          rebuildFromLatest();
-
-        };
-
-        const handleStorageEvent = (event) => {
-
-          if (!event) return;
-
-          if (event.key === ROLE_STORAGE_KEY) {
-
-            syncTeacherMode();
-            syncRealtimeAccess();
-
-            return;
-
-          }
-
-          if (!isSessionStatusKey(event.key)) return;
-
-          rebuildFromLatest();
-
-        };
-
-        try {
-          initFirebase();
-          onAuth((user) => {
-            authUser = user || null;
-            if (!authUser) {
-              realtimeStates = new Map();
-              realtimeHighestSession = 0;
-              realtimeSyncDisabled = false;
-              hidePermissionWarning();
-              stopRealtimeSync();
-              renderSessions();
-            }
-            syncRealtimeAccess();
-          });
-        } catch (_) {}
-
-        grid.addEventListener("click", handleStatusClick);
-
-        renderSessions();
-
-        loadChecklist();
-
-        observeRoleChanges();
-
-        syncRealtimeAccess();
-
-        if (typeof window !== "undefined" && window.addEventListener) {
-
-          window.addEventListener("qs:session-status-changed", handleCustomStatusEvent);
-
-          window.addEventListener("storage", handleStorageEvent);
-
+        grid.innerHTML = "";
+
+        for (let i = 1; i <= totalSessions; i++) {
+          const card = document.createElement("div");
+          card.className = "session-card";
+
+          const link = document.createElement("a");
+          link.href = `sesion${i}.html`;
+          link.className = "session-card__link session-btn";
+          link.textContent = `Sesión ${i}`;
+          link.setAttribute("aria-label", `Sesión ${i}`);
+
+          card.appendChild(link);
+          grid.appendChild(card);
         }
-
       });
-
     </script>
+
 
     <script type="module" src="js/realtime-notifications.js"></script>
     <script type="module" src="js/index-student-uploads.js"></script>
