@@ -59,7 +59,6 @@ function bootstrapLayout() {
   highlightActiveLink(nav, currentPage);
   refreshNavSpacing(nav);
   observeNavHeight(nav);
-  setupSessionStatusControl(pageDoc, currentPage);
   setupSlideAssist(pageDoc);
 
   if (!isLogin && !isNotFound) {
@@ -329,25 +328,6 @@ function toggleTeacherNavLinks(nav, isTeacher) {
     });
   } catch (_) {}
 }
-
-function setupSessionStatusControl(pageDoc, currentPage) {
-  try {
-    if (!pageDoc) return;
-    const page = (currentPage || "").toLowerCase();
-    if (!/^sesion\d+\.html$/.test(page)) return;
-
-    pageDoc.querySelectorAll("[data-role='session-status']").forEach((node) => {
-      try {
-        node.remove();
-      } catch (_) {
-        node.parentNode?.removeChild?.(node);
-      }
-    });
-  } catch (error) {
-    console.error("No se pudo desactivar el control de estado de sesión", error);
-  }
-}
-
 
 function observeRoleClassChanges(html, callback) {
   if (!html || !window.MutationObserver) return;
