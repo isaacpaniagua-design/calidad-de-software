@@ -1,5 +1,5 @@
 
-import { initFirebase, onAuth, getAuthInstance, signInWithGooglePotros, signOutCurrent, isTeacherEmail, isTeacherByDoc, ensureTeacherDocForUser, subscribeForumTopics, createForumTopic, subscribeForumReplies, addForumReply, updateForumTopic, deleteForumTopic, deleteForumReply, registerForumReplyReaction } from './firebase.js';
+import { initFirebase, onAuth, getAuthInstance, signInWithGooglePotros, signOutCurrent, isTeacherEmail, isTeacherByDoc, ensureTeacherDocForUser, ensureTeacherAllowlistLoaded, subscribeForumTopics, createForumTopic, subscribeForumReplies, addForumReply, updateForumTopic, deleteForumTopic, deleteForumReply, registerForumReplyReaction } from './firebase.js';
 
 
 initFirebase();
@@ -333,6 +333,7 @@ onAuth(async user => {
   currentUser = user || null;
   const email = user?.email || '';
   isTeacher = false;
+  await ensureTeacherAllowlistLoaded();
   if (user?.uid) {
     try { isTeacher = await isTeacherByDoc(user.uid); } catch(_) {}
   }

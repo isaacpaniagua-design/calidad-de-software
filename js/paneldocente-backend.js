@@ -1,7 +1,7 @@
 // js/paneldocente-backend.js
 // Backend para paneldocente.html (docente). Firebase 10.12.3 · ES2015.
 
-import { initFirebase, getDb, onAuth, isTeacherByDoc, isTeacherEmail } from './firebase.js';
+import { initFirebase, getDb, onAuth, isTeacherByDoc, isTeacherEmail, ensureTeacherAllowlistLoaded } from './firebase.js';
 import { initializeFileViewer, openFileViewer } from './file-viewer.js';
 import {
   observeAllStudentUploads,
@@ -244,6 +244,7 @@ function setPanelLocked(root, locked){
 async function computeTeacherState(user){
   var email = user && user.email ? user.email : '';
   var teacher = false;
+  await ensureTeacherAllowlistLoaded();
   if (user && user.uid){
     try { teacher = await isTeacherByDoc(user.uid); }
     catch(_){ teacher = false; }

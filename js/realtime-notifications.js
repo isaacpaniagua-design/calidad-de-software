@@ -5,6 +5,7 @@ import {
   isTeacherEmail,
   isTeacherByDoc,
   ensureTeacherDocForUser,
+  ensureTeacherAllowlistLoaded,
   subscribeLatestForumReplies,
   fetchForumTopicSummary,
   fetchForumReply,
@@ -1485,6 +1486,7 @@ function initRealtimeNotifications() {
       if (!user) return false;
       const email = (user.email || "").toLowerCase();
       let teacher = false;
+      await ensureTeacherAllowlistLoaded();
       if (user.uid) {
         try {
           teacher = await isTeacherByDoc(user.uid);
@@ -1508,6 +1510,7 @@ function initRealtimeNotifications() {
 
     try {
       authUnsubscribe = onAuth(async (user) => {
+        await ensureTeacherAllowlistLoaded();
         teacherCheckToken += 1;
         const token = teacherCheckToken;
         const teacher = await determineTeacher(user);
