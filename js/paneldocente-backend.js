@@ -9,7 +9,7 @@ import {
   gradeStudentUpload,
 } from './student-uploads.js';
 import {
-  collection, doc, getDoc, getDocs, setDoc, updateDoc, addDoc,
+  collection, doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc,
   query, where, orderBy, limit, serverTimestamp, Timestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
@@ -305,6 +305,51 @@ async function fetchStudents(db, grupoId){
   }
   return out;
 }
+
+function normalizeStudentPayload(data, opts){
+  data = data || {};
+  var name = data.displayName || data.nombre || '';
+  var payload = {
+    displayName: name,
+    nombre: name,
+    email: data.email || '',
+    matricula: data.matricula ? data.matricula : null,
+    role: 'student',
+    updatedAt: serverTimestamp(),
+  };
+  if (opts && opts.includeCreatedAt){
+    payload.createdAt = serverTimestamp();
+  }
+  if (data.uid){
+    payload.uid = data.uid;
+  }
+  return payload;
+}
+
+async function createGroupStudent(db, grupoId, data){
+  var membersCol = collection(db, 'grupos', grupoId, 'members');
+  var docId = data && data.uid ? String(data.uid).trim() : '';
+  if (docId){
+    var payloadExisting = normalizeStudentPayload(Object.assign({}, data, { uid: docId }), { includeCreatedAt: true });
+    await setDoc(doc(membersCol, docId), payloadExisting);
+    return docId;
+  }
+  var newRef = doc(membersCol);
+  var payload = normalizeStudentPayload(Object.assign({}, data, { uid: newRef.id }), { includeCreatedAt: true });
+  await setDoc(newRef, payload);
+  return newRef.id;
+}
+
+async function updateGroupStudent(db, grupoId, uid, data){
+  if (!uid){ throw new Error('Identificador no válido'); }
+  var payload = normalizeStudentPayload(Object.assign({}, data, { uid: uid }), {});
+  await updateDoc(doc(db, 'grupos', grupoId, 'members', uid), payload);
+}
+
+async function deleteGroupStudent(db, grupoId, uid){
+  if (!uid){ throw new Error('Identificador no válido'); }
+  await deleteDoc(doc(db, 'grupos', grupoId, 'members', uid));
+}
 async function fetchCalifItems(db, grupoId, uid){
   try {
     var snap = await getDocs(query(collection(db, 'grupos', grupoId, 'calificaciones', uid, 'items'), orderBy('fecha','asc')));
@@ -368,11 +413,54 @@ async function deleteDeliverable(db, grupoId, id){
   await updateDoc(doc(db, 'grupos', grupoId, 'deliverables', id), { deleted: true, updatedAt: serverTimestamp() });
 }
 
+function rebuildStudentIndex(state){
+  var list = state && Array.isArray(state.students) ? state.students : [];
+  var index = {};
+  for (var i=0; i<list.length; i++){
+    var stu = list[i];
+    if (stu && stu.uid){
+      index[stu.uid] = stu;
+    }
+  }
+  state.studentIndex = index;
+  return index;
+}
+
+function ensureMetricsForStudents(state){
+  var metrics = state && state.metrics ? state.metrics : {};
+  var list = state && Array.isArray(state.students) ? state.students : [];
+  var next = {};
+  for (var i=0; i<list.length; i++){
+    var stu = list[i];
+    var uid = stu && stu.uid ? stu.uid : '';
+    if (!uid) continue;
+    next[uid] = metrics[uid] || { u1: 0, u2: 0, u3: 0, finalPct: 0 };
+  }
+  state.metrics = next;
+  return next;
+}
+
+async function reloadStudents(db, grupoId, state){
+  state.students = await fetchStudents(db, grupoId);
+  rebuildStudentIndex(state);
+  ensureMetricsForStudents(state);
+  renderSummaryStats(state.students, state.metrics);
+  renderStudentsTable(state.students, state.metrics);
+  handleUploadsSnapshot(state, state.uploads);
+}
+
 // ===== Render =====
 function setText(id, value){ var el=$id(id); if(el) el.textContent = String(value); }
 function renderSummaryStats(students, metrics){
-  setText('pd-summary-total-students', students.length);
-  var finals=[], k; for(k in metrics){ if (metrics[k] && !isNaN(metrics[k].finalPct)) finals.push(metrics[k].finalPct); }
+  var list = Array.isArray(students) ? students : [];
+  setText('pd-summary-total-students', list.length);
+  var finals = [];
+  for (var i=0; i<list.length; i++){
+    var stu = list[i];
+    if (!stu || !stu.uid) continue;
+    var m = metrics && metrics[stu.uid] ? metrics[stu.uid] : null;
+    if (m && !isNaN(m.finalPct)) finals.push(m.finalPct);
+  }
   var avg = finals.length ? finals.reduce(function(a,b){return a+b;},0)/finals.length : 0;
   setText('pd-summary-avg-final', toEscala5(avg));
 }
@@ -410,12 +498,14 @@ function renderDeliverablesList(arr){
 function renderStudentsTable(students, metrics){
   var tbody = $id('pd-students-tbody'); if (!tbody) return;
   tbody.innerHTML='';
-  if (!students.length){ tbody.innerHTML = '<tr><td colspan="7" class="pd-empty">Sin estudiantes.</td></tr>'; return; }
-  for (var i=0;i<students.length;i++){
-    var s = students[i];
+  var list = Array.isArray(students) ? students : [];
+  if (!list.length){ tbody.innerHTML = '<tr><td colspan="8" class="pd-empty">Sin estudiantes.</td></tr>'; return; }
+  for (var i=0;i<list.length;i++){
+    var s = list[i] || {};
+    var uid = s.uid || '';
     var m = metrics[s.uid] || { u1:0,u2:0,u3:0, finalPct:0 };
     var row = '\
-      <tr>\
+      <tr data-id="'+ escAttr(uid) +'">\
         <td style="text-align:center"><input type="checkbox" class="pd-student-check" data-email="'+ escAttr(s.email||'') +'" aria-label="Seleccionar estudiante" /></td>\
         <td>'+ escHtml(s.displayName||'Alumno') +'</td>\
         <td>'+ escHtml(s.email||'') +'</td>\
@@ -423,6 +513,12 @@ function renderStudentsTable(students, metrics){
         <td style="text-align:right">'+ escHtml(toEscala5(m.u2)) +'</td>\
         <td style="text-align:right">'+ escHtml(toEscala5(m.u3)) +'</td>\
         <td style="text-align:right; font-weight:700">'+ escHtml(toEscala5(m.finalPct)) +'</td>\
+        <td>\
+          <div class="pd-student-actions">\
+            <button type="button" class="pd-action-btn pd-student-edit">Editar</button>\
+            <button type="button" class="pd-action-btn pd-student-delete">Eliminar</button>\
+          </div>\
+        </td>\
       </tr>';
     tbody.insertAdjacentHTML('beforeend', row);
   }
@@ -916,13 +1012,172 @@ function bindReminder(state){
   });
 }
 
+function readStudentFormValues(){
+  var nameInput = $id('pd-student-name');
+  var emailInput = $id('pd-student-email');
+  var matriculaInput = $id('pd-student-matricula');
+  return {
+    displayName: nameInput ? nameInput.value.trim() : '',
+    email: emailInput ? emailInput.value.trim() : '',
+    matricula: matriculaInput ? matriculaInput.value.trim() : '',
+  };
+}
+
+function setStudentFormDisabled(form, disabled){
+  if (!form) return;
+  var controls = form.querySelectorAll('input, button, textarea, select');
+  for (var i=0; i<controls.length; i++){
+    controls[i].disabled = !!disabled;
+  }
+  if (disabled){
+    form.setAttribute('aria-busy', 'true');
+  } else {
+    form.removeAttribute('aria-busy');
+  }
+}
+
+function setStudentFormMode(form, state, mode, student){
+  if (!form) return;
+  var title = $id('pd-student-form-title');
+  var submit = $id('pd-student-form-submit');
+  var cancel = $id('pd-student-form-cancel');
+  var nameInput = $id('pd-student-name');
+  var emailInput = $id('pd-student-email');
+  var matriculaInput = $id('pd-student-matricula');
+  if (mode === 'edit' && student){
+    var uid = student.uid || '';
+    form.dataset.mode = 'edit';
+    form.dataset.id = uid;
+    if (title) title.textContent = 'Editar estudiante';
+    if (submit) submit.textContent = 'Guardar cambios';
+    if (cancel) cancel.hidden = false;
+    if (nameInput) nameInput.value = student.displayName || student.nombre || '';
+    if (emailInput) emailInput.value = student.email || '';
+    if (matriculaInput) matriculaInput.value = student.matricula || '';
+    state.editingStudentId = uid;
+  } else {
+    form.dataset.mode = 'create';
+    form.dataset.id = '';
+    if (title) title.textContent = 'Agregar estudiante';
+    if (submit) submit.textContent = 'Agregar estudiante';
+    if (cancel) cancel.hidden = true;
+    if (nameInput) nameInput.value = '';
+    if (emailInput) emailInput.value = '';
+    if (matriculaInput) matriculaInput.value = '';
+    state.editingStudentId = null;
+  }
+}
+
+function bindStudentsManager(db, grupo, state){
+  var form = $id('pd-student-form');
+  var cancelBtn = $id('pd-student-form-cancel');
+  if (form && !form.__pdBound){
+    form.__pdBound = true;
+    setStudentFormMode(form, state, 'create');
+    form.addEventListener('submit', async function(ev){
+      ev.preventDefault();
+      if (form.__pdBusy) return;
+      var values = readStudentFormValues();
+      if (!values.displayName){
+        alert('Captura el nombre del estudiante.');
+        return;
+      }
+      if (!values.email){
+        alert('Captura el correo electrónico del estudiante.');
+        return;
+      }
+      form.__pdBusy = true;
+      setStudentFormDisabled(form, true);
+      try {
+        var payload = {
+          displayName: values.displayName,
+          email: values.email,
+          matricula: values.matricula || null,
+        };
+        var mode = form.dataset.mode || 'create';
+        if (mode === 'edit' && form.dataset.id){
+          await updateGroupStudent(db, grupo, form.dataset.id, payload);
+        } else {
+          var newId = await createGroupStudent(db, grupo, payload);
+          if (newId && !state.metrics[newId]){
+            state.metrics[newId] = { u1: 0, u2: 0, u3: 0, finalPct: 0 };
+          }
+        }
+        await reloadStudents(db, grupo, state);
+        updateSyncStamp();
+        setStudentFormMode(form, state, 'create');
+      } catch (err) {
+        console.error('No se pudo guardar el estudiante', err);
+        alert('No se pudo guardar el estudiante: ' + (err && err.message ? err.message : err));
+      } finally {
+        form.__pdBusy = false;
+        setStudentFormDisabled(form, false);
+      }
+    });
+    if (cancelBtn && !cancelBtn.__pdBound){
+      cancelBtn.__pdBound = true;
+      cancelBtn.addEventListener('click', function(){
+        setStudentFormMode(form, state, 'create');
+      });
+    }
+  }
+
+  var tbody = $id('pd-students-tbody');
+  if (tbody && !tbody.__pdStudentsBound){
+    tbody.__pdStudentsBound = true;
+    tbody.addEventListener('click', async function(ev){
+      var btn = ev.target;
+      if (!btn || !btn.classList) return;
+      if (btn.classList.contains('pd-student-edit')){
+        var tr = btn.closest('tr[data-id]');
+        if (!tr) return;
+        var id = tr.getAttribute('data-id') || '';
+        if (!id) return;
+        var student = state.studentIndex[id] || null;
+        if (!student){
+          for (var i=0;i<state.students.length;i++){
+            if (state.students[i] && state.students[i].uid === id){
+              student = state.students[i];
+              break;
+            }
+          }
+        }
+        if (!student) return;
+        setStudentFormMode(form, state, 'edit', student);
+        var nameInput = $id('pd-student-name');
+        if (nameInput) nameInput.focus();
+      } else if (btn.classList.contains('pd-student-delete')){
+        var trDel = btn.closest('tr[data-id]');
+        if (!trDel) return;
+        var delId = trDel.getAttribute('data-id') || '';
+        if (!delId) return;
+        var studentDel = state.studentIndex[delId] || null;
+        var label = studentDel ? (studentDel.displayName || studentDel.email || 'este estudiante') : 'este estudiante';
+        if (!confirm('¿Eliminar a ' + label + '? Esta acción no se puede deshacer.')) return;
+        var prevDisabled = btn.disabled;
+        btn.disabled = true;
+        try {
+          await deleteGroupStudent(db, grupo, delId);
+          delete state.metrics[delId];
+          await reloadStudents(db, grupo, state);
+          updateSyncStamp();
+          if (state.editingStudentId === delId){
+            setStudentFormMode(form, state, 'create');
+          }
+        } catch (err) {
+          console.error('No se pudo eliminar al estudiante', err);
+          alert('No se pudo eliminar al estudiante: ' + (err && err.message ? err.message : err));
+        } finally {
+          btn.disabled = prevDisabled;
+        }
+      }
+    });
+  }
+}
+
 async function loadDataForGroup(db, grupo, state){
   state.students = await fetchStudents(db, grupo);
-  state.studentIndex = {};
-  for (var si=0; si<state.students.length; si++){
-    var stu = state.students[si];
-    if (stu && stu.uid) state.studentIndex[stu.uid] = stu;
-  }
+  rebuildStudentIndex(state);
   var metrics = {};
   state.metrics = metrics;
   var CONC=5, idx=0;
@@ -946,14 +1201,15 @@ async function loadDataForGroup(db, grupo, state){
     if (idx < state.students.length) return nextBatch();
   }
   await nextBatch();
+  ensureMetricsForStudents(state);
 
-  renderSummaryStats(state.students, metrics);
+  renderSummaryStats(state.students, state.metrics);
   state.deliverables = await fetchDeliverables(db, grupo);
   renderDeliverablesList(state.deliverables);
   var exams = await fetchExams(db, grupo);
   renderExams(exams);
 
-  renderStudentsTable(state.students, metrics);
+  renderStudentsTable(state.students, state.metrics);
 
   handleUploadsSnapshot(state, state.uploads);
 
@@ -967,6 +1223,7 @@ async function loadDataForGroup(db, grupo, state){
   bindDeliverableForm(db, grupo, state);
   bindDeliverableTable(db, grupo, state);
   bindReminder(state);
+  bindStudentsManager(db, grupo, state);
 
   var gantt = await fetchGantt(db, grupo);
   renderGanttTable(gantt);
@@ -997,6 +1254,7 @@ async function main(){
     selectedUploadStudent: null,
     unsubscribeUploads: null,
     currentTeacher: null,
+    editingStudentId: null,
   };
   var isLoading = false;
   var hasLoaded = false;
