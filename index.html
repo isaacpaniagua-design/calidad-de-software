@@ -535,13 +535,55 @@
 
       .sessions-grid {
         display: grid;
-        gap: clamp(8px, 1.4vw, 12px);
-        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: clamp(18px, 3vw, 24px);
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        align-items: start;
+      }
+
+      .session-group {
+        display: grid;
+        gap: clamp(12px, 2vw, 16px);
+        padding: clamp(12px, 2vw, 18px);
+        border-radius: var(--radius-lg);
+        background: rgba(248, 250, 252, 0.82);
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      }
+
+      .session-group__header {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .session-group__badge {
+        align-self: flex-start;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(99, 102, 241, 0.12);
+        color: var(--accent-strong);
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .session-group__title {
+        margin: 0;
+        font-size: clamp(1rem, 2.2vw, 1.1rem);
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+
+      .session-group__list {
+        display: grid;
+        gap: clamp(6px, 1.6vw, 10px);
+        grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
       }
 
       @media (min-width: 1200px) {
-        .sessions-grid {
-          grid-template-columns: repeat(8, minmax(0, 1fr));
+        .session-group__list {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
         }
       }
 
@@ -2320,18 +2362,51 @@
 
         grid.innerHTML = "";
 
-        for (let i = 1; i <= totalSessions; i++) {
-          const card = document.createElement("div");
-          card.className = "session-card";
+        const sessionsPerGroup = 5;
 
-          const link = document.createElement("a");
-          link.href = `sesion${i}.html`;
-          link.className = "session-card__link session-btn";
-          link.textContent = `Sesión ${i}`;
-          link.setAttribute("aria-label", `Sesión ${i}`);
+        const formatLabel = (value) => String(value).padStart(2, "0");
 
-          card.appendChild(link);
-          grid.appendChild(card);
+        const buildRangeTitle = (start, end) =>
+          start === end
+            ? `Sesión ${formatLabel(start)}`
+            : `Sesiones ${formatLabel(start)}–${formatLabel(end)}`;
+
+        for (let start = 1, block = 1; start <= totalSessions; start += sessionsPerGroup, block++) {
+          const end = Math.min(start + sessionsPerGroup - 1, totalSessions);
+
+          const group = document.createElement("div");
+          group.className = "session-group";
+
+          const header = document.createElement("div");
+          header.className = "session-group__header";
+
+          const badge = document.createElement("span");
+          badge.className = "session-group__badge";
+          badge.textContent = `Bloque ${String(block).padStart(2, "0")}`;
+
+          const title = document.createElement("h3");
+          title.className = "session-group__title";
+          title.textContent = buildRangeTitle(start, end);
+
+          header.appendChild(badge);
+          header.appendChild(title);
+
+          const list = document.createElement("div");
+          list.className = "session-group__list";
+
+          for (let session = start; session <= end; session++) {
+            const link = document.createElement("a");
+            link.href = `sesion${session}.html`;
+            link.className = "session-card__link session-btn";
+            link.textContent = `Sesión ${formatLabel(session)}`;
+            link.setAttribute("aria-label", `Sesión ${session}`);
+
+            list.appendChild(link);
+          }
+
+          group.appendChild(header);
+          group.appendChild(list);
+          grid.appendChild(group);
         }
       });
     </script>
