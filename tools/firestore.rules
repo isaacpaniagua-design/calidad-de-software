@@ -131,7 +131,23 @@ service cloud.firestore {
 
       match /members/{memberId} {
         allow read: if isTeacher();
-        allow write: if false;
+
+        function isValidMemberPayload() {
+          return request.resource.data.uid == memberId
+            && request.resource.data.displayName is string
+            && request.resource.data.nombre is string
+            && request.resource.data.email is string
+            && (request.resource.data.matricula == null || request.resource.data.matricula is string)
+            && request.resource.data.role == 'student'
+            && request.resource.data.updatedAt is timestamp
+            && (
+              !('createdAt' in request.resource.data) || request.resource.data.createdAt is timestamp
+            );
+        }
+
+        allow create: if isTeacher() && isValidMemberPayload();
+        allow update: if isTeacher() && isValidMemberPayload();
+        allow delete: if isTeacher();
       }
 
       match /calificaciones/{studentId} {
