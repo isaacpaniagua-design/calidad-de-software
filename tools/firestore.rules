@@ -1,67 +1,44 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isSignedIn() {
-      return request.auth != null;
-    }
-    function isPotros() {
-      return isSignedIn() && request.auth.token.email.matches('.*@potros\\.itson\\.edu\\.mx$');
-    }
-    function allowedTeacherEmails() {
-      // Mantén esta lista sincronizada con allowedTeacherEmails en js/firebase-config.js
-      return [
-        'isaac.paniagua@potros.itson.edu.mx',
-      ];
-    }
-    function teacherAllowlistDocPath() {
-      return /databases/$(database)/documents/config/teacherAllowlist;
-    }
-    function dynamicTeacherEmails() {
-      return (
-        exists(teacherAllowlistDocPath()) &&
-        get(teacherAllowlistDocPath()).data.emails is list
-      )
-        ? get(teacherAllowlistDocPath()).data.emails
-        : [];
-    }
-    function isAllowedTeacherEmail() {
-      return isPotros() && (
-        allowedTeacherEmails().hasAny([request.auth.token.email]) ||
-        dynamicTeacherEmails().hasAny([request.auth.token.email])
-      );
-    }
-    // Mark teachers by creating a doc at /teachers/{uid}
+    function isSignedIn() { return request.auth != null; }
+    function isPotros() { return isSignedIn() && request.auth.token.email.matches('.*@potros\\.itson\\.edu\\.mx$'); }
+    function allowedTeacherEmails() { return ['isaac.paniagua@potros.itson.edu.mx']; }
+    function isAllowedTeacherEmail() { return isPotros() && (request.auth.token.email in allowedTeacherEmails()); }
     function isTeacher() {
-      return (
-        isPotros() && (
-          exists(/databases/$(database)/documents/teachers/$(request.auth.uid)) ||
-          isAllowedTeacherEmail()
-        )
+      return isPotros() && (
+        exists(/databases/$(database)/documents/teachers/$(request.auth.uid)) ||
+        isAllowedTeacherEmail()
       );
     }
 
-    // Mark teachers collection access
+    // Users: resolver UID por matrícula
+    match /users/{uid} {
+      allow read: if isTeacher();
+      allow create, update, delete: if false;
+    }
+
     match /teachers/{uid} {
-      // Allow get to let the client check its status
       allow get: if isPotros();
-      // Allow the designated teacher to create their own marker doc
       allow create: if isAllowedTeacherEmail()
         && request.auth.uid == uid
         && request.resource.data.email == request.auth.token.email;
-      // Lock updates/deletes from client
       allow update, delete: if false;
     }
 
-    // Forum rules
+    // Foro
     match /forum_topics/{topicId} {
+      // Lectura para cuentas @potros
       allow read: if isPotros();
+
+      // Crear/editar/borrar solo docentes
       allow create: if isTeacher()
         && request.resource.data.title is string
         && request.resource.data.content is string
         && request.resource.data.authorEmail == request.auth.token.email;
       allow update, delete: if isTeacher();
 
-      // Replies subcollection
+      // Respuestas
       match /replies/{replyId} {
         allow read: if isPotros();
         allow create: if isPotros()
@@ -71,12 +48,10 @@ service cloud.firestore {
       }
     }
 
-    // Materials rules
+    // Materiales
     match /materials/{materialId} {
       allow read: if isPotros();
-      // Create/update/delete reserved to teachers
       allow create, delete: if isTeacher();
-      // Allow teachers to update; allow potros to increment downloads by +1 only
       allow update: if isTeacher() || (
         isPotros() &&
         request.resource.data.diff(resource.data).changedKeys().hasOnly(['downloads']) &&
@@ -84,7 +59,7 @@ service cloud.firestore {
       );
     }
 
-    // Attendance rules
+    // Asistencias
     match /attendances/{attendanceId} {
       allow read: if isPotros();
       allow create: if isPotros()
@@ -111,7 +86,7 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // Grades rules
+   // Grades rules
     match /grades/{studentId} {
       allow read: if isPotros();
       allow create, update, delete: if isTeacher();
@@ -132,13 +107,19 @@ service cloud.firestore {
       allow update, delete: if isTeacher();
     }
 
-    match /config/{configId} {
+
+
+
+    // Calificaciones anidadas por grupo
+    match /grupos/{grupo}/calificaciones/{uid} {
       allow read: if isPotros();
-      allow write: if false;
+      allow create, update, delete: if isTeacher();
+      match /items/{itemId} {
+        allow read: if isPotros();
+        allow create, update, delete: if isTeacher();
+      }
     }
-
-    // NOTE: Merge these forum rules into your existing rules if you already have them.
-
+    
     match /users/{userId} {
       allow read: if isTeacher();
       allow write: if false;
