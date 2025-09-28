@@ -74,7 +74,7 @@
             : [];
           materialsData = materials.map(normalizeMaterial);
           if (!materialsData.length) {
-            showEmptyState("Aun no hay materiales disponibles.");
+            showEmptyState("Aún no hay materiales disponibles.");
           } else {
             hideEmptyState();
           }
