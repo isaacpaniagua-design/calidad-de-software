@@ -133,19 +133,23 @@ export function observeStudentUploadsByEmail(email, onChange, onError) {
   const variants = [];
   const seen = new Set();
 
-  const pushVariant = (field, value) => {
+  const pushVariant = (field, value, options = {}) => {
     if (!field || !value) return;
     const key = `${field}::${value}`;
     if (seen.has(key)) return;
     seen.add(key);
-    variants.push({ field, value, key });
+    const variantOptions = {
+      orderBySubmittedAt: Boolean(options.orderBySubmittedAt),
+    };
+    variants.push({ field, value, key, options: variantOptions });
   };
 
   pushVariant("student.email", raw);
   const lower = raw.toLowerCase();
   if (lower) {
     pushVariant("student.email", lower);
-    pushVariant("student.emailLower", lower);
+    // Usa el índice compuesto existente studentUploads: student.emailLower, submittedAt, __name__
+    pushVariant("student.emailLower", lower, { orderBySubmittedAt: true });
   }
 
   if (!variants.length) {
@@ -196,9 +200,13 @@ export function observeStudentUploadsByEmail(email, onChange, onError) {
     if (typeof onError === "function") onError(error);
   };
 
-  variants.forEach(({ field, value, key }) => {
+  variants.forEach(({ field, value, key, options: variantOptions = {} }) => {
     try {
-      const q = query(uploadsCollection, where(field, "==", value));
+      const constraints = [where(field, "==", value)];
+      if (variantOptions.orderBySubmittedAt) {
+        constraints.push(orderBy("submittedAt", "desc"));
+      }
+      const q = query(uploadsCollection, ...constraints);
       const unsubscribe = onSnapshot(
         q,
         (snapshot) => {
