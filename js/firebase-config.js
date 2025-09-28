@@ -28,8 +28,8 @@ export const allowedTeacherEmails = [
 export const teacherAllowlistDocPath = "config/teacherAllowlist";
 
 // Habilitar o deshabilitar Firebase Storage.
-// Si no puedes crear un bucket en tu región, déjalo en false.
-export const useStorage = false;
+// Se requiere para que el personal docente pueda subir evidencias pendientes.
+export const useStorage = true;
 
 // Carpeta de Google Drive para materiales (ID extraído del enlace compartido)
 // URL compartida: https://drive.google.com/drive/folders/1kHZa-58lXRWniS8O5tAUG933g4oDs8_L?usp=sharing

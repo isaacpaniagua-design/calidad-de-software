@@ -49,6 +49,13 @@ let storageAvailable = false;
 
 let teacherRoleDetected = false;
 
+function isTeacherUploadingForAnotherStudent(profile) {
+  if (!teacherRoleDetected) return false;
+  if (!profile || !profile.uid) return false;
+  if (!authUser || !authUser.uid) return false;
+  return profile.uid !== authUser.uid;
+}
+
 function elementSignalsTeacherRole(el) {
   if (!el) return false;
   if (el.dataset && el.dataset.role === "teacher") return true;
@@ -407,21 +414,31 @@ function getUploadEligibility(profile) {
       reason: "No se pudo resolver el UID del estudiante en Firebase.",
     };
   }
-  if (!teacherRoleDetected && profile.uid !== authUser.uid) {
+
+  const sameStudent = profile.uid === authUser.uid;
+  const teacherForAnother = isTeacherUploadingForAnotherStudent(profile);
+
+  if (!teacherRoleDetected && !sameStudent) {
     return {
       allowed: false,
       reason:
-        "Las reglas de Firebase solo permiten que cada estudiante suba su propia evidencia. Usa tu cuenta institucional o solicita permisos docentes.",
+        "Solo el personal docente puede subir evidencias pendientes para otros estudiantes. Inicia sesión con tu cuenta institucional o solicita permisos docentes.",
+    };
+  }
+
+  if (teacherForAnother) {
+    return {
+      allowed: true,
+      reason: "Subir evidencia como docente para el estudiante seleccionado.",
     };
   }
 
   return {
     allowed: true,
     reason: teacherRoleDetected
-      ? "Subir evidencia como docente para el estudiante seleccionado."
+      ? "Subir evidencia con tu cuenta docente."
       : "Subir evidencia para esta actividad",
   };
-
 }
 
 function updateUploadButtonsState(profile) {
