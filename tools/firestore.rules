@@ -12,6 +12,30 @@ service cloud.firestore {
       );
     }
 
+    function isSelf(studentId) {
+      return isPotros() && request.auth != null && request.auth.uid == studentId;
+    }
+
+    function isTeacherAllowlistDoc(docId) {
+      return docId == 'teacherAllowlist';
+    }
+
+    function isValidTeacherAllowlistPayload() {
+      return request.resource.data.keys().hasAll(['emails'])
+        && request.resource.data.keys().hasOnly([
+          'emails',
+          'updatedAt',
+          'updatedByUid'
+        ])
+        && request.resource.data.emails is list
+        && request.resource.data.emails.size() <= 200
+        && request.resource.data.emails.all(email, email is string)
+        && (!('updatedAt' in request.resource.data)
+          || request.resource.data.updatedAt is timestamp)
+        && (!('updatedByUid' in request.resource.data)
+          || request.resource.data.updatedByUid is string);
+    }
+
     // Users: resolver UID por matrícula
     match /users/{uid} {
       allow read: if isTeacher();
@@ -87,7 +111,9 @@ service cloud.firestore {
 
     // Grades rules
     match /grades/{studentId} {
-      allow read: if isPotros();
+      allow read: if isTeacher() || isSelf(studentId) || (
+        resource.data.uid is string && isSelf(resource.data.uid)
+      );
       allow create, update, delete: if isTeacher();
     }
 
@@ -111,20 +137,19 @@ service cloud.firestore {
 
     // Calificaciones anidadas por grupo
     match /grupos/{grupo}/calificaciones/{uid} {
-      allow read: if isPotros();
+      allow read: if isTeacher() || isSelf(uid) || (
+        resource.data.uid is string && isSelf(resource.data.uid)
+      );
       allow create, update, delete: if isTeacher();
     }
 
     match /grupos/{grupo}/calificaciones/{uid}/items/{itemId} {
-      allow read: if isPotros();
+      allow read: if isTeacher() || isSelf(uid) || (
+        resource.data.studentUid is string && isSelf(resource.data.studentUid)
+      );
       allow create, update, delete: if isTeacher();
     }
     
-    match /users/{userId} {
-      allow read: if isTeacher();
-      allow write: if false;
-    }
-
     match /grupos/{grupoId} {
       allow read: if isTeacher();
       allow create, update, delete: if false;
@@ -151,16 +176,6 @@ service cloud.firestore {
       allow delete: if isTeacher();
     }
 
-    match /grupos/{grupoId}/calificaciones/{studentId} {
-      allow read: if isTeacher();
-      allow create, update, delete: if false;
-    }
-
-    match /grupos/{grupoId}/calificaciones/{studentId}/items/{itemId} {
-      allow read: if isTeacher();
-      allow create, update, delete: if isTeacher();
-    }
-
     match /grupos/{grupoId}/deliverables/{deliverableId} {
       allow read: if isTeacher();
       allow create, update, delete: if isTeacher();
@@ -184,6 +199,14 @@ service cloud.firestore {
     match /grupos/{grupoId}/assignments/{assignmentId} {
       allow read: if isTeacher();
       allow create, update, delete: if isTeacher();
+    }
+
+    match /config/{docId} {
+      allow read: if isTeacherAllowlistDoc(docId) && isTeacher();
+      allow create, update: if isTeacherAllowlistDoc(docId)
+        && isTeacher()
+        && isValidTeacherAllowlistPayload();
+      allow delete: if false;
     }
   }
 }
