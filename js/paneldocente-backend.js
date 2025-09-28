@@ -385,6 +385,196 @@ function computeMetricsFromItems(items){
   return { u1:u1, u2:u2, u3:u3, finalPct: final3040(u1,u2,u3) };
 }
 
+// ===== Student fallback (sin Firebase) =====
+var STUDENT_FALLBACK_KEY = 'pd_student_fallback_data';
+var STUDENT_FALLBACK_CACHE = null;
+var STUDENT_FALLBACK_ACTIVE = false;
+
+function cloneStudentEntry(entry){
+  if (!entry) return { uid: '', displayName: 'Alumno', email: '', matricula: null };
+  return {
+    uid: entry.uid || '',
+    displayName: entry.displayName || 'Alumno',
+    email: entry.email || '',
+    matricula: entry.matricula != null ? entry.matricula : null,
+  };
+}
+
+function clampMetricValue(value){
+  return clamp100(Number(value || 0));
+}
+
+function normalizeMetricEntry(entry){
+  entry = entry || {};
+  var u1 = clampMetricValue(entry.u1 != null ? entry.u1 : entry.unidad1);
+  var u2 = clampMetricValue(entry.u2 != null ? entry.u2 : entry.unidad2);
+  var u3 = clampMetricValue(entry.u3 != null ? entry.u3 : entry.unidad3);
+  var finalPct = clampMetricValue(entry.finalPct != null ? entry.finalPct : (entry.final != null ? entry.final : final3040(u1, u2, u3)));
+  return { u1: u1, u2: u2, u3: u3, finalPct: finalPct };
+}
+
+function cloneMetrics(metrics){
+  var out = {};
+  for (var key in metrics){
+    if (Object.prototype.hasOwnProperty.call(metrics, key)){
+      out[key] = normalizeMetricEntry(metrics[key]);
+    }
+  }
+  return out;
+}
+
+function sortFallbackStudents(list){
+  list.sort(function(a, b){
+    var rawA = a && a.displayName ? a.displayName : '';
+    var rawB = b && b.displayName ? b.displayName : '';
+    var nameA;
+    var nameB;
+    try { nameA = rawA.toLocaleLowerCase('es-MX'); }
+    catch (_errA){ nameA = rawA.toLowerCase(); }
+    try { nameB = rawB.toLocaleLowerCase('es-MX'); }
+    catch (_errB){ nameB = rawB.toLowerCase(); }
+    if (nameA < nameB) return -1;
+    if (nameA > nameB) return 1;
+    return 0;
+  });
+}
+
+function normalizeFallbackSource(data){
+  var list = [];
+  var metrics = {};
+  var students = data && Array.isArray(data.students) ? data.students : [];
+  for (var i=0; i<students.length; i++){
+    var src = students[i] || {};
+    var uid = String(src.uid || src.id || src.matricula || ('fallback-' + i)).trim();
+    if (!uid) uid = 'fallback-' + i;
+    var displayName = src.displayName || src.nombre || src.name || ('Estudiante ' + (i+1));
+    var email = src.email || src.correo || '';
+    var matricula = src.matricula != null ? String(src.matricula) : (src.id != null ? String(src.id) : null);
+    list.push({ uid: uid, displayName: displayName, email: email, matricula: matricula });
+
+    var grades = src.grades || src.calificaciones || {};
+    if (grades && (grades.u1 != null || grades.u2 != null || grades.u3 != null || grades.unidad1 != null || grades.unidad2 != null || grades.unidad3 != null)){
+      metrics[uid] = normalizeMetricEntry(grades);
+    }
+  }
+
+  var metricEntries = data && data.metrics ? data.metrics : {};
+  for (var key in metricEntries){
+    if (Object.prototype.hasOwnProperty.call(metricEntries, key)){
+      metrics[key] = normalizeMetricEntry(metricEntries[key]);
+    }
+  }
+
+  for (var j=0; j<list.length; j++){
+    var stu = list[j];
+    if (!metrics[stu.uid]){
+      metrics[stu.uid] = { u1: 0, u2: 0, u3: 0, finalPct: 0 };
+    }
+  }
+
+  sortFallbackStudents(list);
+  return { students: list, metrics: metrics };
+}
+
+function setFallbackCache(data){
+  STUDENT_FALLBACK_CACHE = {
+    students: (data.students || []).map(cloneStudentEntry),
+    metrics: cloneMetrics(data.metrics || {}),
+  };
+}
+
+function cloneFallbackData(){
+  if (!STUDENT_FALLBACK_CACHE){
+    return { students: [], metrics: {} };
+  }
+  return {
+    students: STUDENT_FALLBACK_CACHE.students.map(cloneStudentEntry),
+    metrics: cloneMetrics(STUDENT_FALLBACK_CACHE.metrics),
+  };
+}
+
+function readFallbackStorage(){
+  if (typeof window === 'undefined' || !window.localStorage) return null;
+  try {
+    var raw = window.localStorage.getItem(STUDENT_FALLBACK_KEY);
+    if (!raw) return null;
+    var parsed = JSON.parse(raw);
+    return normalizeFallbackSource(parsed);
+  } catch (_err) {
+    return null;
+  }
+}
+
+function persistFallbackData(){
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  if (!STUDENT_FALLBACK_CACHE) return;
+  try {
+    var payload = {
+      students: STUDENT_FALLBACK_CACHE.students,
+      metrics: STUDENT_FALLBACK_CACHE.metrics,
+      updatedAt: new Date().toISOString(),
+    };
+    window.localStorage.setItem(STUDENT_FALLBACK_KEY, JSON.stringify(payload));
+  } catch (_err) {}
+}
+
+async function ensureStudentFallbackLoaded(){
+  if (STUDENT_FALLBACK_CACHE) return;
+  var stored = readFallbackStorage();
+  if (stored){
+    setFallbackCache(stored);
+    return;
+  }
+  try {
+    var res = await fetch('./data/students.json', { cache: 'no-store' });
+    if (!res || !res.ok){
+      throw new Error('Respuesta inválida al cargar base local de estudiantes');
+    }
+    var json = await res.json();
+    setFallbackCache(normalizeFallbackSource(json));
+  } catch (err) {
+    console.error('No se pudo cargar la base local de estudiantes', err);
+    setFallbackCache({ students: [], metrics: {} });
+  }
+}
+
+async function loadStudentFallbackData(){
+  await ensureStudentFallbackLoaded();
+  return cloneFallbackData();
+}
+
+function mutateFallbackData(mutator){
+  if (!STUDENT_FALLBACK_CACHE) return;
+  try {
+    mutator(STUDENT_FALLBACK_CACHE);
+  } catch (err) {
+    console.error('No se pudo actualizar la base local de estudiantes', err);
+  }
+  sortFallbackStudents(STUDENT_FALLBACK_CACHE.students);
+  persistFallbackData();
+}
+
+function generateFallbackId(){
+  return 'local-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+}
+
+function markStudentFallbackActive(flag){
+  STUDENT_FALLBACK_ACTIVE = !!flag;
+}
+
+function isStudentFallbackActive(){
+  return !!STUDENT_FALLBACK_ACTIVE;
+}
+
+function sanitizeStudentInput(data){
+  data = data || {};
+  return {
+    displayName: (data.displayName || data.nombre || '').trim(),
+    email: (data.email || '').trim(),
+    matricula: data.matricula != null && String(data.matricula).trim() !== '' ? String(data.matricula).trim() : null,
+  };
+}
+
 // ===== Firestore =====
 async function fetchStudents(db, grupoId){
   var out = []; var seen={};
@@ -422,12 +612,43 @@ function normalizeStudentPayload(data, opts){
 }
 
 async function createGroupStudent(db, grupoId, data){
-  var membersCol = collection(db, 'grupos', grupoId, 'members');
-  var docId = data && data.uid ? String(data.uid).trim() : '';
-  if (docId){
-    var payloadExisting = normalizeStudentPayload(Object.assign({}, data, { uid: docId }), { includeCreatedAt: true });
-    await setDoc(doc(membersCol, docId), payloadExisting);
+  if (isStudentFallbackActive()){
+    await ensureStudentFallbackLoaded();
+    var clean = sanitizeStudentInput(data);
+    var docId = data && data.uid ? String(data.uid).trim() : '';
+    if (!docId) docId = generateFallbackId();
+    var newStudent = {
+      uid: docId,
+      displayName: clean.displayName || 'Alumno',
+      email: clean.email || '',
+      matricula: clean.matricula,
+    };
+    mutateFallbackData(function(cache){
+      var list = cache.students;
+      var replaced = false;
+      for (var i=0; i<list.length; i++){
+        if (list[i] && list[i].uid === docId){
+          list[i] = newStudent;
+          replaced = true;
+          break;
+        }
+      }
+      if (!replaced){
+        list.push(newStudent);
+      }
+      if (!cache.metrics[docId]){
+        cache.metrics[docId] = { u1: 0, u2: 0, u3: 0, finalPct: 0 };
+      }
+    });
     return docId;
+  }
+
+  var membersCol = collection(db, 'grupos', grupoId, 'members');
+  var docIdFs = data && data.uid ? String(data.uid).trim() : '';
+  if (docIdFs){
+    var payloadExisting = normalizeStudentPayload(Object.assign({}, data, { uid: docIdFs }), { includeCreatedAt: true });
+    await setDoc(doc(membersCol, docIdFs), payloadExisting);
+    return docIdFs;
   }
   var newRef = doc(membersCol);
   var payload = normalizeStudentPayload(Object.assign({}, data, { uid: newRef.id }), { includeCreatedAt: true });
@@ -437,12 +658,48 @@ async function createGroupStudent(db, grupoId, data){
 
 async function updateGroupStudent(db, grupoId, uid, data){
   if (!uid){ throw new Error('Identificador no válido'); }
+  if (isStudentFallbackActive()){
+    await ensureStudentFallbackLoaded();
+    var clean = sanitizeStudentInput(data);
+    mutateFallbackData(function(cache){
+      for (var i=0; i<cache.students.length; i++){
+        if (cache.students[i] && cache.students[i].uid === uid){
+          cache.students[i] = Object.assign({}, cache.students[i], {
+            displayName: clean.displayName || cache.students[i].displayName || 'Alumno',
+            email: clean.email || cache.students[i].email || '',
+            matricula: clean.matricula != null ? clean.matricula : cache.students[i].matricula,
+          });
+          return;
+        }
+      }
+      cache.students.push({
+        uid: uid,
+        displayName: clean.displayName || 'Alumno',
+        email: clean.email || '',
+        matricula: clean.matricula,
+      });
+      if (!cache.metrics[uid]){
+        cache.metrics[uid] = { u1: 0, u2: 0, u3: 0, finalPct: 0 };
+      }
+    });
+    return;
+  }
   var payload = normalizeStudentPayload(Object.assign({}, data, { uid: uid }), {});
   await updateDoc(doc(db, 'grupos', grupoId, 'members', uid), payload);
 }
 
 async function deleteGroupStudent(db, grupoId, uid){
   if (!uid){ throw new Error('Identificador no válido'); }
+  if (isStudentFallbackActive()){
+    await ensureStudentFallbackLoaded();
+    mutateFallbackData(function(cache){
+      cache.students = cache.students.filter(function(stu){ return !stu || stu.uid !== uid; });
+      if (cache.metrics && cache.metrics[uid]){
+        delete cache.metrics[uid];
+      }
+    });
+    return;
+  }
   await deleteDoc(doc(db, 'grupos', grupoId, 'members', uid));
 }
 async function fetchCalifItems(db, grupoId, uid){
@@ -536,7 +793,23 @@ function ensureMetricsForStudents(state){
 }
 
 async function reloadStudents(db, grupoId, state){
+  if (isStudentFallbackActive() || (state && state.isUsingStudentFallback)){
+    await ensureStudentFallbackLoaded();
+    var fallback = cloneFallbackData();
+    state.students = fallback.students;
+    state.metrics = fallback.metrics;
+    state.isUsingStudentFallback = true;
+    rebuildStudentIndex(state);
+    syncRosterCache(state.students);
+    ensureMetricsForStudents(state);
+    renderSummaryStats(state.students, state.metrics);
+    renderStudentsTable(state.students, state.metrics);
+    handleUploadsSnapshot(state, state.uploads);
+    return;
+  }
+
   state.students = await fetchStudents(db, grupoId);
+  state.isUsingStudentFallback = false;
   rebuildStudentIndex(state);
   syncRosterCache(state.students);
   ensureMetricsForStudents(state);
@@ -1304,32 +1577,57 @@ function bindStudentsManager(db, grupo, state){
 
 async function loadDataForGroup(db, grupo, state){
   if (state) state.groupId = grupo;
-  state.students = await fetchStudents(db, grupo);
+  markStudentFallbackActive(false);
+  state.isUsingStudentFallback = false;
+
+  try {
+    state.students = await fetchStudents(db, grupo);
+  } catch (err) {
+    console.error('No se pudieron obtener estudiantes desde Firebase', err);
+    state.students = [];
+  }
+
+  if (!Array.isArray(state.students) || !state.students.length){
+    var fallback = await loadStudentFallbackData();
+    state.students = fallback.students;
+    state.metrics = fallback.metrics;
+    state.isUsingStudentFallback = true;
+    markStudentFallbackActive(true);
+    console.warn('Usando base de datos local de estudiantes (sin conexión a Firebase).');
+  } else {
+    state.metrics = {};
+  }
+
   rebuildStudentIndex(state);
   syncRosterCache(state.students);
-  var metrics = {};
-  state.metrics = metrics;
-  var CONC=5, idx=0;
-  async function nextBatch(){
-    var batch=[];
-    for (var k=0; k<CONC && idx<state.students.length; k++, idx++){
-      (function(s){
-        batch.push((async function(){
-          try {
-            var items = await fetchCalifItems(db, grupo, s.uid);
-            metrics[s.uid] = computeMetricsFromItems(items);
-          } catch (err) {
-            console.error('No se pudieron calcular métricas para', s.uid, err);
-            metrics[s.uid] = { u1:0, u2:0, u3:0, finalPct:0 };
-          }
-        })());
-      })(state.students[idx]);
+
+  if (!state.isUsingStudentFallback){
+    var metrics = state.metrics;
+    var CONC=5, idx=0;
+    async function nextBatch(){
+      var batch=[];
+      for (var k=0; k<CONC && idx<state.students.length; k++, idx++){
+        (function(s){
+          batch.push((async function(){
+            try {
+              var items = await fetchCalifItems(db, grupo, s.uid);
+              metrics[s.uid] = computeMetricsFromItems(items);
+            } catch (err) {
+              console.error('No se pudieron calcular métricas para', s.uid, err);
+              metrics[s.uid] = { u1:0, u2:0, u3:0, finalPct:0 };
+            }
+          })());
+        })(state.students[idx]);
+      }
+      if (!batch.length) return;
+      await Promise.all(batch);
+      if (idx < state.students.length) return nextBatch();
     }
-    if (!batch.length) return;
-    await Promise.all(batch);
-    if (idx < state.students.length) return nextBatch();
+    await nextBatch();
+  } else {
+    ensureMetricsForStudents(state);
   }
-  await nextBatch();
+
   ensureMetricsForStudents(state);
 
   renderSummaryStats(state.students, state.metrics);
@@ -1377,6 +1675,7 @@ async function main(){
     deliverables: [],
     metrics: {},
     studentIndex: {},
+    isUsingStudentFallback: false,
     uploads: [],
     uploadGroups: {},
     uploadIndex: {},
