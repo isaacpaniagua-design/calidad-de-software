@@ -49,11 +49,38 @@ let storageAvailable = false;
 
 let teacherRoleDetected = false;
 
+function elementSignalsTeacherRole(el) {
+  if (!el) return false;
+  if (el.dataset && el.dataset.role === "teacher") return true;
+  if (el.dataset && el.dataset.roleFlag === "teacher") return true;
+  if (el.classList && (el.classList.contains("teacher-yes") || el.classList.contains("role-teacher"))) {
+    return true;
+  }
+  return false;
+}
+
+function hasVisibleTeacherMarkers() {
+  const teacherSelectors = ".teacher-only,.docente-only,[data-role='teacher'],[data-role-flag='teacher']";
+  const elements = document.querySelectorAll(teacherSelectors);
+  for (const el of elements) {
+    if (!el) continue;
+    if (elementSignalsTeacherRole(el)) return true;
+    if (el.hasAttribute("hidden")) continue;
+    if (el.getAttribute("aria-hidden") === "true") continue;
+    if (el.classList && el.classList.contains("hidden")) continue;
+    return true;
+  }
+  return false;
+}
+
 function detectTeacherRoleFromDom() {
   const root = document.documentElement;
-  if (root?.classList?.contains("role-teacher")) return true;
+  if (elementSignalsTeacherRole(root)) return true;
+  if (root?.dataset?.role === "teacher") return true;
   const body = document.body;
-  if (body?.classList?.contains("teacher-yes")) return true;
+  if (elementSignalsTeacherRole(body)) return true;
+  if (body?.dataset?.role === "teacher") return true;
+  if (hasVisibleTeacherMarkers()) return true;
   try {
     const stored = localStorage.getItem("qs_role");
     if (stored && stored.toLowerCase() === "docente") return true;
@@ -68,12 +95,6 @@ function updateTeacherRoleFlag() {
   updateUploadButtonsState(currentStudentProfile);
 }
 
-function observeBodyForTeacherRole(observer) {
-  const body = document.body;
-  if (!body || !observer) return;
-  observer.observe(body, { attributes: true, attributeFilter: ["class"] });
-}
-
 const teacherRoleObserver =
   typeof MutationObserver === "function"
     ? new MutationObserver(() => updateTeacherRoleFlag())
@@ -82,15 +103,24 @@ const teacherRoleObserver =
 if (teacherRoleObserver) {
   teacherRoleObserver.observe(document.documentElement, {
     attributes: true,
-    attributeFilter: ["class"],
+    attributeFilter: ["class", "data-role", "data-role-flag"],
   });
+  const attachBodyObserver = () => {
+    const body = document.body;
+    if (!body) return;
+    teacherRoleObserver.observe(body, {
+      attributes: true,
+      attributeFilter: ["class", "data-role", "data-role-flag", "hidden", "aria-hidden"],
+      subtree: true,
+    });
+  };
   if (document.body) {
-    observeBodyForTeacherRole(teacherRoleObserver);
+    attachBodyObserver();
   } else {
     document.addEventListener(
       "DOMContentLoaded",
       () => {
-        observeBodyForTeacherRole(teacherRoleObserver);
+        attachBodyObserver();
         updateTeacherRoleFlag();
       },
       { once: true }
@@ -358,34 +388,6 @@ function sanitizeFileName(name) {
     .slice(0, 140) || "evidencia";
 }
 
-function sanitizeStudentIdentifier(value) {
-  return String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9]+/g, "-")
-    .replace(/-{2,}/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .toLowerCase();
-}
-
-function buildSyntheticStudentUid(profile) {
-  if (!profile) return "";
-  const parts = [];
-  const matricula = profile.matricula ? String(profile.matricula).trim() : "";
-  const id = profile.id ? String(profile.id).trim() : "";
-  const email = profile.email ? String(profile.email).trim().toLowerCase() : "";
-  if (matricula) parts.push(matricula);
-  if (id && id !== matricula) parts.push(id);
-  if (email) parts.push(email);
-  const normalized = parts
-    .map((part) => sanitizeStudentIdentifier(part))
-    .filter(Boolean);
-  if (!normalized.length) return "";
-  const combined = sanitizeStudentIdentifier(normalized.join("-"));
-  if (!combined) return "";
-  return `synthetic-${combined}`.slice(0, 120);
-}
-
 function getUploadEligibility(profile) {
   if (!authUser) {
     return {
@@ -405,20 +407,11 @@ function getUploadEligibility(profile) {
       reason: "No se pudo resolver el UID del estudiante en Firebase.",
     };
   }
-  if (profile.syntheticUid) {
-    return {
-      allowed: false,
-      reason:
-        "El estudiante seleccionado no está vinculado a una cuenta activa en Firebase.",
-    };
-  }
-
   if (!teacherRoleDetected && profile.uid !== authUser.uid) {
-
     return {
       allowed: false,
       reason:
-        "Las reglas de Firebase solo permiten que cada estudiante suba su propia evidencia.",
+        "Las reglas de Firebase solo permiten que cada estudiante suba su propia evidencia. Usa tu cuenta institucional o solicita permisos docentes.",
     };
   }
 
@@ -480,7 +473,6 @@ function setCurrentProfile(profile) {
       profile.name ||
       (nameField ? nameField.value.trim() : ""),
     id: profile.id ? String(profile.id).trim() : "",
-    syntheticUid: false,
   };
   currentStudentProfile = normalized;
   updateUploadButtonsState(currentStudentProfile);
@@ -662,16 +654,10 @@ async function fetchUidFromFirestore(profile) {
 async function ensureActiveProfileWithUid() {
   if (!currentStudentProfile) return null;
   if (currentStudentProfile.uid) return currentStudentProfile;
-  let uid = await fetchUidFromFirestore(currentStudentProfile);
-  let syntheticUid = false;
-  if (!uid) {
-    uid = buildSyntheticStudentUid(currentStudentProfile);
-    syntheticUid = Boolean(uid);
-  }
+  const uid = await fetchUidFromFirestore(currentStudentProfile);
   if (!uid) return currentStudentProfile;
   currentStudentProfile = Object.assign({}, currentStudentProfile, {
     uid,
-    syntheticUid,
   });
   const cacheKey = `${currentStudentProfile.matricula || ""}|${
     (currentStudentProfile.email || "").toLowerCase()
@@ -750,11 +736,6 @@ async function handleFileInputChange(event) {
         "Las reglas de Firebase impiden subir evidencias para otro estudiante."
       );
     }
-    if (profile.syntheticUid) {
-      throw new Error(
-        "El estudiante seleccionado no cuenta con un UID válido en Firebase Auth."
-      );
-    }
     // authUser presence already validated by getUploadEligibility
 
     setStatus(entry, "Subiendo evidencia…", { uploaded: false, title: "" });
@@ -774,7 +755,7 @@ async function handleFileInputChange(event) {
 
     await createStudentUpload({
       title: entry.activity?.title || entry.title || "Evidencia",
-      description: "Archivo registrado desde el panel de calificaciones.",
+      description: "Archivo registrado manualmente como evidencia complementaria.",
       kind: "evidence",
       fileUrl: upload.url,
       fileName: file.name || upload.fileName || "evidencia",
