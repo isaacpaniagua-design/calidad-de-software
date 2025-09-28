@@ -1,6 +1,7 @@
-import { onAuth } from "./firebase.js";
+import { initFirebase, getDb, getStorageInstance, onAuth } from "./firebase.js";
 import { initializeFileViewer, openFileViewer } from "./file-viewer.js";
 import {
+  createStudentUpload,
   observeStudentUploads,
   observeStudentUploadsByEmail,
 } from "./student-uploads.js";
@@ -8,6 +9,20 @@ import {
   getActivityById,
   findActivityByTitle,
 } from "./course-activities.js";
+import {
+  collection,
+  getDocs,
+  limit,
+  query,
+  where,
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+import {
+  ref as storageRef,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
+
+initFirebase();
 
 initializeFileViewer();
 
@@ -18,10 +33,14 @@ const dateFormatter = new Intl.DateTimeFormat("es-MX", {
 
 const gradeItemSelector = "#calificaciones-root .grade-item";
 const displays = new Map();
+const studentUidCache = new Map();
 let unsubscribeUploads = null;
 let currentProfileKey = null;
+let currentStudentProfile = null;
 let authUser = null;
 let uiReady = false;
+let hiddenFileInput = null;
+let pendingUploadEntry = null;
 
 function ready() {
   if (document.readyState === "complete" || document.readyState === "interactive") {
@@ -114,10 +133,17 @@ function buildDisplayForItem(item) {
   }
 
   const viewWrapper = document.createElement("div");
-  viewWrapper.className = "upload-control";
+  viewWrapper.className = "upload-control teacher-only";
 
   const buttonsWrapper = document.createElement("div");
   buttonsWrapper.className = "upload-control-buttons";
+
+  const uploadButton = document.createElement("button");
+  uploadButton.type = "button";
+  uploadButton.className = "upload-upload teacher-only";
+  uploadButton.textContent = "Subir evidencia";
+  uploadButton.disabled = true;
+  buttonsWrapper.appendChild(uploadButton);
 
   const viewLink = document.createElement("a");
   viewLink.className = "upload-trigger";
@@ -146,18 +172,27 @@ function buildDisplayForItem(item) {
   const entry = {
     statusEl: status,
     viewLink,
+    uploadButton,
     gradeInput,
     activity,
     item,
     statusId,
     title,
+    uploading: false,
   };
 
   if (!activity) {
     disableView(entry);
+    uploadButton.disabled = true;
+    uploadButton.title = "Actividad no vinculada";
   } else {
     resetViewListener(entry);
   }
+
+  uploadButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    handleUploadRequest(entry);
+  });
 
   return entry;
 }
@@ -222,6 +257,7 @@ function updateDisplays(uploadMap) {
       title: upload.fileName || "",
     });
   });
+  updateUploadButtonsState(currentStudentProfile);
 }
 
 function setLoadingState() {
@@ -240,12 +276,302 @@ function setErrorState() {
   });
 }
 
+function sanitizeFileName(name) {
+  return String(name || "evidencia")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]+/g, "_")
+    .replace(/_{2,}/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 140) || "evidencia";
+}
+
+function updateUploadButtonsState(profile) {
+  const isSelfSelection = Boolean(
+    profile && authUser && profile.uid && profile.uid === authUser.uid
+  );
+  const hasStudent = Boolean(
+    profile && (profile.uid || profile.email || profile.matricula) && !isSelfSelection
+  );
+  displays.forEach((entry) => {
+    if (!entry || !entry.uploadButton) return;
+    const cannotUploadActivity = !entry.activity || !entry.activity.id;
+    entry.uploadButton.disabled =
+      entry.uploading || !hasStudent || cannotUploadActivity;
+    if (cannotUploadActivity) {
+      entry.uploadButton.title = "Actividad no vinculada";
+    } else if (!hasStudent) {
+      entry.uploadButton.title =
+        "Selecciona un estudiante para subir evidencia";
+    } else if (entry.uploading) {
+      entry.uploadButton.title = "Subiendo evidencia…";
+    } else {
+      entry.uploadButton.title = "Subir evidencia para esta actividad";
+    }
+  });
+}
+
+function setCurrentProfile(profile) {
+  if (!profile) {
+    currentStudentProfile = null;
+    updateUploadButtonsState(null);
+    return;
+  }
+  const nameField = document.getElementById("studentName");
+  const normalized = {
+    uid: profile.uid ? String(profile.uid).trim() : "",
+    email: profile.email ? String(profile.email).trim() : "",
+    matricula: profile.matricula
+      ? String(profile.matricula).trim()
+      : profile.id
+      ? String(profile.id).trim()
+      : "",
+    displayName:
+      profile.displayName ||
+      profile.name ||
+      (nameField ? nameField.value.trim() : ""),
+    id: profile.id ? String(profile.id).trim() : "",
+  };
+  currentStudentProfile = normalized;
+  updateUploadButtonsState(currentStudentProfile);
+}
+
+function ensureFileInput() {
+  if (hiddenFileInput) return hiddenFileInput;
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "*/*";
+  input.style.display = "none";
+  input.className = "teacher-only";
+  input.addEventListener("change", handleFileInputChange);
+  document.body.appendChild(input);
+  hiddenFileInput = input;
+  return hiddenFileInput;
+}
+
+async function uploadEvidenceFile(file, studentUid) {
+  const storage = getStorageInstance();
+  if (!storage) {
+    throw new Error("El almacenamiento de evidencias no está disponible.");
+  }
+  const safeName = sanitizeFileName(file?.name || "evidencia");
+  const path = `studentEvidence/${studentUid}/${Date.now()}_${safeName}`;
+  const ref = storageRef(storage, path);
+  return new Promise((resolve, reject) => {
+    const task = uploadBytesResumable(ref, file);
+    task.on(
+      "state_changed",
+      null,
+      (error) => reject(error),
+      async () => {
+        const url = await getDownloadURL(ref);
+        resolve({ url, path, fileName: safeName });
+      }
+    );
+  });
+}
+
+async function fetchUidFromFirestore(profile) {
+  if (!profile) return "";
+  const db = getDb();
+  if (!db) return "";
+  const cacheKey = `${profile.matricula || ""}|${
+    (profile.email || "").toLowerCase()
+  }`;
+  if (cacheKey && studentUidCache.has(cacheKey)) {
+    return studentUidCache.get(cacheKey) || "";
+  }
+
+  let uid = "";
+  const matricula = profile.matricula ? String(profile.matricula).trim() : "";
+  if (matricula) {
+    try {
+      const snap = await getDocs(
+        query(
+          collection(db, "users"),
+          where("matricula", "==", matricula),
+          limit(1)
+        )
+      );
+      if (!snap.empty) {
+        uid = snap.docs[0]?.id || "";
+      }
+    } catch (error) {
+      console.warn("[calificaciones-uploads-ui] resolver uid matricula", error);
+    }
+  }
+
+  const emailRaw = profile.email ? String(profile.email).trim() : "";
+  const emailLower = emailRaw.toLowerCase();
+  if (!uid && emailLower) {
+    try {
+      const snap = await getDocs(
+        query(
+          collection(db, "users"),
+          where("emailLower", "==", emailLower),
+          limit(1)
+        )
+      );
+      if (!snap.empty) {
+        uid = snap.docs[0]?.id || "";
+      }
+    } catch (error) {
+      console.warn("[calificaciones-uploads-ui] resolver uid emailLower", error);
+    }
+  }
+
+  if (!uid && emailRaw) {
+    try {
+      const snap = await getDocs(
+        query(
+          collection(db, "users"),
+          where("email", "==", emailRaw),
+          limit(1)
+        )
+      );
+      if (!snap.empty) {
+        uid = snap.docs[0]?.id || "";
+      }
+    } catch (error) {
+      console.warn("[calificaciones-uploads-ui] resolver uid email", error);
+    }
+  }
+
+  if (cacheKey && uid) {
+    studentUidCache.set(cacheKey, uid);
+  }
+  return uid || "";
+}
+
+async function ensureActiveProfileWithUid() {
+  if (!currentStudentProfile) return null;
+  if (currentStudentProfile.uid) return currentStudentProfile;
+  const uid = await fetchUidFromFirestore(currentStudentProfile);
+  if (!uid) return currentStudentProfile;
+  currentStudentProfile = Object.assign({}, currentStudentProfile, { uid });
+  const cacheKey = `${currentStudentProfile.matricula || ""}|${
+    (currentStudentProfile.email || "").toLowerCase()
+  }`;
+  if (cacheKey) {
+    studentUidCache.set(cacheKey, uid);
+  }
+  updateUploadButtonsState(currentStudentProfile);
+  return currentStudentProfile;
+}
+
+function handleUploadRequest(entry) {
+  if (!entry || entry.uploading) return;
+  if (!entry.activity || !entry.activity.id) {
+    setStatus(entry, "Esta actividad no está vinculada a un registro.", {
+      uploaded: false,
+      title: "",
+    });
+    return;
+  }
+  if (!currentStudentProfile) {
+    setStatus(entry, "Selecciona un estudiante para subir evidencia.", {
+      uploaded: false,
+      title: "",
+    });
+    return;
+  }
+  const input = ensureFileInput();
+  if (!input) {
+    setStatus(entry, "La carga de archivos no está disponible.", {
+      uploaded: false,
+      title: "",
+    });
+    return;
+  }
+  pendingUploadEntry = entry;
+  input.value = "";
+  input.click();
+}
+
+async function handleFileInputChange(event) {
+  const input = event?.target;
+  const file = input?.files && input.files[0];
+  const entry = pendingUploadEntry;
+  pendingUploadEntry = null;
+  if (!file || !entry) {
+    if (input) input.value = "";
+    return;
+  }
+
+  entry.uploading = true;
+  updateUploadButtonsState(currentStudentProfile);
+
+  try {
+    const profile = await ensureActiveProfileWithUid();
+    if (!profile || !profile.uid) {
+      throw new Error(
+        "No se pudo identificar al estudiante seleccionado en la base de datos."
+      );
+    }
+    if (!authUser) {
+      throw new Error(
+        "Inicia sesión como docente para subir evidencias."
+      );
+    }
+
+    setStatus(entry, "Subiendo evidencia…", { uploaded: false, title: "" });
+
+    const upload = await uploadEvidenceFile(file, profile.uid);
+
+    const extra = {};
+    if (entry.activity?.id) extra.activityId = entry.activity.id;
+    if (entry.activity?.unitId) extra.unitId = entry.activity.unitId;
+    if (entry.activity?.unitLabel) extra.unitLabel = entry.activity.unitLabel;
+    extra.source = "calificaciones-teacher";
+    extra.uploadedBy = {
+      uid: authUser.uid || "",
+      email: authUser.email || "",
+      displayName: authUser.displayName || "",
+    };
+
+    await createStudentUpload({
+      title: entry.activity?.title || entry.title || "Evidencia",
+      description:
+        "Archivo registrado por el docente desde el panel de calificaciones.",
+      kind: "evidence",
+      fileUrl: upload.url,
+      fileName: file.name || upload.fileName || "evidencia",
+      fileSize: file.size || null,
+      mimeType: file.type || "",
+      extra,
+      student: {
+        uid: profile.uid,
+        email: profile.email || "",
+        displayName: profile.displayName || "",
+      },
+    });
+
+    setStatus(entry, "Evidencia cargada. Sincronizando…", {
+      uploaded: false,
+      title: "",
+    });
+  } catch (error) {
+    console.error("[calificaciones-uploads-ui] evidencia", error);
+    const message =
+      error?.message || "No se pudo cargar la evidencia. Intenta nuevamente.";
+    setStatus(entry, message, { uploaded: false, title: "" });
+  } finally {
+    entry.uploading = false;
+    updateUploadButtonsState(currentStudentProfile);
+    if (hiddenFileInput) hiddenFileInput.value = "";
+  }
+}
+
 function subscribeToProfile(profile) {
+  setCurrentProfile(profile);
   if (!uiReady) return;
   const key = profile
     ? `${profile.uid || ""}|${(profile.email || "").toLowerCase()}`
     : "__none__";
-  if (key === currentProfileKey) return;
+  if (key === currentProfileKey) {
+    updateUploadButtonsState(currentStudentProfile);
+    return;
+  }
   currentProfileKey = key;
   if (typeof unsubscribeUploads === "function") {
     try {
@@ -293,6 +619,9 @@ function getSelectedStudentProfile() {
   const value = select.value;
   const email = option?.dataset?.email || option?.getAttribute("data-email") || "";
   const uid = option?.dataset?.uid || option?.getAttribute("data-uid") || "";
+  const nameAttr = option?.dataset?.name || option?.getAttribute("data-name") || "";
+  const matriculaAttr =
+    option?.dataset?.matricula || option?.getAttribute("data-matricula") || value || "";
   const list = studentsArray();
   const fallback = list.find(
     (student) => student && (student.id === value || student.uid === value)
@@ -300,11 +629,16 @@ function getSelectedStudentProfile() {
   const emailField = document.getElementById("studentEmail");
   const parsedEmail = email || fallback?.email || extractEmail(option?.textContent || "");
   const effectiveEmail = parsedEmail || (emailField ? emailField.value.trim() : "");
+  const nameField = document.getElementById("studentName");
   const profile = {
     uid: uid || fallback?.uid || "",
     email: effectiveEmail,
+    displayName:
+      nameAttr || fallback?.displayName || fallback?.name || (nameField ? nameField.value.trim() : ""),
+    matricula: matriculaAttr || fallback?.matricula || fallback?.id || value || "",
+    id: fallback?.id || value || "",
   };
-  if (profile.uid || profile.email) return profile;
+  if (profile.uid || profile.email || profile.matricula) return profile;
   return null;
 }
 
@@ -333,6 +667,7 @@ async function main() {
 
 onAuth((user) => {
   authUser = user;
+  updateUploadButtonsState(currentStudentProfile);
   if (!uiReady) return;
   if (!getSelectedStudentProfile()) {
     if (user) {
