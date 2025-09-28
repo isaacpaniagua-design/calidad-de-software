@@ -21,7 +21,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 import {
   ref as storageRef,
-  uploadBytesResumable,
+  uploadBytes,
   getDownloadURL,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
 
@@ -516,18 +516,11 @@ async function uploadEvidenceFile(file, studentUid) {
   const safeName = sanitizeFileName(file?.name || "evidencia");
   const path = `studentEvidence/${studentUid}/${Date.now()}_${safeName}`;
   const ref = storageRef(storage, path);
-  return new Promise((resolve, reject) => {
-    const task = uploadBytesResumable(ref, file);
-    task.on(
-      "state_changed",
-      null,
-      (error) => reject(error),
-      async () => {
-        const url = await getDownloadURL(ref);
-        resolve({ url, path, fileName: safeName });
-      }
-    );
-  });
+  // Se usa uploadBytes en lugar de uploadBytesResumable para evitar la
+  // solicitud CORS de preflight que falla en el bucket de producción.
+  await uploadBytes(ref, file);
+  const url = await getDownloadURL(ref);
+  return { url, path, fileName: safeName };
 }
 
 async function tryGetDocId(db, id) {
