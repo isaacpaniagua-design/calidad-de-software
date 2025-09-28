@@ -721,17 +721,52 @@ function sanitizeStudentInput(data){
 
 // ===== Firestore =====
 async function fetchStudents(db, grupoId){
-  var out = []; var seen={};
-  try{
-    var s = await getDocs(query(collection(db, 'grupos/'+grupoId+'/members'), where('role','==','student')));
-    s.forEach(function(d){ var m=d.data()||{}; var uid=d.id; if(!seen[uid]){ seen[uid]=1; out.push({uid:uid, displayName:m.displayName||m.nombre||'Alumno', email:m.email||'', matricula:m.matricula||null}); } });
-  }catch(e){}
-  if (!out.length){
-    try{
-      var s2 = await getDocs(query(collection(db, 'users'), where('role','==','student'), limit(300)));
-      s2.forEach(function(d){ var m=d.data()||{}; var uid=d.id; if(!seen[uid]){ seen[uid]=1; out.push({uid:uid, displayName:m.displayName||m.nombre||'Alumno', email:m.email||'', matricula:m.matricula||null}); } });
-    }catch(e){}
+  var out = [];
+  var seen = {};
+
+  function pushFromSnapshot(snap){
+    if (!snap || snap.empty) return;
+    snap.forEach(function(docSnap){
+      var data = docSnap.data() || {};
+      var uid = docSnap.id;
+      if (seen[uid]) return;
+      seen[uid] = 1;
+      out.push({
+        uid: uid,
+        displayName: data.displayName || data.nombre || 'Alumno',
+        email: data.email || '',
+        matricula: data.matricula || null,
+      });
+    });
   }
+
+  try {
+    var courseRef = doc(db, 'courses', grupoId);
+    var courseMembers = collection(courseRef, 'members');
+    var snapCourse = await getDocs(query(courseMembers, where('role', '==', 'student')));
+    pushFromSnapshot(snapCourse);
+  } catch (_err) {
+    // Ignorar y continuar con otras rutas.
+  }
+
+  try {
+    var grupoRef = doc(db, 'grupos', grupoId);
+    var grupoMembers = collection(grupoRef, 'members');
+    var snapGrupo = await getDocs(query(grupoMembers, where('role', '==', 'student')));
+    pushFromSnapshot(snapGrupo);
+  } catch (_err2) {
+    // Ignorar y continuar con otras rutas.
+  }
+
+  if (!out.length){
+    try {
+      var usersSnap = await getDocs(query(collection(db, 'users'), where('role', '==', 'student'), limit(300)));
+      pushFromSnapshot(usersSnap);
+    } catch (_err3) {
+      // Ignorar error final y regresar lo que se tenga.
+    }
+  }
+
   return out;
 }
 
