@@ -209,6 +209,7 @@ function groupUploadsByKind(list){
 
 var DATA_ADMIN_ALLOWLIST = {
   'isaac.paniagua@potros.itson.edu.mx': true,
+  'iman.guaymas@potros.itson.edu.mx': true,
 };
 
 function isDataAdminUser(user){
