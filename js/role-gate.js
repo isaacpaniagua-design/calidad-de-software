@@ -52,19 +52,11 @@ function applyMaterialsRole(isTeacher) {
     isTeacher ? "teacherBtn" : "studentBtn"
   );
   if (active) active.classList.add("active");
-  // Inject auth button in header
-  const roleToggle = document.querySelector(".role-toggle");
-  const authBtn = upsertAuthButton(
-    roleToggle || document.querySelector(".header-content")
-  );
-  authBtn.textContent = getAuthInstance()?.currentUser
-    ? "Cerrar sesion"
-    : "Iniciar sesion";
-  authBtn.onclick = async () => {
-    const auth = getAuthInstance();
-    if (auth?.currentUser) await signOutCurrent();
-    else await signInWithGooglePotros();
-  };
+  // Remove legacy auth button injected directly on materiales.html.
+  const legacyAuthBtn = document.getElementById("qs-auth-btn");
+  if (legacyAuthBtn) {
+    legacyAuthBtn.remove();
+  }
 }
 
 function applyGradesRole(isTeacher) {
