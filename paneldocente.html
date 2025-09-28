@@ -871,6 +871,16 @@
         >
           Cronograma
         </button>
+        <button
+          id="tab-btn-datastore"
+          class="pd-tab"
+          type="button"
+          data-tab-target="datastore"
+          aria-controls="tab-datastore"
+          aria-pressed="false"
+        >
+          Gestión de datos
+        </button>
       </nav>
 
       <section
@@ -1194,6 +1204,114 @@
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section
+        id="tab-datastore"
+        class="pd-panel"
+        role="tabpanel"
+        aria-labelledby="tab-btn-datastore"
+        hidden
+      >
+        <div>
+          <h2>Gestión de datos en Firebase</h2>
+          <p class="pd-subtitle">
+            Consulta y administra documentos directamente desde Firestore para resolver incidencias de datos del grupo
+            seleccionado.
+          </p>
+        </div>
+        <article class="pd-card" id="pd-data-locked" hidden>
+          <h3>Acceso restringido</h3>
+          <p class="pd-subtitle">
+            Esta consola solo está disponible para el personal autorizado. Comunícate con coordinación si necesitas
+            permisos de administración.
+          </p>
+        </article>
+        <article class="pd-card" id="pd-data-console" hidden>
+          <div class="pd-chip-row" aria-label="Rutas rápidas de datos">
+            <button class="pd-chip" type="button" data-data-shortcut="students" data-data-path="grupos/:grupo/members">
+              👥 Estudiantes
+            </button>
+            <button class="pd-chip" type="button" data-data-shortcut="deliverables" data-data-path="grupos/:grupo/deliverables">
+              📦 Entregables
+            </button>
+            <button class="pd-chip" type="button" data-data-shortcut="assignments" data-data-path="grupos/:grupo/assignments">
+              📝 Asignaciones
+            </button>
+            <button class="pd-chip" type="button" data-data-shortcut="exams" data-data-path="grupos/:grupo/exams">
+              🧪 Exámenes
+            </button>
+            <button class="pd-chip" type="button" data-data-shortcut="uploads" data-data-path="uploads">
+              📁 Entregas (global)
+            </button>
+          </div>
+          <form id="pd-data-path-form" class="pd-form" autocomplete="off">
+            <div class="pd-form-row cols-2">
+              <label class="pd-field">
+                Ruta de la colección o documento
+                <input
+                  id="pd-data-path"
+                  name="data-path"
+                  type="text"
+                  placeholder="Ej. grupos/:grupo/deliverables"
+                  required
+                />
+              </label>
+              <label class="pd-field">
+                ID del documento (opcional)
+                <input
+                  id="pd-data-doc"
+                  name="data-doc"
+                  type="text"
+                  placeholder="Deja vacío para listar la colección"
+                />
+              </label>
+            </div>
+            <div class="pd-inline-actions">
+              <button id="pd-data-load" class="pd-button primary" type="submit">Consultar datos</button>
+              <button id="pd-data-refresh" class="pd-button secondary" type="button">Recargar</button>
+              <button id="pd-data-create" class="pd-button secondary" type="button">Nuevo documento</button>
+            </div>
+          </form>
+          <div class="pd-form-row">
+            <label class="pd-field">
+              Contenido del documento (JSON)
+              <textarea
+                id="pd-data-json"
+                name="data-json"
+                rows="12"
+                placeholder="Selecciona un documento para editarlo o genera uno nuevo"
+                disabled
+              ></textarea>
+            </label>
+          </div>
+          <div class="pd-inline-actions">
+            <button id="pd-data-save" class="pd-button primary" type="button" disabled>Guardar cambios</button>
+            <button id="pd-data-delete" class="pd-button secondary" type="button" disabled>Eliminar documento</button>
+          </div>
+          <p class="pd-subtitle" id="pd-data-status">Selecciona una colección para comenzar.</p>
+        </article>
+        <article class="pd-card" id="pd-data-results-card" hidden>
+          <h3>Documentos encontrados</h3>
+          <p class="pd-subtitle">
+            Selecciona un documento para visualizarlo y editarlo. El listado se limita a los primeros 50 resultados para
+            proteger el rendimiento del panel.
+          </p>
+          <div class="pd-table-wrap" role="region" aria-live="polite">
+            <table class="pd-table">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Vista previa</th>
+                  <th scope="col" class="pd-col-actions">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="pd-data-results">
+                <tr><td colspan="3" class="pd-empty">Sin resultados por mostrar.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
       </section>
     </main>
 
