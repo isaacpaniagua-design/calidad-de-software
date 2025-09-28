@@ -369,6 +369,7 @@ function updateUploadButtonsState(profile) {
   displays.forEach((entry) => {
     if (!entry || !entry.uploadButton) return;
     const cannotUploadActivity = !entry.activity || !entry.activity.id;
+
     const eligibility = getUploadEligibility(profile);
     const disabled =
       entry.uploading ||
@@ -376,10 +377,13 @@ function updateUploadButtonsState(profile) {
       storageDisabled ||
       !eligibility.allowed;
     entry.uploadButton.disabled = disabled;
+
     if (cannotUploadActivity) {
       entry.uploadButton.title = "Actividad no vinculada";
     } else if (storageDisabled) {
       entry.uploadButton.title =
+
+
         "El almacenamiento de evidencias está deshabilitado.";
     } else if (entry.uploading) {
       entry.uploadButton.title = "Subiendo evidencia…";
@@ -624,6 +628,13 @@ function handleUploadRequest(entry) {
   const eligibility = getUploadEligibility(currentStudentProfile);
   if (!eligibility.allowed) {
     setStatus(entry, eligibility.reason, { uploaded: false, title: "" });
+    return;
+  }
+  if (!isStorageAvailable()) {
+    setStatus(entry, "El almacenamiento de evidencias no está disponible.", {
+      uploaded: false,
+      title: "",
+    });
     return;
   }
   if (!isStorageAvailable()) {
