@@ -769,8 +769,7 @@ export function subscribeForumTopics(cb, onError) {
   const db = getDb();
   const qy = query(
     collection(db, "forum_topics"),
-    orderBy("updatedAt", "desc"),
-    orderBy("createdAt", "desc")
+    orderBy("updatedAt", "desc")
   );
   return onSnapshot(
     qy,

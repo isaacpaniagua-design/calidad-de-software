@@ -363,7 +363,7 @@ onAuth(async user => {
         if (/permission-denied/i.test(code)) {
           showDebug('Permisos insuficientes. Verifica teachers/{uid} y reglas.', 'warn');
         } else if (/failed-precondition|index/i.test(code)) {
-          showDebug('Se requiere índice compuesto (updatedAt, createdAt). Crea el índice en Firestore.', 'warn');
+          showDebug('Verifica que los documentos tengan el campo updatedAt y que el índice simple sobre updatedAt esté habilitado.', 'warn');
         } else {
           showDebug('Error suscripción temas: ' + code, 'error');
         }
