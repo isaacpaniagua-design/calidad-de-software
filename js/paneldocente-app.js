@@ -214,8 +214,7 @@ function renderActivityLog() {
     activityLogEl.textContent = "Sin actividad reciente.";
     return;
   }
-  activityLogEl.textContent = state.activityLog.join("
-");
+  activityLogEl.textContent = state.activityLog.join("\n");
 }
 
 function renderOverview() {
@@ -246,8 +245,7 @@ function renderMembers() {
         </tr>
       `;
     })
-    .join("
-");
+    .join("");
 }
 
 function renderUploads(filterText = "") {
@@ -303,8 +301,7 @@ function renderUploads(filterText = "") {
         </article>
       `;
     })
-    .join("
-");
+    .join("");
 }
 
 function renderMaterials() {
@@ -333,8 +330,7 @@ function renderMaterials() {
         </div>
       `;
     })
-    .join("
-");
+    .join("");
 }
 
 function setCollectionFormState(collection, doc = null) {
@@ -367,15 +363,27 @@ function renderCollection(collection) {
             <div class="pd-collection-item__header">
               <span><strong>${escapedId}</strong></span>
               <div class="pd-collection__actions">
-                <button type="button" class="pd-button secondary" data-action="edit-doc" data-collection="${collection}" data-doc="${escapedId}">Editar</button>
-                <button type="button" class="pd-button danger" data-action="delete-doc" data-collection="${collection}" data-doc="${escapedId}">Eliminar</button>
+                <button
+                  type="button"
+                  class="pd-button secondary"
+                  data-action="edit-doc"
+                  data-collection="${collection}"
+                  data-doc="${escapedId}"
+                >Editar</button>
+                <button
+                  type="button"
+                  class="pd-button danger"
+                  data-action="delete-doc"
+                  data-collection="${collection}"
+                  data-doc="${escapedId}"
+                >Eliminar</button>
               </div>
             </div>
             <pre class="pd-code">${escapeHtml(truncated)}</pre>
           </article>
         `;
       })
-      .join("", "");
+      .join("");
   }
   const countEl = collectionCountEls[collection];
   if (countEl) {
@@ -872,8 +880,7 @@ async function loadGroupsOnce() {
     }
     groupSelect.innerHTML = options
       .map((option) => `<option value="${option.id}" ${option.id === state.groupId ? "selected" : ""}>${option.nombre}</option>`)
-      .join("
-");
+      .join("");
   } catch (error) {
     console.error("load groups", error);
     groupSelect.innerHTML = `<option value="${state.groupId}" selected>${state.groupId}</option>`;
