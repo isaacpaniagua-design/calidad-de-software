@@ -540,7 +540,26 @@ export async function upsertStudentGrades(studentId, payload) {
   const db = getDb();
   const ref = doc(collection(db, "grades"), studentId);
   const existing = await getDoc(ref);
-  const base = { ...payload, updatedAt: serverTimestamp() };
+  const normalized = { ...(payload || {}) };
+
+  if (Object.prototype.hasOwnProperty.call(normalized, 'email')) {
+    const rawEmail = normalized.email;
+    const trimmedEmail = typeof rawEmail === 'string' ? rawEmail.trim() : rawEmail;
+    if (typeof trimmedEmail === 'string') {
+      normalized.email = trimmedEmail || null;
+      normalized.emailLower = trimmedEmail ? trimmedEmail.toLowerCase() : null;
+    } else {
+      normalized.email = trimmedEmail ?? null;
+      normalized.emailLower = null;
+    }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(normalized, 'uid')) {
+    const trimmedUid = normalized.uid ? String(normalized.uid).trim() : '';
+    normalized.uid = trimmedUid || null;
+  }
+
+  const base = { ...normalized, updatedAt: serverTimestamp() };
   if (!existing.exists()) base.createdAt = serverTimestamp();
   await setDoc(ref, base, { merge: true });
 }
@@ -548,7 +567,32 @@ export async function upsertStudentGrades(studentId, payload) {
 export async function updateStudentGradePartial(studentId, path, value) {
   const db = getDb();
   const ref = doc(collection(db, "grades"), studentId);
-  await updateDoc(ref, { [path]: value, updatedAt: serverTimestamp() });
+  const updates = { updatedAt: serverTimestamp() };
+
+  if (path === 'email') {
+    const trimmedEmail = typeof value === 'string' ? value.trim() : value;
+    if (typeof trimmedEmail === 'string') {
+      updates.email = trimmedEmail || null;
+      updates.emailLower = trimmedEmail ? trimmedEmail.toLowerCase() : null;
+    } else {
+      updates.email = trimmedEmail ?? null;
+      updates.emailLower = null;
+    }
+  } else if (path === 'uid') {
+    const trimmedUid = typeof value === 'string' ? value.trim() : value;
+    if (typeof trimmedUid === 'string') {
+      const safeUid = trimmedUid.trim();
+      updates.uid = safeUid || null;
+    } else if (trimmedUid) {
+      updates.uid = String(trimmedUid).trim() || null;
+    } else {
+      updates.uid = null;
+    }
+  } else {
+    updates[path] = value;
+  }
+
+  await updateDoc(ref, updates);
 }
 
 // ====== Materiales (Storage + Firestore) ======

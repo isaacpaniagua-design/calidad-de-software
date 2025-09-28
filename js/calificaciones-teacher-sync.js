@@ -8,8 +8,12 @@ import {
   buildCandidateDocIds,
 } from './calificaciones-helpers.js';
 import {
+  collection,
   doc,
   getDoc,
+  getDocs,
+  orderBy,
+  query,
   setDoc,
   serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
@@ -59,6 +63,92 @@ function shouldUseFirestore() {
   if (!db) return false;
   if (isTeacherRole()) return true;
   return isTeacherUiEnabled();
+}
+
+function rosterStudents() {
+  if (typeof window === 'undefined') return [];
+  const list = window.students;
+  return Array.isArray(list) ? list : [];
+}
+
+function normalizeLower(value) {
+  if (value == null) return '';
+  try {
+    return String(value).trim().toLowerCase();
+  } catch (_) {
+    return '';
+  }
+}
+
+function resolveStudentProfile(profile = {}) {
+  const initialUid = profile.uid ? String(profile.uid).trim() : '';
+  const resolved = {
+    id: profile.id || profile.studentId || profile.matricula || null,
+    studentId: profile.studentId || profile.id || profile.matricula || null,
+    matricula: profile.matricula || profile.studentId || profile.id || null,
+    name: profile.name || profile.displayName || null,
+    email: profile.email ? String(profile.email).trim() : null,
+    uid: initialUid || null,
+  };
+
+  const roster = rosterStudents();
+  const idCandidates = [
+    profile.id,
+    profile.studentId,
+    profile.matricula,
+  ].map(normalizeLower).filter(Boolean);
+  const emailLower = normalizeLower(profile.email);
+  let match = null;
+
+  if (idCandidates.length) {
+    match = roster.find((student) => {
+      if (!student) return false;
+      const studentIdLower = normalizeLower(student.id);
+      const matriculaLower = normalizeLower(student.matricula);
+      return idCandidates.some((candidate) =>
+        (studentIdLower && candidate === studentIdLower) ||
+        (matriculaLower && candidate === matriculaLower)
+      );
+    });
+  }
+
+  if (!match && emailLower) {
+    match = roster.find(
+      (student) => normalizeLower(student && student.email) === emailLower
+    );
+  }
+
+  if (match) {
+    if (!resolved.uid && match.uid) {
+      const matchUid = String(match.uid).trim();
+      if (matchUid) resolved.uid = matchUid;
+    }
+    if (!resolved.email && match.email) {
+      resolved.email = match.email;
+    }
+    if (!resolved.name) {
+      resolved.name =
+        match.displayName ||
+        match.name ||
+        match.nombre ||
+        resolved.name ||
+        null;
+    }
+    if (!resolved.studentId && (match.id || match.matricula)) {
+      resolved.studentId = match.id || match.matricula;
+    }
+    if (!resolved.matricula && (match.matricula || match.id)) {
+      resolved.matricula = match.matricula || match.id;
+    }
+  }
+
+  if (!resolved.id && resolved.studentId) {
+    resolved.id = resolved.studentId;
+  }
+
+  resolved.emailLower = normalizeLower(resolved.email) || null;
+
+  return resolved;
 }
 
 function detectUnidad(input) {
@@ -237,18 +327,42 @@ function collectItemsForFirestore() {
 function buildProfile(studentId) {
   const nameEl = document.getElementById('studentName');
   const emailEl = document.getElementById('studentEmail');
-  return {
+  const select = document.getElementById('studentSelect');
+  let option = select?.selectedOptions?.[0] || null;
+  if (select && studentId) {
+    const match = Array.from(select.options || []).find((opt) => opt?.value === studentId);
+    if (match) option = match;
+  }
+  const base = {
     id: studentId || null,
     studentId: studentId || null,
     matricula: studentId || null,
     name: nameEl ? nameEl.value || null : null,
     email: emailEl ? emailEl.value || null : null,
   };
+  if (option?.dataset) {
+    const optionEmail = option.dataset.email ? option.dataset.email.trim() : '';
+    if (!base.email && optionEmail) {
+      base.email = optionEmail;
+    }
+    const optionUid = option.dataset.uid ? option.dataset.uid.trim() : '';
+    if (optionUid) {
+      base.uid = optionUid;
+    }
+    if (!base.name && option.dataset.name) {
+      base.name = option.dataset.name;
+    }
+    if (!base.matricula && option.dataset.matricula) {
+      base.matricula = option.dataset.matricula;
+    }
+  }
+  return resolveStudentProfile(base);
 }
 
 async function fetchRemoteItems(profile) {
   if (!shouldUseFirestore()) return null;
-  const candidates = buildCandidateDocIds(profile);
+  const normalized = resolveStudentProfile(profile || {});
+  const candidates = buildCandidateDocIds(normalized);
   if (!candidates.length) return null;
   for (let i = 0; i < candidates.length; i++) {
     try {
@@ -263,18 +377,34 @@ async function fetchRemoteItems(profile) {
       console.warn('[calificaciones-teacher-sync] fetchRemoteItems', err);
     }
   }
-  return null;
+  const uid = normalized && normalized.uid ? normalized.uid : null;
+  if (!uid) return [];
+  try {
+    const calificacionRef = doc(db, 'grupos', GRUPO_ID, 'calificaciones', uid);
+    const base = collection(calificacionRef, 'items');
+    const snap = await getDocs(query(base, orderBy('fecha', 'asc')));
+    return snap.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+  } catch (err) {
+    console.warn('[calificaciones-teacher-sync] fetchRemoteItems', err);
+    return [];
+  }
 }
 
 async function persistRemoteItems(profile, items) {
   if (!shouldUseFirestore()) return;
-  const docId = getPrimaryDocId(profile);
+  const normalized = resolveStudentProfile(profile || {});
+  const docId = getPrimaryDocId(normalized);
   if (!docId) return;
+  const lowerEmail = normalized.emailLower && normalized.emailLower.length ? normalized.emailLower : null;
+  const studentUid = normalized.uid ? String(normalized.uid).trim() : null;
+  const primaryId = normalized.studentId || normalized.id || normalized.matricula || null;
   const payload = {
     items: Array.isArray(items) ? items : [],
-    studentId: profile.studentId || null,
-    studentName: profile.name || null,
-    studentEmail: profile.email || null,
+    studentId: primaryId,
+    studentName: normalized.name || null,
+    studentEmail: normalized.email || null,
+    studentEmailLower: lowerEmail,
+    studentUid: studentUid || null,
     updatedAt: serverTimestamp(),
   };
   try {
@@ -292,12 +422,13 @@ const remoteSync = (() => {
   return {
     schedule(profile) {
       if (!shouldUseFirestore()) return;
-      lastProfile = Object.assign({}, profile);
+      const normalizedProfile = resolveStudentProfile(profile || {});
+      lastProfile = normalizedProfile;
       if (timer) clearTimeout(timer);
       timer = setTimeout(() => {
         timer = null;
         const items = collectItemsForFirestore();
-        persistRemoteItems(lastProfile, items).catch((err) => {
+        persistRemoteItems(normalizedProfile, items).catch((err) => {
           console.error('[calificaciones-teacher-sync] scheduleSync', err);
         });
       }, 800);
@@ -308,10 +439,11 @@ const remoteSync = (() => {
         clearTimeout(timer);
         timer = null;
       }
-      const target = profile || lastProfile;
-      if (!target) return;
+      const targetProfile = profile ? resolveStudentProfile(profile) : lastProfile;
+      if (!targetProfile) return;
+      lastProfile = targetProfile;
       const items = collectItemsForFirestore();
-      await persistRemoteItems(target, items);
+      await persistRemoteItems(targetProfile, items);
     },
   };
 })();
