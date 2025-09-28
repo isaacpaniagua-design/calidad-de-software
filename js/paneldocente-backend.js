@@ -10,7 +10,7 @@ import {
 } from './student-uploads.js';
 import {
   collection, doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc,
-  query, where, orderBy, limit, serverTimestamp, Timestamp,
+  query, where, orderBy, limit, startAfter, serverTimestamp, Timestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 function $(sel, root){ return (root || document).querySelector(sel); }
@@ -45,6 +45,8 @@ function formatSize(bytes){
 }
 
 var ROSTER_STORAGE_KEY = 'qs_roster_cache';
+var DATA_COLLECTION_PAGE_SIZE = 50;
+var DATA_COLLECTION_MAX_PAGES = 200;
 
 function normalizeEmail(value){
   if (value == null) return '';
@@ -1845,6 +1847,41 @@ function bindDataAdmin(db, grupo, state){
     };
   }
 
+  async function fetchEntireCollection(colRef, pageSize){
+    var docs = [];
+    var map = {};
+    var lastDoc = null;
+    var hasMore = true;
+    var guard = 0;
+    var truncated = false;
+    var limitPerPage = Number(pageSize) || DATA_COLLECTION_PAGE_SIZE;
+    if (!limitPerPage || limitPerPage < 1) limitPerPage = DATA_COLLECTION_PAGE_SIZE;
+    while (hasMore && guard < DATA_COLLECTION_MAX_PAGES){
+      guard += 1;
+      var constraints = [limit(limitPerPage)];
+      if (lastDoc) constraints.push(startAfter(lastDoc));
+      var q = query(colRef, ...constraints);
+      var snap = await getDocs(q);
+      if (snap.empty){
+        break;
+      }
+      var snapDocs = snap.docs || [];
+      for (var i = 0; i < snapDocs.length; i++){
+        var docSnap = snapDocs[i];
+        var data = docSnap.data();
+        docs.push({ id: docSnap.id, data: data });
+        map[docSnap.id] = data;
+      }
+      lastDoc = snapDocs[snapDocs.length - 1] || null;
+      hasMore = snap.size >= limitPerPage && !!lastDoc;
+    }
+    if (hasMore){
+      truncated = true;
+      console.warn('pd-data:collection', 'Se alcanzó el máximo de páginas permitidas al cargar la colección.');
+    }
+    return { docs: docs, map: map, truncated: truncated };
+  }
+
   async function loadCollection(rawPath, opts){
     opts = opts || {};
     var info;
@@ -1869,20 +1906,19 @@ function bindDataAdmin(db, grupo, state){
       var args = info.collectionSegments.slice();
       args.unshift(getActiveDb());
       var colRef = collection.apply(null, args);
-      var snap = await getDocs(query(colRef, limit(50)));
-      var docs = [];
-      var map = {};
-      snap.forEach(function(docSnap){
-        var data = docSnap.data();
-        docs.push({ id: docSnap.id, data: data });
-        map[docSnap.id] = data;
-      });
+      var result = await fetchEntireCollection(colRef, DATA_COLLECTION_PAGE_SIZE);
+      var docs = result.docs;
+      var map = result.map;
       current.lastDocs = docs;
       current.docsMap = map;
       clearEditor();
       renderCollection();
       if (!opts.silent){
-        setStatus(docs.length ? ('Se listaron ' + docs.length + ' documento(s).') : 'La colección está vacía.');
+        var statusMsg = docs.length ? ('Se listaron ' + docs.length + ' documento(s).') : 'La colección está vacía.';
+        if (result.truncated){
+          statusMsg += ' Se mostraron los primeros ' + docs.length + ' documentos. Refina la ruta o filtra los datos para ver más.';
+        }
+        setStatus(statusMsg);
       }
     } catch (err) {
       console.error('pd-data:collection', err);
