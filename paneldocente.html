@@ -154,6 +154,144 @@
         gap: clamp(18px, 3vw, 28px);
       }
 
+      .pd-section-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .pd-section-header h2 {
+        margin: 0;
+        font-size: clamp(1.1rem, 3vw, 1.35rem);
+      }
+
+      .pd-collections-grid {
+        display: grid;
+        gap: clamp(16px, 3vw, 24px);
+      }
+
+      @media (min-width: 960px) {
+        .pd-collections-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      .pd-collection {
+        background: var(--pd-surface);
+        border: 1px solid var(--pd-border);
+        border-radius: var(--pd-radius);
+        padding: clamp(16px, 3vw, 22px);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+      }
+
+      .pd-collection__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+      }
+
+      .pd-collection__header h3 {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .pd-collection__header p {
+        margin: 4px 0 0;
+        color: var(--pd-muted);
+        font-size: 0.85rem;
+      }
+
+      .pd-collection__actions {
+        display: inline-flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .pd-collection__content {
+        display: grid;
+        gap: 16px;
+      }
+
+      .pd-collection__list {
+        display: grid;
+        gap: 12px;
+        max-height: 320px;
+        overflow: auto;
+        padding-right: 4px;
+      }
+
+      .pd-collection-item {
+        border: 1px solid var(--pd-border);
+        border-radius: 12px;
+        padding: 12px;
+        background: rgba(148, 163, 184, 0.08);
+        display: grid;
+        gap: 8px;
+      }
+
+      .pd-collection-item__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        font-size: 0.9rem;
+      }
+
+      .pd-code {
+        margin: 0;
+        padding: 12px;
+        background: rgba(15, 23, 42, 0.08);
+        border-radius: 10px;
+        font-size: 0.8rem;
+        max-height: 220px;
+        overflow: auto;
+        line-height: 1.35;
+      }
+
+      .pd-collection-form {
+        display: grid;
+        gap: 12px;
+      }
+
+      .pd-collection-form label {
+        display: grid;
+        gap: 6px;
+        font-weight: 600;
+        font-size: 0.85rem;
+      }
+
+      .pd-collection-form input,
+      .pd-collection-form textarea {
+        width: 100%;
+        padding: 10px;
+        border-radius: 10px;
+        border: 1px solid var(--pd-border);
+        font: inherit;
+        background: #fff;
+      }
+
+      .pd-collection-form textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+
+      .pd-collection-form__actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .pd-collection-empty {
+        color: var(--pd-muted);
+        font-size: 0.9rem;
+      }
+
       .pd-banner {
         padding: 12px 16px;
         border-radius: 10px;
@@ -342,6 +480,7 @@
         <button type="button" data-action="switch-view" data-target="students">Alumnos</button>
         <button type="button" data-action="switch-view" data-target="uploads">Evidencias</button>
         <button type="button" data-action="switch-view" data-target="materials">Materiales</button>
+        <button type="button" data-action="switch-view" data-target="datasets">Colecciones</button>
         <button type="button" data-action="switch-view" data-target="admin">Administracion</button>
       </nav>
 
@@ -488,6 +627,254 @@
               <p class="pd-empty">Aun no hay materiales registrados.</p>
             </div>
           </article>
+        </section>
+
+        <section data-view-panel="datasets">
+          <article class="pd-card">
+            <div class="pd-section-header">
+              <div>
+                <h2>Gestion de colecciones</h2>
+                <p class="pd-muted">Consulta y administra los documentos clave del curso directamente desde Firebase.</p>
+              </div>
+              <div class="pd-collection__actions">
+                <button type="button" class="pd-button secondary" data-action="refresh-all-collections">Recargar todas</button>
+              </div>
+            </div>
+            <p class="pd-muted">Selecciona una coleccion para cargar sus registros. Puedes editar un documento existente o crear uno nuevo introduciendo los datos en formato JSON.</p>
+          </article>
+
+          <div class="pd-collections-grid">
+            <article class="pd-collection" data-collection="attendances">
+              <div class="pd-collection__header">
+                <div>
+                  <h3>Asistencias</h3>
+                  <p>Documentos de la coleccion <strong>attendances</strong>.</p>
+                </div>
+                <div class="pd-collection__actions">
+                  <span class="pd-muted">Registros: <strong data-collection-count="attendances">0</strong></span>
+                  <button type="button" class="pd-button secondary" data-action="refresh-collection" data-collection="attendances">Recargar</button>
+                </div>
+              </div>
+              <div class="pd-collection__content">
+                <div id="pd-collection-attendances" class="pd-collection__list" aria-live="polite">
+                  <p class="pd-collection-empty">Sin datos cargados.</p>
+                </div>
+                <form class="pd-collection-form" data-collection-form="attendances">
+                  <label>
+                    ID del documento (opcional)
+                    <input type="text" name="docId" placeholder="Deja vacio para generar uno nuevo" autocomplete="off" />
+                  </label>
+                  <label>
+                    Datos en formato JSON
+                    <textarea name="docData" placeholder='{ "campo": "valor" }'></textarea>
+                  </label>
+                  <div class="pd-collection-form__actions">
+                    <button type="submit" class="pd-button primary">Guardar</button>
+                    <button type="button" class="pd-button secondary" data-action="reset-form" data-collection="attendances">Limpiar</button>
+                    <button type="button" class="pd-button danger" data-action="delete-doc" data-collection="attendances">Eliminar</button>
+                  </div>
+                </form>
+              </div>
+            </article>
+
+            <article class="pd-collection" data-collection="courses">
+              <div class="pd-collection__header">
+                <div>
+                  <h3>Cursos</h3>
+                  <p>Documentos de la coleccion <strong>courses</strong>.</p>
+                </div>
+                <div class="pd-collection__actions">
+                  <span class="pd-muted">Registros: <strong data-collection-count="courses">0</strong></span>
+                  <button type="button" class="pd-button secondary" data-action="refresh-collection" data-collection="courses">Recargar</button>
+                </div>
+              </div>
+              <div class="pd-collection__content">
+                <div id="pd-collection-courses" class="pd-collection__list" aria-live="polite">
+                  <p class="pd-collection-empty">Sin datos cargados.</p>
+                </div>
+                <form class="pd-collection-form" data-collection-form="courses">
+                  <label>
+                    ID del documento (opcional)
+                    <input type="text" name="docId" placeholder="Deja vacio para generar uno nuevo" autocomplete="off" />
+                  </label>
+                  <label>
+                    Datos en formato JSON
+                    <textarea name="docData" placeholder='{ "nombre": "Calidad de Software" }'></textarea>
+                  </label>
+                  <div class="pd-collection-form__actions">
+                    <button type="submit" class="pd-button primary">Guardar</button>
+                    <button type="button" class="pd-button secondary" data-action="reset-form" data-collection="courses">Limpiar</button>
+                    <button type="button" class="pd-button danger" data-action="delete-doc" data-collection="courses">Eliminar</button>
+                  </div>
+                </form>
+              </div>
+            </article>
+
+            <article class="pd-collection" data-collection="forum_topics">
+              <div class="pd-collection__header">
+                <div>
+                  <h3>Temas del foro</h3>
+                  <p>Documentos de la coleccion <strong>forum_topics</strong>.</p>
+                </div>
+                <div class="pd-collection__actions">
+                  <span class="pd-muted">Registros: <strong data-collection-count="forum_topics">0</strong></span>
+                  <button type="button" class="pd-button secondary" data-action="refresh-collection" data-collection="forum_topics">Recargar</button>
+                </div>
+              </div>
+              <div class="pd-collection__content">
+                <div id="pd-collection-forum_topics" class="pd-collection__list" aria-live="polite">
+                  <p class="pd-collection-empty">Sin datos cargados.</p>
+                </div>
+                <form class="pd-collection-form" data-collection-form="forum_topics">
+                  <label>
+                    ID del documento (opcional)
+                    <input type="text" name="docId" placeholder="Deja vacio para generar uno nuevo" autocomplete="off" />
+                  </label>
+                  <label>
+                    Datos en formato JSON
+                    <textarea name="docData" placeholder='{ "titulo": "Presentaciones" }'></textarea>
+                  </label>
+                  <div class="pd-collection-form__actions">
+                    <button type="submit" class="pd-button primary">Guardar</button>
+                    <button type="button" class="pd-button secondary" data-action="reset-form" data-collection="forum_topics">Limpiar</button>
+                    <button type="button" class="pd-button danger" data-action="delete-doc" data-collection="forum_topics">Eliminar</button>
+                  </div>
+                </form>
+              </div>
+            </article>
+
+            <article class="pd-collection" data-collection="grupos">
+              <div class="pd-collection__header">
+                <div>
+                  <h3>Grupos</h3>
+                  <p>Documentos de la coleccion <strong>grupos</strong>.</p>
+                </div>
+                <div class="pd-collection__actions">
+                  <span class="pd-muted">Registros: <strong data-collection-count="grupos">0</strong></span>
+                  <button type="button" class="pd-button secondary" data-action="refresh-collection" data-collection="grupos">Recargar</button>
+                </div>
+              </div>
+              <div class="pd-collection__content">
+                <div id="pd-collection-grupos" class="pd-collection__list" aria-live="polite">
+                  <p class="pd-collection-empty">Sin datos cargados.</p>
+                </div>
+                <form class="pd-collection-form" data-collection-form="grupos">
+                  <label>
+                    ID del documento (opcional)
+                    <input type="text" name="docId" placeholder="Deja vacio para generar uno nuevo" autocomplete="off" />
+                  </label>
+                  <label>
+                    Datos en formato JSON
+                    <textarea name="docData" placeholder='{ "nombre": "calidad-2025" }'></textarea>
+                  </label>
+                  <div class="pd-collection-form__actions">
+                    <button type="submit" class="pd-button primary">Guardar</button>
+                    <button type="button" class="pd-button secondary" data-action="reset-form" data-collection="grupos">Limpiar</button>
+                    <button type="button" class="pd-button danger" data-action="delete-doc" data-collection="grupos">Eliminar</button>
+                  </div>
+                </form>
+              </div>
+            </article>
+
+            <article class="pd-collection" data-collection="materials">
+              <div class="pd-collection__header">
+                <div>
+                  <h3>Materiales (global)</h3>
+                  <p>Documentos de la coleccion <strong>materials</strong>.</p>
+                </div>
+                <div class="pd-collection__actions">
+                  <span class="pd-muted">Registros: <strong data-collection-count="materials">0</strong></span>
+                  <button type="button" class="pd-button secondary" data-action="refresh-collection" data-collection="materials">Recargar</button>
+                </div>
+              </div>
+              <div class="pd-collection__content">
+                <div id="pd-collection-materials" class="pd-collection__list" aria-live="polite">
+                  <p class="pd-collection-empty">Sin datos cargados.</p>
+                </div>
+                <form class="pd-collection-form" data-collection-form="materials">
+                  <label>
+                    ID del documento (opcional)
+                    <input type="text" name="docId" placeholder="Deja vacio para generar uno nuevo" autocomplete="off" />
+                  </label>
+                  <label>
+                    Datos en formato JSON
+                    <textarea name="docData" placeholder='{ "title": "Sesion 1" }'></textarea>
+                  </label>
+                  <div class="pd-collection-form__actions">
+                    <button type="submit" class="pd-button primary">Guardar</button>
+                    <button type="button" class="pd-button secondary" data-action="reset-form" data-collection="materials">Limpiar</button>
+                    <button type="button" class="pd-button danger" data-action="delete-doc" data-collection="materials">Eliminar</button>
+                  </div>
+                </form>
+              </div>
+            </article>
+
+            <article class="pd-collection" data-collection="studentUploads">
+              <div class="pd-collection__header">
+                <div>
+                  <h3>Evidencias globales</h3>
+                  <p>Documentos de la coleccion <strong>studentUploads</strong>.</p>
+                </div>
+                <div class="pd-collection__actions">
+                  <span class="pd-muted">Registros: <strong data-collection-count="studentUploads">0</strong></span>
+                  <button type="button" class="pd-button secondary" data-action="refresh-collection" data-collection="studentUploads">Recargar</button>
+                </div>
+              </div>
+              <div class="pd-collection__content">
+                <div id="pd-collection-studentUploads" class="pd-collection__list" aria-live="polite">
+                  <p class="pd-collection-empty">Sin datos cargados.</p>
+                </div>
+                <form class="pd-collection-form" data-collection-form="studentUploads">
+                  <label>
+                    ID del documento (opcional)
+                    <input type="text" name="docId" placeholder="Deja vacio para generar uno nuevo" autocomplete="off" />
+                  </label>
+                  <label>
+                    Datos en formato JSON
+                    <textarea name="docData" placeholder='{ "title": "Entrega 1" }'></textarea>
+                  </label>
+                  <div class="pd-collection-form__actions">
+                    <button type="submit" class="pd-button primary">Guardar</button>
+                    <button type="button" class="pd-button secondary" data-action="reset-form" data-collection="studentUploads">Limpiar</button>
+                    <button type="button" class="pd-button danger" data-action="delete-doc" data-collection="studentUploads">Eliminar</button>
+                  </div>
+                </form>
+              </div>
+            </article>
+
+            <article class="pd-collection" data-collection="teachers">
+              <div class="pd-collection__header">
+                <div>
+                  <h3>Docentes</h3>
+                  <p>Documentos de la coleccion <strong>teachers</strong>.</p>
+                </div>
+                <div class="pd-collection__actions">
+                  <span class="pd-muted">Registros: <strong data-collection-count="teachers">0</strong></span>
+                  <button type="button" class="pd-button secondary" data-action="refresh-collection" data-collection="teachers">Recargar</button>
+                </div>
+              </div>
+              <div class="pd-collection__content">
+                <div id="pd-collection-teachers" class="pd-collection__list" aria-live="polite">
+                  <p class="pd-collection-empty">Sin datos cargados.</p>
+                </div>
+                <form class="pd-collection-form" data-collection-form="teachers">
+                  <label>
+                    ID del documento (opcional)
+                    <input type="text" name="docId" placeholder="Deja vacio para generar uno nuevo" autocomplete="off" />
+                  </label>
+                  <label>
+                    Datos en formato JSON
+                    <textarea name="docData" placeholder='{ "displayName": "Docente" }'></textarea>
+                  </label>
+                  <div class="pd-collection-form__actions">
+                    <button type="submit" class="pd-button primary">Guardar</button>
+                    <button type="button" class="pd-button secondary" data-action="reset-form" data-collection="teachers">Limpiar</button>
+                    <button type="button" class="pd-button danger" data-action="delete-doc" data-collection="teachers">Eliminar</button>
+                  </div>
+                </form>
+              </div>
+            </article>
+          </div>
         </section>
 
         <section data-view-panel="admin">
