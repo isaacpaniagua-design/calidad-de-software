@@ -198,11 +198,7 @@ export function observeStudentUploadsByEmail(email, onChange, onError) {
 
   variants.forEach(({ field, value, key }) => {
     try {
-      const q = query(
-        uploadsCollection,
-        where(field, "==", value),
-        orderBy("submittedAt", "desc")
-      );
+      const q = query(uploadsCollection, where(field, "==", value));
       const unsubscribe = onSnapshot(
         q,
         (snapshot) => {
