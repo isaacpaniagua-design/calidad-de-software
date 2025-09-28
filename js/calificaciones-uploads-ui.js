@@ -270,7 +270,7 @@ function buildDisplayForItem(item) {
   }
 
   const viewWrapper = document.createElement("div");
-  viewWrapper.className = "upload-control teacher-only";
+  viewWrapper.className = "upload-control";
 
   const buttonsWrapper = document.createElement("div");
   buttonsWrapper.className = "upload-control-buttons";
