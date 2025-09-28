@@ -398,6 +398,8 @@ async function persistRemoteItems(profile, items) {
   const lowerEmail = normalized.emailLower && normalized.emailLower.length ? normalized.emailLower : null;
   const studentUid = normalized.uid ? String(normalized.uid).trim() : null;
   const primaryId = normalized.studentId || normalized.id || normalized.matricula || null;
+  const calificacionesRef = doc(db, 'grupos', GRUPO_ID, 'calificaciones', docId);
+
   const payload = {
     items: Array.isArray(items) ? items : [],
     studentId: primaryId,
@@ -408,13 +410,53 @@ async function persistRemoteItems(profile, items) {
     updatedAt: serverTimestamp(),
   };
   try {
-    await setDoc(doc(db, 'grupos', GRUPO_ID, 'calificaciones', docId), payload, {
-      merge: true,
-    });
+    await setDoc(calificacionesRef, payload, { merge: true });
   } catch (err) {
     console.error('[calificaciones-teacher-sync] persistRemoteItems', err);
   }
+
+  if (studentUid) {
+    try {
+      const memberRef = doc(db, 'grupos', GRUPO_ID, 'members', studentUid);
+      const memberSnap = await getDoc(memberRef);
+      const existingMember = memberSnap.exists() ? memberSnap.data() || {} : {};
+      const memberDisplayName =
+        normalized.name ||
+        normalized.displayName ||
+        existingMember.displayName ||
+        existingMember.nombre ||
+        normalized.email ||
+        primaryId ||
+        studentUid;
+      const memberNombre = normalized.name || existingMember.nombre || memberDisplayName;
+      const memberEmail = normalized.email || existingMember.email || '';
+      const memberMatricula = primaryId || existingMember.matricula || '';
+      const memberRole = existingMember.role || 'student';
+      const memberUpdatedAt = serverTimestamp();
+      const memberPayload = {
+        uid: studentUid,
+        displayName: memberDisplayName,
+        nombre: memberNombre,
+        email: memberEmail,
+        matricula: memberMatricula,
+        role: memberRole,
+        updatedAt: memberUpdatedAt,
+        calificacionesDocId: docId,
+        calificacionesDocPath: calificacionesRef.path,
+        calificacionesSnapshot: payload.items,
+        calificacionesUpdatedAt: serverTimestamp(),
+      };
+      if (!memberSnap.exists()) {
+        memberPayload.createdAt = serverTimestamp();
+      }
+      await setDoc(memberRef, memberPayload, { merge: true });
+    } catch (err) {
+      console.warn('[calificaciones-teacher-sync] members', err);
+    }
+  }
 }
+
+
 
 const remoteSync = (() => {
   let timer = null;
