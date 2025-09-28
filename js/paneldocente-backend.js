@@ -985,7 +985,38 @@ async function handleGradeAction(state, uploadId, btn){
     if (!current || normalizeStatus(current.status) === 'enviado'){
       await markStudentUploadAccepted(uploadId, teacher);
     }
-    await gradeStudentUpload(uploadId, { grade: grade, feedback: feedbackInput, teacher: teacher });
+    var rosterStudent = null;
+    if (current && current.student && current.student.uid && state.studentIndex){
+      rosterStudent = state.studentIndex[current.student.uid] || null;
+    }
+    var deliverable = null;
+    var activityId = current && current.extra ? (current.extra.activityId || current.extra.deliverableId) : null;
+    if (!activityId && current && current.extra && current.extra.assignmentId){
+      activityId = current.extra.assignmentId;
+    }
+    if (activityId && Array.isArray(state.deliverables)){
+      var targetId = String(activityId).trim();
+      for (var di=0; di<state.deliverables.length; di++){
+        var del = state.deliverables[di];
+        if (!del) continue;
+        var delId = del.id != null ? String(del.id).trim() : '';
+        var delKey = del.calItemKey != null ? String(del.calItemKey).trim() : '';
+        if ((delId && delId === targetId) || (delKey && delKey === targetId)){
+          deliverable = del;
+          break;
+        }
+      }
+    }
+    await gradeStudentUpload(uploadId, {
+      grade: grade,
+      feedback: feedbackInput,
+      teacher: teacher,
+      upload: current,
+      student: current ? current.student : null,
+      rosterStudent: rosterStudent,
+      groupId: state.groupId || grupo,
+      deliverable: deliverable,
+    });
     alert('Calificación registrada. El estudiante recibirá la notificación en su panel.');
     updateSyncStamp();
   } catch (err) {
@@ -1272,6 +1303,7 @@ function bindStudentsManager(db, grupo, state){
 }
 
 async function loadDataForGroup(db, grupo, state){
+  if (state) state.groupId = grupo;
   state.students = await fetchStudents(db, grupo);
   rebuildStudentIndex(state);
   syncRosterCache(state.students);
@@ -1352,6 +1384,7 @@ async function main(){
     unsubscribeUploads: null,
     currentTeacher: null,
     editingStudentId: null,
+    groupId: grupo,
   };
   var isLoading = false;
   var hasLoaded = false;

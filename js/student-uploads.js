@@ -1,4 +1,5 @@
 import { initFirebase, getDb } from "./firebase.js";
+import { getPrimaryDocId } from "./calificaciones-helpers.js";
 import {
   collection,
   addDoc,
@@ -9,11 +10,246 @@ import {
   onSnapshot,
   doc,
   updateDoc,
+  getDoc,
+  setDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 initFirebase();
 const db = getDb();
 const uploadsCollection = collection(db, "studentUploads");
+
+const DEFAULT_GROUP_ID = "calidad-2025";
+
+const KIND_TO_LABEL = {
+  activity: "Actividad",
+  homework: "Tarea",
+  evidence: "Evidencia",
+};
+
+function sanitizeGroupId(value) {
+  if (!value) return DEFAULT_GROUP_ID;
+  const trimmed = String(value).trim();
+  return trimmed || DEFAULT_GROUP_ID;
+}
+
+function clampGrade(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return 0;
+  if (num < 0) return 0;
+  if (num > 100) return 100;
+  return num;
+}
+
+function extractUnidad(upload = {}) {
+  const extra = upload.extra || {};
+  const direct =
+    extra.unitId ?? extra.unidad ?? upload.unitId ?? upload.unidad ?? null;
+  const numeric = Number(direct);
+  if (Number.isFinite(numeric)) return numeric;
+  const label =
+    extra.unitLabel || extra.unidadLabel || upload.unitLabel || upload.title;
+  if (label) {
+    const match = String(label).match(/([123])/);
+    if (match) return Number(match[1]);
+  }
+  return null;
+}
+
+function extractPonderacion(upload = {}, rosterStudent = {}, deliverable = {}) {
+  const extra = upload.extra || {};
+  const sources = [extra, upload, deliverable, rosterStudent];
+  for (let i = 0; i < sources.length; i++) {
+    const source = sources[i];
+    if (!source || typeof source !== "object") continue;
+    const candidates = [
+      source.ponderacion,
+      source.weight,
+      source.weightPct,
+      source.weightPercentage,
+      source.peso,
+    ];
+    for (let j = 0; j < candidates.length; j++) {
+      const raw = candidates[j];
+      if (raw == null) continue;
+      const num = Number(raw);
+      if (Number.isFinite(num)) return num;
+    }
+  }
+  return 0;
+}
+
+function extractMaxPoints(upload = {}) {
+  const extra = upload.extra || {};
+  const candidates = [
+    extra.maxPoints,
+    extra.maxPuntos,
+    upload.maxPoints,
+    upload.maxPuntos,
+  ];
+  for (let i = 0; i < candidates.length; i++) {
+    const raw = candidates[i];
+    if (raw == null) continue;
+    const num = Number(raw);
+    if (Number.isFinite(num) && num > 0) return num;
+  }
+  return 100;
+}
+
+function resolveItemNombre(upload = {}, fallbackTitle = "") {
+  const title =
+    upload.title ||
+    upload.description ||
+    (upload.extra && upload.extra.activityTitle) ||
+    fallbackTitle;
+  const trimmed = title ? String(title).trim() : "";
+  return trimmed || "Entrega";
+}
+
+function resolveItemTipo(upload = {}) {
+  const key = (upload.kind || "").toLowerCase();
+  return KIND_TO_LABEL[key] || "Entrega";
+}
+
+function buildStudentProfile(uploadStudent = {}, explicit = {}, roster = {}) {
+  const profile = {
+    uid: "",
+    email: "",
+    displayName: "",
+    name: "",
+    matricula: "",
+    studentId: "",
+    id: "",
+  };
+  const sources = [explicit, roster, uploadStudent];
+  for (let i = 0; i < sources.length; i++) {
+    const source = sources[i];
+    if (!source || typeof source !== "object") continue;
+    if (!profile.uid && source.uid) profile.uid = String(source.uid).trim();
+    const email = source.email || source.studentEmail;
+    if (!profile.email && email) profile.email = String(email).trim();
+    const matricula = source.matricula || source.studentId || source.id;
+    if (!profile.matricula && matricula)
+      profile.matricula = String(matricula).trim();
+    const name =
+      source.displayName || source.nombre || source.name || source.fullName;
+    if (!profile.displayName && name)
+      profile.displayName = String(name).trim();
+    if (!profile.name && name) profile.name = String(name).trim();
+  }
+  if (!profile.studentId && profile.matricula)
+    profile.studentId = profile.matricula;
+  if (!profile.id)
+    profile.id =
+      profile.studentId || profile.matricula || profile.uid || profile.email || "";
+  if (!profile.name) profile.name = profile.displayName || "";
+  return profile;
+}
+
+async function syncUploadGradeWithCalificaciones(uploadId, options = {}) {
+  const { upload, student, rosterStudent, grade, feedback, groupId, deliverable } =
+    options;
+  if (!uploadId) return;
+  const resolvedGrade = clampGrade(grade);
+  const profile = buildStudentProfile(
+    upload?.student || {},
+    student || {},
+    rosterStudent || {}
+  );
+  const docId = getPrimaryDocId(profile);
+  if (!docId) return;
+  const targetGroupId = sanitizeGroupId(groupId);
+  const calificacionesRef = doc(
+    db,
+    "grupos",
+    targetGroupId,
+    "calificaciones",
+    docId
+  );
+
+  let existingData = {};
+  let existingItems = [];
+  try {
+    const snapshot = await getDoc(calificacionesRef);
+    if (snapshot.exists()) {
+      existingData = snapshot.data() || {};
+      if (Array.isArray(existingData.items)) {
+        existingItems = existingData.items.slice();
+      }
+    }
+  } catch (error) {
+    console.error("gradeStudentUpload:calificaciones:getDoc", error);
+  }
+
+  const itemKey = `upload-${uploadId}`;
+  const maxPoints = extractMaxPoints(upload);
+  const puntos = Number(resolvedGrade.toFixed(3));
+  const rawPuntos = Number(resolvedGrade.toFixed(2));
+  const newItem = {
+    key: itemKey,
+    nombre: resolveItemNombre(upload),
+    tipo: resolveItemTipo(upload),
+    unidad: extractUnidad(upload),
+    ponderacion: extractPonderacion(upload, rosterStudent, deliverable),
+    maxPuntos: Number(maxPoints.toFixed(3)),
+    puntos,
+    rawPuntos,
+    rawMaxPuntos: Number(maxPoints.toFixed(3)),
+    fecha: serverTimestamp(),
+    fuente: "student-upload",
+    uploadId,
+  };
+  if (feedback) newItem.feedback = String(feedback).trim();
+  if (upload?.fileUrl) newItem.evidenciaUrl = upload.fileUrl;
+  if (upload?.title) newItem.referencia = upload.title;
+
+  const teacherInfo = options.teacherInfo;
+  if (teacherInfo && typeof teacherInfo === "object") {
+    const reviewer =
+      teacherInfo.displayName || teacherInfo.email || teacherInfo.uid || "";
+    if (reviewer) newItem.calificadoPor = reviewer;
+  }
+
+  let updated = false;
+  for (let i = 0; i < existingItems.length; i++) {
+    const item = existingItems[i];
+    if (item && item.key === itemKey) {
+      existingItems[i] = Object.assign({}, item, newItem);
+      updated = true;
+      break;
+    }
+  }
+  if (!updated) {
+    existingItems.push(newItem);
+  }
+
+  const seenKeys = new Set();
+  const deduped = [];
+  for (let i = 0; i < existingItems.length; i++) {
+    const item = existingItems[i];
+    if (!item || typeof item !== "object") continue;
+    const key = item.key || `idx-${i}`;
+    if (seenKeys.has(key)) continue;
+    seenKeys.add(key);
+    deduped.push(item);
+  }
+
+  const payload = {
+    items: deduped,
+    studentId:
+      profile.studentId || profile.id || existingData.studentId || null,
+    studentName:
+      profile.name || profile.displayName || existingData.studentName || null,
+    studentEmail: profile.email || existingData.studentEmail || null,
+    updatedAt: serverTimestamp(),
+  };
+  if (profile.uid) payload.studentUid = profile.uid;
+
+  try {
+    await setDoc(calificacionesRef, payload, { merge: true });
+  } catch (error) {
+    console.error("gradeStudentUpload:calificaciones:setDoc", error);
+  }
+}
 
 function isPermissionDenied(error) {
   if (!error) return false;
@@ -332,4 +568,19 @@ export async function gradeStudentUpload(uploadId, options = {}) {
   }
 
   await updateDoc(ref, payload);
+
+  try {
+    await syncUploadGradeWithCalificaciones(uploadId, {
+      upload: options.upload || null,
+      student: options.student || null,
+      rosterStudent: options.rosterStudent || null,
+      grade,
+      feedback,
+      groupId: options.groupId,
+      deliverable: options.deliverable || null,
+      teacherInfo,
+    });
+  } catch (error) {
+    console.error("gradeStudentUpload:sync", error);
+  }
 }
