@@ -5,6 +5,7 @@ import {
   createStudentUpload,
   observeStudentUploads,
   observeStudentUploadsByEmail,
+  deleteStudentUpload,
 } from "./student-uploads.js";
 import {
   getActivityById,
@@ -210,6 +211,22 @@ function toTimestamp(value) {
 }
 
 function setStatus(entry, text, { uploaded = false, title = "" } = {}) {
+function updateEntryActions(entry) {
+  if (!entry || !entry.deleteButton) return;
+  const hasUpload = Boolean(entry.currentUpload && entry.currentUpload.fileUrl);
+  const showDelete = teacherRoleDetected && hasUpload;
+  entry.deleteButton.classList.toggle("upload-reset--hidden", !showDelete);
+  entry.deleteButton.disabled = 
+    !showDelete || entry.deletePending || entry.uploading;
+  if (showDelete) {
+    entry.deleteButton.title = entry.deletePending
+      ? "Eliminando evidencia..."
+      : "Eliminar la evidencia para esta actividad";
+  } else {
+    entry.deleteButton.title = "";
+  }
+}
+
   if (!entry || !entry.statusEl) return;
   entry.statusEl.textContent = text;
   entry.statusEl.title = title;
@@ -282,6 +299,13 @@ function buildDisplayForItem(item) {
   uploadButton.disabled = true;
   buttonsWrapper.appendChild(uploadButton);
 
+  const deleteButton = document.createElement("button");
+  deleteButton.type = "button";
+  deleteButton.className = "upload-reset teacher-only upload-reset--hidden";
+  deleteButton.textContent = "Eliminar evidencia";
+  deleteButton.disabled = true;
+  buttonsWrapper.appendChild(deleteButton);
+
   const viewLink = document.createElement("a");
   viewLink.className = "upload-trigger";
   viewLink.href = "#";
@@ -310,12 +334,15 @@ function buildDisplayForItem(item) {
     statusEl: status,
     viewLink,
     uploadButton,
+    deleteButton,
     gradeInput,
     activity,
     item,
     statusId,
     title,
     uploading: false,
+    deletePending: false,
+    currentUpload: null,
   };
 
   if (!activity) {
@@ -331,6 +358,12 @@ function buildDisplayForItem(item) {
     handleUploadRequest(entry);
   });
 
+  deleteButton.addEventListener("click", (event) => {
+    event.preventDefault();
+    handleDeleteRequest(entry);
+  });
+
+  updateEntryActions(entry);
   return entry;
 }
 
@@ -371,13 +404,16 @@ function mapUploadsByActivity(items) {
 function updateDisplays(uploadMap) {
   displays.forEach((entry, activityId) => {
     const upload = uploadMap.get(activityId) || null;
+    entry.currentUpload = upload || null;
     resetViewListener(entry);
     if (!upload || !upload.fileUrl) {
+      entry.deletePending = false;
       disableView(entry);
       const text = entry.activity
         ? "Sin entrega registrada"
         : "Actividad no vinculada";
       setStatus(entry, text, { uploaded: false, title: "" });
+      updateEntryActions(entry);
       return;
     }
     enableView(entry, upload.fileUrl, upload.fileName || "", entry.activity?.title || entry.title);
@@ -393,6 +429,7 @@ function updateDisplays(uploadMap) {
       uploaded: true,
       title: upload.fileName || "",
     });
+    updateEntryActions(entry);
   });
   updateUploadButtonsState(currentStudentProfile);
 }
@@ -787,6 +824,47 @@ function handleUploadRequest(entry) {
   pendingUploadEntry = entry;
   input.value = "";
   input.click();
+}
+
+async function handleDeleteRequest(entry) {
+  if (!entry || entry.deletePending) return;
+  if (!teacherRoleDetected) {
+    setStatus(entry, "Solo el personal docente puede eliminar evidencias.", {
+      uploaded: Boolean(entry.currentUpload && entry.currentUpload.fileUrl),
+      title: entry.currentUpload?.fileName || "",
+    });
+    return;
+  }
+  const upload = entry.currentUpload;
+  if (!upload || !upload.id) {
+    setStatus(entry, "No hay evidencia para eliminar.", { uploaded: false, title: "" });
+    return;
+  }
+  const confirmed = typeof window !== "undefined" && typeof window.confirm === "function"
+    ? window.confirm("¿Eliminar la evidencia registrada para esta actividad?")
+    : true;
+  if (!confirmed) return;
+
+  entry.deletePending = true;
+  updateEntryActions(entry);
+  setStatus(entry, "Eliminando evidencia...", { uploaded: false, title: "" });
+  try {
+    await deleteStudentUpload(upload);
+    entry.currentUpload = null;
+    disableView(entry);
+    setStatus(entry, "Evidencia eliminada. Sincronizando...", { uploaded: false, title: "" });
+  } catch (error) {
+    console.error("[calificaciones-uploads-ui] eliminar evidencia", error);
+    setStatus(entry, error?.message || "No se pudo eliminar la evidencia. Intenta nuevamente.", {
+      uploaded: Boolean(upload.fileUrl),
+      title: upload.fileName || "",
+    });
+    entry.currentUpload = upload;
+  } finally {
+    entry.deletePending = false;
+    updateEntryActions(entry);
+    updateUploadButtonsState(currentStudentProfile);
+  }
 }
 
 async function handleFileInputChange(event) {

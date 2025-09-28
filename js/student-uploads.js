@@ -1,4 +1,4 @@
-import { initFirebase, getDb } from "./firebase.js";
+import { initFirebase, getDb, getStorageInstance } from "./firebase.js";
 import { getPrimaryDocId } from "./calificaciones-helpers.js";
 import {
   collection,
@@ -12,7 +12,9 @@ import {
   updateDoc,
   getDoc,
   setDoc,
+  deleteDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+import { ref as storageRef, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
 
 initFirebase();
 const db = getDb();
@@ -262,6 +264,38 @@ function isPermissionDenied(error) {
 function logSnapshotError(context, error) {
   if (isPermissionDenied(error)) {
     console.warn(`${context}:permission-denied`, error);
+function resolveUploadStorageInfo(upload = {}) {
+  const extra = upload && typeof upload === "object" ? upload.extra || {} : {};
+  const storagePath =
+    extra.storagePath ||
+    extra.path ||
+    upload.storagePath ||
+    upload.path ||
+    null;
+  const backend =
+    extra.uploadBackend ||
+    extra.backend ||
+    upload.uploadBackend ||
+    upload.backend ||
+    null;
+  return { storagePath: storagePath || null, backend: backend || null };
+}
+
+async function deleteUploadAssetIfNeeded(upload) {
+  if (!upload || typeof upload !== "object") return false;
+  const { storagePath, backend } = resolveUploadStorageInfo(upload);
+  if (!storagePath || backend === "uploadcare") return false;
+  try {
+    const storage = getStorageInstance();
+    if (!storage) return false;
+    await deleteObject(storageRef(storage, storagePath));
+    return true;
+  } catch (error) {
+    console.warn("deleteStudentUpload:storage", error);
+    return false;
+  }
+}
+
   } else {
     console.error(`${context}:error`, error);
   }
@@ -583,4 +617,27 @@ export async function gradeStudentUpload(uploadId, options = {}) {
   } catch (error) {
     console.error("gradeStudentUpload:sync", error);
   }
+}
+
+export async function deleteStudentUpload(uploadOrId) {
+  const id = typeof uploadOrId === "string" ? uploadOrId : uploadOrId?.id;
+  if (!id) throw new Error("Falta el identificador de la entrega");
+  const ref = doc(uploadsCollection, id);
+  let target = uploadOrId && typeof uploadOrId === "object" ? uploadOrId : null;
+  if (!target || !target.extra) {
+    try {
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        target = { id: snap.id, ...snap.data() };
+      }
+    } catch (error) {
+      console.warn("deleteStudentUpload:getDoc", error);
+    }
+  }
+
+  try {
+    await deleteUploadAssetIfNeeded(target);
+  } catch (_) {}
+
+  await deleteDoc(ref);
 }
