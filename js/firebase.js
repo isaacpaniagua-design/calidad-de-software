@@ -58,6 +58,57 @@ let driveAccessToken = null;
 const normalizeEmail = (email) =>
   typeof email === "string" ? email.trim().toLowerCase() : "";
 
+function isLikelyIdentityNetworkIssue(error) {
+  if (!error) return false;
+  const code = typeof error.code === "string" ? error.code.toLowerCase() : "";
+  if (code === "auth/network-request-failed") return true;
+  const message = typeof error.message === "string" ? error.message.toLowerCase() : "";
+  if (!message && !code) return false;
+  if (code === "auth/internal-error" && /identitytoolkit|network/.test(message)) {
+    return true;
+  }
+  if (/identitytoolkit|accounts:lookup|accounts:sign/.test(message)) return true;
+  if (/err_connection_(?:closed|reset|aborted)/.test(message)) return true;
+  if (/network\s?(?:error|request)/.test(message)) return true;
+  return false;
+}
+
+function createFriendlyIdentityNetworkError(error) {
+  const friendly = new Error(
+    "No se pudo conectar con el servicio de autenticación de Google. Verifica tu conexión a internet y que el dominio identitytoolkit.googleapis.com no esté bloqueado."
+  );
+  friendly.code = "auth/network-request-failed";
+  friendly.cause = error;
+  return friendly;
+}
+
+function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, Math.max(0, ms || 0)));
+}
+
+async function signInWithPopupSafe(authInstance, provider, { retries = 1 } = {}) {
+  const normalizedRetries = Number.isFinite(retries) ? Math.max(0, retries) : 0;
+  for (let attempt = 0; attempt <= normalizedRetries; attempt++) {
+    try {
+      return await signInWithPopup(authInstance, provider);
+    } catch (error) {
+      const isNetworkIssue = isLikelyIdentityNetworkIssue(error);
+      const hasNextAttempt = attempt < normalizedRetries;
+      if (isNetworkIssue && hasNextAttempt) {
+        await wait(400 * (attempt + 1));
+        continue;
+      }
+      if (isNetworkIssue) {
+        throw createFriendlyIdentityNetworkError(error);
+      }
+      throw error;
+    }
+  }
+  const fallbackError = new Error("No se pudo completar la autenticación.");
+  fallbackError.code = "auth/network-request-failed";
+  throw fallbackError;
+}
+
 const baseTeacherEmails = Array.isArray(allowedTeacherEmails)
   ? allowedTeacherEmails.map(normalizeEmail).filter(Boolean)
   : [];
@@ -146,7 +197,7 @@ export async function signInWithGooglePotros() {
   } catch (_) {}
 
   try {
-    const result = await signInWithPopup(auth, provider);
+    const result = await signInWithPopupSafe(auth, provider, { retries: 1 });
     const user = result.user;
     try {
       const cred = GoogleAuthProvider.credentialFromResult(result);
@@ -183,7 +234,7 @@ export async function getDriveAccessTokenInteractive() {
   try {
     provider.addScope("https://www.googleapis.com/auth/drive.file");
   } catch (_) {}
-  const result = await signInWithPopup(auth, provider);
+  const result = await signInWithPopupSafe(auth, provider, { retries: 1 });
   const cred = GoogleAuthProvider.credentialFromResult(result);
   driveAccessToken = cred?.accessToken || null;
   if (!driveAccessToken)
@@ -215,7 +266,7 @@ export async function signInWithEmailPassword(email, password) {
 export async function signInWithGoogleOpen() {
   const auth = getAuthInstance();
   const provider = new GoogleAuthProvider();
-  const result = await signInWithPopup(auth, provider);
+  const result = await signInWithPopupSafe(auth, provider, { retries: 1 });
   return result?.user || null;
 }
 
