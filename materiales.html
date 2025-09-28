@@ -471,16 +471,20 @@
         console.error("materiales.html: faltan elementos esenciales", missingKeys);
       }
 
+      onAuth(async (user) => {
         if (!user) {
           window.location.href = "index.html";
           return;
         }
 
         currentUser = user;
+
         try {
+          await ensureTeacherAllowlistLoaded();
         } catch (error) {
           console.warn("No se pudo sincronizar la lista de docentes", error);
         }
+
         isCurrentUserTeacher = Boolean(user.email && isTeacherEmail(user.email));
         await initializeApp();
       });
@@ -780,159 +784,6 @@
     <script defer src="js/nav-inject.js"></script>
   </body>
 </html>
-              <div class="form-group">
-                <label class="form-label" for="materialDescription"
-                  >Descripción</label
-                ><textarea
-                  class="form-textarea"
-                  id="materialDescription"
-                ></textarea>
-              </div>
-              <div class="form-group">
-                <button type="submit" class="submit-btn">
-                  Guardar Material
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-        <div class="materials-grid" id="materialsGrid"></div>
-        <div class="empty-state" id="emptyState">
-          <p id="emptyMessage">Verificando usuario...</p>
-        </div>
-      </div>
-    </div>
-    <div class="notification" id="notification">
-      <span id="notificationIcon">✅</span
-      ><span id="notificationMessage"></span>
-    </div>
-
-    <!-- Botón de regreso al inicio para cualquier rol.  Otros módulos utilizan
-         la navegación fija generada por nav‑inject.js, pero este botón
-         adicional ofrece una ruta clara de regreso a la página principal en
-         dispositivos móviles.  Aparece en la esquina inferior izquierda. -->
-    <a href="index.html"
-       class="return-home-btn">
-      ⟵ Inicio
-    </a>
-
-    <script type="module">
-      import { onAuth, isTeacherEmail } from "./js/firebase.js";
-      import {
-        getMaterials,
-        saveMaterial,
-        deleteMaterial,
-        updateMaterial,
-        incrementDownloads,
-      } from "./js/materials-manager.js";
-
-      let allMaterials = [];
-      let currentUser = null;
-      let isCurrentUserTeacher = false;
-      let uploadcareWidget;
-
-      const elements = {
-        grid: document.getElementById("materialsGrid"),
-        form: document.getElementById("materialForm"),
-        teacherView: document.getElementById("teacherView"),
-        notification: document.getElementById("notification"),
-        notificationMessage: document.getElementById("notificationMessage"),
-        emptyState: document.getElementById("emptyState"),
-        emptyMessage: document.getElementById("emptyMessage"),
-      };
-
-      const essentialElementKeys = [
-        "grid",
-        "emptyState",
-        "emptyMessage",
-        "notification",
-        "notificationMessage",
-      ];
-
-      const missingEssentialElements = essentialElementKeys.filter(
-        (key) => !elements[key]
-      );
-
-      if (missingEssentialElements.length > 0) {
-        console.error(
-          "materiales.html: faltan elementos esenciales en el DOM",
-          missingEssentialElements
-        );
-      }
-
-      onAuth(async (user) => {
-        if (user) {
-          currentUser = user;
-          isCurrentUserTeacher = isTeacherEmail(user.email);
-          await initializeApp();
-        } else {
-          window.location.href = "index.html";
-        }
-      });
-
-      async function initializeApp() {
-        if (missingEssentialElements.length > 0) {
-          return;
-        }
-        // Inicializa el widget DESPUÉS de que sabemos que el usuario es un profesor
-        if (isCurrentUserTeacher && elements.form) {
-          uploadcareWidget = uploadcare.Widget("#file-widget");
-          elements.form.addEventListener("submit", handleFormSubmit);
-        }
-
-        if (elements.grid) {
-          elements.grid.addEventListener("click", handleGridClick);
-        }
-
-        try {
-          allMaterials = await getMaterials();
-          render();
-        } catch (error) {
-          console.error("Error al inicializar:", error);
-          showNotification("error", "No se pudieron cargar los materiales.");
-          if (elements.emptyMessage) {
-            elements.emptyMessage.textContent =
-              "Error al cargar. Revisa los permisos.";
-          }
-        }
-
-        applyRoleVisibility();
-      }
-
-      function render() {
-        if (!elements.grid || !elements.emptyState || !elements.emptyMessage) {
-          return;
-        }
-        elements.grid.innerHTML = "";
-        if (allMaterials.length === 0) {
-          elements.emptyState.classList.remove("hidden");
-          elements.emptyMessage.textContent =
-            "Aún no hay materiales disponibles.";
-          return;
-        }
-        elements.emptyState.classList.add("hidden");
-        allMaterials.forEach((material) => {
-          elements.grid.insertAdjacentHTML(
-            "beforeend",
-            createMaterialCard(material)
-          );
-        });
-        applyRoleVisibility();
-      }
-
-      function createMaterialCard(material) {
-        const fileInfo = getFileInfo(material);
-        const date = material.createdAt?.toDate
-          ? material.createdAt.toDate().toLocaleDateString("es-MX")
-          : new Date().toLocaleDateString("es-MX");
-        const url = material.url || material.downloadUrl;
-        return `
-                <div class="material-card">
-                    <div class="material-header">
-                        <div class="file-icon ${fileInfo.className}">${
-          fileInfo.label
-        }</div>
-                        <div><h4 class="material-title">${escapeHtml(
                           material.title
                         )}</h4><p class="material-meta">${date} · ${
           material.downloads || 0
