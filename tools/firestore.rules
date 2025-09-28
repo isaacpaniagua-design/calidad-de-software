@@ -21,15 +21,19 @@ service cloud.firestore {
     }
 
     function isValidTeacherAllowlistPayload() {
+
       return request.resource.data.keys().hasAll(['emails'])
         && request.resource.data.keys().hasOnly([
+
           'emails',
           'updatedAt',
           'updatedByUid'
         ])
         && request.resource.data.emails is list
         && request.resource.data.emails.size() <= 200
+
         && request.resource.data.emails.all(email, email is string)
+
         && (!('updatedAt' in request.resource.data)
           || request.resource.data.updatedAt is timestamp)
         && (!('updatedByUid' in request.resource.data)
