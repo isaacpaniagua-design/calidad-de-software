@@ -211,6 +211,12 @@ function toTimestamp(value) {
 }
 
 function setStatus(entry, text, { uploaded = false, title = "" } = {}) {
+  if (!entry || !entry.statusEl) return;
+  entry.statusEl.textContent = text;
+  entry.statusEl.title = title;
+  entry.statusEl.classList.toggle("upload-status--uploaded", Boolean(uploaded));
+}
+
 function updateEntryActions(entry) {
   if (!entry || !entry.deleteButton) return;
   const hasUpload = Boolean(entry.currentUpload && entry.currentUpload.fileUrl);
@@ -225,12 +231,6 @@ function updateEntryActions(entry) {
   } else {
     entry.deleteButton.title = "";
   }
-}
-
-  if (!entry || !entry.statusEl) return;
-  entry.statusEl.textContent = text;
-  entry.statusEl.title = title;
-  entry.statusEl.classList.toggle("upload-status--uploaded", Boolean(uploaded));
 }
 
 function disableView(entry) {
