@@ -11,6 +11,8 @@ import {
 } from "./course-activities.js";
 import {
   collection,
+  doc,
+  getDoc,
   getDocs,
   limit,
   query,
@@ -371,6 +373,17 @@ async function uploadEvidenceFile(file, studentUid) {
   });
 }
 
+async function tryGetDocId(db, id) {
+  if (!db || !id) return "";
+  try {
+    const snap = await getDoc(doc(db, "users", id));
+    return snap.exists() ? snap.id || "" : "";
+  } catch (error) {
+    console.warn("[calificaciones-uploads-ui] resolver uid docId", error);
+    return "";
+  }
+}
+
 async function fetchUidFromFirestore(profile) {
   if (!profile) return "";
   const db = getDb();
@@ -399,6 +412,50 @@ async function fetchUidFromFirestore(profile) {
     } catch (error) {
       console.warn("[calificaciones-uploads-ui] resolver uid matricula", error);
     }
+
+    const matriculaDigits = matricula.replace(/\D+/g, "");
+    if (!uid && matriculaDigits && matriculaDigits !== matricula) {
+      try {
+        const snap = await getDocs(
+          query(
+            collection(db, "users"),
+            where("matricula", "==", matriculaDigits),
+            limit(1)
+          )
+        );
+        if (!snap.empty) {
+          uid = snap.docs[0]?.id || "";
+        }
+      } catch (error) {
+        console.warn(
+          "[calificaciones-uploads-ui] resolver uid matricula digits",
+          error
+        );
+      }
+    }
+
+    if (!uid && matriculaDigits) {
+      const numeric = Number(matriculaDigits);
+      if (Number.isFinite(numeric) && numeric > 0) {
+        try {
+          const snap = await getDocs(
+            query(
+              collection(db, "users"),
+              where("matricula", "==", numeric),
+              limit(1)
+            )
+          );
+          if (!snap.empty) {
+            uid = snap.docs[0]?.id || "";
+          }
+        } catch (error) {
+          console.warn(
+            "[calificaciones-uploads-ui] resolver uid matricula number",
+            error
+          );
+        }
+      }
+    }
   }
 
   const emailRaw = profile.email ? String(profile.email).trim() : "";
@@ -418,6 +475,17 @@ async function fetchUidFromFirestore(profile) {
     } catch (error) {
       console.warn("[calificaciones-uploads-ui] resolver uid emailLower", error);
     }
+  }
+
+  if (!uid) {
+    const profileId = profile.id ? String(profile.id).trim() : "";
+    if (profileId) {
+      uid = await tryGetDocId(db, profileId);
+    }
+  }
+
+  if (!uid && profile && profile.uid) {
+    uid = profile.uid;
   }
 
   if (!uid && emailRaw) {
