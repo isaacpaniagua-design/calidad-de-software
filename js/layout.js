@@ -30,6 +30,7 @@ const NAV_VERSION = "2024.12.clean";
 const FOOTER_VERSION = "2024.12.clean";
 const AUTH_STORAGE_KEY = "qs_auth_state";
 const ROLE_STORAGE_KEY = "qs_role";
+const REALTIME_MODULE_FLAG = "__qsRealtimeNotificationsModuleLoaded";
 
 function bootstrapLayout() {
   if (window.__qsLayoutBooted) return;
@@ -48,6 +49,7 @@ function bootstrapLayout() {
   ensureFavicon(pageDoc, basePath);
 
   const nav = ensureNavigation(pageDoc, body, basePath);
+  ensureRealtimeCenter(pageDoc, body, nav);
   const footer = ensureFooter(pageDoc, body);
 
   toggleTeacherNavLinks(nav, html.classList.contains("role-teacher"));
@@ -60,6 +62,8 @@ function bootstrapLayout() {
   refreshNavSpacing(nav);
   observeNavHeight(nav);
   setupSlideAssist(pageDoc);
+
+  ensureRealtimeNotificationsModule();
 
   if (!isLogin && !isNotFound) {
     injectAuthGuard(pageDoc, basePath);
@@ -168,6 +172,106 @@ function ensureFooter(doc, body) {
   }
 
   return footer;
+}
+
+function ensureRealtimeCenter(doc, body, nav) {
+  if (!doc || !body) return null;
+
+  let center = doc.querySelector("[data-realtime-center]");
+  if (!center) {
+    center = doc.createElement("div");
+  }
+
+  center.classList.add("realtime-center");
+  center.setAttribute("data-realtime-center", "");
+
+  if (!center.querySelector("[data-realtime-panel]")) {
+    center.innerHTML = buildRealtimeCenterTemplate();
+  }
+
+  const referenceParent = body;
+  const referenceSibling = nav && nav.parentNode === referenceParent ? nav.nextSibling : referenceParent.firstChild;
+  referenceParent.insertBefore(center, referenceSibling || null);
+
+  return center;
+}
+
+function buildRealtimeCenterTemplate() {
+  return `
+    <button
+      class="realtime-toggle"
+      type="button"
+      aria-haspopup="true"
+      aria-expanded="false"
+      aria-controls="realtimePanel"
+      data-realtime-toggle
+    >
+      <span class="realtime-toggle__icon" aria-hidden="true">🔔</span>
+      <span class="sr-only" data-realtime-toggle-label>Abrir centro de notificaciones</span>
+      <span class="realtime-toggle__badge" data-realtime-badge hidden></span>
+    </button>
+    <section
+      class="realtime-panel"
+      id="realtimePanel"
+      role="dialog"
+      aria-label="Notificaciones en tiempo real"
+      tabindex="-1"
+      data-realtime-panel
+      hidden
+    >
+      <header class="realtime-panel__header">
+        <div class="realtime-panel__heading">
+          <span class="realtime-panel__eyebrow">Alertas inteligentes</span>
+          <div class="realtime-panel__title-row">
+            <h2 class="realtime-panel__title">Notificaciones en tiempo real</h2>
+            <span class="realtime-panel__status" data-realtime-status data-enabled="true" aria-live="polite">
+              Notificaciones en tiempo real activas.
+            </span>
+          </div>
+        </div>
+        <button type="button" class="realtime-panel__close" data-realtime-close aria-label="Cerrar notificaciones">
+          <span aria-hidden="true">×</span>
+          <span class="sr-only">Cerrar centro de notificaciones</span>
+        </button>
+      </header>
+      <details class="realtime-panel__hint">
+        <summary>
+          <span class="realtime-panel__hint-icon" aria-hidden="true">💡</span>
+          <span>¿Cómo funcionan las alertas?</span>
+          <span class="realtime-panel__hint-caret" aria-hidden="true">▸</span>
+        </summary>
+        <p class="realtime-panel__description">
+          Personaliza qué eventos generan avisos al instante. Al iniciar sesión como docente, las entregas de alumnos y los
+          nuevos comentarios del foro se mostrarán aquí en tiempo real.
+        </p>
+      </details>
+      <div class="realtime-panel__content">
+        <div class="realtime-feed">
+          <div class="realtime-feed__header">
+            <h3 class="realtime-feed__title">Actividad en vivo</h3>
+            <p class="realtime-feed__description">
+              Vista previa de cómo aparecerán las alertas en la plataforma.
+            </p>
+          </div>
+          <div class="realtime-feed__empty" data-realtime-empty>
+            <strong data-empty-title>Esperando actividad…</strong>
+            <span data-empty-message>Activa al menos un tipo para previsualizar las notificaciones en vivo.</span>
+          </div>
+          <div class="realtime-feed__list" data-realtime-feed></div>
+        </div>
+      </div>
+    </section>
+  `.trim();
+}
+
+function ensureRealtimeNotificationsModule() {
+  if (typeof window === "undefined" || typeof document === "undefined") return;
+  if (window[REALTIME_MODULE_FLAG]) return;
+  window[REALTIME_MODULE_FLAG] = true;
+
+  import("./realtime-notifications.js").catch((error) => {
+    console.error("No se pudo cargar js/realtime-notifications.js", error);
+  });
 }
 
 function ensureFavicon(doc, basePath) {
