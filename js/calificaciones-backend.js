@@ -1,7 +1,13 @@
 // js/calificaciones-backend.js
 import { initFirebase, getDb, onAuth } from './firebase.js';
 import { buildCandidateDocIds } from './calificaciones-helpers.js';
-import { collection, doc, getDoc, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
+import {
+  collection,
+  doc,
+  onSnapshot,
+  query,
+  orderBy,
+} from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 
 const $ = (selector, root = document) => root.querySelector(selector);
 const $id = (id) => document.getElementById(id);
@@ -79,6 +85,17 @@ function normalizeItems(source) {
       displayPuntos: Number.isFinite(displayPoints) ? Number(displayPoints.toFixed(2)) : NaN,
       estaCalificado: !!estaCalificado,
     }));
+  }
+  return out;
+}
+
+function cloneItems(items) {
+  const out = [];
+  if (!Array.isArray(items)) return out;
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (!item || typeof item !== 'object') continue;
+    out.push(Object.assign({}, item));
   }
   return out;
 }
@@ -415,34 +432,111 @@ function setStatusMessage(message) {
   el.textContent = message ? String(message) : '';
 }
 
-async function obtenerItemsAlumno(db, grupoId, profile){
+function subscribeToCalificaciones(db, grupoId, profile, { onChange, onError } = {}) {
+  if (!db) {
+    if (typeof onChange === 'function') onChange([]);
+    return () => {};
+  }
+
   const candidates = buildCandidateDocIds(profile);
+  const order = new Map();
   for (let i = 0; i < candidates.length; i++) {
-    try {
-      const ref = doc(db, 'grupos', grupoId, 'calificaciones', candidates[i]);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        const data = snap.data() || {};
-        if (Array.isArray(data.items)) {
-          return data.items.map((item) => Object.assign({}, item));
-        }
+    order.set(candidates[i], i);
+  }
+
+  const unsubscribers = [];
+  let activeDocId = null;
+  let hasLegacySnapshot = false;
+  let lastLegacyItems = [];
+
+  const emit = (items) => {
+    if (typeof onChange === 'function') {
+      onChange(Array.isArray(items) ? items : []);
+    }
+  };
+
+  const handleError = (error) => {
+    if (typeof onError === 'function') onError(error);
+  };
+
+  const handleDocSnapshot = (candidate, snapshot) => {
+    const candidateIndex = order.has(candidate) ? order.get(candidate) : Number.MAX_SAFE_INTEGER;
+    if (snapshot.exists()) {
+      const data = snapshot.data() || {};
+      const items = cloneItems(Array.isArray(data.items) ? data.items : []);
+      const activeIndex = activeDocId && order.has(activeDocId)
+        ? order.get(activeDocId)
+        : Number.MAX_SAFE_INTEGER;
+      if (!activeDocId || candidate === activeDocId || candidateIndex < activeIndex) {
+        activeDocId = candidate;
+        emit(items);
+      } else if (!activeDocId) {
+        emit(items);
       }
-    } catch (err) {
-      console.warn('[calificaciones-backend] obtenerItemsAlumno(doc)', err);
+      return;
+    }
+
+    if (activeDocId === candidate) {
+      activeDocId = null;
+      if (hasLegacySnapshot) {
+        emit(lastLegacyItems);
+      } else {
+        emit([]);
+      }
+    } else if (!activeDocId) {
+      emit([]);
+    }
+  };
+
+  for (let i = 0; i < candidates.length; i++) {
+    const candidate = candidates[i];
+    try {
+      const ref = doc(db, 'grupos', grupoId, 'calificaciones', candidate);
+      const unsubscribe = onSnapshot(ref, (snapshot) => handleDocSnapshot(candidate, snapshot), handleError);
+      unsubscribers.push(unsubscribe);
+    } catch (error) {
+      handleError(error);
     }
   }
 
-  const uid = profile && profile.uid ? profile.uid : null;
-  if (!uid) return [];
-  try {
-    const calificacionRef = doc(db, 'grupos', grupoId, 'calificaciones', uid);
-    const base = collection(calificacionRef, 'items');
-    const snap = await getDocs(query(base, orderBy('fecha','asc')));
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  } catch (err) {
-    console.warn('[calificaciones-backend] obtenerItemsAlumno(legacy)', err);
-    return [];
+  if (profile && profile.uid) {
+    try {
+      const calificacionRef = doc(db, 'grupos', grupoId, 'calificaciones', profile.uid);
+      const base = collection(calificacionRef, 'items');
+      const q = query(base, orderBy('fecha', 'asc'));
+      const unsubscribeLegacy = onSnapshot(
+        q,
+        (snapshot) => {
+          const items = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+          hasLegacySnapshot = true;
+          lastLegacyItems = items;
+          if (activeDocId) return;
+          emit(items);
+        },
+        handleError
+      );
+      unsubscribers.push(unsubscribeLegacy);
+    } catch (error) {
+      handleError(error);
+    }
   }
+
+  if (!unsubscribers.length) {
+    emit([]);
+  }
+
+  return () => {
+    for (let i = 0; i < unsubscribers.length; i++) {
+      const unsubscribe = unsubscribers[i];
+      if (typeof unsubscribe === 'function') {
+        try {
+          unsubscribe();
+        } catch (_) {
+          /* ignore */
+        }
+      }
+    }
+  };
 }
 
 async function main(){
@@ -455,28 +549,54 @@ async function main(){
   const grupoAttr = dataset && dataset.grupo ? dataset.grupo : null;
   const GRUPO_ID = (grupoAttr || params.get('grupo') || 'calidad-2025').trim();
 
-  onAuth(async (user) => {
+  let unsubscribeRealtime = null;
+
+  onAuth((user) => {
+    if (typeof unsubscribeRealtime === 'function') {
+      try {
+        unsubscribeRealtime();
+      } catch (_) {
+        /* ignore */
+      }
+      unsubscribeRealtime = null;
+    }
+
     if (!user) {
       renderAlumno([]);
       setStatusMessage('Inicia sesion con tu correo @potros.itson.edu.mx para ver tu progreso.');
       return;
     }
-    try {
-      const items = await obtenerItemsAlumno(db, GRUPO_ID, {
-        uid: user.uid,
-        email: user.email || null,
-      });
-      renderAlumno(items);
-      setStatusMessage(items && items.length ? '' : 'Sin actividades registradas aun.');
-    } catch (error) {
-      console.error('[calificaciones-backend] error', error);
-      renderAlumno([]);
-      if (error && (error.code === 'permission-denied' || error.code === 'firestore/permission-denied')) {
-        setStatusMessage('Tu cuenta no tiene permisos para consultar las calificaciones en linea. Contacta al docente para habilitar el acceso.');
-      } else {
-        setStatusMessage('No se pudieron cargar tus calificaciones. Intenta nuevamente mas tarde.');
-      }
-    }
+
+    setStatusMessage('Cargando calificaciones en tiempo real…');
+
+    const profile = {
+      uid: user.uid,
+      email: user.email || null,
+    };
+
+    unsubscribeRealtime = subscribeToCalificaciones(db, GRUPO_ID, profile, {
+      onChange(items) {
+        renderAlumno(items);
+        setStatusMessage(items && items.length ? '' : 'Sin actividades registradas aun.');
+      },
+      onError(error) {
+        console.error('[calificaciones-backend] realtime error', error);
+        renderAlumno([]);
+        const code = String(error && error.code ? error.code : '').toLowerCase();
+        const message = String(error && error.message ? error.message : '').toLowerCase();
+        if (
+          code === 'permission-denied' ||
+          code === 'firestore/permission-denied' ||
+          message.includes('permission-denied') ||
+          message.includes('insufficient permissions')
+        ) {
+          setStatusMessage('Tu cuenta no tiene permisos para consultar las calificaciones en linea. Contacta al docente para habilitar el acceso.');
+        } else {
+          setStatusMessage('No se pudieron cargar tus calificaciones en tiempo real. Intenta nuevamente mas tarde.');
+        }
+        unsubscribeRealtime = null;
+      },
+    });
   });
 }
 
