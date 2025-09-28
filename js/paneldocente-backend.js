@@ -205,6 +205,91 @@ function groupUploadsByKind(list){
   return sections;
 }
 
+var DATA_ADMIN_ALLOWLIST = {
+  'isaac.paniagua@potros.itson.edu.mx': true,
+};
+
+function isDataAdminUser(user){
+  if (!user || !user.email) return false;
+  return !!DATA_ADMIN_ALLOWLIST[normalizeEmail(user.email)];
+}
+
+function replaceDataPathTokens(path, grupo){
+  var value = (path == null ? '' : String(path)).trim();
+  if (!value) return '';
+  var replaced = value
+    .replace(/:grupo\b/gi, grupo)
+    .replace(/:group\b/gi, grupo)
+    .replace(/\{grupo\}/gi, grupo)
+    .replace(/\{group\}/gi, grupo);
+  // Normalizar diagonales duplicadas y eliminar la final.
+  replaced = replaced.replace(new RegExp('\\/+', 'g'), '/');
+  if (replaced.length > 1 && replaced.endsWith('/')){
+    replaced = replaced.replace(new RegExp('\\/+$', 'g'), '');
+  }
+  return replaced;
+}
+
+function parseDataPathSegments(path){
+  var source = (path == null ? '' : String(path)).trim();
+  if (!source) return [];
+  var parts = source.split('/');
+  var segments = [];
+  for (var i=0; i<parts.length; i++){
+    var seg = parts[i].trim();
+    if (!seg) continue;
+    if (seg === '.' || seg === '..'){
+      throw new Error('La ruta no puede contener ".." ni ".".');
+    }
+    segments.push(seg);
+  }
+  return segments;
+}
+
+function formatDataPreview(data){
+  try {
+    var str = JSON.stringify(data);
+    if (str.length > 140) return str.slice(0, 137) + '…';
+    return str;
+  } catch (_err) {
+    try {
+      return String(data);
+    } catch (__err) {
+      return '[No disponible]';
+    }
+  }
+}
+
+function ensureDataAdminStore(state){
+  var defaults = {
+    lastInputPath: '',
+    currentCollectionSegments: [],
+    currentPathResolved: '',
+    selectedId: '',
+    docExists: false,
+    editorEnabled: false,
+    lastDocs: [],
+    docsMap: {},
+    lastQuery: null,
+  };
+  if (!state) return Object.assign({}, defaults);
+  if (!state.dataAdmin){
+    state.dataAdmin = Object.assign({}, defaults);
+    return state.dataAdmin;
+  }
+  var store = state.dataAdmin;
+  if (!Array.isArray(store.currentCollectionSegments)) store.currentCollectionSegments = [];
+  if (!Array.isArray(store.lastDocs)) store.lastDocs = [];
+  if (!store.docsMap) store.docsMap = {};
+  if (!store.lastQuery) store.lastQuery = null;
+  if (typeof store.lastInputPath !== 'string') store.lastInputPath = '';
+  if (typeof store.currentPathResolved !== 'string') store.currentPathResolved = '';
+  if (typeof store.selectedId !== 'string') store.selectedId = '';
+  store.docExists = !!store.docExists;
+  store.editorEnabled = !!store.editorEnabled;
+  return store;
+}
+
 var UPLOAD_STATUS_LABELS = {
   enviado: 'Enviado',
   aceptado: 'Aceptado',
@@ -1608,6 +1693,512 @@ function bindReminder(state){
   });
 }
 
+function bindDataAdmin(db, grupo, state){
+  var panel = $id('tab-datastore');
+  if (!panel) return;
+
+  var consoleCard = $id('pd-data-console');
+  var lockedCard = $id('pd-data-locked');
+  var resultsCard = $id('pd-data-results-card');
+  var resultsTbody = $id('pd-data-results');
+  var form = $id('pd-data-path-form');
+  var pathInput = $id('pd-data-path');
+  var docInput = $id('pd-data-doc');
+  var jsonInput = $id('pd-data-json');
+  var statusEl = $id('pd-data-status');
+  var saveBtn = $id('pd-data-save');
+  var deleteBtn = $id('pd-data-delete');
+  var refreshBtn = $id('pd-data-refresh');
+  var newBtn = $id('pd-data-create');
+  var shortcuts = panel.querySelectorAll('[data-data-shortcut]');
+
+  var isAdmin = isDataAdminUser(state.currentTeacher);
+  if (!isAdmin){
+    if (lockedCard) lockedCard.hidden = false;
+    if (consoleCard) consoleCard.hidden = true;
+    if (resultsCard) resultsCard.hidden = true;
+    return;
+  }
+
+  if (lockedCard) lockedCard.hidden = true;
+  if (consoleCard) consoleCard.hidden = false;
+
+  var store = ensureDataAdminStore(state);
+  store.lastDocs = Array.isArray(store.lastDocs) ? store.lastDocs : [];
+  store.docsMap = store.docsMap || {};
+
+  if (consoleCard){
+    consoleCard.__pdDb = db;
+    consoleCard.__pdGrupo = grupo;
+    consoleCard.__pdStore = store;
+  }
+
+  function getActiveStore(){
+    return (consoleCard && consoleCard.__pdStore) ? consoleCard.__pdStore : store;
+  }
+
+  function getActiveDb(){
+    return (consoleCard && consoleCard.__pdDb) ? consoleCard.__pdDb : db;
+  }
+
+  function getActiveGroup(){
+    return (consoleCard && consoleCard.__pdGrupo) ? consoleCard.__pdGrupo : grupo;
+  }
+
+  function setStatus(message){
+    if (statusEl) statusEl.textContent = message || '';
+  }
+
+  function setBusy(flag){
+    if (!consoleCard) return;
+    if (flag){
+      consoleCard.setAttribute('aria-busy', 'true');
+    } else {
+      consoleCard.removeAttribute('aria-busy');
+    }
+  }
+
+  function syncInputs(){
+    var current = getActiveStore();
+    if (pathInput && current.lastInputPath){
+      pathInput.value = current.lastInputPath;
+    }
+    if (docInput){
+      docInput.value = current.selectedId || '';
+    }
+    if (jsonInput){
+      jsonInput.disabled = !current.editorEnabled;
+    }
+    if (saveBtn) saveBtn.disabled = !current.editorEnabled;
+    if (deleteBtn) deleteBtn.disabled = !current.editorEnabled || !current.docExists || !(current.selectedId && current.selectedId.length);
+  }
+
+  function clearEditor(){
+    var current = getActiveStore();
+    current.editorEnabled = false;
+    current.docExists = false;
+    current.selectedId = '';
+    if (jsonInput){
+      jsonInput.value = '';
+      jsonInput.disabled = true;
+    }
+    if (docInput) docInput.value = '';
+    syncInputs();
+  }
+
+  function renderCollection(){
+    var current = getActiveStore();
+    if (!resultsTbody || !resultsCard) return;
+    var docs = Array.isArray(current.lastDocs) ? current.lastDocs : [];
+    if (!docs.length){
+      resultsTbody.innerHTML = '<tr><td colspan="3" class="pd-empty">No se encontraron documentos.</td></tr>';
+    } else {
+      resultsTbody.innerHTML = '';
+      for (var i=0; i<docs.length; i++){
+        var entry = docs[i] || {};
+        var docId = entry.id != null ? String(entry.id) : '';
+        var preview = formatDataPreview(entry.data);
+        resultsTbody.insertAdjacentHTML(
+          'beforeend',
+          '<tr>' +
+            '<td><code>' + escHtml(docId || '(sin id)') + '</code></td>' +
+            '<td><code>' + escHtml(preview) + '</code></td>' +
+            '<td class="pd-col-actions"><button type="button" class="pd-button secondary" data-doc-open="' + escAttr(docId) + '">Abrir</button></td>' +
+          '</tr>'
+        );
+      }
+    }
+    resultsCard.hidden = false;
+  }
+
+  function clearCollection(){
+    if (resultsTbody) resultsTbody.innerHTML = '<tr><td colspan="3" class="pd-empty">Sin resultados por mostrar.</td></tr>';
+    if (resultsCard) resultsCard.hidden = true;
+  }
+
+  syncInputs();
+  if (store.lastDocs && store.lastDocs.length){
+    renderCollection();
+  } else {
+    clearCollection();
+  }
+
+  function resolvePath(rawPath, rawDocId){
+    var groupId = getActiveGroup();
+    var normalized = replaceDataPathTokens(rawPath, groupId);
+    var segments = parseDataPathSegments(normalized);
+    if (!segments.length) throw new Error('La ruta no puede estar vacía.');
+    var docId = rawDocId != null ? String(rawDocId).trim() : '';
+    var docFromPath = false;
+    if (!docId && segments.length % 2 === 0){
+      docId = segments[segments.length - 1];
+      segments = segments.slice(0, segments.length - 1);
+      docFromPath = true;
+    }
+    if (!segments.length) throw new Error('La ruta debe apuntar a una colección de Firestore.');
+    return {
+      rawPath: rawPath,
+      resolvedPath: normalized,
+      collectionSegments: segments,
+      docId: docId,
+      docFromPath: docFromPath,
+    };
+  }
+
+  async function loadCollection(rawPath, opts){
+    opts = opts || {};
+    var info;
+    try {
+      info = resolvePath(rawPath, '');
+    } catch (err) {
+      setStatus(err && err.message ? err.message : String(err));
+      return;
+    }
+    if (info.docId){
+      if (docInput) docInput.value = info.docId;
+      await loadDocument(rawPath, info.docId, Object.assign({}, opts, { preferCache: true }));
+      return;
+    }
+    var current = getActiveStore();
+    current.lastInputPath = rawPath;
+    current.currentCollectionSegments = info.collectionSegments.slice();
+    current.currentPathResolved = info.resolvedPath;
+    current.lastQuery = { type: 'collection', path: rawPath, docId: '' };
+    setBusy(true);
+    try {
+      var args = info.collectionSegments.slice();
+      args.unshift(getActiveDb());
+      var colRef = collection.apply(null, args);
+      var snap = await getDocs(query(colRef, limit(50)));
+      var docs = [];
+      var map = {};
+      snap.forEach(function(docSnap){
+        var data = docSnap.data();
+        docs.push({ id: docSnap.id, data: data });
+        map[docSnap.id] = data;
+      });
+      current.lastDocs = docs;
+      current.docsMap = map;
+      clearEditor();
+      renderCollection();
+      if (!opts.silent){
+        setStatus(docs.length ? ('Se listaron ' + docs.length + ' documento(s).') : 'La colección está vacía.');
+      }
+    } catch (err) {
+      console.error('pd-data:collection', err);
+      setStatus('No se pudo obtener la colección: ' + (err && err.message ? err.message : err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function loadDocument(rawPath, rawDocId, options){
+    options = options || {};
+    var info;
+    try {
+      info = resolvePath(rawPath, rawDocId);
+    } catch (err) {
+      setStatus(err && err.message ? err.message : String(err));
+      return;
+    }
+    if (!info.docId){
+      setStatus('Captura el ID del documento que deseas consultar.');
+      if (docInput) docInput.focus();
+      return;
+    }
+    var current = getActiveStore();
+    current.lastInputPath = rawPath;
+    current.currentCollectionSegments = info.collectionSegments.slice();
+    current.currentPathResolved = info.resolvedPath;
+    current.selectedId = info.docId;
+    current.lastQuery = { type: 'document', path: rawPath, docId: info.docId };
+    if (docInput) docInput.value = info.docId;
+
+    var cached = options && options.preferCache && current.docsMap ? current.docsMap[info.docId] : null;
+    if (cached && jsonInput){
+      try { jsonInput.value = JSON.stringify(cached, null, 2); } catch (_err) { jsonInput.value = ''; }
+      jsonInput.disabled = false;
+      current.editorEnabled = true;
+      syncInputs();
+    }
+
+    setBusy(true);
+    try {
+      var docArgs = info.collectionSegments.slice();
+      docArgs.unshift(getActiveDb());
+      docArgs.push(info.docId);
+      var ref = doc.apply(null, docArgs);
+      var snap = await getDoc(ref);
+      var data = snap.exists() ? snap.data() : {};
+      current.docsMap = current.docsMap || {};
+      current.docsMap[info.docId] = data;
+      current.docExists = snap.exists();
+      current.editorEnabled = true;
+      if (jsonInput){
+        try { jsonInput.value = JSON.stringify(data, null, 2); } catch (_err2) { jsonInput.value = ''; }
+        jsonInput.disabled = false;
+      }
+      syncInputs();
+      setStatus(snap.exists() ? 'Documento cargado correctamente.' : 'El documento no existe. Guarda para crearlo.');
+    } catch (err) {
+      console.error('pd-data:document', err);
+      setStatus('No se pudo obtener el documento: ' + (err && err.message ? err.message : err));
+      var fallback = getActiveStore();
+      fallback.editorEnabled = false;
+      fallback.docExists = false;
+      syncInputs();
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function refreshLastQuery(){
+    var current = getActiveStore();
+    if (!current.lastQuery || !current.lastQuery.path){
+      setStatus('Primero realiza una consulta.');
+      return;
+    }
+    if (current.lastQuery.type === 'collection'){
+      loadCollection(current.lastQuery.path, { silent: true });
+    } else {
+      loadDocument(current.lastQuery.path, current.lastQuery.docId || '', { preferCache: false });
+    }
+  }
+
+  if (form && !form.__pdBound){
+    form.__pdBound = true;
+    form.addEventListener('submit', function(ev){
+      ev.preventDefault();
+      var rawPath = pathInput ? pathInput.value.trim() : '';
+      var rawDoc = docInput ? docInput.value.trim() : '';
+      if (!rawPath){
+        setStatus('Captura la ruta de la colección.');
+        if (pathInput) pathInput.focus();
+        return;
+      }
+      if (rawDoc){
+        loadDocument(rawPath, rawDoc);
+      } else {
+        loadCollection(rawPath);
+      }
+    });
+  }
+
+  if (saveBtn && !saveBtn.__pdBound){
+    saveBtn.__pdBound = true;
+    saveBtn.addEventListener('click', async function(){
+      var rawPath = pathInput ? pathInput.value.trim() : '';
+      var rawDoc = docInput ? docInput.value.trim() : '';
+      if (!rawPath){
+        setStatus('Captura la ruta de la colección.');
+        if (pathInput) pathInput.focus();
+        return;
+      }
+      var payloadText = jsonInput ? jsonInput.value : '';
+      var payload;
+      try {
+        payload = payloadText ? JSON.parse(payloadText) : {};
+      } catch (err) {
+        alert('Revisa el JSON del documento: ' + (err && err.message ? err.message : err));
+        if (jsonInput) jsonInput.focus();
+        return;
+      }
+      var info;
+      try {
+        info = resolvePath(rawPath, rawDoc);
+      } catch (err2) {
+        setStatus(err2 && err2.message ? err2.message : String(err2));
+        return;
+      }
+      var segments = info.collectionSegments.slice();
+      if (!segments.length){
+        setStatus('La ruta debe apuntar a una colección de Firestore.');
+        return;
+      }
+      var current = getActiveStore();
+      var baseArgs = segments.slice();
+      baseArgs.unshift(getActiveDb());
+      setBusy(true);
+      try {
+        var docId = info.docId;
+        if (!docId){
+          var colRef = collection.apply(null, baseArgs);
+          var newRef = await addDoc(colRef, payload);
+          docId = newRef.id;
+          if (docInput) docInput.value = docId;
+          setStatus('Documento creado con ID ' + docId + '.');
+        } else {
+          var docArgs = baseArgs.slice();
+          docArgs.push(docId);
+          var ref = doc.apply(null, docArgs);
+          await setDoc(ref, payload);
+          setStatus('Documento guardado correctamente.');
+        }
+        current.lastInputPath = rawPath;
+        current.currentCollectionSegments = segments;
+        current.currentPathResolved = replaceDataPathTokens(rawPath, getActiveGroup());
+        current.selectedId = docId;
+        current.docExists = true;
+        current.editorEnabled = true;
+        current.docsMap = current.docsMap || {};
+        current.docsMap[docId] = payload;
+        current.lastQuery = { type: 'document', path: rawPath, docId: docId };
+        if (jsonInput) jsonInput.disabled = false;
+        syncInputs();
+        if (current.lastDocs && current.lastDocs.length){
+          var updated = false;
+          for (var i=0; i<current.lastDocs.length; i++){
+            if (current.lastDocs[i].id === docId){
+              current.lastDocs[i] = { id: docId, data: payload };
+              updated = true;
+              break;
+            }
+          }
+          if (!updated && current.lastDocs.length < 50){
+            current.lastDocs.push({ id: docId, data: payload });
+          }
+          renderCollection();
+        }
+      } catch (err) {
+        console.error('pd-data:save', err);
+        alert('No se pudo guardar el documento: ' + (err && err.message ? err.message : err));
+      } finally {
+        setBusy(false);
+      }
+    });
+  }
+
+  if (deleteBtn && !deleteBtn.__pdBound){
+    deleteBtn.__pdBound = true;
+    deleteBtn.addEventListener('click', async function(){
+      var rawPath = pathInput ? pathInput.value.trim() : '';
+      var rawDoc = docInput ? docInput.value.trim() : '';
+      if (!rawDoc){
+        alert('Selecciona el documento que deseas eliminar.');
+        return;
+      }
+      if (!confirm('¿Eliminar el documento seleccionado?')) return;
+      var info;
+      try {
+        info = resolvePath(rawPath || store.lastInputPath || '', rawDoc);
+      } catch (err) {
+        setStatus(err && err.message ? err.message : String(err));
+        return;
+      }
+      var segments = info.collectionSegments.slice();
+      if (!segments.length){
+        setStatus('La ruta es inválida.');
+        return;
+      }
+      var docArgs = segments.slice();
+      docArgs.unshift(getActiveDb());
+      docArgs.push(info.docId);
+      setBusy(true);
+      try {
+        await deleteDoc(doc.apply(null, docArgs));
+        var current = getActiveStore();
+        if (current.docsMap) delete current.docsMap[info.docId];
+        current.docExists = false;
+        current.editorEnabled = false;
+        current.selectedId = '';
+        if (jsonInput) jsonInput.value = '';
+        if (docInput) docInput.value = '';
+        syncInputs();
+        setStatus('Documento eliminado correctamente.');
+        if (current.lastDocs && current.lastDocs.length){
+          for (var i=current.lastDocs.length-1; i>=0; i--){
+            if (current.lastDocs[i].id === info.docId){
+              current.lastDocs.splice(i, 1);
+            }
+          }
+          if (current.lastDocs.length){
+            renderCollection();
+          } else {
+            clearCollection();
+          }
+        } else {
+          clearCollection();
+        }
+      } catch (err) {
+        console.error('pd-data:delete', err);
+        alert('No se pudo eliminar el documento: ' + (err && err.message ? err.message : err));
+      } finally {
+        setBusy(false);
+      }
+    });
+  }
+
+  if (refreshBtn && !refreshBtn.__pdBound){
+    refreshBtn.__pdBound = true;
+    refreshBtn.addEventListener('click', function(){
+      refreshLastQuery();
+    });
+  }
+
+  if (newBtn && !newBtn.__pdBound){
+    newBtn.__pdBound = true;
+    newBtn.addEventListener('click', function(){
+      if (pathInput && !pathInput.value.trim()){
+        setStatus('Captura primero la ruta de la colección.');
+        pathInput.focus();
+        return;
+      }
+      var current = getActiveStore();
+      current.editorEnabled = true;
+      current.docExists = false;
+      current.selectedId = '';
+      if (docInput) docInput.value = '';
+      if (jsonInput){
+        jsonInput.disabled = false;
+        jsonInput.value = '{\n  \n}';
+        jsonInput.focus();
+      }
+      syncInputs();
+      setStatus('Define el contenido y un ID opcional, luego presiona "Guardar cambios".');
+    });
+  }
+
+  if (resultsTbody && !resultsTbody.__pdBound){
+    resultsTbody.__pdBound = true;
+    resultsTbody.addEventListener('click', function(ev){
+      var target = ev.target || ev.srcElement;
+      var btn = target && target.closest ? target.closest('[data-doc-open]') : null;
+      if (!btn) return;
+      var docId = btn.getAttribute('data-doc-open') || '';
+      if (!docId){
+        setStatus('El documento seleccionado no tiene ID.');
+        return;
+      }
+      var current = getActiveStore();
+      var rawPath = current.lastQuery && current.lastQuery.type === 'collection'
+        ? current.lastQuery.path
+        : (pathInput ? pathInput.value.trim() : '');
+      if (!rawPath) rawPath = current.lastInputPath || '';
+      if (!rawPath){
+        setStatus('No se pudo determinar la ruta actual de la colección.');
+        return;
+      }
+      if (docInput) docInput.value = docId;
+      loadDocument(rawPath, docId, { preferCache: true });
+    });
+  }
+
+  for (var si=0; si<shortcuts.length; si++){
+    (function(btn){
+      if (!btn || btn.__pdBound) return;
+      btn.__pdBound = true;
+      btn.addEventListener('click', function(){
+        var raw = btn.getAttribute('data-data-path') || '';
+        if (!raw) return;
+        if (pathInput) pathInput.value = raw;
+        store.lastInputPath = raw;
+        clearEditor();
+        loadCollection(raw);
+      });
+    })(shortcuts[si]);
+  }
+}
+
 function readStudentFormValues(){
   var nameInput = $id('pd-student-name');
   var emailInput = $id('pd-student-email');
@@ -1847,6 +2438,7 @@ async function loadDataForGroup(db, grupo, state){
   bindDeliverableTable(db, grupo, state);
   bindReminder(state);
   bindStudentsManager(db, grupo, state);
+  bindDataAdmin(db, grupo, state);
 
   var gantt = await fetchGantt(db, grupo);
   renderGanttTable(gantt);
@@ -1881,6 +2473,7 @@ async function main(){
     currentTeacher: null,
     editingStudentId: null,
     groupId: grupo,
+    dataAdmin: null,
   };
   var isLoading = false;
   var hasLoaded = false;
