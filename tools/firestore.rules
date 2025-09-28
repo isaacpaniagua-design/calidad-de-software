@@ -37,15 +37,14 @@ service cloud.firestore {
         && request.resource.data.content is string
         && request.resource.data.authorEmail == request.auth.token.email;
       allow update, delete: if isTeacher();
+    }
 
-      // Respuestas
-      match /replies/{replyId} {
-        allow read: if isPotros();
-        allow create: if isPotros()
-          && request.resource.data.text is string
-          && request.resource.data.authorEmail == request.auth.token.email;
-        allow update, delete: if isTeacher() || (isPotros() && resource.data.authorEmail == request.auth.token.email);
-      }
+    match /forum_topics/{topicId}/replies/{replyId} {
+      allow read: if isPotros();
+      allow create: if isPotros()
+        && request.resource.data.text is string
+        && request.resource.data.authorEmail == request.auth.token.email;
+      allow update, delete: if isTeacher() || (isPotros() && resource.data.authorEmail == request.auth.token.email);
     }
 
     // Materiales
@@ -86,7 +85,7 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-   // Grades rules
+    // Grades rules
     match /grades/{studentId} {
       allow read: if isPotros();
       allow create, update, delete: if isTeacher();
@@ -114,10 +113,11 @@ service cloud.firestore {
     match /grupos/{grupo}/calificaciones/{uid} {
       allow read: if isPotros();
       allow create, update, delete: if isTeacher();
-      match /items/{itemId} {
-        allow read: if isPotros();
-        allow create, update, delete: if isTeacher();
-      }
+    }
+
+    match /grupos/{grupo}/calificaciones/{uid}/items/{itemId} {
+      allow read: if isPotros();
+      allow create, update, delete: if isTeacher();
     }
     
     match /users/{userId} {
@@ -128,62 +128,62 @@ service cloud.firestore {
     match /grupos/{grupoId} {
       allow read: if isTeacher();
       allow create, update, delete: if false;
+    }
 
-      match /members/{memberId} {
-        allow read: if isTeacher();
+    match /grupos/{grupoId}/members/{memberId} {
+      allow read: if isTeacher();
 
-        function isValidMemberPayload() {
-          return request.resource.data.uid == memberId
-            && request.resource.data.displayName is string
-            && request.resource.data.nombre is string
-            && request.resource.data.email is string
-            && (request.resource.data.matricula == null || request.resource.data.matricula is string)
-            && request.resource.data.role == 'student'
-            && request.resource.data.updatedAt is timestamp
-            && (
-              !('createdAt' in request.resource.data) || request.resource.data.createdAt is timestamp
-            );
-        }
-
-        allow create: if isTeacher() && isValidMemberPayload();
-        allow update: if isTeacher() && isValidMemberPayload();
-        allow delete: if isTeacher();
+      function isValidMemberPayload() {
+        return request.resource.data.uid == memberId
+          && request.resource.data.displayName is string
+          && request.resource.data.nombre is string
+          && request.resource.data.email is string
+          && (request.resource.data.matricula == null || request.resource.data.matricula is string)
+          && request.resource.data.role == 'student'
+          && request.resource.data.updatedAt is timestamp
+          && (
+            !('createdAt' in request.resource.data) || request.resource.data.createdAt is timestamp
+          );
       }
 
-      match /calificaciones/{studentId} {
-        allow read: if isTeacher();
-        allow create, update, delete: if false;
+      allow create: if isTeacher() && isValidMemberPayload();
+      allow update: if isTeacher() && isValidMemberPayload();
+      allow delete: if isTeacher();
+    }
 
-        match /items/{itemId} {
-          allow read: if isTeacher();
-          allow create, update, delete: if isTeacher();
-        }
-      }
+    match /grupos/{grupoId}/calificaciones/{studentId} {
+      allow read: if isTeacher();
+      allow create, update, delete: if false;
+    }
 
-      match /deliverables/{deliverableId} {
-        allow read: if isTeacher();
-        allow create, update, delete: if isTeacher();
-      }
+    match /grupos/{grupoId}/calificaciones/{studentId}/items/{itemId} {
+      allow read: if isTeacher();
+      allow create, update, delete: if isTeacher();
+    }
 
-      match /exams/{examId} {
-        allow read: if isTeacher();
-        allow create, update, delete: if isTeacher();
-      }
+    match /grupos/{grupoId}/deliverables/{deliverableId} {
+      allow read: if isTeacher();
+      allow create, update, delete: if isTeacher();
+    }
 
-      match /gantt/{rowId} {
-        allow read: if isTeacher();
-        allow create, update, delete: if isTeacher();
-      }
+    match /grupos/{grupoId}/exams/{examId} {
+      allow read: if isTeacher();
+      allow create, update, delete: if isTeacher();
+    }
 
-      match /rubric/{rubricId} {
-        allow read: if isTeacher();
-        allow create, update, delete: if isTeacher();
-      }
+    match /grupos/{grupoId}/gantt/{rowId} {
+      allow read: if isTeacher();
+      allow create, update, delete: if isTeacher();
+    }
 
-      match /assignments/{assignmentId} {
-        allow read: if isTeacher();
-        allow create, update, delete: if isTeacher();
-      }
+    match /grupos/{grupoId}/rubric/{rubricId} {
+      allow read: if isTeacher();
+      allow create, update, delete: if isTeacher();
+    }
+
+    match /grupos/{grupoId}/assignments/{assignmentId} {
+      allow read: if isTeacher();
+      allow create, update, delete: if isTeacher();
     }
   }
 }
