@@ -47,6 +47,64 @@ let pendingUploadEntry = null;
 let storageAvailabilityChecked = false;
 let storageAvailable = false;
 
+let teacherRoleDetected = false;
+
+function detectTeacherRoleFromDom() {
+  const root = document.documentElement;
+  if (root?.classList?.contains("role-teacher")) return true;
+  const body = document.body;
+  if (body?.classList?.contains("teacher-yes")) return true;
+  try {
+    const stored = localStorage.getItem("qs_role");
+    if (stored && stored.toLowerCase() === "docente") return true;
+  } catch (_) {}
+  return false;
+}
+
+function updateTeacherRoleFlag() {
+  const detected = detectTeacherRoleFromDom();
+  if (detected === teacherRoleDetected) return;
+  teacherRoleDetected = detected;
+  updateUploadButtonsState(currentStudentProfile);
+}
+
+function observeBodyForTeacherRole(observer) {
+  const body = document.body;
+  if (!body || !observer) return;
+  observer.observe(body, { attributes: true, attributeFilter: ["class"] });
+}
+
+const teacherRoleObserver =
+  typeof MutationObserver === "function"
+    ? new MutationObserver(() => updateTeacherRoleFlag())
+    : null;
+
+if (teacherRoleObserver) {
+  teacherRoleObserver.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["class"],
+  });
+  if (document.body) {
+    observeBodyForTeacherRole(teacherRoleObserver);
+  } else {
+    document.addEventListener(
+      "DOMContentLoaded",
+      () => {
+        observeBodyForTeacherRole(teacherRoleObserver);
+        updateTeacherRoleFlag();
+      },
+      { once: true }
+    );
+  }
+} else {
+  document.addEventListener("DOMContentLoaded", updateTeacherRoleFlag, {
+    once: true,
+  });
+}
+
+updateTeacherRoleFlag();
+
+
 function isStorageAvailable() {
   if (!useStorage) return false;
   if (!storageAvailabilityChecked) {
@@ -354,14 +412,23 @@ function getUploadEligibility(profile) {
         "El estudiante seleccionado no está vinculado a una cuenta activa en Firebase.",
     };
   }
-  if (profile.uid !== authUser.uid) {
+
+  if (!teacherRoleDetected && profile.uid !== authUser.uid) {
+
     return {
       allowed: false,
       reason:
         "Las reglas de Firebase solo permiten que cada estudiante suba su propia evidencia.",
     };
   }
-  return { allowed: true, reason: "Subir evidencia para esta actividad" };
+
+  return {
+    allowed: true,
+    reason: teacherRoleDetected
+      ? "Subir evidencia como docente para el estudiante seleccionado."
+      : "Subir evidencia para esta actividad",
+  };
+
 }
 
 function updateUploadButtonsState(profile) {
@@ -369,6 +436,7 @@ function updateUploadButtonsState(profile) {
   displays.forEach((entry) => {
     if (!entry || !entry.uploadButton) return;
     const cannotUploadActivity = !entry.activity || !entry.activity.id;
+
 
     const eligibility = getUploadEligibility(profile);
     const disabled =
@@ -382,7 +450,6 @@ function updateUploadButtonsState(profile) {
       entry.uploadButton.title = "Actividad no vinculada";
     } else if (storageDisabled) {
       entry.uploadButton.title =
-
 
         "El almacenamiento de evidencias está deshabilitado.";
     } else if (entry.uploading) {
@@ -632,13 +699,8 @@ function handleUploadRequest(entry) {
   }
   if (!isStorageAvailable()) {
     setStatus(entry, "El almacenamiento de evidencias no está disponible.", {
-      uploaded: false,
-      title: "",
-    });
-    return;
-  }
-  if (!isStorageAvailable()) {
-    setStatus(entry, "El almacenamiento de evidencias no está disponible.", {
+
+
       uploaded: false,
       title: "",
     });
@@ -681,7 +743,9 @@ async function handleFileInputChange(event) {
         "No se pudo identificar al estudiante seleccionado en la base de datos."
       );
     }
-    if (profile.uid !== authUser.uid) {
+
+    if (!teacherRoleDetected && profile.uid !== authUser.uid) {
+
       throw new Error(
         "Las reglas de Firebase impiden subir evidencias para otro estudiante."
       );
@@ -845,6 +909,7 @@ async function main() {
 
 onAuth((user) => {
   authUser = user;
+  updateTeacherRoleFlag();
   updateUploadButtonsState(currentStudentProfile);
   if (!uiReady) return;
   if (!getSelectedStudentProfile()) {
