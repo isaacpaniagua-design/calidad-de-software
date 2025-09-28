@@ -44,6 +44,101 @@ function formatSize(bytes){
   return value.toFixed(precision) + ' ' + units[unitIndex];
 }
 
+var ROSTER_STORAGE_KEY = 'qs_roster_cache';
+
+function normalizeRosterStudent(student){
+  if (!student) return null;
+  var email = (student.email || '').toLowerCase();
+  var uid = student.uid ? String(student.uid) : '';
+  var matricula = student.matricula || student.id || uid || email || '';
+  var id = student.id || matricula || email || uid;
+  if (!id && !email && !uid) return null;
+  var name = student.displayName || student.nombre || student.name || '';
+  var type = student.type || 'student';
+  return {
+    uid: uid,
+    id: id,
+    matricula: matricula || id,
+    name: name || email || id || 'Estudiante',
+    email: email,
+    type: type,
+  };
+}
+
+function dedupeRosterEntries(list){
+  var order = [];
+  var map = {};
+  if (!Array.isArray(list)) return [];
+  for (var i=0; i<list.length; i++){
+    var entry = list[i];
+    if (!entry) continue;
+    var key = (entry.email || entry.id || entry.matricula || entry.uid || entry.name || ('idx'+i)).toLowerCase();
+    if (!map[key]){
+      map[key] = Object.assign({}, entry);
+      order.push(key);
+    } else {
+      var current = map[key];
+      if (entry.uid && !current.uid) current.uid = entry.uid;
+      if (entry.id && !current.id) current.id = entry.id;
+      if (entry.matricula && !current.matricula) current.matricula = entry.matricula;
+      if (entry.email && !current.email) current.email = entry.email;
+      if (entry.type && !current.type) current.type = entry.type;
+      if (entry.name && (!current.name || current.name === current.id || current.name === current.email)){
+        current.name = entry.name;
+      }
+    }
+  }
+  var out = [];
+  for (var j=0; j<order.length; j++){
+    var item = map[order[j]];
+    if (!item) continue;
+    if (!item.id) item.id = item.matricula || item.email || item.uid || ('student-' + j);
+    if (!item.matricula) item.matricula = item.id;
+    if (!item.name) item.name = item.email || item.id;
+    if (!item.type) item.type = 'student';
+    out.push(item);
+  }
+  return out;
+}
+
+function emitRosterUpdate(detail){
+  if (typeof window === 'undefined' || !window.dispatchEvent) return;
+  try {
+    window.dispatchEvent(new CustomEvent('qs:roster-updated', { detail: detail }));
+  } catch (_err) {
+    if (typeof document !== 'undefined' && typeof document.createEvent === 'function'){
+      try {
+        var ev = document.createEvent('CustomEvent');
+        ev.initCustomEvent('qs:roster-updated', false, false, detail);
+        window.dispatchEvent(ev);
+      } catch (__err) {}
+    }
+  }
+}
+
+function syncRosterCache(students){
+  if (typeof window === 'undefined') return [];
+  var list = Array.isArray(students) ? students : [];
+  var normalized = [];
+  for (var i=0; i<list.length; i++){
+    var item = normalizeRosterStudent(list[i]);
+    if (item) normalized.push(item);
+  }
+  var deduped = dedupeRosterEntries(normalized);
+  var payload = {
+    updatedAt: new Date().toISOString(),
+    students: deduped,
+  };
+  try {
+    if (window.localStorage) window.localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(payload));
+  } catch (_err) {}
+  try {
+    window.students = deduped.slice();
+  } catch (_err2) {}
+  emitRosterUpdate(payload);
+  return deduped;
+}
+
 var UPLOAD_KIND_LABELS = {
   activity: 'Actividad',
   homework: 'Tarea',
@@ -443,6 +538,7 @@ function ensureMetricsForStudents(state){
 async function reloadStudents(db, grupoId, state){
   state.students = await fetchStudents(db, grupoId);
   rebuildStudentIndex(state);
+  syncRosterCache(state.students);
   ensureMetricsForStudents(state);
   renderSummaryStats(state.students, state.metrics);
   renderStudentsTable(state.students, state.metrics);
@@ -1178,6 +1274,7 @@ function bindStudentsManager(db, grupo, state){
 async function loadDataForGroup(db, grupo, state){
   state.students = await fetchStudents(db, grupo);
   rebuildStudentIndex(state);
+  syncRosterCache(state.students);
   var metrics = {};
   state.metrics = metrics;
   var CONC=5, idx=0;

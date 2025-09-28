@@ -527,7 +527,94 @@
 
         // Student data - this will be used for validation when integrated with Google Auth
 
-        const students = [
+        const ROSTER_STORAGE_KEY = 'qs_roster_cache';
+
+        function normalizeRosterEntry(entry) {
+            if (!entry) return null;
+            const email = typeof entry.email === 'string' ? entry.email.toLowerCase() : '';
+            const uid = entry.uid ? String(entry.uid) : '';
+            const matricula = entry.matricula || entry.id || uid || email || '';
+            const id = entry.id || matricula || email || uid;
+            if (!id && !email && !uid) return null;
+            const name = entry.name || entry.displayName || entry.nombre || '';
+            const type = entry.type || 'student';
+            return {
+                uid,
+                id,
+                matricula: matricula || id,
+                name: name || email || id || 'Estudiante',
+                email,
+                type,
+            };
+        }
+
+        function mergeRosterLists(primary, extras) {
+            const map = new Map();
+            const addEntry = (item) => {
+                if (!item) return;
+                const key = (item.email || item.id || item.matricula || item.uid || item.name || '')
+                    .toString()
+                    .toLowerCase();
+                if (!key) return;
+                if (!map.has(key)) {
+                    map.set(key, Object.assign({}, item));
+                    return;
+                }
+                const current = map.get(key);
+                if (item.uid && !current.uid) current.uid = item.uid;
+                if (item.id && !current.id) current.id = item.id;
+                if (item.matricula && !current.matricula) current.matricula = item.matricula;
+                if (item.email && !current.email) current.email = item.email;
+                if (item.type && !current.type) current.type = item.type;
+                if (
+                    item.name &&
+                    (!current.name ||
+                        current.name === current.id ||
+                        current.name === current.email ||
+                        current.name.toLowerCase() === (current.email || '').toLowerCase())
+                ) {
+                    current.name = item.name;
+                }
+            };
+            primary.forEach(addEntry);
+            extras.forEach(addEntry);
+            const result = Array.from(map.values()).map((entry, index) => {
+                const copy = Object.assign({}, entry);
+                if (!copy.id) copy.id = copy.matricula || copy.email || copy.uid || `student-${index}`;
+                if (!copy.matricula) copy.matricula = copy.id;
+                if (!copy.name) copy.name = copy.email || copy.id;
+                if (!copy.type) copy.type = 'student';
+                return copy;
+            });
+            result.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'es', { sensitivity: 'base' }));
+            return result;
+        }
+
+        function parseRosterPayload(value) {
+            if (!value) return [];
+            try {
+                const parsed = typeof value === 'string' ? JSON.parse(value) : value;
+                if (Array.isArray(parsed)) {
+                    return parsed.map(normalizeRosterEntry).filter(Boolean);
+                }
+                if (parsed && Array.isArray(parsed.students)) {
+                    return parsed.students.map(normalizeRosterEntry).filter(Boolean);
+                }
+            } catch (_err) {}
+            return [];
+        }
+
+        function readCachedRoster() {
+            if (typeof window === 'undefined' || !window.localStorage) return [];
+            try {
+                const raw = window.localStorage.getItem(ROSTER_STORAGE_KEY);
+                return parseRosterPayload(raw);
+            } catch (_err) {
+                return [];
+            }
+        }
+
+        const baseRosterRaw = [
             {id: "00000249116", name: "Arana Guerrero, Danett Itzanami", email: "danett.arana249116@potros.itson.edu.mx", type: "student"},
             {id: "00000147818", name: "Araujo Godoy, Abraham Francisco", email: "abraham.araujo@potros.itson.edu.mx", type: "student"},
             {id: "00000244228", name: "Avalos Morales, Egla Icel", email: "egla.avalos244228@potros.itson.edu.mx", type: "student"},
@@ -554,12 +641,43 @@
             {id: "00000244689", name: "Villegas Sosa, Ramsés Mauricio", email: "ramses.villegas244689@potros.itson.edu.mx", type: "student"},
             {id: "00000244679", name: "Viveros Zavala, Angel Gael", email: "angel.viveros244679@potros.itson.edu.mx", type: "student"},
             {id: "99645", name: "Paniagua Ruiz, Isaac Noé", email: "isaac.paniagua@potros.itson.edu.mx", type: "teacher"}
-
         ];
 
+        const baseRoster = baseRosterRaw.map(normalizeRosterEntry).filter(Boolean);
+        let rosterExtras = [];
+        let students = mergeRosterLists(baseRoster, rosterExtras);
 
+        function updateWindowRoster() {
+            try {
+                window.students = students;
+            } catch (_err) {}
+        }
 
-        window.students = students;
+        function applyRosterExtras(newExtras) {
+            rosterExtras = Array.isArray(newExtras)
+                ? newExtras.map(normalizeRosterEntry).filter(Boolean)
+                : [];
+            students = mergeRosterLists(baseRoster, rosterExtras);
+            updateWindowRoster();
+        }
+
+        updateWindowRoster();
+
+        const cachedRoster = readCachedRoster();
+        if (cachedRoster.length) {
+            applyRosterExtras(cachedRoster);
+        }
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('storage', (event) => {
+                if (event && event.key === ROSTER_STORAGE_KEY) {
+                    applyRosterExtras(parseRosterPayload(event.newValue));
+                }
+            });
+            window.addEventListener('qs:roster-updated', (event) => {
+                applyRosterExtras(parseRosterPayload(event?.detail));
+            });
+        }
 
 
 
