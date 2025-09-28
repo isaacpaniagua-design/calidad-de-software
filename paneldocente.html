@@ -3,1387 +3,518 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Panel del Maestro · Calidad de Software</title>
+    <title>Panel docente | Calidad de Software</title>
     <link rel="stylesheet" href="./css/layout.css" />
     <script>
       window.firebaseConfig = {
         apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
         authDomain: "calidad-de-software-v2.firebaseapp.com",
         projectId: "calidad-de-software-v2",
-        storageBucket: "calidad-de-software-v2.firebasestorage.app",
+        storageBucket: "calidad-de-software-v2.appspot.com",
         messagingSenderId: "220818066383",
-        appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
+        appId: "1:220818066383:web:0c2119f470a5f9711b60ba"
       };
     </script>
     <style>
       :root {
-        --pd-shell-width: min(1160px, 94vw);
-        --pd-card-bg: rgba(255, 255, 255, 0.92);
-        --pd-card-border: rgba(148, 163, 184, 0.35);
-        --pd-card-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        --pd-bg: #f8fafc;
+        --pd-surface: #ffffff;
+        --pd-border: rgba(148, 163, 184, 0.35);
+        --pd-primary: #2563eb;
+        --pd-primary-soft: rgba(37, 99, 235, 0.12);
+        --pd-danger: #dc2626;
         --pd-muted: #64748b;
-        --pd-accent: #2563eb;
-        --pd-accent-soft: rgba(37, 99, 235, 0.08);
-        --pd-surface: rgba(248, 250, 252, 0.9);
-        --motion-duration: 180ms;
-        --motion-easing: cubic-bezier(0.22, 1, 0.36, 1);
+        --pd-success: #16a34a;
+        --pd-radius: 16px;
+        --pd-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+        --pd-max-width: min(1180px, 94vw);
+      }
+
+      *, *::before, *::after {
+        box-sizing: border-box;
       }
 
       body {
         margin: 0;
-        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-          sans-serif;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--pd-bg);
         color: #0f172a;
-        background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 55%),
-          radial-gradient(circle at bottom right, rgba(15, 23, 42, 0.12), transparent 60%),
-          #f8fafc;
       }
 
-      main.pd-shell {
-        width: var(--pd-shell-width);
-        margin: clamp(36px, 6vw, 72px) auto clamp(96px, 12vw, 140px);
-        display: grid;
-        gap: clamp(28px, 5vw, 44px);
-      }
-
-      .pd-hero {
-        position: relative;
-        display: flex;
-        flex-wrap: wrap;
-        gap: clamp(18px, 4vw, 32px);
-        align-items: flex-start;
-        justify-content: space-between;
-        padding: clamp(24px, 5vw, 36px);
-        border-radius: 28px;
-        background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(30, 64, 175, 0.88));
-        color: #e2e8f0;
-        box-shadow: 0 28px 60px rgba(15, 23, 42, 0.35);
-        overflow: hidden;
-      }
-
-      .pd-hero::after {
-        content: "";
-        position: absolute;
-        inset: -25% 45% auto -12%;
-        min-height: 320px;
-        background: radial-gradient(
-          circle at center,
-          rgba(59, 130, 246, 0.38),
-          transparent 68%
-        );
-        filter: blur(48px);
-        opacity: 0.7;
-        pointer-events: none;
-      }
-
-      .pd-hero h1 {
-        margin: 0;
-        font-size: clamp(1.9rem, 5vw, 2.6rem);
-        font-weight: 700;
-        letter-spacing: -0.02em;
-      }
-
-      .pd-hero p {
-        margin: 0;
-        max-width: 48ch;
-        color: rgba(226, 232, 240, 0.88);
-        font-size: clamp(1rem, 2.5vw, 1.1rem);
-      }
-
-      .pd-chip-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: clamp(6px, 2vw, 12px);
-      }
-
-      .pd-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 12px;
-        border-radius: 999px;
-        background: rgba(15, 23, 42, 0.45);
-        border: 1px solid rgba(226, 232, 240, 0.22);
-        font-size: 0.85rem;
-        font-weight: 500;
-      }
-
-      .pd-hero-actions {
+      .pd-layout {
         display: flex;
         flex-direction: column;
+        min-height: 100vh;
+      }
+
+      .pd-toolbar {
+        background: var(--pd-surface);
+        border-bottom: 1px solid var(--pd-border);
+        position: sticky;
+        top: 0;
+        z-index: 20;
+      }
+
+      .pd-toolbar__inner {
+        margin: 0 auto;
+        max-width: var(--pd-max-width);
+        padding: 14px clamp(16px, 4vw, 28px);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+      }
+
+      .pd-brand {
+        font-size: clamp(1.05rem, 3vw, 1.35rem);
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+
+      .pd-toolbar__actions {
+        display: inline-flex;
+        align-items: center;
         gap: 12px;
-        min-width: 220px;
-        position: relative;
-        z-index: 1;
+        flex-wrap: wrap;
       }
 
       .pd-button {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
-        font-weight: 600;
-        font-size: 0.95rem;
+        gap: 8px;
+        padding: 8px 16px;
         border-radius: 999px;
-        border: none;
+        font-weight: 600;
+        font-size: 0.92rem;
         cursor: pointer;
-        padding: 12px 18px;
-        transition: transform 0.2s var(--motion-easing),
-          box-shadow 0.2s var(--motion-easing),
-          background 0.2s var(--motion-easing);
-        text-decoration: none;
+        border: 1px solid transparent;
+        transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        background: rgba(15, 23, 42, 0.04);
+        color: #1e293b;
       }
 
       .pd-button.primary {
-        color: white;
-        background: linear-gradient(135deg, #2563eb, #7c3aed);
-        box-shadow: 0 18px 38px rgba(59, 130, 246, 0.35);
-      }
-
-      .pd-button.primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 22px 48px rgba(59, 130, 246, 0.4);
+        background: var(--pd-primary);
+        color: #fff;
+        border-color: transparent;
       }
 
       .pd-button.secondary {
-        background: rgba(226, 232, 240, 0.16);
-        color: #e0e7ff;
-        border: 1px solid rgba(148, 163, 184, 0.35);
+        background: transparent;
+        border-color: rgba(37, 99, 235, 0.4);
+        color: var(--pd-primary);
       }
 
-      .pd-button.secondary:hover {
-        transform: translateY(-1px);
-        background: rgba(226, 232, 240, 0.22);
+      .pd-button.danger {
+        background: rgba(220, 38, 38, 0.09);
+        border-color: rgba(220, 38, 38, 0.45);
+        color: var(--pd-danger);
       }
 
-      .pd-button[aria-disabled="true"] {
+      .pd-button:disabled {
+        cursor: default;
         opacity: 0.55;
-        cursor: not-allowed;
-        pointer-events: none;
       }
 
       .pd-tabs {
+        margin: 0 auto;
+        max-width: var(--pd-max-width);
+        padding: clamp(8px, 2vw, 16px) clamp(16px, 4vw, 28px);
         display: flex;
-        flex-wrap: wrap;
         gap: 12px;
-        padding: 6px;
-        border-radius: 999px;
-        background: rgba(255, 255, 255, 0.6);
-        border: 1px solid rgba(148, 163, 184, 0.25);
-        box-shadow: var(--pd-card-shadow);
-        backdrop-filter: blur(12px);
+        flex-wrap: wrap;
       }
 
-      .pd-tab {
-        appearance: none;
-        border: none;
+      .pd-tabs button {
+        border: 1px solid transparent;
+        border-radius: 999px;
+        padding: 8px 18px;
         background: transparent;
         color: var(--pd-muted);
         font-weight: 600;
-        padding: 10px 18px;
-        border-radius: 999px;
+        font-size: 0.9rem;
         cursor: pointer;
-        transition: background var(--motion-duration) var(--motion-easing),
-          color var(--motion-duration) var(--motion-easing);
+        transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
       }
 
-      .pd-tab[aria-pressed="true"] {
-        background: linear-gradient(
-          135deg,
-          rgba(59, 130, 246, 0.18),
-          rgba(147, 51, 234, 0.18)
-        );
-        color: #1d4ed8;
+      .pd-tabs button[aria-pressed="true"] {
+        background: var(--pd-primary-soft);
+        border-color: rgba(37, 99, 235, 0.35);
+        color: var(--pd-primary);
       }
 
-      .pd-tab:focus-visible {
-        outline: 3px solid rgba(59, 130, 246, 0.4);
-        outline-offset: 2px;
-      }
-
-      .pd-panel {
-        display: none;
-        padding: clamp(24px, 4vw, 32px);
-        border-radius: 24px;
-        background: var(--pd-card-bg);
-        border: 1px solid var(--pd-card-border);
-        box-shadow: var(--pd-card-shadow);
-        backdrop-filter: blur(14px);
-      }
-
-      .pd-panel.active {
+      main.pd-main {
+        flex: 1;
+        width: 100%;
+        margin: 0 auto;
+        max-width: var(--pd-max-width);
+        padding: clamp(16px, 4vw, 28px);
         display: grid;
         gap: clamp(18px, 3vw, 28px);
       }
 
-      .pd-panel h2 {
-        margin: 0;
-        font-size: clamp(1.35rem, 3vw, 1.7rem);
-      }
-
-      .pd-subtitle {
-        margin: 0;
-        color: var(--pd-muted);
+      .pd-banner {
+        padding: 12px 16px;
+        border-radius: 10px;
         font-size: 0.95rem;
+        border: 1px solid transparent;
       }
 
-      .pd-alert {
-        display: flex;
-        gap: 12px;
-        align-items: flex-start;
-        padding: 16px 20px;
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.75);
-        border: 1px solid rgba(148, 163, 184, 0.4);
-        box-shadow: var(--pd-card-shadow);
-        color: #0f172a;
-        font-size: 0.95rem;
-      }
+      .pd-banner.info { background: rgba(37, 99, 235, 0.08); border-color: rgba(37, 99, 235, 0.28); color: var(--pd-primary); }
+      .pd-banner.error { background: rgba(220, 38, 38, 0.08); border-color: rgba(220, 38, 38, 0.28); color: var(--pd-danger); }
+      .pd-banner.success { background: rgba(22, 163, 74, 0.08); border-color: rgba(22, 163, 74, 0.28); color: var(--pd-success); }
 
-      .pd-alert strong {
-        font-weight: 700;
-        min-width: max-content;
-      }
-
-      .pd-alert[data-variant="warning"] {
-        background: rgba(254, 243, 199, 0.75);
-        border-color: rgba(217, 119, 6, 0.45);
-        color: #92400e;
-      }
-
-      .pd-alert[data-variant="error"] {
-        background: rgba(254, 226, 226, 0.78);
-        border-color: rgba(220, 38, 38, 0.5);
-        color: #991b1b;
-      }
-
-      .pd-alert[hidden] {
-        display: none !important;
-      }
-
-      main.pd-shell[data-locked="true"] .pd-tabs,
-      main.pd-shell[data-locked="true"] .pd-panel {
-        pointer-events: none;
-        opacity: 0.45;
-      }
-
-      .pd-grid {
-        display: grid;
+      section[data-view-panel] {
+        display: none;
+        grid-template-columns: 1fr;
         gap: clamp(16px, 3vw, 24px);
       }
 
-      .pd-grid.cols-4 {
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      section[data-view-panel].active {
+        display: grid;
       }
 
       .pd-card {
         background: var(--pd-surface);
-        border-radius: 22px;
-        padding: clamp(18px, 3vw, 24px);
-        border: 1px solid rgba(148, 163, 184, 0.25);
-        box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+        border-radius: var(--pd-radius);
+        border: 1px solid var(--pd-border);
+        box-shadow: var(--pd-shadow);
+        padding: clamp(18px, 3vw, 26px);
         display: grid;
-        gap: 6px;
+        gap: clamp(12px, 2.5vw, 20px);
       }
 
-      .pd-card strong {
-        font-size: clamp(1.6rem, 4vw, 2rem);
-        color: #1d4ed8;
+      .pd-card h2,
+      .pd-card h3 {
+        margin: 0;
+        font-weight: 700;
+        letter-spacing: -0.01em;
       }
 
-      .pd-card small {
-        color: var(--pd-muted);
+      .pd-muted { color: var(--pd-muted); }
+
+      .pd-metric-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      .pd-metric {
+        border-radius: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        padding: 16px;
+        background: rgba(248, 250, 252, 0.8);
+        display: grid;
+        gap: 4px;
+      }
+
+      .pd-metric strong {
+        font-size: 1.9rem;
+        font-weight: 700;
       }
 
       .pd-table-wrap {
         overflow-x: auto;
-        border-radius: 18px;
         border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 12px;
+        background: rgba(248, 250, 252, 0.65);
       }
 
-      table.pd-table {
+      table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 640px;
-        background: white;
+        min-width: 600px;
       }
 
-      table.pd-table th,
-      table.pd-table td {
-        padding: 14px 16px;
-        text-align: left;
-        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-        font-size: 0.95rem;
-      }
-
-      table.pd-table th {
-        background: rgba(241, 245, 249, 0.7);
-        font-weight: 600;
-        color: #0f172a;
-      }
-
-      table.pd-table tbody tr:hover {
-        background: rgba(248, 250, 252, 0.7);
-      }
-
-      .pd-table .pd-col-select {
-        width: 48px;
-        text-align: center;
-      }
-
-      .pd-col-actions {
-        width: 180px;
-        text-align: right;
-      }
-
-      .pd-student-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-
-      .pd-table input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-      }
-
-      .pd-empty {
-        padding: 32px 20px;
-        text-align: center;
-        color: var(--pd-muted);
-        font-style: italic;
-      }
-
-      .pd-uploads-grid {
-        display: grid;
-        gap: clamp(18px, 4vw, 28px);
-        grid-template-columns: minmax(240px, 1fr) minmax(0, 2fr);
-      }
-
-      .pd-uploads__sidebar {
-        display: grid;
-        gap: 12px;
-        align-content: start;
-      }
-
-      .pd-uploads__students {
-        list-style: none;
-        margin: 0;
-        padding: 0;
-        display: grid;
-        gap: 10px;
-      }
-
-      .pd-uploads__student button {
-        width: 100%;
-        display: grid;
-        gap: 6px;
-        padding: 12px 16px;
-        border-radius: 16px;
-        border: 1px solid rgba(148, 163, 184, 0.35);
-        background: rgba(255, 255, 255, 0.88);
-        cursor: pointer;
-        text-align: left;
-        font: inherit;
-        transition: border-color var(--motion-duration) var(--motion-easing),
-          box-shadow var(--motion-duration) var(--motion-easing),
-          background var(--motion-duration) var(--motion-easing);
-      }
-
-      .pd-uploads__student button[aria-pressed="true"] {
-        border-color: rgba(37, 99, 235, 0.6);
-        background: rgba(37, 99, 235, 0.12);
-        box-shadow: 0 14px 28px rgba(37, 99, 235, 0.18);
-      }
-
-      .pd-uploads__student-name {
-        font-weight: 600;
-      }
-
-      .pd-uploads__student-email {
-        font-size: 0.8rem;
-        color: var(--pd-muted);
-      }
-
-      .pd-uploads__student-counts {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .pd-uploads__student-breakdown {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        font-size: 0.75rem;
-        color: var(--pd-muted);
-      }
-
-      .pd-uploads__student-chip {
-        display: inline-flex;
-        align-items: center;
-        padding: 2px 8px;
-        border-radius: 999px;
-        background: rgba(148, 163, 184, 0.22);
-        font-weight: 600;
-      }
-
-      .pd-uploads__student-count {
-        display: inline-flex;
-        align-items: center;
-        padding: 2px 10px;
-        border-radius: 999px;
-        background: rgba(37, 99, 235, 0.16);
-        color: #1d4ed8;
-        font-size: 0.8rem;
-        font-weight: 600;
-      }
-
-      .pd-uploads__student-pending {
-        color: #b91c1c;
-        font-weight: 600;
-        font-size: 0.75rem;
-      }
-
-      .pd-uploads__detail {
-        display: grid;
-        gap: 16px;
-        border-radius: 22px;
-        border: 1px solid rgba(148, 163, 184, 0.25);
-        background: rgba(255, 255, 255, 0.92);
-        padding: clamp(20px, 3vw, 28px);
-        box-shadow: var(--pd-card-shadow);
-        min-height: 340px;
-      }
-
-      .pd-uploads__detail-header {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
+      th, td {
+        padding: 10px 14px;
         border-bottom: 1px solid rgba(148, 163, 184, 0.25);
-        padding-bottom: 12px;
-        margin-bottom: 4px;
+        text-align: left;
+        font-size: 0.92rem;
       }
 
-      .pd-uploads__detail-header span {
-        color: var(--pd-muted);
-        font-size: 0.85rem;
-      }
+      tbody tr:hover { background: rgba(37, 99, 235, 0.05); }
 
-      .pd-uploads__kind-section {
-        display: grid;
-        gap: 14px;
-        padding-top: 8px;
-      }
+      .pd-form-grid { display: grid; gap: 16px; }
 
-      .pd-uploads__kind-section + .pd-uploads__kind-section {
-        margin-top: 12px;
-        padding-top: 20px;
-        border-top: 1px solid rgba(148, 163, 184, 0.25);
-      }
-
-      .pd-uploads__kind-header {
-        display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 12px;
-      }
-
-      .pd-uploads__kind-heading {
-        margin: 0;
-        font-size: 1.05rem;
-        font-weight: 600;
-        color: #1e293b;
-      }
-
-      .pd-uploads__kind-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 2px 10px;
-        border-radius: 999px;
-        background: rgba(37, 99, 235, 0.12);
-        color: #1d4ed8;
-        font-size: 0.8rem;
-        font-weight: 600;
-      }
-
-      .pd-uploads__kind-list {
-        display: grid;
-        gap: 16px;
-      }
-
-      .pd-uploads__item {
-        border: 1px solid rgba(148, 163, 184, 0.25);
-        border-radius: 18px;
-        padding: 16px 18px;
-        display: grid;
-        gap: 12px;
-        background: white;
-      }
-
-      .pd-uploads__item-header {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: space-between;
-        gap: 12px;
-      }
-
-      .pd-uploads__item-heading {
+      .pd-field {
         display: flex;
         flex-direction: column;
-        gap: 4px;
-      }
-
-      .pd-uploads__item-title {
-        margin: 0;
-        font-size: 1rem;
-        font-weight: 600;
-      }
-
-      .pd-uploads__item-chip {
-        display: inline-flex;
-        align-items: center;
-        padding: 2px 10px;
-        border-radius: 999px;
-        background: rgba(59, 130, 246, 0.12);
-        color: #2563eb;
-        font-size: 0.75rem;
-        font-weight: 600;
-        width: max-content;
-      }
-
-      .pd-uploads__item-status {
-        display: inline-flex;
-        align-items: center;
-        padding: 4px 12px;
-        border-radius: 999px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        background: rgba(148, 163, 184, 0.16);
-        color: #1f2937;
-      }
-
-      .pd-uploads__item-status--aceptado {
-        background: rgba(34, 197, 94, 0.18);
-        color: #166534;
-      }
-
-      .pd-uploads__item-status--calificado {
-        background: rgba(59, 130, 246, 0.18);
-        color: #1d4ed8;
-      }
-
-      .pd-uploads__item-status--rechazado {
-        background: rgba(248, 113, 113, 0.22);
-        color: #b91c1c;
-      }
-
-      .pd-uploads__item-meta,
-      .pd-uploads__item-description,
-      .pd-uploads__item-feedback,
-      .pd-uploads__item-reviewer {
-        margin: 0;
-        color: #1f2937;
-        font-size: 0.9rem;
-        line-height: 1.5;
-      }
-
-      .pd-uploads__item-meta {
-        color: var(--pd-muted);
-        font-style: italic;
-        font-weight: 500;
-      }
-
-      .pd-uploads__item-grade {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #1d4ed8;
-      }
-
-      .pd-uploads__item-grade--pending {
-        color: #b91c1c;
-      }
-
-      .pd-uploads__item-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-
-      .pd-uploads__item-link-disabled {
-        display: inline-flex;
-        align-items: center;
-        padding: 6px 12px;
-        border-radius: 999px;
-        border: 1px dashed rgba(148, 163, 184, 0.55);
-        color: var(--pd-muted);
-        font-weight: 600;
-      }
-
-      .pd-action-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 6px 12px;
-        border-radius: 999px;
-        border: 1px solid rgba(59, 130, 246, 0.35);
-        background: rgba(59, 130, 246, 0.08);
-        color: #1d4ed8;
-        font-weight: 600;
-        cursor: pointer;
-        transition: background var(--motion-duration) var(--motion-easing);
-        text-decoration: none;
-      }
-
-      .pd-action-btn:hover {
-        background: rgba(59, 130, 246, 0.16);
-      }
-
-      .pd-action-btn[disabled] {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
-
-      .pd-form {
-        display: grid;
-        gap: 16px;
-        margin-top: 12px;
-      }
-
-      .pd-form-row {
-        display: grid;
-        gap: 16px;
-      }
-
-      .pd-form-row.cols-2 {
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      }
-
-      label.pd-field {
-        display: grid;
         gap: 6px;
-        font-weight: 600;
-        color: #0f172a;
+        font-size: 0.9rem;
       }
 
       .pd-field input,
       .pd-field textarea,
       .pd-field select {
-        padding: 12px 14px;
-        border-radius: 14px;
-        border: 1px solid rgba(148, 163, 184, 0.35);
-        background: rgba(255, 255, 255, 0.9);
-        font: inherit;
-        resize: vertical;
-        transition: border-color var(--motion-duration) var(--motion-easing),
-          box-shadow var(--motion-duration) var(--motion-easing);
+        border-radius: 10px;
+        border: 1px solid rgba(148, 163, 184, 0.45);
+        padding: 10px 12px;
+        font-size: 0.95rem;
+        font-family: inherit;
+        background: rgba(255, 255, 255, 0.95);
       }
 
-      .pd-field input:focus,
-      .pd-field textarea:focus,
-      .pd-field select:focus {
-        outline: none;
-        border-color: rgba(59, 130, 246, 0.6);
-        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-      }
-
-      textarea#pd-rubric-text {
-        min-height: 220px;
-      }
-
-      .pd-inline-actions {
+      .pd-flex {
         display: flex;
         flex-wrap: wrap;
-        gap: 12px;
-        justify-content: flex-end;
-      }
-
-      .pd-tag {
-        display: inline-flex;
+        gap: 10px;
         align-items: center;
+      }
+
+      .pd-list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .pd-upload-card {
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        border-radius: 14px;
+        padding: 14px 16px;
+        background: rgba(248, 250, 252, 0.85);
+        display: grid;
         gap: 8px;
-        padding: 8px 14px;
-        border-radius: 999px;
-        background: rgba(59, 130, 246, 0.12);
-        color: #1d4ed8;
-        font-weight: 600;
-        font-size: 0.9rem;
       }
 
-      @media (max-width: 920px) {
-        .pd-uploads-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .pd-hero {
-          border-radius: 24px;
-        }
-
-        main.pd-shell {
-          margin-top: clamp(28px, 10vw, 48px);
-          margin-bottom: clamp(80px, 14vw, 120px);
-        }
-
-        .pd-tabs {
-          border-radius: 18px;
-        }
+      .pd-upload-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 16px;
+        font-size: 0.88rem;
+        color: var(--pd-muted);
       }
 
-      @media (max-width: 640px) {
-        .pd-hero-actions {
-          width: 100%;
-          flex-direction: row;
-          flex-wrap: wrap;
-          justify-content: flex-start;
-        }
+      .pd-upload-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
 
-        .pd-button {
-          flex: 1 1 180px;
-        }
+      .pd-material-item {
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        border-radius: 12px;
+        padding: 12px 16px;
+        background: rgba(248, 250, 252, 0.8);
+        display: grid;
+        gap: 6px;
+      }
 
-        table.pd-table {
-          min-width: 520px;
-        }
+      .pd-empty {
+        text-align: center;
+        padding: 26px;
+        color: var(--pd-muted);
+      }
+
+      .pd-log {
+        font-family: "Roboto Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 0.82rem;
+        background: rgba(15, 23, 42, 0.04);
+        border-radius: 10px;
+        border: 1px solid rgba(148, 163, 184, 0.25);
+        padding: 10px 12px;
+        max-height: 200px;
+        overflow: auto;
+      }
+
+      @media (max-width: 720px) {
+        .pd-toolbar__inner { flex-direction: column; align-items: flex-start; }
+        .pd-toolbar__actions { width: 100%; justify-content: space-between; }
+        table { min-width: 520px; }
       }
     </style>
   </head>
   <body>
-    <main id="paneldocente-root" data-grupo="calidad-2025" class="pd-shell">
-      <header class="pd-hero">
-        <div class="pd-hero-text">
-          <h1>Panel del Maestro</h1>
-          <p>
-            Un tablero integral para monitorear entregas, calificaciones y el avance
-            de cada estudiante del grupo.
-          </p>
-          <div class="pd-chip-row" aria-hidden="true">
-            <span class="pd-chip">📆 Semana actual <strong id="pd-week-display">—</strong></span>
-            <span class="pd-chip">🧑‍🏫 Docente activo</span>
+    <div class="pd-layout">
+      <header class="pd-toolbar">
+        <div class="pd-toolbar__inner">
+          <div class="pd-brand">Panel docente</div>
+          <div class="pd-toolbar__actions">
+            <span id="pd-user-email" class="pd-user"></span>
+            <button id="pd-sign-in" class="pd-button primary" type="button">Iniciar sesion</button>
+            <button id="pd-sign-out" class="pd-button secondary" type="button" hidden>Cerrar sesion</button>
           </div>
-        </div>
-        <div class="pd-hero-actions">
-          <button id="pd-remind-selected" class="pd-button primary" type="button">
-            📧 Enviar recordatorio
-          </button>
-          <a
-            id="pd-exam-u1-link"
-            class="pd-button secondary"
-            href="#"
-            aria-disabled="true"
-          >
-            📘 Examen Unidad I
-          </a>
-          <a
-            id="pd-exam-u2-link"
-            class="pd-button secondary"
-            href="#"
-            aria-disabled="true"
-          >
-            📗 Examen Unidad II
-          </a>
         </div>
       </header>
 
-      <div
-        id="pd-status-banner"
-        class="pd-alert"
-        role="alert"
-        aria-live="polite"
-        data-variant="info"
-        hidden
-      >
-        <strong id="pd-status-title">Acceso restringido.</strong>
-        <span id="pd-status-message"
-          >Inicia sesión con una cuenta de docente para ver este panel.</span
-        >
-      </div>
-
       <nav class="pd-tabs" aria-label="Secciones del panel">
-        <button
-          id="tab-btn-overview"
-          class="pd-tab"
-          type="button"
-          data-tab-target="overview"
-          aria-controls="tab-overview"
-          aria-pressed="true"
-        >
-          Resumen
-        </button>
-        <button
-          id="tab-btn-deliverables"
-          class="pd-tab"
-          type="button"
-          data-tab-target="deliverables"
-          aria-controls="tab-deliverables"
-          aria-pressed="false"
-        >
-          Entregables
-        </button>
-        <button
-          id="tab-btn-uploads"
-          class="pd-tab"
-          type="button"
-          data-tab-target="uploads"
-          aria-controls="tab-uploads"
-          aria-pressed="false"
-        >
-          Evidencias
-        </button>
-        <button
-          id="tab-btn-evaluations"
-          class="pd-tab"
-          type="button"
-          data-tab-target="evaluations"
-          aria-controls="tab-evaluations"
-          aria-pressed="false"
-        >
-          Evaluaciones
-        </button>
-        <button
-          id="tab-btn-rubric"
-          class="pd-tab"
-          type="button"
-          data-tab-target="rubric"
-          aria-controls="tab-rubric"
-          aria-pressed="false"
-        >
-          Rúbrica
-        </button>
-        <button
-          id="tab-btn-students"
-          class="pd-tab"
-          type="button"
-          data-tab-target="students"
-          aria-controls="tab-students"
-          aria-pressed="false"
-        >
-          Estudiantes
-        </button>
-        <button
-          id="tab-btn-gantt"
-          class="pd-tab"
-          type="button"
-          data-tab-target="gantt"
-          aria-controls="tab-gantt"
-          aria-pressed="false"
-        >
-          Cronograma
-        </button>
-        <button
-          id="tab-btn-datastore"
-          class="pd-tab"
-          type="button"
-          data-tab-target="datastore"
-          aria-controls="tab-datastore"
-          aria-pressed="false"
-        >
-          Gestión de datos
-        </button>
+        <button type="button" data-action="switch-view" data-target="overview" aria-pressed="true">Resumen</button>
+        <button type="button" data-action="switch-view" data-target="students">Alumnos</button>
+        <button type="button" data-action="switch-view" data-target="uploads">Evidencias</button>
+        <button type="button" data-action="switch-view" data-target="materials">Materiales</button>
+        <button type="button" data-action="switch-view" data-target="admin">Administracion</button>
       </nav>
 
-      <section
-        id="tab-overview"
-        class="pd-panel active"
-        role="tabpanel"
-        aria-labelledby="tab-btn-overview"
-      >
-        <div>
-          <h2>Resumen general</h2>
-          <p class="pd-subtitle">
-            Estos indicadores se calculan automáticamente a partir de la información en Firebase.
-          </p>
-        </div>
-        <div class="pd-grid cols-4">
-          <article class="pd-card">
-            <span class="pd-subtitle">Estudiantes registrados</span>
-            <strong id="pd-summary-total-students">0</strong>
-          </article>
-          <article class="pd-card">
-            <span class="pd-subtitle">Promedio final (escala 5)</span>
-            <strong id="pd-summary-avg-final">0.0</strong>
-          </article>
-          <article class="pd-card">
-            <span class="pd-subtitle">Entregables activos</span>
-            <strong id="pd-summary-active-deliverables">—</strong>
-            <small>Se actualiza al crear o archivar entregables.</small>
-          </article>
-          <article class="pd-card">
-            <span class="pd-subtitle">Última sincronización</span>
-            <strong id="pd-summary-sync">En curso</strong>
-            <small>La información se recarga automáticamente al abrir el panel.</small>
-          </article>
-        </div>
-      </section>
+      <main class="pd-main">
+        <section id="pd-status-banner" class="pd-banner" hidden></section>
 
-      <section
-        id="tab-deliverables"
-        class="pd-panel"
-        role="tabpanel"
-        aria-labelledby="tab-btn-deliverables"
-        hidden
-      >
-        <div>
-          <h2>Gestión de entregables</h2>
-          <p class="pd-subtitle">
-            Visualiza, edita y crea entregables que alimentan el cálculo de calificaciones del curso.
-          </p>
-        </div>
-        <div class="pd-table-wrap" role="region" aria-live="polite">
-          <table class="pd-table">
-            <thead>
-              <tr>
-                <th scope="col">Título</th>
-                <th scope="col">Descripción</th>
-                <th scope="col">Unidad</th>
-                <th scope="col">Ponderación</th>
-                <th scope="col">Entrega</th>
-                <th scope="col">Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="pd-deliverables-tbody">
-              <tr><td colspan="6" class="pd-empty">Cargando entregables…</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <form id="pd-new-deliverable-form" class="pd-form" autocomplete="off">
-          <h3>Registrar nuevo entregable</h3>
-          <div class="pd-form-row cols-2">
-            <label class="pd-field">
-              Título
-              <input
-                id="pd-deliv-title"
-                type="text"
-                name="title"
-                placeholder="Ej. Informe de avances"
-                required
-              />
-            </label>
-            <label class="pd-field">
-              Unidad
-              <select id="pd-deliv-unidad" name="unidad">
-                <option value="">Selecciona…</option>
-                <option value="1">Unidad I</option>
-                <option value="2">Unidad II</option>
-                <option value="3">Unidad III</option>
-              </select>
-            </label>
-          </div>
-          <label class="pd-field">
-            Descripción
-            <textarea
-              id="pd-deliv-desc"
-              name="description"
-              placeholder="Objetivo, materiales requeridos o notas adicionales."
-            ></textarea>
-          </label>
-          <div class="pd-form-row cols-2">
-            <label class="pd-field">
-              Ponderación (%)
-              <input id="pd-deliv-weight" type="number" min="0" max="100" step="1" name="weight" />
-            </label>
-            <label class="pd-field">
-              Fecha de entrega
-              <input id="pd-deliv-due" type="date" name="due" />
-            </label>
-          </div>
-          <div class="pd-inline-actions">
-            <button class="pd-button primary" type="submit">Guardar entregable</button>
-          </div>
-        </form>
-      </section>
-
-      <section
-        id="tab-uploads"
-        class="pd-panel"
-        role="tabpanel"
-        aria-labelledby="tab-btn-uploads"
-        hidden
-      >
-        <div>
-          <h2>Evidencias de estudiantes</h2>
-          <p class="pd-subtitle">
-            Explora las actividades, tareas y evidencias registradas por cada estudiante. Marca los envíos aceptados y agrega calificaciones para avisarles en su panel.
-          </p>
-        </div>
-        <div class="pd-uploads-grid">
-          <aside class="pd-uploads__sidebar">
-            <h3>Listado de estudiantes</h3>
-            <p class="pd-subtitle">Selecciona un alumno para revisar sus entregas.</p>
-            <ul class="pd-uploads__students" id="pd-upload-student-list"></ul>
-            <p class="pd-empty" id="pd-upload-empty">No hay evidencias registradas todavía.</p>
-          </aside>
-          <div class="pd-uploads__detail" id="pd-upload-detail">
-            <p class="pd-empty">Selecciona un estudiante para revisar sus evidencias.</p>
-          </div>
-        </div>
-      </section>
-
-      <section
-        id="tab-evaluations"
-        class="pd-panel"
-        role="tabpanel"
-        aria-labelledby="tab-btn-evaluations"
-        hidden
-      >
-        <div>
-          <h2>Evaluaciones del curso</h2>
-          <p class="pd-subtitle">
-            Los enlaces a exámenes se habilitan al registrar la URL correspondiente en la colección de Firebase.
-          </p>
-        </div>
-        <div class="pd-grid cols-4">
+        <section data-view-panel="overview" class="active">
           <article class="pd-card">
-            <span class="pd-subtitle">Examen Unidad I</span>
-            <small>El botón del encabezado apunta al formulario disponible.</small>
-          </article>
-          <article class="pd-card">
-            <span class="pd-subtitle">Examen Unidad II</span>
-            <small>Utiliza el botón del encabezado para abrir el enlace.</small>
-          </article>
-        </div>
-        <div class="pd-table-wrap">
-          <table class="pd-table">
-            <thead>
-              <tr>
-                <th scope="col">Asignación</th>
-                <th scope="col">Unidad</th>
-                <th scope="col">Ponderación</th>
-                <th scope="col">Clave</th>
-                <th scope="col">Descripción</th>
-              </tr>
-            </thead>
-            <tbody id="pd-assignments-tbody">
-              <tr><td colspan="5" class="pd-empty">Sin asignaciones registradas.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section
-        id="tab-rubric"
-        class="pd-panel"
-        role="tabpanel"
-        aria-labelledby="tab-btn-rubric"
-        hidden
-      >
-        <div>
-          <h2>Rúbrica de evaluación</h2>
-          <p class="pd-subtitle">
-            Personaliza la rúbrica utilizada para evaluar entregables y exámenes. Se almacena directamente en Firebase.
-          </p>
-        </div>
-        <label class="pd-field">
-          Contenido de la rúbrica
-          <textarea
-            id="pd-rubric-text"
-            name="rubric"
-            placeholder="Define los criterios, niveles de desempeño y pesos por unidad."
-          ></textarea>
-        </label>
-        <div class="pd-inline-actions">
-          <button id="pd-rubric-save" class="pd-button primary" type="button">Guardar cambios</button>
-        </div>
-      </section>
-
-      <section
-        id="tab-students"
-        class="pd-panel"
-        role="tabpanel"
-        aria-labelledby="tab-btn-students"
-        hidden
-      >
-        <div>
-          <h2>Seguimiento de estudiantes</h2>
-          <p class="pd-subtitle">
-            Consulta los promedios por unidad y selecciona estudiantes para enviar recordatorios personalizados.
-          </p>
-        </div>
-        <article class="pd-card">
-          <div>
-            <h3 id="pd-student-form-title">Agregar estudiante</h3>
-            <p class="pd-subtitle">
-              Registra estudiantes manualmente para reutilizar la plataforma en nuevos grupos.
-            </p>
-          </div>
-          <form id="pd-student-form" class="pd-form" data-mode="create">
-            <div class="pd-form-row cols-2">
-              <label class="pd-field">
-                Nombre completo
-                <input
-                  id="pd-student-name"
-                  name="student-name"
-                  type="text"
-                  autocomplete="name"
-                  placeholder="Ej. Ana Pérez"
-                  required
-                />
+            <h2>Resumen en tiempo real</h2>
+            <p class="pd-muted">Los datos se sincronizan directamente con Firebase. Selecciona el grupo para filtrar la informacion.</p>
+            <div class="pd-flex">
+              <label class="pd-field" style="flex: 1 1 220px; max-width: 260px;">
+                Grupo activo
+                <select id="pd-group-select"></select>
               </label>
-              <label class="pd-field">
-                Correo electrónico
-                <input
-                  id="pd-student-email"
-                  name="student-email"
-                  type="email"
-                  autocomplete="email"
-                  placeholder="nombre@ejemplo.com"
-                  required
-                />
-              </label>
+              <button class="pd-button secondary" id="pd-refresh-overview" type="button">Actualizar ahora</button>
             </div>
-            <div class="pd-form-row cols-2">
-              <label class="pd-field">
-                Matrícula (opcional)
-                <input
-                  id="pd-student-matricula"
-                  name="student-matricula"
-                  type="text"
-                  autocomplete="off"
-                  placeholder="Ej. A01234567"
-                />
-              </label>
+            <div class="pd-metric-grid">
+              <div class="pd-metric">
+                <span>Alumnos registrados</span>
+                <strong id="pd-count-members">--</strong>
+              </div>
+              <div class="pd-metric">
+                <span>Evidencias recibidas (7 dias)</span>
+                <strong id="pd-count-uploads">--</strong>
+              </div>
+              <div class="pd-metric">
+                <span>Evidencias pendientes</span>
+                <strong id="pd-count-pending">--</strong>
+              </div>
+              <div class="pd-metric">
+                <span>Materiales publicados</span>
+                <strong id="pd-count-materials">--</strong>
+              </div>
             </div>
-            <div class="pd-inline-actions">
-              <button id="pd-student-form-submit" class="pd-button primary" type="submit">
-                Agregar estudiante
-              </button>
-              <button id="pd-student-form-cancel" class="pd-button secondary" type="button" hidden>
-                Cancelar edición
-              </button>
-            </div>
-          </form>
-        </article>
-        <div class="pd-table-wrap" role="region" aria-live="polite">
-          <table class="pd-table">
-            <thead>
-              <tr>
-                <th scope="col" class="pd-col-select">&nbsp;</th>
-                <th scope="col">Nombre</th>
-                <th scope="col">Correo</th>
-                <th scope="col">Unidad I</th>
-                <th scope="col">Unidad II</th>
-                <th scope="col">Unidad III</th>
-                <th scope="col">Final</th>
-                <th scope="col" class="pd-col-actions">Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="pd-students-tbody">
-              <tr><td colspan="8" class="pd-empty">Preparando información de estudiantes…</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+          </article>
 
-      <section
-        id="tab-gantt"
-        class="pd-panel"
-        role="tabpanel"
-        aria-labelledby="tab-btn-gantt"
-        hidden
-      >
-        <div>
-          <h2>Cronograma de actividades</h2>
-          <p class="pd-subtitle">
-            Las filas se construyen desde la colección <code>gantt</code> del grupo en Firebase.
-          </p>
-        </div>
-        <div class="pd-table-wrap" role="region" aria-live="polite">
-          <table class="pd-table">
-            <thead>
-              <tr>
-                <th scope="col">Actividad</th>
-                <th scope="col">Inicio</th>
-                <th scope="col">Fin</th>
-                <th scope="col">Responsable</th>
-                <th scope="col">Estado</th>
-              </tr>
-            </thead>
-            <tbody id="pd-gantt-tbody">
-              <tr><td colspan="5" class="pd-empty">Sin actividades programadas.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
+          <article class="pd-card">
+            <h3>Actividad reciente</h3>
+            <div id="pd-activity-log" class="pd-log" aria-live="polite">Esperando datos...</div>
+          </article>
+        </section>
 
-      <section
-        id="tab-datastore"
-        class="pd-panel"
-        role="tabpanel"
-        aria-labelledby="tab-btn-datastore"
-        hidden
-      >
-        <div>
-          <h2>Gestión de datos en Firebase</h2>
-          <p class="pd-subtitle">
-            Consulta y administra documentos directamente desde Firestore para resolver incidencias de datos del grupo
-            seleccionado.
-          </p>
-        </div>
-        <article class="pd-card" id="pd-data-locked" hidden>
-          <h3>Acceso restringido</h3>
-          <p class="pd-subtitle">
-            Esta consola solo está disponible para el personal autorizado. Comunícate con coordinación si necesitas
-            permisos de administración.
-          </p>
-        </article>
-        <article class="pd-card" id="pd-data-console" hidden>
-          <div class="pd-chip-row" aria-label="Rutas rápidas de datos">
-            <button class="pd-chip" type="button" data-data-shortcut="students" data-data-path="grupos/:grupo/members">
-              👥 Estudiantes
-            </button>
-            <button class="pd-chip" type="button" data-data-shortcut="deliverables" data-data-path="grupos/:grupo/deliverables">
-              📦 Entregables
-            </button>
-            <button class="pd-chip" type="button" data-data-shortcut="assignments" data-data-path="grupos/:grupo/assignments">
-              📝 Asignaciones
-            </button>
-            <button class="pd-chip" type="button" data-data-shortcut="exams" data-data-path="grupos/:grupo/exams">
-              🧪 Exámenes
-            </button>
-            <button class="pd-chip" type="button" data-data-shortcut="uploads" data-data-path="uploads">
-              📁 Entregas (global)
-            </button>
-          </div>
-          <form id="pd-data-path-form" class="pd-form" autocomplete="off">
-            <div class="pd-form-row cols-2">
-              <label class="pd-field">
-                Ruta de la colección o documento
-                <input
-                  id="pd-data-path"
-                  name="data-path"
-                  type="text"
-                  placeholder="Ej. grupos/:grupo/deliverables"
-                  required
-                />
-              </label>
-              <label class="pd-field">
-                ID del documento (opcional)
-                <input
-                  id="pd-data-doc"
-                  name="data-doc"
-                  type="text"
-                  placeholder="Deja vacío para listar la colección"
-                />
-              </label>
-            </div>
-            <div class="pd-inline-actions">
-              <button id="pd-data-load" class="pd-button primary" type="submit">Consultar datos</button>
-              <button id="pd-data-refresh" class="pd-button secondary" type="button">Recargar</button>
-              <button id="pd-data-create" class="pd-button secondary" type="button">Nuevo documento</button>
-            </div>
-          </form>
-          <div class="pd-form-row">
-            <label class="pd-field">
-              Contenido del documento (JSON)
-              <textarea
-                id="pd-data-json"
-                name="data-json"
-                rows="12"
-                placeholder="Selecciona un documento para editarlo o genera uno nuevo"
-                disabled
-              ></textarea>
-            </label>
-          </div>
-          <div class="pd-inline-actions">
-            <button id="pd-data-save" class="pd-button primary" type="button" disabled>Guardar cambios</button>
-            <button id="pd-data-delete" class="pd-button secondary" type="button" disabled>Eliminar documento</button>
-          </div>
-          <p class="pd-subtitle" id="pd-data-status">Selecciona una colección para comenzar.</p>
-        </article>
-        <article class="pd-card" id="pd-data-results-card" hidden>
-          <h3>Documentos encontrados</h3>
-          <p class="pd-subtitle">
-            Selecciona un documento para visualizarlo y editarlo. El listado se limita a los primeros 50 resultados para
-            proteger el rendimiento del panel.
-          </p>
-          <div class="pd-table-wrap" role="region" aria-live="polite">
-            <table class="pd-table">
-              <thead>
-                <tr>
-                  <th scope="col">ID</th>
-                  <th scope="col">Vista previa</th>
-                  <th scope="col" class="pd-col-actions">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="pd-data-results">
-                <tr><td colspan="3" class="pd-empty">Sin resultados por mostrar.</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </article>
-      </section>
-    </main>
+        <section data-view-panel="students">
+          <article class="pd-card">
+            <h2>Gestion de alumnos</h2>
+            <p class="pd-muted">Edita la informacion basica de cada alumno para mantener sincronizada la lista del grupo.</p>
+            <form id="pd-member-form" class="pd-form-grid" autocomplete="off">
+              <div class="pd-field">
+                <label>UID de Firebase (opcional)
+                  <input type="text" name="uid" placeholder="UID si el alumno ya inicio sesion" />
+                </label>
+              </div>
+              <div class="pd-field">
+                <label>Matricula / ID de control
+                  <input type="text" name="matricula" required />
+                </label>
+              </div>
+              <div class="pd-field">
+                <label>Nombre completo
+                  <input type="text" name="displayName" required />
+                </label>
+              </div>
+              <div class="pd-field">
+                <label>Correo institucional
+                  <input type="email" name="email" required />
+                </label>
+              </div>
+              <div class="pd-flex">
+                <button type="submit" class="pd-button primary">Guardar alumno</button>
+                <button type="button" id="pd-member-reset" class="pd-button secondary">Limpiar formulario</button>
+                <button type="button" id="pd-member-delete" class="pd-button danger" disabled>Eliminar alumno</button>
+              </div>
+            </form>
+          </article>
 
-    <div class="file-viewer" id="fileViewer" hidden aria-hidden="true">
-      <div class="file-viewer__backdrop" data-file-viewer-close></div>
-      <div class="file-viewer__dialog" role="dialog" aria-modal="true" aria-labelledby="fileViewerTitle">
-        <header class="file-viewer__header">
-          <h2 class="file-viewer__title" id="fileViewerTitle" data-file-viewer-title>Vista previa del archivo</h2>
-          <button type="button" class="file-viewer__close" aria-label="Cerrar vista previa" data-file-viewer-close>&times;</button>
-        </header>
-        <div class="file-viewer__content">
-          <iframe
-            data-file-viewer-frame
-            title="Vista previa del archivo seleccionado"
-            loading="lazy"
-            allow="fullscreen"
-          ></iframe>
-        </div>
-        <p class="file-viewer__notice">
-          Si el archivo no se muestra correctamente, puedes
-          <a data-file-viewer-download target="_blank" rel="noopener">abrirlo en una pestaña nueva</a>.
-        </p>
-      </div>
+          <article class="pd-card">
+            <h3>Alumnos del grupo</h3>
+            <div class="pd-table-wrap" role="region" aria-live="polite">
+              <table id="pd-members-table">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Matricula</th>
+                    <th>Correo</th>
+                    <th>UID</th>
+                    <th>Actualizado</th>
+                  </tr>
+                </thead>
+                <tbody id="pd-members-body">
+                  <tr><td colspan="5" class="pd-empty">Sin alumnos registrados.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section data-view-panel="uploads">
+          <article class="pd-card">
+            <h2>Evidencias de los alumnos</h2>
+            <div class="pd-flex">
+              <label class="pd-field" style="flex: 1 1 260px;">
+                Buscar (nombre, correo, evidencia)
+                <input type="search" id="pd-upload-search" placeholder="Filtrar evidencias" />
+              </label>
+              <button type="button" id="pd-refresh-uploads" class="pd-button secondary">Actualizar lista</button>
+            </div>
+            <div id="pd-uploads-list" class="pd-list" aria-live="polite">
+              <p class="pd-empty">Sin evidencias registradas.</p>
+            </div>
+          </article>
+        </section>
+
+        <section data-view-panel="materials">
+          <article class="pd-card">
+            <h2>Materiales para la clase</h2>
+            <form id="pd-material-form" class="pd-form-grid">
+              <div class="pd-field">
+                <label>Titulo
+                  <input type="text" name="title" required />
+                </label>
+              </div>
+              <div class="pd-field">
+                <label>Categoria
+                  <input type="text" name="category" placeholder="Presentaciones, videos, etc." />
+                </label>
+              </div>
+              <div class="pd-field">
+                <label>URL del recurso
+                  <input type="url" name="url" required />
+                </label>
+              </div>
+              <div class="pd-field">
+                <label>Descripcion breve
+                  <textarea name="description" rows="3"></textarea>
+                </label>
+              </div>
+              <button type="submit" class="pd-button primary">Publicar material</button>
+            </form>
+          </article>
+          <article class="pd-card">
+            <h3>Materiales publicados</h3>
+            <div id="pd-materials-list" class="pd-list" aria-live="polite">
+              <p class="pd-empty">Aun no hay materiales registrados.</p>
+            </div>
+          </article>
+        </section>
+
+        <section data-view-panel="admin">
+          <article class="pd-card">
+            <h2>Herramientas de administracion</h2>
+            <div class="pd-form-grid">
+              <form id="pd-allowlist-form" class="pd-form-grid">
+                <div class="pd-field">
+                  <label>Agregar correo de docente autorizado
+                    <input type="email" name="teacherEmail" placeholder="docente@potros.itson.edu.mx" required />
+                  </label>
+                </div>
+                <button type="submit" class="pd-button primary">Agregar a la lista dinamica</button>
+              </form>
+              <button type="button" id="pd-load-allowlist" class="pd-button secondary">Ver lista actual</button>
+              <textarea id="pd-allowlist-view" class="pd-log" rows="6" readonly>
+Presiona "Ver lista actual" para consultar la configuracion.
+              </textarea>
+            </div>
+            <h3>Resumen del entorno</h3>
+            <div id="pd-admin-log" class="pd-log" aria-live="polite"></div>
+          </article>
+        </section>
+      </main>
     </div>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        var tabs = document.querySelectorAll('.pd-tab');
-        var panels = document.querySelectorAll('.pd-panel');
-        var weekEl = document.getElementById('pd-week-display');
-
-        if (weekEl) {
-          try {
-            var now = new Date();
-            var yearStart = new Date(now.getFullYear(), 0, 1);
-            var pastDays = Math.floor((now - yearStart) / 86400000);
-            var weekNumber = Math.max(
-              1,
-              Math.ceil((pastDays + yearStart.getDay() + 1) / 7)
-            );
-            weekEl.textContent = String(weekNumber);
-          } catch (err) {
-            weekEl.textContent = '—';
-          }
-        }
-
-        function activate(targetId) {
-          if (!targetId) return;
-
-          Array.prototype.forEach.call(panels, function (panel) {
-            var isActive = panel.id === 'tab-' + targetId;
-            panel.classList.toggle('active', isActive);
-            panel.hidden = !isActive;
-          });
-
-          Array.prototype.forEach.call(tabs, function (tab) {
-            var tabTarget = tab.getAttribute('data-tab-target') || '';
-            var isActive = tabTarget === targetId;
-            tab.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-          });
-        }
-
-        Array.prototype.forEach.call(tabs, function (tab) {
-          tab.addEventListener('click', function () {
-            activate(tab.getAttribute('data-tab-target'));
-          });
-        });
-
-        activate('overview');
-      });
-    </script>
-    <script type="module" src="./js/paneldocente-backend.js"></script>
+    <script type="module" src="./js/paneldocente-app.js"></script>
     <script type="module" src="./js/role-gate.js"></script>
     <script type="module" src="./js/layout.js"></script>
     <script defer src="js/back-home.js"></script>
