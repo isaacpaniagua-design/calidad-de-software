@@ -784,45 +784,6 @@
     <script defer src="js/nav-inject.js"></script>
   </body>
 </html>
-
-          }
-        } else if (button.classList.contains("edit-btn")) {
-          const material = allMaterials.find((m) => m.id === id);
-          const newTitle = prompt("Nuevo título:", material.title);
-          const newDescription = prompt(
-            "Nueva descripción:",
-            material.description
-          );
-          if (newTitle === null || newDescription === null) return;
-          try {
-            await updateMaterial(id, newTitle.trim(), newDescription.trim());
-            material.title = newTitle.trim();
-            material.description = newDescription.trim();
-            render();
-            showNotification("success", "Material actualizado.");
-          } catch (error) {
-            showNotification("error", "No se pudo actualizar.");
-          }
-        }
-      }
-
-      function applyRoleVisibility() {
-        const shouldShowTeacherContent = isCurrentUserTeacher;
-        if (elements.teacherView) {
-          elements.teacherView.classList.toggle(
-            "hidden",
-            !shouldShowTeacherContent
-          );
-        }
-        document.querySelectorAll(".teacher-only").forEach((el) => {
-          const hideElement = !shouldShowTeacherContent;
-          el.classList.toggle("hidden", hideElement);
-          if (hideElement) {
-            el.setAttribute("hidden", "true");
-            el.setAttribute("aria-hidden", "true");
-          } else {
-            el.removeAttribute("hidden");
-            el.removeAttribute("aria-hidden");
           }
         });
       }
