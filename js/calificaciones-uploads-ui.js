@@ -1,4 +1,5 @@
 import { initFirebase, getDb, getStorageInstance, onAuth } from "./firebase.js";
+import { useStorage } from "./firebase-config.js";
 import { initializeFileViewer, openFileViewer } from "./file-viewer.js";
 import {
   createStudentUpload,
@@ -43,6 +44,17 @@ let authUser = null;
 let uiReady = false;
 let hiddenFileInput = null;
 let pendingUploadEntry = null;
+let storageAvailabilityChecked = false;
+let storageAvailable = false;
+
+function isStorageAvailable() {
+  if (!useStorage) return false;
+  if (!storageAvailabilityChecked) {
+    storageAvailable = Boolean(getStorageInstance());
+    storageAvailabilityChecked = true;
+  }
+  return storageAvailable;
+}
 
 function ready() {
   if (document.readyState === "complete" || document.readyState === "interactive") {
@@ -326,13 +338,17 @@ function updateUploadButtonsState(profile) {
   displays.forEach((entry) => {
     if (!entry || !entry.uploadButton) return;
     const cannotUploadActivity = !entry.activity || !entry.activity.id;
+    const disabledByStorage = !isStorageAvailable();
     entry.uploadButton.disabled =
-      entry.uploading || !hasStudent || cannotUploadActivity;
+      entry.uploading || !hasStudent || cannotUploadActivity || disabledByStorage;
     if (cannotUploadActivity) {
       entry.uploadButton.title = "Actividad no vinculada";
     } else if (!hasStudent) {
       entry.uploadButton.title =
         "Selecciona un estudiante para subir evidencia";
+    } else if (disabledByStorage) {
+      entry.uploadButton.title =
+        "El almacenamiento de evidencias está deshabilitado.";
     } else if (entry.uploading) {
       entry.uploadButton.title = "Subiendo evidencia…";
     } else {
@@ -575,6 +591,13 @@ function handleUploadRequest(entry) {
   }
   if (!currentStudentProfile) {
     setStatus(entry, "Selecciona un estudiante para subir evidencia.", {
+      uploaded: false,
+      title: "",
+    });
+    return;
+  }
+  if (!isStorageAvailable()) {
+    setStatus(entry, "El almacenamiento de evidencias no está disponible.", {
       uploaded: false,
       title: "",
     });
