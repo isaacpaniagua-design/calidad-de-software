@@ -328,31 +328,67 @@ function buildSyntheticStudentUid(profile) {
   return `synthetic-${combined}`.slice(0, 120);
 }
 
+function getUploadEligibility(profile) {
+  if (!authUser) {
+    return {
+      allowed: false,
+      reason: "Inicia sesión para subir evidencias.",
+    };
+  }
+  if (!profile) {
+    return {
+      allowed: false,
+      reason: "Selecciona un estudiante para subir evidencia.",
+    };
+  }
+  if (!profile.uid) {
+    return {
+      allowed: false,
+      reason: "No se pudo resolver el UID del estudiante en Firebase.",
+    };
+  }
+  if (profile.syntheticUid) {
+    return {
+      allowed: false,
+      reason:
+        "El estudiante seleccionado no está vinculado a una cuenta activa en Firebase.",
+    };
+  }
+  if (profile.uid !== authUser.uid) {
+    return {
+      allowed: false,
+      reason:
+        "Las reglas de Firebase solo permiten que cada estudiante suba su propia evidencia.",
+    };
+  }
+  return { allowed: true, reason: "Subir evidencia para esta actividad" };
+}
+
 function updateUploadButtonsState(profile) {
-  const isSelfSelection = Boolean(
-    profile && authUser && profile.uid && profile.uid === authUser.uid
-  );
-  const hasStudent = Boolean(
-    profile && (profile.uid || profile.email || profile.matricula) && !isSelfSelection
-  );
+  const storageDisabled = !isStorageAvailable();
   displays.forEach((entry) => {
     if (!entry || !entry.uploadButton) return;
     const cannotUploadActivity = !entry.activity || !entry.activity.id;
-    const disabledByStorage = !isStorageAvailable();
-    entry.uploadButton.disabled =
-      entry.uploading || !hasStudent || cannotUploadActivity || disabledByStorage;
+
+    const eligibility = getUploadEligibility(profile);
+    const disabled =
+      entry.uploading ||
+      cannotUploadActivity ||
+      storageDisabled ||
+      !eligibility.allowed;
+    entry.uploadButton.disabled = disabled;
+
     if (cannotUploadActivity) {
       entry.uploadButton.title = "Actividad no vinculada";
-    } else if (!hasStudent) {
+    } else if (storageDisabled) {
       entry.uploadButton.title =
-        "Selecciona un estudiante para subir evidencia";
-    } else if (disabledByStorage) {
-      entry.uploadButton.title =
+
+
         "El almacenamiento de evidencias está deshabilitado.";
     } else if (entry.uploading) {
       entry.uploadButton.title = "Subiendo evidencia…";
     } else {
-      entry.uploadButton.title = "Subir evidencia para esta actividad";
+      entry.uploadButton.title = eligibility.reason;
     }
   });
 }
@@ -589,8 +625,13 @@ function handleUploadRequest(entry) {
     });
     return;
   }
-  if (!currentStudentProfile) {
-    setStatus(entry, "Selecciona un estudiante para subir evidencia.", {
+  const eligibility = getUploadEligibility(currentStudentProfile);
+  if (!eligibility.allowed) {
+    setStatus(entry, eligibility.reason, { uploaded: false, title: "" });
+    return;
+  }
+  if (!isStorageAvailable()) {
+    setStatus(entry, "El almacenamiento de evidencias no está disponible.", {
       uploaded: false,
       title: "",
     });
@@ -630,17 +671,27 @@ async function handleFileInputChange(event) {
   updateUploadButtonsState(currentStudentProfile);
 
   try {
+    const eligibility = getUploadEligibility(currentStudentProfile);
+    if (!eligibility.allowed) {
+      throw new Error(eligibility.reason);
+    }
     const profile = await ensureActiveProfileWithUid();
     if (!profile || !profile.uid) {
       throw new Error(
         "No se pudo identificar al estudiante seleccionado en la base de datos."
       );
     }
-    if (!authUser) {
+    if (profile.uid !== authUser.uid) {
       throw new Error(
-        "Inicia sesión como docente para subir evidencias."
+        "Las reglas de Firebase impiden subir evidencias para otro estudiante."
       );
     }
+    if (profile.syntheticUid) {
+      throw new Error(
+        "El estudiante seleccionado no cuenta con un UID válido en Firebase Auth."
+      );
+    }
+    // authUser presence already validated by getUploadEligibility
 
     setStatus(entry, "Subiendo evidencia…", { uploaded: false, title: "" });
 
@@ -651,14 +702,6 @@ async function handleFileInputChange(event) {
     if (entry.activity?.unitId) extra.unitId = entry.activity.unitId;
     if (entry.activity?.unitLabel) extra.unitLabel = entry.activity.unitLabel;
     extra.source = "calificaciones-teacher";
-    if (profile.syntheticUid) {
-      extra.syntheticStudentUid = true;
-      extra.syntheticStudentReference = {
-        matricula: profile.matricula || "",
-        id: profile.id || "",
-        email: profile.email || "",
-      };
-    }
     extra.uploadedBy = {
       uid: authUser.uid || "",
       email: authUser.email || "",
@@ -667,8 +710,7 @@ async function handleFileInputChange(event) {
 
     await createStudentUpload({
       title: entry.activity?.title || entry.title || "Evidencia",
-      description:
-        "Archivo registrado por el docente desde el panel de calificaciones.",
+      description: "Archivo registrado desde el panel de calificaciones.",
       kind: "evidence",
       fileUrl: upload.url,
       fileName: file.name || upload.fileName || "evidencia",
