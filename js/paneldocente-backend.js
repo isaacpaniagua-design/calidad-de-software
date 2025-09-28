@@ -46,9 +46,18 @@ function formatSize(bytes){
 
 var ROSTER_STORAGE_KEY = 'qs_roster_cache';
 
+function normalizeEmail(value){
+  if (value == null) return '';
+  try {
+    return String(value).trim().toLowerCase();
+  } catch (_err) {
+    return '';
+  }
+}
+
 function normalizeRosterStudent(student){
   if (!student) return null;
-  var email = (student.email || '').toLowerCase();
+  var email = normalizeEmail(student.email || '');
   var uid = student.uid ? String(student.uid) : '';
   var matricula = student.matricula || student.id || uid || email || '';
   var id = student.id || matricula || email || uid;
@@ -72,7 +81,7 @@ function dedupeRosterEntries(list){
   for (var i=0; i<list.length; i++){
     var entry = list[i];
     if (!entry) continue;
-    var key = (entry.email || entry.id || entry.matricula || entry.uid || entry.name || ('idx'+i)).toLowerCase();
+    var key = normalizeEmail(entry.email || '') || (entry.id || entry.matricula || entry.uid || entry.name || ('idx'+i)).toLowerCase();
     if (!map[key]){
       map[key] = Object.assign({}, entry);
       order.push(key);
@@ -411,6 +420,141 @@ function normalizeMetricEntry(entry){
   var u3 = clampMetricValue(entry.u3 != null ? entry.u3 : entry.unidad3);
   var finalPct = clampMetricValue(entry.finalPct != null ? entry.finalPct : (entry.final != null ? entry.final : final3040(u1, u2, u3)));
   return { u1: u1, u2: u2, u3: u3, finalPct: finalPct };
+}
+
+function scoreStudentPriority(student, metrics){
+  if (!student) return 0;
+  var score = 0;
+  var uid = student.uid || '';
+  var matricula = student.matricula != null ? String(student.matricula).trim() : '';
+  var displayName = student.displayName || '';
+  if (matricula && matricula !== uid && matricula !== student.email) score += 30;
+  if (displayName && displayName !== uid && displayName !== student.email) score += 10;
+  if (uid && /^local-/.test(uid)) score += 8;
+  if (uid && uid.length >= 20) score += 2;
+  if (uid) score += 1;
+  if (student.__order != null){
+    var orderScore = Number(student.__order);
+    if (!isNaN(orderScore)) score += orderScore * 0.0001;
+  }
+  if (metrics && metrics[uid]){
+    var metric = normalizeMetricEntry(metrics[uid]);
+    if (metric.finalPct > 0) score += 5;
+    if (metric.u1 > 0 || metric.u2 > 0 || metric.u3 > 0) score += 3;
+  }
+  return score;
+}
+
+function applyStudentEmailDeduplication(state){
+  if (!state || !Array.isArray(state.students)) return;
+  var metricsMap = state.metrics || {};
+  var groups = {};
+  var order = [];
+
+  for (var i=0; i<state.students.length; i++){
+    var original = state.students[i];
+    if (!original) continue;
+    var entry = cloneStudentEntry(original);
+    entry.uid = original.uid || entry.uid || '';
+    entry.email = entry.email || '';
+    entry.__order = i;
+    var emailKey = entry.email ? normalizeEmail(entry.email) : '';
+    var key;
+    var skipMerge = false;
+    if (emailKey){
+      key = 'email:' + emailKey;
+    } else {
+      key = 'uid:' + (entry.uid || ('idx' + i));
+      skipMerge = true;
+    }
+    if (!groups[key]){
+      groups[key] = { entries: [], order: i, skipMerge: skipMerge };
+      order.push(key);
+    }
+    groups[key].entries.push(entry);
+    if (i < groups[key].order) groups[key].order = i;
+  }
+
+  order.sort(function(a, b){ return groups[a].order - groups[b].order; });
+
+  var deduped = [];
+  var aggregatedMetrics = {};
+  var aliasMap = {};
+
+  function normalizedMetric(uid){
+    if (metricsMap && metricsMap[uid]){
+      return normalizeMetricEntry(metricsMap[uid]);
+    }
+    return { u1: 0, u2: 0, u3: 0, finalPct: 0 };
+  }
+
+  for (var oi=0; oi<order.length; oi++){
+    var key = order[oi];
+    var group = groups[key];
+    if (!group || !group.entries.length) continue;
+    if (group.skipMerge || group.entries.length === 1){
+      var single = group.entries[0];
+      single.sourceUids = single.uid ? [single.uid] : [];
+      aggregatedMetrics[single.uid] = normalizedMetric(single.uid);
+      if (single.hasOwnProperty('__order')) delete single.__order;
+      deduped.push(single);
+      continue;
+    }
+    var best = group.entries[0];
+    var bestScore = scoreStudentPriority(best, metricsMap);
+    for (var gi=1; gi<group.entries.length; gi++){
+      var candidate = group.entries[gi];
+      var candidateScore = scoreStudentPriority(candidate, metricsMap);
+      if (candidateScore > bestScore){
+        best = candidate;
+        bestScore = candidateScore;
+      }
+    }
+    if (!best.sourceUids) best.sourceUids = [];
+    var combinedMetric = { u1: 0, u2: 0, u3: 0, finalPct: 0 };
+    var hasMetric = false;
+    for (var mj=0; mj<group.entries.length; mj++){
+      var member = group.entries[mj];
+      if (!member) continue;
+      if (best.sourceUids.indexOf(member.uid) === -1 && member.uid){
+        best.sourceUids.push(member.uid);
+      }
+      if (member.uid && member.uid !== best.uid){
+        aliasMap[member.uid] = best.uid;
+      }
+      if ((!best.displayName || best.displayName === best.email || best.displayName === best.uid) && member.displayName && member.displayName !== member.email){
+        best.displayName = member.displayName;
+      }
+      if ((!best.matricula || best.matricula === best.uid || best.matricula === best.email) && member.matricula){
+        best.matricula = member.matricula;
+      }
+      if (!best.email && member.email){
+        best.email = member.email;
+      }
+      var metric = metricsMap ? metricsMap[member.uid] : null;
+      if (metric){
+        var normalized = normalizeMetricEntry(metric);
+        hasMetric = true;
+        combinedMetric.u1 = Math.max(combinedMetric.u1, normalized.u1);
+        combinedMetric.u2 = Math.max(combinedMetric.u2, normalized.u2);
+        combinedMetric.u3 = Math.max(combinedMetric.u3, normalized.u3);
+        combinedMetric.finalPct = Math.max(combinedMetric.finalPct, normalized.finalPct);
+      }
+    }
+    if (!best.sourceUids.length && best.uid){
+      best.sourceUids.push(best.uid);
+    }
+    aggregatedMetrics[best.uid] = hasMetric ? combinedMetric : { u1: 0, u2: 0, u3: 0, finalPct: 0 };
+    if (best.hasOwnProperty('__order')) delete best.__order;
+    deduped.push(best);
+  }
+
+  state.students = deduped;
+  state.metrics = aggregatedMetrics;
+  state.studentAliasMap = aliasMap;
+  if (state.selectedUploadStudent && aliasMap[state.selectedUploadStudent]){
+    state.selectedUploadStudent = aliasMap[state.selectedUploadStudent];
+  }
 }
 
 function cloneMetrics(metrics){
@@ -774,6 +918,14 @@ function rebuildStudentIndex(state){
       index[stu.uid] = stu;
     }
   }
+  var aliasMap = state && state.studentAliasMap ? state.studentAliasMap : {};
+  for (var alias in aliasMap){
+    if (!Object.prototype.hasOwnProperty.call(aliasMap, alias)) continue;
+    var target = aliasMap[alias];
+    if (target && index[target]){
+      index[alias] = index[target];
+    }
+  }
   state.studentIndex = index;
   return index;
 }
@@ -799,6 +951,8 @@ async function reloadStudents(db, grupoId, state){
     state.students = fallback.students;
     state.metrics = fallback.metrics;
     state.isUsingStudentFallback = true;
+    state.studentAliasMap = {};
+    applyStudentEmailDeduplication(state);
     rebuildStudentIndex(state);
     syncRosterCache(state.students);
     ensureMetricsForStudents(state);
@@ -810,6 +964,8 @@ async function reloadStudents(db, grupoId, state){
 
   state.students = await fetchStudents(db, grupoId);
   state.isUsingStudentFallback = false;
+  state.studentAliasMap = {};
+  applyStudentEmailDeduplication(state);
   rebuildStudentIndex(state);
   syncRosterCache(state.students);
   ensureMetricsForStudents(state);
@@ -1145,11 +1301,16 @@ function handleUploadsSnapshot(state, items){
   state.uploads = docs;
   var grouped = {};
   var index = {};
+  var aliasMap = state && state.studentAliasMap ? state.studentAliasMap : {};
   for (var i=0;i<docs.length;i++){
     var upload = docs[i];
     if (!upload || !upload.id) continue;
     index[upload.id] = upload;
-    var uid = (upload.student && upload.student.uid) ? upload.student.uid : '__sinuid__';
+    var rawUid = (upload.student && upload.student.uid) ? upload.student.uid : '__sinuid__';
+    var uid = aliasMap[rawUid] || rawUid;
+    if (upload.student && aliasMap[rawUid]){
+      upload.student = Object.assign({}, upload.student, { uid: uid });
+    }
     if (!grouped[uid]) grouped[uid] = { uploads: [], student: upload.student || null };
     grouped[uid].uploads.push(upload);
     if (!grouped[uid].student && upload.student) grouped[uid].student = upload.student;
@@ -1579,6 +1740,7 @@ async function loadDataForGroup(db, grupo, state){
   if (state) state.groupId = grupo;
   markStudentFallbackActive(false);
   state.isUsingStudentFallback = false;
+  state.studentAliasMap = {};
 
   try {
     state.students = await fetchStudents(db, grupo);
@@ -1597,9 +1759,6 @@ async function loadDataForGroup(db, grupo, state){
   } else {
     state.metrics = {};
   }
-
-  rebuildStudentIndex(state);
-  syncRosterCache(state.students);
 
   if (!state.isUsingStudentFallback){
     var metrics = state.metrics;
@@ -1624,10 +1783,12 @@ async function loadDataForGroup(db, grupo, state){
       if (idx < state.students.length) return nextBatch();
     }
     await nextBatch();
-  } else {
-    ensureMetricsForStudents(state);
   }
 
+  applyStudentEmailDeduplication(state);
+
+  rebuildStudentIndex(state);
+  syncRosterCache(state.students);
   ensureMetricsForStudents(state);
 
   renderSummaryStats(state.students, state.metrics);
@@ -1675,6 +1836,7 @@ async function main(){
     deliverables: [],
     metrics: {},
     studentIndex: {},
+    studentAliasMap: {},
     isUsingStudentFallback: false,
     uploads: [],
     uploadGroups: {},
