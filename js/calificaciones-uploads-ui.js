@@ -46,6 +46,7 @@ let hiddenFileInput = null;
 let pendingUploadEntry = null;
 let storageAvailabilityChecked = false;
 let storageAvailable = false;
+
 let teacherRoleDetected = false;
 
 function detectTeacherRoleFromDom() {
@@ -102,6 +103,7 @@ if (teacherRoleObserver) {
 }
 
 updateTeacherRoleFlag();
+
 
 function isStorageAvailable() {
   if (!useStorage) return false;
@@ -410,19 +412,23 @@ function getUploadEligibility(profile) {
         "El estudiante seleccionado no está vinculado a una cuenta activa en Firebase.",
     };
   }
+
   if (!teacherRoleDetected && profile.uid !== authUser.uid) {
+
     return {
       allowed: false,
       reason:
         "Las reglas de Firebase solo permiten que cada estudiante suba su propia evidencia.",
     };
   }
+
   return {
     allowed: true,
     reason: teacherRoleDetected
       ? "Subir evidencia como docente para el estudiante seleccionado."
       : "Subir evidencia para esta actividad",
   };
+
 }
 
 function updateUploadButtonsState(profile) {
@@ -430,6 +436,8 @@ function updateUploadButtonsState(profile) {
   displays.forEach((entry) => {
     if (!entry || !entry.uploadButton) return;
     const cannotUploadActivity = !entry.activity || !entry.activity.id;
+
+
     const eligibility = getUploadEligibility(profile);
     const disabled =
       entry.uploading ||
@@ -437,10 +445,12 @@ function updateUploadButtonsState(profile) {
       storageDisabled ||
       !eligibility.allowed;
     entry.uploadButton.disabled = disabled;
+
     if (cannotUploadActivity) {
       entry.uploadButton.title = "Actividad no vinculada";
     } else if (storageDisabled) {
       entry.uploadButton.title =
+
         "El almacenamiento de evidencias está deshabilitado.";
     } else if (entry.uploading) {
       entry.uploadButton.title = "Subiendo evidencia…";
@@ -689,6 +699,8 @@ function handleUploadRequest(entry) {
   }
   if (!isStorageAvailable()) {
     setStatus(entry, "El almacenamiento de evidencias no está disponible.", {
+
+
       uploaded: false,
       title: "",
     });
@@ -731,7 +743,9 @@ async function handleFileInputChange(event) {
         "No se pudo identificar al estudiante seleccionado en la base de datos."
       );
     }
+
     if (!teacherRoleDetected && profile.uid !== authUser.uid) {
+
       throw new Error(
         "Las reglas de Firebase impiden subir evidencias para otro estudiante."
       );
