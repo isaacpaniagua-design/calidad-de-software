@@ -46,6 +46,8 @@ let hiddenFileInput = null;
 let pendingUploadEntry = null;
 let storageAvailabilityChecked = false;
 let storageAvailable = false;
+let uploadcareAvailabilityChecked = false;
+let uploadcareAvailable = false;
 
 let teacherRoleDetected = false;
 
@@ -149,6 +151,32 @@ function isStorageAvailable() {
     storageAvailabilityChecked = true;
   }
   return storageAvailable;
+}
+
+function isUploadcareAvailable() {
+  if (!uploadcareAvailabilityChecked) {
+    uploadcareAvailable =
+      typeof uploadcare !== "undefined" &&
+      uploadcare !== null &&
+      typeof uploadcare.fileFrom === "function";
+    uploadcareAvailabilityChecked = true;
+  }
+  if (!uploadcareAvailable) {
+    // Permite reintentar la detección cuando el script se carga de forma diferida.
+    uploadcareAvailabilityChecked = false;
+  }
+  return uploadcareAvailable;
+}
+
+function isUploadBackendAvailable() {
+  return isUploadcareAvailable() || isStorageAvailable();
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("load", () => {
+    uploadcareAvailabilityChecked = false;
+    updateUploadButtonsState(currentStudentProfile);
+  });
 }
 
 function ready() {
@@ -442,7 +470,7 @@ function getUploadEligibility(profile) {
 }
 
 function updateUploadButtonsState(profile) {
-  const storageDisabled = !isStorageAvailable();
+  const backendAvailable = isUploadBackendAvailable();
   displays.forEach((entry) => {
     if (!entry || !entry.uploadButton) return;
     const cannotUploadActivity = !entry.activity || !entry.activity.id;
@@ -452,16 +480,15 @@ function updateUploadButtonsState(profile) {
     const disabled =
       entry.uploading ||
       cannotUploadActivity ||
-      storageDisabled ||
+      !backendAvailable ||
       !eligibility.allowed;
     entry.uploadButton.disabled = disabled;
 
     if (cannotUploadActivity) {
       entry.uploadButton.title = "Actividad no vinculada";
-    } else if (storageDisabled) {
+    } else if (!backendAvailable) {
       entry.uploadButton.title =
-
-        "El almacenamiento de evidencias está deshabilitado.";
+        "El almacenamiento de evidencias no está disponible.";
     } else if (entry.uploading) {
       entry.uploadButton.title = "Subiendo evidencia…";
     } else {
@@ -509,6 +536,11 @@ function ensureFileInput() {
 }
 
 async function uploadEvidenceFile(file, studentUid) {
+  const uploadedViaUploadcare = await tryUploadEvidenceWithUploadcare(file);
+  if (uploadedViaUploadcare) {
+    return uploadedViaUploadcare;
+  }
+
   const storage = getStorageInstance();
   if (!storage) {
     throw new Error("El almacenamiento de evidencias no está disponible.");
@@ -520,7 +552,51 @@ async function uploadEvidenceFile(file, studentUid) {
   // solicitud CORS de preflight que falla en el bucket de producción.
   await uploadBytes(ref, file);
   const url = await getDownloadURL(ref);
-  return { url, path, fileName: safeName };
+  return { url, path, fileName: safeName, fileSize: file?.size || null, mimeType: file?.type || "" };
+}
+
+async function tryUploadEvidenceWithUploadcare(file) {
+  if (!file) return null;
+  const available = isUploadcareAvailable();
+  if (!available) return null;
+  try {
+    const fileFrom = uploadcare.fileFrom("object", file);
+    const info = await new Promise((resolve, reject) => {
+      if (!fileFrom || typeof fileFrom.done !== "function") {
+        reject(new Error("No se pudo inicializar la carga con Uploadcare."));
+        return;
+      }
+      fileFrom.done(resolve).fail(reject);
+    });
+    if (!info) {
+      throw new Error("Respuesta vacía al cargar el archivo con Uploadcare.");
+    }
+    const name =
+      info.name ||
+      info.originalFilename ||
+      file.name ||
+      info.filename ||
+      "evidencia";
+    const safeName = sanitizeFileName(name);
+    const url = info.cdnUrl || info.originalUrl || "";
+    if (!url) {
+      throw new Error("Uploadcare no devolvió una URL pública.");
+    }
+    return {
+      url,
+      fileName: safeName,
+      fileSize: info.size || info.originalFileSize || file.size || null,
+      mimeType:
+        info.mimeType ||
+        (info.contentInfo && info.contentInfo.mime) ||
+        file.type ||
+        "",
+      backend: "uploadcare",
+    };
+  } catch (error) {
+    console.error("[calificaciones-uploads-ui] uploadcare", error);
+    return null;
+  }
 }
 
 async function tryGetDocId(db, id) {
@@ -693,10 +769,8 @@ function handleUploadRequest(entry) {
     setStatus(entry, eligibility.reason, { uploaded: false, title: "" });
     return;
   }
-  if (!isStorageAvailable()) {
+  if (!isUploadBackendAvailable()) {
     setStatus(entry, "El almacenamiento de evidencias no está disponible.", {
-
-
       uploaded: false,
       title: "",
     });
@@ -757,6 +831,8 @@ async function handleFileInputChange(event) {
     if (entry.activity?.unitId) extra.unitId = entry.activity.unitId;
     if (entry.activity?.unitLabel) extra.unitLabel = entry.activity.unitLabel;
     extra.source = "calificaciones-teacher";
+    if (upload.backend) extra.uploadBackend = upload.backend;
+    if (upload.path) extra.storagePath = upload.path;
     extra.uploadedBy = {
       uid: authUser.uid || "",
       email: authUser.email || "",
@@ -768,9 +844,9 @@ async function handleFileInputChange(event) {
       description: "Archivo registrado manualmente como evidencia complementaria.",
       kind: "evidence",
       fileUrl: upload.url,
-      fileName: file.name || upload.fileName || "evidencia",
-      fileSize: file.size || null,
-      mimeType: file.type || "",
+      fileName: upload.fileName || file.name || "evidencia",
+      fileSize: upload.fileSize || file.size || null,
+      mimeType: upload.mimeType || file.type || "",
       extra,
       student: {
         uid: profile.uid,
