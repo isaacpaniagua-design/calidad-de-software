@@ -19,6 +19,33 @@ import {
 initFirebase();
 const db = getDb();
 
+const COLLECTION_KEYS = [
+  "attendances",
+  "courses",
+  "forum_topics",
+  "grupos",
+  "materials",
+  "studentUploads",
+  "teachers"
+];
+
+const COLLECTION_LABELS = {
+  attendances: "Asistencias",
+  courses: "Cursos",
+  forum_topics: "Temas del foro",
+  grupos: "Grupos",
+  materials: "Materiales",
+  studentUploads: "Evidencias",
+  teachers: "Docentes"
+};
+
+function createEmptyCollectionsState() {
+  return COLLECTION_KEYS.reduce((acc, key) => {
+    acc[key] = [];
+    return acc;
+  }, {});
+}
+
 const state = {
   user: null,
   isTeacher: false,
@@ -28,6 +55,8 @@ const state = {
   materials: [],
   activityLog: [],
   allowlist: [],
+  collections: createEmptyCollectionsState(),
+  collectionLoading: {},
   unsub: {
     members: null,
     uploads: null,
@@ -69,6 +98,17 @@ const allowlistViewBtn = document.getElementById("pd-load-allowlist");
 const allowlistView = document.getElementById("pd-allowlist-view");
 const adminLog = document.getElementById("pd-admin-log");
 
+const datasetsPanel = document.querySelector('[data-view-panel="datasets"]');
+const collectionListEls = {};
+const collectionCountEls = {};
+const collectionForms = {};
+
+COLLECTION_KEYS.forEach((key) => {
+  collectionListEls[key] = document.getElementById(`pd-collection-${key}`);
+  collectionCountEls[key] = document.querySelector(`[data-collection-count="${key}"]`);
+  collectionForms[key] = document.querySelector(`[data-collection-form="${key}"]`);
+});
+
 const viewButtons = document.querySelectorAll('[data-action="switch-view"]');
 const viewPanels = document.querySelectorAll('[data-view-panel]');
 
@@ -88,6 +128,25 @@ function showBanner(message, type = "info") {
   banner.hidden = false;
   banner.textContent = message;
   banner.className = `pd-banner ${type}`;
+}
+
+const htmlEscapeMap = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => htmlEscapeMap[char] || char);
+}
+
+function safeStringify(value) {
+  if (value === undefined) return "{}";
+  try {
+    return JSON.stringify(value ?? {}, null, 2);
+  } catch (_err) {
+    return String(value ?? "{}");
+  }
+}
+
+function getCollectionLabel(key) {
+  return COLLECTION_LABELS[key] || key;
 }
 
 function setUserUI(user) {
@@ -276,6 +335,133 @@ function renderMaterials() {
     })
     .join("
 ");
+}
+
+function setCollectionFormState(collection, doc = null) {
+  const form = collectionForms[collection];
+  if (!form) return;
+  if (!doc) {
+    form.reset();
+    form.dataset.editing = "";
+    return;
+  }
+  if (form.elements.docId) form.elements.docId.value = doc.id || "";
+  if (form.elements.docData) form.elements.docData.value = safeStringify(doc.data);
+  form.dataset.editing = doc.id || "";
+}
+
+function renderCollection(collection) {
+  const container = collectionListEls[collection];
+  if (!container) return;
+  const items = state.collections[collection] || [];
+  if (!items.length) {
+    container.innerHTML = '<p class="pd-collection-empty">Sin datos cargados.</p>';
+  } else {
+    container.innerHTML = items
+      .map((item) => {
+        const preview = safeStringify(item.data);
+        const truncated = preview.length > 1200 ? `${preview.slice(0, 1200)}\n...` : preview;
+        const escapedId = escapeHtml(item.id);
+        return `
+          <article class="pd-collection-item" data-doc-id="${escapedId}">
+            <div class="pd-collection-item__header">
+              <span><strong>${escapedId}</strong></span>
+              <div class="pd-collection__actions">
+                <button type="button" class="pd-button secondary" data-action="edit-doc" data-collection="${collection}" data-doc="${escapedId}">Editar</button>
+                <button type="button" class="pd-button danger" data-action="delete-doc" data-collection="${collection}" data-doc="${escapedId}">Eliminar</button>
+              </div>
+            </div>
+            <pre class="pd-code">${escapeHtml(truncated)}</pre>
+          </article>
+        `;
+      })
+      .join("", "");
+  }
+  const countEl = collectionCountEls[collection];
+  if (countEl) {
+    countEl.textContent = items.length.toString();
+  }
+  const form = collectionForms[collection];
+  if (form && form.dataset.editing) {
+    const match = items.find((item) => item.id === form.dataset.editing);
+    if (match && form.elements.docData) {
+      form.elements.docData.value = safeStringify(match.data);
+    }
+  }
+}
+
+function renderAllCollections() {
+  COLLECTION_KEYS.forEach((collection) => {
+    renderCollection(collection);
+  });
+}
+
+function resetAllCollectionForms() {
+  COLLECTION_KEYS.forEach((collection) => {
+    setCollectionFormState(collection, null);
+  });
+}
+
+async function loadCollection(collection, options = {}) {
+  if (!COLLECTION_KEYS.includes(collection)) return;
+  if (!state.isTeacher) return;
+  if (state.collectionLoading[collection]) return;
+  const silent = !!options.silent;
+  const announce = !!options.announce;
+  const listEl = collectionListEls[collection];
+  if (listEl && !silent) {
+    listEl.innerHTML = '<p class="pd-collection-empty">Cargando datos...</p>';
+  }
+  state.collectionLoading[collection] = true;
+  try {
+    const firestore = await getFirestore();
+    const ref = firestore.collection(db, collection);
+    let snap;
+    if (typeof firestore.query === "function" && typeof firestore.limit === "function") {
+      snap = await firestore.getDocs(firestore.query(ref, firestore.limit(50)));
+    } else {
+      snap = await firestore.getDocs(ref);
+    }
+    state.collections[collection] = snap.docs.map((docSnap) => ({
+      id: docSnap.id,
+      data: docSnap.data() || {}
+    }));
+    renderCollection(collection);
+    if (announce) {
+      showBanner(`Coleccion ${getCollectionLabel(collection)} actualizada.`, "success");
+    }
+    logAdmin(`Coleccion ${collection} cargada (${state.collections[collection].length} documentos).`);
+  } catch (error) {
+    console.error("load collection", collection, error);
+    if (!silent) {
+      showBanner(`No se pudo cargar la coleccion ${collection}.`, "error");
+    }
+    if (listEl) {
+      listEl.innerHTML = '<p class="pd-collection-empty">Error al cargar los datos.</p>';
+    }
+  } finally {
+    state.collectionLoading[collection] = false;
+  }
+}
+
+async function loadAllCollections(options = {}) {
+  if (!state.isTeacher) return;
+  const silent = options.silent ?? true;
+  let hasError = false;
+  await Promise.all(
+    COLLECTION_KEYS.map((collection) =>
+      loadCollection(collection, { silent, announce: false }).catch(() => {
+        hasError = true;
+      })
+    )
+  );
+  if (options.announce) {
+    if (hasError) {
+      showBanner("Algunas colecciones no se pudieron actualizar.", "error");
+    } else {
+      showBanner("Colecciones actualizadas.", "success");
+    }
+  }
 }
 
 function setMemberForm(member = null) {
@@ -532,6 +718,141 @@ if (allowlistViewBtn) allowlistViewBtn.addEventListener("click", async () => {
   }
 });
 
+if (datasetsPanel) {
+  datasetsPanel.addEventListener("click", async (event) => {
+    const action = event.target.getAttribute("data-action");
+    if (!action) return;
+    if (action === "refresh-all-collections") {
+      if (!state.isTeacher) {
+        showBanner("Tu cuenta no tiene permisos para modificar las colecciones.", "error");
+        return;
+      }
+      await loadAllCollections({ silent: false, announce: true });
+      return;
+    }
+    const collection = event.target.getAttribute("data-collection");
+    if (!collection) {
+      if (action === "reset-form") {
+        event.preventDefault();
+      }
+      return;
+    }
+    if (action === "refresh-collection") {
+      if (!state.isTeacher) {
+        showBanner("Tu cuenta no tiene permisos para modificar las colecciones.", "error");
+        return;
+      }
+      await loadCollection(collection, { silent: false, announce: true });
+      return;
+    }
+    if (action === "reset-form") {
+      setCollectionFormState(collection, null);
+      showBanner(`Formulario de ${getCollectionLabel(collection)} reiniciado.`, "info");
+      return;
+    }
+    if (action === "edit-doc") {
+      const docId = event.target.getAttribute("data-doc") || "";
+      if (!docId) return;
+      const match = (state.collections[collection] || []).find((item) => item.id === docId);
+      if (match) {
+        setCollectionFormState(collection, match);
+        showBanner(`Documento ${docId} listo para edicion.`, "info");
+      } else {
+        showBanner(`No se encontro el documento ${docId} en ${collection}.`, "error");
+      }
+      return;
+    }
+    if (action === "delete-doc") {
+      event.preventDefault();
+      if (!state.isTeacher) {
+        showBanner("Tu cuenta no tiene permisos para modificar las colecciones.", "error");
+        return;
+      }
+      const form = collectionForms[collection];
+      const targetId = event.target.getAttribute("data-doc") || (form?.elements.docId?.value || "").trim();
+      if (!targetId) {
+        showBanner("Selecciona un documento para eliminar.", "error");
+        return;
+      }
+      const confirmed = window.confirm(`Deseas eliminar el documento "${targetId}" de ${collection}?`);
+      if (!confirmed) return;
+      try {
+        const { doc, deleteDoc } = await getFirestore();
+        await deleteDoc(doc(db, collection, targetId));
+        appendActivity(`Documento eliminado (${collection}): ${targetId}`);
+        logAdmin(`Documento eliminado: ${collection}/${targetId}`);
+        showBanner(`Documento eliminado de ${collection}.`, "success");
+        setCollectionFormState(collection, null);
+        await loadCollection(collection, { silent: true });
+      } catch (error) {
+        console.error("delete collection doc", collection, error);
+        showBanner(`No se pudo eliminar el documento en ${collection}.`, "error");
+      }
+    }
+  });
+
+  datasetsPanel.addEventListener("submit", async (event) => {
+    const form = event.target.closest('[data-collection-form]');
+    if (!form) return;
+    event.preventDefault();
+    const collection = form.getAttribute("data-collection-form");
+    if (!collection) return;
+    if (!state.isTeacher) {
+      showBanner("Tu cuenta no tiene permisos para modificar las colecciones.", "error");
+      return;
+    }
+    const docId = (form.elements.docId?.value || "").trim();
+    const rawData = (form.elements.docData?.value || "").trim();
+    if (!rawData) {
+      showBanner("Ingresa los datos del documento en formato JSON.", "error");
+      return;
+    }
+    let payload;
+    try {
+      payload = JSON.parse(rawData);
+    } catch (_error) {
+      showBanner("El contenido debe ser un JSON valido.", "error");
+      return;
+    }
+    try {
+      const firestore = await getFirestore();
+      if (docId) {
+        const data = { ...payload };
+        if (typeof firestore.serverTimestamp === "function") {
+          data.updatedAt = firestore.serverTimestamp();
+        } else {
+          data.updatedAt = new Date().toISOString();
+        }
+        await firestore.setDoc(firestore.doc(db, collection, docId), data, { merge: true });
+        appendActivity(`Documento actualizado (${collection}): ${docId}`);
+        logAdmin(`Documento actualizado: ${collection}/${docId}`);
+        showBanner(`Documento ${docId} actualizado en ${collection}.`, "success");
+        form.dataset.editing = docId;
+      } else {
+        const data = { ...payload };
+        if (typeof firestore.serverTimestamp === "function") {
+          data.createdAt = firestore.serverTimestamp();
+        } else {
+          data.createdAt = new Date().toISOString();
+        }
+        const ref = await firestore.addDoc(firestore.collection(db, collection), data);
+        appendActivity(`Documento creado (${collection}): ${ref.id}`);
+        logAdmin(`Documento creado: ${collection}/${ref.id}`);
+        showBanner(`Documento creado en ${collection}.`, "success");
+        if (form.elements.docId) form.elements.docId.value = ref.id;
+        form.dataset.editing = ref.id;
+      }
+      if (form.elements.docData) {
+        form.elements.docData.value = safeStringify(payload);
+      }
+      await loadCollection(collection, { silent: true });
+    } catch (error) {
+      console.error("save collection doc", collection, error);
+      showBanner(`No se pudo guardar el documento en ${collection}.`, "error");
+    }
+  });
+}
+
 if (refreshOverviewBtn) refreshOverviewBtn.addEventListener("click", () => {
   renderOverview();
   showBanner("Resumen actualizado.", "success");
@@ -645,10 +966,14 @@ function stopAllSubscriptions() {
   state.members = [];
   state.uploads = [];
   state.materials = [];
+  state.collections = createEmptyCollectionsState();
+  state.collectionLoading = {};
   renderMembers();
   renderUploads();
   renderMaterials();
+  renderAllCollections();
   renderOverview();
+  resetAllCollectionForms();
 }
 
 auth.signIn.addEventListener("click", async () => {
@@ -710,12 +1035,14 @@ async function handleAuth(user) {
   subscribeMembers();
   subscribeUploads();
   subscribeMaterials();
+  await loadAllCollections({ silent: true });
   renderOverview();
 }
 
 renderMembers();
 renderUploads();
 renderMaterials();
+renderAllCollections();
 renderOverview();
 renderActivityLog();
 
