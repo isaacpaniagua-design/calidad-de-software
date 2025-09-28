@@ -288,6 +288,34 @@ function sanitizeFileName(name) {
     .slice(0, 140) || "evidencia";
 }
 
+function sanitizeStudentIdentifier(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase();
+}
+
+function buildSyntheticStudentUid(profile) {
+  if (!profile) return "";
+  const parts = [];
+  const matricula = profile.matricula ? String(profile.matricula).trim() : "";
+  const id = profile.id ? String(profile.id).trim() : "";
+  const email = profile.email ? String(profile.email).trim().toLowerCase() : "";
+  if (matricula) parts.push(matricula);
+  if (id && id !== matricula) parts.push(id);
+  if (email) parts.push(email);
+  const normalized = parts
+    .map((part) => sanitizeStudentIdentifier(part))
+    .filter(Boolean);
+  if (!normalized.length) return "";
+  const combined = sanitizeStudentIdentifier(normalized.join("-"));
+  if (!combined) return "";
+  return `synthetic-${combined}`.slice(0, 120);
+}
+
 function updateUploadButtonsState(profile) {
   const isSelfSelection = Boolean(
     profile && authUser && profile.uid && profile.uid === authUser.uid
@@ -333,6 +361,7 @@ function setCurrentProfile(profile) {
       profile.name ||
       (nameField ? nameField.value.trim() : ""),
     id: profile.id ? String(profile.id).trim() : "",
+    syntheticUid: false,
   };
   currentStudentProfile = normalized;
   updateUploadButtonsState(currentStudentProfile);
@@ -514,9 +543,17 @@ async function fetchUidFromFirestore(profile) {
 async function ensureActiveProfileWithUid() {
   if (!currentStudentProfile) return null;
   if (currentStudentProfile.uid) return currentStudentProfile;
-  const uid = await fetchUidFromFirestore(currentStudentProfile);
+  let uid = await fetchUidFromFirestore(currentStudentProfile);
+  let syntheticUid = false;
+  if (!uid) {
+    uid = buildSyntheticStudentUid(currentStudentProfile);
+    syntheticUid = Boolean(uid);
+  }
   if (!uid) return currentStudentProfile;
-  currentStudentProfile = Object.assign({}, currentStudentProfile, { uid });
+  currentStudentProfile = Object.assign({}, currentStudentProfile, {
+    uid,
+    syntheticUid,
+  });
   const cacheKey = `${currentStudentProfile.matricula || ""}|${
     (currentStudentProfile.email || "").toLowerCase()
   }`;
@@ -591,6 +628,14 @@ async function handleFileInputChange(event) {
     if (entry.activity?.unitId) extra.unitId = entry.activity.unitId;
     if (entry.activity?.unitLabel) extra.unitLabel = entry.activity.unitLabel;
     extra.source = "calificaciones-teacher";
+    if (profile.syntheticUid) {
+      extra.syntheticStudentUid = true;
+      extra.syntheticStudentReference = {
+        matricula: profile.matricula || "",
+        id: profile.id || "",
+        email: profile.email || "",
+      };
+    }
     extra.uploadedBy = {
       uid: authUser.uid || "",
       email: authUser.email || "",
