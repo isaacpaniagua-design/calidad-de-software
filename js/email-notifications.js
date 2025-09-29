@@ -13,6 +13,7 @@ let emailJsPromise = null;
 let emailJsInitialized = false;
 let missingConfigWarned = false;
 let missingRecipientsWarned = false;
+let missingGenericRecipientsWarned = false;
 
 function safeTrim(value, fallback = "") {
   if (value == null) return fallback;
@@ -76,9 +77,36 @@ async function loadEmailJs() {
   return emailJsPromise;
 }
 
-async function dispatchTeacherNotification({
+function normalizeRecipientList(recipients = []) {
+  const unique = new Map();
+  recipients
+    .map((recipient) => {
+      if (!recipient || typeof recipient !== "object") return null;
+      const email = safeTrim(recipient.email);
+      if (!email) return null;
+      const name = safeTrim(
+        recipient.name || recipient.displayName || recipient.to_name
+      );
+      return { email, name };
+    })
+    .filter(Boolean)
+    .forEach(({ email, name }) => {
+      const key = email.toLowerCase();
+      if (!unique.has(key)) {
+        unique.set(key, {
+          email,
+          name: name || email,
+        });
+      }
+    });
+  return Array.from(unique.values());
+}
+
+async function dispatchNotificationToRecipients({
+  recipients = [],
   templateParams = {},
   debugContext = "general",
+  fallbackName = "Comunidad educativa",
 } = {}) {
   if (!isEmailConfigured()) {
     if (!missingConfigWarned) {
@@ -90,26 +118,33 @@ async function dispatchTeacherNotification({
     return false;
   }
 
-  const recipients = await listTeacherNotificationEmails({ domainOnly: true });
-  if (!recipients.length) {
-    if (!missingRecipientsWarned) {
-      console.info(
-        "[email-notifications] No se encontraron correos de docentes autorizados con dominio válido."
-      );
-      missingRecipientsWarned = true;
-    }
-    return false;
-  }
-
   const emailjs = await loadEmailJs();
   if (!emailjs || typeof emailjs.send !== "function") {
     console.warn("[email-notifications] EmailJS no disponible para enviar notificaciones");
     return false;
   }
 
+  const normalizedRecipients = normalizeRecipientList(recipients);
+  if (!normalizedRecipients.length) {
+    if (!missingGenericRecipientsWarned) {
+      console.info(
+        "[email-notifications] No se enviará notificación: no hay destinatarios válidos."
+      );
+      missingGenericRecipientsWarned = true;
+    }
+    return false;
+  }
+
+  const toEmails = normalizedRecipients.map((item) => item.email).join(",");
+  const toName =
+    templateParams.to_name ||
+    normalizedRecipients[0]?.name ||
+    fallbackName ||
+    "Equipo";
+
   const params = {
-    to_email: recipients.join(","),
-    to_name: templateParams.to_name || "Equipo docente",
+    to_email: toEmails,
+    to_name: toName,
     timestamp: formatDateTime(),
     ...templateParams,
   };
@@ -121,6 +156,32 @@ async function dispatchTeacherNotification({
     console.warn(`[email-notifications] Error al enviar (${debugContext})`, error);
     return false;
   }
+}
+
+async function dispatchTeacherNotification({
+  templateParams = {},
+  debugContext = "general",
+} = {}) {
+  const teacherRecipients = await listTeacherNotificationEmails({ domainOnly: true });
+  if (!teacherRecipients.length) {
+    if (!missingRecipientsWarned) {
+      console.info(
+        "[email-notifications] No se encontraron correos de docentes autorizados con dominio válido."
+      );
+      missingRecipientsWarned = true;
+    }
+    return false;
+  }
+
+  return dispatchNotificationToRecipients({
+    recipients: teacherRecipients.map((email) => ({ email })),
+    templateParams: {
+      ...templateParams,
+      to_name: templateParams.to_name || "Equipo docente",
+    },
+    debugContext,
+    fallbackName: "Equipo docente",
+  });
 }
 
 const KIND_LABELS = {
@@ -251,6 +312,63 @@ export async function notifyTeacherAboutForumReply({
     });
   } catch (error) {
     console.warn("[email-notifications] notifyTeacherAboutForumReply", error);
+    return false;
+  }
+}
+
+export async function notifyForumParticipantsAboutReply({
+  topicId,
+  topicTitle,
+  replyText,
+  replyId = null,
+  replyAuthor = {},
+  recipients = [],
+} = {}) {
+  try {
+    const text = safeTrim(replyText);
+    if (!text) {
+      return false;
+    }
+
+    const authorEmail = safeTrim(replyAuthor.email);
+    const authorName =
+      safeTrim(replyAuthor.displayName) ||
+      safeTrim(replyAuthor.name) ||
+      authorEmail ||
+      "Participante";
+
+    const normalizedRecipients = normalizeRecipientList(recipients).filter(
+      (item) => item.email.toLowerCase() !== authorEmail.toLowerCase()
+    );
+
+    if (!normalizedRecipients.length) {
+      return false;
+    }
+
+    const excerpt = truncateText(text, 220);
+    const actionUrl = buildForumUrl(topicId);
+    const subjectBase = topicTitle ? `en "${topicTitle}"` : "en el foro";
+
+    return dispatchNotificationToRecipients({
+      recipients: normalizedRecipients,
+      templateParams: {
+        subject: `Nueva respuesta ${subjectBase} de ${authorName}`,
+        message: `${authorName}${authorEmail ? ` (${authorEmail})` : ""} escribió: ${excerpt}`,
+        action_type: "forum_reply_participant",
+        action_label: "respuesta",
+        forum_topic_id: topicId || "",
+        forum_topic_title: safeTrim(topicTitle),
+        forum_reply_excerpt: excerpt,
+        forum_reply_id: replyId || "",
+        participant_name: authorName,
+        participant_email: authorEmail,
+        action_url: actionUrl,
+      },
+      debugContext: "forum-reply-participants",
+      fallbackName: "Participantes del foro",
+    });
+  } catch (error) {
+    console.warn("[email-notifications] notifyForumParticipantsAboutReply", error);
     return false;
   }
 }

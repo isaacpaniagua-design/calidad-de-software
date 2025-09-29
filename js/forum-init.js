@@ -1,6 +1,6 @@
 
 import { initFirebase, onAuth, getAuthInstance, signInWithGooglePotros, signOutCurrent, isTeacherEmail, isTeacherByDoc, ensureTeacherDocForUser, ensureTeacherAllowlistLoaded, subscribeForumTopics, createForumTopic, subscribeForumReplies, addForumReply, updateForumTopic, deleteForumTopic, deleteForumReply, registerForumReplyReaction, fetchForumRepliesCount } from './firebase.js';
-import { notifyTeacherAboutForumReply } from './email-notifications.js';
+import { notifyTeacherAboutForumReply, notifyForumParticipantsAboutReply } from './email-notifications.js';
 
 
 initFirebase();
@@ -20,6 +20,34 @@ const pendingRepliesCountRequests = new Map();
 function getTopicById(topicId){
   if (!topicId) return null;
   return topicsCache.find((topic) => topic?.id === topicId) || null;
+}
+
+function collectTopicParticipants(topicId, excludeEmail = ''){
+  const normalizedExclude = typeof excludeEmail === 'string' ? excludeEmail.trim().toLowerCase() : '';
+  const unique = new Map();
+  const pushParticipant = (email, name) => {
+    if (!email || typeof email !== 'string') return;
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail) return;
+    if (trimmedEmail.toLowerCase() === normalizedExclude) return;
+    const key = trimmedEmail.toLowerCase();
+    if (unique.has(key)) return;
+    const displayName = typeof name === 'string' && name.trim() ? name.trim() : trimmedEmail;
+    unique.set(key, { email: trimmedEmail, name: displayName });
+  };
+
+  const topic = getTopicById(topicId);
+  if (topic) {
+    pushParticipant(topic.authorEmail, topic.authorName);
+  }
+
+  if (Array.isArray(lastRepliesSnapshot)) {
+    lastRepliesSnapshot.forEach((reply) => {
+      pushParticipant(reply?.authorEmail, reply?.authorName);
+    });
+  }
+
+  return Array.from(unique.values());
 }
 
 
@@ -442,8 +470,8 @@ function createReplyElement(reply, depth = 0){
         });
         childTextarea.value = '';
         childForm.classList.add('hidden');
+        const topicMeta = getTopicById(currentTopicId);
         if (!isTeacher) {
-          const topicMeta = getTopicById(currentTopicId);
           notifyTeacherAboutForumReply({
             topicId: currentTopicId,
             topicTitle: topicMeta?.title || '',
@@ -457,6 +485,24 @@ function createReplyElement(reply, depth = 0){
             isTeacherAuthor: isTeacher,
           }).catch((error) => {
             console.warn('[forum-init] notifyTeacherAboutForumReply', error);
+          });
+        }
+
+        const participantRecipients = collectTopicParticipants(currentTopicId, currentUser.email || '');
+        if (participantRecipients.length) {
+          notifyForumParticipantsAboutReply({
+            topicId: currentTopicId,
+            topicTitle: topicMeta?.title || '',
+            replyText: txt,
+            replyId: replyResult?.id || null,
+            replyAuthor: {
+              uid: currentUser.uid || null,
+              email: currentUser.email || '',
+              displayName: currentUser.displayName || '',
+            },
+            recipients: participantRecipients,
+          }).catch((error) => {
+            console.warn('[forum-init] notifyForumParticipantsAboutReply', error);
           });
         }
       } catch (err) {
@@ -782,8 +828,8 @@ window.addResponse = async function(){
   try{
     const replyResult = await addForumReply(currentTopicId, { text: txt, authorName: currentUser.displayName || null, authorEmail: currentUser.email || null });
 
+    const topicMeta = getTopicById(currentTopicId);
     if (!isTeacher) {
-      const topicMeta = getTopicById(currentTopicId);
       notifyTeacherAboutForumReply({
         topicId: currentTopicId,
         topicTitle: topicMeta?.title || '',
@@ -797,6 +843,24 @@ window.addResponse = async function(){
         isTeacherAuthor: isTeacher,
       }).catch((error) => {
         console.warn('[forum-init] notifyTeacherAboutForumReply', error);
+      });
+    }
+
+    const participantRecipients = collectTopicParticipants(currentTopicId, currentUser.email || '');
+    if (participantRecipients.length) {
+      notifyForumParticipantsAboutReply({
+        topicId: currentTopicId,
+        topicTitle: topicMeta?.title || '',
+        replyText: txt,
+        replyId: replyResult?.id || null,
+        replyAuthor: {
+          uid: currentUser.uid || null,
+          email: currentUser.email || '',
+          displayName: currentUser.displayName || '',
+        },
+        recipients: participantRecipients,
+      }).catch((error) => {
+        console.warn('[forum-init] notifyForumParticipantsAboutReply', error);
       });
     }
 
