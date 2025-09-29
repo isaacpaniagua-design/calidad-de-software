@@ -900,6 +900,7 @@ async function handleFileInputChange(event) {
     }
     // authUser presence already validated by getUploadEligibility
 
+    const upload = await uploadEvidenceFile(file, profile.uid);
 
     const normalizeAuthUserField = (value) => {
       if (value == null) return "";
