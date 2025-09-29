@@ -531,6 +531,7 @@ function renderTopics(items){
       <div class="flex items-start justify-between">
         <div class="flex-1">
           <div class="flex items-center space-x-3 mb-2">
+
             <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">${t.category || 'General'}</span>
             <span class="text-xs text-gray-500">${rel}</span>
           </div>
