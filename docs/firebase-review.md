@@ -10,7 +10,9 @@
 | Área | Reglas relevantes | Implementación en frontend | Observaciones |
 | --- | --- | --- | --- |
 | Asistencias | `match /attendances/{attendanceId}` exige que el alumno registre solo su propia asistencia o que el docente marque registros manuales. 【F:tools/firestore.rules†L61-L86】 | `saveTodayAttendance` completa `uid`, `email`, `createdByUid`, `createdByEmail` con el usuario autenticado antes de hacer `setDoc`. 【F:js/firebase.js†L323-L392】 | El flujo cumple los campos y tipos requeridos; evita duplicados diarios.
+
 | Entregas de estudiantes | `match /studentUploads/{uploadId}` permite que el estudiante cree su propia entrega o que un docente registre la evidencia a nombre del alumno (cuando `extra.uploadedBy.uid` coincide con el usuario autenticado); las actualizaciones/borrados siguen siendo exclusivos del docente. 【F:tools/firestore.rules†L154-L185】 | `createStudentUpload` valida `student.uid` y define `status`, `submittedAt`, `updatedAt` con valores válidos. 【F:js/student-uploads.js†L300-L327】 | Las consultas usan `where("student.uid" == uid)` + `orderBy("submittedAt")`, cubiertas por el índice compuesto configurado.
+
 | Materiales | Actualizaciones solo docentes o incremento controlado de `downloads`. 【F:tools/firestore.rules†L50-L59】 | Los helpers docentes usan `addDoc`, `updateDoc` y `deleteDoc`; el contador de descargas usa `FieldValue.increment(1)`. 【F:js/materials-manager.js†L12-L47】 | El incremento respeta la restricción de `downloads == downloads + 1`.
 | Lista blanca de docentes | El frontend combina correos estáticos con un doc `config/teacherAllowlist`. 【F:js/firebase.js†L78-L117】【F:js/firebase-config.js†L19-L36】 | `match /config/{docId}` permite leer `teacherAllowlist` a cualquier usuario autenticado, y solo docentes autorizados pueden actualizarlo. 【F:tools/firestore.rules†L256-L260】 | La UI ignora lecturas fallidas y la regla mantiene el control de escritura exclusivo para docentes.
 

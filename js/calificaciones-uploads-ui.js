@@ -900,6 +900,7 @@ async function handleFileInputChange(event) {
     }
     // authUser presence already validated by getUploadEligibility
 
+
     const normalizeAuthUserField = (value) => {
       if (value == null) return "";
       if (typeof value === "string") return value;
@@ -913,6 +914,7 @@ async function handleFileInputChange(event) {
       uid: normalizeAuthUserField(authUser?.uid),
       email: normalizeAuthUserField(authUser?.email),
       displayName: normalizeAuthUserField(authUser?.displayName),
+
 
     const extra = {};
     if (entry.activity?.id) extra.activityId = entry.activity.id;
