@@ -23,6 +23,7 @@ import {
   limit,
   serverTimestamp,
   increment,
+  getCountFromServer,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 import {
   getStorage,
@@ -947,6 +948,23 @@ export function subscribeForumReplies(topicId, cb) {
     });
     cb(items);
   });
+}
+
+export async function fetchForumRepliesCount(topicId) {
+  if (!topicId) return 0;
+  const db = getDb();
+  try {
+    const repliesCol = collection(db, "forum_topics", topicId, "replies");
+    const snapshot = await getCountFromServer(repliesCol);
+    const data = snapshot?.data ? snapshot.data() : null;
+    const rawCount = data && typeof data.count !== "undefined" ? data.count : snapshot.count;
+    const numeric = Number(rawCount);
+    if (!Number.isFinite(numeric)) return 0;
+    return Math.max(0, Math.trunc(numeric));
+  } catch (error) {
+    console.error("fetchForumRepliesCount:error", error);
+    return null;
+  }
 }
 
 export async function addForumReply(
