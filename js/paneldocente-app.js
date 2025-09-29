@@ -93,6 +93,27 @@ const refreshUploadsBtn = document.getElementById("pd-refresh-uploads");
 const materialForm = document.getElementById("pd-material-form");
 const materialsList = document.getElementById("pd-materials-list");
 
+const membersFallbackEl = document.getElementById("pd-members-fallback");
+if (membersFallbackEl) {
+  try {
+    const fallbackData = JSON.parse(membersFallbackEl.textContent || "{}");
+    const members = Array.isArray(fallbackData.members) ? fallbackData.members : [];
+    if (members.length) {
+      state.members = members.map((member) => ({
+        uid: member.uid || member.id || member.matricula || "",
+        id: member.id || member.uid || member.matricula || "",
+        matricula: member.matricula || member.id || member.uid || "",
+        displayName: member.displayName || member.nombre || "",
+        nombre: member.nombre || member.displayName || "",
+        email: member.email || "",
+        updatedAt: member.updatedAt || null
+      }));
+    }
+  } catch (error) {
+    console.warn("members fallback parse", error);
+  }
+}
+
 const allowlistForm = document.getElementById("pd-allowlist-form");
 const allowlistViewBtn = document.getElementById("pd-load-allowlist");
 const allowlistView = document.getElementById("pd-allowlist-view");
