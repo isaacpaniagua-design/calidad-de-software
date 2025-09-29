@@ -1,4 +1,5 @@
 import { initFirebase, getDb, getStorageInstance } from "./firebase.js";
+import { notifyTeacherAboutStudentUpload } from "./email-notifications.js";
 import { getPrimaryDocId } from "./calificaciones-helpers.js";
 import {
   collection,
@@ -358,6 +359,14 @@ export async function createStudentUpload(payload = {}) {
   }
 
   const ref = await addDoc(uploadsCollection, submission);
+  notifyTeacherAboutStudentUpload({ submissionId: ref.id, submission }).catch(
+    (error) => {
+      console.warn(
+        "[student-uploads] notifyTeacherAboutStudentUpload",
+        error
+      );
+    }
+  );
   return { id: ref.id };
 }
 

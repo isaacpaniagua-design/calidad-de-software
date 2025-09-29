@@ -169,6 +169,38 @@ export async function ensureTeacherAllowlistLoaded() {
   return teacherAllowlistPromise;
 }
 
+export async function listTeacherNotificationEmails({ domainOnly = true } = {}) {
+  try {
+    await ensureTeacherAllowlistLoaded();
+  } catch (error) {
+    console.warn("listTeacherNotificationEmails:allowlist", error);
+  }
+
+  const normalizedDomain =
+    typeof allowedEmailDomain === "string"
+      ? allowedEmailDomain.trim().toLowerCase()
+      : "";
+
+  const emails = [];
+  const seen = new Set();
+
+  teacherAllowlistSet.forEach((email) => {
+    if (!email || typeof email !== "string") return;
+    const normalized = email.trim().toLowerCase();
+    if (!normalized || seen.has(normalized)) return;
+    if (domainOnly && normalizedDomain) {
+      const [, domain = ""] = normalized.split("@");
+      if (!domain || domain !== normalizedDomain) {
+        return;
+      }
+    }
+    seen.add(normalized);
+    emails.push(normalized);
+  });
+
+  return emails;
+}
+
 export function initFirebase() {
   if (!app) {
     app = initializeApp(firebaseConfig);
@@ -1018,6 +1050,8 @@ export async function addForumReply(
       },
     });
   } catch (_) {}
+
+  return { id: replyRef.id };
 }
 
 async function refreshTopicLastReply(topicId) {
