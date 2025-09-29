@@ -9,6 +9,7 @@ import {
 } from './calificaciones-helpers.js';
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -393,26 +394,81 @@ async function fetchRemoteItems(profile) {
 async function persistRemoteItems(profile, items) {
   if (!shouldUseFirestore()) return;
   const normalized = resolveStudentProfile(profile || {});
-  const docId = getPrimaryDocId(normalized);
+  const candidates = buildCandidateDocIds(normalized);
+  let docId = getPrimaryDocId(normalized);
+  if (!docId && candidates.length) {
+    docId = candidates[0];
+  }
   if (!docId) return;
   const lowerEmail = normalized.emailLower && normalized.emailLower.length ? normalized.emailLower : null;
   const studentUid = normalized.uid ? String(normalized.uid).trim() : null;
   const primaryId = normalized.studentId || normalized.id || normalized.matricula || null;
   const calificacionesRef = doc(db, 'grupos', GRUPO_ID, 'calificaciones', docId);
+  let existingSnap = null;
+  try {
+    existingSnap = await getDoc(calificacionesRef);
+  } catch (err) {
+    console.warn('[calificaciones-teacher-sync] primary lookup', err);
+  }
+
+  const fallbackIds = candidates.filter((candidate) => candidate && candidate !== docId);
+  let legacyRef = null;
+  let legacyData = null;
+
+  if ((!existingSnap || !existingSnap.exists()) && fallbackIds.length) {
+    for (let i = 0; i < fallbackIds.length; i++) {
+      try {
+        const candidateId = fallbackIds[i];
+        const candidateRef = doc(db, 'grupos', GRUPO_ID, 'calificaciones', candidateId);
+        const candidateSnap = await getDoc(candidateRef);
+        if (candidateSnap.exists()) {
+          legacyRef = candidateRef;
+          legacyData = candidateSnap.data() || {};
+          break;
+        }
+      } catch (err) {
+        console.warn('[calificaciones-teacher-sync] legacy lookup', err);
+      }
+    }
+  }
+
+  const existingData = existingSnap && existingSnap.exists() ? existingSnap.data() || {} : {};
+  const legacyBase = legacyData || {};
+  const itemsToPersist = Array.isArray(items) ? items.map((item) => ({ ...item })) : [];
 
   const payload = {
-    items: Array.isArray(items) ? items : [],
-    studentId: primaryId,
-    studentName: normalized.name || null,
-    studentEmail: normalized.email || null,
+    ...legacyBase,
+    ...existingData,
+    items: itemsToPersist,
+    studentId: primaryId || existingData.studentId || legacyBase.studentId || null,
+    studentName: normalized.name || existingData.studentName || legacyBase.studentName || null,
+    studentEmail: normalized.email || existingData.studentEmail || legacyBase.studentEmail || null,
     studentEmailLower: lowerEmail,
-    studentUid: studentUid || null,
+    studentUid: studentUid || existingData.studentUid || legacyBase.studentUid || null,
     updatedAt: serverTimestamp(),
   };
+
+  if (!existingSnap || !existingSnap.exists()) {
+    if (legacyBase.createdAt) {
+      payload.createdAt = legacyBase.createdAt;
+    } else if (!payload.createdAt) {
+      payload.createdAt = serverTimestamp();
+    }
+  }
+
   try {
     await setDoc(calificacionesRef, payload, { merge: true });
   } catch (err) {
     console.error('[calificaciones-teacher-sync] persistRemoteItems', err);
+    return;
+  }
+
+  if (legacyRef && legacyRef.id !== docId) {
+    try {
+      await deleteDoc(legacyRef);
+    } catch (err) {
+      console.warn('[calificaciones-teacher-sync] cleanup legacy doc', err);
+    }
   }
 
   if (studentUid) {
