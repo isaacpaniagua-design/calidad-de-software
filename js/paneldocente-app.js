@@ -29,6 +29,8 @@ const COLLECTION_KEYS = [
   "teachers"
 ];
 
+const ROSTER_STORAGE_KEY = "qs_roster_cache";
+
 const COLLECTION_LABELS = {
   attendances: "Asistencias",
   courses: "Cursos",
@@ -63,6 +65,112 @@ const state = {
     materials: null
   }
 };
+
+function normalizeEmail(value) {
+  if (value == null) return "";
+  try {
+    return String(value).trim().toLowerCase();
+  } catch (_err) {
+    return "";
+  }
+}
+
+function normalizeRosterStudent(student) {
+  if (!student) return null;
+  const email = normalizeEmail(student.email || "");
+  const uid = student.uid ? String(student.uid) : "";
+  const matricula = student.matricula || student.id || uid || email || "";
+  const id = student.id || matricula || email || uid;
+  if (!id && !email && !uid) return null;
+  const name = student.name || student.displayName || student.nombre || "";
+  const type = student.type || "student";
+  return {
+    uid,
+    id,
+    matricula: matricula || id,
+    name: name || email || id || "Estudiante",
+    email,
+    type
+  };
+}
+
+function dedupeRosterEntries(list) {
+  const order = [];
+  const map = {};
+  if (!Array.isArray(list)) return [];
+  list.forEach((entry, index) => {
+    if (!entry) return;
+    const key =
+      normalizeEmail(entry.email || "") ||
+      (entry.id || entry.matricula || entry.uid || entry.name || `idx${index}`).toString().toLowerCase();
+    if (!key) return;
+    if (!map[key]) {
+      map[key] = { ...entry };
+      order.push(key);
+    } else {
+      const current = map[key];
+      if (entry.uid && !current.uid) current.uid = entry.uid;
+      if (entry.id && !current.id) current.id = entry.id;
+      if (entry.matricula && !current.matricula) current.matricula = entry.matricula;
+      if (entry.email && !current.email) current.email = entry.email;
+      if (entry.type && !current.type) current.type = entry.type;
+      if (
+        entry.name &&
+        (!current.name || current.name === current.id || current.name === current.email)
+      ) {
+        current.name = entry.name;
+      }
+    }
+  });
+  return order.map((key, index) => {
+    const item = map[key];
+    if (!item) return null;
+    const copy = { ...item };
+    if (!copy.id) copy.id = copy.matricula || copy.email || copy.uid || `student-${index}`;
+    if (!copy.matricula) copy.matricula = copy.id;
+    if (!copy.name) copy.name = copy.email || copy.id;
+    if (!copy.type) copy.type = "student";
+    return copy;
+  }).filter(Boolean);
+}
+
+function emitRosterUpdate(detail) {
+  if (typeof window === "undefined" || !window.dispatchEvent) return;
+  try {
+    window.dispatchEvent(new CustomEvent("qs:roster-updated", { detail }));
+  } catch (_err) {
+    if (typeof document !== "undefined" && typeof document.createEvent === "function") {
+      try {
+        const ev = document.createEvent("CustomEvent");
+        ev.initCustomEvent("qs:roster-updated", false, false, detail);
+        window.dispatchEvent(ev);
+      } catch (_err2) {
+        // ignore
+      }
+    }
+  }
+}
+
+function syncRosterCacheFromMembers(members) {
+  if (typeof window === "undefined") return;
+  const list = Array.isArray(members) ? members : [];
+  const normalized = list.map(normalizeRosterStudent).filter(Boolean);
+  const deduped = dedupeRosterEntries(normalized);
+  const payload = {
+    updatedAt: new Date().toISOString(),
+    students: deduped
+  };
+  try {
+    if (window.localStorage) {
+      window.localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(payload));
+    }
+  } catch (_err) {}
+  try {
+    window.students = deduped.slice();
+  } catch (_err2) {}
+  emitRosterUpdate(payload);
+  return payload;
+}
 
 const auth = {
   email: document.getElementById("pd-user-email"),
@@ -108,6 +216,7 @@ if (membersFallbackEl) {
         email: member.email || "",
         updatedAt: member.updatedAt || null
       }));
+      syncRosterCacheFromMembers(state.members);
     }
   } catch (error) {
     console.warn("members fallback parse", error);
@@ -977,6 +1086,7 @@ async function subscribeMembers(options = {}) {
       });
       renderMembers();
       renderOverview();
+      syncRosterCacheFromMembers(state.members);
     });
   } catch (error) {
     console.error("members snapshot", error);
