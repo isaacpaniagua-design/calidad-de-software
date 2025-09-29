@@ -145,6 +145,16 @@ function safeStringify(value) {
   }
 }
 
+function isPermissionDenied(error) {
+  if (!error) return false;
+  const code = typeof error.code === "string" ? error.code.toLowerCase() : "";
+  if (code === "permission-denied" || code.endsWith("/permission-denied")) {
+    return true;
+  }
+  const message = typeof error.message === "string" ? error.message : "";
+  return /missing or insufficient permissions/i.test(message);
+}
+
 function getCollectionLabel(key) {
   return COLLECTION_LABELS[key] || key;
 }
@@ -440,12 +450,29 @@ async function loadCollection(collection, options = {}) {
     }
     logAdmin(`Coleccion ${collection} cargada (${state.collections[collection].length} documentos).`);
   } catch (error) {
-    console.error("load collection", collection, error);
-    if (!silent) {
-      showBanner(`No se pudo cargar la coleccion ${collection}.`, "error");
-    }
-    if (listEl) {
-      listEl.innerHTML = '<p class="pd-collection-empty">Error al cargar los datos.</p>';
+    const permissionDenied = isPermissionDenied(error);
+    state.collections[collection] = [];
+    renderCollection(collection);
+    if (permissionDenied) {
+      console.warn(`load collection ${collection}: acceso denegado`, error);
+      logAdmin(`Coleccion ${collection} sin permisos de lectura.`);
+      if (!silent) {
+        showBanner(
+          `No tienes permisos para consultar la coleccion ${getCollectionLabel(collection)}.`,
+          "warning"
+        );
+      }
+      if (listEl) {
+        listEl.innerHTML = '<p class="pd-collection-empty">Sin permisos para ver esta coleccion.</p>';
+      }
+    } else {
+      console.error("load collection", collection, error);
+      if (!silent) {
+        showBanner(`No se pudo cargar la coleccion ${collection}.`, "error");
+      }
+      if (listEl) {
+        listEl.innerHTML = '<p class="pd-collection-empty">Error al cargar los datos.</p>';
+      }
     }
   } finally {
     state.collectionLoading[collection] = false;
