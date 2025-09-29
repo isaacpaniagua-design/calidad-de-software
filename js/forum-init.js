@@ -1,5 +1,6 @@
 
 import { initFirebase, onAuth, getAuthInstance, signInWithGooglePotros, signOutCurrent, isTeacherEmail, isTeacherByDoc, ensureTeacherDocForUser, ensureTeacherAllowlistLoaded, subscribeForumTopics, createForumTopic, subscribeForumReplies, addForumReply, updateForumTopic, deleteForumTopic, deleteForumReply, registerForumReplyReaction, fetchForumRepliesCount } from './firebase.js';
+import { notifyTeacherAboutForumReply } from './email-notifications.js';
 
 
 initFirebase();
@@ -15,6 +16,11 @@ let lastRepliesSnapshot = [];
 
 const topicRepliesCountCache = new Map();
 const pendingRepliesCountRequests = new Map();
+
+function getTopicById(topicId){
+  if (!topicId) return null;
+  return topicsCache.find((topic) => topic?.id === topicId) || null;
+}
 
 
 function updateLayoutColumns(showAdminPanel) {
@@ -428,7 +434,7 @@ function createReplyElement(reply, depth = 0){
       submitChild.dataset.loading = '1';
       submitChild.classList.add('opacity-70');
       try {
-        await addForumReply(currentTopicId, {
+        const replyResult = await addForumReply(currentTopicId, {
           text: txt,
           authorName: currentUser.displayName || null,
           authorEmail: currentUser.email || null,
@@ -436,6 +442,23 @@ function createReplyElement(reply, depth = 0){
         });
         childTextarea.value = '';
         childForm.classList.add('hidden');
+        if (!isTeacher) {
+          const topicMeta = getTopicById(currentTopicId);
+          notifyTeacherAboutForumReply({
+            topicId: currentTopicId,
+            topicTitle: topicMeta?.title || '',
+            replyText: txt,
+            replyId: replyResult?.id || null,
+            student: {
+              uid: currentUser.uid || null,
+              email: currentUser.email || '',
+              displayName: currentUser.displayName || '',
+            },
+            isTeacherAuthor: isTeacher,
+          }).catch((error) => {
+            console.warn('[forum-init] notifyTeacherAboutForumReply', error);
+          });
+        }
       } catch (err) {
         alert(err?.message || err);
       } finally {
@@ -757,7 +780,25 @@ window.addResponse = async function(){
   const txt = responseText?.value?.trim();
   if (!txt) { alert('Escribe tu respuesta'); return; }
   try{
-    await addForumReply(currentTopicId, { text: txt, authorName: currentUser.displayName || null, authorEmail: currentUser.email || null });
+    const replyResult = await addForumReply(currentTopicId, { text: txt, authorName: currentUser.displayName || null, authorEmail: currentUser.email || null });
+
+    if (!isTeacher) {
+      const topicMeta = getTopicById(currentTopicId);
+      notifyTeacherAboutForumReply({
+        topicId: currentTopicId,
+        topicTitle: topicMeta?.title || '',
+        replyText: txt,
+        replyId: replyResult?.id || null,
+        student: {
+          uid: currentUser.uid || null,
+          email: currentUser.email || '',
+          displayName: currentUser.displayName || '',
+        },
+        isTeacherAuthor: isTeacher,
+      }).catch((error) => {
+        console.warn('[forum-init] notifyTeacherAboutForumReply', error);
+      });
+    }
 
     if (responseText) responseText.value = '';
   } catch(e){ alert(e.message || e); }
