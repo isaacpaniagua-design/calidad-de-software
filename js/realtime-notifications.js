@@ -18,6 +18,8 @@ initFirebase();
 
 
 const STORAGE_KEY = "qs:realtime-notifications";
+const HISTORY_STORAGE_PREFIX = `${STORAGE_KEY}:history:`;
+const HISTORY_LIMIT_PER_DAY = 10;
 const BOOT_FLAG = "__qsRealtimeNotificationsBooted";
 let storageUnavailable = false;
 
@@ -189,6 +191,56 @@ function persistPreferences(state) {
   }
 }
 
+function getHistoryStorageKey(date = new Date()) {
+  try {
+    const isoDate = new Date(date).toISOString().slice(0, 10);
+    return `${HISTORY_STORAGE_PREFIX}${isoDate}`;
+  } catch (error) {
+    return `${HISTORY_STORAGE_PREFIX}unknown`;
+  }
+}
+
+function normalizeHistoryEntry(entry) {
+  if (!entry || typeof entry !== "object") return null;
+  const type = typeof entry.type === "string" ? entry.type : "";
+  const message = typeof entry.message === "string" ? entry.message : "";
+  const timestamp = Number(entry.timestamp);
+  if (!type || !message || !Number.isFinite(timestamp)) return null;
+  const icon = typeof entry.icon === "string" && entry.icon ? entry.icon : "🔔";
+  const detail = typeof entry.detail === "string" ? entry.detail : "";
+  return { type, message, detail, icon, timestamp };
+}
+
+function loadHistoryEntries(date = new Date()) {
+  if (storageUnavailable || typeof window === "undefined" || typeof window.localStorage === "undefined") {
+    return [];
+  }
+  try {
+    const raw = window.localStorage.getItem(getHistoryStorageKey(date));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((entry) => normalizeHistoryEntry(entry))
+      .filter(Boolean)
+      .slice(-HISTORY_LIMIT_PER_DAY);
+  } catch (error) {
+    storageUnavailable = true;
+    return [];
+  }
+}
+
+function persistHistoryEntries(entries, date = new Date()) {
+  if (storageUnavailable || typeof window === "undefined" || typeof window.localStorage === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.setItem(getHistoryStorageKey(date), JSON.stringify(entries));
+  } catch (error) {
+    storageUnavailable = true;
+  }
+}
+
 function shuffle(array) {
   for (let i = array.length - 1; i > 0; i -= 1) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -237,6 +289,8 @@ function initRealtimeNotifications() {
   const stored = loadPreferences();
   const state = {};
   let shouldPersist = false;
+  const historyDate = new Date();
+  let historyEntries = loadHistoryEntries(historyDate);
 
   OPTIONS.forEach((option) => {
     const value = stored[option.id];
@@ -315,6 +369,7 @@ function initRealtimeNotifications() {
 
 
   renderOptions();
+  restoreHistory();
   updateStatus();
   filterFeedItems();
   scheduleNextEvent();
@@ -531,47 +586,96 @@ function initRealtimeNotifications() {
     updateEmptyState();
   }
 
-  function publishEvent(event) {
-    if (!event) return;
+  function createFeedCard(entry) {
     const card = doc.createElement("article");
     card.className = "realtime-feed__item";
-    card.setAttribute("data-type", event.type);
-    const enabled = isEnabled(event.type);
-    card.hidden = !enabled;
-    const timeText = timeFormatter.format(new Date());
-    const detailHtml = event.detail ? `<p class="realtime-feed__detail">${event.detail}</p>` : "";
+    card.setAttribute("data-type", entry.type);
+    const detailHtml = entry.detail ? `<p class="realtime-feed__detail">${entry.detail}</p>` : "";
+    const timeValue = Number.isFinite(entry.timestamp) ? new Date(entry.timestamp) : new Date();
+    const timeText = timeFormatter.format(timeValue);
     card.innerHTML = `
       <div class="realtime-feed__item-header">
         <div class="realtime-feed__item-leading">
-          <span class="realtime-feed__icon" aria-hidden="true">${event.icon || "🔔"}</span>
+          <span class="realtime-feed__icon" aria-hidden="true">${entry.icon || "🔔"}</span>
           <div class="realtime-feed__item-info">
-            <span class="realtime-feed__tag">${labelMap.get(event.type) || "Notificación"}</span>
+            <span class="realtime-feed__tag">${labelMap.get(entry.type) || "Notificación"}</span>
             <span class="realtime-feed__meta">${timeText}</span>
           </div>
         </div>
       </div>
-      <p class="realtime-feed__message">${event.message}</p>
+      <p class="realtime-feed__message">${entry.message}</p>
       ${detailHtml}
     `;
+    return card;
+  }
 
+  function insertFeedCard(entry, { skipUnread = false, animate = true } = {}) {
+    if (!feedList) return null;
+    const card = createFeedCard(entry);
+    const enabled = isEnabled(entry.type);
+    card.hidden = !enabled;
     feedList.prepend(card);
 
-
-    if (!isPanelOpen) {
+    if (!skipUnread && !isPanelOpen) {
       unreadCount = Math.min(unreadCount + 1, 99);
       updateBadge();
     }
 
-
-    requestAnimationFrame(() => {
+    if (animate) {
+      requestAnimationFrame(() => {
+        card.classList.add("is-visible");
+      });
+    } else {
       card.classList.add("is-visible");
-    });
-
-    while (feedList.children.length > 6) {
-      feedList.removeChild(feedList.lastElementChild);
     }
 
+    trimFeedList();
     updateEmptyState();
+    return card;
+  }
+
+  function trimFeedList() {
+    if (!feedList) return;
+    while (feedList.children.length > HISTORY_LIMIT_PER_DAY) {
+      feedList.removeChild(feedList.lastElementChild);
+    }
+  }
+
+  function appendHistoryEntry(list, entry) {
+    const next = Array.isArray(list) ? list.slice() : [];
+    next.push(entry);
+    if (next.length > HISTORY_LIMIT_PER_DAY) {
+      next.splice(0, next.length - HISTORY_LIMIT_PER_DAY);
+    }
+    return next;
+  }
+
+  function restoreHistory() {
+    if (!Array.isArray(historyEntries) || historyEntries.length === 0) {
+      historyEntries = [];
+      persistHistoryEntries(historyEntries, historyDate);
+      return;
+    }
+    historyEntries = historyEntries.slice(-HISTORY_LIMIT_PER_DAY);
+    historyEntries.forEach((entry) => {
+      insertFeedCard(entry, { skipUnread: true, animate: false });
+    });
+    persistHistoryEntries(historyEntries, historyDate);
+  }
+
+  function publishEvent(event) {
+    if (!event) return;
+    const entry = {
+      type: event.type,
+      icon: event.icon || "🔔",
+      message: event.message,
+      detail: event.detail || "",
+      timestamp: Date.now(),
+    };
+
+    historyEntries = appendHistoryEntry(historyEntries, entry);
+    persistHistoryEntries(historyEntries, historyDate);
+    insertFeedCard(entry);
   }
 
   function nextDelay() {
