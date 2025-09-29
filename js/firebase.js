@@ -59,6 +59,14 @@ let driveAccessToken = null;
 const normalizeEmail = (email) =>
   typeof email === "string" ? email.trim().toLowerCase() : "";
 
+function sanitizeFirestoreKey(value) {
+  if (!value) return "";
+  return String(value)
+    .trim()
+    .replace(/[.#$/\[\]]/g, "_")
+    .replace(/\s+/g, "_");
+}
+
 function isLikelyIdentityNetworkIssue(error) {
   if (!error) return false;
   const code = typeof error.code === "string" ? error.code.toLowerCase() : "";
@@ -987,6 +995,9 @@ export async function addForumReply(
     reactions: {
       like: 0,
     },
+    reactionUsers: {
+      like: {},
+    },
   });
   try {
     const topicRef = doc(collection(db, "forum_topics"), topicId);
@@ -999,6 +1010,12 @@ export async function addForumReply(
       lastReplyAuthorEmail: authorEmail || null,
       lastReplyParentId: parentId || null,
       lastReplyCreatedAt: serverTimestamp(),
+      lastReplyReactions: {
+        like: 0,
+      },
+      lastReplyReactionUsers: {
+        like: {},
+      },
     });
   } catch (_) {}
 }
@@ -1023,6 +1040,8 @@ async function refreshTopicLastReply(topicId) {
         lastReplyAuthorEmail: null,
         lastReplyParentId: null,
         lastReplyCreatedAt: null,
+        lastReplyReactions: null,
+        lastReplyReactionUsers: null,
       });
       return;
     }
@@ -1035,6 +1054,8 @@ async function refreshTopicLastReply(topicId) {
       lastReplyAuthorEmail: latestData.authorEmail || null,
       lastReplyParentId: latestData.parentId || null,
       lastReplyCreatedAt: latestData.createdAt || null,
+      lastReplyReactions: latestData.reactions || null,
+      lastReplyReactionUsers: latestData.reactionUsers || null,
     });
   } catch (_) {}
 }
@@ -1071,7 +1092,8 @@ export async function deleteForumReply(topicId, replyId) {
 export async function registerForumReplyReaction(
   topicId,
   replyId,
-  reaction = "like"
+  reaction = "like",
+  reactor = null
 ) {
 
   const db = getDb();
@@ -1083,9 +1105,24 @@ export async function registerForumReplyReaction(
   }
   const ref = doc(collection(db, "forum_topics", topicId, "replies"), replyId);
   const fieldPath = `reactions.${reaction}`;
-  await updateDoc(ref, {
+  const updates = {
     [fieldPath]: increment(1),
-  });
+  };
+
+  if (reactor && typeof reactor === "object") {
+    const keyCandidate = sanitizeFirestoreKey(reactor.uid || reactor.email || "");
+    if (keyCandidate) {
+      const userField = `reactionUsers.${reaction}.${keyCandidate}`;
+      updates[userField] = {
+        uid: reactor.uid || null,
+        email: reactor.email || null,
+        name: reactor.name || null,
+        reactedAt: serverTimestamp(),
+      };
+    }
+  }
+
+  await updateDoc(ref, updates);
 }
 
 export function subscribeLatestForumReplies(limitOrOptions, onChange, onError) {
@@ -1129,6 +1166,8 @@ export function subscribeLatestForumReplies(limitOrOptions, onChange, onError) {
           data.lastReplyParentId ?? data.lastReply?.parentId ?? null;
         const reactions =
           data.lastReplyReactions ?? data.lastReply?.reactions ?? null;
+        const reactionUsers =
+          data.lastReplyReactionUsers ?? data.lastReply?.reactionUsers ?? null;
 
         const payload = {
           id: lastReplyId,
@@ -1146,6 +1185,10 @@ export function subscribeLatestForumReplies(limitOrOptions, onChange, onError) {
 
         if (reactions && typeof reactions === "object") {
           payload.reactions = reactions;
+        }
+
+        if (reactionUsers && typeof reactionUsers === "object") {
+          payload.reactionUsers = reactionUsers;
         }
 
         items.push(payload);

@@ -81,6 +81,32 @@ function formatRepliesLabel(count){
   return `💬 ${safe} ${noun}`;
 }
 
+function collectReactionUsersMap(mapLike){
+  if (!mapLike || typeof mapLike !== 'object') return [];
+  const unique = new Map();
+  Object.values(mapLike).forEach((entry) => {
+    if (!entry || typeof entry !== 'object') return;
+    const uid = typeof entry.uid === 'string' ? entry.uid.trim() : '';
+    const email = typeof entry.email === 'string' ? entry.email.trim() : '';
+    const name = typeof entry.name === 'string' ? entry.name.trim() : '';
+    const key = uid || email || name;
+    if (!key) return;
+    const display = name || email || 'Anónimo';
+    if (!display) return;
+    if (!unique.has(key)) {
+      unique.set(key, display);
+    }
+  });
+  return Array.from(unique.values()).sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
+}
+
+function formatReactionUsersSummary(users){
+  if (!Array.isArray(users) || users.length === 0) {
+    return 'Aún no hay reacciones';
+  }
+  return `Reaccionaron: ${users.join(', ')}`;
+}
+
 function hasReplyMetadata(topic){
   if (!topic) return false;
   return Boolean(topic.lastReplyId || topic.lastReplyCreatedAt || topic.lastReplyText);
@@ -249,7 +275,10 @@ function createReplyElement(reply, depth = 0){
   } else {
     replyBtnClasses.push('text-gray-400', 'cursor-not-allowed');
   }
-  const reactTitle = currentUser ? 'Aplaudir esta respuesta' : 'Inicia sesión para reaccionar';
+  const likeReactors = collectReactionUsersMap(reply?.reactionUsers?.like);
+  const reactionUsersLabel = formatReactionUsersSummary(likeReactors);
+  const reactTitleBase = currentUser ? 'Aplaudir esta respuesta' : 'Inicia sesión para reaccionar';
+  const reactTitle = `${reactTitleBase}. ${reactionUsersLabel}`.trim();
   const replyTitle = currentUser ? 'Responder a este comentario' : 'Inicia sesión para responder';
 
   const textContent = reply?.text ? reply.text : '';
@@ -282,6 +311,7 @@ function createReplyElement(reply, depth = 0){
         <span>Responder</span>
       </button>
     </div>
+    <div data-role="reaction-users" class="text-xs text-gray-500"></div>
     <div data-role="child-reply-form" class="mt-3 hidden">
       <textarea
         rows="2"
@@ -311,12 +341,17 @@ function createReplyElement(reply, depth = 0){
   }
 
   const btnReact = card.querySelector('[data-role="react-like"]');
+  const reactionUsersEl = card.querySelector('[data-role="reaction-users"]');
+  if (reactionUsersEl) {
+    reactionUsersEl.textContent = reactionUsersLabel;
+  }
   if (btnReact) {
     if (!currentUser) {
       btnReact.setAttribute('disabled', 'true');
     } else {
       btnReact.removeAttribute('disabled');
     }
+    btnReact.title = reactTitle;
     btnReact.addEventListener('click', async (e) => {
       e.stopPropagation();
       if (!currentUser) {
@@ -329,7 +364,11 @@ function createReplyElement(reply, depth = 0){
       try {
 
 
-        await registerForumReplyReaction(currentTopicId, reply.id, 'like');
+        await registerForumReplyReaction(currentTopicId, reply.id, 'like', {
+          uid: currentUser?.uid || null,
+          email: currentUser?.email || null,
+          name: currentUser?.displayName || null,
+        });
       } catch (err) {
         alert(err?.message || err || 'No fue posible registrar tu reacción');
       } finally {
