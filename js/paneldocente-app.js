@@ -938,19 +938,31 @@ async function loadGroupsOnce() {
 if (groupSelect) groupSelect.addEventListener("change", (event) => {
   state.groupId = event.target.value || state.groupId;
   cleanupSubscriptions();
-  subscribeMembers();
+  subscribeMembers({ reset: true });
   subscribeUploads();
   renderOverview();
   showBanner(`Grupo activo: ${state.groupId}`, "info");
 });
 
-async function subscribeMembers() {
+async function subscribeMembers(options = {}) {
   if (!state.isTeacher) return;
+  const { reset = false } = options;
   if (state.unsub.members) state.unsub.members();
+  if (reset) {
+    state.members = [];
+    renderMembers();
+    renderOverview();
+  }
   try {
-    const { collection, doc, onSnapshot, orderBy, query } = await getFirestore();
+    const { collection, onSnapshot, orderBy, query } = await getFirestore();
     const q = query(collection(db, "grupos", state.groupId, "members"), orderBy("nombre", "asc"));
     state.unsub.members = onSnapshot(q, (snap) => {
+      if (snap.empty) {
+        // Keep previously loaded members (fallback or last successful fetch) when Firestore
+        // returns an empty snapshot. This avoids wiping the table because of transient
+        // errors/offline states. Only explicit resets (e.g. when switching groups) clear the list.
+        return;
+      }
       state.members = snap.docs.map((docSnap) => {
         const data = docSnap.data() || {};
         return {
