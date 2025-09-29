@@ -3,13 +3,47 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function isSignedIn() { return request.auth != null; }
     function isPotros() { return isSignedIn() && request.auth.token.email.matches('.*@potros\\.itson\\.edu\\.mx$'); }
-    function allowedTeacherEmails() { return ['isaac.paniagua@potros.itson.edu.mx']; }
-    function isAllowedTeacherEmail() { return isPotros() && (request.auth.token.email in allowedTeacherEmails()); }
+    function allowedTeacherEmails() {
+      return ['isaac.paniagua@potros.itson.edu.mx'];
+    }
+
+    function normalizedTeacherEmail() {
+      return request.auth != null
+        && request.auth.token.email is string
+        ? request.auth.token.email.lower()
+        : '';
+    }
+
+    function isAllowedTeacherEmail() {
+      return normalizedTeacherEmail() in allowedTeacherEmails();
+    }
+
+    function teacherAllowlistPath() {
+      return /databases/$(database)/documents/config/teacherAllowlist;
+    }
+
+    function isTeacherAllowlisted() {
+      let email = normalizedTeacherEmail();
+      if (email == '') return false;
+      if (!exists(teacherAllowlistPath())) return false;
+      let data = get(teacherAllowlistPath()).data;
+      if (!(data.keys().hasOnly(['emails']) && data.emails is list)) return false;
+      if (data.emails.where(email => email is string).size() != data.emails.size()) return false;
+      let lowercased = data.emails.map(email => email.lower());
+      return lowercased.hasAny([email]);
+    }
+
+    function isTeacherRecord() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
+    }
+
     function isTeacher() {
-      return isPotros() && (
-        exists(/databases/$(database)/documents/teachers/$(request.auth.uid)) ||
-        isAllowedTeacherEmail()
-      );
+      return isSignedIn()
+        && (
+          (isPotros() && (isTeacherRecord() || isAllowedTeacherEmail()))
+          || isTeacherAllowlisted()
+        );
     }
 
     function isSelf(studentId) {
@@ -220,7 +254,7 @@ service cloud.firestore {
     }
 
     match /config/{docId} {
-      allow read: if isTeacherAllowlistDoc(docId) && isTeacher();
+      allow read: if isTeacherAllowlistDoc(docId) && isSignedIn();
       allow create, update: if isTeacherAllowlistDoc(docId)
         && isTeacher()
         && isValidTeacherAllowlistPayload();

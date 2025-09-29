@@ -900,9 +900,21 @@ async function handleFileInputChange(event) {
     }
     // authUser presence already validated by getUploadEligibility
 
-      uid: String(authUser.uid || ""),
-      email: String(authUser.email || ""),
-      displayName: String(authUser.displayName || ""),
+
+    const normalizeAuthUserField = (value) => {
+      if (value == null) return "";
+      if (typeof value === "string") return value;
+      try {
+        return String(value);
+      } catch (_) {
+        return "";
+      }
+    };
+
+      uid: normalizeAuthUserField(authUser?.uid),
+      email: normalizeAuthUserField(authUser?.email),
+      displayName: normalizeAuthUserField(authUser?.displayName),
+
 
     const extra = {};
     if (entry.activity?.id) extra.activityId = entry.activity.id;
