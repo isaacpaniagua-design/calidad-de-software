@@ -21,57 +21,169 @@
         
 
         .fade-in {
-
             animation: fadeIn 0.5s ease-in;
-
         }
-
-        
 
         @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
 
-            from { opacity: 0; transform: translateY(20px); }
-
-            to { opacity: 1; transform: translateY(0); }
-
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-
-        
 
         .success-pulse {
-
             animation: successPulse 0.8s ease-out;
-
         }
-
-        
 
         @keyframes successPulse {
+            0% {
+                transform: scale(1);
+            }
 
-            0% { transform: scale(1); }
+            50% {
+                transform: scale(1.1);
+            }
 
-            50% { transform: scale(1.1); }
-
-            100% { transform: scale(1); }
-
+            100% {
+                transform: scale(1);
+            }
         }
-
-        
 
         .slide-in {
-
             animation: slideIn 0.4s ease-out;
-
         }
 
-        
-
         @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
 
-            from { transform: translateX(100%); opacity: 0; }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
 
-            to { transform: translateX(0); opacity: 1; }
+        .attendance-hero {
+            position: relative;
+            overflow: hidden;
+            border-radius: clamp(28px, 5vw, 40px);
+            padding: clamp(40px, 7vw, 72px);
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 45%, #0ea5e9 100%);
+            color: #f8fafc;
+            box-shadow: 0 32px 84px rgba(79, 70, 229, 0.35);
+        }
 
+        .attendance-hero::before,
+        .attendance-hero::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .attendance-hero::before {
+            background: radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0.22), transparent 60%),
+                radial-gradient(circle at 82% 18%, rgba(14, 165, 233, 0.25), transparent 62%);
+            opacity: 0.95;
+        }
+
+        .attendance-hero::after {
+            background: linear-gradient(140deg, rgba(59, 130, 246, 0.12) 0%, rgba(129, 140, 248, 0.28) 45%, transparent 80%);
+            mix-blend-mode: screen;
+        }
+
+        .attendance-hero > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        .attendance-hero .hero-badge {
+            width: clamp(60px, 10vw, 96px);
+            height: clamp(60px, 10vw, 96px);
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(248, 250, 252, 0.2), rgba(255, 255, 255, 0.05));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 18px 38px rgba(15, 23, 42, 0.25);
+            backdrop-filter: blur(8px);
+        }
+
+        .attendance-hero .hero-badge svg {
+            width: clamp(32px, 6vw, 44px);
+            height: clamp(32px, 6vw, 44px);
+        }
+
+        .attendance-hero__meta {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        @media (min-width: 768px) {
+            .attendance-hero__meta {
+                align-items: flex-end;
+            }
+        }
+
+        .attendance-hero__datetime {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            border-radius: 9999px;
+            background: rgba(15, 23, 42, 0.18);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            font-size: 0.95rem;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+        }
+
+        .attendance-hero__datetime span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .attendance-hero__auth {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            border-radius: 18px;
+            background: rgba(15, 23, 42, 0.14);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+
+        .attendance-hero__auth button {
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.35);
+        }
+
+        .attendance-hero__banner {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            border-radius: 9999px;
+            background: rgba(16, 185, 129, 0.14);
+            color: #ecfdf5;
+            box-shadow: inset 0 1px 0 rgba(16, 185, 129, 0.35);
+        }
+
+        .attendance-hero__banner .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 9999px;
+            background-color: #22c55e;
         }
 
     </style>
@@ -168,71 +280,50 @@
 
         <!-- Header -->
 
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-8 border border-gray-100">
-
-            <div class="text-center">
-
-                <div class="w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-
-                    </svg>
-
+        <header class="attendance-hero mb-12">
+          <div class="flex flex-col gap-8">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+              <div class="flex items-start gap-5 text-indigo-50">
+                <div class="hero-badge">
+                  <svg class="text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
                 </div>
-
-                <h1 class="text-4xl font-bold text-gray-800 mb-2">Registro de Asistencia</h1>
-
-                <p class="text-gray-600 text-lg">Instituto Tecnológico de Sonora</p>
-
-                <div class="mt-4 flex items-center justify-center space-x-4 text-sm text-gray-500">
-
-                    <div id="currentDate" class="font-medium"></div>
-
-                    <span></span>
-
-                    <div id="currentTime"></div>
-
+                <div class="max-w-3xl space-y-3">
+                  <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white">Registro de Asistencia</h1>
+                  <p class="text-base md:text-lg text-indigo-100/90 leading-relaxed">
+                    Lleva el control de asistencia de tu grupo en tiempo real con confirmación automática mediante cuentas @potros. Administra el acceso de estudiantes y docentes desde una interfaz moderna y accesible.
+                  </p>
                 </div>
-
-                <div id="authArea" class="mt-6 flex items-center justify-center gap-3 student-only">
-
+              </div>
+              <div class="attendance-hero__meta">
+                <div class="attendance-hero__datetime text-indigo-50/90">
+                  <svg class="w-5 h-5 text-sky-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <span class="flex flex-col sm:flex-row sm:items-center sm:gap-3">
+                    <span id="currentDate" class="font-semibold uppercase tracking-wide"></span>
+                    <span class="hidden sm:inline opacity-60" aria-hidden="true">•</span>
+                    <span id="currentTime" class="font-semibold"></span>
+                  </span>
+                </div>
+                <div id="authArea" class="attendance-hero__auth student-only">
                   <button id="signInBtn" class="bg-gradient-to-r from-emerald-600 to-green-600 text-white px-5 py-2 rounded-full hover:from-emerald-700 hover:to-green-700 transition-all duration-200 font-semibold">
-
                     Acceder con cuenta @potros
-
                   </button>
-
-                    <div id="userInfo" class="hidden items-center gap-3">
-
-                    <img id="userPhoto" class="w-8 h-8 rounded-full border" alt="Foto" />
-
-                    <span id="userName" class="text-gray-700 font-medium"></span>
-
+                  <div id="userInfo" class="hidden items-center gap-3">
+                    <img id="userPhoto" class="w-8 h-8 rounded-full border border-white/40" alt="Foto" />
+                    <span id="userName" class="text-white font-medium"></span>
                   </div>
-
                 </div>
-
-                <!-- Banner de clase activa -->
-
-                <div id="classBanner" class="mt-4 hidden">
-
-                  <div class="inline-flex items-center px-4 py-2 rounded-full bg-green-100 text-green-800 text-sm font-semibold shadow-sm">
-
-                    <span class="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
-
-                    Clase activa ahora: 18:00 - 19:00 (Lun/Mié/Vie)
-
-                  </div>
-
-                </div>
-
+              </div>
             </div>
-
-        </div>
-
-
+            <div id="classBanner" class="attendance-hero__banner hidden">
+              <span class="status-dot animate-pulse"></span>
+              <span class="text-sm font-semibold tracking-wide">Clase activa ahora: 18:00 - 19:00 (Lun/Mié/Vie)</span>
+            </div>
+          </div>
+        </header>
 
                 <!-- Herramientas Docente -->
 
