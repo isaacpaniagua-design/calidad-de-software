@@ -1,5 +1,5 @@
 
-import { initFirebase, onAuth, getAuthInstance, signInWithGooglePotros, signOutCurrent, isTeacherEmail, isTeacherByDoc, ensureTeacherDocForUser, ensureTeacherAllowlistLoaded, subscribeForumTopics, createForumTopic, subscribeForumReplies, addForumReply, updateForumTopic, deleteForumTopic, deleteForumReply, registerForumReplyReaction } from './firebase.js';
+import { initFirebase, onAuth, getAuthInstance, signInWithGooglePotros, signOutCurrent, isTeacherEmail, isTeacherByDoc, ensureTeacherDocForUser, ensureTeacherAllowlistLoaded, subscribeForumTopics, createForumTopic, subscribeForumReplies, addForumReply, updateForumTopic, deleteForumTopic, deleteForumReply, registerForumReplyReaction, fetchForumRepliesCount } from './firebase.js';
 
 
 initFirebase();
@@ -12,6 +12,9 @@ let currentTopicId = null;
 let unsubscribeReplies = null;
 let unsubscribeTopics = null;
 let lastRepliesSnapshot = [];
+
+const topicRepliesCountCache = new Map();
+const pendingRepliesCountRequests = new Map();
 
 
 function updateLayoutColumns(showAdminPanel) {
@@ -60,6 +63,105 @@ function timeAgo(dateLike){
   return `hace ${days} días`;
 }
 
+function parseRepliesCount(value){
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value.trim(), 10);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return NaN;
+}
+
+function formatRepliesLabel(count){
+  const numeric = Number(count);
+  const safe = Number.isFinite(numeric) ? Math.max(0, Math.trunc(numeric)) : 0;
+  const noun = safe === 1 ? 'respuesta' : 'respuestas';
+  return `💬 ${safe} ${noun}`;
+}
+
+function hasReplyMetadata(topic){
+  if (!topic) return false;
+  return Boolean(topic.lastReplyId || topic.lastReplyCreatedAt || topic.lastReplyText);
+}
+
+function findTopicRow(topicId){
+  if (!topicsList || !topicId) return null;
+  const children = Array.from(topicsList.children || []);
+  return children.find((child) => child?.dataset?.topicId === topicId) || null;
+}
+
+function updateTopicRepliesUi(topicId, count){
+  const row = findTopicRow(topicId);
+  if (!row) return;
+  const target = row.querySelector('[data-role="reply-count"]');
+  if (!target) return;
+  target.textContent = formatRepliesLabel(count);
+}
+
+function setTopicRepliesCount(topicId, count, { updateDom = true } = {}){
+  if (!topicId) return;
+  const numeric = Number(count);
+  if (!Number.isFinite(numeric)) return;
+  const safe = Math.max(0, Math.trunc(numeric));
+  topicRepliesCountCache.set(topicId, safe);
+  if (updateDom) updateTopicRepliesUi(topicId, safe);
+  const idx = topicsCache.findIndex((topic) => topic?.id === topicId);
+  if (idx >= 0) {
+    topicsCache[idx] = { ...topicsCache[idx], repliesCount: safe };
+  }
+}
+
+function ensureRepliesCount(topicId){
+  if (!topicId || pendingRepliesCountRequests.has(topicId)) return;
+  const promise = fetchForumRepliesCount(topicId)
+    .then((count) => {
+      if (Number.isFinite(count)) {
+        setTopicRepliesCount(topicId, count);
+      }
+    })
+    .catch(() => {})
+    .finally(() => {
+      pendingRepliesCountRequests.delete(topicId);
+    });
+  pendingRepliesCountRequests.set(topicId, promise);
+}
+
+function getRepliesCountForTopic(topic){
+  if (!topic || !topic.id) return 0;
+  const numeric = parseRepliesCount(topic.repliesCount);
+  const cached = topicRepliesCountCache.get(topic.id);
+  if (Number.isFinite(cached)) {
+    if (Number.isFinite(numeric)) {
+      if (numeric >= 0) {
+        const safe = Math.max(0, Math.trunc(numeric));
+        if (safe !== Math.trunc(cached)) {
+          setTopicRepliesCount(topic.id, safe, { updateDom: false });
+          return safe;
+        }
+      } else {
+        ensureRepliesCount(topic.id);
+      }
+    } else if (hasReplyMetadata(topic)) {
+      ensureRepliesCount(topic.id);
+    }
+    return Math.max(0, Math.trunc(cached));
+  }
+  if (Number.isFinite(numeric)) {
+    const safe = Math.max(0, Math.trunc(numeric));
+    setTopicRepliesCount(topic.id, safe, { updateDom: false });
+    if (numeric < 0 || (safe === 0 && hasReplyMetadata(topic))) {
+      ensureRepliesCount(topic.id);
+    }
+    return safe;
+  }
+  if (hasReplyMetadata(topic)) {
+    ensureRepliesCount(topic.id);
+  }
+  return 0;
+}
+
 function renderLoading(){
   if (!topicsList) return;
   topicsList.innerHTML = '';
@@ -71,6 +173,8 @@ function renderLoading(){
 
 function renderSignedOutState(){
   if (!topicsList) return;
+  topicRepliesCountCache.clear();
+  pendingRepliesCountRequests.clear();
   topicsList.innerHTML = '';
   const div = document.createElement('div');
   div.className = 'p-6 text-gray-500';
@@ -357,7 +461,24 @@ onAuth(async user => {
   if (user && isPotros) {
     renderLoading();
     unsubscribeTopics = subscribeForumTopics(
-      (items) => { topicsCache = items; renderTopics(items); showDebug('Temas cargados', 'ok'); },
+      (items) => {
+        topicsCache = items;
+        const activeIds = new Set(
+          Array.isArray(items) ? items.map((topic) => topic?.id).filter(Boolean) : []
+        );
+        Array.from(topicRepliesCountCache.keys()).forEach((key) => {
+          if (!activeIds.has(key)) {
+            topicRepliesCountCache.delete(key);
+          }
+        });
+        Array.from(pendingRepliesCountRequests.keys()).forEach((key) => {
+          if (!activeIds.has(key)) {
+            pendingRepliesCountRequests.delete(key);
+          }
+        });
+        renderTopics(items);
+        showDebug('Temas cargados', 'ok');
+      },
       (err) => {
         const code = (err && (err.code||err.message||'')).toString();
         if (/permission-denied/i.test(code)) {
@@ -399,10 +520,12 @@ function renderTopics(items){
     return;
   }
   items.forEach(t => {
+    if (!t || !t.id) return;
     const row = document.createElement('div');
     row.className = 'p-6 hover:bg-gray-50 transition-colors cursor-pointer';
+    row.dataset.topicId = t.id;
     row.addEventListener('click', () => window.openTopic(t.id));
-    const replies = Number.isFinite(t.repliesCount) ? t.repliesCount : (t.repliesCount || 0);
+    const replies = getRepliesCountForTopic(t);
     const rel = timeAgo(t.updatedAt || t.createdAt);
     row.innerHTML = `
       <div class="flex items-start justify-between">
@@ -415,7 +538,7 @@ function renderTopics(items){
           <p class="text-gray-600 text-sm mb-3 line-clamp-2">${t.content || ''}</p>
           <div class="flex items-center space-x-4 text-sm text-gray-500">
             <span>👤 ${t.authorName || t.authorEmail || 'Desconocido'}</span>
-            <span>💬 ${replies} respuestas</span>
+            <span data-role="reply-count">${formatRepliesLabel(replies)}</span>
           </div>
         </div>
         <div class="ml-4"><div class="w-3 h-3 bg-green-400 rounded-full"></div></div>
@@ -567,6 +690,7 @@ window.openTopic = function(topicId){
   lastRepliesSnapshot = [];
   unsubscribeReplies = subscribeForumReplies(topicId, (items) => {
     lastRepliesSnapshot = Array.isArray(items) ? items : [];
+    setTopicRepliesCount(topicId, lastRepliesSnapshot.length);
     renderReplies(lastRepliesSnapshot);
   });
 
