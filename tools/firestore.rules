@@ -119,15 +119,33 @@ service cloud.firestore {
 
     // Student uploads rules
     match /studentUploads/{uploadId} {
+      function hasValidStudentUploadPayload() {
+        return request.resource.data.student is map
+          && request.resource.data.student.uid is string
+          && request.resource.data.title is string
+          && request.resource.data.kind is string
+          && request.resource.data.status is string;
+      }
+
+      function isTeacherProxyingUpload() {
+        return isTeacher()
+          && hasValidStudentUploadPayload()
+          && ('extra' in request.resource.data)
+          && request.resource.data.extra is map
+          && ('uploadedBy' in request.resource.data.extra)
+          && request.resource.data.extra.uploadedBy is map
+          && request.resource.data.extra.uploadedBy.uid is string
+          && request.resource.data.extra.uploadedBy.uid == request.auth.uid;
+      }
+
       allow read: if isTeacher() || (isPotros() && resource.data.student.uid == request.auth.uid);
 
-      allow create: if isPotros()
-        && request.resource.data.student is map
-        && request.resource.data.student.uid is string
-        && request.resource.data.student.uid == request.auth.uid
-        && request.resource.data.title is string
-        && request.resource.data.kind is string
-        && request.resource.data.status is string;
+      allow create: if hasValidStudentUploadPayload()
+        && ((
+            isPotros()
+            && request.resource.data.student.uid == request.auth.uid
+          )
+          || isTeacherProxyingUpload());
 
       allow update, delete: if isTeacher();
     }
