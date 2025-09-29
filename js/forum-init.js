@@ -402,7 +402,10 @@ function renderTopics(items){
     const row = document.createElement('div');
     row.className = 'p-6 hover:bg-gray-50 transition-colors cursor-pointer';
     row.addEventListener('click', () => window.openTopic(t.id));
-    const replies = Number.isFinite(t.repliesCount) ? t.repliesCount : (t.repliesCount || 0);
+    const repliesNumeric = Number.isFinite(t.repliesCount)
+      ? t.repliesCount
+      : Number.parseInt(t.repliesCount, 10);
+    const replies = Number.isFinite(repliesNumeric) && repliesNumeric > 0 ? repliesNumeric : 0;
     const rel = timeAgo(t.updatedAt || t.createdAt);
     row.innerHTML = `
       <div class="flex items-start justify-between">
