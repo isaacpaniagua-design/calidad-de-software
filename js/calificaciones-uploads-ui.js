@@ -163,7 +163,7 @@ function isUploadcareAvailable() {
     uploadcareAvailabilityChecked = true;
   }
   if (!uploadcareAvailable) {
-    // Permite reintentar la detección cuando el script se carga de forma diferida.
+    // Permite reintentar la detecciÃ³n cuando el script se carga de forma diferida.
     uploadcareAvailabilityChecked = false;
   }
   return uploadcareAvailable;
@@ -424,7 +424,7 @@ function updateDisplays(uploadMap) {
     if (submittedDate && !Number.isNaN(submittedDate.getTime())) {
       parts.push(dateFormatter.format(submittedDate));
     }
-    const statusText = parts.length ? parts.join(" · ") : "Entrega disponible";
+    const statusText = parts.length ? parts.join(" Â· ") : "Entrega disponible";
     setStatus(entry, statusText, {
       uploaded: true,
       title: upload.fileName || "",
@@ -437,7 +437,7 @@ function updateDisplays(uploadMap) {
 function setLoadingState() {
   displays.forEach((entry) => {
     if (!entry.activity || !entry.statusEl) return;
-    setStatus(entry, "Buscando entregas…", { uploaded: false, title: "" });
+    setStatus(entry, "Buscando entregasâ¦", { uploaded: false, title: "" });
     disableView(entry);
   });
 }
@@ -464,7 +464,7 @@ function getUploadEligibility(profile) {
   if (!authUser) {
     return {
       allowed: false,
-      reason: "Inicia sesión para subir evidencias.",
+      reason: "Inicia sesiÃ³n para subir evidencias.",
     };
   }
   if (!profile) {
@@ -487,7 +487,7 @@ function getUploadEligibility(profile) {
     return {
       allowed: false,
       reason:
-        "Solo el personal docente puede subir evidencias pendientes para otros estudiantes. Inicia sesión con tu cuenta institucional o solicita permisos docentes.",
+        "Solo el personal docente puede subir evidencias pendientes para otros estudiantes. Inicia sesiÃ³n con tu cuenta institucional o solicita permisos docentes.",
     };
   }
 
@@ -525,9 +525,9 @@ function updateUploadButtonsState(profile) {
       entry.uploadButton.title = "Actividad no vinculada";
     } else if (!backendAvailable) {
       entry.uploadButton.title =
-        "El almacenamiento de evidencias no está disponible.";
+        "El almacenamiento de evidencias no estÃ¡ disponible.";
     } else if (entry.uploading) {
-      entry.uploadButton.title = "Subiendo evidencia…";
+      entry.uploadButton.title = "Subiendo evidenciaâ¦";
     } else {
       entry.uploadButton.title = eligibility.reason;
     }
@@ -580,13 +580,13 @@ async function uploadEvidenceFile(file, studentUid) {
 
   const storage = getStorageInstance();
   if (!storage) {
-    throw new Error("El almacenamiento de evidencias no está disponible.");
+    throw new Error("El almacenamiento de evidencias no estÃ¡ disponible.");
   }
   const safeName = sanitizeFileName(file?.name || "evidencia");
   const path = `studentEvidence/${studentUid}/${Date.now()}_${safeName}`;
   const ref = storageRef(storage, path);
   // Se usa uploadBytes en lugar de uploadBytesResumable para evitar la
-  // solicitud CORS de preflight que falla en el bucket de producción.
+  // solicitud CORS de preflight que falla en el bucket de producciÃ³n.
   await uploadBytes(ref, file);
   const url = await getDownloadURL(ref);
   return { url, path, fileName: safeName, fileSize: file?.size || null, mimeType: file?.type || "" };
@@ -606,7 +606,7 @@ async function tryUploadEvidenceWithUploadcare(file) {
       fileFrom.done(resolve).fail(reject);
     });
     if (!info) {
-      throw new Error("Respuesta vacía al cargar el archivo con Uploadcare.");
+      throw new Error("Respuesta vacÃ­a al cargar el archivo con Uploadcare.");
     }
     const name =
       info.name ||
@@ -617,7 +617,7 @@ async function tryUploadEvidenceWithUploadcare(file) {
     const safeName = sanitizeFileName(name);
     const url = info.cdnUrl || info.originalUrl || "";
     if (!url) {
-      throw new Error("Uploadcare no devolvió una URL pública.");
+      throw new Error("Uploadcare no devolviÃ³ una URL pÃºblica.");
     }
     return {
       url,
@@ -795,7 +795,7 @@ async function ensureActiveProfileWithUid() {
 function handleUploadRequest(entry) {
   if (!entry || entry.uploading) return;
   if (!entry.activity || !entry.activity.id) {
-    setStatus(entry, "Esta actividad no está vinculada a un registro.", {
+    setStatus(entry, "Esta actividad no estÃ¡ vinculada a un registro.", {
       uploaded: false,
       title: "",
     });
@@ -807,7 +807,7 @@ function handleUploadRequest(entry) {
     return;
   }
   if (!isUploadBackendAvailable()) {
-    setStatus(entry, "El almacenamiento de evidencias no está disponible.", {
+    setStatus(entry, "El almacenamiento de evidencias no estÃ¡ disponible.", {
       uploaded: false,
       title: "",
     });
@@ -815,7 +815,7 @@ function handleUploadRequest(entry) {
   }
   const input = ensureFileInput();
   if (!input) {
-    setStatus(entry, "La carga de archivos no está disponible.", {
+    setStatus(entry, "La carga de archivos no estÃ¡ disponible.", {
       uploaded: false,
       title: "",
     });
@@ -841,7 +841,7 @@ async function handleDeleteRequest(entry) {
     return;
   }
   const confirmed = typeof window !== "undefined" && typeof window.confirm === "function"
-    ? window.confirm("�Eliminar la evidencia registrada para esta actividad?")
+    ? window.confirm("¿Eliminar la evidencia registrada para esta actividad?")
     : true;
   if (!confirmed) return;
 
@@ -900,9 +900,9 @@ async function handleFileInputChange(event) {
     }
     // authUser presence already validated by getUploadEligibility
 
-    setStatus(entry, "Subiendo evidencia…", { uploaded: false, title: "" });
-
-    const upload = await uploadEvidenceFile(file, profile.uid);
+      uid: String(authUser.uid || ""),
+      email: String(authUser.email || ""),
+      displayName: String(authUser.displayName || ""),
 
     const extra = {};
     if (entry.activity?.id) extra.activityId = entry.activity.id;
@@ -933,7 +933,7 @@ async function handleFileInputChange(event) {
       },
     });
 
-    setStatus(entry, "Evidencia cargada. Sincronizando…", {
+    setStatus(entry, "Evidencia cargada. Sincronizandoâ¦", {
       uploaded: false,
       title: "",
     });
