@@ -208,7 +208,6 @@ function buildRealtimeCenterTemplate() {
     >
       <span class="realtime-toggle__icon" aria-hidden="true">🔔</span>
       <span class="sr-only" data-realtime-toggle-label>Abrir centro de notificaciones</span>
-      <span class="realtime-toggle__badge" data-realtime-badge hidden></span>
     </button>
     <section
       class="realtime-panel"
