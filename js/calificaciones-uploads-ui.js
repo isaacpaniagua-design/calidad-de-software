@@ -910,10 +910,11 @@ async function handleFileInputChange(event) {
         return "";
       }
     };
-
+    const normalizedAuthUser = {
       uid: normalizeAuthUserField(authUser?.uid),
       email: normalizeAuthUserField(authUser?.email),
       displayName: normalizeAuthUserField(authUser?.displayName),
+    };
 
 
     const extra = {};
@@ -924,9 +925,9 @@ async function handleFileInputChange(event) {
     if (upload.backend) extra.uploadBackend = upload.backend;
     if (upload.path) extra.storagePath = upload.path;
     extra.uploadedBy = {
-      uid: authUser.uid || "",
-      email: authUser.email || "",
-      displayName: authUser.displayName || "",
+      uid: normalizedAuthUser.uid,
+      email: normalizedAuthUser.email,
+      displayName: normalizedAuthUser.displayName,
     };
 
     await createStudentUpload({
