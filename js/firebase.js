@@ -1299,36 +1299,6 @@ export async function saveTestPlan(planId, planData) {
   return setDoc(planRef, dataToSave, { merge: true }); // merge:true es útil si quieres actualizar sin sobreescribir todo
 }
 
-/**
- * Obtiene una lista de todos los planes de prueba, ordenados por fecha de modificación.
- * @returns {Promise<Array<object>>} Una lista de objetos, cada uno con 'id' y los datos del plan.
- */
-export async function fetchAllTestPlans() {
-  const db = getDb();
-  const plansRef = collection(db, "planesDePrueba");
-  const q = query(plansRef, orderBy("lastModified", "desc"));
-  
-  const querySnapshot = await getDocs(q);
-  const plans = [];
-  querySnapshot.forEach((doc) => {
-    plans.push({ id: doc.id, ...doc.data() });
-  });
-  return plans;
-}
 
-/**
- * Obtiene los datos de un único plan de pruebas por su ID.
- * @param {string} planId El ID del documento a buscar.
- * @returns {Promise<object|null>} Los datos del documento o null si no existe.
- */
-export async function fetchTestPlanById(planId) {
-  const db = getDb();
-  const planRef = doc(db, "planesDePrueba", planId);
-  const docSnap = await getDoc(planRef);
 
-  if (docSnap.exists()) {
-    return docSnap.data();
-  } else {
-    return null;
-  }
-}
+
