@@ -1,29 +1,19 @@
 // js/plan-de-pruebas.js
 
-// Importamos las funciones que acabamos de crear en firebase.js
-import { saveTestPlan, fetchAllTestPlans, fetchTestPlanById } from './firebase.js';
+// Importamos únicamente la función de guardado
+import { saveTestPlan } from './firebase.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Referencias a los elementos principales de la UI
+    // Referencias a los elementos de la UI restantes
     const saveButton = document.getElementById('saveButton');
-    const loadButton = document.getElementById('loadButton');
     const clearButton = document.getElementById('clearButton');
     const printButton = document.getElementById('printButton');
-    const modal = document.getElementById('loadPlanModal');
-    const closeModalButton = document.getElementById('closeModalButton');
     const textareas = document.querySelectorAll('.input-area');
 
     // --- EVENT LISTENERS ---
     saveButton.addEventListener('click', handleSave);
-    loadButton.addEventListener('click', handleOpenLoadModal);
     clearButton.addEventListener('click', handleClearForm);
     printButton.addEventListener('click', () => window.print());
-    closeModalButton.addEventListener('click', () => modal.style.display = 'none');
-    window.addEventListener('click', (event) => {
-        if (event.target === modal) {
-            modal.style.display = 'none';
-        }
-    });
 
     // Generar navegación dinámica al cargar la página
     generateNavLinks();
@@ -54,61 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             saveButton.disabled = false;
             saveButton.innerHTML = '<i class="bi bi-cloud-arrow-up-fill me-2"></i>Guardar en Plataforma';
-        }
-    }
-
-    async function handleOpenLoadModal() {
-        const listContainer = document.getElementById('plan-list-container');
-        listContainer.innerHTML = '<p>Cargando planes...</p>';
-        modal.style.display = 'flex';
-
-        try {
-            const plans = await fetchAllTestPlans();
-            let html = '';
-            if (plans.length > 0) {
-                html = '<div class="list-group">';
-                plans.forEach(plan => {
-                    const modDate = plan.lastModified ? plan.lastModified.toDate().toLocaleString() : 'N/A';
-                    html += `<a href="#" class="list-group-item" data-plan-id="${plan.id}">
-                               <strong>${plan.id}</strong>
-                               <small>Modificado: ${modDate}</small>
-                           </a>`;
-                });
-                html += '</div>';
-            } else {
-                html = '<p>No hay planes guardados.</p>';
-            }
-            listContainer.innerHTML = html;
-            
-            // Añadir event listeners a los nuevos elementos
-            listContainer.querySelectorAll('.list-group-item').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    handleLoadPlan(item.dataset.planId);
-                });
-            });
-
-        } catch (error) {
-            console.error("Error al cargar lista de planes:", error);
-            listContainer.innerHTML = `<p class="text-danger">Error al cargar la lista: ${error.message}</p>`;
-        }
-    }
-
-    async function handleLoadPlan(planId) {
-        modal.style.display = 'none';
-        try {
-            const planData = await fetchTestPlanById(planId);
-            if (planData) {
-                textareas.forEach(textarea => {
-                    textarea.value = planData[textarea.id] || '';
-                });
-                alert(`Plan "${planId}" cargado.`);
-            } else {
-                alert(`No se encontró el plan "${planId}".`);
-            }
-        } catch (error) {
-            console.error("Error al cargar el plan:", error);
-            alert(`❌ Error al cargar el plan: ${error.message}`);
         }
     }
     
