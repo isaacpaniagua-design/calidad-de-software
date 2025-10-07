@@ -1,12 +1,12 @@
 // js/updates.js
 
 // --- CONFIGURACIÓN DE ACTUALIZACIONES ---
-// AHORA LAS FECHAS SE INTRODUCEN EN FORMATO YYYY-MM-DD.
-// El script se encargará de formatearlas automáticamente para el usuario.
+// Las fechas se introducen en formato YYYY-MM-DD.
+// El script las formatea automáticamente para el usuario.
 const changelogData = [
     {
         version: "v1.2.0",
-        date: "2025-10-05", // <-- FORMATO ESTÁNDAR
+        date: "2025-10-05", 
         changes: [
             { type: 'new', text: '¡Nuevo! Sección de "Actualizaciones del Sistema" para mantenerte informado sobre las últimas mejoras.' },
             { type: 'new', text: 'Indicador de notificación para nuevas actualizaciones en el menú de navegación.' },
@@ -15,7 +15,7 @@ const changelogData = [
     },
     {
         version: "v1.1.0",
-        date: "2025-10-02", // <-- FORMATO ESTÁNDAR
+        date: "2025-10-02",
         changes: [
             { type: 'new', text: 'Implementado el guardado local automático para el "Plan de Pruebas". Tu progreso se guarda mientras escribes.' },
             { type: 'improvement', text: 'El botón de guardado ahora confirma la acción visualmente.' },
@@ -24,7 +24,7 @@ const changelogData = [
     },
     {
         version: "v1.0.0",
-        date: "2025-09-28", // <-- FORMATO ESTÁNDAR
+        date: "2025-09-28",
         changes: [
             { type: 'new', text: 'Exportación de "Plan de Pruebas" a formato PDF con diseño profesional y paginación.' },
             { type: 'improvement', text: 'Se ha cambiado el tamaño de la hoja a A3 para una mejor visualización digital y menos cortes de contenido.' },
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * NUEVA FUNCIÓN: Formatea una fecha de 'YYYY-MM-DD' a un formato legible.
+ * Formatea una fecha de 'YYYY-MM-DD' a un formato legible.
  * @param {string} dateString - La fecha en formato 'YYYY-MM-DD'.
  * @returns {string} - La fecha formateada, ej: "5 de octubre de 2025".
  */
@@ -74,7 +74,6 @@ function renderChangelog(container) {
             </li>
         `).join('');
         
-        // Usamos la nueva función para formatear la fecha
         const formattedDate = formatDate(release.date);
 
         card.innerHTML = `
