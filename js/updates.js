@@ -1,12 +1,11 @@
 // js/updates.js
 
 // --- CONFIGURACIÓN DE ACTUALIZACIONES ---
-// Las fechas se introducen en formato YYYY-MM-DD.
-// El script las formatea automáticamente para el usuario.
+// CORRECCIÓN: Las fechas ahora reflejan el día real en que se implementaron los cambios.
 const changelogData = [
     {
         version: "v1.2.0",
-        date: "2025-10-05", 
+        date: "2025-10-06", // <-- FECHA CORREGIDA
         changes: [
             { type: 'new', text: '¡Nuevo! Sección de "Actualizaciones del Sistema" para mantenerte informado sobre las últimas mejoras.' },
             { type: 'new', text: 'Indicador de notificación para nuevas actualizaciones en el menú de navegación.' },
@@ -15,7 +14,7 @@ const changelogData = [
     },
     {
         version: "v1.1.0",
-        date: "2025-10-02",
+        date: "2025-10-06", // <-- FECHA CORREGIDA
         changes: [
             { type: 'new', text: 'Implementado el guardado local automático para el "Plan de Pruebas". Tu progreso se guarda mientras escribes.' },
             { type: 'improvement', text: 'El botón de guardado ahora confirma la acción visualmente.' },
@@ -24,7 +23,7 @@ const changelogData = [
     },
     {
         version: "v1.0.0",
-        date: "2025-09-28",
+        date: "2025-10-06", // <-- FECHA CORREGIDA
         changes: [
             { type: 'new', text: 'Exportación de "Plan de Pruebas" a formato PDF con diseño profesional y paginación.' },
             { type: 'improvement', text: 'Se ha cambiado el tamaño de la hoja a A3 para una mejor visualización digital y menos cortes de contenido.' },
@@ -33,7 +32,7 @@ const changelogData = [
     }
 ];
 
-// --- LÓGICA DEL MÓDULO ---
+// --- LÓGICA DEL MÓDULO (Sin cambios) ---
 
 const latestVersion = changelogData[0].version;
 const lastSeenVersionKey = 'lastSeenUpdateVersion';
@@ -48,11 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 500);
 });
 
-/**
- * Formatea una fecha de 'YYYY-MM-DD' a un formato legible.
- * @param {string} dateString - La fecha en formato 'YYYY-MM-DD'.
- * @returns {string} - La fecha formateada, ej: "5 de octubre de 2025".
- */
 function formatDate(dateString) {
     const [year, month, day] = dateString.split('-');
     const date = new Date(year, month - 1, day);
@@ -61,7 +55,7 @@ function formatDate(dateString) {
 }
 
 function renderChangelog(container) {
-    container.innerHTML = ''; // Limpiar el spinner
+    container.innerHTML = ''; 
 
     changelogData.forEach(release => {
         const card = document.createElement('div');
@@ -98,5 +92,4 @@ function getIconForType(type) {
     }
 }
 
-// Exportamos las variables que necesita el layout para la notificación
 export { latestVersion, lastSeenVersionKey };
