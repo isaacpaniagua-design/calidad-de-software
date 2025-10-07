@@ -97,94 +97,81 @@
 .modal-close-btn { background: none; border: none; font-size: 1.8rem; cursor: pointer; }
 .modal-body { padding: 24px; max-height: 60vh; overflow-y: auto; }
 
-/* Estilos para impresión */
+/* Estilos para impresión (Modo de impresión del navegador) */
 @media print {
     body { background: white !important; }
-    .plan-sidebar, header[data-qs="navbar"], footer[data-qs="footer"], .modal-overlay { display: none !important; }
-    main.page-content, .plan-container { display: block !important; }
-    .plan-document { box-shadow: none; border: 1px solid #ccc; }
-}
-
-/* css/plan-de-pruebas.css */
-
-/* Tus estilos existentes van aquí... */
-:root {
-    --accent: #6366f1;
-    --surface: #ffffff;
-    --text-primary: #111827;
-}
-
-/* ... (resto de tus estilos) ... */
-
-.input-area:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-    outline: none;
-}
-
-/* ... (tus estilos de modal) ... */
-
-
-/* Estilos para impresión */
-@media print {
-    /* ... (tus estilos de @media print) ... */
+    .plan-sidebar, header[data-qs="navbar"], footer[data-qs="footer"], .modal-overlay, #saveButton, #clearButton, #printButton { 
+        display: none !important; 
+    }
+    main.page-content, .plan-container { 
+        display: block !important; 
+        grid-template-columns: 1fr;
+    }
+    .plan-document { 
+        box-shadow: none; 
+        border: 1px solid #ccc;
+        padding: 0;
+    }
 }
 
 
-/* --- ESTILOS ADICIONALES PARA LA EXPORTACIÓN A PDF --- */
+/* --- ESTILOS CORREGIDOS Y ROBUSTOS PARA LA EXPORTACIÓN A PDF --- */
 
 /* Contenedor principal para la exportación.
-  Se posiciona fuera de la pantalla para que no sea visible al usuario.
-  Se le da un ancho fijo para simular una hoja de papel.
+   Lo hacemos "visible" para el motor de renderizado pero lo ocultamos 
+   de forma que no afecte visualmente al usuario.
 */
-.plan-document-pdf {
+#pdf-export-container {
     position: absolute;
-    left: -9999px;
-    top: auto;
-    width: 8.5in; /* Ancho de una hoja tamaño carta */
-    background: white;
+    top: 0;
+    left: 0;
+    z-index: -1; /* Lo enviamos detrás de todo */
+    opacity: 0; /* Lo hacemos 100% transparente */
+    width: 8.5in; /* Ancho estándar de una hoja tamaño carta */
+    background: #fff;
     padding: 0.5in;
     color: #000;
     box-sizing: border-box;
-    font-family: Arial, sans-serif; /* Fuente legible para documentos */
+    font-family: Arial, sans-serif;
 }
 
-/* Estilos para el contenido que reemplaza a los textareas */
-.plan-document-pdf .pdf-content {
+/* Contenido que reemplaza a los <textarea> en el PDF */
+#pdf-export-container .pdf-content {
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;
-    padding: 12px;
+    padding: 10px 12px;
     border-radius: 4px;
-    font-size: 11pt; /* Tamaño de fuente estándar para documentos */
+    font-size: 10pt;
     line-height: 1.5;
     color: #212529;
-    word-wrap: break-word; /* Asegura que el texto largo no se desborde */
-    min-height: 40px;
+    word-wrap: break-word;
+    min-height: 30px;
 }
 
-/* Ajustes a los títulos de las secciones para el PDF */
-.plan-document-pdf .section h2 {
-    font-size: 14pt;
+/* Títulos de las secciones en el PDF */
+#pdf-export-container .section h2 {
+    font-size: 13pt;
     font-weight: bold;
-    margin-bottom: 12px;
-    color: #1a237e; /* Un azul oscuro y profesional */
+    color: #1a237e; /* Un azul oscuro profesional */
     border-bottom: 2px solid #e0e0e0;
-    padding-bottom: 8px;
-    page-break-after: avoid; /* Evita un salto de página justo después del título */
+    padding-bottom: 6px;
+    margin-top: 20px;
+    margin-bottom: 10px;
 }
 
-/* Ajustes a los títulos principales del documento */
-.plan-document-pdf .header h1 {
-    font-size: 22pt;
-    font-weight: bold;
+/* Cabecera del documento en el PDF */
+#pdf-export-container .header {
+    text-align: center;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 15px;
+    margin-bottom: 30px;
+}
+#pdf-export-container .header h1 {
+    font-size: 20pt;
     color: #000;
+    margin: 0;
 }
-.plan-document-pdf .header .subtitle {
-    font-size: 12pt;
-    color: #6c757d;
-}
-
-/* Evita que las secciones se corten entre páginas siempre que sea posible */
-.plan-document-pdf .section {
-    page-break-inside: avoid;
+#pdf-export-container .header .subtitle {
+    font-size: 11pt;
+    color: #555;
 }
