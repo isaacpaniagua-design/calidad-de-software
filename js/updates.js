@@ -1,12 +1,12 @@
 // js/updates.js
 
 // --- CONFIGURACIÓN DE ACTUALIZACIONES ---
-// Para añadir una nueva actualización, simplemente agrega un nuevo objeto al inicio de esta lista.
-// El script se encargará del resto.
+// AHORA LAS FECHAS SE INTRODUCEN EN FORMATO YYYY-MM-DD.
+// El script se encargará de formatearlas automáticamente para el usuario.
 const changelogData = [
     {
         version: "v1.2.0",
-        date: "05 de Octubre, 2025",
+        date: "2025-10-05", // <-- FORMATO ESTÁNDAR
         changes: [
             { type: 'new', text: '¡Nuevo! Sección de "Actualizaciones del Sistema" para mantenerte informado sobre las últimas mejoras.' },
             { type: 'new', text: 'Indicador de notificación para nuevas actualizaciones en el menú de navegación.' },
@@ -15,7 +15,7 @@ const changelogData = [
     },
     {
         version: "v1.1.0",
-        date: "02 de Octubre, 2025",
+        date: "2025-10-02", // <-- FORMATO ESTÁNDAR
         changes: [
             { type: 'new', text: 'Implementado el guardado local automático para el "Plan de Pruebas". Tu progreso se guarda mientras escribes.' },
             { type: 'improvement', text: 'El botón de guardado ahora confirma la acción visualmente.' },
@@ -24,7 +24,7 @@ const changelogData = [
     },
     {
         version: "v1.0.0",
-        date: "28 de Septiembre, 2025",
+        date: "2025-09-28", // <-- FORMATO ESTÁNDAR
         changes: [
             { type: 'new', text: 'Exportación de "Plan de Pruebas" a formato PDF con diseño profesional y paginación.' },
             { type: 'improvement', text: 'Se ha cambiado el tamaño de la hoja a A3 para una mejor visualización digital y menos cortes de contenido.' },
@@ -42,16 +42,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('changelog-container');
     if (!container) return;
 
-    // Simula una pequeña carga para la UX
     setTimeout(() => {
         renderChangelog(container);
-        // Marca la última versión como vista
         localStorage.setItem(lastSeenVersionKey, latestVersion);
     }, 500);
 });
 
+/**
+ * NUEVA FUNCIÓN: Formatea una fecha de 'YYYY-MM-DD' a un formato legible.
+ * @param {string} dateString - La fecha en formato 'YYYY-MM-DD'.
+ * @returns {string} - La fecha formateada, ej: "5 de octubre de 2025".
+ */
+function formatDate(dateString) {
+    const [year, month, day] = dateString.split('-');
+    const date = new Date(year, month - 1, day);
+    const options = { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' };
+    return date.toLocaleDateString('es-ES', options);
+}
+
 function renderChangelog(container) {
-    container.innerHTML = ''; // Limpiar el spinner de carga
+    container.innerHTML = ''; // Limpiar el spinner
 
     changelogData.forEach(release => {
         const card = document.createElement('div');
@@ -63,11 +73,14 @@ function renderChangelog(container) {
                 <span>${change.text}</span>
             </li>
         `).join('');
+        
+        // Usamos la nueva función para formatear la fecha
+        const formattedDate = formatDate(release.date);
 
         card.innerHTML = `
             <div class="update-card-header">
                 <h2>Versión ${release.version}</h2>
-                <span class="release-date">${release.date}</span>
+                <span class="release-date">${formattedDate}</span>
             </div>
             <div class="update-card-body">
                 <ul class="update-list">${changesHtml}</ul>
