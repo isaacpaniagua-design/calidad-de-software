@@ -1,6 +1,9 @@
-
 // Unified layout bootstrap for the QS platform.
 // Creates the navigation bar, footer, and login integrations used across pages.
+
+// CAMBIO: 1. Importar las variables desde el módulo de actualizaciones.
+// Asegúrate de que el archivo 'updates.js' que te proporcioné antes exista en la misma carpeta 'js/'.
+import { latestVersion, lastSeenVersionKey } from './updates.js';
 
 (function initializeLoadingOverlay() {
   ensureLoadingOverlay();
@@ -99,7 +102,16 @@ function computeBasePath(doc) {
 
 function ensureNavigation(doc, body, basePath) {
   let nav = doc.querySelector(".qs-nav");
-  const template = buildNavTemplate(basePath);
+
+  // CAMBIO: 2. Lógica para determinar si se debe mostrar la notificación.
+  // Esto se hace ANTES de construir el template del menú.
+  const lastSeenVersion = localStorage.getItem(lastSeenVersionKey);
+  const hasNewUpdate = latestVersion !== lastSeenVersion;
+  const notificationBadge = hasNewUpdate 
+    ? '<span class="notification-dot" title="¡Nuevas actualizaciones disponibles!"></span>' 
+    : '';
+  
+  const template = buildNavTemplate(basePath, notificationBadge); // Pasamos el badge al template
 
   if (!nav) {
     nav = doc.createElement("div");
@@ -119,7 +131,9 @@ function ensureNavigation(doc, body, basePath) {
   return nav;
 }
 
-function buildNavTemplate(basePath) {
+function buildNavTemplate(basePath, notificationBadge) {
+  // CAMBIO: 3. Añadimos el nuevo enlace "Actualizaciones" y el badge.
+  // El badge se mostrará solo si 'notificationBadge' tiene contenido.
   return `
     <div class="wrap">
       <div class="qs-brand-shell">
@@ -143,6 +157,7 @@ function buildNavTemplate(basePath) {
           <a class="qs-btn" href="${basePath}asistencia.html">Asistencia</a>
           <a class="qs-btn" href="${basePath}calificaciones.html">Calificaciones</a>
           <a class="qs-btn" href="${basePath}Foro.html">Foro</a>
+          <a class="qs-btn nav-link-updates" href="${basePath}updates.html">Actualizaciones ${notificationBadge || ''}</a>
           <a class="qs-btn teacher-only" data-route="panel" href="${basePath}paneldocente.html" hidden aria-hidden="true">Panel</a>
         </nav>
       </div>
@@ -379,7 +394,8 @@ function shouldBypassAuth(href) {
   if (!trimmed) return true;
   const lower = trimmed.split("#")[0].split("?")[0].toLowerCase();
   if (!lower) return true;
-  if (lower === "login.html" || lower === "404.html") return true;
+  // Permitimos el acceso a 'updates.html' sin necesidad de autenticación.
+  if (lower === "updates.html" || lower === "login.html" || lower === "404.html") return true;
   if (/^https?:\/\//.test(trimmed)) return true;
   if (trimmed.startsWith("#")) return true;
   if (trimmed.startsWith("mailto:")) return true;
