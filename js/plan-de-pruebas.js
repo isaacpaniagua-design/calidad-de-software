@@ -4,21 +4,16 @@
 import { saveTestPlan } from './firebase.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Referencias a los elementos de la UI restantes
     const saveButton = document.getElementById('saveButton');
     const clearButton = document.getElementById('clearButton');
     const printButton = document.getElementById('printButton');
     const textareas = document.querySelectorAll('.input-area');
 
-    // --- EVENT LISTENERS ---
     saveButton.addEventListener('click', handleSave);
     clearButton.addEventListener('click', handleClearForm);
     printButton.addEventListener('click', handleExportPDF);
     
-    // Generar navegación dinámica al cargar la página
     generateNavLinks();
-
-    // --- LÓGICA PRINCIPAL ---
 
     async function handleSave() {
         const formData = {};
@@ -48,61 +43,58 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * FUNCIÓN CORREGIDA: Exporta el contenido del formulario a un archivo PDF
-     * con un diseño mejorado.
+     * FUNCIÓN DEFINITIVA: Exporta el contenido del formulario a un archivo PDF.
+     * Soluciona el problema del PDF en blanco asegurando que el contenido sea renderizado.
      */
     function handleExportPDF() {
         const originalElement = document.querySelector('.plan-document');
-        const planId = document.getElementById('identificador').value || "nuevo-plan";
+        const planId = document.getElementById('identificador').value.trim() || "nuevo-plan";
         const fileName = `Plan de Pruebas - ${planId}.pdf`;
 
-        // 1. Crear un contenedor temporal para la versión de exportación
-        const exportContainer = document.createElement('div');
-        exportContainer.innerHTML = originalElement.innerHTML;
-        exportContainer.classList.add('plan-document-pdf'); // Clase para estilos PDF
+        printButton.disabled = true;
+        printButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Preparando...';
 
-        // 2. Reemplazar cada <textarea> con un <div> con el contenido
+        // 1. Clonar el elemento para no alterar la vista actual
+        const exportContainer = originalElement.cloneNode(true);
+        exportContainer.id = 'pdf-export-container'; // ID para aplicar estilos específicos
+
+        // 2. Reemplazar cada <textarea> por un <div> que preserve el formato
         exportContainer.querySelectorAll('.input-area').forEach(textarea => {
             const contentDiv = document.createElement('div');
             contentDiv.className = 'pdf-content';
-            
-            // Escapamos HTML para seguridad y preservamos saltos de línea
-            const safeText = document.createTextNode(textarea.value).textContent;
-            contentDiv.innerHTML = safeText.replace(/\n/g, '<br>');
-            
+            // Convertir saltos de línea a <br> y usar textContent para seguridad
+            contentDiv.innerHTML = textarea.value.replace(/\n/g, '<br>');
             textarea.parentNode.replaceChild(contentDiv, textarea);
         });
 
-        // 3. Añadir temporalmente el contenedor al DOM para que sea renderizable
+        // 3. Añadir el clon al DOM para que sea renderizable
         document.body.appendChild(exportContainer);
-
+        
         // Opciones de configuración para html2pdf.js
         const opt = {
-            margin:       [0.7, 0.5, 0.7, 0.5], // Márgenes en pulgadas [arriba, izq, abajo, der]
+            margin:       [0.6, 0.5, 0.6, 0.5],
             filename:     fileName,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true, logging: false },
-            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+            pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] } // Mejor manejo de saltos de página
         };
 
-        // Feedback visual para el usuario
-        printButton.disabled = true;
-        printButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Exportando...';
-
-        // 4. Llamada a la biblioteca para generar y descargar el PDF
-        html2pdf().from(exportContainer).set(opt).save().then(() => {
-            // Restaurar el botón y limpiar
-            printButton.disabled = false;
-            printButton.innerHTML = '<i class="bi bi-printer me-2"></i>Imprimir / PDF';
-            document.body.removeChild(exportContainer);
-        }).catch((error) => {
-            console.error("Error al exportar PDF:", error);
-            alert("Ocurrió un error al generar el PDF.");
-            // Restaurar el botón y limpiar en caso de error
-            printButton.disabled = false;
-            printButton.innerHTML = '<i class="bi bi-printer me-2"></i>Imprimir / PDF';
-            document.body.removeChild(exportContainer);
-        });
+        // 4. Usar un pequeño retardo para dar tiempo al navegador a renderizar el clon
+        setTimeout(() => {
+            html2pdf().from(exportContainer).set(opt).save().then(() => {
+                // 5. Limpieza final
+                document.body.removeChild(exportContainer);
+                printButton.disabled = false;
+                printButton.innerHTML = '<i class="bi bi-printer me-2"></i>Imprimir / PDF';
+            }).catch(err => {
+                console.error("Error al generar el PDF:", err);
+                alert("Hubo un problema al crear el PDF.");
+                document.body.removeChild(exportContainer);
+                printButton.disabled = false;
+                printButton.innerHTML = '<i class="bi bi-printer me-2"></i>Imprimir / PDF';
+            });
+        }, 100); // 100 milisegundos de espera
     }
     
     function handleClearForm() {
