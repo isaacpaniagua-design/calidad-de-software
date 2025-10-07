@@ -175,3 +175,160 @@
     font-size: 11pt;
     color: #555;
 }
+
+:root {
+    --accent: #6366f1;
+    --surface: #ffffff;
+    --text-primary: #111827;
+}
+
+.plan-container {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.plan-sidebar {
+    position: sticky;
+    top: calc(var(--nav-h) + 24px); /* Anclado debajo de la barra de navegación */
+    height: fit-content;
+}
+
+.plan-sidebar h2, .plan-sidebar h3 {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.btn {
+    width: 100%;
+    text-align: left;
+    padding: 10px 14px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+.btn-primary { background-color: var(--accent); color: white; }
+.btn-primary:hover { background-color: #4f46e5; }
+.btn-secondary { background-color: #e5e7eb; color: #1f2937; }
+.btn-secondary:hover { background-color: #d1d5db; }
+.btn-outline-secondary { border-color: #d1d5db; color: #374151; }
+.btn-outline-secondary:hover { background-color: #f3f4f6; }
+
+.plan-document {
+    background: var(--surface);
+    padding: clamp(20px, 4vw, 50px);
+    border-radius: 12px;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
+}
+
+.plan-document .header {
+    text-align: center;
+    margin-bottom: 40px;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 20px;
+}
+
+.section { margin-bottom: 30px; }
+.section h2 { font-size: 1.3rem; margin-bottom: 12px; color: var(--accent); }
+
+.input-area {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+    line-height: 1.6;
+    resize: vertical;
+}
+.input-area:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    outline: none;
+}
+
+.modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    display: flex; align-items: center; justify-content: center; z-index: 2000;
+    backdrop-filter: blur(4px);
+}
+.modal-content {
+    background: white; width: 90%; max-width: 600px;
+    border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    overflow: hidden;
+}
+.modal-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 24px; border-bottom: 1px solid #e5e7eb;
+}
+.modal-close-btn { background: none; border: none; font-size: 1.8rem; cursor: pointer; }
+.modal-body { padding: 24px; max-height: 60vh; overflow-y: auto; }
+
+@media print {
+    body { background: white !important; }
+    .plan-sidebar, header[data-qs="navbar"], footer[data-qs="footer"], .modal-overlay { display: none !important; }
+    main.page-content, .plan-container { display: block !important; }
+    .plan-document { box-shadow: none; border: 1px solid #ccc; }
+}
+
+/* --- ESTILOS PARA LA EXPORTACIÓN A PDF (HTML2CANVAS) --- */
+
+#pdf-export-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    opacity: 0;
+    width: 8.5in;
+    background: #fff;
+    padding: 0.5in;
+    color: #000;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+#pdf-export-container .pdf-content {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    padding: 10px 12px;
+    border-radius: 4px;
+    font-size: 10pt;
+    line-height: 1.5;
+    color: #212529;
+    word-wrap: break-word;
+    min-height: 30px;
+}
+
+#pdf-export-container .section h2 {
+    font-size: 13pt;
+    font-weight: bold;
+    color: #1a237e;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 6px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+#pdf-export-container .header {
+    text-align: center;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 15px;
+    margin-bottom: 30px;
+}
+
+#pdf-export-container .header h1 {
+    font-size: 20pt;
+    color: #000;
+    margin: 0;
+}
+
+#pdf-export-container .header .subtitle {
+    font-size: 11pt;
+    color: #555;
+}
