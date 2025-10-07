@@ -1,9 +1,7 @@
 // js/plan-de-pruebas.js
 
-// Importamos únicamente la función de guardado
 import { saveTestPlan } from './firebase.js';
 
-// Usamos el objeto jspdf que se carga globalmente desde el script
 const { jsPDF } = window.jspdf;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -23,16 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
         textareas.forEach(textarea => {
             formData[textarea.id] = textarea.value;
         });
-
         const planId = formData.identificador;
         if (!planId || planId.trim() === '') {
             alert('El campo "Identificador del Plan de Pruebas" es obligatorio para guardar.');
             return;
         }
-
         saveButton.disabled = true;
         saveButton.textContent = 'Guardando...';
-
         try {
             await saveTestPlan(planId, formData);
             alert(`✅ Plan "${planId}" guardado con éxito.`);
@@ -46,8 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     /**
-     * FUNCIÓN FINAL CON LIBRERÍA JSPDF: Exporta el contenido a un PDF.
-     * Este método es el más confiable y definitivo.
+     * FUNCIÓN MEJORADA: Exporta a PDF con diseño y formato A3 para evitar cortes.
      */
     function handleExportPDF() {
         const originalElement = document.querySelector('.plan-document');
@@ -57,11 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
         printButton.disabled = true;
         printButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generando PDF...';
 
-        // 1. Clonamos el nodo para prepararlo para la exportación
         const exportContainer = originalElement.cloneNode(true);
         exportContainer.id = 'pdf-export-container';
 
-        // 2. Reemplazamos los textareas por divs para una mejor visualización
         exportContainer.querySelectorAll('.input-area').forEach(textarea => {
             const contentDiv = document.createElement('div');
             contentDiv.className = 'pdf-content';
@@ -69,40 +61,55 @@ document.addEventListener('DOMContentLoaded', () => {
             textarea.parentNode.replaceChild(contentDiv, textarea);
         });
 
-        // 3. Lo añadimos al cuerpo para que pueda ser renderizado por el navegador
         document.body.appendChild(exportContainer);
 
-        // 4. Usamos html2canvas para capturar el clon como una imagen de alta calidad
         html2canvas(exportContainer, {
-            scale: 2, // Mejora la resolución de la imagen de captura
+            scale: 2,
             useCORS: true,
             logging: false,
         }).then(canvas => {
             const imgData = canvas.toDataURL('image/png');
+            // CAMBIO: Usamos formato 'a3' para tener una hoja más larga
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'in',
-                format: 'letter'
+                format: 'a3' 
             });
 
-            // Dimensiones del PDF y del Canvas
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
-            const canvasWidth = canvas.width;
-            const canvasHeight = canvas.height;
-            const canvasRatio = canvasHeight / canvasWidth;
-            
-            // Calculamos la altura de la imagen en el PDF para que no se deforme
+            const canvasRatio = canvas.height / canvas.width;
             const imgHeight = pdfWidth * canvasRatio;
+            
             let heightLeft = imgHeight;
             let position = 0;
+            let page = 1;
 
-            // Agregamos la imagen (completa) al PDF en la primera página
+            // Función para añadir cabecera y pie de página
+            const addHeadersAndFooters = () => {
+                const pageCount = pdf.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    pdf.setPage(i);
+                    // -- Cabecera --
+                    pdf.setFillColor(45, 52, 71); // Color oscuro (#2d3447)
+                    pdf.rect(0, 0, pdfWidth, 0.5, 'F');
+                    pdf.setFontSize(14);
+                    pdf.setTextColor(255, 255, 255);
+                    pdf.setFont('helvetica', 'bold');
+                    pdf.text('Plan de Pruebas de Software', pdfWidth / 2, 0.3, { align: 'center' });
+
+                    // -- Pie de página --
+                    pdf.setFontSize(10);
+                    pdf.setTextColor(150);
+                    pdf.text(`Página ${i} de ${pageCount}`, pdfWidth / 2, pdfHeight - 0.3, { align: 'center' });
+                }
+            };
+
+            // Añadir la primera página
             pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
             heightLeft -= pdfHeight;
 
-            // Si el contenido es más largo que una página, creamos nuevas páginas
-            // y movemos la posición de la imagen hacia arriba para mostrar el resto
+            // Añadir páginas adicionales si es necesario
             while (heightLeft > 0) {
                 position = heightLeft - imgHeight;
                 pdf.addPage();
@@ -110,17 +117,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 heightLeft -= pdfHeight;
             }
 
-            // 5. Descargamos el PDF generado
+            // Añadir diseño a todas las páginas generadas
+            addHeadersAndFooters();
+
             pdf.save(fileName);
 
-            // 6. Limpiamos el DOM eliminando el clon y restauramos el botón
             document.body.removeChild(exportContainer);
             printButton.disabled = false;
             printButton.innerHTML = '<i class="bi bi-printer me-2"></i>Imprimir / PDF';
         }).catch(err => {
             console.error("Error al generar el PDF:", err);
-            alert("Hubo un problema al crear el PDF. Revisa la consola para más detalles.");
-            // Limpiamos y restauramos también en caso de error
+            alert("Hubo un problema al crear el PDF. Revisa la consola.");
             document.body.removeChild(exportContainer);
             printButton.disabled = false;
             printButton.innerHTML = '<i class="bi bi-printer me-2"></i>Imprimir / PDF';
