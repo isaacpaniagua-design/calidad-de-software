@@ -1,56 +1,84 @@
-/* css/plan-de-pruebas.css actualizado */
+/* css/plan-de-pruebas.css */
 
-/* --- NUEVO: Estilos para la estructura de la página --- */
+/* Variables de la plataforma que podríamos usar */
+:root {
+    --accent: #6366f1;
+    --surface: #ffffff;
+    --text-primary: #111827;
+}
+
 .plan-container {
-    display: flex;
-    flex-wrap: wrap; /* Permite que los elementos se muevan en pantallas pequeñas */
-    gap: 24px;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 32px;
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .plan-sidebar {
-    flex: 1 1 280px; /* Define el comportamiento flexible de la barra lateral */
-    max-width: 320px; /* Ancho máximo para la barra lateral */
-    position: sticky; /* Fija la barra lateral al hacer scroll */
-    top: 20px;
+    position: sticky;
+    top: calc(var(--nav-h) + 24px); /* Anclado debajo de la barra de navegación */
+    height: fit-content;
 }
 
+.plan-sidebar h2, .plan-sidebar h3 {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+/* Usando clases genéricas para botones y adaptándolas si es necesario */
+.btn {
+    width: 100%;
+    text-align: left;
+    padding: 10px 14px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+.btn-primary { background-color: var(--accent); color: white; }
+.btn-primary:hover { background-color: #4f46e5; }
+.btn-secondary { background-color: #e5e7eb; color: #1f2937; }
+.btn-secondary:hover { background-color: #d1d5db; }
+.btn-outline-secondary { border-color: #d1d5db; color: #374151; }
+.btn-outline-secondary:hover { background-color: #f3f4f6; }
+
 .plan-document {
-    flex: 2 1 600px; /* Permite que el documento principal ocupe más espacio */
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    padding: 24px 32px;
+    background: var(--surface);
+    padding: clamp(20px, 4vw, 50px);
+    border-radius: 12px;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
 }
 
 .plan-document .header {
     text-align: center;
-    margin-bottom: 2rem;
-    padding-bottom: 1rem;
+    margin-bottom: 40px;
     border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 20px;
 }
 
-.section {
-    margin-bottom: 2rem;
-}
-
-.section h2 {
-    font-size: 1.1rem;
-    margin-bottom: 0.75rem;
-}
+.section { margin-bottom: 30px; }
+.section h2 { font-size: 1.3rem; margin-bottom: 12px; color: var(--accent); }
 
 .input-area {
+    width: 100%;
     min-height: 120px;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 1rem;
+    line-height: 1.6;
+    resize: vertical;
 }
-/* --- FIN de nuevos estilos --- */
-
-
 .input-area:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
     outline: none;
 }
 
+/* Estilos para el Modal */
 .modal-overlay {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(15, 23, 42, 0.6);
@@ -69,72 +97,10 @@
 .modal-close-btn { background: none; border: none; font-size: 1.8rem; cursor: pointer; }
 .modal-body { padding: 24px; max-height: 60vh; overflow-y: auto; }
 
-
-/* --- IMPRESIÓN OPTIMIZADA PDF --- */
+/* Estilos para impresión */
 @media print {
-    @page {
-        size: A4;
-        margin: 20mm;
-    }
-
-    body {
-        background: white !important;
-        color: #000 !important;
-        font-size: 12pt;
-    }
-
-    header[data-qs="navbar"],
-    footer[data-qs="footer"],
-    .plan-sidebar,
-    #saveButton,
-    #clearButton,
-    #printButton,
-    .modal-overlay {
-        display: none !important;
-    }
-
-    main.page-content,
-    .plan-container {
-        display: block !important;
-        margin: 0;
-        padding: 0;
-    }
-
-    .plan-document {
-        box-shadow: none !important;
-        border: none !important;
-        width: 100%;
-        padding: 0;
-        margin: 0 auto;
-    }
-
-    .plan-document .header {
-        text-align: center;
-        border-bottom: 2px solid #444;
-        margin-bottom: 10mm;
-        padding-bottom: 5mm;
-        page-break-before: always;
-    }
-
-    .section {
-        margin-bottom: 12mm;
-        page-break-inside: avoid;
-    }
-
-    .section h2 {
-        color: #000 !important;
-        font-size: 1.2rem;
-        margin-bottom: 4mm;
-    }
-
-    .input-area {
-        border: 1px solid #ccc;
-        min-height: 40mm;
-        resize: none !important;
-        background: #fff;
-    }
-
-    .section:nth-child(5n) {
-        page-break-after: always;
-    }
+    body { background: white !important; }
+    .plan-sidebar, header[data-qs="navbar"], footer[data-qs="footer"], .modal-overlay { display: none !important; }
+    main.page-content, .plan-container { display: block !important; }
+    .plan-document { box-shadow: none; border: 1px solid #ccc; }
 }
