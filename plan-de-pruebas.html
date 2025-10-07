@@ -1,161 +1,116 @@
-/* css/plan-de-pruebas.css actualizado */
-:root {
-    --accent: #6366f1;
-    --surface: #ffffff;
-    --text-primary: #111827;
-}
+<!DOCTYPE html>
+<html lang="es" data-layout="global">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Plan de Pruebas · Plataforma QS</title>
 
-.plan-container {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 32px;
-    max-width: 1400px;
-    margin: 0 auto;
-}
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/plan-de-pruebas.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+    <header data-qs="navbar"></header>
 
-.plan-sidebar {
-    position: sticky;
-    top: calc(var(--nav-h) + 24px);
-    height: fit-content;
-}
+    <main class="page-content">
+        <div class="content-wrapper">
+            <div class="plan-container">
+                <aside class="plan-sidebar">
+                    <h2><i class="bi bi-tools me-2"></i>Acciones</h2>
+                    <div class="d-grid gap-2">
+                        <button id="saveButton" class="btn btn-primary"><i class="bi bi-cloud-arrow-up-fill me-2"></i>Guardar en Plataforma</button>
+                        <button id="clearButton" class="btn btn-outline-secondary"><i class="bi bi-trash2 me-2"></i>Limpiar</button>
+                        <button id="printButton" class="btn btn-outline-secondary"><i class="bi bi-printer me-2"></i>Imprimir / PDF</button>
+                    </div>
+                    <h3 class="mt-4 fs-5">Navegación</h3>
+                    <div class="d-grid gap-2" id="navigation-links"></div>
+                </aside>
 
-.plan-sidebar h2, .plan-sidebar h3 {
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 16px;
-}
+                <div class="plan-document">
+                    <div class="header">
+                        <h1>Formato de Plan de Pruebas</h1>
+                        <div class="subtitle">(Basado en IEEE 829)</div>
+                    </div>
 
-.btn {
-    width: 100%;
-    text-align: left;
-    padding: 10px 14px;
-    border-radius: 6px;
-    border: 1px solid transparent;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-.btn-primary { background-color: var(--accent); color: white; }
-.btn-primary:hover { background-color: #4f46e5; }
-.btn-outline-secondary { border-color: #d1d5db; color: #374151; }
-.btn-outline-secondary:hover { background-color: #f3f4f6; }
+                    <div class="section" id="section1">
+                        <h2>1. Identificador del Plan de Pruebas</h2>
+                        <textarea class="form-control input-area" id="identificador" placeholder="Ej: PP-MODULO_PAGOS-V1.0"></textarea>
+                    </div>
 
-.plan-document {
-    background: var(--surface);
-    padding: clamp(20px, 4vw, 50px);
-    border-radius: 12px;
-    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.05);
-}
+                    <div class="section" id="section2">
+                        <h2>2. Introducción y Referencias</h2>
+                        <textarea class="form-control input-area" id="introduccion" placeholder="Ej: Este documento cubre las pruebas para el módulo de pagos con tarjeta de crédito del proyecto E-commerce."></textarea>
+                    </div>
 
-.plan-document .header {
-    text-align: center;
-    margin-bottom: 40px;
-    border-bottom: 1px solid #e5e7eb;
-    padding-bottom: 20px;
-}
+                    <div class="section" id="section3">
+                        <h2>3. Características a Probar</h2>
+                        <textarea class="form-control input-area" id="caracteristicas_probar" placeholder="Ej: Procesamiento de pagos con Visa/Mastercard."></textarea>
+                    </div>
 
-.section { margin-bottom: 30px; }
-.section h2 { font-size: 1.3rem; margin-bottom: 12px; color: var(--accent); }
+                    <div class="section" id="section4">
+                        <h2>4. Características a NO Probar</h2>
+                        <textarea class="form-control input-area" id="caracteristicas_no_probar" placeholder="Ej: Pruebas de rendimiento o estrés del procesador de pagos."></textarea>
+                    </div>
 
-.input-area {
-    width: 100%;
-    min-height: 120px;
-    padding: 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 1rem;
-    line-height: 1.6;
-    resize: vertical;
-}
-.input-area:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-    outline: none;
-}
+                    <div class="section" id="section5">
+                        <h2>5. Enfoque de la Prueba</h2>
+                        <textarea class="form-control input-area" id="enfoque" placeholder="Ej: Se realizará un enfoque de pruebas funcionales de caja negra."></textarea>
+                    </div>
 
-.modal-overlay {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(15, 23, 42, 0.6);
-    display: flex; align-items: center; justify-content: center; z-index: 2000;
-    backdrop-filter: blur(4px);
-}
-.modal-content {
-    background: white; width: 90%; max-width: 600px;
-    border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    overflow: hidden;
-}
-.modal-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 16px 24px; border-bottom: 1px solid #e5e7eb;
-}
-.modal-close-btn { background: none; border: none; font-size: 1.8rem; cursor: pointer; }
-.modal-body { padding: 24px; max-height: 60vh; overflow-y: auto; }
+                    <div class="section" id="section6">
+                        <h2>6. Criterios de Pasa/Falla</h2>
+                        <textarea class="form-control input-area" id="criterios_pasa_falla" placeholder="Ej: Un caso de prueba se considera 'PASA' si el resultado coincide con el esperado."></textarea>
+                    </div>
 
-/* --- IMPRESIÓN OPTIMIZADA PDF --- */
-@media print {
-    @page {
-        size: A4;
-        margin: 20mm;
-    }
+                    <div class="section" id="section7">
+                        <h2>7. Criterios de Suspensión y Reanudación</h2>
+                        <textarea class="form-control input-area" id="suspension_reanudacion" placeholder="Ej: Suspensión: si hay un defecto bloqueante que impida el 40% de las pruebas."></textarea>
+                    </div>
 
-    body {
-        background: white !important;
-        color: #000 !important;
-        font-size: 12pt;
-    }
+                    <div class="section" id="section8">
+                        <h2>8. Entregables de la Prueba</h2>
+                        <textarea class="form-control input-area" id="entregables" placeholder="Ej: Plan de pruebas, casos de prueba, reportes de defectos, informe final."></textarea>
+                    </div>
 
-    header[data-qs="navbar"],
-    footer[data-qs="footer"],
-    .plan-sidebar,
-    #saveButton,
-    #clearButton,
-    #printButton,
-    .modal-overlay {
-        display: none !important;
-    }
+                    <div class="section" id="section9">
+                        <h2>9. Entorno de Pruebas</h2>
+                        <textarea class="form-control input-area" id="entorno" placeholder="Ej: URL: qa.mi-ecommerce.com. Navegadores: Chrome y Safari."></textarea>
+                    </div>
 
-    main.page-content,
-    .plan-container {
-        display: block !important;
-        margin: 0;
-        padding: 0;
-    }
+                    <div class="section" id="section10">
+                        <h2>10. Cronograma y Recursos</h2>
+                        <textarea class="form-control input-area" id="cronograma" placeholder="Ej: Diseño de casos de prueba del 01/10 al 03/10. Ejecución del 06/10 al 10/10."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 
-    .plan-document {
-        box-shadow: none !important;
-        border: none !important;
-        width: 100%;
-        padding: 0;
-        margin: 0 auto;
-    }
+    <footer data-qs="footer"></footer>
 
-    .plan-document .header {
-        text-align: center;
-        border-bottom: 2px solid #444;
-        margin-bottom: 10mm;
-        padding-bottom: 5mm;
-        page-break-before: always;
-    }
+    <div class="modal-overlay" id="loadPlanModal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Cargar Plan de Pruebas</h2>
+                <button class="modal-close-btn" id="closeModalButton">&times;</button>
+            </div>
+            <div class="modal-body" id="plan-list-container"></div>
+        </div>
+    </div>
 
-    .section {
-        margin-bottom: 12mm;
-        page-break-inside: avoid;
-    }
-
-    .section h2 {
-        color: #000 !important;
-        font-size: 1.2rem;
-        margin-bottom: 4mm;
-    }
-
-    .input-area {
-        border: 1px solid #ccc;
-        min-height: 40mm;
-        resize: none !important;
-        background: #fff;
-    }
-
-    .section:nth-child(5n) {
-        page-break-after: always;
-    }
-}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script type="module">
+    document.getElementById("printButton").addEventListener("click", () => {
+      const content = document.querySelector(".plan-document");
+      const opt = {
+        margin: 10,
+        filename: "plan-de-pruebas.pdf",
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+      };
+      html2pdf().set(opt).from(content).save();
+    });
+    </script>
+</body>
+</html>
