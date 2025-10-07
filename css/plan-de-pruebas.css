@@ -1,26 +1,69 @@
 /* css/plan-de-pruebas.css actualizado */
+
+/* --- Estructura del Plan de Pruebas --- */
+.plan-container {
+    display: flex;
+    flex-wrap: wrap; /* Permite que los elementos se ajusten en pantallas pequeñas */
+    gap: 24px;
+    align-items: flex-start;
 }
+
+.plan-sidebar {
+    flex: 1 1 280px; /* Flex-grow, flex-shrink, flex-basis */
+    max-width: 320px;
+    position: sticky; /* Se mantiene fijo al hacer scroll */
+    top: 20px;
+}
+
+.plan-document {
+    flex: 2 1 600px; /* Ocupa más espacio */
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    padding: 24px 32px;
+}
+
+.plan-document .header {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.section {
+    margin-bottom: 2rem;
+}
+
+.section h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+}
+
+.input-area {
+    min-height: 120px; /* Altura mínima para los campos de texto */
+}
+
 .input-area:focus {
-border-color: var(--accent);
-box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    outline: none;
 }
 
-
+/* --- Modal --- */
 .modal-overlay {
-position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-background: rgba(15, 23, 42, 0.6);
-display: flex; align-items: center; justify-content: center; z-index: 2000;
-backdrop-filter: blur(4px);
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    display: flex; align-items: center; justify-content: center; z-index: 2000;
+    backdrop-filter: blur(4px);
 }
 .modal-content {
-background: white; width: 90%; max-width: 600px;
-border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-overflow: hidden;
+    background: white; width: 90%; max-width: 600px;
+    border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    overflow: hidden;
 }
 .modal-header {
-display: flex; justify-content: space-between; align-items: center;
-padding: 16px 24px; border-bottom: 1px solid #e5e7eb;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 16px 24px; border-bottom: 1px solid #e5e7eb;
 }
 .modal-close-btn { background: none; border: none; font-size: 1.8rem; cursor: pointer; }
 .modal-body { padding: 24px; max-height: 60vh; overflow-y: auto; }
@@ -28,78 +71,69 @@ padding: 16px 24px; border-bottom: 1px solid #e5e7eb;
 
 /* --- IMPRESIÓN OPTIMIZADA PDF --- */
 @media print {
-@page {
-size: A4;
-margin: 20mm;
-}
+    @page {
+        size: A4;
+        margin: 20mm;
+    }
 
+    body {
+        background: white !important;
+        color: #000 !important;
+        font-size: 12pt;
+    }
 
-body {
-background: white !important;
-color: #000 !important;
-font-size: 12pt;
-}
+    header[data-qs="navbar"],
+    footer[data-qs="footer"],
+    .plan-sidebar,
+    #saveButton,
+    #clearButton,
+    #printButton,
+    .modal-overlay {
+        display: none !important;
+    }
 
+    main.page-content,
+    .plan-container {
+        display: block !important;
+        margin: 0;
+        padding: 0;
+    }
 
-header[data-qs="navbar"],
-footer[data-qs="footer"],
-.plan-sidebar,
-#saveButton,
-#clearButton,
-#printButton,
-.modal-overlay {
-display: none !important;
-}
+    .plan-document {
+        box-shadow: none !important;
+        border: none !important;
+        width: 100%;
+        padding: 0;
+        margin: 0 auto;
+    }
 
+    .plan-document .header {
+        text-align: center;
+        border-bottom: 2px solid #444;
+        margin-bottom: 10mm;
+        padding-bottom: 5mm;
+        page-break-before: always;
+    }
 
-main.page-content,
-.plan-container {
-display: block !important;
-margin: 0;
-padding: 0;
-}
+    .section {
+        margin-bottom: 12mm;
+        page-break-inside: avoid;
+    }
 
+    .section h2 {
+        color: #000 !important;
+        font-size: 1.2rem;
+        margin-bottom: 4mm;
+    }
 
-.plan-document {
-box-shadow: none !important;
-border: none !important;
-width: 100%;
-padding: 0;
-margin: 0 auto;
-}
+    .input-area {
+        border: 1px solid #ccc;
+        min-height: 40mm;
+        resize: none !important;
+        background: #fff;
+    }
 
-
-.plan-document .header {
-text-align: center;
-border-bottom: 2px solid #444;
-margin-bottom: 10mm;
-padding-bottom: 5mm;
-page-break-before: always;
-}
-
-
-.section {
-margin-bottom: 12mm;
-page-break-inside: avoid;
-}
-
-
-.section h2 {
-color: #000 !important;
-font-size: 1.2rem;
-margin-bottom: 4mm;
-}
-
-
-.input-area {
-border: 1px solid #ccc;
-min-height: 40mm;
-resize: none !important;
-background: #fff;
-}
-
-
-.section:nth-child(5n) {
-page-break-after: always;
-}
+    .section:nth-child(5n) {
+        page-break-after: always;
+    }
 }
