@@ -1,6 +1,6 @@
 /* css/plan-de-pruebas.css */
 
-/* Variables de la plataforma que podríamos usar */
+/* Variables de la plataforma */
 :root {
     --accent: #6366f1;
     --surface: #ffffff;
@@ -17,7 +17,7 @@
 
 .plan-sidebar {
     position: sticky;
-    top: calc(var(--nav-h) + 24px); /* Anclado debajo de la barra de navegación */
+    top: calc(var(--nav-h) + 24px);
     height: fit-content;
 }
 
@@ -27,7 +27,7 @@
     margin-bottom: 16px;
 }
 
-/* Usando clases genéricas para botones y adaptándolas si es necesario */
+/* Botones */
 .btn {
     width: 100%;
     text-align: left;
@@ -97,80 +97,73 @@
 .modal-close-btn { background: none; border: none; font-size: 1.8rem; cursor: pointer; }
 .modal-body { padding: 24px; max-height: 60vh; overflow-y: auto; }
 
-/* Estilos para impresión (Modo de impresión del navegador) */
+/* Estilos para impresión del navegador */
 @media print {
     body { background: white !important; }
-    .plan-sidebar, header[data-qs="navbar"], footer[data-qs="footer"], .modal-overlay, #saveButton, #clearButton, #printButton { 
-        display: none !important; 
-    }
-    main.page-content, .plan-container { 
-        display: block !important; 
-        grid-template-columns: 1fr;
-    }
-    .plan-document { 
-        box-shadow: none; 
-        border: 1px solid #ccc;
-        padding: 0;
-    }
+    .plan-sidebar, header[data-qs="navbar"], footer[data-qs="footer"], .modal-overlay, .btn { display: none !important; }
+    main.page-content, .plan-container { display: block !important; grid-template-columns: 1fr; }
+    .plan-document { box-shadow: none; border: 1px solid #ccc; padding: 0; }
 }
 
 
-/* --- ESTILOS DEFINITIVOS PARA LA EXPORTACIÓN A PDF (HTML2CANVAS) --- */
+/* --- ESTILOS MEJORADOS PARA LA EXPORTACIÓN A PDF --- */
 
-/* Contenedor que se usará para la captura.
-   La clave es posicionarlo fuera de la pantalla para forzar su renderizado completo.
-*/
 #pdf-export-container {
     position: absolute;
     top: 0;
-    left: -9999px; /* ¡ESTE ES EL CAMBIO CRUCIAL! */
-    width: 8.5in; /* Ancho de una hoja tamaño carta para que el texto se ajuste bien */
+    left: -9999px; /* Lo mueve fuera de la pantalla para forzar el renderizado */
+    width: 11in;  /* Ancho similar a A3 para un mejor flujo de texto */
     background: #fff;
-    padding: 0.5in;
-    color: #000;
+    /* Dejamos el padding para el JS que añade el header/footer */
+    padding: 0.8in 0.5in; 
     box-sizing: border-box;
-    font-family: Arial, sans-serif; /* Fuente estándar para documentos */
+    font-family: 'Helvetica', Arial, sans-serif;
+    color: #333;
 }
 
-/* Estilos para el contenido que reemplaza a los textareas en el PDF */
-#pdf-export-container .pdf-content {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    padding: 10px 12px;
-    border-radius: 4px;
-    font-size: 10pt;
-    line-height: 1.5;
-    color: #212932;
-    word-wrap: break-word;
-    min-height: 30px;
+/* Intenta evitar que una sección se corte entre páginas */
+#pdf-export-container .section {
+    page-break-inside: avoid;
 }
 
-/* Estilos para los títulos de las secciones en el PDF */
-#pdf-export-container .section h2 {
-    font-size: 13pt;
-    font-weight: bold;
-    color: #1a237e;
-    border-bottom: 2px solid #e0e0e0;
-    padding-bottom: 6px;
-    margin-top: 20px;
-    margin-bottom: 10px;
-}
-
-/* Estilos para la cabecera del documento en el PDF */
 #pdf-export-container .header {
     text-align: center;
-    border-bottom: 1px solid #ccc;
-    padding-bottom: 15px;
-    margin-bottom: 30px;
+    margin-bottom: 40px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #2d3447;
 }
 
 #pdf-export-container .header h1 {
-    font-size: 20pt;
-    color: #000;
+    font-size: 24pt;
+    color: #1a202c;
     margin: 0;
+    font-weight: bold;
 }
 
 #pdf-export-container .header .subtitle {
+    font-size: 12pt;
+    color: #718096;
+    margin-top: 5px;
+}
+
+#pdf-export-container .section h2 {
+    font-size: 16pt;
+    font-weight: bold;
+    color: #2d3447;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 8px;
+    margin-top: 25px;
+    margin-bottom: 15px;
+}
+
+#pdf-export-container .pdf-content {
+    background-color: #f7fafc;
+    border: 1px solid #e2e8f0;
+    border-left: 3px solid #6366f1; /* Borde de acento */
+    padding: 12px 15px;
+    border-radius: 4px;
     font-size: 11pt;
-    color: #555;
+    line-height: 1.6;
+    color: #4a5568;
+    word-wrap: break-word;
 }
