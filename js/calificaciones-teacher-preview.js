@@ -1,226 +1,168 @@
 // js/calificaciones-teacher-preview.js
-// Vista de estudiante para preview docente: llena #studentSelect si está vacío y pinta tabla qsp-*.
+// Vista de estudiante para preview docente: llena #studentSelect si está vacío y pinta la tabla de preview.
 
-import { initFirebase, getDb } from './firebase.js';
+import { getDb } from './firebase.js';
 import { buildCandidateDocIds } from './calificaciones-helpers.js';
+import { getDocs, query, collection, where } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 
-const $ = (s, r=document)=>r.querySelector(s);
-const $id = (id)=>document.getElementById(id);
-window.__teacherPreviewLoaded = true;
+const $id = (id) => document.getElementById(id);
 
-function ready(){
-  return new Promise((resolve) => {
-    if (/complete|interactive/.test(document.readyState)) {
-      resolve();
-    } else {
-      document.addEventListener('DOMContentLoaded', resolve, { once: true });
+/**
+ * Función principal que se llamará desde calificaciones-backend.js una vez que el usuario esté autenticado como docente.
+ */
+function initTeacherPreview(user, claims) {
+  // Si no es un docente, no hacemos nada en este script.
+  if (!claims || claims.role !== 'docente') {
+    return;
+  }
+  
+  console.log('[calificaciones-teacher-preview] Inicializado para docente.');
+  
+  const sel = $id('studentSelect'); // El dropdown principal de estudiantes
+  const selPreview = $id('qsp-student-select'); // El dropdown de la vista previa
+  
+  if (sel && selPreview) {
+    // Sincroniza el dropdown de la vista previa cuando cambia el principal
+    sel.addEventListener('change', () => {
+      selPreview.value = sel.value;
+      selPreview.dispatchEvent(new Event('change')); // Dispara el evento para cargar la tabla
+    });
+    
+    // Configura el listener para el dropdown de la vista previa
+    setupPreviewDropdown(selPreview);
+  }
+}
+
+// Hacemos la función de inicialización accesible globalmente
+window.initTeacherPreview = initTeacherPreview;
+
+
+// --- Lógica interna del Módulo ---
+
+/**
+ * Configura los eventos para el dropdown de la vista previa del docente.
+ */
+function setupPreviewDropdown(sel) {
+  const db = getDb();
+  
+  sel.addEventListener('change', async () => {
+    const matricula = sel.value;
+    const opt = sel.selectedOptions[0];
+    
+    // Construye el perfil del estudiante seleccionado para la consulta
+    const profile = {
+      uid: opt?.dataset?.uid || await resolverUidPorMatricula(db, matricula),
+      email: opt?.dataset?.email || null,
+      matricula: opt?.dataset?.matricula || matricula || null,
+    };
+
+    const tbody = $id('qsp-tbody');
+    if (!profile.uid && !profile.email && !profile.matricula) {
+      tbody.innerHTML = '<tr><td class="qsc-muted" colspan="6">No se encontró información para la selección.</td></tr>';
+      return;
+    }
+
+    try {
+      tbody.innerHTML = '<tr><td class="qsc-muted" colspan="6">Cargando...</td></tr>';
+      const items = await obtenerItemsAlumno(db, 'calidad-de-software-v2', profile);
+      renderItems(items);
+    } catch (err) {
+      console.error("[teacher-preview] Error obteniendo items de alumno:", err);
+      tbody.innerHTML = '<tr><td class="qsc-muted" colspan="6">Error al cargar las calificaciones.</td></tr>';
     }
   });
 }
 
-function fmtPct(n){ return (Number(n)||0).toFixed(2) + '%'; }
-function clampPct(n){ n = Number(n)||0; return Math.max(0, Math.min(100, n)); }
+/**
+ * Obtiene las calificaciones de un alumno específico.
+ */
+async function obtenerItemsAlumno(db, grupoId, profile) {
+    if (!grupoId || !profile) return [];
+    const candidateIds = buildCandidateDocIds(profile);
+    if (!candidateIds.length) return [];
 
-function resumenGlobal(items){
-  let porc=0, pond=0;
-  for(const it of items){
-    const max=Number(it.maxPuntos)||0, pts=Number(it.puntos)||0, pnd=Number(it.ponderacion)||0;
-    if (max>0) porc += (pts/max)*pnd;
-    pond += pnd;
-  }
-  return { porcentaje: clampPct(porc), pondSum: clampPct(pond) };
+    const q = query(
+        collection(db, 'calificaciones'),
+        where('grupoId', '==', grupoId),
+        where('alumnoId', 'in', candidateIds)
+    );
+
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({...d.data(), id: d.id }));
 }
 
-function ensureUI(root){
-  if ($id('student-preview')) return;
-  const wrap = document.createElement('section');
-  wrap.id = 'student-preview';
-  wrap.className = 'qsc-wrap qsc-compact teacher-only';
-  wrap.innerHTML = `
-    <h2 class="qsc-title" style="margin-bottom:10px">Vista de estudiante (preview docente)</h2>
-    <div class="qsc-kpis">
-      <div class="qsc-kpi"><span id="qsp-kpi-total">--%</span><small>Total</small></div>
-      <div class="qsc-kpi"><span id="qsp-kpi-items">0</span><small>Actividades</small></div>
-      <div class="qsc-kpi"><span id="qsp-kpi-pond">0%</span><small>Peso cubierto</small></div>
-    </div>
-    <div class="qsc-bar"><div id="qsp-bar-fill" class="qsc-bar-fill"></div></div>
-    <div class="qsc-table-wrap" style="margin-top:12px">
-      <table class="qsc-table">
-        <thead><tr>
-          <th>Actividad</th><th>Puntos</th><th>Máx</th>
-          <th>Ponderación</th><th>Aporta al final</th><th>Fecha</th>
-        </tr></thead>
-        <tbody id="qsp-tbody"><tr><td class="qsc-muted" colspan="6">Selecciona un alumno…</td></tr></tbody>
-      </table>
-    </div>`;
-  const anchor = root.querySelector('.qsc-wrap');
-  if (anchor && anchor.parentNode) {
-    anchor.parentNode.replaceChild(wrap, anchor);
-  } else if (root && typeof root.appendChild === 'function') {
-    root.appendChild(wrap);
-  } else {
-    document.body.appendChild(wrap);
+/**
+ * Renderiza la tabla de calificaciones en la vista previa.
+ */
+function renderItems(items) {
+  const tbody = $id('qsp-tbody');
+  if (!items || !items.length) {
+    tbody.innerHTML = '<tr><td class="qsc-muted" colspan="6">Sin actividades registradas aún.</td></tr>';
+    return;
   }
-}
+  
+  // Lógica de renderizado (tomada de tu archivo original)
+  const resumen = resumenGlobal(items);
+  $id('qsc-kpi-total-preview').textContent = fmtPct(resumen.porcentaje);
+  $id('qsc-kpi-pond-preview').textContent = fmtPct(resumen.pondSum);
+  $id('qsc-kpi-items-preview').textContent = items.length;
+  $id('qsc-bar-fill-preview').style.width = fmtPct(resumen.porcentaje);
 
-function renderQsp(items){
-  const tbody=$id('qsp-tbody'), kpiT=$id('qsp-kpi-total'), kpiI=$id('qsp-kpi-items'), kpiP=$id('qsp-kpi-pond'), bar=$id('qsp-bar-fill');
-  const { porcentaje, pondSum } = resumenGlobal(items);
-  if(kpiT) kpiT.textContent = fmtPct(porcentaje);
-  if(kpiI) kpiI.textContent = String(items.length);
-  if(kpiP) kpiP.textContent = fmtPct(pondSum);
-  if(bar) bar.style.width = porcentaje.toFixed(2) + '%';
+  let html = '';
+  for (const it of items) {
+    const max = Number(it.maxPuntos) || 0;
+    const pts = Number(it.puntos) || 0;
+    const pnd = Number(it.ponderacion) || 0;
+    const porc = max > 0 ? (pts / max) * 100 : 0;
+    const status = porc > 1 ? 'done' : 'pending';
+    const unidad = inferUnidad(it) || '-';
 
-  if (!tbody) return;
-  tbody.innerHTML='';
-  if(!items.length){ tbody.innerHTML = `<tr><td class="qsc-muted" colspan="6">Sin actividades registradas aún.</td></tr>`; return; }
-  for(const it of items){
-    const max=Number(it.maxPuntos)||0, pts=Number(it.puntos)||0, pnd=Number(it.ponderacion)||0;
-    const aporta = max>0 ? (pts/max)*pnd : 0;
-    const fecha = (()=>{ try{ const d = it.fecha?.toDate ? it.fecha.toDate() : (it.fecha instanceof Date ? it.fecha : null); return d? d.toLocaleDateString() : '—'; } catch(_){ return '—'; } })();
-    tbody.insertAdjacentHTML('beforeend', `
+    html += `
       <tr>
-        <td>${it.nombre||it.title||'Actividad'}</td>
-        <td>${pts}</td>
-        <td>${max}</td>
-        <td>${pnd}%</td>
-        <td>${(Number(aporta)||0).toFixed(2)}%</td>
-        <td>${fecha}</td>
-      </tr>`);
+        <td class="qsc-cell-main">
+          <span class="qsc-status qsc-status--${status}"></span>
+          <span>${it.actividad || 'Actividad'}</span>
+        </td>
+        <td>${it.tipo || 'Tarea'}</td>
+        <td style="text-align:center;">${unidad}</td>
+        <td style="text-align:right;">${(it.puntos || 0).toFixed(1)}</td>
+        <td style="text-align:right;">${(it.maxPuntos || 0).toFixed(1)}</td>
+        <td style="text-align:right;">${fmtPct(pnd)}</td>
+      </tr>
+    `;
   }
+  tbody.innerHTML = html;
 }
 
-// --- Firestore helpers
-async function resolverUidPorMatricula(db, matricula){
-  try{
-  // Importar Firestore desde la misma versión que firebase.js (10.12.3) para evitar
-  // incompatibilidades con las instancias de Firestore.
-  const { collection, getDocs, query, where } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js');
-    const s = await getDocs(query(collection(db,'users'), where('matricula','==', String(matricula))));
-    if(!s.empty) return s.docs[0].id;
-  }catch(e){ console.warn('[preview] resolverUidPorMatricula', e); }
+// --- Funciones de Ayuda (Helper) ---
+
+async function resolverUidPorMatricula(db, matricula) {
+    if (!matricula) return null;
+    try {
+        const q = query(collection(db, 'students'), where('matricula', '==', matricula));
+        const snap = await getDocs(q);
+        if (snap.empty) return null;
+        return snap.docs[0].id; // El ID del documento del estudiante es el UID
+    } catch (e) {
+        return null;
+    }
+}
+
+function resumenGlobal(items) {
+    let porc = 0, pond = 0;
+    for (const it of items) {
+        const max = Number(it.maxPuntos) || 0, pts = Number(it.puntos) || 0, pnd = Number(it.ponderacion) || 0;
+        if (max > 0) porc += (pts / max) * pnd;
+        pond += pnd;
+    }
+    return { porcentaje: clampPct(porc), pondSum: clampPct(pond) };
+}
+
+function fmtPct(n) { return (Number(n) || 0).toFixed(2) + '%'; }
+function clampPct(n) { n = Number(n) || 0; return Math.max(0, Math.min(100, n)); }
+function inferUnidad(it) {
+  if (it && it.unidad != null) return Number(it.unidad);
+  const n = String(it.actividad || '').trim().charAt(0);
+  if (n >= '1' && n <= '6') return Number(n);
   return null;
 }
-async function obtenerItemsAlumno(db, grupoId, profile){
-  const { collection, doc, getDoc, getDocs, query, orderBy } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js');
-
-  const candidates = buildCandidateDocIds(profile);
-  for (let i = 0; i < candidates.length; i++) {
-    try {
-      const ref = doc(db, 'grupos', grupoId, 'calificaciones', candidates[i]);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        const data = snap.data() || {};
-        if (Array.isArray(data.items)) {
-          return data.items.map(item => Object.assign({}, item));
-        }
-      }
-    } catch (err) {
-      console.warn('[preview] obtenerItemsAlumno(doc)', err);
-    }
-  }
-
-  const uid = profile && profile.uid ? profile.uid : null;
-  if (!uid) return [];
-  try {
-    const calificacionRef = doc(db, 'grupos', grupoId, 'calificaciones', uid);
-    const base = collection(calificacionRef, 'items');
-    const snap = await getDocs(query(base, orderBy('fecha','asc')));
-    return snap.docs.map(d=>({id:d.id, ...d.data()}));
-  } catch (err) {
-    console.warn('[preview] obtenerItemsAlumno(legacy)', err);
-    return [];
-  }
-}
-
-async function fetchStudentList(db, grupoId){
-  // 1) lista local si existe
-  if (Array.isArray(window.students) && window.students.length){
-    return window.students.map(s=>({ uid: s.uid||null, matricula: s.id||s.matricula||null, displayName: s.name||s.displayName||'Alumno', email: s.email||'' }));
-  }
-  // 2) Firestore: courses/grupos/users
-  const out=[]; const seen=new Set();
-  async function pushFrom(qSnap){
-    qSnap.forEach(d=>{
-      const m=d.data()||{}; const uid=d.id;
-      const matricula=m.matricula||null;
-      const displayName=m.displayName||m.nombre||'Alumno';
-      const email=m.email||'';
-      const key=uid||`${matricula}|${email}`;
-      if(!seen.has(key)){ seen.add(key); out.push({uid, matricula, displayName, email}); }
-    });
-  }
-  try{
-    const { collection, doc, getDocs, query, where } = await import('https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js');
-    // Para evitar pasar rutas con barras ("/") a collection(), construimos una referencia
-    // al documento y luego solicitamos la subcolección 'members'.
-    let s;
-    try {
-      const courseRef = doc(db, 'courses', grupoId);
-      const courseMembers = collection(courseRef, 'members');
-      s = await getDocs(query(courseMembers, where('role','==','student')));
-      if(!s.empty) await pushFrom(s);
-    } catch (_){ /* ignorar */ }
-    try {
-      const grupoRef = doc(db, 'grupos', grupoId);
-      const grupoMembers = collection(grupoRef, 'members');
-      s = await getDocs(query(grupoMembers, where('role','==','student')));
-      if(!s.empty) await pushFrom(s);
-    } catch (_){ /* ignorar */ }
-    if(!out.length){ s = await getDocs(query(collection(db,'users'), where('role','==','student'))); if(!s.empty) await pushFrom(s); }
-  }catch(_){}
-  return out;
-}
-
-async function main(){
-  await ready();
-  initFirebase();
-  const db = getDb();
-  const root = $id('calificaciones-root') || document.body;
-  const params = new URLSearchParams(location.search);
-  const GRUPO_ID = (root?.dataset?.grupo || params.get('grupo') || 'calidad-2025').trim();
-
-  ensureUI(root);
-
-  const sel = $id('studentSelect');
-  if (sel){
-    // Poblar si está vacío o solo tiene el placeholder
-    if (sel.options.length <= 1){
-      sel.innerHTML = `<option value="">-- Seleccione un estudiante --</option>`;
-      const list = await fetchStudentList(db, GRUPO_ID);
-      list.sort((a,b)=> (a.displayName||'').localeCompare(b.displayName||''));
-      for(const m of list){
-        const opt = document.createElement('option');
-        opt.textContent = m.displayName ? `${m.displayName} · ${m.email||m.matricula||m.uid}` : (m.email||m.matricula||m.uid||'Alumno');
-        opt.value = m.matricula || m.uid || m.email || '';
-        if (m.uid) opt.dataset.uid = m.uid;
-        if (m.email) opt.dataset.email = m.email;
-        if (m.matricula) opt.dataset.matricula = m.matricula;
-        sel.appendChild(opt);
-      }
-    }
-
-    sel.addEventListener('change', async ()=>{
-      const matricula = sel.value;
-      const opt = sel.selectedOptions[0];
-      const profile = {
-        uid: opt?.dataset?.uid || await resolverUidPorMatricula(db, matricula),
-        email: opt?.dataset?.email || null,
-        matricula: opt?.dataset?.matricula || matricula || null,
-      };
-      if(!profile.uid && !profile.email && !profile.matricula){
-        $id('qsp-tbody').innerHTML='<tr><td class="qsc-muted" colspan="6">No se encontró información para la selección.</td></tr>';
-        return;
-      }
-      try{
-        const items = await obtenerItemsAlumno(db, GRUPO_ID, profile);
-        renderQsp(items);
-      }catch(e){
-        console.error('[preview] obtenerItemsAlumno', e);
-        $id('qsp-tbody').innerHTML='<tr><td class="qsc-muted" colspan="6">Error al cargar datos.</td></tr>';
-      }
-    });
-  }
-}
-
-main().catch(console.error);
