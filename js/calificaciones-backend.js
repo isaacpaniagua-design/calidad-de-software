@@ -3,16 +3,16 @@
 import { getDb, onAuth } from './firebase.js';
 import { collection, getDocs, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 
-// Importa las funciones de inicialización de los otros módulos
+// Importa TODAS las funciones de inicialización de los otros módulos
 import { initStudentUploads } from './student-uploads.js';
 import { initTeacherSync } from './calificaciones-teacher-sync.js';
 import { initTeacherPreview } from './calificaciones-teacher-preview.js';
-
+import { initUploadsUI } from './calificaciones-uploads-ui.js';
 
 const db = getDb();
 const COURSE_ID = "calidad-de-software-v2";
 let students = [];
-let isAppInitialized = false; // <-- NUEVA BANDERA DE CONTROL
+let isAppInitialized = false; // Bandera de control para evitar doble inicialización
 
 // --- Carga de Datos Segura ---
 async function fetchStudents() {
@@ -30,6 +30,26 @@ async function fetchStudents() {
 }
 
 // --- Gestión de Calificaciones ---
+async function saveGradesToFirestore(studentId) {
+    if (!studentId) return false;
+    const gradesData = {};
+    document.querySelectorAll(".grade-input, .project-grade-input").forEach(input => {
+        const activityId = input.dataset.activityId;
+        if (activityId) {
+            gradesData[activityId] = input.value || "0";
+        }
+    });
+
+    try {
+        const gradesDocRef = doc(db, "courses", COURSE_ID, "grades", studentId);
+        await setDoc(gradesDocRef, gradesData, { merge: true });
+        return true;
+    } catch (error) {
+        console.error("Error al guardar calificaciones:", error);
+        return false;
+    }
+}
+
 async function loadGradesFromFirestore(studentId) {
     const clearUI = () => window.clearAllGrades && window.clearAllGrades();
     const calculateUI = () => {
@@ -73,7 +93,7 @@ window.populateStudentDropdown = (studentList) => {
 };
 
 // --- Punto de Entrada y Orquestación ---
-function initializeEventListeners() {
+function initializePageEventListeners() {
     const studentSelect = document.getElementById("studentSelect");
     if (studentSelect) {
         studentSelect.addEventListener("change", function () {
@@ -91,36 +111,65 @@ function initializeEventListeners() {
             }
         });
     }
+
+    const saveButton = document.getElementById("saveGradesBtn");
+    if (saveButton) {
+        saveButton.addEventListener("click", async () => {
+            const statusEl = document.getElementById("saveGradesStatus");
+            const showStatus = (message, isError) => {
+                 if (!statusEl) return;
+                 statusEl.textContent = message;
+                 statusEl.classList.remove("hidden");
+                 statusEl.classList.toggle("text-red-600", !!isError);
+                 statusEl.classList.toggle("text-emerald-600", !isError);
+                 setTimeout(() => statusEl.classList.add("hidden"), 4000);
+            };
+
+            const studentId = document.getElementById("studentId").value;
+            if (!studentId) {
+                showStatus("Selecciona un estudiante antes de guardar.", true);
+                return;
+            }
+            saveButton.disabled = true;
+            saveButton.textContent = "Guardando...";
+            const success = await saveGradesToFirestore(studentId);
+            showStatus(success ? "Calificaciones guardadas en la nube." : "Error al guardar.", !success);
+            saveButton.disabled = false;
+            saveButton.textContent = "Guardar Cambios";
+        });
+    }
 }
 
-// --- PUNTO DE ENTRADA ---
+// --- PUNTO DE ENTRADA ÚNICO DE LA APLICACIÓN ---
 document.addEventListener('DOMContentLoaded', () => {
-    initializeEventListeners();
+    initializePageEventListeners();
     
     onAuth((user, claims) => {
-        // Si no hay usuario, no hacemos nada más.
         if (!user || !claims) {
             console.log("Usuario no autenticado, auth-guard.js debería actuar.");
+            isAppInitialized = false;
             return;
         }
 
-        // --- ¡CLAVE! ---
-        // Usamos la bandera para asegurar que la inicialización ocurra UNA SOLA VEZ.
         if (isAppInitialized) {
             return;
         }
         isAppInitialized = true;
         
-        console.log(`Usuario autenticado como: ${claims.role}. Inicializando aplicación...`);
+        console.log(`Usuario autenticado como: ${claims.role}. Inicializando todos los módulos...`);
 
-        // Llama a los inicializadores de OTROS scripts.
-        initStudentUploads(user, claims);
+        // Llama a TODOS los inicializadores
         initTeacherSync(user, claims);
         initTeacherPreview(user, claims);
+        initStudentUploads(user, claims);
+        initUploadsUI(user, claims);
 
+        // Lógica específica de esta página
         if (claims.role === 'docente') {
+            document.body.classList.add('role-teacher');
             fetchStudents();
         } else {
+            document.body.classList.remove('role-teacher');
             const teacherUI = document.querySelector('.teacher-only');
             if(teacherUI) teacherUI.style.display = 'none';
             loadGradesFromFirestore(user.uid);
