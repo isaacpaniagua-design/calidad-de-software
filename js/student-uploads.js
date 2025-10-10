@@ -2,11 +2,22 @@ import { initFirebase, getDb, getStorageInstance } from "./firebase.js";
 import { notifyTeacherAboutStudentUpload } from "./email-notifications.js";
 import { getPrimaryDocId } from "./calificaciones-helpers.js";
 import {
-  collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot, doc, updateDoc, getDoc, setDoc, deleteDoc,
+  collection,
+  addDoc,
+  serverTimestamp,
+  query,
+  where,
+  orderBy,
+  onSnapshot,
+  doc,
+  updateDoc,
+  getDoc,
+  setDoc,
+  deleteDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 import { ref as storageRef, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
 
-initFirebase();
+// La llamada a initFirebase() se elimina de aquí, se asume que el orquestador principal la llama.
 const db = getDb();
 const uploadsCollection = collection(db, "studentUploads");
 
@@ -17,7 +28,6 @@ const KIND_TO_LABEL = {
   homework: "Tarea",
   evidence: "Evidencia",
 };
-
 function sanitizeGroupId(value) {
   if (!value) return DEFAULT_GROUP_ID;
   const trimmed = String(value).trim();
@@ -254,6 +264,11 @@ function isPermissionDenied(error) {
 function logSnapshotError(context, error) {
   if (isPermissionDenied(error)) {
     console.warn(`${context}:permission-denied`, error);
+  } else {
+    console.error(`${context}:error`, error);
+  }
+}
+    
 function resolveUploadStorageInfo(upload = {}) {
   const extra = upload && typeof upload === "object" ? upload.extra || {} : {};
   const storagePath =
@@ -643,23 +658,30 @@ export async function deleteStudentUpload(uploadOrId) {
 function initStudentUploads(user, claims) {
     if (!user || !claims) return;
     
-    // La lógica que antes se autoejecutaba ahora es controlada desde calificaciones-backend.js
     if (claims.role === 'docente') {
-        // La llamada a observeAllStudentUploads necesita un callback para hacer algo con los datos.
-        // Si la intención es solo mostrar en consola, se puede dejar así, pero usualmente
-        // querrías actualizar la UI. Por ahora, lo dejamos como estaba.
         observeAllStudentUploads(
-            (items) => { /* console.log('Uploads del docente:', items) */ },
-            (error) => { console.error('Error observando uploads del docente:', error); }
+            (items) => { /* Lógica de UI para el docente */ },
+            (error) => { logSnapshotError('init:observeAllStudentUploads', error); }
         );
     } else {
         observeStudentUploads(
             user.uid,
-            (items) => { /* console.log('Mis uploads:', items) */ },
-            (error) => { console.error('Error observando mis uploads:', error); }
+            (items) => { /* Lógica de UI para el estudiante */ },
+            (error) => { logSnapshotError('init:observeStudentUploads', error); }
         );
     }
 }
 
-// Exportamos la función de inicialización y las otras que puedan ser útiles
-export { createStudentUpload, observeStudentUploads, observeAllStudentUploads, gradeStudentUpload, deleteStudentUpload, markStudentUploadAccepted, initStudentUploads };
+
+// --- BLOQUE ÚNICO DE EXPORTACIÓN ---
+// Aquí se listan todas las funciones que este módulo ofrece a otros archivos.
+export {
+  createStudentUpload,
+  observeStudentUploads,
+  observeStudentUploadsByEmail,
+  observeAllStudentUploads,
+  markStudentUploadAccepted,
+  gradeStudentUpload,
+  deleteStudentUpload,
+  initStudentUploads
+};
