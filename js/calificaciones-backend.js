@@ -134,14 +134,3 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-const teacherUI = document.querySelector('.teacher-only');
-                if(teacherUI) teacherUI.style.display = 'none';
-                loadGradesFromFirestore(user.uid);
-            }
-        } else {
-            console.log("Usuario no autenticado, auth-guard.js debería actuar.");
-            window.populateStudentDropdown([]);
-            if(window.clearAllGrades) window.clearAllGrades();
-        }
-    });
-});
