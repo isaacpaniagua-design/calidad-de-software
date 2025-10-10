@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía de Despliegue - Solución de Autenticación</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .step {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        
+        .step h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .step h3 {
+            color: #555;
+            margin: 15px 0 10px 0;
+            font-size: 1.2em;
+        }
+        
+        .step ol, .step ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .step li {
+            margin-bottom: 8px;
+        }
+        
+        .code {
+            background: #2d3748;
+            color: #a0aec0;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .code-inline {
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .alert {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+        
+        .alert-danger {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+        
+        .alert strong {
+            font-weight: 600;
+        }
+        
+        .checklist {
+            list-style: none;
+            margin-left: 0;
+        }
+        
+        .checklist li::before {
+            content: '✓ ';
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 30px 40px;
+            text-align: center;
+            color: #666;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        
+        .button:hover {
+            background: #5a67d8;
+        }
+        
+        .button-secondary {
+            background: #6c757d;
+        }
+        
+        .button-secondary:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Guía de Despliegue</h1>
+            <p>Solución de problemas de autenticación</p>
+        </div>
+        
+        <div class="content">
+            <div class="alert alert-danger">
+                <strong>⚠️ Importante:</strong> Esta guía debe seguirse para que los docentes y estudiantes puedan acceder al sistema correctamente.
+            </div>
+            
+            <div class="step">
+                <h2>📋 Paso 1: Actualizar reglas de Firestore</h2>
+                <p>Las reglas de seguridad de Firestore deben actualizarse para soportar múltiples métodos de autenticación.</p>
+                
+                <h3>Opción A: Usar script de despliegue (recomendado)</h3>
+                <div class="code">
+# En Linux/Mac:
+./tools/deploy-firestore-rules.sh
+
+# En Windows:
+tools\deploy-firestore-rules.bat
+                </div>
+                
+                <h3>Opción B: Firebase CLI directamente</h3>
+                <div class="code">
+# Primero, inicia sesión si no lo has hecho
+firebase login
+
+# Despliega las reglas
+firebase deploy --only firestore:rules
+                </div>
+                
+                <h3>Opción C: Manualmente desde Firebase Console</h3>
+                <ol>
+                    <li>Ve a <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a></li>
+                    <li>Selecciona el proyecto "calidad-de-software-v2"</li>
+                    <li>Ve a <strong>Firestore Database</strong> → <strong>Rules</strong></li>
+                    <li>Copia el contenido del archivo <span class="code-inline">tools/firestore.rules</span></li>
+                    <li>Pega en el editor y presiona <strong>Publish</strong></li>
+                </ol>
+            </div>
+            
+            <div class="step">
+                <h2>👤 Paso 2: Configurar docente principal</h2>
+                <p>El docente <span class="code-inline">isaac.paniagua@potros.itson.edu.mx</span> ya está configurado en el código. Para que funcione inmediatamente:</p>
+                
+                <h3>Método automático (recomendado):</h3>
+                <ol>
+                    <li>El docente debe iniciar sesión en la aplicación</li>
+                    <li>El sistema creará automáticamente el documento en Firestore</li>
+                    <li>Si hay problemas, continúa con el método manual</li>
+                </ol>
+                
+                <h3>Método manual:</h3>
+                <ol>
+                    <li>Ve a <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a></li>
+                    <li>Ve a <strong>Authentication</strong> → <strong>Users</strong></li>
+                    <li>Busca el usuario y copia su <strong>UID</strong></li>
+                    <li>Ve a <strong>Firestore Database</strong></li>
+                    <li>Crea la colección <span class="code-inline">teachers</span> si no existe</li>
+                    <li>Agrega un documento con ID = UID del docente</li>
+                    <li>Campos del documento:</li>
+                </ol>
+                
+                <div class="code">
+{
+  "email": "isaac.paniagua@potros.itson.edu.mx",
+  "name": "Isaac Paniagua",
+  "createdAt": [timestamp actual]
+}
+                </div>
+            </div>
+            
+            <div class="step">
+                <h2>🔑 Paso 3: Verificar dominios autorizados</h2>
+                <p>Asegúrate de que el dominio donde está desplegada la app esté autorizado:</p>
+                
+                <ol>
+                    <li>Ve a <a href="https://console.firebase.google.com/" target="_blank">Firebase Console</a></li>
+                    <li>Ve a <strong>Authentication</strong> → <strong>Settings</strong> → <strong>Authorized domains</strong></li>
+                    <li>Verifica que estos dominios estén en la lista:
+                        <ul>
+                            <li><span class="code-inline">localhost</span></li>
+                            <li><span class="code-inline">calidad-de-software-v2.web.app</span></li>
+                            <li><span class="code-inline">calidad-de-software-v2.firebaseapp.com</span></li>
+                            <li>Cualquier dominio personalizado que uses</li>
+                        </ul>
+                    </li>
+                    <li>Si falta alguno, agrégalo con <strong>Add domain</strong></li>
+                </ol>
+            </div>
+            
+            <div class="step">
+                <h2>✅ Paso 4: Verificar despliegue</h2>
+                <p>Después de desplegar, verifica que todo funcione correctamente:</p>
+                
+                <h3>Como docente:</h3>
+                <ul class="checklist">
+                    <li>Puedes iniciar sesión</li>
+                    <li>Puedes acceder a <span class="code-inline">paneldocente.html</span></li>
+                    <li>Puedes ver y editar calificaciones</li>
+                    <li>Puedes subir materiales</li>
+                    <li>Puedes ver todas las asistencias</li>
+                </ul>
+                
+                <h3>Como estudiante:</h3>
+                <ul class="checklist">
+                    <li>Puede iniciar sesión con cuenta <span class="code-inline">@potros.itson.edu.mx</span></li>
+                    <li>Puede ver materiales</li>
+                    <li>Puede registrar asistencia</li>
+                    <li>Puede ver sus propias calificaciones</li>
+                    <li>Puede participar en el foro</li>
+                </ul>
+            </div>
+            
+            <div class="step">
+                <h2>➕ Agregar más docentes (opcional)</h2>
+                <p>Para agregar más docentes después del despliegue inicial:</p>
+                
+                <h3>Método 1: Lista dinámica en Firestore (sin código)</h3>
+                <ol>
+                    <li>Ve a <strong>Firestore Database</strong></li>
+                    <li>Crea/actualiza el documento <span class="code-inline">config/teacherAllowlist</span></li>
+                    <li>Agrega un campo <span class="code-inline">emails</span> (tipo: array)</li>
+                    <li>Agrega los correos de los docentes (en minúsculas)</li>
+                </ol>
+                
+                <h3>Método 2: Actualizar código</h3>
+                <ol>
+                    <li>Edita <span class="code-inline">js/firebase-config.js</span> → <span class="code-inline">allowedTeacherEmails</span></li>
+                    <li>Edita <span class="code-inline">tools/firestore.rules</span> → función <span class="code-inline">allowedTeacherEmails()</span></li>
+                    <li>Despliega las reglas: <span class="code-inline">firebase deploy --only firestore:rules</span></li>
+                </ol>
+            </div>
+            
+            <div class="alert alert-success">
+                <strong>✅ ¡Listo!</strong> El sistema ahora debe funcionar correctamente para docentes y estudiantes.
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="../docs/SOLUCION_AUTENTICACION.md" class="button">📖 Documentación Completa</a>
+                <a href="../docs/TROUBLESHOOTING.md" class="button button-secondary">🔧 Guía de Problemas</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>¿Necesitas ayuda?</strong></p>
+            <p>Consulta la documentación técnica en <span class="code-inline">docs/SOLUCION_AUTENTICACION.md</span></p>
+            <p style="margin-top: 15px; font-size: 0.9em; color: #999;">
+                Plataforma QS - Calidad de Software · ITSON
+            </p>
+        </div>
+    </div>
+</body>
+</html>
