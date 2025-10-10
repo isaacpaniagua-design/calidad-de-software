@@ -650,3 +650,16 @@ export async function deleteStudentUpload(uploadOrId) {
 
   await deleteDoc(ref);
 }
+
+function initStudentUploads(user, claims) {
+    if (!user || !claims) return;
+    
+    // La lógica original que se ejecutaba sola ahora se llama desde aquí.
+    if (claims.role === 'docente') {
+        observeAllStudentUploads();
+    } else {
+        observeStudentUploads(user.uid);
+    }
+}
+
+window.initStudentUploads = initStudentUploads;
