@@ -12,55 +12,153 @@ service cloud.firestore {
     function getUserRole() {
       return request.auth.token.role;
     }
+    
+    // Lista estática de correos de docentes autorizados
+    function allowedTeacherEmails() {
+      return [
+        "isaac.paniagua@potros.itson.edu.mx"
+      ];
+    }
+    
+    // Función para verificar si un usuario es docente
+    // Verifica tanto el Custom Claim como el email en la lista blanca
+    function isTeacher() {
+      return isAuthenticated() && (
+        getUserRole() == 'docente' ||
+        request.auth.token.email in allowedTeacherEmails() ||
+        exists(/databases/$(database)/documents/teachers/$(request.auth.uid))
+      );
+    }
+    
+    // Función para verificar si un usuario tiene el dominio autorizado
+    function hasAuthorizedDomain() {
+      return isAuthenticated() && 
+             request.auth.token.email.matches('.*@potros[.]itson[.]edu[.]mx$');
+    }
 
     // --- REGLAS PRINCIPALES ---
 
-    // Colección de Estudiantes
-    match /students/{studentId} {
-      allow read: if getUserRole() == 'docente';
-      allow write: if false; // Proteger la lista de estudiantes
+    // Colección de docentes (teachers)
+    // Permite a los docentes autenticados crear su propio documento
+    match /teachers/{teacherId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated() && 
+                      request.auth.uid == teacherId && 
+                      hasAuthorizedDomain();
+    }
+    
+    // Configuración de lista blanca de docentes
+    match /config/teacherAllowlist {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
     }
 
-    // Calificaciones
+    // Colección de Estudiantes
+    match /students/{studentId} {
+      allow read: if isTeacher();
+      allow write: if false; // Proteger la lista de estudiantes
+    }
+    
+    // Asistencias
+    match /attendances/{attendanceId} {
+      allow read: if isTeacher() || (isAuthenticated() && hasAuthorizedDomain());
+      allow create: if isAuthenticated() && hasAuthorizedDomain();
+      allow update, delete: if isTeacher();
+    }
+
+    // Calificaciones (grades)
+    match /grades/{gradeId} {
+      allow read: if isTeacher() || 
+                     (isAuthenticated() && 
+                      hasAuthorizedDomain() && 
+                      request.auth.uid == gradeId);
+      allow write: if isTeacher();
+    }
+    
+    // Calificaciones alternativa (courses)
     match /courses/{courseId}/grades/{studentId} {
-      allow read: if getUserRole() == 'docente' || request.auth.uid == studentId;
-      allow write: if getUserRole() == 'docente';
+      allow read: if isTeacher() || 
+                     (isAuthenticated() && request.auth.uid == studentId);
+      allow write: if isTeacher();
     }
     
     // Entregas de Evidencias (Submissions)
     match /courses/{courseId}/submissions/{studentId}/{document=**} {
-       allow read, write: if getUserRole() == 'docente' || request.auth.uid == studentId;
+       allow read, write: if isTeacher() || 
+                            (isAuthenticated() && request.auth.uid == studentId);
     }
 
     // Colección de Materiales
     match /materials/{materialId} {
-      // Permite a cualquier usuario autenticado leer los materiales.
+      // Permite a cualquier usuario autenticado con dominio autorizado leer los materiales.
       // Solo los docentes pueden crear, actualizar o eliminar.
-      allow read: if isAuthenticated();
-      allow write: if getUserRole() == 'docente';
+      allow read: if isAuthenticated() && hasAuthorizedDomain();
+      allow create, delete: if isTeacher();
+      allow update: if isTeacher() && 
+                       (request.resource.data.downloads == resource.data.downloads + 1 ||
+                        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['downloads']));
     }
 
-// Entregas de estudiantes (studentUploads)
+    // Entregas de estudiantes (studentUploads)
     match /studentUploads/{uploadId} {
       // Los estudiantes pueden crear sus propias entregas y leerlas/actualizarlas.
-      allow create: if request.auth.uid == request.resource.data.student.uid;
-      allow read, update: if request.auth.uid == resource.data.student.uid;
+      allow create: if isAuthenticated() && 
+                       hasAuthorizedDomain() &&
+                       request.auth.uid == request.resource.data.student.uid;
+      allow read, update: if isAuthenticated() && 
+                            (request.auth.uid == resource.data.student.uid || isTeacher());
 
       // Los docentes pueden leer, actualizar y eliminar cualquier entrega.
-     // Se combina con la regla de estudiante para que un docente también pueda leer su propia entrega si fuera el caso.
-      allow read, update, delete: if getUserRole() == 'docente';
-   }
+      allow delete: if isTeacher();
+    }
+    
+    // Planes de prueba
+    match /planesDePrueba/{planId} {
+      allow read: if isAuthenticated() && hasAuthorizedDomain();
+      allow write: if isTeacher();
+    }
+    
     // --- REGLAS ADICIONALES PARA EVITAR ERRORES EN OTRAS PÁGINAS ---
     
     // Temas del Foro
-    match /forum_topics/{topicId}/{document=**} {
-      // Permite a cualquier usuario autenticado leer y escribir en el foro
-      allow read, write: if isAuthenticated();
+    match /forum_topics/{topicId} {
+      allow read: if isAuthenticated() && hasAuthorizedDomain();
+      allow create: if isAuthenticated() && hasAuthorizedDomain();
+      allow update, delete: if isTeacher() || 
+                              (isAuthenticated() && 
+                               request.auth.token.email == resource.data.authorEmail);
     }
     
-    // Lista de profesores (usada en el panel de docente)
+    // Respuestas del foro
+    match /forum_topics/{topicId}/replies/{replyId} {
+      allow read: if isAuthenticated() && hasAuthorizedDomain();
+      allow create: if isAuthenticated() && hasAuthorizedDomain();
+      allow update: if isAuthenticated() && hasAuthorizedDomain();
+      allow delete: if isTeacher() || 
+                      (isAuthenticated() && 
+                       request.auth.token.email == resource.data.authorEmail);
+    }
+    
+    // Grupos y sus subcolecciones
+    match /grupos/{groupId} {
+      allow read: if isAuthenticated() && hasAuthorizedDomain();
+      allow write: if isTeacher();
+    }
+    
+    match /grupos/{groupId}/{document=**} {
+      allow read: if isAuthenticated() && hasAuthorizedDomain();
+      allow write: if isTeacher();
+    }
+    
+    // Lista de profesores (usada en el panel de docente) - legacy
     match /teacher_allowlist/{docId} {
        allow read: if isAuthenticated();
+    }
+    
+    // Permitir acceso a usuarios autenticados para leer su propia información
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
     }
   }
 }
