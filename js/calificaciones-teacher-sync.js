@@ -1,7 +1,23 @@
 // js/calificaciones-teacher-sync.js
+// Sincroniza las capturas de calificaciones del docente con Firestore para que
+// el alumno pueda consultarlas desde su sesión.
+
 import { initFirebase, getDb } from './firebase.js';
-import { getPrimaryDocId, buildCandidateDocIds } from './calificaciones-helpers.js';
-import { collection, deleteDoc, doc, getDoc, getDocs, orderBy, query, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
+import {
+  getPrimaryDocId,
+  buildCandidateDocIds,
+} from './calificaciones-helpers.js';
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  orderBy,
+  query,
+  setDoc,
+  serverTimestamp,
+} from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 
 initFirebase();
 const db = getDb();
@@ -14,16 +30,23 @@ let localLoad = null;
 let localClear = null;
 
 function initializeBaseFunctions() {
-  localSave = typeof window.saveStudentGrades === 'function' ? window.saveStudentGrades.bind(window) : null;
-  localLoad = typeof window.loadStudentGrades === 'function' ? window.loadStudentGrades.bind(window) : null;
-  localClear = typeof window.clearAllGrades === 'function' ? window.clearAllGrades.bind(window) : null;
-  
+  localSave = typeof window.saveStudentGrades === 'function'
+    ? window.saveStudentGrades.bind(window)
+    : null;
+  localLoad = typeof window.loadStudentGrades === 'function'
+    ? window.loadStudentGrades.bind(window)
+    : null;
+  localClear = typeof window.clearAllGrades === 'function'
+    ? window.clearAllGrades.bind(window)
+    : null;
+
   if (!localSave || !localLoad) {
     console.warn('[calificaciones-teacher-sync] funciones base no disponibles. Asegúrate de que calificaciones.js se carga correctamente.');
   } else {
-     patchFunctions();
+    patchFunctions();
   }
 }
+
 function isTeacherRole() {
   try {
     const stored = (localStorage.getItem('qs_role') || 'estudiante').toLowerCase();
@@ -531,53 +554,51 @@ const remoteSync = (() => {
   };
 })();
 
-// -- MODIFICACIÓN: Esta función ahora contiene el código que parchea las funciones globales
 function patchFunctions() {
-    if (localLoad) {
-      window.loadStudentGrades = function patchedLoad(studentId) {
-        const profile = buildProfile(studentId);
-        if (!shouldUseFirestore()) {
-          return localLoad(studentId);
-        }
-        fetchRemoteItems(profile)
-          .then((items) => {
-            if (items === null) {
-              localLoad(studentId);
-              return;
-            }
-            const activeId = document.getElementById('studentId')?.value || null;
-            const targetId = profile.studentId || profile.id || null;
-            if (targetId && activeId && targetId !== activeId) {
-              return;
-            }
-            applyItemsToInputs(items);
-            if (localSave && studentId) {
-              localSave(studentId);
-            }
-          })
-          .catch((err) => {
-            console.error('[calificaciones-teacher-sync] loadStudentGrades', err);
+  if (localLoad) {
+    window.loadStudentGrades = function patchedLoad(studentId) {
+      const profile = buildProfile(studentId);
+      if (!shouldUseFirestore()) {
+        return localLoad(studentId);
+      }
+      fetchRemoteItems(profile)
+        .then((items) => {
+          if (items === null) {
             localLoad(studentId);
-          });
-      };
-    }
+            return;
+          }
+          const activeId = document.getElementById('studentId')?.value || null;
+          const targetId = profile.studentId || profile.id || null;
+          if (targetId && activeId && targetId !== activeId) {
+            return;
+          }
+          applyItemsToInputs(items);
+          if (localSave && studentId) {
+            localSave(studentId);
+          }
+        })
+        .catch((err) => {
+          console.error('[calificaciones-teacher-sync] loadStudentGrades', err);
+          localLoad(studentId);
+        });
+    };
+  }
 
-    if (localSave) {
-      window.saveStudentGrades = function patchedSave(studentId) {
-        localSave(studentId);
-        if (!studentId) return;
-        const profile = buildProfile(studentId);
-        remoteSync.schedule(profile);
-      };
-    }
+  if (localSave) {
+    window.saveStudentGrades = function patchedSave(studentId) {
+      localSave(studentId);
+      if (!studentId) return;
+      const profile = buildProfile(studentId);
+      remoteSync.schedule(profile);
+    };
+  }
 
-    if (localClear) {
-      window.clearAllGrades = function patchedClear() {
-        localClear();
-      };
-    }
+  if (localClear) {
+    window.clearAllGrades = function patchedClear() {
+      localClear();
+    };
+  }
 }
-
 
 const flushButtons = ['calculateBtn', 'exportBtn', 'saveGradesBtn'];
 flushButtons.forEach((id) => {
@@ -612,21 +633,15 @@ if (clearBtn) {
   });
 }
 
-function initTeacherSync(user, claims) {
+export function initTeacherSync(user, claims) {
   if (!claims || claims.role !== 'docente') {
     return;
   }
-  console.log('[calificaciones-teacher-sync] Modo docente activado. Sincronización en tiempo real iniciada.');
-  // Aquí puedes llamar a la función principal que estaba en tu archivo original.
-  // Por ejemplo, si tenías una función `startRealtimeSync()`, la llamarías aquí.
-}
-
-window.initTeacherSync = initTeacherSync;
-
-// -- MODIFICACIÓN: Se espera a que la ventana cargue completamente antes de inicializar.
-if (document.readyState === 'loading') {
+  // Esperamos a que la página esté completamente cargada para asegurar que calificaciones.js exista
+  if (document.readyState === 'loading') {
     window.addEventListener('DOMContentLoaded', initializeBaseFunctions);
-} else {
+  } else {
     initializeBaseFunctions();
+  }
+  console.log('[calificaciones-teacher-sync] Modo docente activado. Sincronización en tiempo real iniciada.');
 }
-
