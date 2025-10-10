@@ -2,6 +2,10 @@
 // Obtén las credenciales en Firebase Console > Configuración del proyecto > tus apps web.
 // IMPORTANTE: No subas credenciales sensibles a repos públicos.
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 export const firebaseConfig = {
   apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
   authDomain: "calidad-de-software-v2.firebaseapp.com",
@@ -12,6 +16,13 @@ export const firebaseConfig = {
   messagingSenderId: "220818066383",
   appId: "1:220818066383:web:0c2119f470a5f9711b60ba"
 };
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+// Export auth and db instances
+export const auth = getAuth(app);
+export const db = getFirestore(app);
 
 // Dominio permitido para acceso de alumnos
 export const allowedEmailDomain = "potros.itson.edu.mx";
