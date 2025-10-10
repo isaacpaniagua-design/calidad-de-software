@@ -4407,25 +4407,30 @@
     <!-- Ajuste dinámico de los rangos de las calificaciones: escala 0–10 -->
 
     <script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // La sección de calificaciones de alumnos ahora será visible para todos por defecto.
+    // La lógica de "role-gate.js" se encargará de ocultar los botones de edición para los estudiantes.
+    var preview = document.getElementById("student-preview");
+    if (preview) {
+        preview.style.removeProperty("display");
+    }
 
-      document.addEventListener('DOMContentLoaded', function () {
+    // Mantenemos la lógica del botón para que el docente pueda navegar a la vista previa.
+    const btn = document.getElementById("viewStudentPreviewBtn");
+    var rolLocal = (localStorage.getItem("qs_role") || "estudiante").toLowerCase();
+    var isTeacher = rolLocal === "docente" || document.documentElement.classList.contains("role-teacher");
 
-        document
-
-          .querySelectorAll('.grade-input, .project-grade-input')
-
-          .forEach(function (input) {
-
-            input.setAttribute('max', '10');
-
-            input.setAttribute('min', '0');
-
-          });
-
-      });
-
-    </script>
-
+    if (btn && isTeacher) {
+        btn.classList.remove("hidden");
+        btn.addEventListener("click", function () {
+          var prev = document.getElementById("student-preview");
+          if (prev) {
+            prev.scrollIntoView({ behavior: "smooth" });
+          }
+        });
+    }
+  });
+</script>
 
 
     <script type="module" src="js/layout.js"></script>
@@ -4438,4 +4443,5 @@
 
 
   </html>
+
 
