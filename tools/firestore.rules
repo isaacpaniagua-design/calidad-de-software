@@ -32,6 +32,14 @@ service cloud.firestore {
        allow read, write: if getUserRole() == 'docente' || request.auth.uid == studentId;
     }
 
+    // Colección de Materiales
+    match /materials/{materialId} {
+      // Permite a cualquier usuario autenticado leer los materiales.
+      // Solo los docentes pueden crear, actualizar o eliminar.
+      allow read: if isAuthenticated();
+      allow write: if getUserRole() == 'docente';
+    }
+
     // --- REGLAS ADICIONALES PARA EVITAR ERRORES EN OTRAS PÁGINAS ---
     
     // Temas del Foro
