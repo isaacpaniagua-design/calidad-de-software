@@ -1,60 +1,40 @@
-// Simple auth guard to redirect unauthenticated users to login page.
-// This module initializes Firebase and listens to authentication changes.
-// If no user is signed in and the current page is not the login or 404 page,
-// it will redirect to login.html. See firebase.js for initFirebase/onAuth.
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { auth, db } from "./firebase-config.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import { initFirebase, onAuth } from './firebase.js';
+const PROTECTED_PATH = '/index.html';
+const LOGIN_PATH = '/login.html';
 
-// Initialize Firebase if it hasn't been already.
-initFirebase();
+const isPublicPage = (path) => path === LOGIN_PATH;
 
-// Determine current filename (lowercase).
-const currentPage = (window.location.pathname.split('/').pop() || '').toLowerCase();
-// Pages that should not trigger a redirect when no user is signed in.
-const skipPages = ['login.html', '404.html'];
+onAuthStateChanged(auth, async (user) => {
+  const currentPage = window.location.pathname;
 
-const AUTH_STORAGE_KEY = 'qs_auth_state';
+  if (user) {
+    // Usuario ha iniciado sesión. Ahora verificamos si es docente.
+    const userDocRef = doc(db, "teachers", user.uid);
+    const userDocSnap = await getDoc(userDocRef);
 
-function readStoredAuthState() {
-  try {
-    const sessionValue = sessionStorage.getItem(AUTH_STORAGE_KEY);
-    if (sessionValue) return sessionValue;
-  } catch (_) {}
-  try {
-    const localValue = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (localValue) return localValue;
-  } catch (_) {}
-  return '';
-}
-
-function persistAuthState(state) {
-  try {
-    sessionStorage.setItem(AUTH_STORAGE_KEY, state);
-  } catch (_) {}
-  try {
-    localStorage.setItem(AUTH_STORAGE_KEY, state);
-  } catch (_) {}
-  try {
-    window.__qsAuthState = state;
-  } catch (_) {}
-}
-
-// Expone en memoria el último estado conocido si estaba guardado previamente.
-// Esto evita que otras piezas lo reescriban con valores por defecto.
-try {
-  const stored = readStoredAuthState();
-  if (stored) window.__qsAuthState = stored;
-} catch (_) {}
-
-// Listen for authentication state changes. If there is no user and we are
-// currently on a protected page, redirect to the login page.
-onAuth((user) => {
-  const state = user ? 'signed-in' : 'signed-out';
-  persistAuthState(state);
-  if (!user && !skipPages.includes(currentPage)) {
-    // Preserve query parameters when redirecting to login by appending them
-    const query = window.location.search || '';
-    // Avoid infinite redirect loops: if already on login, do nothing.
-    window.location.href = 'login.html' + query;
+    if (userDocSnap.exists()) {
+      // El usuario es un docente.
+      console.log("Acceso concedido. Usuario es docente.");
+      if (isPublicPage(currentPage)) {
+        // Si está en la página de login, redirigir al panel.
+        window.location.href = PROTECTED_PATH;
+      }
+    } else {
+      // El usuario no es un docente.
+      console.warn("Acceso denegado. El usuario no está en la colección de teachers.");
+      await signOut(auth);
+      // Redirigir a login con un mensaje de error.
+      window.location.href = `${LOGIN_PATH}?error=unauthorized`;
+    }
+  } else {
+    // No hay usuario iniciado sesión.
+    if (!isPublicPage(currentPage)) {
+      // Si no está en una página pública, redirigir a login.
+      console.log("Usuario no autenticado. Redirigiendo a login.");
+      window.location.href = LOGIN_PATH;
+    }
   }
 });
