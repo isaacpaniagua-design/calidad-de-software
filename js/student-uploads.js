@@ -17,7 +17,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 import { ref as storageRef, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
 
-// La llamada a initFirebase() se elimina de aquí, se asume que el orquestador principal la llama.
 const db = getDb();
 const uploadsCollection = collection(db, "studentUploads");
 
@@ -28,6 +27,7 @@ const KIND_TO_LABEL = {
   homework: "Tarea",
   evidence: "Evidencia",
 };
+
 function sanitizeGroupId(value) {
   if (!value) return DEFAULT_GROUP_ID;
   const trimmed = String(value).trim();
@@ -148,109 +148,83 @@ function buildStudentProfile(uploadStudent = {}, explicit = {}, roster = {}) {
 }
 
 async function syncUploadGradeWithCalificaciones(uploadId, options = {}) {
-  const { upload, student, rosterStudent, grade, feedback, groupId, deliverable } =
-    options;
-  if (!uploadId) return;
-  const resolvedGrade = clampGrade(grade);
-  const profile = buildStudentProfile(
-    upload?.student || {},
-    student || {},
-    rosterStudent || {}
-  );
-  const docId = getPrimaryDocId(profile);
-  if (!docId) return;
-  const targetGroupId = sanitizeGroupId(groupId);
-  const calificacionesRef = doc(
-    db,
-    "grupos",
-    targetGroupId,
-    "calificaciones",
-    docId
-  );
+    if (!uploadId) return;
+    const resolvedGrade = clampGrade(options.grade);
+    const profile = buildStudentProfile(
+        options.upload?.student || {},
+        options.student || {},
+        options.rosterStudent || {}
+    );
+    const docId = getPrimaryDocId(profile);
+    if (!docId) return;
+    const targetGroupId = sanitizeGroupId(options.groupId);
+    const calificacionesRef = doc(db, "grupos", targetGroupId, "calificaciones", docId);
 
-  let existingData = {};
-  let existingItems = [];
-  try {
-    const snapshot = await getDoc(calificacionesRef);
-    if (snapshot.exists()) {
-      existingData = snapshot.data() || {};
-      if (Array.isArray(existingData.items)) {
-        existingItems = existingData.items.slice();
-      }
+    let existingData = {};
+    let existingItems = [];
+    try {
+        const snapshot = await getDoc(calificacionesRef);
+        if (snapshot.exists()) {
+            existingData = snapshot.data() || {};
+            if (Array.isArray(existingData.items)) {
+                existingItems = existingData.items.slice();
+            }
+        }
+    } catch (error) {
+        console.error("gradeStudentUpload:calificaciones:getDoc", error);
     }
-  } catch (error) {
-    console.error("gradeStudentUpload:calificaciones:getDoc", error);
-  }
 
-  const itemKey = `upload-${uploadId}`;
-  const maxPoints = extractMaxPoints(upload);
-  const puntos = Number(resolvedGrade.toFixed(3));
-  const rawPuntos = Number(resolvedGrade.toFixed(2));
-  const newItem = {
-    key: itemKey,
-    nombre: resolveItemNombre(upload),
-    tipo: resolveItemTipo(upload),
-    unidad: extractUnidad(upload),
-    ponderacion: extractPonderacion(upload, rosterStudent, deliverable),
-    maxPuntos: Number(maxPoints.toFixed(3)),
-    puntos,
-    rawPuntos,
-    rawMaxPuntos: Number(maxPoints.toFixed(3)),
-    fecha: serverTimestamp(),
-    fuente: "student-upload",
-    uploadId,
-  };
-  if (feedback) newItem.feedback = String(feedback).trim();
-  if (upload?.fileUrl) newItem.evidenciaUrl = upload.fileUrl;
-  if (upload?.title) newItem.referencia = upload.title;
-
-  const teacherInfo = options.teacherInfo;
-  if (teacherInfo && typeof teacherInfo === "object") {
-    const reviewer =
-      teacherInfo.displayName || teacherInfo.email || teacherInfo.uid || "";
-    if (reviewer) newItem.calificadoPor = reviewer;
-  }
-
-  let updated = false;
-  for (let i = 0; i < existingItems.length; i++) {
-    const item = existingItems[i];
-    if (item && item.key === itemKey) {
-      existingItems[i] = Object.assign({}, item, newItem);
-      updated = true;
-      break;
+    const itemKey = `upload-${uploadId}`;
+    const maxPoints = extractMaxPoints(options.upload);
+    const newItem = {
+        key: itemKey,
+        nombre: resolveItemNombre(options.upload),
+        tipo: resolveItemTipo(options.upload),
+        unidad: extractUnidad(options.upload),
+        ponderacion: extractPonderacion(options.upload, options.rosterStudent, options.deliverable),
+        maxPuntos: Number(maxPoints.toFixed(3)),
+        puntos: Number(resolvedGrade.toFixed(3)),
+        rawPuntos: Number(resolvedGrade.toFixed(2)),
+        rawMaxPuntos: Number(maxPoints.toFixed(3)),
+        fecha: serverTimestamp(),
+        fuente: "student-upload",
+        uploadId,
+    };
+    if (options.feedback) newItem.feedback = String(options.feedback).trim();
+    if (options.upload?.fileUrl) newItem.evidenciaUrl = options.upload.fileUrl;
+    if (options.upload?.title) newItem.referencia = options.upload.title;
+    
+    if (options.teacherInfo && typeof options.teacherInfo === "object") {
+        const reviewer = options.teacherInfo.displayName || options.teacherInfo.email || options.teacherInfo.uid || "";
+        if (reviewer) newItem.calificadoPor = reviewer;
     }
-  }
-  if (!updated) {
-    existingItems.push(newItem);
-  }
 
-  const seenKeys = new Set();
-  const deduped = [];
-  for (let i = 0; i < existingItems.length; i++) {
-    const item = existingItems[i];
-    if (!item || typeof item !== "object") continue;
-    const key = item.key || `idx-${i}`;
-    if (seenKeys.has(key)) continue;
-    seenKeys.add(key);
-    deduped.push(item);
-  }
+    let updated = false;
+    for (let i = 0; i < existingItems.length; i++) {
+        if (existingItems[i] && existingItems[i].key === itemKey) {
+            existingItems[i] = { ...existingItems[i], ...newItem };
+            updated = true;
+            break;
+        }
+    }
+    if (!updated) {
+        existingItems.push(newItem);
+    }
+    
+    const payload = {
+        items: existingItems,
+        studentId: profile.studentId || profile.id || existingData.studentId || null,
+        studentName: profile.name || profile.displayName || existingData.studentName || null,
+        studentEmail: profile.email || existingData.studentEmail || null,
+        updatedAt: serverTimestamp(),
+    };
+    if (profile.uid) payload.studentUid = profile.uid;
 
-  const payload = {
-    items: deduped,
-    studentId:
-      profile.studentId || profile.id || existingData.studentId || null,
-    studentName:
-      profile.name || profile.displayName || existingData.studentName || null,
-    studentEmail: profile.email || existingData.studentEmail || null,
-    updatedAt: serverTimestamp(),
-  };
-  if (profile.uid) payload.studentUid = profile.uid;
-
-  try {
-    await setDoc(calificacionesRef, payload, { merge: true });
-  } catch (error) {
-    console.error("gradeStudentUpload:calificaciones:setDoc", error);
-  }
+    try {
+        await setDoc(calificacionesRef, payload, { merge: true });
+    } catch (error) {
+        console.error("gradeStudentUpload:calificaciones:setDoc", error);
+    }
 }
 
 function isPermissionDenied(error) {
@@ -268,21 +242,11 @@ function logSnapshotError(context, error) {
     console.error(`${context}:error`, error);
   }
 }
-    
+
 function resolveUploadStorageInfo(upload = {}) {
   const extra = upload && typeof upload === "object" ? upload.extra || {} : {};
-  const storagePath =
-    extra.storagePath ||
-    extra.path ||
-    upload.storagePath ||
-    upload.path ||
-    null;
-  const backend =
-    extra.uploadBackend ||
-    extra.backend ||
-    upload.uploadBackend ||
-    upload.backend ||
-    null;
+  const storagePath = extra.storagePath || extra.path || upload.storagePath || upload.path || null;
+  const backend = extra.uploadBackend || extra.backend || upload.uploadBackend || upload.backend || null;
   return { storagePath: storagePath || null, backend: backend || null };
 }
 
@@ -301,29 +265,9 @@ async function deleteUploadAssetIfNeeded(upload) {
   }
 }
 
-  } else {
-    console.error(`${context}:error`, error);
-  }
-}
+// --- FUNCIONES PÚBLICAS (SIN 'export' INDIVIDUAL) ---
 
-/**
- * Registra una entrega de estudiante.
- * @param {Object} payload
- * @param {Object} payload.student Información del estudiante autenticado.
- * @param {string} payload.student.uid Identificador del estudiante.
- * @param {string} [payload.student.email]
- * @param {string} [payload.student.displayName]
- * @param {string} payload.title Título de la entrega.
- * @param {string} [payload.description]
- * @param {string} [payload.kind]
- * @param {string} [payload.fileUrl]
- * @param {string} [payload.fileName]
- * @param {number} [payload.fileSize]
- * @param {string} [payload.mimeType]
- * @param {string} [payload.status]
- * @returns {Promise<{id: string}>}
- */
-export async function createStudentUpload(payload = {}) {
+async function createStudentUpload(payload = {}) {
   if (!payload.student || !payload.student.uid) {
     throw new Error("Falta el identificador del estudiante");
   }
@@ -331,21 +275,13 @@ export async function createStudentUpload(payload = {}) {
   const emailRaw = payload.student.email ? String(payload.student.email).trim() : "";
   const emailLower = emailRaw ? emailRaw.toLowerCase() : "";
 
-  let extraPayload = null;
-  if (payload.extra && typeof payload.extra === "object") {
-    extraPayload = { ...payload.extra };
-  }
-
   const submission = {
     title: (payload.title || "").trim() || "Entrega sin título",
     description: (payload.description || "").trim(),
     kind: (payload.kind || "activity").trim(),
     fileUrl: payload.fileUrl || "",
     fileName: payload.fileName || "",
-    fileSize:
-      typeof payload.fileSize === "number" && !Number.isNaN(payload.fileSize)
-        ? payload.fileSize
-        : null,
+    fileSize: typeof payload.fileSize === "number" && !Number.isNaN(payload.fileSize) ? payload.fileSize : null,
     mimeType: payload.mimeType || "",
     status: payload.status || "enviado",
     student: {
@@ -358,43 +294,24 @@ export async function createStudentUpload(payload = {}) {
     updatedAt: serverTimestamp(),
   };
 
-  if (extraPayload) {
-    submission.extra = extraPayload;
+  if (payload.extra && typeof payload.extra === "object") {
+    submission.extra = { ...payload.extra };
   }
 
   const ref = await addDoc(uploadsCollection, submission);
   notifyTeacherAboutStudentUpload({ submissionId: ref.id, submission }).catch(
-    (error) => {
-      console.warn(
-        "[student-uploads] notifyTeacherAboutStudentUpload",
-        error
-      );
-    }
+    (error) => console.warn("[student-uploads] notifyTeacherAboutStudentUpload", error)
   );
   return { id: ref.id };
 }
 
-/**
- * Observa en tiempo real las entregas del estudiante.
- * @param {string} uid Identificador del estudiante.
- * @param {(items: Array<Object>) => void} onChange Callback con los registros.
- * @param {(error: Error) => void} [onError] Callback de error opcional.
- * @returns {() => void} Función para cancelar la suscripción.
- */
-export function observeStudentUploads(uid, onChange, onError) {
+function observeStudentUploads(uid, onChange, onError) {
   if (!uid) {
     if (typeof onChange === "function") onChange([]);
     return () => {};
   }
-
-  const q = query(
-    uploadsCollection,
-    where("student.uid", "==", uid),
-    orderBy("submittedAt", "desc")
-  );
-
-  return onSnapshot(
-    q,
+  const q = query(uploadsCollection, where("student.uid", "==", uid), orderBy("submittedAt", "desc"));
+  return onSnapshot(q,
     (snapshot) => {
       const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       if (typeof onChange === "function") onChange(items);
@@ -406,138 +323,32 @@ export function observeStudentUploads(uid, onChange, onError) {
   );
 }
 
-export function observeStudentUploadsByEmail(email, onChange, onError) {
-  const raw = typeof email === "string" ? email.trim() : "";
-  if (!raw) {
-    if (typeof onChange === "function") onChange([]);
-    return () => {};
-  }
-
-  const variants = [];
-  const seen = new Set();
-
-  const pushVariant = (field, value, options = {}) => {
-    if (!field || !value) return;
-    const key = `${field}::${value}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    const variantOptions = {
-      orderBySubmittedAt: Boolean(options.orderBySubmittedAt),
-    };
-    variants.push({ field, value, key, options: variantOptions });
-  };
-
-  pushVariant("student.email", raw);
-  const lower = raw.toLowerCase();
-  if (lower) {
-    pushVariant("student.email", lower);
-    // Usa el índice compuesto existente studentUploads: student.emailLower, submittedAt, __name__
-    pushVariant("student.emailLower", lower, { orderBySubmittedAt: true });
-  }
-
-  if (!variants.length) {
-    if (typeof onChange === "function") onChange([]);
-    return () => {};
-  }
-
-  const toTimestamp = (input) => {
-    if (!input) return 0;
-    if (typeof input.toMillis === "function") {
-      try {
-        return input.toMillis();
-      } catch (_) {
-        return 0;
-      }
+function observeStudentUploadsByEmail(email, onChange, onError) {
+    const raw = typeof email === "string" ? email.trim() : "";
+    if (!raw) {
+        if (typeof onChange === "function") onChange([]);
+        return () => {};
     }
-    if (typeof input.toDate === "function") {
-      try {
-        const date = input.toDate();
-        return date instanceof Date && !Number.isNaN(date.getTime())
-          ? date.getTime()
-          : 0;
-      } catch (_) {
-        return 0;
-      }
-    }
-    const date = input instanceof Date ? input : new Date(input);
-    return date instanceof Date && !Number.isNaN(date.getTime()) ? date.getTime() : 0;
-  };
 
-  const variantState = new Map();
-  const unsubscribers = [];
+    const q = query(uploadsCollection, where("student.emailLower", "==", raw.toLowerCase()), orderBy("submittedAt", "desc"));
 
-  const emitCombined = () => {
-    const combined = new Map();
-    variantState.forEach((map) => {
-      map.forEach((value, key) => {
-        combined.set(key, value);
-      });
-    });
-    const items = Array.from(combined.values());
-    items.sort((a, b) => toTimestamp(b?.submittedAt) - toTimestamp(a?.submittedAt));
-    if (typeof onChange === "function") onChange(items);
-  };
-
-  const handleError = (error) => {
-    logSnapshotError("observeStudentUploadsByEmail", error);
-    if (typeof onError === "function") onError(error);
-  };
-
-  variants.forEach(({ field, value, key, options: variantOptions = {} }) => {
-    try {
-      const constraints = [where(field, "==", value)];
-      if (variantOptions.orderBySubmittedAt) {
-        constraints.push(orderBy("submittedAt", "desc"));
-      }
-      const q = query(uploadsCollection, ...constraints);
-      const unsubscribe = onSnapshot(
-        q,
+    return onSnapshot(q,
         (snapshot) => {
-          const map = new Map();
-          snapshot.docs.forEach((docSnap) => {
-            map.set(docSnap.id, { id: docSnap.id, ...docSnap.data() });
-          });
-          variantState.set(key, map);
-          emitCombined();
+            const items = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+            if (typeof onChange === "function") onChange(items);
         },
-        handleError
-      );
-      unsubscribers.push(unsubscribe);
-    } catch (error) {
-      handleError(error);
-    }
-  });
-
-  return () => {
-    while (unsubscribers.length) {
-      const fn = unsubscribers.pop();
-      if (typeof fn === "function") {
-        try {
-          fn();
-        } catch (_) {}
-      }
-    }
-    variantState.clear();
-  };
+        (error) => {
+            logSnapshotError("observeStudentUploadsByEmail", error);
+            if (typeof onError === "function") onError(error);
+        }
+    );
 }
 
-/**
- * Observa todas las entregas registradas por los estudiantes.
- * Pensado para la vista de docentes.
- * @param {(items: Array<Object>) => void} onChange
- * @param {(error: Error) => void} [onError]
- * @returns {() => void}
- */
-export function observeAllStudentUploads(onChange, onError) {
+function observeAllStudentUploads(onChange, onError) {
   const q = query(uploadsCollection, orderBy("submittedAt", "desc"));
-
-  return onSnapshot(
-    q,
+  return onSnapshot(q,
     (snapshot) => {
-      const items = snapshot.docs.map((docSnap) => ({
-        id: docSnap.id,
-        ...docSnap.data(),
-      }));
+      const items = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
       if (typeof onChange === "function") onChange(items);
     },
     (error) => {
@@ -553,19 +364,10 @@ function buildTeacherInfo(teacher = {}) {
   const email = teacher.email ? String(teacher.email).trim() : "";
   const displayName = teacher.displayName ? String(teacher.displayName).trim() : "";
   if (!uid && !email && !displayName) return null;
-  return {
-    uid,
-    email,
-    displayName,
-  };
+  return { uid, email, displayName };
 }
 
-/**
- * Marca una entrega como aceptada por el docente.
- * @param {string} uploadId
- * @param {{uid?: string, email?: string, displayName?: string}} [teacher]
- */
-export async function markStudentUploadAccepted(uploadId, teacher = {}) {
+async function markStudentUploadAccepted(uploadId, teacher = {}) {
   if (!uploadId) throw new Error("Falta el identificador de la entrega");
   const ref = doc(uploadsCollection, uploadId);
   const teacherInfo = buildTeacherInfo(teacher);
@@ -579,23 +381,11 @@ export async function markStudentUploadAccepted(uploadId, teacher = {}) {
   await updateDoc(ref, payload);
 }
 
-/**
- * Registra o actualiza la calificación de una entrega.
- * @param {string} uploadId
- * @param {{
- *   grade: number,
- *   feedback?: string,
- *   teacher?: {uid?: string, email?: string, displayName?: string},
- * }} options
- */
-export async function gradeStudentUpload(uploadId, options = {}) {
+async function gradeStudentUpload(uploadId, options = {}) {
   if (!uploadId) throw new Error("Falta el identificador de la entrega");
   const grade = Number(options.grade);
-  if (!Number.isFinite(grade)) {
-    throw new Error("La calificación debe ser un número");
-  }
-  if (grade < 0 || grade > 100) {
-    throw new Error("La calificación debe estar entre 0 y 100");
+  if (!Number.isFinite(grade) || grade < 0 || grade > 100) {
+    throw new Error("La calificación debe ser un número entre 0 y 100");
   }
 
   const teacherInfo = buildTeacherInfo(options.teacher);
@@ -632,7 +422,7 @@ export async function gradeStudentUpload(uploadId, options = {}) {
   }
 }
 
-export async function deleteStudentUpload(uploadOrId) {
+async function deleteStudentUpload(uploadOrId) {
   const id = typeof uploadOrId === "string" ? uploadOrId : uploadOrId?.id;
   if (!id) throw new Error("Falta el identificador de la entrega");
   const ref = doc(uploadsCollection, id);
@@ -655,6 +445,8 @@ export async function deleteStudentUpload(uploadOrId) {
   await deleteDoc(ref);
 }
 
+// --- FUNCIÓN DE INICIALIZACIÓN ---
+
 function initStudentUploads(user, claims) {
     if (!user || !claims) return;
     
@@ -672,9 +464,7 @@ function initStudentUploads(user, claims) {
     }
 }
 
-
 // --- BLOQUE ÚNICO DE EXPORTACIÓN ---
-// Aquí se listan todas las funciones que este módulo ofrece a otros archivos.
 export {
   createStudentUpload,
   observeStudentUploads,
