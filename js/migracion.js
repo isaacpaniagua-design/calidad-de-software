@@ -1,22 +1,19 @@
 // js/migracion.js
 
-// 1. Importamos la función getDb() de tu archivo firebase.js
 import { getDb } from './firebase.js';
-// 2. Importamos solo las funciones de Firestore que necesitamos
 import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-// 3. Obtenemos la instancia de la base de datos llamando a la función.
-//    Esta función se encargará de inicializar Firebase si es necesario.
 const db = getDb();
 
 // Función para obtener los estudiantes del archivo JSON local
 async function getStudentsFromFile() {
-    const response = await fetch('../data/students.json');
+    // Ruta correcta relativa al archivo migracion.html (que estará en la raíz)
+    const response = await fetch('data/students.json'); 
+    
     if (!response.ok) {
-        throw new Error("No se pudo cargar el archivo data/students.json. Verifica que la ruta es correcta.");
+        throw new Error("No se pudo cargar el archivo data/students.json. Asegúrate de que el archivo está en la carpeta 'data'.");
     }
     const data = await response.json();
-    // Tu archivo JSON tiene la lista dentro de la clave "students"
     return data.students; 
 }
 
@@ -46,7 +43,7 @@ async function migrateStudents() {
         console.log(`✅ Estudiante migrado con éxito: ${student.name} (${student.id})`);
     }
 
-    console.log("🎉 ¡Migración completada! Todos los estudiantes están en Firestore.");
+    console.log("🎉 ¡Migración completada! Todos los estudiantes están seguros en Firestore.");
 
   } catch (error) {
       console.error("❌ Ocurrió un error durante la migración:", error);
