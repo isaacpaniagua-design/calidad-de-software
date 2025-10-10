@@ -40,6 +40,16 @@ service cloud.firestore {
       allow write: if getUserRole() == 'docente';
     }
 
+// Entregas de estudiantes (studentUploads)
+    match /studentUploads/{uploadId} {
+      // Los estudiantes pueden crear sus propias entregas y leerlas/actualizarlas.
+      allow create: if request.auth.uid == request.resource.data.student.uid;
+      allow read, update: if request.auth.uid == resource.data.student.uid;
+
+      // Los docentes pueden leer, actualizar y eliminar cualquier entrega.
+     // Se combina con la regla de estudiante para que un docente también pueda leer su propia entrega si fuera el caso.
+      allow read, update, delete: if getUserRole() == 'docente';
+   }
     // --- REGLAS ADICIONALES PARA EVITAR ERRORES EN OTRAS PÁGINAS ---
     
     // Temas del Foro
