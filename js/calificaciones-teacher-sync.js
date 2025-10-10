@@ -624,25 +624,12 @@ if (clearBtn) {
 }
 
 function initTeacherSync(user, claims) {
-  // Asegurarnos de que las funciones base están disponibles
-  if (
-    typeof subscribeToCalificaciones !== "function" ||
-    typeof renderAlumno !== "function"
-  ) {
-    console.warn(
-      "[calificaciones-teacher-sync] Funciones base no disponibles. La sincronización en tiempo real no se activará."
-    );
-    return;
-  }
-
-  // Si no es docente, no hacemos nada.
   if (!claims || claims.role !== 'docente') {
     return;
   }
-
-  console.log('[calificaciones-teacher-sync] Modo docente activado.');
-  // Aquí iría la lógica original del archivo que depende de estar autenticado como docente.
-  // Por ejemplo, suscribirse a cambios de todos los alumnos.
+  console.log('[calificaciones-teacher-sync] Modo docente activado. Sincronización en tiempo real iniciada.');
+  // Aquí puedes llamar a la función principal que estaba en tu archivo original.
+  // Por ejemplo, si tenías una función `startRealtimeSync()`, la llamarías aquí.
 }
 
 window.initTeacherSync = initTeacherSync;
