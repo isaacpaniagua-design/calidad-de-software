@@ -1,4 +1,5 @@
 ﻿import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+import { firebaseConfig } from "./firebase-config.js";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -1300,5 +1301,6 @@ export async function saveTestPlan(planId, planData) {
 }
 
 
+const app = initializeApp(firebaseConfig);
 
-
+export { app };
