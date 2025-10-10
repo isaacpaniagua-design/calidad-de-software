@@ -104,23 +104,37 @@ function initializeEventListeners() {
     // ... (otros event listeners como el del botón de guardar)
 }
 
+// --- PUNTO DE ENTRADA ---
 document.addEventListener('DOMContentLoaded', () => {
     initializeEventListeners();
-    onAuth(async (user, claims) => {
+    
+    // onAuth es ahora nuestro único punto de entrada a la lógica de la app
+    onAuth((user, claims) => {
         if (user && claims) {
             const userRole = claims.role;
 
-            // Llama a las funciones de inicialización de otros scripts AHORA que es seguro.
+            // Llama a los inicializadores de OTROS scripts.
             if (window.initStudentUploads) window.initStudentUploads(user, claims);
             if (window.initTeacherSync) window.initTeacherSync(user, claims);
             if (window.initTeacherPreview) window.initTeacherPreview(user, claims);
 
             if (userRole === 'docente') {
-                document.body.classList.add('role-teacher');
                 fetchStudents();
             } else {
-                document.body.classList.remove('role-teacher');
                 const teacherUI = document.querySelector('.teacher-only');
+                if(teacherUI) teacherUI.style.display = 'none';
+                loadGradesFromFirestore(user.uid);
+            }
+        } else {
+            console.log("Usuario no autenticado, auth-guard.js debería actuar.");
+            window.populateStudentDropdown([]);
+            if(window.clearAllGrades) window.clearAllGrades();
+        }
+    });
+});
+
+
+const teacherUI = document.querySelector('.teacher-only');
                 if(teacherUI) teacherUI.style.display = 'none';
                 loadGradesFromFirestore(user.uid);
             }
