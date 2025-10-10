@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sistema de Gestión de Calificaciones - Calidad de Software</title>
+    
     <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/calificaciones.css" />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       UPLOADCARE_PUBLIC_KEY = "85eb5471d305dcd08e71";
@@ -17,437 +20,10 @@
     ></script>
 
     <style>
+      /* Se mantiene este estilo base para la fuente, ya que es global */
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
-
       body {
         font-family: "Inter", sans-serif;
-      }
-
-      .grades-hero {
-        position: relative;
-        overflow: hidden;
-        border-radius: clamp(28px, 5vw, 40px);
-        padding: clamp(36px, 7vw, 68px);
-        margin: clamp(28px, 6vw, 56px) auto 0;
-        max-width: 1200px;
-        background: linear-gradient(
-          135deg,
-          #4338ca 0%,
-          #7c3aed 45%,
-          #0ea5e9 100%
-        );
-        color: #f8fafc;
-        box-shadow: 0 30px 80px rgba(67, 56, 202, 0.3);
-      }
-
-      .grades-hero::before,
-      .grades-hero::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-      }
-
-      .grades-hero::before {
-        background: radial-gradient(
-            circle at 18% 22%,
-            rgba(255, 255, 255, 0.22),
-            transparent 60%
-          ),
-          radial-gradient(
-            circle at 82% 18%,
-            rgba(14, 165, 233, 0.25),
-            transparent 62%
-          );
-        opacity: 0.9;
-      }
-
-      .grades-hero::after {
-        background: linear-gradient(
-          140deg,
-          rgba(59, 130, 246, 0.15) 0%,
-          rgba(129, 140, 248, 0.32) 48%,
-          transparent 78%
-        );
-        mix-blend-mode: screen;
-      }
-
-      .grades-hero > * {
-        position: relative;
-        z-index: 1;
-      }
-
-      .grades-hero__grid {
-        display: flex;
-        flex-direction: column;
-        gap: clamp(28px, 5vw, 48px);
-      }
-
-      @media (min-width: 1024px) {
-        .grades-hero__grid {
-          flex-direction: row;
-          justify-content: space-between;
-          align-items: flex-end;
-        }
-      }
-
-      .grades-hero__intro {
-        display: flex;
-        gap: clamp(18px, 4vw, 28px);
-        align-items: center;
-      }
-
-      .grades-hero__badge {
-        width: clamp(60px, 10vw, 92px);
-        height: clamp(60px, 10vw, 92px);
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(
-          135deg,
-          rgba(248, 250, 252, 0.2),
-          rgba(255, 255, 255, 0.05)
-        );
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25),
-          0 18px 38px rgba(15, 23, 42, 0.25);
-        backdrop-filter: blur(8px);
-      }
-
-      .grades-hero__badge svg {
-        width: clamp(32px, 6vw, 44px);
-        height: clamp(32px, 6vw, 44px);
-      }
-
-      .grades-hero__eyebrow {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 14px;
-        border-radius: 999px;
-        background: rgba(15, 23, 42, 0.2);
-        font-size: 0.85rem;
-        font-weight: 600;
-        letter-spacing: 0.04em;
-        text-transform: uppercase;
-      }
-
-      .grades-hero h1 {
-        font-size: clamp(2rem, 4vw, 2.8rem);
-        font-weight: 700;
-        margin: 16px 0 12px;
-      }
-
-      .grades-hero p {
-        color: rgba(241, 245, 249, 0.92);
-        font-size: clamp(1rem, 2.2vw, 1.125rem);
-        max-width: 42ch;
-      }
-
-      .grades-hero__meta {
-        display: grid;
-        gap: 16px;
-        width: 100%;
-        max-width: 320px;
-      }
-
-      .grades-hero__stat {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        padding: 16px 18px;
-        border-radius: 18px;
-        background: rgba(15, 23, 42, 0.16);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
-        backdrop-filter: blur(6px);
-      }
-
-      .grades-hero__stat span:first-child {
-        font-size: 0.8rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: rgba(226, 232, 240, 0.75);
-      }
-
-      .grades-hero__stat span:last-child {
-        font-size: 1rem;
-        font-weight: 600;
-        color: #f8fafc;
-      }
-
-      .grades-hero__footer {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-top: clamp(24px, 5vw, 32px);
-      }
-
-      .grades-hero__tag {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 18px;
-        border-radius: 999px;
-        background: rgba(15, 23, 42, 0.18);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-        font-weight: 500;
-      }
-
-      .card-shadow {
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      }
-
-      .progress-bar {
-        transition: width 0.3s ease-in-out;
-      }
-    </style>
-
-    <style id="qs-calificaciones-css">
-      /* Mostrar el resumen de calificaciones únicamente al personal docente
-         para que pueda monitorear el avance individual de cada alumno en
-         tiempo real. Para estudiantes se mantiene oculto. */
-      html:not(.role-teacher) #calificaciones-root .qsc-wrap.teacher-only {
-        display: none !important;
-      }
-      #calificaciones-root .qsc-wrap {
-        max-width: 1100px;
-        margin: 24px auto;
-        padding: 0 16px;
-      }
-      #calificaciones-root .qsc-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        margin: 0 0 12px;
-      }
-      #calificaciones-root .qsc-kpis {
-        display: flex;
-        gap: 16px;
-        flex-wrap: wrap;
-        margin-bottom: 10px;
-      }
-      #calificaciones-root .qsc-kpi {
-        min-width: 140px;
-        padding: 10px 12px;
-        border-radius: 12px;
-        background: rgba(0, 0, 0, 0.05);
-        text-align: center;
-      }
-      #calificaciones-root .qsc-kpi span {
-        display: block;
-        font-weight: 700;
-        font-size: 1.1rem;
-      }
-      #calificaciones-root .qsc-kpi small {
-        display: block;
-        opacity: 0.75;
-      }
-      #calificaciones-root .qsc-bar {
-        height: 10px;
-        border-radius: 999px;
-        background: rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-      }
-      #calificaciones-root .qsc-bar-fill {
-        height: 100%;
-        background: var(--primary, #667eea);
-        width: 0%;
-        transition: width 0.4s ease;
-      }
-      #calificaciones-root .qsc-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 14px;
-        background: rgba(255, 255, 255, 0.85);
-      }
-      #calificaciones-root .qsc-table th {
-        padding: 10px;
-        text-align: left;
-        border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-        white-space: nowrap;
-        font-weight: 700;
-      }
-      #calificaciones-root .qsc-table td {
-        padding: 10px;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-      }
-      #calificaciones-root .qsc-cell-main {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-weight: 500;
-      }
-      #calificaciones-root .qsc-status {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 2px 8px;
-        border-radius: 999px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        line-height: 1.2;
-        letter-spacing: 0.02em;
-        text-transform: uppercase;
-        color: #1f2933;
-        background: rgba(15, 118, 110, 0.15);
-      }
-      #calificaciones-root .qsc-status::before {
-        content: "";
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: currentColor;
-      }
-      #calificaciones-root .qsc-status--done {
-        color: #047857;
-        background: rgba(16, 185, 129, 0.16);
-      }
-      #calificaciones-root .qsc-status--pending {
-        color: #b45309;
-        background: rgba(251, 191, 36, 0.22);
-      }
-
-      #calificaciones-root .grade-item {
-        gap: 16px;
-        flex-wrap: wrap;
-      }
-
-      #calificaciones-root .grade-actions {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 0.75rem;
-        min-width: 220px;
-      }
-
-      #calificaciones-root .grade-actions .grade-input,
-      #calificaciones-root .grade-actions .project-grade-input {
-        margin-bottom: 0.25rem;
-      }
-
-      #calificaciones-root .upload-control {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 0.35rem;
-        width: 100%;
-      }
-
-      #calificaciones-root .upload-control-buttons {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-      }
-
-      #calificaciones-root .upload-trigger,
-      #calificaciones-root .upload-reset {
-        font-size: 0.8rem;
-        font-weight: 600;
-        padding: 0.45rem 0.8rem;
-        border-radius: 999px;
-        border: 1px solid rgba(79, 70, 229, 0.35);
-        background: rgba(99, 102, 241, 0.08);
-        color: #4338ca;
-        transition: all 0.2s ease;
-      }
-
-      #calificaciones-root .upload-upload {
-        font-size: 0.8rem;
-        font-weight: 600;
-        padding: 0.45rem 0.8rem;
-        border-radius: 999px;
-        border: 1px solid rgba(59, 130, 246, 0.45);
-        background: rgba(59, 130, 246, 0.12);
-        color: #1d4ed8;
-        transition: all 0.2s ease;
-      }
-
-      #calificaciones-root .upload-upload:hover {
-        background: rgba(59, 130, 246, 0.22);
-      }
-
-      #calificaciones-root .upload-upload[disabled] {
-        opacity: 0.55;
-        cursor: not-allowed;
-      }
-
-      #calificaciones-root .upload-trigger:hover,
-      #calificaciones-root .upload-reset:hover {
-        background: rgba(79, 70, 229, 0.18);
-      }
-
-      #calificaciones-root .upload-reset {
-        border-color: rgba(148, 163, 184, 0.45);
-        background: rgba(148, 163, 184, 0.12);
-        color: #334155;
-      }
-
-      #calificaciones-root .upload-reset:hover {
-        background: rgba(148, 163, 184, 0.2);
-      }
-
-      #calificaciones-root .upload-reset.upload-reset--hidden {
-        display: none;
-      }
-
-      #calificaciones-root .upload-status {
-        font-size: 0.75rem;
-        color: #4b5563;
-      }
-
-      #calificaciones-root
-        .upload-status.upload-status--uploaded {
-        color: #047857;
-        font-weight: 600;
-      }
-
-      #calificaciones-root
-        .upload-status.upload-status--uploaded::before {
-        content: "✔";
-        display: inline-block;
-        margin-right: 0.4rem;
-      }
-
-      @media (max-width: 640px) {
-        #calificaciones-root .grade-actions {
-          width: 100%;
-          align-items: stretch;
-        }
-
-        #calificaciones-root .upload-control,
-        #calificaciones-root .upload-control-buttons {
-          align-items: stretch;
-          justify-content: flex-start;
-        }
-
-        #calificaciones-root .upload-trigger,
-        #calificaciones-root .upload-reset {
-          width: 100%;
-          text-align: center;
-        }
-
-        #calificaciones-root .upload-status {
-          text-align: left;
-        }
-      }
-
-      /* La vista de alumno permanece oculta para estudiantes, pero se muestra
-         automáticamente al personal docente. */
-      html:not(.role-teacher) #student-preview {
-        display: none;
-      }
-
-      /* El botón "Vista de alumno" sólo se oculta para estudiantes. */
-      html:not(.role-teacher) #viewStudentPreviewBtn {
-        display: none !important;
-      }
-      #calificaciones-root .qsc-msg {
-        margin-top: 8px;
-        opacity: 0.85;
-        font-size: 0.9rem;
-      }
-      #calificaciones-root .qsc-muted {
-        opacity: 0.7;
       }
     </style>
   </head>
@@ -2037,7 +1613,8 @@
         const result = Array.from(map.values()).map((entry, index) => {
           const copy = Object.assign({}, entry);
           if (!copy.id)
-            copy.id = copy.matricula || copy.email || copy.uid || `student-${index}`;
+            copy.id =
+              copy.matricula || copy.email || copy.uid || `student-${index}`;
           if (!copy.matricula) copy.matricula = copy.id;
           if (!copy.name) copy.name = copy.email || copy.id;
           if (!copy.type) copy.type = "student";
@@ -2076,6 +1653,12 @@
       }
 
       const baseRosterRaw = [
+        {
+          id: "00000000001",
+          name: "Estudiante de Prueba",
+          email: "prueba@potros.itson.edu.mx",
+          type: "student",
+        },
         {
           id: "00000249116",
           name: "Arana Guerrero, Danett Itzanami",
@@ -2268,7 +1851,6 @@
         });
       }
 
-      // Populate student dropdown
       function populateStudentDropdown() {
         const select = document.getElementById("studentSelect");
         if (!select) return;
@@ -2295,7 +1877,6 @@
         select.dispatchEvent(new Event("change"));
       }
 
-      // Handle student selection
       document
         .getElementById("studentSelect")
         .addEventListener("change", function () {
@@ -2306,7 +1887,6 @@
             document.getElementById("studentId").value = student.id;
             document.getElementById("studentName").value = student.name;
             document.getElementById("studentEmail").value = student.email;
-            // Load saved grades for this student
             loadStudentGrades(selectedId);
           } else {
             document.getElementById("studentId").value = "";
@@ -2316,7 +1896,6 @@
           }
         });
 
-      // Save and load grades functionality
       function saveStudentGrades(studentId) {
         if (!studentId) return;
         const grades = {};
@@ -2351,10 +1930,7 @@
       }
 
       function clearAllGrades() {
-        document.querySelectorAll(".grade-input").forEach((input) => {
-          input.value = "";
-        });
-        document.querySelectorAll(".project-grade-input").forEach((input) => {
+        document.querySelectorAll(".grade-input, .project-grade-input").forEach((input) => {
           input.value = "";
         });
         calculateProjectGrades();
@@ -2362,125 +1938,72 @@
       }
 
       function calculateProjectGrades() {
-        // Gather all rubric inputs for the project
         const rubricInputs = document.querySelectorAll(
           "#project .project-grade-input"
         );
-        // Initialize sums for each phase
-        let phase1Contribution = 0;
-        let phase1WeightSum = 0;
-        let phase2Contribution = 0;
-        let phase2WeightSum = 0;
-        let phase34Contribution = 0;
-        let phase34WeightSum = 0;
-        let presentationContribution = 0;
-        let presentationWeightSum = 0;
+        let phase1Contribution = 0, phase1WeightSum = 0;
+        let phase2Contribution = 0, phase2WeightSum = 0;
+        let phase34Contribution = 0, phase34WeightSum = 0;
+        let presentationContribution = 0, presentationWeightSum = 0;
 
-        // Phase 1 (first 3 rubric items) – contributes 4 % of the course
         for (let i = 0; i < 3; i++) {
-          const grade = parseFloat(rubricInputs[i].value) || 0;
-          const weight = parseFloat(rubricInputs[i].dataset.weight);
-          // Each rubric item's weight represents its contribution (%) to the final grade.
-          // Contribution = (grade / 10) * weight
-          phase1Contribution += (grade / 10) * weight;
-          phase1WeightSum += weight;
+            const grade = parseFloat(rubricInputs[i].value) || 0;
+            const weight = parseFloat(rubricInputs[i].dataset.weight);
+            phase1Contribution += (grade / 10) * weight;
+            phase1WeightSum += weight;
         }
-        // Phase 2 (next 3 rubric items) – contributes 6 % of the course
         for (let i = 3; i < 6; i++) {
-          const grade = parseFloat(rubricInputs[i].value) || 0;
-          const weight = parseFloat(rubricInputs[i].dataset.weight);
-          phase2Contribution += (grade / 10) * weight;
-          phase2WeightSum += weight;
+            const grade = parseFloat(rubricInputs[i].value) || 0;
+            const weight = parseFloat(rubricInputs[i].dataset.weight);
+            phase2Contribution += (grade / 10) * weight;
+            phase2WeightSum += weight;
         }
-        // Phase 3-4 (next 4 rubric items) – contributes 6 % of the course
         for (let i = 6; i < 10; i++) {
-          const grade = parseFloat(rubricInputs[i].value) || 0;
-          const weight = parseFloat(rubricInputs[i].dataset.weight);
-          phase34Contribution += (grade / 10) * weight;
-          phase34WeightSum += weight;
+            const grade = parseFloat(rubricInputs[i].value) || 0;
+            const weight = parseFloat(rubricInputs[i].dataset.weight);
+            phase34Contribution += (grade / 10) * weight;
+            phase34WeightSum += weight;
         }
-        // Presentation (next 5 rubric items) – contributes 8 % of the course
         for (let i = 10; i < 15; i++) {
-          const grade = parseFloat(rubricInputs[i].value) || 0;
-          const weight = parseFloat(rubricInputs[i].dataset.weight);
-          presentationContribution += (grade / 10) * weight;
-          presentationWeightSum += weight;
+            const grade = parseFloat(rubricInputs[i].value) || 0;
+            const weight = parseFloat(rubricInputs[i].dataset.weight);
+            presentationContribution += (grade / 10) * weight;
+            presentationWeightSum += weight;
         }
 
-        // Compute weighted average grade for each phase (0–10). If no inputs, average = 0
-        const phase1Avg = phase1WeightSum
-          ? (phase1Contribution * 10) / phase1WeightSum
-          : 0;
-        const phase2Avg = phase2WeightSum
-          ? (phase2Contribution * 10) / phase2WeightSum
-          : 0;
-        const phase34Avg = phase34WeightSum
-          ? (phase34Contribution * 10) / phase34WeightSum
-          : 0;
-        const presentationAvg = presentationWeightSum
-          ? (presentationContribution * 10) / presentationWeightSum
-          : 0;
+        const phase1Avg = phase1WeightSum ? (phase1Contribution * 10) / phase1WeightSum : 0;
+        const phase2Avg = phase2WeightSum ? (phase2Contribution * 10) / phase2WeightSum : 0;
+        const phase34Avg = phase34WeightSum ? (phase34Contribution * 10) / phase34WeightSum : 0;
+        const presentationAvg = presentationWeightSum ? (presentationContribution * 10) / presentationWeightSum : 0;
 
-        // Update high-level Unit III grade inputs with the weighted average grade from the rubric
-        const fase1Input = document.querySelector(
-          '#unit3 .grade-input[data-weight="4"]'
-        );
+        const fase1Input = document.querySelector('#unit3 .grade-input[data-weight="4"]');
         if (fase1Input) fase1Input.value = phase1Avg.toFixed(1);
-        // Hay dos inputs con data-weight="6" dentro de la unidad III: el primero corresponde a la Fase 2 y el segundo a las Fases 3‑4.
-        const weight6Inputs = document.querySelectorAll(
-          '#unit3 .grade-input[data-weight="6"]'
-        );
-        const fase2Input = weight6Inputs[0];
-        const fase34Input = weight6Inputs[1];
-        if (fase2Input) fase2Input.value = phase2Avg.toFixed(1);
-        if (fase34Input) fase34Input.value = phase34Avg.toFixed(1);
-        const presentInput = document.querySelector(
-          '#unit3 .grade-input[data-weight="8"]'
-        );
+        const weight6Inputs = document.querySelectorAll('#unit3 .grade-input[data-weight="6"]');
+        if (weight6Inputs[0]) weight6Inputs[0].value = phase2Avg.toFixed(1);
+        if (weight6Inputs[1]) weight6Inputs[1].value = phase34Avg.toFixed(1);
+        const presentInput = document.querySelector('#unit3 .grade-input[data-weight="8"]');
         if (presentInput) presentInput.value = presentationAvg.toFixed(1);
 
-        // Calculate Final Exam contribution (16 % of course). It resides in Unit III.
-        const examInput = document.querySelector(
-          '#unit3 .grade-input[data-weight="16"]'
-        );
+        const examInput = document.querySelector('#unit3 .grade-input[data-weight="16"]');
         let examGrade = 0;
         if (examInput) {
-          const examValue = parseFloat(examInput.value) || 0;
-          // Convert exam grade (0–10) to its weighted contribution (0–16)
-          examGrade = (examValue / 10) * 16;
+            const examValue = parseFloat(examInput.value) || 0;
+            examGrade = (examValue / 10) * 16;
         }
 
-        // Update summary displays with contributions (0–weight)
-        document.getElementById("phase1Grade").textContent =
-          phase1Contribution.toFixed(1);
-        document.getElementById("phase2Grade").textContent =
-          phase2Contribution.toFixed(1);
-        document.getElementById("phase34Grade").textContent =
-          phase34Contribution.toFixed(1);
-        document.getElementById("presentationGrade").textContent =
-          presentationContribution.toFixed(1);
-        document.getElementById("finalExamGrade").textContent =
-          examGrade.toFixed(1);
+        document.getElementById("phase1Grade").textContent = phase1Contribution.toFixed(1);
+        document.getElementById("phase2Grade").textContent = phase2Contribution.toFixed(1);
+        document.getElementById("phase34Grade").textContent = phase34Contribution.toFixed(1);
+        document.getElementById("presentationGrade").textContent = presentationContribution.toFixed(1);
+        document.getElementById("finalExamGrade").textContent = examGrade.toFixed(1);
 
-        // Sum contributions to get total project contribution (0–40)
-        const projectTotal =
-          phase1Contribution +
-          phase2Contribution +
-          phase34Contribution +
-          presentationContribution +
-          examGrade;
-        document.getElementById("projectTotalGrade").textContent =
-          projectTotal.toFixed(1);
-
+        const projectTotal = phase1Contribution + phase2Contribution + phase34Contribution + presentationContribution + examGrade;
+        document.getElementById("projectTotalGrade").textContent = projectTotal.toFixed(1);
         return projectTotal;
       }
 
-      // Auto-save grades when changed
-      document.querySelectorAll(".grade-input").forEach((input) => {
+      document.querySelectorAll(".grade-input, .project-grade-input").forEach((input) => {
         input.addEventListener("input", () => {
-          // Whenever a standard grade input changes, recalculate both unit-based grades
-          // and project-based grades. This ensures the final exam (which resides in Unit III)
-          // reflects in the project summary when edited.
           calculateGrades();
           calculateProjectGrades();
           const studentId = document.getElementById("studentId").value;
@@ -2490,19 +2013,6 @@
         });
       });
 
-      // Auto-save project grades when changed
-      document.querySelectorAll(".project-grade-input").forEach((input) => {
-        input.addEventListener("input", () => {
-          calculateProjectGrades();
-          calculateGrades();
-          const studentId = document.getElementById("studentId").value;
-          if (studentId) {
-            saveStudentGrades(studentId);
-          }
-        });
-      });
-
-      // Manual save button for docentes
       (function setupSaveButton() {
         const saveButton = document.getElementById("saveGradesBtn");
         const statusEl = document.getElementById("saveGradesStatus");
@@ -2514,18 +2024,13 @@
           statusEl.classList.remove("hidden");
           statusEl.classList.toggle("text-red-600", !!isError);
           statusEl.classList.toggle("text-emerald-600", !isError);
-          if (hideTimer) {
-            clearTimeout(hideTimer);
-            hideTimer = null;
-          }
+          if (hideTimer) clearTimeout(hideTimer);
           hideTimer = setTimeout(() => {
             statusEl.classList.add("hidden");
-            hideTimer = null;
           }, 4000);
         }
         saveButton.addEventListener("click", () => {
-          const studentInput = document.getElementById("studentId");
-          const studentId = studentInput ? studentInput.value : "";
+          const studentId = document.getElementById("studentId").value;
           if (!studentId) {
             showStatus("Selecciona un estudiante antes de guardar.", true);
             return;
@@ -2535,151 +2040,76 @@
         });
       })();
 
-      // Tab functionality
       document.querySelectorAll(".tab-button").forEach((button) => {
         button.addEventListener("click", () => {
           const unit = button.dataset.unit;
-
-          // Update tab buttons
           document.querySelectorAll(".tab-button").forEach((btn) => {
-            btn.classList.remove(
-              "bg-blue-50",
-              "text-blue-600",
-              "border-b-2",
-              "border-blue-600"
-            );
+            btn.classList.remove("bg-blue-50", "text-blue-600", "border-b-2", "border-blue-600");
             btn.classList.add("text-gray-600");
           });
-          button.classList.add(
-            "bg-blue-50",
-            "text-blue-600",
-            "border-b-2",
-            "border-blue-600"
-          );
+          button.classList.add("bg-blue-50", "text-blue-600", "border-b-2", "border-blue-600");
           button.classList.remove("text-gray-600");
-
-          // Update content
           document.querySelectorAll(".unit-content").forEach((content) => {
             content.classList.add("hidden");
           });
-          if (unit === "project") {
-            document.getElementById("project").classList.remove("hidden");
-          } else {
-            document.getElementById(`unit${unit}`).classList.remove("hidden");
-          }
+          document.getElementById(unit === "project" ? "project" : `unit${unit}`).classList.remove("hidden");
         });
-      });
-
-      // Auto-calculate on input change
-      document.querySelectorAll(".grade-input").forEach((input) => {
-        input.addEventListener("input", calculateGrades);
       });
 
       function calculateGrades() {
-        let totalWeightedGrade = 0;
-        let unit1Total = 0;
-        let unit2Total = 0;
-        let unit3Total = 0;
+        let unit1Total = 0, unit2Total = 0, unit3Total = 0;
 
-        // Calcular para cada unidad (ponderaciones: U1 30 %, U2 30 %, U3 40 %)
-        document.querySelectorAll("#unit1 .grade-input").forEach((input) => {
-          const grade = parseFloat(input.value) || 0;
-          const weight = parseFloat(input.dataset.weight);
-          unit1Total += (grade * weight) / 30; // Unidad I aporta el 30 % del total del curso
+        document.querySelectorAll("#unit1 .grade-input").forEach(input => {
+            const grade = parseFloat(input.value) || 0;
+            const weight = parseFloat(input.dataset.weight);
+            unit1Total += (grade * weight) / 30;
+        });
+        document.querySelectorAll("#unit2 .grade-input").forEach(input => {
+            const grade = parseFloat(input.value) || 0;
+            const weight = parseFloat(input.dataset.weight);
+            unit2Total += (grade * weight) / 30;
+        });
+        document.querySelectorAll("#unit3 .grade-input").forEach(input => {
+            const grade = parseFloat(input.value) || 0;
+            const weight = parseFloat(input.dataset.weight);
+            unit3Total += (grade * weight) / 40;
         });
 
-        document.querySelectorAll("#unit2 .grade-input").forEach((input) => {
-          const grade = parseFloat(input.value) || 0;
-          const weight = parseFloat(input.dataset.weight);
-          unit2Total += (grade * weight) / 30; // Unidad II aporta el 30 % del total del curso
-        });
+        const unit1Contribution = (unit1Total / 10) * 30;
+        const unit2Contribution = (unit2Total / 10) * 30;
+        const unit3Contribution = (unit3Total / 10) * 40;
+        const finalContribution = unit1Contribution + unit2Contribution + unit3Contribution;
+        const finalPct = (finalContribution / 100) * 100;
 
-        document.querySelectorAll("#unit3 .grade-input").forEach((input) => {
-          const grade = parseFloat(input.value) || 0;
-          const weight = parseFloat(input.dataset.weight);
-          unit3Total += (grade * weight) / 40; // Unidad III aporta el 40 % del total del curso
-        });
-
-        // Calcular la contribución de cada unidad en porcentaje del curso.
-        // Si la calificación de la unidad es 10, aporta su peso completo (30 %, 30 % o 40 %).
-        const unit1Contribution = (unit1Total / 10) * 30; // 0–30
-        const unit2Contribution = (unit2Total / 10) * 30; // 0–30
-        const unit3Contribution = (unit3Total / 10) * 40; // 0–40
-        const finalContribution =
-          unit1Contribution + unit2Contribution + unit3Contribution; // 0–100
-        // Normalizar sobre la suma de ponderaciones (100) para obtener un porcentaje 0–100
-        const totalWeightSum = 30 + 30 + 40;
-        const finalPct = (finalContribution / totalWeightSum) * 100;
-
-        // Update displays: mostrar contribución (%) por unidad y porcentaje total
         document.getElementById("finalGrade").textContent = finalPct.toFixed(1);
-        document.getElementById("unit1Grade").textContent =
-          unit1Contribution.toFixed(1);
-        document.getElementById("unit2Grade").textContent =
-          unit2Contribution.toFixed(1);
-        document.getElementById("unit3Grade").textContent =
-          unit3Contribution.toFixed(1);
+        document.getElementById("unit1Grade").textContent = unit1Contribution.toFixed(1);
+        document.getElementById("unit2Grade").textContent = unit2Contribution.toFixed(1);
+        document.getElementById("unit3Grade").textContent = unit3Contribution.toFixed(1);
 
-        // Update progress bar
         const progressPercent = Math.min(finalPct, 100);
-        document.getElementById(
-          "progressPercent"
-        ).textContent = `${progressPercent.toFixed(0)}%`;
-        document.getElementById(
-          "progressBar"
-        ).style.width = `${progressPercent}%`;
-
-        // Update progress bar color based on percentage achieved
+        document.getElementById("progressPercent").textContent = `${progressPercent.toFixed(0)}%`;
         const progressBar = document.getElementById("progressBar");
-        progressBar.className = "h-3 rounded-full progress-bar";
-        if (finalPct >= 90.0) {
-          progressBar.classList.add(
-            "bg-gradient-to-r",
-            "from-green-500",
-            "to-green-600"
-          );
-        } else if (finalPct >= 70.0) {
-          progressBar.classList.add(
-            "bg-gradient-to-r",
-            "from-yellow-500",
-            "to-yellow-600"
-          );
-        } else if (finalPct >= 60.0) {
-          progressBar.classList.add(
-            "bg-gradient-to-r",
-            "from-orange-500",
-            "to-orange-600"
-          );
-        } else {
-          progressBar.classList.add(
-            "bg-gradient-to-r",
-            "from-red-500",
-            "to-red-600"
-          );
-        }
+        progressBar.style.width = `${progressPercent}%`;
+
+        progressBar.className = "h-3 rounded-full progress-bar"; // Reset classes
+        if (finalPct >= 90.0) progressBar.classList.add("bg-gradient-to-r", "from-green-500", "to-green-600");
+        else if (finalPct >= 70.0) progressBar.classList.add("bg-gradient-to-r", "from-yellow-500", "to-yellow-600");
+        else if (finalPct >= 60.0) progressBar.classList.add("bg-gradient-to-r", "from-orange-500", "to-orange-600");
+        else progressBar.classList.add("bg-gradient-to-r", "from-red-500", "to-red-600");
       }
 
-      // Calculate button
       document.getElementById("calculateBtn").addEventListener("click", () => {
         calculateGrades();
         showSummary();
       });
 
-      // Clear button
       document.getElementById("clearBtn").addEventListener("click", () => {
         const studentId = document.getElementById("studentId").value;
-        if (
-          studentId &&
-          confirm(
-            "¿Está seguro de que desea limpiar todas las calificaciones de este estudiante?"
-          )
-        ) {
-          // Clear grades from localStorage
+        if (studentId && confirm("¿Está seguro de que desea limpiar todas las calificaciones de este estudiante?")) {
           localStorage.removeItem(`grades_${studentId}`);
           clearAllGrades();
           document.getElementById("resultsSummary").classList.add("hidden");
         } else if (!studentId) {
-          // If no student selected, just clear the form
           document.getElementById("studentSelect").value = "";
           document.getElementById("studentName").value = "";
           document.getElementById("studentId").value = "";
@@ -2689,110 +2119,59 @@
         }
       });
 
-      // Export button
       document.getElementById("exportBtn").addEventListener("click", () => {
-        const studentName =
-          document.getElementById("studentName").value || "Estudiante";
+        const studentName = document.getElementById("studentName").value || "Estudiante";
         const studentId = document.getElementById("studentId").value || "N/A";
         const finalGrade = document.getElementById("finalGrade").textContent;
-
-        let reportContent = `REPORTE DE CALIFICACIONES - CALIDAD DE SOFTWARE\n`;
-        reportContent += `==============================================\n\n`;
-        reportContent += `Estudiante: ${studentName}\n`;
-        reportContent += `Código: ${studentId}\n`;
-        reportContent += `Fecha: ${new Date().toLocaleDateString()}\n\n`;
-        // Ajuste de escala: mostrar el avance total en porcentaje (0–100)
-        reportContent += `AVANCE TOTAL: ${finalGrade}%\n\n`;
-
-        reportContent += `DETALLE POR UNIDADES:\n`;
-        reportContent += `- Unidad I (30%): ${
-          document.getElementById("unit1Grade").textContent
-        }%\n`;
-        reportContent += `- Unidad II (30%): ${
-          document.getElementById("unit2Grade").textContent
-        }%\n`;
-        // La unidad III se pondera al 40 % del curso
-        reportContent += `- Unidad III (40%): ${
-          document.getElementById("unit3Grade").textContent
-        }%\n\n`;
-
+        let reportContent = `REPORTE DE CALIFICACIONES - CALIDAD DE SOFTWARE\n==============================================\n\n`;
+        reportContent += `Estudiante: ${studentName}\nCódigo: ${studentId}\nFecha: ${new Date().toLocaleDateString()}\n\n`;
+        reportContent += `AVANCE TOTAL: ${finalGrade}%\n\nDETALLE POR UNIDADES:\n`;
+        reportContent += `- Unidad I (30%): ${document.getElementById("unit1Grade").textContent}%\n`;
+        reportContent += `- Unidad II (30%): ${document.getElementById("unit2Grade").textContent}%\n`;
+        reportContent += `- Unidad III (40%): ${document.getElementById("unit3Grade").textContent}%\n\n`;
         const blob = new Blob([reportContent], { type: "text/plain" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `Reporte_${studentName.replace(/\s+/g, "_")}_${
-          new Date().toISOString().split("T")[0]
-        }.txt`;
+        a.download = `Reporte_${studentName.replace(/\s+/g, "_")}_${new Date().toISOString().split("T")[0]}.txt`;
         a.click();
         URL.revokeObjectURL(url);
       });
 
       function showSummary() {
-        // La variable `finalGrade` almacena ahora un porcentaje (0–100) en lugar de
-        // una calificación sobre 10. Se interpreta como el avance total del
-        // curso, por lo que el umbral de aprobación se fija en 60 %. Si
-        // `finalGrade` es 100, el estudiante ha cubierto el 100 % de las
-        // ponderaciones del curso.
-        const finalGrade = parseFloat(
-          document.getElementById("finalGrade").textContent
-        );
+        const finalGrade = parseFloat(document.getElementById("finalGrade").textContent);
         const summaryDiv = document.getElementById("summaryContent");
-
-        let status = "";
-        let statusColor = "";
-
-        // Con escala porcentual (0–100), se aprueba con 60 % o más
-        if (finalGrade >= 60.0) {
-          status = "APROBADO";
-          statusColor = "text-green-600";
-        } else {
-          status = "REPROBADO";
-          statusColor = "text-red-600";
-        }
-
+        const status = finalGrade >= 60.0 ? "APROBADO" : "REPROBADO";
+        const statusColor = finalGrade >= 60.0 ? "text-green-600" : "text-red-600";
         summaryDiv.innerHTML = `
-                <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                    <span class="font-medium">Estado del Curso:</span>
-                    <span class="font-bold ${statusColor}">${status}</span>
-                </div>
-                <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
-                    <span class="font-medium">Progreso total:</span>
-                    <span class="font-bold text-blue-600">${finalGrade.toFixed(
-                      1
-                    )}%</span>
-                </div>
-                <div class="text-sm text-gray-600 mt-4">
-                    <p><strong>Nota:</strong> La calificación mínima para aprobar es 60.0%</p>
-                </div>
-            `;
-
+            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                <span class="font-medium">Estado del Curso:</span>
+                <span class="font-bold ${statusColor}">${status}</span>
+            </div>
+            <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                <span class="font-medium">Progreso total:</span>
+                <span class="font-bold text-blue-600">${finalGrade.toFixed(1)}%</span>
+            </div>
+            <div class="text-sm text-gray-600 mt-4">
+                <p><strong>Nota:</strong> La calificación mínima para aprobar es 60.0%</p>
+            </div>`;
         document.getElementById("resultsSummary").classList.remove("hidden");
       }
 
-      // Initialize
       populateStudentDropdown();
       calculateProjectGrades();
       calculateGrades();
     </script>
-    <script
-      type="module"
-      src="js/calificaciones-teacher-sync.js"
-    ></script>
-
+    <script type="module" src="js/calificaciones-teacher-sync.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        // La sección de calificaciones de alumnos ahora será visible para todos por defecto.
-        // La lógica de "role-gate.js" se encargará de ocultar los botones de edición para los estudiantes.
         var preview = document.getElementById("student-preview");
         if (preview) {
             preview.style.removeProperty("display");
         }
-    
-        // Mantenemos la lógica del botón para que el docente pueda navegar a la vista previa.
         const btn = document.getElementById("viewStudentPreviewBtn");
         var rolLocal = (localStorage.getItem("qs_role") || "estudiante").toLowerCase();
         var isTeacher = rolLocal === "docente" || document.documentElement.classList.contains("role-teacher");
-    
         if (btn && isTeacher) {
             btn.classList.remove("hidden");
             btn.addEventListener("click", function () {
@@ -2804,47 +2183,29 @@
         }
       });
     </script>
-    
     <script type="module" src="./js/role-gate.js"></script>
-
     <script>
-      // Gating por rol local: estudiante solo lectura
       document.addEventListener("DOMContentLoaded", function () {
         try {
-          var rol = (
-            localStorage.getItem("qs_role") || "estudiante"
-          ).toLowerCase();
+          var rol = (localStorage.getItem("qs_role") || "estudiante").toLowerCase();
           if (rol !== "docente") {
-            // Deshabilitar todas las entradas y botones para estudiantes.  No se hace
-            // excepción con los botones de cálculo/limpieza/exportación ya
-            // que éstos se ocultan con la clase `teacher-only`.
-            document
-              .querySelectorAll("input, select, textarea, button")
-              .forEach(function (el) {
+            document.querySelectorAll("input, select, textarea, button").forEach(function (el) {
                 if (el.tagName === "BUTTON") {
-                  // No deshabilitar los botones de navegación entre unidades (tab-button).
-                  if (!el.classList.contains("tab-button") && !el.classList.contains('upload-trigger') && !el.classList.contains('upload-reset')) {
+                  if (!el.classList.contains('tab-button') && !el.classList.contains('upload-trigger') && !el.classList.contains('upload-reset')) {
                     el.disabled = true;
                   }
-                } else if (
-                  el.tagName === "INPUT" ||
-                  el.tagName === "SELECT" ||
-                  el.tagName === "TEXTAREA"
-                ) {
+                } else if ( el.tagName === "INPUT" || el.tagName === "SELECT" || el.tagName === "TEXTAREA") {
                   el.readOnly = true;
                   el.disabled = true;
                 }
               });
-            document
-              .querySelectorAll(".teacher-only,.docente-only")
-              .forEach(function (el) {
+            document.querySelectorAll(".teacher-only,.docente-only").forEach(function (el) {
                 el.style.display = "none";
               });
           }
         } catch (e) {}
       });
     </script>
-
     <script>
       window.firebaseConfig = {
         apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
@@ -2855,24 +2216,16 @@
         appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
       };
     </script>
-
     <script type="module" src="js/calificaciones-backend.js"></script>
-    <script
-      type="module"
-      src="js/calificaciones-teacher-preview.js"
-    ></script>
-
+    <script type="module" src="js/calificaciones-teacher-preview.js"></script>
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        document
-          .querySelectorAll(".grade-input, .project-grade-input")
-          .forEach(function (input) {
-            input.setAttribute("max", "10");
-            input.setAttribute("min", "0");
+      document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.grade-input, .project-grade-input').forEach(function (input) {
+            input.setAttribute('max', '10');
+            input.setAttribute('min', '0');
           });
       });
     </script>
-
     <script type="module" src="js/layout.js"></script>
     <script defer src="js/back-home.js"></script>
     <script defer src="js/nav-inject.js"></script>
