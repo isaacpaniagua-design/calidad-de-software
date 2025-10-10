@@ -25,18 +25,28 @@ const root = document.getElementById('calificaciones-root') || document.body;
 const params = new URLSearchParams(location.search || '');
 const GRUPO_ID = (root?.dataset?.grupo || params.get('grupo') || 'calidad-2025').trim();
 
-const localSave = typeof window.saveStudentGrades === 'function'
-  ? window.saveStudentGrades.bind(window)
-  : null;
-const localLoad = typeof window.loadStudentGrades === 'function'
-  ? window.loadStudentGrades.bind(window)
-  : null;
-const localClear = typeof window.clearAllGrades === 'function'
-  ? window.clearAllGrades.bind(window)
-  : null;
+// -- MODIFICACIÓN: Se declaran las variables pero se asignan después --
+let localSave = null;
+let localLoad = null;
+let localClear = null;
 
-if (!localSave || !localLoad) {
-  console.warn('[calificaciones-teacher-sync] funciones base no disponibles');
+function initializeBaseFunctions() {
+  localSave = typeof window.saveStudentGrades === 'function'
+    ? window.saveStudentGrades.bind(window)
+    : null;
+  localLoad = typeof window.loadStudentGrades === 'function'
+    ? window.loadStudentGrades.bind(window)
+    : null;
+  localClear = typeof window.clearAllGrades === 'function'
+    ? window.clearAllGrades.bind(window)
+    : null;
+  
+  if (!localSave || !localLoad) {
+    console.warn('[calificaciones-teacher-sync] funciones base no disponibles');
+  } else {
+     // Si las funciones se encontraron, parchearlas
+     patchFunctions();
+  }
 }
 
 function isTeacherRole() {
@@ -546,49 +556,53 @@ const remoteSync = (() => {
   };
 })();
 
-if (localLoad) {
-  window.loadStudentGrades = function patchedLoad(studentId) {
-    const profile = buildProfile(studentId);
-    if (!shouldUseFirestore()) {
-      return localLoad(studentId);
+// -- MODIFICACIÓN: Esta función ahora contiene el código que parchea las funciones globales
+function patchFunctions() {
+    if (localLoad) {
+      window.loadStudentGrades = function patchedLoad(studentId) {
+        const profile = buildProfile(studentId);
+        if (!shouldUseFirestore()) {
+          return localLoad(studentId);
+        }
+        fetchRemoteItems(profile)
+          .then((items) => {
+            if (items === null) {
+              localLoad(studentId);
+              return;
+            }
+            const activeId = document.getElementById('studentId')?.value || null;
+            const targetId = profile.studentId || profile.id || null;
+            if (targetId && activeId && targetId !== activeId) {
+              return;
+            }
+            applyItemsToInputs(items);
+            if (localSave && studentId) {
+              localSave(studentId);
+            }
+          })
+          .catch((err) => {
+            console.error('[calificaciones-teacher-sync] loadStudentGrades', err);
+            localLoad(studentId);
+          });
+      };
     }
-    fetchRemoteItems(profile)
-      .then((items) => {
-        if (items === null) {
-          localLoad(studentId);
-          return;
-        }
-        const activeId = document.getElementById('studentId')?.value || null;
-        const targetId = profile.studentId || profile.id || null;
-        if (targetId && activeId && targetId !== activeId) {
-          return;
-        }
-        applyItemsToInputs(items);
-        if (localSave && studentId) {
-          localSave(studentId);
-        }
-      })
-      .catch((err) => {
-        console.error('[calificaciones-teacher-sync] loadStudentGrades', err);
-        localLoad(studentId);
-      });
-  };
+
+    if (localSave) {
+      window.saveStudentGrades = function patchedSave(studentId) {
+        localSave(studentId);
+        if (!studentId) return;
+        const profile = buildProfile(studentId);
+        remoteSync.schedule(profile);
+      };
+    }
+
+    if (localClear) {
+      window.clearAllGrades = function patchedClear() {
+        localClear();
+      };
+    }
 }
 
-if (localSave) {
-  window.saveStudentGrades = function patchedSave(studentId) {
-    localSave(studentId);
-    if (!studentId) return;
-    const profile = buildProfile(studentId);
-    remoteSync.schedule(profile);
-  };
-}
-
-if (localClear) {
-  window.clearAllGrades = function patchedClear() {
-    localClear();
-  };
-}
 
 const flushButtons = ['calculateBtn', 'exportBtn', 'saveGradesBtn'];
 flushButtons.forEach((id) => {
@@ -633,3 +647,10 @@ function initTeacherSync(user, claims) {
 }
 
 window.initTeacherSync = initTeacherSync;
+
+// -- MODIFICACIÓN: Se espera a que la ventana cargue completamente antes de inicializar.
+if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', initializeBaseFunctions);
+} else {
+    initializeBaseFunctions();
+}
