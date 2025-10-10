@@ -1,23 +1,7 @@
 // js/calificaciones-teacher-sync.js
-// Sincroniza las capturas de calificaciones del docente con Firestore para que
-// el alumno pueda consultarlas desde su sesión.
-
 import { initFirebase, getDb } from './firebase.js';
-import {
-  getPrimaryDocId,
-  buildCandidateDocIds,
-} from './calificaciones-helpers.js';
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDoc,
-  getDocs,
-  orderBy,
-  query,
-  setDoc,
-  serverTimestamp,
-} from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
+import { getPrimaryDocId, buildCandidateDocIds } from './calificaciones-helpers.js';
+import { collection, deleteDoc, doc, getDoc, getDocs, orderBy, query, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 
 initFirebase();
 const db = getDb();
@@ -25,30 +9,21 @@ const root = document.getElementById('calificaciones-root') || document.body;
 const params = new URLSearchParams(location.search || '');
 const GRUPO_ID = (root?.dataset?.grupo || params.get('grupo') || 'calidad-2025').trim();
 
-// -- MODIFICACIÓN: Se declaran las variables pero se asignan después --
 let localSave = null;
 let localLoad = null;
 let localClear = null;
 
 function initializeBaseFunctions() {
-  localSave = typeof window.saveStudentGrades === 'function'
-    ? window.saveStudentGrades.bind(window)
-    : null;
-  localLoad = typeof window.loadStudentGrades === 'function'
-    ? window.loadStudentGrades.bind(window)
-    : null;
-  localClear = typeof window.clearAllGrades === 'function'
-    ? window.clearAllGrades.bind(window)
-    : null;
+  localSave = typeof window.saveStudentGrades === 'function' ? window.saveStudentGrades.bind(window) : null;
+  localLoad = typeof window.loadStudentGrades === 'function' ? window.loadStudentGrades.bind(window) : null;
+  localClear = typeof window.clearAllGrades === 'function' ? window.clearAllGrades.bind(window) : null;
   
   if (!localSave || !localLoad) {
-    console.warn('[calificaciones-teacher-sync] funciones base no disponibles');
+    console.warn('[calificaciones-teacher-sync] funciones base no disponibles. Asegúrate de que calificaciones.js se carga correctamente.');
   } else {
-     // Si las funciones se encontraron, parchearlas
      patchFunctions();
   }
 }
-
 function isTeacherRole() {
   try {
     const stored = (localStorage.getItem('qs_role') || 'estudiante').toLowerCase();
@@ -654,3 +629,4 @@ if (document.readyState === 'loading') {
 } else {
     initializeBaseFunctions();
 }
+
