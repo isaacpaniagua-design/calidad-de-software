@@ -1,51 +1,56 @@
 // js/migracion.js
 
-// Asegúrate de que firebase.js y firebase-config.js se carguen antes que este script.
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
-import { app } from './firebase.js'; // Importa la app de Firebase ya inicializada
+// 1. Importamos la función getDb() de tu archivo firebase.js
+import { getDb } from './firebase.js';
+// 2. Importamos solo las funciones de Firestore que necesitamos
+import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-const db = getFirestore(app);
+// 3. Obtenemos la instancia de la base de datos llamando a la función.
+//    Esta función se encargará de inicializar Firebase si es necesario.
+const db = getDb();
 
-// Función para obtener los estudiantes del archivo JSON
+// Función para obtener los estudiantes del archivo JSON local
 async function getStudentsFromFile() {
     const response = await fetch('../data/students.json');
     if (!response.ok) {
-        throw new Error("No se pudo cargar el archivo students.json");
+        throw new Error("No se pudo cargar el archivo data/students.json. Verifica que la ruta es correcta.");
     }
     const data = await response.json();
-    return data.students; // Asumiendo que el JSON tiene una clave "students"
+    // Tu archivo JSON tiene la lista dentro de la clave "students"
+    return data.students; 
 }
 
 // Función para subir los datos a Firestore
 async function migrateStudents() {
-  console.log("Iniciando migración de estudiantes...");
-  const studentsToMigrate = await getStudentsFromFile();
-
-  if (!studentsToMigrate || studentsToMigrate.length === 0) {
-      console.error("No hay estudiantes para migrar.");
-      return;
-  }
-
-  for (const student of studentsToMigrate) {
-    try {
-      // Usaremos el 'id' del estudiante como ID del documento
-      const studentDocRef = doc(db, "students", student.id);
-      
-      const studentData = {
-        name: student.name,
-        email: student.email,
-        matricula: student.id,
-        type: "student"
-      };
-      
-      await setDoc(studentDocRef, studentData);
-      console.log(`✅ Estudiante migrado: ${student.name} (${student.id})`);
-    } catch (error) {
-      console.error(`❌ Error migrando a ${student.name}:`, error);
+  console.log("Iniciando migración de estudiantes a Firestore...");
+  
+  try {
+    const studentsToMigrate = await getStudentsFromFile();
+    if (!studentsToMigrate || studentsToMigrate.length === 0) {
+        console.error("La lista de estudiantes en students.json está vacía o no se encontró.");
+        return;
     }
-  }
 
-  console.log("¡Migración completada!");
+    for (const student of studentsToMigrate) {
+        // Usaremos el 'id' del estudiante como ID del documento en la colección 'students'
+        const studentDocRef = doc(db, "students", student.id);
+        
+        const studentData = {
+          name: student.name,
+          email: student.email,
+          matricula: student.id,
+          type: "student"
+        };
+        
+        await setDoc(studentDocRef, studentData);
+        console.log(`✅ Estudiante migrado con éxito: ${student.name} (${student.id})`);
+    }
+
+    console.log("🎉 ¡Migración completada! Todos los estudiantes están en Firestore.");
+
+  } catch (error) {
+      console.error("❌ Ocurrió un error durante la migración:", error);
+  }
 }
 
 // Llama a la función para iniciar el proceso
