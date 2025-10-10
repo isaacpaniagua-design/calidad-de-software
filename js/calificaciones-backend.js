@@ -3,6 +3,12 @@
 import { getDb, onAuth } from './firebase.js';
 import { collection, getDocs, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 
+// Importa las funciones de inicialización de los otros módulos
+import { initStudentUploads } from './student-uploads.js';
+import { initTeacherSync } from './calificaciones-teacher-sync.js';
+import { initTeacherPreview } from './calificaciones-teacher-preview.js';
+
+
 const db = getDb();
 const COURSE_ID = "calidad-de-software-v2";
 let students = [];
@@ -114,9 +120,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const userRole = claims.role;
 
             // Llama a los inicializadores de OTROS scripts.
-            if (window.initStudentUploads) window.initStudentUploads(user, claims);
-            if (window.initTeacherSync) window.initTeacherSync(user, claims);
-            if (window.initTeacherPreview) window.initTeacherPreview(user, claims);
+            // Esto asegura que se ejecuten DESPUÉS de la autenticación
+            // y con el usuario y rol correctos.
+            initStudentUploads(user, claims);
+            initTeacherSync(user, claims);
+            initTeacherPreview(user, claims);
 
             if (userRole === 'docente') {
                 fetchStudents();
@@ -132,5 +140,3 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-
-
