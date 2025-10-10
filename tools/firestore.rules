@@ -50,6 +50,12 @@ service cloud.firestore {
      // Se combina con la regla de estudiante para que un docente también pueda leer su propia entrega si fuera el caso.
       allow read, update, delete: if getUserRole() == 'docente';
    }
+
+// Colección de Estudiantes
+match /students/{studentId} {
+  allow read: if getUserRole() == 'docente' || request.auth.uid == studentId;
+  allow write: if false; // Proteger la lista de estudiantes
+}
     // --- REGLAS ADICIONALES PARA EVITAR ERRORES EN OTRAS PÁGINAS ---
     
     // Temas del Foro
