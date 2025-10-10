@@ -1,40 +1,70 @@
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { auth, db } from "./firebase-config.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+// js/auth-guard.js
 
-const PROTECTED_PATH = '/index.html';
-const LOGIN_PATH = '/login.html';
+import { app } from './firebase.js';
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.9.2/firebase-auth.js";
 
-const isPublicPage = (path) => path === LOGIN_PATH;
+const auth = getAuth(app);
+const PROTECTED_PAGES = ['calificaciones.html', 'paneldocente.html', 'asistencia.html', 'materiales.html', 'Foro.html'];
 
-onAuthStateChanged(auth, async (user) => {
-  const currentPage = window.location.pathname;
+/**
+ * Determina el rol del usuario basado en su dirección de correo electrónico.
+ * @param {import("firebase/auth").User} user - El objeto de usuario de Firebase.
+ * @returns {'docente' | 'estudiante'} - El rol asignado.
+ */
+function determineUserRole(user) {
+    if (user && user.email && user.email.endsWith('@potros.itson.edu.mx')) {
+        return 'docente';
+    }
+    return 'estudiante';
+}
 
-  if (user) {
-    // Usuario ha iniciado sesión. Ahora verificamos si es docente.
-    const userDocRef = doc(db, "teachers", user.uid);
-    const userDocSnap = await getDoc(userDocRef);
+/**
+ * Guarda la información del usuario y su rol en el almacenamiento local.
+ * @param {import("firebase/auth").User} user - El objeto de usuario de Firebase.
+ * @param {string} role - El rol del usuario.
+ */
+function saveSession(user, role) {
+    localStorage.setItem('qs_user_uid', user.uid);
+    localStorage.setItem('qs_user_name', user.displayName);
+    localStorage.setItem('qs_user_email', user.email);
+    localStorage.setItem('qs_role', role);
+}
 
-    if (userDocSnap.exists()) {
-      // El usuario es un docente.
-      console.log("Acceso concedido. Usuario es docente.");
-      if (isPublicPage(currentPage)) {
-        // Si está en la página de login, redirigir al panel.
-        window.location.href = PROTECTED_PATH;
-      }
+/**
+ * Limpia la sesión del almacenamiento local al cerrar sesión.
+ */
+function clearSession() {
+    localStorage.removeItem('qs_user_uid');
+    localStorage.removeItem('qs_user_name');
+    localStorage.removeItem('qs_user_email');
+    localStorage.removeItem('qs_role');
+}
+
+// --- Lógica Principal del Guardián ---
+onAuthStateChanged(auth, (user) => {
+    const currentPage = window.location.pathname.split('/').pop();
+    const isProtectedPage = PROTECTED_PAGES.includes(currentPage);
+
+    if (user) {
+        // Usuario ha iniciado sesión
+        const role = determineUserRole(user);
+        saveSession(user, role);
+        console.log(`Usuario autenticado como: ${role.toUpperCase()}`);
+
+        // Si el usuario está en la página de login, lo redirigimos al panel principal.
+        if (currentPage === 'login.html') {
+            window.location.href = 'index.html';
+        }
+
     } else {
-      // El usuario no es un docente.
-      console.warn("Acceso denegado. El usuario no está en la colección de teachers.");
-      await signOut(auth);
-      // Redirigir a login con un mensaje de error.
-      window.location.href = `${LOGIN_PATH}?error=unauthorized`;
+        // Usuario NO ha iniciado sesión
+        clearSession();
+        console.log("Usuario no autenticado.");
+
+        // Si intenta acceder a una página protegida, lo redirigimos al login.
+        if (isProtectedPage) {
+            console.log(`Acceso denegado a ${currentPage}. Redirigiendo a login.`);
+            window.location.href = 'login.html';
+        }
     }
-  } else {
-    // No hay usuario iniciado sesión.
-    if (!isPublicPage(currentPage)) {
-      // Si no está en una página pública, redirigir a login.
-      console.log("Usuario no autenticado. Redirigiendo a login.");
-      window.location.href = LOGIN_PATH;
-    }
-  }
 });
