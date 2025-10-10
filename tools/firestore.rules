@@ -1,264 +1,47 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    function isSignedIn() { return request.auth != null; }
-    function isPotros() { return isSignedIn() && request.auth.token.email.matches('.*@potros\\.itson\\.edu\\.mx$'); }
-    function allowedTeacherEmails() {
-      return ['isaac.paniagua@potros.itson.edu.mx'];
+  
+    // =============================================
+    // Función de Ayuda para verificar roles
+    // =============================================
+    function getUserRole() {
+      // Obtiene el 'claim' personalizado 'role' del token de autenticación del usuario.
+      return request.auth.token.role;
     }
 
-    function normalizedTeacherEmail() {
-      return request.auth != null
-        && request.auth.token.email is string
-        ? request.auth.token.email.lower()
-        : '';
+    // =============================================
+    // Colección de Estudiantes (Roster)
+    // =============================================
+    match /students/{studentId} {
+      // LECTURA: Solo los docentes pueden leer la lista completa de estudiantes.
+      allow read: if getUserRole() == 'docente';
+      
+      // ESCRITURA: Deshabilitada para los clientes. La lista se gestiona desde un panel de admin.
+      allow write: if false; 
     }
 
-    function isAllowedTeacherEmail() {
-      return normalizedTeacherEmail() in allowedTeacherEmails();
-    }
+    // =============================================
+    // Colección de Calificaciones
+    // =============================================
+    match /courses/{courseId}/grades/{studentId} {
+      // LECTURA: Docentes leen todo. Estudiantes solo lo suyo.
+      allow read: if getUserRole() == 'docente' || request.auth.uid == studentId;
 
-    function teacherAllowlistPath() {
-      return /databases/$(database)/documents/config/teacherAllowlist;
-    }
-
-    function isTeacherAllowlisted() {
-      let email = normalizedTeacherEmail();
-      if (email == '') return false;
-      if (!exists(teacherAllowlistPath())) return false;
-      let data = get(teacherAllowlistPath()).data;
-      if (!(data.keys().hasOnly(['emails']) && data.emails is list)) return false;
-      if (data.emails.where(email => email is string).size() != data.emails.size()) return false;
-      let lowercased = data.emails.map(email => email.lower());
-      return lowercased.hasAny([email]);
-    }
-
-    function isTeacherRecord() {
-      return request.auth != null
-        && exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
-    }
-
-    function isTeacher() {
-      return isSignedIn()
-        && (
-          (isPotros() && (isTeacherRecord() || isAllowedTeacherEmail()))
-          || isTeacherAllowlisted()
-        );
-    }
-
-    function isSelf(studentId) {
-      return isPotros() && request.auth != null && request.auth.uid == studentId;
-    }
-
-    function isTeacherAllowlistDoc(docId) {
-      return docId == 'teacherAllowlist';
-    }
-
-    function isValidTeacherAllowlistPayload() {
-      return request.resource.data.keys().hasOnly([
-          'emails',
-          'updatedAt',
-          'updatedByUid'
-        ])
-        && request.resource.data.emails is list
-        && request.resource.data.emails.size() <= 200
-        && request.resource.data.emails.where(email => email is string).size()
-          == request.resource.data.emails.size()
-        && (!('updatedAt' in request.resource.data)
-          || request.resource.data.updatedAt is timestamp)
-        && (!('updatedByUid' in request.resource.data)
-          || request.resource.data.updatedByUid is string);
-    }
-
-    // Users: resolver UID por matrícula
-    match /users/{uid} {
-      allow read: if isTeacher();
-      allow create, update, delete: if false;
-    }
-
-    match /teachers/{uid} {
-      allow get: if isPotros();
-      allow create: if isAllowedTeacherEmail()
-        && request.auth.uid == uid
-        && request.resource.data.email == request.auth.token.email;
-      allow update, delete: if false;
-    }
-
-    // Foro
-    match /forum_topics/{topicId} {
-      // Lectura para cuentas @potros
-      allow read: if isPotros();
-
-      // Crear/editar/borrar solo docentes
-      allow create: if isTeacher()
-        && request.resource.data.title is string
-        && request.resource.data.content is string
-        && request.resource.data.authorEmail == request.auth.token.email;
-      allow update, delete: if isTeacher();
-    }
-
-    match /forum_topics/{topicId}/replies/{replyId} {
-      allow read: if isPotros();
-      allow create: if isPotros()
-        && request.resource.data.text is string
-        && request.resource.data.authorEmail == request.auth.token.email;
-      allow update, delete: if isTeacher() || (isPotros() && resource.data.authorEmail == request.auth.token.email);
-    }
-
-    // Materiales
-    match /materials/{materialId} {
-      allow read: if isPotros();
-      allow create, delete: if isTeacher();
-      allow update: if isTeacher() || (
-        isPotros() &&
-        request.resource.data.diff(resource.data).changedKeys().hasOnly(['downloads']) &&
-        request.resource.data.downloads == resource.data.downloads + 1
-      );
-    }
-
-    // Asistencias
-    match /attendances/{attendanceId} {
-      allow read: if isPotros();
-      allow create: if isPotros()
-        && request.resource.data.date is string
-        && request.resource.data.email is string
-        && request.resource.data.uid is string
-        && request.resource.data.manual is bool
-        && request.resource.data.createdByUid is string
-        && request.resource.data.createdByEmail is string
-        && (
-          (
-            request.resource.data.email == request.auth.token.email
-            && request.resource.data.uid == request.auth.uid
-            && request.resource.data.createdByUid == request.auth.uid
-            && request.resource.data.createdByEmail == request.auth.token.email
-          )
-          || (
-            isTeacher()
-            && request.resource.data.manual == true
-            && request.resource.data.createdByUid == request.auth.uid
-            && request.resource.data.createdByEmail == request.auth.token.email
-          )
-        );
-      allow update, delete: if false;
-    }
-
-    // Grades rules
-    match /grades/{studentId} {
-      allow read: if isTeacher() || isSelf(studentId) || (
-        resource.data.uid is string && isSelf(resource.data.uid)
-      );
-      allow create, update, delete: if isTeacher();
-    }
-
-    // Student uploads rules
-    match /studentUploads/{uploadId} {
-      function hasValidStudentUploadPayload() {
-        return request.resource.data.student is map
-          && request.resource.data.student.uid is string
-          && request.resource.data.title is string
-          && request.resource.data.kind is string
-          && request.resource.data.status is string;
-      }
-
-      function isTeacherProxyingUpload() {
-        return isTeacher()
-          && hasValidStudentUploadPayload()
-          && ('extra' in request.resource.data)
-          && request.resource.data.extra is map
-          && ('uploadedBy' in request.resource.data.extra)
-          && request.resource.data.extra.uploadedBy is map
-          && request.resource.data.extra.uploadedBy.uid is string
-          && request.resource.data.extra.uploadedBy.uid == request.auth.uid;
-      }
-
-      allow read: if isTeacher() || (isPotros() && resource.data.student.uid == request.auth.uid);
-
-      allow create: if hasValidStudentUploadPayload()
-        && ((
-            isPotros()
-            && request.resource.data.student.uid == request.auth.uid
-          )
-          || isTeacherProxyingUpload());
-
-      allow update, delete: if isTeacher();
-    }
-
-
-
-
-    // Calificaciones anidadas por grupo
-    match /grupos/{grupo}/calificaciones/{uid} {
-      allow read: if isTeacher() || isSelf(uid) || (
-        resource.data.uid is string && isSelf(resource.data.uid)
-      );
-      allow create, update, delete: if isTeacher();
-    }
-
-    match /grupos/{grupo}/calificaciones/{uid}/items/{itemId} {
-      allow read: if isTeacher() || isSelf(uid) || (
-        resource.data.studentUid is string && isSelf(resource.data.studentUid)
-      );
-      allow create, update, delete: if isTeacher();
+      // ESCRITURA: Solo los docentes pueden crear o modificar calificaciones.
+      allow write: if getUserRole() == 'docente';
     }
     
-    match /grupos/{grupoId} {
-      allow read: if isTeacher();
-      allow create, update, delete: if false;
-    }
-
-    match /grupos/{grupoId}/members/{memberId} {
-      allow read: if isTeacher();
-
-      function isValidMemberPayload() {
-        return request.resource.data.uid == memberId
-          && request.resource.data.displayName is string
-          && request.resource.data.nombre is string
-          && request.resource.data.email is string
-          && (request.resource.data.matricula == null || request.resource.data.matricula is string)
-          && request.resource.data.role == 'student'
-          && request.resource.data.updatedAt is timestamp
-          && (
-            !('createdAt' in request.resource.data) || request.resource.data.createdAt is timestamp
-          );
-      }
-
-      allow create: if isTeacher() && isValidMemberPayload();
-      allow update: if isTeacher() && isValidMemberPayload();
-      allow delete: if isTeacher();
-    }
-
-    match /grupos/{grupoId}/deliverables/{deliverableId} {
-      allow read: if isTeacher();
-      allow create, update, delete: if isTeacher();
-    }
-
-    match /grupos/{grupoId}/exams/{examId} {
-      allow read: if isTeacher();
-      allow create, update, delete: if isTeacher();
-    }
-
-    match /grupos/{grupoId}/gantt/{rowId} {
-      allow read: if isTeacher();
-      allow create, update, delete: if isTeacher();
-    }
-
-    match /grupos/{grupoId}/rubric/{rubricId} {
-      allow read: if isTeacher();
-      allow create, update, delete: if isTeacher();
-    }
-
-    match /grupos/{grupoId}/assignments/{assignmentId} {
-      allow read: if isTeacher();
-      allow create, update, delete: if isTeacher();
-    }
-
-    match /config/{docId} {
-      allow read: if isTeacherAllowlistDoc(docId) && isSignedIn();
-      allow create, update: if isTeacherAllowlistDoc(docId)
-        && isTeacher()
-        && isValidTeacherAllowlistPayload();
-      allow delete: if false;
+    // =============================================
+    // Colección de Evidencias (Entregas)
+    // =============================================
+    match /courses/{courseId}/submissions/{studentId}/activities/{activityId} {
+      // LECTURA: Docentes leen todo. Estudiantes solo lo suyo.
+      allow read: if getUserRole() == 'docente' || request.auth.uid == studentId;
+      
+      // ESCRITURA: Docentes y estudiantes (solo en su propia entrega).
+      allow write: if getUserRole() == 'docente' || request.auth.uid == studentId;
     }
   }
 }
