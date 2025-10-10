@@ -1,13 +1,12 @@
 // js/calificaciones-backend.js
 
-// 1. IMPORTACIONES CORREGIDAS: Usamos las funciones de tu archivo firebase.js
 import { getDb, onAuth } from './firebase.js';
 import { collection, getDocs, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 
 const db = getDb();
 
-const COURSE_ID = "calidad-de-software-v2"; // ID único para este curso
-let students = []; // Caché local de la lista de estudiantes
+const COURSE_ID = "calidad-de-software-v2";
+let students = []; // Caché de la lista de estudiantes
 
 // --- Carga de Datos Segura desde Firestore ---
 async function fetchStudents() {
@@ -16,8 +15,8 @@ async function fetchStudents() {
         students = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         students.sort((a, b) => a.name.localeCompare(b.name, 'es'));
         
-        if (typeof populateStudentDropdown === 'function') {
-            populateStudentDropdown(students);
+        if (typeof window.populateStudentDropdown === 'function') {
+            window.populateStudentDropdown(students);
         }
     } catch (error) {
         console.error("Error al cargar estudiantes:", error);
@@ -28,7 +27,6 @@ async function fetchStudents() {
 // --- Gestión de Calificaciones en Firestore ---
 async function saveGradesToFirestore(studentId) {
     if (!studentId) return false;
-
     const gradesData = {};
     document.querySelectorAll(".grade-input, .project-grade-input").forEach(input => {
         const activityId = input.dataset.activityId;
@@ -63,13 +61,13 @@ async function loadGradesFromFirestore(studentId) {
         const gradesDocRef = doc(db, "courses", COURSE_ID, "grades", studentId);
         const docSnap = await getDoc(gradesDocRef);
 
-        clearUI(); // Limpia la UI antes de cargar nuevos datos
+        clearUI(); // Limpia antes de cargar
 
         if (docSnap.exists()) {
             const grades = docSnap.data();
             document.querySelectorAll(".grade-input, .project-grade-input").forEach(input => {
                 const activityId = input.dataset.activityId;
-                if (activityId && grades[activityId]) {
+                if (activityId && grades[activityId] !== undefined) {
                     input.value = grades[activityId];
                 }
             });
@@ -85,6 +83,7 @@ async function loadGradesFromFirestore(studentId) {
 window.populateStudentDropdown = (studentList) => {
     const select = document.getElementById("studentSelect");
     if (!select) return;
+    const currentVal = select.value;
     select.innerHTML = '<option value="">-- Seleccione un estudiante --</option>';
     studentList.forEach(student => {
         const option = document.createElement("option");
@@ -92,10 +91,11 @@ window.populateStudentDropdown = (studentList) => {
         option.textContent = `${student.matricula || student.id} - ${student.name}`;
         select.appendChild(option);
     });
+    if (currentVal) select.value = currentVal;
 };
 
-// --- Inicialización y Manejo de Autenticación ---
-function initializePage() {
+// --- Punto de Entrada y Orquestación ---
+function initializePageEventListeners() {
     const studentSelect = document.getElementById("studentSelect");
     if (studentSelect) {
         studentSelect.addEventListener("change", function () {
@@ -106,6 +106,7 @@ function initializePage() {
                 document.getElementById("studentEmail").value = student.email;
                 loadGradesFromFirestore(this.value);
             } else {
+                // Limpia la info del estudiante
                 document.getElementById("studentId").value = "";
                 document.getElementById("studentName").value = "";
                 document.getElementById("studentEmail").value = "";
@@ -113,42 +114,62 @@ function initializePage() {
             }
         });
     }
-    
+
     const saveButton = document.getElementById("saveGradesBtn");
-    const statusEl = document.getElementById("saveGradesStatus");
-    if (saveButton && statusEl) {
-        const showStatus = (message, isError) => { /* ... (código sin cambios) */ };
-        saveButton.addEventListener("click", async () => { /* ... (código sin cambios) */ });
+    if (saveButton) {
+        saveButton.addEventListener("click", async () => {
+            const statusEl = document.getElementById("saveGradesStatus");
+            const showStatus = (message, isError) => {
+                 if (!statusEl) return;
+                 statusEl.textContent = message;
+                 statusEl.classList.remove("hidden");
+                 statusEl.classList.toggle("text-red-600", !!isError);
+                 statusEl.classList.toggle("text-emerald-600", !isError);
+                 setTimeout(() => statusEl.classList.add("hidden"), 4000);
+            };
+
+            const studentId = document.getElementById("studentId").value;
+            if (!studentId) {
+                showStatus("Selecciona un estudiante antes de guardar.", true);
+                return;
+            }
+            saveButton.disabled = true;
+            saveButton.textContent = "Guardando...";
+            const success = await saveGradesToFirestore(studentId);
+            showStatus(success ? "Calificaciones guardadas en la nube." : "Error al guardar.", !success);
+            saveButton.disabled = false;
+            saveButton.textContent = "Guardar Cambios";
+        });
     }
 }
 
-// Punto de entrada principal
 document.addEventListener('DOMContentLoaded', () => {
-    
-    initializePage();
+    initializePageEventListeners();
 
+    // onAuth es nuestro controlador principal. Espera a que firebase.js confirme el estado del usuario.
     onAuth(async (user, claims) => {
         if (user && claims) {
-            // Usuario autenticado
             const userRole = claims.role;
+
+            // Llama a las funciones de inicialización de otros scripts AHORA que sabemos el rol.
+            // Esto resuelve el error de "funciones base no disponibles".
+            if (window.initStudentUploads) window.initStudentUploads(user, claims);
+            if (window.initTeacherSync) window.initTeacherSync(user, claims);
+            if (window.initTeacherPreview) window.initTeacherPreview(user, claims);
 
             if (userRole === 'docente') {
                 document.body.classList.add('role-teacher');
-                fetchStudents(); // Solo el docente carga la lista
+                fetchStudents(); // Solo el docente puede obtener la lista de alumnos.
             } else {
-                // Es un estudiante
+                // Lógica para estudiante
                 document.body.classList.remove('role-teacher');
-                // Ocultamos el selector de estudiantes y mostramos sus datos
-                const studentInfo = document.querySelector('.teacher-only');
-                if(studentInfo) studentInfo.style.display = 'none';
-
-                // Cargamos solo sus propias calificaciones
+                const teacherUI = document.querySelector('.teacher-only');
+                if(teacherUI) teacherUI.style.display = 'none';
                 loadGradesFromFirestore(user.uid); 
             }
         } else {
-            // Usuario no autenticado
-            console.log("Usuario no autenticado, esperando redirección de auth-guard.js");
-            // Limpiamos la UI para no mostrar datos residuales
+            // No hay usuario autenticado.
+            console.log("Usuario no autenticado, auth-guard.js debería actuar.");
             window.populateStudentDropdown([]);
             if(window.clearAllGrades) window.clearAllGrades();
         }
