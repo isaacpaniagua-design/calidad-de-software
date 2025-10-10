@@ -2,18 +2,7 @@ import { initFirebase, getDb, getStorageInstance } from "./firebase.js";
 import { notifyTeacherAboutStudentUpload } from "./email-notifications.js";
 import { getPrimaryDocId } from "./calificaciones-helpers.js";
 import {
-  collection,
-  addDoc,
-  serverTimestamp,
-  query,
-  where,
-  orderBy,
-  onSnapshot,
-  doc,
-  updateDoc,
-  getDoc,
-  setDoc,
-  deleteDoc,
+  collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot, doc, updateDoc, getDoc, setDoc, deleteDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 import { ref as storageRef, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
 
@@ -654,12 +643,23 @@ export async function deleteStudentUpload(uploadOrId) {
 function initStudentUploads(user, claims) {
     if (!user || !claims) return;
     
-    // La lógica original que se ejecutaba sola ahora se llama desde aquí.
+    // La lógica que antes se autoejecutaba ahora es controlada desde calificaciones-backend.js
     if (claims.role === 'docente') {
-        observeAllStudentUploads();
+        // La llamada a observeAllStudentUploads necesita un callback para hacer algo con los datos.
+        // Si la intención es solo mostrar en consola, se puede dejar así, pero usualmente
+        // querrías actualizar la UI. Por ahora, lo dejamos como estaba.
+        observeAllStudentUploads(
+            (items) => { /* console.log('Uploads del docente:', items) */ },
+            (error) => { console.error('Error observando uploads del docente:', error); }
+        );
     } else {
-        observeStudentUploads(user.uid);
+        observeStudentUploads(
+            user.uid,
+            (items) => { /* console.log('Mis uploads:', items) */ },
+            (error) => { console.error('Error observando mis uploads:', error); }
+        );
     }
 }
 
-window.initStudentUploads = initStudentUploads;
+// Exportamos la función de inicialización y las otras que puedan ser útiles
+export { createStudentUpload, observeStudentUploads, observeAllStudentUploads, gradeStudentUpload, deleteStudentUpload, markStudentUploadAccepted, initStudentUploads };
