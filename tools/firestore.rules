@@ -3,45 +3,46 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
   
-    // =============================================
-    // Función de Ayuda para verificar roles
-    // =============================================
+    // Función para verificar si un usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Función para obtener el rol del usuario desde los Custom Claims
     function getUserRole() {
-      // Obtiene el 'claim' personalizado 'role' del token de autenticación del usuario.
       return request.auth.token.role;
     }
 
-    // =============================================
-    // Colección de Estudiantes (Roster)
-    // =============================================
+    // --- REGLAS PRINCIPALES ---
+
+    // Colección de Estudiantes
     match /students/{studentId} {
-      // LECTURA: Solo los docentes pueden leer la lista completa de estudiantes.
       allow read: if getUserRole() == 'docente';
-      
-      // ESCRITURA: Deshabilitada para los clientes. La lista se gestiona desde un panel de admin.
-      allow write: if false; 
+      allow write: if false; // Proteger la lista de estudiantes
     }
 
-    // =============================================
-    // Colección de Calificaciones
-    // =============================================
+    // Calificaciones
     match /courses/{courseId}/grades/{studentId} {
-      // LECTURA: Docentes leen todo. Estudiantes solo lo suyo.
       allow read: if getUserRole() == 'docente' || request.auth.uid == studentId;
-
-      // ESCRITURA: Solo los docentes pueden crear o modificar calificaciones.
       allow write: if getUserRole() == 'docente';
     }
     
-    // =============================================
-    // Colección de Evidencias (Entregas)
-    // =============================================
-    match /courses/{courseId}/submissions/{studentId}/activities/{activityId} {
-      // LECTURA: Docentes leen todo. Estudiantes solo lo suyo.
-      allow read: if getUserRole() == 'docente' || request.auth.uid == studentId;
-      
-      // ESCRITURA: Docentes y estudiantes (solo en su propia entrega).
-      allow write: if getUserRole() == 'docente' || request.auth.uid == studentId;
+    // Entregas de Evidencias (Submissions)
+    match /courses/{courseId}/submissions/{studentId}/{document=**} {
+       allow read, write: if getUserRole() == 'docente' || request.auth.uid == studentId;
+    }
+
+    // --- REGLAS ADICIONALES PARA EVITAR ERRORES EN OTRAS PÁGINAS ---
+    
+    // Temas del Foro
+    match /forum_topics/{topicId}/{document=**} {
+      // Permite a cualquier usuario autenticado leer y escribir en el foro
+      allow read, write: if isAuthenticated();
+    }
+    
+    // Lista de profesores (usada en el panel de docente)
+    match /teacher_allowlist/{docId} {
+       allow read: if isAuthenticated();
     }
   }
 }
