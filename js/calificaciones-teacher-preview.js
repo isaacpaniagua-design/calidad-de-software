@@ -10,7 +10,7 @@ const $id = (id) => document.getElementById(id);
 /**
  * Función principal que se llamará desde calificaciones-backend.js una vez que el usuario esté autenticado como docente.
  */
-function initTeacherPreview(user, claims) {
+export function initTeacherPreview(user, claims) {
   // Si no es un docente, no hacemos nada en este script.
   if (!claims || claims.role !== 'docente') {
     return;
@@ -32,9 +32,6 @@ function initTeacherPreview(user, claims) {
     setupPreviewDropdown(selPreview);
   }
 }
-
-// Hacemos la función de inicialización accesible globalmente
-window.initTeacherPreview = initTeacherPreview;
 
 
 // --- Lógica interna del Módulo ---
