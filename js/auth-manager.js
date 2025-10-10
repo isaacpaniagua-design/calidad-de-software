@@ -1,19 +1,54 @@
-// js/auth-manager.js
-import { app } from './firebase.js';
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.9.2/firebase-auth.js";
+// js/auth-guard.js
+import { authReady } from './auth-manager.js'; // Importamos a nuestro nuevo director
+import { app } from './firebase.js'; // Se mantiene por si se necesita en el futuro
 
-const auth = getAuth(app);
+const PROTECTED_PAGES = ['calificaciones.html', 'paneldocente.html', 'asistencia.html', 'materiales.html', 'Foro.html'];
 
 /**
- * Esta es una promesa que se resolverá una sola vez cuando el estado de autenticación inicial sea conocido.
- * Otros módulos pueden "esperar" a esta promesa para asegurarse de que el chequeo de auth ha terminado.
- * @type {Promise<import("firebase/auth").User|null>}
+ * Gestiona la sesión del usuario en localStorage.
+ * @param {import("firebase/auth").User|null} user - El objeto de usuario de Firebase o null.
  */
-export const authReady = new Promise(resolve => {
-    // onAuthStateChanged se dispara inmediatamente con el estado actual y luego cada vez que cambia.
-    // Usamos 'unsubscribe' para que solo se ejecute la primera vez, evitando comportamientos inesperados.
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-        resolve(user); // Resuelve la promesa con el usuario (o null si no está logueado)
-        unsubscribe(); // Nos damos de baja para no volver a ejecutar esto.
-    });
+function manageUserSession(user) {
+    if (user) {
+        // 1. Determinar el rol
+        const isTeacher = user.email && user.email.endsWith('@potros.itson.edu.mx');
+        const role = isTeacher ? 'docente' : 'estudiante';
+
+        // 2. Guardar datos de sesión
+        localStorage.setItem('qs_user_uid', user.uid);
+        localStorage.setItem('qs_user_name', user.displayName);
+        localStorage.setItem('qs_user_email', user.email);
+        localStorage.setItem('qs_role', role);
+        
+        console.log(`Auth Guard: Sesión iniciada. Rol de usuario: ${role.toUpperCase()}`);
+    } else {
+        // 3. Si no hay usuario, limpiar la sesión
+        localStorage.clear(); // Limpia todo para evitar datos residuales
+        console.log("Auth Guard: Sesión cerrada. Se limpió localStorage.");
+    }
+}
+
+// --- Lógica Principal del Guardián ---
+// Toda la lógica ahora espera a que el 'auth-manager' dé la señal de que está listo.
+authReady.then(user => {
+    // Una vez que sabemos el estado de auth, gestionamos la sesión.
+    manageUserSession(user);
+
+    const currentPage = window.location.pathname.split('/').pop();
+    const isProtectedPage = PROTECTED_PAGES.includes(currentPage);
+
+    if (user) {
+        // Usuario ha iniciado sesión.
+        // Si está en la página de login, lo redirigimos al panel principal.
+        if (currentPage === 'login.html' || currentPage === '') {
+            window.location.href = 'calificaciones.html';
+        }
+    } else {
+        // Usuario NO ha iniciado sesión.
+        // Si intenta acceder a una página protegida, lo redirigimos al login.
+        if (isProtectedPage) {
+            console.log(`Auth Guard: Acceso denegado a ${currentPage}. Redirigiendo a login.`);
+            window.location.href = 'login.html';
+        }
+    }
 });
