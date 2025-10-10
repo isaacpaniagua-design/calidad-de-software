@@ -1,178 +1,134 @@
 // js/calificaciones-backend.js
+import { app } from "./firebase.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/9.9.2/firebase-firestore.js";
+import { authReady } from './auth-manager.js'; // Importamos al director de orquesta
 
-import { getDb, onAuth } from './firebase.js';
-import { collection, getDocs, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
+const db = getFirestore(app);
 
-// Importa TODAS las funciones de inicialización de los otros módulos
-import { initStudentUploads } from './student-uploads.js';
-import { initTeacherSync } from './calificaciones-teacher-sync.js';
-import { initTeacherPreview } from './calificaciones-teacher-preview.js';
-import { initUploadsUI } from './calificaciones-uploads-ui.js';
-
-const db = getDb();
-const COURSE_ID = "calidad-de-software-v2";
-let students = [];
-let isAppInitialized = false; // Bandera de control para evitar doble inicialización
-
-// --- Carga de Datos Segura ---
-async function fetchStudents() {
-    try {
-        const querySnapshot = await getDocs(collection(db, "students"));
-        students = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        students.sort((a, b) => a.name.localeCompare(b.name, 'es'));
-        if (typeof window.populateStudentDropdown === 'function') {
-            window.populateStudentDropdown(students);
+// --- Toda la lógica del módulo se envuelve en la promesa authReady ---
+authReady.then(user => {
+    // Este bloque de código solo se ejecutará DESPUÉS de que la autenticación inicial se haya completado.
+    
+    if (user) {
+        console.log(`calificaciones-backend.js: Usuario ${user.email} autenticado. Procediendo a cargar datos.`);
+        
+        // --- INICIO DE TU CÓDIGO ORIGINAL ---
+        const studentId = localStorage.getItem('qs_user_uid'); // Ahora podemos leer esto con seguridad
+        if (!studentId) {
+            console.error("No se pudo obtener el ID del estudiante desde localStorage.");
+            return;
         }
-    } catch (error) {
-        console.error("Error al cargar estudiantes:", error);
-        alert("No se pudo cargar la lista de estudiantes. Asegúrate de iniciar sesión como 'docente'.");
-    }
-}
 
-// --- Gestión de Calificaciones ---
-async function saveGradesToFirestore(studentId) {
-    if (!studentId) return false;
-    const gradesData = {};
-    document.querySelectorAll(".grade-input, .project-grade-input").forEach(input => {
-        const activityId = input.dataset.activityId;
-        if (activityId) {
-            gradesData[activityId] = input.value || "0";
-        }
-    });
+        const courseId = "software-quality-2024";
+        const gradesDocRef = doc(db, "courses", courseId, "grades", studentId);
+        
+        const gradeInputs = document.querySelectorAll(".grade-input");
+        const finalGradeEl = document.getElementById("finalGrade");
+        const unit1GradeEl = document.getElementById("unit1Grade");
+        const unit2GradeEl = document.getElementById("unit2Grade");
+        const unit3GradeEl = document.getElementById("unit3Grade");
+        const progressBar = document.getElementById("progressBar");
+        const progressPercent = document.getElementById("progressPercent");
 
-    try {
-        const gradesDocRef = doc(db, "courses", COURSE_ID, "grades", studentId);
-        await setDoc(gradesDocRef, gradesData, { merge: true });
-        return true;
-    } catch (error) {
-        console.error("Error al guardar calificaciones:", error);
-        return false;
-    }
-}
+        function calculateGrades() {
+            let totalWeightedGrade = 0;
+            let unit1WeightedGrade = 0;
+            let unit2WeightedGrade = 0;
+            let unit3WeightedGrade = 0;
+            
+            const unit1TotalWeight = 30;
+            const unit2TotalWeight = 30;
+            const unit3TotalWeight = 40;
 
-async function loadGradesFromFirestore(studentId) {
-    const clearUI = () => window.clearAllGrades && window.clearAllGrades();
-    const calculateUI = () => {
-        if (window.calculateProjectGrades) window.calculateProjectGrades();
-        if (window.calculateGrades) window.calculateGrades();
-    };
-    if (!studentId) { clearUI(); return; }
-    try {
-        const gradesDocRef = doc(db, "courses", COURSE_ID, "grades", studentId);
-        const docSnap = await getDoc(gradesDocRef);
-        clearUI();
-        if (docSnap.exists()) {
-            const grades = docSnap.data();
-            document.querySelectorAll(".grade-input, .project-grade-input").forEach(input => {
-                const activityId = input.dataset.activityId;
-                if (activityId && grades[activityId] !== undefined) {
-                    input.value = grades[activityId];
+            gradeInputs.forEach((input) => {
+                const grade = parseFloat(input.value) || 0;
+                const weight = parseFloat(input.dataset.weight);
+                const unit = input.closest(".unit-content").id;
+
+                const weightedGrade = (grade / 10) * weight;
+                totalWeightedGrade += weightedGrade;
+
+                if (unit === "unit1") {
+                    unit1WeightedGrade += weightedGrade;
+                } else if (unit === "unit2") {
+                    unit2WeightedGrade += weightedGrade;
+                } else if (unit === "unit3") {
+                    unit3WeightedGrade += weightedGrade;
                 }
             });
+            
+            const unit1Percentage = (unit1WeightedGrade / unit1TotalWeight) * 100;
+            const unit2Percentage = (unit2WeightedGrade / unit2TotalWeight) * 100;
+            const unit3Percentage = (unit3WeightedGrade / unit3TotalWeight) * 100;
+
+            finalGradeEl.textContent = totalWeightedGrade.toFixed(2);
+            unit1GradeEl.textContent = unit1Percentage.toFixed(2);
+            unit2GradeEl.textContent = unit2Percentage.toFixed(2);
+            unit3GradeEl.textContent = unit3Percentage.toFixed(2);
+            
+            progressBar.style.width = `${totalWeightedGrade.toFixed(2)}%`;
+            progressPercent.textContent = `${totalWeightedGrade.toFixed(2)}%`;
         }
-        calculateUI();
-    } catch (error) {
-        console.error("Error al cargar calificaciones:", error);
-        clearUI();
-    }
-}
 
-// --- Lógica de Interfaz ---
-window.populateStudentDropdown = (studentList) => {
-    const select = document.getElementById("studentSelect");
-    if (!select) return;
-    const currentVal = select.value;
-    select.innerHTML = '<option value="">-- Seleccione un estudiante --</option>';
-    studentList.forEach(student => {
-        const option = document.createElement("option");
-        option.value = student.id;
-        option.textContent = `${student.matricula || student.id} - ${student.name}`;
-        select.appendChild(option);
-    });
-    if (currentVal) select.value = currentVal;
-};
+        async function saveGrades() {
+            const grades = {};
+            gradeInputs.forEach((input, index) => {
+                grades[`activity_${index}`] = input.value;
+            });
 
-// --- Punto de Entrada y Orquestación ---
-function initializePageEventListeners() {
-    const studentSelect = document.getElementById("studentSelect");
-    if (studentSelect) {
-        studentSelect.addEventListener("change", function () {
-            const student = students.find(s => s.id === this.value);
-            if (student) {
-                document.getElementById("studentId").value = student.id;
-                document.getElementById("studentName").value = student.name;
-                document.getElementById("studentEmail").value = student.email;
-                loadGradesFromFirestore(this.value);
-            } else {
-                document.getElementById("studentId").value = "";
-                document.getElementById("studentName").value = "";
-                document.getElementById("studentEmail").value = "";
-                if(window.clearAllGrades) window.clearAllGrades();
+            try {
+                await setDoc(gradesDocRef, grades);
+                console.log("Calificaciones guardadas en Firestore.");
+            } catch (error) {
+                console.error("Error al guardar calificaciones: ", error);
             }
-        });
-    }
+        }
 
-    const saveButton = document.getElementById("saveGradesBtn");
-    if (saveButton) {
-        saveButton.addEventListener("click", async () => {
-            const statusEl = document.getElementById("saveGradesStatus");
-            const showStatus = (message, isError) => {
-                 if (!statusEl) return;
-                 statusEl.textContent = message;
-                 statusEl.classList.remove("hidden");
-                 statusEl.classList.toggle("text-red-600", !!isError);
-                 statusEl.classList.toggle("text-emerald-600", !isError);
-                 setTimeout(() => statusEl.classList.add("hidden"), 4000);
-            };
-
-            const studentId = document.getElementById("studentId").value;
-            if (!studentId) {
-                showStatus("Selecciona un estudiante antes de guardar.", true);
-                return;
+        async function loadGrades() {
+            try {
+                const docSnap = await getDoc(gradesDocRef);
+                if (docSnap.exists()) {
+                    const grades = docSnap.data();
+                    gradeInputs.forEach((input, index) => {
+                        if (grades[`activity_${index}`]) {
+                            input.value = grades[`activity_${index}`];
+                        }
+                    });
+                    console.log("Calificaciones cargadas desde Firestore.");
+                    calculateGrades();
+                } else {
+                    console.log("No hay calificaciones guardadas para este estudiante.");
+                }
+            } catch (error) {
+                console.error("Error al cargar calificaciones: ", error);
             }
-            saveButton.disabled = true;
-            saveButton.textContent = "Guardando...";
-            const success = await saveGradesToFirestore(studentId);
-            showStatus(success ? "Calificaciones guardadas en la nube." : "Error al guardar.", !success);
-            saveButton.disabled = false;
-            saveButton.textContent = "Guardar Cambios";
+        }
+
+        gradeInputs.forEach((input) => {
+            input.addEventListener("input", calculateGrades);
         });
-    }
-}
-
-// --- PUNTO DE ENTRADA ÚNICO DE LA APLICACIÓN ---
-document.addEventListener('DOMContentLoaded', () => {
-    initializePageEventListeners();
-    
-    onAuth((user, claims) => {
-        if (!user || !claims) {
-            console.log("Usuario no autenticado, auth-guard.js debería actuar.");
-            isAppInitialized = false;
-            return;
-        }
-
-        if (isAppInitialized) {
-            return;
-        }
-        isAppInitialized = true;
         
-        console.log(`Usuario autenticado como: ${claims.role}. Inicializando todos los módulos...`);
+        // Carga las calificaciones al iniciar
+        loadGrades();
 
-        // Llama a TODOS los inicializadores
-        initTeacherSync(user, claims);
-        initTeacherPreview(user, claims);
-        initStudentUploads(user, claims);
-        initUploadsUI(user, claims);
+        // Escucha cambios en tiempo real desde Firestore
+        onSnapshot(gradesDocRef, (doc) => {
+            if (doc.exists()) {
+                const grades = doc.data();
+                gradeInputs.forEach((input, index) => {
+                    if (grades[`activity_${index}`]) {
+                        input.value = grades[`activity_${index}`];
+                    }
+                });
+                console.log("Datos actualizados en tiempo real.");
+                calculateGrades();
+            }
+        });
+        
+        // --- FIN DE TU CÓDIGO ORIGINAL ---
 
-        // Lógica específica de esta página
-        if (claims.role === 'docente') {
-            document.body.classList.add('role-teacher');
-            fetchStudents();
-        } else {
-            document.body.classList.remove('role-teacher');
-            const teacherUI = document.querySelector('.teacher-only');
-            if(teacherUI) teacherUI.style.display = 'none';
-            loadGradesFromFirestore(user.uid);
-        }
-    });
+    } else {
+        // Si el usuario no está autenticado, la lógica de calificaciones no se ejecuta.
+        console.log("calificaciones-backend.js: Usuario no autenticado. No se realizarán operaciones de carga o guardado de datos.");
+    }
 });
