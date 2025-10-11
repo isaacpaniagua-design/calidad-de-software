@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carga Masiva de Calificaciones (Versión Definitiva)</title>
+    <style>
+        body { font-family: sans-serif; padding: 2em; line-height: 1.6; color: #333; }
+        #status { border: 1px solid #ccc; padding: 1em; height: 400px; overflow-y: scroll; background-color: #f9f9f9; }
+        button { background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:disabled { background-color: #ccc; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { color: navy; }
+    </style>
+</head>
+<body>
+    <h1>Carga Masiva en la Colección "grades" (Versión Definitiva)</h1>
+    <p>
+        Esta herramienta utiliza la lista de estudiantes correcta para crear un documento de calificaciones inicial para cada uno en Firestore.
+    </p>
+    <button id="startButton">Iniciar Carga Masiva</button>
+    <div id="status">
+        <p>Presiona el botón para comenzar...</p>
+    </div>
+
+    <script type="module">
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import { firebaseConfig } from "./js/firebase-config.js";
+
+        // --- LISTA DE ESTUDIANTES CORRECTA Y ACTUALIZADA ---
+        const students = [
+            { "id": "00000249116", "name": "Arana Guerrero, Danett Itzanami", "email": "danett.arana249116@potros.itson.edu.mx" },
+            { "id": "00000147818", "name": "Araujo Godoy, Abraham Francisco", "email": "abraham.araujo@potros.itson.edu.mx" },
+            { "id": "00000244228", "name": "Avalos Morales, Egla Icel", "email": "egla.avalos244228@potros.itson.edu.mx" },
+            { "id": "00000244442", "name": "Blasco Villagomez, Luis Mario", "email": "luis.blasco244442@potros.itson.edu.mx" },
+            { "id": "00000244242", "name": "Duarte Lopez, Adlemi Guadalupe", "email": "adlemi.duarte244242@potros.itson.edu.mx" },
+            { "id": "00000244473", "name": "Espericueta Ramos, Jesus Alan", "email": "jesus.espericueta244473@potros.itson.edu.mx" },
+            { "id": "00000244608", "name": "Gracia Morales, Sergio Alejandro", "email": "sergio.gracia244608@potros.itson.edu.mx" },
+            { "id": "00000228847", "name": "Hernandez Gonzalez, Julian Ricardo", "email": "julian.hernandez228847@potros.itson.edu.mx" },
+            { "id": "00000248997", "name": "Le Blohic Garay, Mario Enrique", "email": "mario.leblohic248997@potros.itson.edu.mx" },
+            { "id": "00000249012", "name": "Lopez Guerrero, Luis Carlos", "email": "luis.lopez249012@potros.itson.edu.mx" },
+            { "id": "00000248990", "name": "Maldonado Montoya, Jose Gabriel", "email": "jose.maldonado248990@potros.itson.edu.mx" },
+            { "id": "00000244378", "name": "Martínez Santacruz, Yolanda", "email": "yolanda.martinez244378@potros.itson.edu.mx" },
+            { "id": "00000217812", "name": "Martínez Soto, Dainiz Raí", "email": "dainiz.martinez217812@potros.itson.edu.mx" },
+            { "id": "00000244321", "name": "Nevescanin Moreno, Angel Stipe", "email": "angel.nevescanin244321@potros.itson.edu.mx" },
+            { "id": "00000244477", "name": "Osuna Aguilera, Erik David", "email": "erik.osuna244477@potros.itson.edu.mx" },
+            { "id": "00000244711", "name": "Palacios Cardenas, Jorge Eduardo", "email": "jorge.palacios244711@potros.itson.edu.mx" },
+            { "id": "00000244569", "name": "Preciado Ruiz, Juan Carlos", "email": "juan.preciado244569@potros.itson.edu.mx" },
+            { "id": "00000244373", "name": "Reyes Galaz, Jose Abelardo", "email": "jose.reyes244373@potros.itson.edu.mx" },
+            { "id": "00000240691", "name": "Rivas Quintana, Emmanuel", "email": "emmanuel.rivas240691@potros.itson.edu.mx" },
+            { "id": "00000244266", "name": "Rocha Aguilar, Víctor Emmanuel", "email": "victor.rocha244266@potros.itson.edu.mx" },
+            { "id": "00000244312", "name": "Rodriguez Alvarado, Jose Agustin", "email": "jose.rodriguez244312@potros.itson.edu.mx" },
+            { "id": "00000244621", "name": "Soto Carrazco, Francisco Javier", "email": "francisco.soto244621@potros.itson.edu.mx" },
+            { "id": "00000216759", "name": "Sánchez Zavala, Dulce María", "email": "dulce.sanchez216759@potros.itson.edu.mx" },
+            { "id": "00000244689", "name": "Villegas Sosa, Ramsés Mauricio", "email": "ramses.villegas244689@potros.itson.edu.mx" },
+            { "id": "00000244679", "name": "Viveros Zavala, Angel Gael", "email": "angel.viveros244679@potros.itson.edu.mx" },
+            { "id": "00000099644", "name": "Paniagua, Isaac Prueba", "email": "iman.guaymas@potros.itson.edu.mx" }
+        ];
+
+        // --- LÓGICA DE CARGA ---
+        const startButton = document.getElementById('startButton');
+        const statusDiv = document.getElementById('status');
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        function log(message, type = 'info') {
+            const p = document.createElement('p');
+            p.textContent = message;
+            p.className = type;
+            statusDiv.appendChild(p);
+            statusDiv.scrollTop = statusDiv.scrollHeight;
+        }
+
+        async function createInitialGradeRecords() {
+            log("Iniciando proceso de carga...", 'info');
+            startButton.disabled = true;
+
+            try {
+                log(`Se encontraron ${students.length} estudiantes en la lista interna.`, 'info');
+
+                for (const student of students) {
+                    const studentId = student.id;
+                    const studentName = student.name;
+
+                    if (!studentId || !studentName) {
+                        log(`Saltando registro inválido: ${JSON.stringify(student)}`, 'error');
+                        continue;
+                    }
+
+                    const gradeRef = doc(db, 'grades', studentId);
+                    const docSnap = await getDoc(gradeRef);
+
+                    if (docSnap.exists()) {
+                        log(`Saltando: El estudiante ${studentName} (${studentId}) ya existe en 'grades'.`);
+                        continue;
+                    }
+
+                    const initialGradeData = {
+                        name: studentName,
+                        email: student.email || null,
+                        unit1: 0,
+                        unit2: 0,
+                        unit3: 0,
+                        projectFinal: 0,
+                        createdAt: new Date()
+                    };
+
+                    await setDoc(gradeRef, initialGradeData);
+                    log(`Éxito: Se creó el registro para ${studentName} (${studentId}).`, 'success');
+                }
+
+                log("¡Proceso de carga masiva completado!", 'success');
+
+            } catch (error) {
+                log(`Error crítico durante el proceso: ${error.message}`, 'error');
+                console.error(error);
+            } finally {
+                startButton.disabled = false;
+            }
+        }
+
+        startButton.addEventListener('click', createInitialGradeRecords);
+    </script>
+</body>
+</html>
