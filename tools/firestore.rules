@@ -3,87 +3,81 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
   
-    // Función para verificar si un usuario está autenticado
+    // --- Funciones de Ayuda ---
+    
+    // Verdadero si el usuario ha iniciado sesión.
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    // Función para obtener el rol del usuario desde los Custom Claims
-    function getUserRole() {
-      return request.auth.token.role;
+    // Verdadero si el UID del usuario que hace la petición
+    // existe como un documento en la colección 'teachers'.
+    function isTeacher() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
     }
 
-    // --- REGLAS PRINCIPALES ---
+    // --- Reglas por Colección ---
 
-    // Colección de Estudiantes
+    // Colección de Profesores: Solo los profesores pueden leer la lista. La escritura debe ser manejada con cuidado (ej. desde el admin).
+    match /teachers/{teacherId} {
+      allow read: if isTeacher();
+      allow write: if false; // Proteger para que solo se pueda modificar desde un backend de confianza o la consola
+    }
+
+    // Colección de Estudiantes: Los profesores pueden leer todo, cada estudiante puede leer su propio documento.
     match /students/{studentId} {
-      allow read: if getUserRole() == 'docente';
-      allow write: if false; // Proteger la lista de estudiantes
+      allow read: if isTeacher() || (isAuthenticated() && request.auth.uid == studentId);
+      allow write: if isTeacher(); // Permitir a los docentes editar/crear estudiantes
     }
 
-    // Calificaciones
-    match /courses/{courseId}/grades/{studentId} {
-      allow read: if getUserRole() == 'docente' || request.auth.uid == studentId;
-      allow write: if getUserRole() == 'docente';
+    // Materiales de clase
+    match /materials/{materialId} {
+      allow read: if isAuthenticated(); // Todos los autenticados pueden leer
+      allow write: if isTeacher();      // Solo los docentes pueden crear/editar/borrar
+    }
+
+    // Entregas de los estudiantes
+    match /studentUploads/{uploadId} {
+      // Los docentes tienen acceso total de lectura y escritura.
+      allow read, write: if isTeacher();
+      
+      // Un estudiante puede crear su propia entrega y leer/actualizarla.
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.student.uid;
+      allow get, update: if isAuthenticated() && request.auth.uid == resource.data.student.uid;
+    }
+
+    // Foro: Temas y Respuestas
+    match /forum_topics/{topicId} {
+      // Cualquier usuario autenticado puede leer, crear y modificar temas.
+      allow read, write: if isAuthenticated();
+      
+      // Regla para la subcolección de respuestas
+      match /replies/{replyId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    // Asistencias
+    match /attendances/{attendanceId} {
+      allow read: if isAuthenticated(); // Todos pueden leer la lista de asistencia
+      // Permite a un usuario crear su propia asistencia, y a un docente crear cualquiera.
+      allow create: if (isAuthenticated() && request.auth.uid == request.resource.data.uid) || isTeacher();
     }
     
-    // Entregas de Evidencias (Submissions)
-    match /courses/{courseId}/submissions/{studentId}/{document=**} {
-       allow read, write: if getUserRole() == 'docente' || request.auth.uid == studentId;
+    // Planes de Prueba
+    match /planesDePrueba/{planId} {
+        allow read, write: if isTeacher(); // Solo los docentes pueden gestionar planes de prueba
     }
-
-    // --- REGLAS PARA MATERIALES (CORREGIDO) ---
-// Colección de Materiales
-match /materials/{materialId} {
-  // Permite a CUALQUIER usuario autenticado leer la lista de materiales o un material específico.
-  allow read: if isAuthenticated();
-  
-  // SOLO permite escribir (crear, actualizar, borrar) a usuarios
-  // cuyo ID de autenticación exista como un documento en la colección 'teachers'.
-  allow write: if request.auth != null && exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
-}
-
-// Entregas de estudiantes (studentUploads)
-match /studentUploads/{uploadId} {
-  // REGLA #1: DOCENTES
-  // Un docente tiene acceso total. 'read' incluye 'get' y 'list'.
-  // 'write' incluye 'create', 'update' y 'delete'.
-  // Esta regla le da el permiso a 'observeAllStudentUploads' para funcionar.
-  allow read, write: if request.auth != null && exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
-
-  // REGLA #2: ESTUDIANTES (Permisos adicionales y específicos)
-  
-  // Permitir que un estudiante CREE un documento si el `student.uid`
-  // en los datos del nuevo documento es su propio UID.
-  allow create: if request.auth.uid == request.resource.data.student.uid;
-
-  // Permitir que un estudiante LEA (get) y ACTUALICE un documento existente
-  // si el `student.uid` guardado en el documento coincide con su UID.
-  // **Importante:** 'get' no es lo mismo que 'list'. Esta regla no les permite ver las entregas de otros.
-  allow get, update: if request.auth.uid == resource.data.student.uid;
-}
-
-      // Los docentes pueden leer, actualizar y eliminar cualquier entrega.
-     // Se combina con la regla de estudiante para que un docente también pueda leer su propia entrega si fuera el caso.
-      allow read, update, delete: if getUserRole() == 'docente';
-   }
-
-// Colección de Estudiantes
-match /students/{studentId} {
-  allow read: if getUserRole() == 'docente' || request.auth.uid == studentId;
-  allow write: if false; // Proteger la lista de estudiantes
-}
-    // --- REGLAS ADICIONALES PARA EVITAR ERRORES EN OTRAS PÁGINAS ---
     
-  // --- REGLAS PARA EL FORO (CORREGIDO) ---
-match /forum_topics/{topicId} {
-  // Permite a cualquier usuario autenticado leer (get, list) y escribir en la colección de temas.
-  // Esto SOLUCIONA el error 'subscribeLatestForumReplies:permission-denied'.
-  allow read, write: if isAuthenticated();
-
-  // Regla para la subcolección de respuestas dentro de cada tema
-  match /replies/{replyId} {
-    allow read, write: if isAuthenticated();
+    // Colecciones 'courses' y 'grupos' (reglas de ejemplo, ajústalas a tus necesidades)
+    match /courses/{courseId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+    }
+    
+    match /grupos/{grupoId} {
+        allow read: if isAuthenticated();
+        allow write: if isTeacher();
+    }
   }
-}
 }
