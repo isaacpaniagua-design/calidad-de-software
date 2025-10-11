@@ -1,52 +1,41 @@
 // js/calificaciones-backend.js
 
-// 1. IMPORTACIONES CORRECTAS
-// Importamos 'onAuth' para saber quién es el usuario y las dos funciones para obtener calificaciones.
 import { onAuth } from './firebase.js';
 import { subscribeGrades, subscribeMyGrades, updateStudentGradePartial } from './firebase.js';
 
-// Variable global para mantener la referencia a la función de cancelación de la suscripción de Firestore
 let unsubscribeFromGrades = null;
 
 /**
  * Función principal que se ejecuta cuando el estado de autenticación cambia.
- * @param {import("firebase/auth").User|null} user - El objeto de usuario de Firebase o null.
  */
 function handleAuthStateChanged(user) {
-    // Si hay una suscripción activa de Firestore de una sesión anterior, la cancelamos.
     if (unsubscribeFromGrades) {
         unsubscribeFromGrades();
         unsubscribeFromGrades = null;
-        console.log("Suscripción de calificaciones anterior cancelada.");
     }
 
-    // Buscamos los elementos del DOM que vamos a necesitar.
     const container = document.getElementById('grades-table-container');
-    const titleEl = document.getElementById('grades-title'); // <-- LÍNEA NUEVA
+    const titleEl = document.getElementById('grades-title');
 
-    // VERIFICACIÓN MEJORADA: Si falta alguno de los elementos, detenemos el script.
-    if (!container || !titleEl) { // <-- LÍNEA MODIFICADA
+    if (!container || !titleEl) {
         console.error("Error crítico: No se encontraron los elementos #grades-table-container o #grades-title en el HTML.");
-        return; 
+        return;
     }
 
     if (user) {
         const userRole = localStorage.getItem('qs_role') || 'estudiante';
-        console.log(`Usuario autenticado con rol: ${userRole.toUpperCase()}`);
-
         container.style.display = 'block';
 
-        // LÓGICA BASADA EN EL ROL
         if (userRole === 'docente') {
-            titleEl.textContent = 'Panel de Calificaciones'; // <-- LÍNEA NUEVA
+            titleEl.textContent = 'Panel de Calificaciones';
+            // Llama a la función que renderiza la tabla editable para el docente
             unsubscribeFromGrades = subscribeGrades(renderGradesTableForTeacher);
         } else {
-            titleEl.textContent = 'Mis Calificaciones'; // <-- LÍNEA NUEVA
+            titleEl.textContent = 'Mis Calificaciones';
+            // Llama a la función que renderiza la tabla de solo lectura para el estudiante
             unsubscribeFromGrades = subscribeMyGrades(user.uid, renderGradesTableForStudent);
         }
     } else {
-        // Si no hay usuario, ocultamos la tabla.
-        console.log("Usuario no autenticado. Limpiando vista de calificaciones.");
         container.style.display = 'none';
         const tbody = document.getElementById('grades-table-body');
         if (tbody) tbody.innerHTML = '';
@@ -55,39 +44,40 @@ function handleAuthStateChanged(user) {
 
 /**
  * Renderiza la tabla de calificaciones para la vista del DOCENTE.
- * Las celdas son editables.
- * @param {Array<object>} studentsData - Array con los datos de los estudiantes.
+ * Las celdas son inputs editables.
+ * @param {Array<object>} studentsData - Array con los datos de todos los estudiantes.
  */
 function renderGradesTableForTeacher(studentsData) {
     const tbody = document.getElementById('grades-table-body');
     if (!tbody) return;
 
-    tbody.innerHTML = ''; // Limpiar tabla
+    tbody.innerHTML = '';
     if (studentsData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10">No hay estudiantes registrados para calificar.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No hay estudiantes registrados.</td></tr>';
         return;
     }
 
     studentsData.forEach(student => {
         const row = document.createElement('tr');
-        row.dataset.studentId = student.id; // Guardamos el ID del estudiante en la fila
+        row.dataset.studentId = student.id; // ID del documento del estudiante
+        row.className = 'border-b hover:bg-gray-50';
 
-        // Celda para el nombre del estudiante (no editable)
-        const nameCell = document.createElement('td');
-        nameCell.textContent = student.name || 'Sin nombre';
-        row.appendChild(nameCell);
+        // Celda del nombre (no editable)
+        row.innerHTML = `<td class="py-2 px-4">${student.name || 'Sin nombre'}</td>`;
 
-        // Celdas para las calificaciones de las unidades y proyecto
+        // Celdas de calificaciones (editables)
         const fields = ['unit1', 'unit2', 'unit3', 'projectFinal'];
         fields.forEach(field => {
             const cell = document.createElement('td');
+            cell.className = 'py-2 px-4';
             const input = document.createElement('input');
             input.type = 'number';
             input.min = 0;
             input.max = 10;
+            input.step = 0.1; // Permitir decimales
             input.value = student[field] || 0;
-            input.dataset.field = field; // Guardamos el campo que representa (ej. 'unit1')
-            input.classList.add('grade-input-teacher');
+            input.dataset.field = field; // ej. 'unit1'
+            input.className = 'w-20 text-center bg-transparent focus:bg-blue-50 rounded';
             cell.appendChild(input);
             row.appendChild(cell);
         });
@@ -95,41 +85,43 @@ function renderGradesTableForTeacher(studentsData) {
         tbody.appendChild(row);
     });
 
-    // Añadir el listener para guardar cambios al salir del input (evento 'blur')
+    // Se añade un único listener al contenedor de la tabla para ser más eficiente.
     tbody.addEventListener('blur', handleGradeChange, true);
 }
 
 /**
- * Maneja el evento de cambio de calificación y lo guarda en Firestore.
- * @param {Event} event - El evento 'blur' del input.
+ * Maneja el evento de cambio en un input de calificación y lo guarda en Firestore.
+ * @param {Event} event - El evento 'blur' que se propaga desde un input.
  */
 async function handleGradeChange(event) {
-    if (event.target.classList.contains('grade-input-teacher')) {
-        const input = event.target;
+    const input = event.target;
+    // Nos aseguramos de que el evento venga de un input de calificación
+    if (input.tagName === 'INPUT' && input.dataset.field) {
         const studentId = input.closest('tr').dataset.studentId;
         const field = input.dataset.field;
-        const value = parseFloat(input.value) || 0;
+        const value = Math.max(0, Math.min(10, parseFloat(input.value) || 0)); // Validar que esté entre 0 y 10
+
+        // Actualizar el valor visual por si se corrigió (ej. si pusieron 11 o -1)
+        input.value = value;
 
         try {
-            console.log(`Actualizando calificación para ${studentId}: ${field} = ${value}`);
+            console.log(`Actualizando para ${studentId}: ${field} -> ${value}`);
             await updateStudentGradePartial(studentId, field, value);
-            // Opcional: mostrar una confirmación visual de que se guardó.
-            input.style.backgroundColor = '#d4edda'; // Verde claro
-            setTimeout(() => {
-                input.style.backgroundColor = '';
-            }, 1000);
+
+            input.classList.add('bg-green-100');
+            setTimeout(() => input.classList.remove('bg-green-100'), 1500);
+
         } catch (error) {
             console.error("Error al guardar la calificación:", error);
-            input.style.backgroundColor = '#f8d7da'; // Rojo claro
+            input.classList.add('bg-red-100');
         }
     }
 }
 
-
 /**
  * Renderiza la tabla de calificaciones para la vista del ESTUDIANTE.
  * Las celdas son de solo lectura.
- * @param {Array<object>} myGradesData - Array con un único objeto: las calificaciones del estudiante.
+ * @param {Array<object>} myGradesData - Array con las calificaciones del estudiante.
  */
 function renderGradesTableForStudent(myGradesData) {
     const tbody = document.getElementById('grades-table-body');
@@ -137,29 +129,23 @@ function renderGradesTableForStudent(myGradesData) {
 
     tbody.innerHTML = '';
     if (myGradesData.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="10">Aún no tienes calificaciones registradas.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Aún no tienes calificaciones registradas.</td></tr>';
         return;
     }
 
-    const myData = myGradesData[0]; // Solo habrá un elemento en el array
+    const myData = myGradesData[0];
     const row = document.createElement('tr');
-
-    // Nombre
-    row.innerHTML += `<td>${myData.name || 'Estudiante'}</td>`;
-
-    // Calificaciones
-    row.innerHTML += `<td>${myData.unit1 || 0}</td>`;
-    row.innerHTML += `<td>${myData.unit2 || 0}</td>`;
-    row.innerHTML += `<td>${myData.unit3 || 0}</td>`;
-    row.innerHTML += `<td>${myData.projectFinal || 0}</td>`;
-
+    row.innerHTML = `
+        <td class="py-2 px-4">${myData.name || 'Estudiante'}</td>
+        <td class="py-2 px-4">${myData.unit1 || 0}</td>
+        <td class="py-2 px-4">${myData.unit2 || 0}</td>
+        <td class="py-2 px-4">${myData.unit3 || 0}</td>
+        <td class="py-2 px-4">${myData.projectFinal || 0}</td>
+    `;
     tbody.appendChild(row);
 }
 
-
-// --- PUNTO DE ENTRADA ---
-// Iniciar la lógica cuando el DOM esté completamente cargado
+// Punto de entrada: iniciar la lógica cuando el DOM esté listo.
 document.addEventListener('DOMContentLoaded', () => {
-    // Escuchar los cambios de autenticación para iniciar la aplicación
     onAuth(handleAuthStateChanged);
 });
