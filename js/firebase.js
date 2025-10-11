@@ -504,6 +504,29 @@ export function subscribeTodayAttendanceByUser(email, cb, onError) {
   );
 }
 
+/**
+ * Busca un documento de estudiante en la colección 'students' por su email.
+ * @param {string} email El email del estudiante a buscar.
+ * @returns {Promise<{id: string, data: object}|null>} El ID y datos del estudiante, o null si no se encuentra.
+ */
+export async function findStudentByEmail(email) {
+  if (!email) return null;
+  const db = getDb();
+  const studentsRef = collection(db, "students");
+  const q = query(studentsRef, where("email", "==", email.toLowerCase()), limit(1));
+  
+  try {
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      const studentDoc = querySnapshot.docs[0];
+      return { id: studentDoc.id, data: studentDoc.data() }; // Devolvemos el ID del documento (ej. "00000099876")
+    }
+    return null;
+  } catch (error) {
+    console.error("Error buscando estudiante por email:", error);
+    return null;
+  }
+}
 export async function fetchAttendancesByDateRange(startDateStr, endDateStr) {
   const db = getDb();
   // startDateStr, endDateStr expected in 'YYYY-MM-DD'
@@ -1332,5 +1355,6 @@ export async function saveTestPlan(planId, planData) {
 
 
 export { app };
+
 
 
