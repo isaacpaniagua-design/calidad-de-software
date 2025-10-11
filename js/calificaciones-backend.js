@@ -32,8 +32,12 @@ function handleAuthStateChanged(user) {
             unsubscribeFromGrades = subscribeGrades(renderGradesTableForTeacher);
         } else {
             titleEl.textContent = 'Mis Calificaciones';
-            // Llama a la función que renderiza la tabla de solo lectura para el estudiante
-            unsubscribeFromGrades = subscribeMyGrades(user.uid, renderGradesTableForStudent);
+            // --- CAMBIO IMPORTANTE AQUÍ ---
+            // Leemos el ID de estudiante (ej. "00000099876") desde localStorage
+            const studentId = localStorage.getItem('qs_student_id'); 
+            
+            // Usamos ese ID para buscar las calificaciones, en lugar de user.uid
+            unsubscribeFromGrades = subscribeMyGrades(studentId, renderGradesTableForStudent);
         }
     } else {
         container.style.display = 'none';
