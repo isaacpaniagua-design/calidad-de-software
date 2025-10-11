@@ -3,35 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carga Masiva de Calificaciones (con Autenticación)</title>
+    <title>Carga y Diagnóstico de Calificaciones</title>
     <style>
-        body { font-family: sans-serif; padding: 2em; line-height: 1.6; color: #333; }
-        #status { border: 1px solid #ccc; padding: 1em; height: 400px; overflow-y: scroll; background-color: #f9f9f9; margin-top: 1em; }
+        body { font-family: sans-serif; padding: 2em; line-height: 1.6; }
+        #auth-info { border: 2px solid navy; padding: 1em; margin-bottom: 1em; background-color: #f0f8ff; }
+        #uid-display { font-weight: bold; color: navy; word-break: break-all; }
         button { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-right: 10px; }
         button#startButton { background-color: #28a745; }
         button:disabled { background-color: #ccc; cursor: not-allowed; }
         .success { color: green; font-weight: bold; }
         .error { color: red; font-weight: bold; }
-        .info { color: navy; }
-        #auth-status { font-weight: bold; }
     </style>
 </head>
 <body>
-    <h1>Carga Masiva en "grades" (con Autenticación)</h1>
-    <p>
-        Para ejecutar la carga masiva, primero debes iniciar sesión como docente.
-    </p>
+    <h1>Diagnóstico y Carga Masiva en "grades"</h1>
+    <p>Primero, inicia sesión. Luego, verifica que el UID mostrado abajo coincida con el que tienes en tu colección "teachers".</p>
     
-    <div>
-        <button id="loginButton">1. Iniciar Sesión con Google</button>
-        <span id="auth-status" class="info">Estado: No autenticado</span>
+    <button id="loginButton">1. Iniciar Sesión con Google</button>
+    
+    <div id="auth-info" style="display: none;">
+        <h3>Información de Autenticación</h3>
+        <p><strong>Usuario:</strong> <span id="user-name"></span></p>
+        <p><strong>Email:</strong> <span id="user-email"></span></p>
+        <p><strong>UID de Sesión:</strong> <span id="uid-display"></span></p>
     </div>
 
     <hr style="margin: 2em 0;">
 
     <button id="startButton" disabled>2. Iniciar Carga Masiva</button>
     
-    <div id="status">
+    <div id="status" style="border: 1px solid #ccc; padding: 1em; height: 300px; overflow-y: scroll; margin-top: 1em;">
         <p>Esperando inicio de sesión...</p>
     </div>
 
@@ -41,7 +42,6 @@
         import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
         import { firebaseConfig } from "./js/firebase-config.js";
 
-        // --- LISTA DE ESTUDIANTES CORRECTA ---
         const students = [
             { "id": "00000249116", "name": "Arana Guerrero, Danett Itzanami", "email": "danett.arana249116@potros.itson.edu.mx" },
             { "id": "00000147818", "name": "Araujo Godoy, Abraham Francisco", "email": "abraham.araujo@potros.itson.edu.mx" },
@@ -71,40 +71,38 @@
             { "id": "00000099644", "name": "Paniagua, Isaac Prueba", "email": "iman.guaymas@potros.itson.edu.mx" }
         ];
 
-        // --- LÓGICA DE LA PÁGINA ---
         const startButton = document.getElementById('startButton');
         const loginButton = document.getElementById('loginButton');
         const statusDiv = document.getElementById('status');
-        const authStatusSpan = document.getElementById('auth-status');
+        const authInfoDiv = document.getElementById('auth-info');
         
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // Observador de estado de autenticación
         onAuthStateChanged(auth, (user) => {
-            if (user && user.email === 'isaac.paniagua@potros.itson.edu.mx') {
-                authStatusSpan.textContent = `Autenticado como: ${user.displayName}`;
-                authStatusSpan.className = 'success';
-                loginButton.disabled = true;
-                startButton.disabled = false; // Habilitar el botón de carga
-                log("Autenticación exitosa. Listo para iniciar la carga masiva.", "success");
+            if (user) {
+                document.getElementById('user-name').textContent = user.displayName;
+                document.getElementById('user-email').textContent = user.email;
+                document.getElementById('uid-display').textContent = user.uid;
+                authInfoDiv.style.display = 'block';
+
+                if (user.email === 'isaac.paniagua@potros.itson.edu.mx') {
+                    loginButton.disabled = true;
+                    startButton.disabled = false;
+                    log("Autenticación exitosa. UID verificado. Listo para la carga.", "success");
+                } else {
+                    log("Usuario autenticado, pero NO es la cuenta del docente. La carga masiva está deshabilitada.", "error");
+                    startButton.disabled = true;
+                }
             } else {
-                authStatusSpan.textContent = 'Estado: No autenticado o no es docente.';
-                authStatusSpan.className = 'error';
-                loginButton.disabled = false;
+                authInfoDiv.style.display = 'none';
                 startButton.disabled = true;
             }
         });
 
-        // Función de inicio de sesión
         async function signIn() {
-            const provider = new GoogleAuthProvider();
-            try {
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                log(`Error de inicio de sesión: ${error.message}`, 'error');
-            }
+            try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (error) { log(`Error: ${error.message}`, 'error'); }
         }
 
         function log(message, type = 'info') {
@@ -118,48 +116,24 @@
         async function createInitialGradeRecords() {
             log("Iniciando proceso de carga...", 'info');
             startButton.disabled = true;
-
             try {
-                log(`Se encontraron ${students.length} estudiantes en la lista interna.`, 'info');
-
                 for (const student of students) {
-                    const studentId = student.id;
-                    const studentName = student.name;
-
-                    if (!studentId || !studentName) {
-                        log(`Saltando registro inválido: ${JSON.stringify(student)}`, 'error');
-                        continue;
-                    }
-
-                    const gradeRef = doc(db, 'grades', studentId);
+                    const gradeRef = doc(db, 'grades', student.id);
                     const docSnap = await getDoc(gradeRef);
-
                     if (docSnap.exists()) {
-                        log(`Saltando: El estudiante ${studentName} (${studentId}) ya existe en 'grades'.`);
+                        log(`Saltando: ${student.name} (${student.id}) ya existe.`);
                         continue;
                     }
-
-                    const initialGradeData = {
-                        name: studentName,
-                        email: student.email || null,
-                        unit1: 0,
-                        unit2: 0,
-                        unit3: 0,
-                        projectFinal: 0,
-                        createdAt: new Date()
-                    };
-
+                    const initialGradeData = { name: student.name, email: student.email, unit1: 0, unit2: 0, unit3: 0, projectFinal: 0, createdAt: new Date() };
                     await setDoc(gradeRef, initialGradeData);
-                    log(`Éxito: Se creó el registro para ${studentName} (${studentId}).`, 'success');
+                    log(`Éxito: Se creó el registro para ${student.name} (${student.id}).`, 'success');
                 }
-
                 log("¡Proceso de carga masiva completado!", 'success');
-
             } catch (error) {
-                log(`Error crítico durante el proceso: ${error.message}`, 'error');
+                log(`Error crítico: ${error.message}`, 'error');
                 console.error(error);
             } finally {
-                startButton.disabled = true; // Deshabilitar después de usar
+                startButton.disabled = true;
             }
         }
 
