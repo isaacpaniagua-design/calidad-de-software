@@ -3,33 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carga Masiva de Calificaciones (Versión Definitiva)</title>
+    <title>Carga Masiva de Calificaciones (con Autenticación)</title>
     <style>
         body { font-family: sans-serif; padding: 2em; line-height: 1.6; color: #333; }
-        #status { border: 1px solid #ccc; padding: 1em; height: 400px; overflow-y: scroll; background-color: #f9f9f9; }
-        button { background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        button:disabled { background-color: #ccc; }
+        #status { border: 1px solid #ccc; padding: 1em; height: 400px; overflow-y: scroll; background-color: #f9f9f9; margin-top: 1em; }
+        button { background-color: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-right: 10px; }
+        button#startButton { background-color: #28a745; }
+        button:disabled { background-color: #ccc; cursor: not-allowed; }
         .success { color: green; font-weight: bold; }
         .error { color: red; font-weight: bold; }
         .info { color: navy; }
+        #auth-status { font-weight: bold; }
     </style>
 </head>
 <body>
-    <h1>Carga Masiva en la Colección "grades" (Versión Definitiva)</h1>
+    <h1>Carga Masiva en "grades" (con Autenticación)</h1>
     <p>
-        Esta herramienta utiliza la lista de estudiantes correcta para crear un documento de calificaciones inicial para cada uno en Firestore.
+        Para ejecutar la carga masiva, primero debes iniciar sesión como docente.
     </p>
-    <button id="startButton">Iniciar Carga Masiva</button>
+    
+    <div>
+        <button id="loginButton">1. Iniciar Sesión con Google</button>
+        <span id="auth-status" class="info">Estado: No autenticado</span>
+    </div>
+
+    <hr style="margin: 2em 0;">
+
+    <button id="startButton" disabled>2. Iniciar Carga Masiva</button>
+    
     <div id="status">
-        <p>Presiona el botón para comenzar...</p>
+        <p>Esperando inicio de sesión...</p>
     </div>
 
     <script type="module">
         import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
         import { firebaseConfig } from "./js/firebase-config.js";
 
-        // --- LISTA DE ESTUDIANTES CORRECTA Y ACTUALIZADA ---
+        // --- LISTA DE ESTUDIANTES CORRECTA ---
         const students = [
             { "id": "00000249116", "name": "Arana Guerrero, Danett Itzanami", "email": "danett.arana249116@potros.itson.edu.mx" },
             { "id": "00000147818", "name": "Araujo Godoy, Abraham Francisco", "email": "abraham.araujo@potros.itson.edu.mx" },
@@ -59,12 +71,41 @@
             { "id": "00000099644", "name": "Paniagua, Isaac Prueba", "email": "iman.guaymas@potros.itson.edu.mx" }
         ];
 
-        // --- LÓGICA DE CARGA ---
+        // --- LÓGICA DE LA PÁGINA ---
         const startButton = document.getElementById('startButton');
+        const loginButton = document.getElementById('loginButton');
         const statusDiv = document.getElementById('status');
+        const authStatusSpan = document.getElementById('auth-status');
         
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // Observador de estado de autenticación
+        onAuthStateChanged(auth, (user) => {
+            if (user && user.email === 'isaac.paniagua@potros.itson.edu.mx') {
+                authStatusSpan.textContent = `Autenticado como: ${user.displayName}`;
+                authStatusSpan.className = 'success';
+                loginButton.disabled = true;
+                startButton.disabled = false; // Habilitar el botón de carga
+                log("Autenticación exitosa. Listo para iniciar la carga masiva.", "success");
+            } else {
+                authStatusSpan.textContent = 'Estado: No autenticado o no es docente.';
+                authStatusSpan.className = 'error';
+                loginButton.disabled = false;
+                startButton.disabled = true;
+            }
+        });
+
+        // Función de inicio de sesión
+        async function signIn() {
+            const provider = new GoogleAuthProvider();
+            try {
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                log(`Error de inicio de sesión: ${error.message}`, 'error');
+            }
+        }
 
         function log(message, type = 'info') {
             const p = document.createElement('p');
@@ -118,10 +159,11 @@
                 log(`Error crítico durante el proceso: ${error.message}`, 'error');
                 console.error(error);
             } finally {
-                startButton.disabled = false;
+                startButton.disabled = true; // Deshabilitar después de usar
             }
         }
 
+        loginButton.addEventListener('click', signIn);
         startButton.addEventListener('click', createInitialGradeRecords);
     </script>
 </body>
