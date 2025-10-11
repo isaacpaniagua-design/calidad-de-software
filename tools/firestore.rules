@@ -44,10 +44,24 @@ match /materials/{materialId} {
 }
 
 // Entregas de estudiantes (studentUploads)
-    match /studentUploads/{uploadId} {
-      // Los estudiantes pueden crear sus propias entregas y leerlas/actualizarlas.
-      allow create: if request.auth.uid == request.resource.data.student.uid;
-      allow read, update: if request.auth.uid == resource.data.student.uid;
+match /studentUploads/{uploadId} {
+  // REGLA #1: DOCENTES
+  // Un docente tiene acceso total. 'read' incluye 'get' y 'list'.
+  // 'write' incluye 'create', 'update' y 'delete'.
+  // Esta regla le da el permiso a 'observeAllStudentUploads' para funcionar.
+  allow read, write: if request.auth != null && exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
+
+  // REGLA #2: ESTUDIANTES (Permisos adicionales y específicos)
+  
+  // Permitir que un estudiante CREE un documento si el `student.uid`
+  // en los datos del nuevo documento es su propio UID.
+  allow create: if request.auth.uid == request.resource.data.student.uid;
+
+  // Permitir que un estudiante LEA (get) y ACTUALICE un documento existente
+  // si el `student.uid` guardado en el documento coincide con su UID.
+  // **Importante:** 'get' no es lo mismo que 'list'. Esta regla no les permite ver las entregas de otros.
+  allow get, update: if request.auth.uid == resource.data.student.uid;
+}
 
       // Los docentes pueden leer, actualizar y eliminar cualquier entrega.
      // Se combina con la regla de estudiante para que un docente también pueda leer su propia entrega si fuera el caso.
