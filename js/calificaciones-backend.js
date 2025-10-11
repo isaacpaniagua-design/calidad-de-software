@@ -20,24 +20,34 @@ function handleAuthStateChanged(user) {
         console.log("Suscripción de calificaciones anterior cancelada.");
     }
 
+    // Buscamos los elementos del DOM que vamos a necesitar.
+    const container = document.getElementById('grades-table-container');
+    const titleEl = document.getElementById('grades-title'); // <-- LÍNEA NUEVA
+
+    // VERIFICACIÓN MEJORADA: Si falta alguno de los elementos, detenemos el script.
+    if (!container || !titleEl) { // <-- LÍNEA MODIFICADA
+        console.error("Error crítico: No se encontraron los elementos #grades-table-container o #grades-title en el HTML.");
+        return; 
+    }
+
     if (user) {
         const userRole = localStorage.getItem('qs_role') || 'estudiante';
         console.log(`Usuario autenticado con rol: ${userRole.toUpperCase()}`);
 
-        // 2. LÓGICA BASADA EN EL ROL
+        container.style.display = 'block';
+
+        // LÓGICA BASADA EN EL ROL
         if (userRole === 'docente') {
-            // VISTA DEL DOCENTE: Carga la tabla con todos los estudiantes y la hace editable.
-            document.getElementById('grades-table-container').style.display = 'block';
+            titleEl.textContent = 'Panel de Calificaciones'; // <-- LÍNEA NUEVA
             unsubscribeFromGrades = subscribeGrades(renderGradesTableForTeacher);
         } else {
-            // VISTA DEL ESTUDIANTE: Carga solo sus propias calificaciones en modo de solo lectura.
-            document.getElementById('grades-table-container').style.display = 'block';
+            titleEl.textContent = 'Mis Calificaciones'; // <-- LÍNEA NUEVA
             unsubscribeFromGrades = subscribeMyGrades(user.uid, renderGradesTableForStudent);
         }
     } else {
-        // Si no hay usuario, ocultamos la tabla y nos aseguramos de que no haya suscripciones activas.
+        // Si no hay usuario, ocultamos la tabla.
         console.log("Usuario no autenticado. Limpiando vista de calificaciones.");
-        document.getElementById('grades-table-container').style.display = 'none';
+        container.style.display = 'none';
         const tbody = document.getElementById('grades-table-body');
         if (tbody) tbody.innerHTML = '';
     }
