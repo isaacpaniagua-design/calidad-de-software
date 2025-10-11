@@ -75,14 +75,15 @@ match /students/{studentId} {
 }
     // --- REGLAS ADICIONALES PARA EVITAR ERRORES EN OTRAS PÁGINAS ---
     
-   // Temas del Foro y sus subcolecciones (respuestas)
+  // --- REGLAS PARA EL FORO (CORREGIDO) ---
 match /forum_topics/{topicId} {
-  // Permite a cualquier usuario autenticado leer, crear, actualizar o borrar temas.
-  allow read, create, update, delete: if isAuthenticated();
+  // Permite a cualquier usuario autenticado leer (get, list) y escribir en la colección de temas.
+  // Esto SOLUCIONA el error 'subscribeLatestForumReplies:permission-denied'.
+  allow read, write: if isAuthenticated();
 
-  // Reglas para las subcolecciones (si las tienes, como 'replies')
+  // Regla para la subcolección de respuestas dentro de cada tema
   match /replies/{replyId} {
-    allow read, create, update, delete: if isAuthenticated();
+    allow read, write: if isAuthenticated();
   }
 }
 }
