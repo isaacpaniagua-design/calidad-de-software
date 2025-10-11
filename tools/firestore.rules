@@ -58,15 +58,14 @@ match /students/{studentId} {
 }
     // --- REGLAS ADICIONALES PARA EVITAR ERRORES EN OTRAS PÁGINAS ---
     
-    // Temas del Foro
-    match /forum_topics/{topicId}/{document=**} {
-      // Permite a cualquier usuario autenticado leer y escribir en el foro
-      allow read, write: if isAuthenticated();
-    }
-    
-    // Lista de profesores (usada en el panel de docente)
-    match /teacher_allowlist/{docId} {
-       allow read: if isAuthenticated();
-    }
+   // Temas del Foro y sus subcolecciones (respuestas)
+match /forum_topics/{topicId} {
+  // Permite a cualquier usuario autenticado leer, crear, actualizar o borrar temas.
+  allow read, create, update, delete: if isAuthenticated();
+
+  // Reglas para las subcolecciones (si las tienes, como 'replies')
+  match /replies/{replyId} {
+    allow read, create, update, delete: if isAuthenticated();
   }
+}
 }
