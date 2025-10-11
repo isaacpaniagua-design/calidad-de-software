@@ -577,7 +577,36 @@ export function subscribeGrades(cb) {
     cb(items);
   });
 }
-
+/**
+ * Se suscribe para obtener las calificaciones de UN SOLO estudiante en tiempo real.
+ * @param {string} studentUid - El UID del estudiante logueado.
+ * @param {function} cb - El callback que se ejecutará con los datos de las calificaciones.
+ * @returns {import("firebase/firestore").Unsubscribe} - La función para cancelar la suscripción.
+ */
+export function subscribeMyGrades(studentUid, cb, onError) {
+  if (!studentUid) {
+    const err = new Error("UID de estudiante es requerido para buscar sus calificaciones.");
+    if (onError) onError(err);
+    return () => {}; // Devuelve una función vacía para no romper la app
+  }
+  
+  const db = getDb();
+  const studentRef = doc(db, "grades", studentUid);
+  
+  return onSnapshot(studentRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      // Devolvemos los datos en un array para que la UI que esperaba una lista no se rompa.
+      cb([{ id: docSnap.id, ...data }]);
+    } else {
+      // El estudiante aún no tiene un registro de calificaciones.
+      cb([]); 
+    }
+  }, (error) => {
+    console.error("Error al obtener mis calificaciones:", error);
+    if (onError) onError(error);
+  });
+}
 export async function upsertStudentGrades(studentId, payload) {
   const db = getDb();
   const ref = doc(collection(db, "grades"), studentId);
@@ -1303,4 +1332,5 @@ export async function saveTestPlan(planId, planData) {
 
 
 export { app };
+
 
