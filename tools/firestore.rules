@@ -2,7 +2,17 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  
+
+// Calificaciones (Colección a nivel raíz)
+    match /grades/{studentId} {
+      // Un profesor puede listar toda la colección y escribir/actualizar cualquier documento.
+      allow list, write: if isTeacher();
+      
+      // Un estudiante solo puede LEER (get) su propio documento de calificaciones.
+      // El ID del documento DEBE ser igual al UID del estudiante.
+      // ¡Importante! No se le da permiso de 'list', por lo que no puede ver las de otros.
+      allow get: if isAuthenticated() && request.auth.uid == studentId;
+    }
     // --- Funciones de Ayuda ---
     
     // Verdadero si el usuario ha iniciado sesión.
