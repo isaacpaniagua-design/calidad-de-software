@@ -147,7 +147,7 @@ async function fetchTeacherAllowlistFromFirestore() {
   return raw.map(normalizeEmail).filter(Boolean);
 }
 
-export async function ensureTeacherAllowlistLoaded() {
+async function ensureTeacherAllowlistLoaded() {
   if (teacherAllowlistLoaded) return teacherAllowlistSet;
   if (!teacherAllowlistPromise) {
     teacherAllowlistPromise = (async () => {
@@ -170,7 +170,7 @@ export async function ensureTeacherAllowlistLoaded() {
   return teacherAllowlistPromise;
 }
 
-export async function listTeacherNotificationEmails({ domainOnly = true } = {}) {
+async function listTeacherNotificationEmails({ domainOnly = true } = {}) {
   try {
     await ensureTeacherAllowlistLoaded();
   } catch (error) {
@@ -202,7 +202,7 @@ export async function listTeacherNotificationEmails({ domainOnly = true } = {}) 
   return emails;
 }
 
-export function initFirebase() {
+ function initFirebase() {
   if (!app) {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
@@ -212,23 +212,23 @@ export function initFirebase() {
   return { app, auth, db };
 }
 
-export function getAuthInstance() {
+ function getAuthInstance() {
   if (!auth) initFirebase();
   return auth;
 }
 
-export function getDb() {
+function getDb() {
   if (!db) initFirebase();
   return db;
 }
 
-export function getStorageInstance() {
+function getStorageInstance() {
   if (!useStorage) return null;
   if (!storage) initFirebase();
   return storage;
 }
 
-export async function signInWithGooglePotros() {
+async function signInWithGooglePotros() {
   const auth = getAuthInstance();
   const provider = new GoogleAuthProvider();
   // Sugerencia visual del dominio (no es seguridad)
@@ -267,7 +267,7 @@ export async function signInWithGooglePotros() {
   }
 }
 
-export async function getDriveAccessTokenInteractive() {
+async function getDriveAccessTokenInteractive() {
   if (driveAccessToken) return driveAccessToken;
   // Intentar re-solicitar el token con alcance de Drive
   const auth = getAuthInstance();
@@ -284,7 +284,7 @@ export async function getDriveAccessTokenInteractive() {
   return driveAccessToken;
 }
 
-export async function signOutCurrent() {
+async function signOutCurrent() {
   const auth = getAuthInstance();
   await signOut(auth);
   driveAccessToken = null;
@@ -295,7 +295,7 @@ export async function signOutCurrent() {
 // registradas en Firebase Authentication. No realiza ninguna validación de
 // dominio; se espera que el rol de docente o estudiante se determine después
 // mediante isTeacherEmail/isTeacherByDoc.
-export async function signInWithEmailPassword(email, password) {
+async function signInWithEmailPassword(email, password) {
   const auth = getAuthInstance();
   return signInWithEmailAndPassword(auth, email, password);
 }
@@ -305,26 +305,26 @@ export async function signInWithEmailPassword(email, password) {
 // correos que no pertenecen al dominio institucional. Tras iniciar sesión, el
 // rol de docente o estudiante se determinará mediante isTeacherEmail o
 // isTeacherByDoc. No solicita permisos de Drive.
-export async function signInWithGoogleOpen() {
+async function signInWithGoogleOpen() {
   const auth = getAuthInstance();
   const provider = new GoogleAuthProvider();
   const result = await signInWithPopupSafe(auth, provider, { retries: 1 });
   return result?.user || null;
 }
 
-export function onAuth(cb) {
+ function onAuth(cb) {
   const auth = getAuthInstance();
   return onAuthStateChanged(auth, cb);
 }
 
 // ====== Roles ======
-export function isTeacherEmail(email) {
+function isTeacherEmail(email) {
   const normalized = normalizeEmail(email);
   if (!normalized) return false;
   return teacherAllowlistSet.has(normalized);
 }
 
-export async function isTeacherByDoc(uid) {
+async function isTeacherByDoc(uid) {
   if (!uid) return false;
   const db = getDb();
   try {
@@ -336,7 +336,7 @@ export async function isTeacherByDoc(uid) {
   }
 }
 
-export async function ensureTeacherDocForUser({ uid, email, displayName }) {
+async function ensureTeacherDocForUser({ uid, email, displayName }) {
   if (!uid || !email) return false;
   const lower = (email || "").toLowerCase();
   const db = getDb();
@@ -371,7 +371,7 @@ function todayKey() {
   return `${y}-${m}-${day}`;
 }
 
-export async function saveTodayAttendance({
+async function saveTodayAttendance({
   uid,
   name,
   email,
@@ -434,7 +434,7 @@ export async function saveTodayAttendance({
   return { id: attendanceId, uid, name, email: normalizedEmail, type, date };
 }
 
-export function subscribeTodayAttendance(cb, onError) {
+function subscribeTodayAttendance(cb, onError) {
   const db = getDb();
   const date = todayKey();
   const q = query(collection(db, "attendances"), where("date", "==", date));
@@ -467,7 +467,7 @@ export function subscribeTodayAttendance(cb, onError) {
   );
 }
 
-export function subscribeTodayAttendanceByUser(email, cb, onError) {
+function subscribeTodayAttendanceByUser(email, cb, onError) {
   const db = getDb();
   const date = todayKey();
   const q = query(
@@ -509,7 +509,7 @@ export function subscribeTodayAttendanceByUser(email, cb, onError) {
  * @param {string} email El email del estudiante a buscar.
  * @returns {Promise<{id: string, data: object}|null>} El ID y datos del estudiante, o null si no se encuentra.
  */
-export async function findStudentByUid(uid) {
+ async function findStudentByUid(uid) {
   if (!uid) {
     console.error("findStudentByUid: Se requiere un UID.");
     return null;
@@ -534,7 +534,7 @@ export async function findStudentByUid(uid) {
     return null;
   }
 }
-export async function fetchAttendancesByDateRange(startDateStr, endDateStr) {
+ async function fetchAttendancesByDateRange(startDateStr, endDateStr) {
   const db = getDb();
   // startDateStr, endDateStr expected in 'YYYY-MM-DD'
   const qy = query(
@@ -559,7 +559,7 @@ export async function fetchAttendancesByDateRange(startDateStr, endDateStr) {
   return items;
 }
 
-export async function fetchAttendancesByDateRangeByUser(
+async function fetchAttendancesByDateRangeByUser(
   email,
   startDateStr,
   endDateStr
@@ -572,7 +572,7 @@ export async function fetchAttendancesByDateRangeByUser(
 }
 
 // ====== Calificaciones (Grades) ======
-export function subscribeGrades(cb) {
+function subscribeGrades(cb) {
   const db = getDb();
   const q = query(collection(db, "grades"), orderBy("name"));
   return onSnapshot(q, (snap) => {
@@ -613,7 +613,7 @@ export function subscribeGrades(cb) {
  * @param {function} cb - El callback que se ejecutará con los datos de las calificaciones.
  * @returns {import("firebase/firestore").Unsubscribe} - La función para cancelar la suscripción.
  */
-export function subscribeMyGrades(studentUid, cb, onError) {
+ function subscribeMyGrades(studentUid, cb, onError) {
   if (!studentUid) {
     const err = new Error("UID de estudiante es requerido para buscar sus calificaciones.");
     if (onError) onError(err);
@@ -637,7 +637,7 @@ export function subscribeMyGrades(studentUid, cb, onError) {
     if (onError) onError(error);
   });
 }
-export async function upsertStudentGrades(studentId, payload) {
+async function upsertStudentGrades(studentId, payload) {
   const db = getDb();
   const ref = doc(collection(db, "grades"), studentId);
   const existing = await getDoc(ref);
@@ -665,7 +665,7 @@ export async function upsertStudentGrades(studentId, payload) {
   await setDoc(ref, base, { merge: true });
 }
 
-export async function updateStudentGradePartial(studentId, path, value) {
+async function updateStudentGradePartial(studentId, path, value) {
   const db = getDb();
   const ref = doc(collection(db, "grades"), studentId);
   const updates = { updatedAt: serverTimestamp() };
@@ -697,7 +697,7 @@ export async function updateStudentGradePartial(studentId, path, value) {
 }
 
 // ====== Materiales (Storage + Firestore) ======
-export async function uploadMaterial({
+async function uploadMaterial({
   file,
   title,
   category,
@@ -754,7 +754,7 @@ export async function uploadMaterial({
   });
 }
 
-export async function addMaterialLink({
+async function addMaterialLink({
   title,
   category,
   description,
@@ -779,7 +779,7 @@ export async function addMaterialLink({
   return { id: docRef.id, title, category, description, url };
 }
 
-export async function uploadMaterialToDrive({
+async function uploadMaterialToDrive({
   file,
   title,
   category,
@@ -897,7 +897,7 @@ export async function uploadMaterialToDrive({
   return { id: docRef.id, title, category, description, url };
 }
 
-export function subscribeMaterials(cb) {
+function subscribeMaterials(cb) {
   const db = getDb();
   const q = query(collection(db, "materials"), orderBy("createdAt", "desc"));
   return onSnapshot(q, (snap) => {
@@ -910,7 +910,7 @@ export function subscribeMaterials(cb) {
   });
 }
 
-export async function deleteMaterialById(id) {
+async function deleteMaterialById(id) {
   const db = getDb();
   const refDoc = doc(collection(db, "materials"), id);
   const snap = await getDoc(refDoc);
@@ -929,14 +929,14 @@ export async function deleteMaterialById(id) {
   await deleteDoc(refDoc);
 }
 
-export async function incrementMaterialDownloads(id) {
+async function incrementMaterialDownloads(id) {
   const db = getDb();
   const refDoc = doc(collection(db, "materials"), id);
   await updateDoc(refDoc, { downloads: increment(1) });
 }
 
 // ====== Grades range fetch by updatedAt ======
-export async function fetchGradesByDateRange(startISO, endISO) {
+async function fetchGradesByDateRange(startISO, endISO) {
   const db = getDb();
   const start = new Date(startISO);
   const end = new Date(endISO);
@@ -961,7 +961,7 @@ export async function fetchGradesByDateRange(startISO, endISO) {
 // Collection: forum_topics (doc fields: title, category, content, authorName, authorEmail, createdAt, updatedAt)
 // Subcollection per topic: forum_topics/{topicId}/replies (doc fields: text, authorName, authorEmail, createdAt)
 
-export function subscribeForumTopics(cb, onError) {
+ function subscribeForumTopics(cb, onError) {
   const db = getDb();
   const qy = query(
     collection(db, "forum_topics"),
@@ -986,7 +986,7 @@ export function subscribeForumTopics(cb, onError) {
   );
 }
 
-export async function createForumTopic({
+ async function createForumTopic({
   title,
   category,
   content,
@@ -1014,14 +1014,14 @@ export async function createForumTopic({
   return { id: docRef.id };
 }
 
-export async function updateForumTopic(topicId, updates) {
+async function updateForumTopic(topicId, updates) {
   const db = getDb();
   const ref = doc(collection(db, "forum_topics"), topicId);
   const payload = { ...updates, updatedAt: serverTimestamp() };
   await updateDoc(ref, payload);
 }
 
-export async function deleteForumTopic(topicId) {
+async function deleteForumTopic(topicId) {
   const db = getDb();
   // Delete replies first (best-effort)
   try {
@@ -1036,7 +1036,7 @@ export async function deleteForumTopic(topicId) {
   await deleteDoc(ref);
 }
 
-export function subscribeForumReplies(topicId, cb) {
+function subscribeForumReplies(topicId, cb) {
   const db = getDb();
   const repliesCol = collection(db, "forum_topics", topicId, "replies");
   const qy = query(repliesCol, orderBy("createdAt", "asc"));
@@ -1050,7 +1050,7 @@ export function subscribeForumReplies(topicId, cb) {
   });
 }
 
-export async function fetchForumRepliesCount(topicId) {
+async function fetchForumRepliesCount(topicId) {
   if (!topicId) return 0;
   const db = getDb();
   try {
@@ -1067,7 +1067,7 @@ export async function fetchForumRepliesCount(topicId) {
   }
 }
 
-export async function addForumReply(
+async function addForumReply(
   topicId,
   { text, authorName, authorEmail, parentId = null }
 ) {
@@ -1154,7 +1154,7 @@ async function refreshTopicLastReply(topicId) {
   } catch (_) {}
 }
 
-export async function deleteForumReply(topicId, replyId) {
+async function deleteForumReply(topicId, replyId) {
   const db = getDb();
   if (!topicId || !replyId) throw new Error("topicId y replyId requeridos");
   const ref = doc(collection(db, "forum_topics", topicId, "replies"), replyId);
@@ -1183,7 +1183,7 @@ export async function deleteForumReply(topicId, replyId) {
   } catch (_) {}
 }
 
-export async function registerForumReplyReaction(
+async function registerForumReplyReaction(
   topicId,
   replyId,
   reaction = "like",
@@ -1219,7 +1219,7 @@ export async function registerForumReplyReaction(
   await updateDoc(ref, updates);
 }
 
-export function subscribeLatestForumReplies(limitOrOptions, onChange, onError) {
+ function subscribeLatestForumReplies(limitOrOptions, onChange, onError) {
   const db = getDb();
   let max = 25;
   if (typeof limitOrOptions === "number" && Number.isFinite(limitOrOptions)) {
@@ -1308,7 +1308,7 @@ export function subscribeLatestForumReplies(limitOrOptions, onChange, onError) {
   );
 }
 
-export async function fetchForumTopicSummary(topicId) {
+async function fetchForumTopicSummary(topicId) {
   if (!topicId) return null;
   const db = getDb();
   try {
@@ -1323,7 +1323,7 @@ export async function fetchForumTopicSummary(topicId) {
   }
 }
 
-export async function fetchForumReply(topicId, replyId) {
+async function fetchForumReply(topicId, replyId) {
   if (!topicId || !replyId) return null;
   const db = getDb();
   try {
@@ -1348,7 +1348,7 @@ export async function fetchForumReply(topicId, replyId) {
  * @param {object} planData Objeto con todos los datos del formulario.
  * @returns {Promise<void>}
  */
-export async function saveTestPlan(planId, planData) {
+async function saveTestPlan(planId, planData) {
   const db = getDb();
   const planRef = doc(db, "planesDePrueba", planId);
   // Añadimos un timestamp para ordenar y saber cuándo se modificó por última vez
@@ -1361,7 +1361,7 @@ export async function saveTestPlan(planId, planData) {
 
 
 
-export { app };
+ { app };
 
 // Añade esto al final de js/firebase.js
 
@@ -1371,7 +1371,7 @@ export { app };
  * @param {function} cb - El callback que se ejecutará con la lista de actividades.
  * @returns {import("firebase/firestore").Unsubscribe} - La función para cancelar la suscripción.
  */
-export function subscribeMyActivities(studentId, cb) {
+ function subscribeMyActivities(studentId, cb) {
   if (!studentId) return () => {};
 
   const db = getDb();
@@ -1386,3 +1386,54 @@ export function subscribeMyActivities(studentId, cb) {
 
 
 
+// Pega este bloque al final de tu archivo js/firebase.js
+
+export {
+  app,
+  ensureTeacherAllowlistLoaded,
+  listTeacherNotificationEmails,
+  initFirebase,
+  getAuthInstance,
+  getDb,
+  getStorageInstance,
+  signInWithGooglePotros,
+  getDriveAccessTokenInteractive,
+  signOutCurrent,
+  signInWithEmailPassword,
+  signInWithGoogleOpen,
+  onAuth,
+  isTeacherEmail,
+  isTeacherByDoc,
+  ensureTeacherDocForUser,
+  saveTodayAttendance,
+  subscribeTodayAttendance,
+  subscribeTodayAttendanceByUser,
+  findStudentByEmail,
+  fetchAttendancesByDateRange,
+  fetchAttendancesByDateRangeByUser,
+  subscribeGrades,
+  subscribeMyGrades,
+  upsertStudentGrades,
+  updateStudentGradePartial,
+  uploadMaterial,
+  addMaterialLink,
+  uploadMaterialToDrive,
+  subscribeMaterials,
+  deleteMaterialById,
+  incrementMaterialDownloads,
+  fetchGradesByDateRange,
+  subscribeForumTopics,
+  createForumTopic,
+  updateForumTopic,
+  deleteForumTopic,
+  subscribeForumReplies,
+  fetchForumRepliesCount,
+  addForumReply,
+  deleteForumReply,
+  registerForumReplyReaction,
+  subscribeLatestForumReplies,
+  fetchForumTopicSummary,
+  fetchForumReply,
+  saveTestPlan,
+  subscribeMyActivities
+};
