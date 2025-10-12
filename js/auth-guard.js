@@ -1,7 +1,7 @@
 // js/auth-guard.js
 import { app } from './firebase.js';
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.9.2/firebase-auth.js";
-import { findStudentByEmail } from './firebase.js'; // Importación de la nueva función
+import { findStudentByUid } from './firebase.js'; // Importación de la nueva función
 
 const auth = getAuth(app);
 
@@ -12,28 +12,35 @@ const PROTECTED_PAGES = ['calificaciones.html', 'paneldocente.html', 'asistencia
  * @param {import("firebase/auth").User|null} user - El objeto de usuario de Firebase o null.
  */
 async function manageUserSession(user) {
-    if (user) {
-        const isTeacher = user.email === 'isaac.paniagua@potros.itson.edu.mx';
-        const role = isTeacher ? 'docente' : 'estudiante';
+  const userRole = determineUserRole(user);
+  localStorage.setItem('qs_role', userRole);
 
-        // Guardar datos básicos de sesión
-        localStorage.setItem('qs_user_uid', user.uid); // UID de Autenticación
-        localStorage.setItem('qs_user_name', user.displayName);
-        localStorage.setItem('qs_user_email', user.email);
-        localStorage.setItem('qs_role', role);
-        
-        // Si es un estudiante, buscamos su ID de matrícula (document ID)
-        if (role === 'estudiante') {
-            const studentProfile = await findStudentByEmail(user.email);
-            if (studentProfile) {
-                // Guardamos el ID de la colección 'students' (ej. "00000099876")
-                localStorage.setItem('qs_student_id', studentProfile.id);
-                console.log(`Auth Guard: ID de estudiante (${studentProfile.id}) encontrado y guardado.`);
-            } else {
-                console.warn(`Auth Guard: No se encontró un perfil de estudiante para ${user.email}. El estudiante no podrá ver sus calificaciones.`);
-                localStorage.removeItem('qs_student_id'); // Asegurarse de que no haya un ID antiguo
-            }
-        }
+  console.log(`Renderizando página para el rol: ${userRole.toUpperCase()}`);
+
+  try {
+    if (userRole === 'estudiante') {
+      // Usamos la nueva función para buscar por UID, no por email.
+      const studentProfile = await findStudentByUid(user.uid);
+      
+      if (studentProfile && studentProfile.id) {
+        // Guardamos el ID del documento del estudiante (su matrícula), que es lo que necesitamos.
+        localStorage.setItem('qs_student_id', studentProfile.id);
+        console.log(`Auth Guard: Perfil de estudiante encontrado para ${user.email}. ID asignado: ${studentProfile.id}`);
+      } else {
+        localStorage.removeItem('qs_student_id');
+        console.warn(`Auth Guard: No se encontró un perfil de estudiante para ${user.email}. El estudiante no podrá ver sus calificaciones.`);
+      }
+
+    } else if (userRole === 'docente') {
+      localStorage.removeItem('qs_student_id');
+    }
+    
+    updateUIVisibility(userRole);
+
+  } catch (error) {
+    console.error("Auth Guard: Error al procesar la sesión del usuario:", error);
+  }
+}
         
         console.log(`Sesión iniciada para ${user.email}. Rol asignado: ${role.toUpperCase()}`);
     } else {
