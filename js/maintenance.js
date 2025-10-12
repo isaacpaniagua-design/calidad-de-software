@@ -1,40 +1,49 @@
 // js/maintenance.js
 
-// Estado de mantenimiento: 'true' para activado, 'false' para desactivado.
-const MANTENIMIENTO_ACTIVADO = true;
+// Usamos importaciones de módulos para obtener las funciones que necesitamos
+import { initFirebase, getDb } from './firebase.js';
+import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 
-// Correo del estudiante que SÍ puede acceder durante el mantenimiento.
-const CORREO_EXCEPCION = "iman.guaymas@potros.itson.edu.mx";
+// Inicializamos Firebase para asegurarnos de que la conexión esté lista.
+initFirebase(); 
+const db = getDb();
 
-// Función para verificar el estado de autenticación y rol del usuario.
-function verificarAccesoMantenimiento() {
-    if (!MANTENIMIENTO_ACTIVADO) {
-        // Si el mantenimiento no está activado, no hacemos nada.
+async function verificarAccesoMantenimiento() {
+    if (!db) {
+        console.error("La base de datos de Firebase no está inicializada.");
         return;
     }
 
-    firebase.auth().onAuthStateChanged(function(user) {
-        if (user) {
-            // El usuario está autenticado.
-            user.getIdTokenResult().then(idTokenResult => {
-                const esDocente = idTokenResult.claims.role === 'teacher';
-                const esExcepcion = user.email === CORREO_EXCEPCION;
+    // Usamos el UID del usuario actual guardado en localStorage
+    const userUid = localStorage.getItem('qs_user_uid');
+    
+    // Si no hay UID, no es necesario continuar.
+    if (!userUid) {
+        return; 
+    }
 
-                if (esDocente || esExcepcion) {
-                    // Si es docente o es el estudiante de excepción, puede continuar.
-                    console.log("Acceso permitido durante mantenimiento.");
-                } else {
-                    // Si es cualquier otro estudiante, se redirige a la pantalla de mantenimiento.
-                    window.location.href = '/maintenance.html';
-                }
-            });
+    try {
+        const maintenanceRef = doc(db, 'maintenance', 'accessControl');
+        const docSnap = await getDoc(maintenanceRef);
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
+            const whitelist = data.whitelist || [];
+            
+            // Si el UID del usuario no está en la lista blanca, lo redirigimos.
+            if (!whitelist.includes(userUid)) {
+                window.location.href = '/maintenance.html';
+            }
         } else {
-            // Si no hay un usuario autenticado, el auth-guard.js debería manejarlo.
-            // Si estás en una página que no sea login.html, es probable que seas redirigido.
-            console.log("Usuario no autenticado, auth-guard se encargará.");
+            // Si el documento de control no existe, por seguridad, redirigimos a todos.
+            window.location.href = '/maintenance.html';
         }
-    });
+    } catch (error) {
+        console.error("Error al verificar el modo de mantenimiento:", error);
+        // En caso de error, es más seguro redirigir.
+        window.location.href = '/maintenance.html';
+    }
 }
 
-// Ejecutar la verificación en cuanto se cargue el DOM.
+// Nos aseguramos de que el DOM esté cargado antes de ejecutar la función.
 document.addEventListener('DOMContentLoaded', verificarAccesoMantenimiento);
