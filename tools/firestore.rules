@@ -3,76 +3,66 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-// Calificaciones (Colección a nivel raíz)
-    match /grades/{studentId} {
-      // El docente tiene control total sobre los documentos de calificaciones.
-      allow read, write: if isTeacher();
-      
-      // Un estudiante puede leer (get) su propio documento de calificaciones.
-      allow get: if isAuthenticated() && get(/databases/$(database)/documents/students/$(studentId)).data.authUid == request.auth.uid;
-
-      // --- REGLA ANIDADA PARA LA SUBCOLECCIÓN 'activities' ---
-      // Esta regla SÓLO se aplica a la ruta /grades/{studentId}/activities/{activityId}
-      match /activities/{activityId} {
-        // El docente puede escribir (crear, actualizar, eliminar).
-        allow write: if isTeacher();
-        
-        // El docente puede leer la LISTA completa de actividades de un estudiante.
-        allow list: if isTeacher();
-
-        // El docente O el estudiante propietario pueden leer un documento de actividad específico (GET).
-        allow get: if isTeacher() || (isAuthenticated() && get(/databases/$(database)/documents/students/$(studentId)).data.authUid == request.auth.uid);
-      }
-    }
     // --- Funciones de Ayuda ---
     
-    // Verdadero si el usuario ha iniciado sesión.
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    // Verdadero si el UID del usuario que hace la petición
-    // existe como un documento en la colección 'teachers'.
     function isTeacher() {
       return isAuthenticated() && exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
     }
 
-    // --- Reglas por Colección ---
+    // --- Reglas por Colección (Ordenadas por importancia) ---
 
-    // Colección de Profesores: Solo los profesores pueden leer la lista. La escritura debe ser manejada con cuidado (ej. desde el admin).
-    match /teachers/{teacherId} {
-      allow read: if isTeacher();
-      allow write: if false; // Proteger para que solo se pueda modificar desde un backend de confianza o la consola
+    // Colección de Estudiantes
+    match /students/{studentId} {
+      allow read, write: if isTeacher();
+      allow get: if isAuthenticated() && request.auth.uid == resource.data.authUid;
+      allow list: if isAuthenticated() && request.query.where.authUid == request.auth.uid;
     }
 
-    // Colección de Estudiantes: Los profesores pueden leer todo, cada estudiante puede leer su propio documento.
-    match /students/{studentId} {
-      allow read: if isTeacher() || (isAuthenticated() && request.auth.uid == studentId);
-      allow write: if isTeacher(); // Permitir a los docentes editar/crear estudiantes
+    // Colección de Calificaciones (Grades)
+    match /grades/{studentId} {
+      allow read, write: if isTeacher();
+      
+      // Un estudiante puede leer (get) su propio documento de calificaciones
+      // si el UID del usuario coincide con el campo 'authUid' del documento.
+      allow get: if isAuthenticated() && resource.data.authUid == request.auth.uid;
+
+      // REGLA ANIDADA CORRECTAMENTE para la subcolección 'activities'
+      match /activities/{activityId} {
+        allow write: if isTeacher();
+        allow list: if isTeacher();
+
+        // Un estudiante puede leer (get y list) sus propias actividades.
+        // Se verifica que el documento 'grade' padre le pertenezca.
+        allow read: if isAuthenticated() && get(/databases/$(database)/documents/grades/$(studentId)).data.authUid == request.auth.uid;
+      }
+    }
+
+    // Colección de Profesores
+    match /teachers/{teacherId} {
+      allow read: if isTeacher();
+      allow write: if false; 
     }
 
     // Materiales de clase
     match /materials/{materialId} {
-      allow read: if isAuthenticated(); // Todos los autenticados pueden leer
-      allow write: if isTeacher();      // Solo los docentes pueden crear/editar/borrar
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
     }
 
     // Entregas de los estudiantes
     match /studentUploads/{uploadId} {
-      // Los docentes tienen acceso total de lectura y escritura.
       allow read, write: if isTeacher();
-      
-      // Un estudiante puede crear su propia entrega y leer/actualizarla.
       allow create: if isAuthenticated() && request.auth.uid == request.resource.data.student.uid;
       allow get, update: if isAuthenticated() && request.auth.uid == resource.data.student.uid;
     }
 
     // Foro: Temas y Respuestas
     match /forum_topics/{topicId} {
-      // Cualquier usuario autenticado puede leer, crear y modificar temas.
       allow read, write: if isAuthenticated();
-      
-      // Regla para la subcolección de respuestas
       match /replies/{replyId} {
         allow read, write: if isAuthenticated();
       }
@@ -80,17 +70,16 @@ service cloud.firestore {
 
     // Asistencias
     match /attendances/{attendanceId} {
-      allow read: if isAuthenticated(); // Todos pueden leer la lista de asistencia
-      // Permite a un usuario crear su propia asistencia, y a un docente crear cualquiera.
+      allow read: if isAuthenticated();
       allow create: if (isAuthenticated() && request.auth.uid == request.resource.data.uid) || isTeacher();
     }
     
     // Planes de Prueba
     match /planesDePrueba/{planId} {
-        allow read, write: if isTeacher(); // Solo los docentes pueden gestionar planes de prueba
+        allow read, write: if isTeacher();
     }
     
-    // Colecciones 'courses' y 'grupos' (reglas de ejemplo, ajústalas a tus necesidades)
+    // Colecciones 'courses' y 'grupos'
     match /courses/{courseId} {
       allow read: if isAuthenticated();
       allow write: if isTeacher();
@@ -100,6 +89,5 @@ service cloud.firestore {
         allow read: if isAuthenticated();
         allow write: if isTeacher();
     }
-    
   }
 }
