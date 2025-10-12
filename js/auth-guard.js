@@ -1,10 +1,6 @@
 // js/auth-guard.js
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.9.2/firebase-auth.js";
-import {
-  initFirebase,
-  getAuthInstance,
-  findStudentByEmail,
-} from "./firebase.js"; // Cambiado a findStudentByEmail
+import { initFirebase, getAuthInstance, findStudentByUid } from "./firebase.js"; // Revertido a findStudentByUid
 
 initFirebase(); // Ensure Firebase is initialized before use.
 const auth = getAuthInstance();
@@ -28,8 +24,8 @@ async function manageUserSession(user) {
     localStorage.setItem("qs_role", role);
 
     if (role === "estudiante") {
-      // CAMBIO CLAVE: Buscamos al estudiante por su email, que es un dato más fiable en este caso.
-      const studentProfile = await findStudentByEmail(user.email);
+      // Se vuelve a usar la búsqueda por UID de autenticación.
+      const studentProfile = await findStudentByUid(user.uid);
 
       if (studentProfile && studentProfile.id) {
         // Guardamos el ID del documento del estudiante (su matrícula), que es lo que necesitamos.
@@ -40,7 +36,7 @@ async function manageUserSession(user) {
       } else {
         localStorage.removeItem("qs_student_id");
         console.warn(
-          `Auth Guard: No se encontró un perfil de estudiante para el email ${user.email}.`
+          `Auth Guard: No se encontró un perfil de estudiante para el UID ${user.uid}. Asegúrate de que el campo 'authUid' en la colección 'students' coincida.`
         );
       }
     } else {
