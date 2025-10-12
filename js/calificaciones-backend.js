@@ -64,10 +64,12 @@ function renderGradesTableForTeacher(studentsData) {
     tbody.innerHTML = studentsData.map(student => `
         <tr class="border-b hover:bg-gray-50">
             <td class="py-3 px-4 font-medium text-gray-800">${student.name || 'Sin nombre'}</td>
-            <td class="py-3 px-4 text-center">${(student.unit1 || 0).toFixed(2)}</td>
-            <td class="py-3 px-4 text-center">${(student.unit2 || 0).toFixed(2)}</td>
-            <td class="py-3 px-4 text-center">${(student.projectFinal || 0).toFixed(2)}</td>
-            <td class="py-3 px-4 text-center font-bold text-blue-600">${(student.finalGrade || 0).toFixed(2)}</td>
+            
+            <td class="py-3 px-4 text-center">${getSafeScore(student.unit1)}</td>
+            <td class="py-3 px-4 text-center">${getSafeScore(student.unit2)}</td>
+            <td class="py-3 px-4 text-center">${getSafeScore(student.projectFinal)}</td>
+            <td class="py-3 px-4 text-center font-bold text-blue-600">${getSafeScore(student.finalGrade)}</td>
+
         </tr>
     `).join('');
 }
