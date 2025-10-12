@@ -132,6 +132,8 @@ function ensureNavigation(doc, body, basePath) {
 }
 
 function buildNavTemplate(basePath, notificationBadge) {
+  // CAMBIO: 3. Añadimos el nuevo enlace "Actualizaciones" y el badge.
+  // El badge se mostrará solo si 'notificationBadge' tiene contenido.
   return `
     <div class="wrap">
       <div class="qs-brand-shell">
@@ -156,9 +158,6 @@ function buildNavTemplate(basePath, notificationBadge) {
           <a class="qs-btn" href="${basePath}calificaciones.html">Calificaciones</a>
           <a class="qs-btn" href="${basePath}Foro.html">Foro</a>
           <a class="qs-btn nav-link-updates" href="${basePath}updates.html">Actualizaciones ${notificationBadge || ''}</a>
-          
-          <a class="qs-btn teacher-only" href="${basePath}actividades.html" hidden aria-hidden="true">Gestionar Actividades</a>
-
           <a class="qs-btn teacher-only" data-route="panel" href="${basePath}paneldocente.html" hidden aria-hidden="true">Panel</a>
         </nav>
       </div>
@@ -167,6 +166,7 @@ function buildNavTemplate(basePath, notificationBadge) {
       </div>
     </div>
   `;
+}
 
 function ensureFooter(doc, body) {
   let footer = doc.querySelector("footer[data-footer-version]");
@@ -434,12 +434,10 @@ function persistRole(role, nav) {
   toggleTeacherNavLinks(nav, role === "docente");
 }
 
-// --- CAMBIO #2: ACTUALIZAR ESTA FUNCIÓN PARA QUE OCULTE/MUESTRE TODOS LOS ENLACES DE DOCENTE ---
 function toggleTeacherNavLinks(nav, isTeacher) {
   if (!nav) return;
   try {
-    // La nueva lógica busca TODOS los elementos con la clase 'teacher-only'
-    nav.querySelectorAll(".teacher-only").forEach((link) => {
+    nav.querySelectorAll("[data-route='panel']").forEach((link) => {
       if (!link) return;
       if (isTeacher) {
         link.removeAttribute("hidden");
@@ -862,4 +860,3 @@ if (document.readyState === "loading") {
 } else {
   bootstrapLayout();
 }
-
