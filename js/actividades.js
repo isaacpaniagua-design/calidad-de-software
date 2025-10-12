@@ -1,7 +1,7 @@
 // js/actividades.js
 
 import { onAuth, getDb, subscribeGrades } from './firebase.js';
-import { collection, doc, addDoc, updateDoc, onSnapshot, query, orderBy, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+import { collection, doc, updateDoc, onSnapshot, query, orderBy, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 const db = getDb();
 let studentsList = [];
@@ -10,14 +10,18 @@ let unsubscribeFromActivities = null;
 
 // Referencias al DOM
 const studentSelect = document.getElementById('student-select');
-const createActivitySection = document.getElementById('create-activity-section');
 const activitiesListSection = document.getElementById('activities-list-section');
 const studentNameDisplay = document.getElementById('student-name-display');
 const activitiesContainer = document.getElementById('activities-container');
-const createActivityForm = document.getElementById('create-activity-form');
-const mainContent = document.querySelector('.container.mx-auto'); // Contenedor principal
+const mainContent = document.querySelector('.container.mx-auto');
 
-// --- LÓGICA DE CÁLCULO DE CALIFICACIONES ---
+// NUEVAS REFERENCIAS PARA CREACIÓN GRUPAL
+const createGroupActivityForm = document.getElementById('create-group-activity-form');
+const submitGroupActivityBtn = document.getElementById('submit-group-activity');
+const batchStatusDiv = document.getElementById('batch-status');
+
+
+// --- LÓGICA DE CÁLCULO DE CALIFICACIONES (SIN CAMBIOS, YA VALIDADA) ---
 
 const GRADE_WEIGHTS = {
     UNITS: { unit1: 0.30, unit2: 0.30, unit3: 0.40 },
@@ -29,32 +33,22 @@ const GRADE_WEIGHTS = {
     }
 };
 
-/**
- * El motor principal de cálculo. Se ejecuta cada vez que las actividades cambian.
- * @param {Array<object>} activities - La lista completa de actividades de un estudiante.
- */
 async function calculateAndSaveAllGrades(activities) {
     if (!selectedStudentId) return;
 
-    // --- 1. CALCULAR PROMEDIO DE UNIDAD 1 ---
     const unit1Activities = activities.filter(a => a.unit === 'unit1');
     const unit1Score = calculateUnitAverage(unit1Activities);
 
-    // --- 2. CALCULAR PROMEDIO DE UNIDAD 2 ---
     const unit2Activities = activities.filter(a => a.unit === 'unit2');
     const unit2Score = calculateUnitAverage(unit2Activities);
     
-    // --- 3. OBTENER CALIFICACIÓN DE UNIDAD 3 (PROYECTO FINAL) ---
-    // Corregido: Busca tipo 'proyecto' en unidad 3, si no existe, busca en las demás.
     const projectFinalActivity = activities.find(a => a.unit === 'unit3' && a.type === 'proyecto') || activities.find(a => a.type === 'proyecto');
     const projectFinalScore = projectFinalActivity ? (projectFinalActivity.score || 0) : 0;
 
-    // --- 4. CALCULAR PROMEDIO GENERAL ---
     const finalGrade = (unit1Score * GRADE_WEIGHTS.UNITS.unit1) +
                        (unit2Score * GRADE_WEIGHTS.UNITS.unit2) +
                        (projectFinalScore * GRADE_WEIGHTS.UNITS.unit3);
 
-    // --- 5. GUARDAR EN FIRESTORE ---
     const studentGradeRef = doc(db, 'grades', selectedStudentId);
     try {
         await updateDoc(studentGradeRef, {
@@ -69,11 +63,6 @@ async function calculateAndSaveAllGrades(activities) {
     }
 }
 
-/**
- * Calcula el promedio ponderado para la Unidad 1 o 2.
- * @param {Array<object>} unitActivities - Actividades de una unidad específica.
- * @returns {number} - El promedio de la unidad (0-100).
- */
 function calculateUnitAverage(unitActivities) {
     let weightedScore = 0;
     const types = GRADE_WEIGHTS.UNIT_1_2_TYPES;
@@ -82,7 +71,7 @@ function calculateUnitAverage(unitActivities) {
         const activitiesOfType = unitActivities.filter(a => a.type === type);
         if (activitiesOfType.length > 0) {
             const sumOfScores = activitiesOfType.reduce((acc, curr) => acc + (curr.score || 0), 0);
-            const averageTypeScore = (sumOfScores / activitiesOfType.length) * 10; // Convertir de base 10 a base 100
+            const averageTypeScore = (sumOfScores / activitiesOfType.length) * 10;
             weightedScore += averageTypeScore * types[type];
         }
     }
@@ -96,12 +85,10 @@ onAuth(user => {
     const isTeacher = user && localStorage.getItem('qs_role') === 'docente';
     
     if (isTeacher) {
-        // Si es docente, nos aseguramos de que el contenido principal sea visible
         if(mainContent) mainContent.style.display = 'block';
         loadStudents();
         setupEventListeners();
     } else {
-        // Si no es docente, ocultamos el contenido y mostramos un error sin destruir la página
         if(mainContent) mainContent.innerHTML = '<div class="bg-white p-6 rounded-lg shadow-md text-center"><h1 class="text-2xl font-bold text-red-600">Acceso Denegado</h1><p class="text-gray-600 mt-2">Esta página es solo para docentes.</p></div>';
     }
 });
@@ -111,12 +98,12 @@ function loadStudents() {
     studentSelect.innerHTML = '<option>Cargando estudiantes...</option>';
 
     subscribeGrades(students => {
-        studentsList = students;
-        studentSelect.innerHTML = ''; // Limpiar
+        studentsList = students.filter(s => s.id); // Asegurarnos de que todos los estudiantes tienen un ID
+        studentSelect.innerHTML = '';
 
-        if (students && students.length > 0) {
-            studentSelect.innerHTML = '<option value="">-- Seleccione un estudiante --</option>';
-            students.forEach(student => {
+        if (studentsList.length > 0) {
+            studentSelect.innerHTML = '<option value="">-- Seleccione un estudiante para calificar --</option>';
+            studentsList.forEach(student => {
                 const option = document.createElement('option');
                 option.value = student.id;
                 option.textContent = student.name || `Estudiante sin nombre (ID: ${student.id})`;
@@ -124,7 +111,6 @@ function loadStudents() {
             });
             studentSelect.disabled = false;
         } else {
-            // Si no hay estudiantes, mostramos un mensaje claro y mantenemos el select deshabilitado
             studentSelect.innerHTML = '<option value="">No hay estudiantes para mostrar.</option>';
         }
     });
@@ -167,7 +153,6 @@ function loadActivitiesForStudent(studentId) {
     unsubscribeFromActivities = onSnapshot(q, (snapshot) => {
         const activities = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderActivities(activities);
-        // ¡Magia! Cada vez que las actividades cambian, se recalcula todo.
         calculateAndSaveAllGrades(activities);
     }, (error) => {
         console.error("Error al cargar actividades:", error);
@@ -181,39 +166,64 @@ function setupEventListeners() {
         if (selectedStudentId) {
             const student = studentsList.find(s => s.id === selectedStudentId);
             studentNameDisplay.textContent = student.name;
-            // Mostramos las secciones correspondientes
-            createActivitySection.style.display = 'block';
             activitiesListSection.style.display = 'block';
             loadActivitiesForStudent(selectedStudentId);
         } else {
-            // Si se deselecciona, ocultamos todo
-            createActivitySection.style.display = 'none';
             activitiesListSection.style.display = 'none';
         }
     });
 
-    createActivityForm.addEventListener('submit', async (e) => {
+    // --- NUEVO EVENT LISTENER PARA EL FORMULARIO GRUPAL ---
+    createGroupActivityForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (!selectedStudentId) {
-            alert("Por favor, seleccione un estudiante antes de crear una actividad.");
+
+        if (studentsList.length === 0) {
+            alert("No hay estudiantes cargados para asignar la actividad.");
             return;
         }
 
-        const newActivity = {
-            activityName: document.getElementById('activity-name').value.trim(),
-            unit: document.getElementById('activity-unit').value,
-            type: document.getElementById('activity-type').value,
-            score: 0 // Inicia con calificación 0
-        };
-
-        if (!newActivity.activityName) {
+        const activityName = document.getElementById('group-activity-name').value.trim();
+        if (!activityName) {
             alert("El nombre de la actividad no puede estar vacío.");
             return;
         }
 
-        const activitiesRef = collection(db, 'grades', selectedStudentId, 'activities');
-        await addDoc(activitiesRef, newActivity);
-        createActivityForm.reset();
+        const newActivityData = {
+            activityName: activityName,
+            unit: document.getElementById('group-activity-unit').value,
+            type: document.getElementById('group-activity-type').value,
+            score: 0 // Todas las actividades inician con 0
+        };
+
+        submitGroupActivityBtn.disabled = true;
+        submitGroupActivityBtn.textContent = 'Procesando...';
+        batchStatusDiv.textContent = `Asignando actividad a ${studentsList.length} estudiantes...`;
+        batchStatusDiv.className = 'text-blue-600';
+
+        try {
+            const batch = writeBatch(db);
+
+            studentsList.forEach(student => {
+                const activityRef = doc(collection(db, 'grades', student.id, 'activities'));
+                batch.set(activityRef, newActivityData);
+            });
+
+            await batch.commit();
+
+            batchStatusDiv.textContent = `¡Éxito! La actividad "${activityName}" fue asignada a todos los estudiantes.`;
+            batchStatusDiv.className = 'text-green-600 font-semibold';
+            createGroupActivityForm.reset();
+
+        } catch (error) {
+            console.error("Error al crear actividad en lote:", error);
+            batchStatusDiv.textContent = "Error: No se pudo asignar la actividad. Revisa la consola.";
+            batchStatusDiv.className = 'text-red-600 font-semibold';
+            alert("Ocurrió un error al asignar la actividad en lote.");
+        } finally {
+            submitGroupActivityBtn.disabled = false;
+            submitGroupActivityBtn.textContent = 'Añadir Actividad a Todos';
+            setTimeout(() => { batchStatusDiv.textContent = ''; }, 5000);
+        }
     });
     
     activitiesContainer.addEventListener('change', async (e) => {
@@ -222,18 +232,15 @@ function setupEventListeners() {
             const activityId = input.dataset.activityId;
             let newScore = parseFloat(input.value);
 
-            // Validar que la calificación esté en el rango 0-10
             if (isNaN(newScore) || newScore < 0) newScore = 0;
             if (newScore > 10) newScore = 10;
-            input.value = newScore; // Corregir el valor en la UI si está fuera de rango
+            input.value = newScore;
 
             const activityRef = doc(db, 'grades', selectedStudentId, 'activities', activityId);
             await updateDoc(activityRef, { score: newScore });
-            // No necesitamos llamar a la función de cálculo aquí, porque el listener onSnapshot ya lo hace automáticamente.
         }
     });
 
-    // Event listener para el botón de eliminar usando delegación de eventos
     activitiesContainer.addEventListener('click', async (e) => {
         const targetButton = e.target.closest('button[data-action="delete-activity"]');
         if (targetButton) {
