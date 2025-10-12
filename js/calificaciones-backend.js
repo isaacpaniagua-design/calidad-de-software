@@ -27,23 +27,24 @@ onAuth(user => {
         // No cargamos datos de un solo estudiante, sino la lista completa.
         // Esto lo maneja calificaciones-teacher-sync.js
     } else if (role === 'estudiante') {
-        // Lógica para la vista del estudiante
-        gradesTitle.textContent = 'Mis Calificaciones';
-        const studentId = localStorage.getItem('qs_student_id');
+    gradesTitle.textContent = 'Mis Calificaciones';
+    const studentId = localStorage.getItem('qs_student_id');
 
-        if (studentId) {
-            // Mostramos los contenedores que estaban ocultos
-            gradesTableContainer.style.display = 'block';
-            studentActivitiesContainer.style.display = 'block';
+    if (studentId) {
+        // Mostramos los contenedores para la vista del estudiante
+        if (gradesTableContainer) gradesTableContainer.style.display = 'block';
+        if (studentActivitiesContainer) studentActivitiesContainer.style.display = 'block';
 
-            // Nos suscribimos a los datos del estudiante logueado
-            unsubscribeGrades = subscribeGrades(studentId, renderStudentGrades);
-            unsubscribeActivities = subscribeMyActivities(studentId, renderStudentActivities);
+        // --- CORRECCIÓN CLAVE ---
+        // Iniciamos las dos suscripciones de forma independiente.
+        // Una para los promedios y otra para el desglose de actividades.
+        unsubscribeGrades = subscribeMyGrades(studentId, renderStudentGrades);
+        unsubscribeActivities = subscribeMyActivities(studentId, renderStudentActivities);
 
-        } else {
-            renderError("No se pudo encontrar tu matrícula. Por favor, contacta a tu docente.");
-        }
+    } else {
+        renderError("No se pudo encontrar tu matrícula. Por favor, contacta a tu docente.");
     }
+}
 });
 
 // Limpiar suscripciones al salir de la página
