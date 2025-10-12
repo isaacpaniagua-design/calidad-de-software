@@ -1356,5 +1356,25 @@ export async function saveTestPlan(planId, planData) {
 
 export { app };
 
+// Añade esto al final de js/firebase.js
+
+/**
+ * Se suscribe para obtener las actividades de UN SOLO estudiante en tiempo real.
+ * @param {string} studentId - El ID de matrícula del estudiante (ej. "00000249116").
+ * @param {function} cb - El callback que se ejecutará con la lista de actividades.
+ * @returns {import("firebase/firestore").Unsubscribe} - La función para cancelar la suscripción.
+ */
+export function subscribeMyActivities(studentId, cb) {
+  if (!studentId) return () => {};
+
+  const db = getDb();
+  const activitiesRef = collection(db, 'grades', studentId, 'activities');
+  const q = query(activitiesRef, orderBy('unit')); // Ordenar por unidad
+
+  return onSnapshot(q, (snapshot) => {
+    const activities = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    cb(activities);
+  });
+}
 
 
