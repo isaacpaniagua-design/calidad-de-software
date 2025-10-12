@@ -1,95 +1,119 @@
 // js/calificaciones-backend.js
 
-// Importamos las funciones necesarias, incluyendo la nueva que creamos.
-import { onAuth, subscribeGrades, subscribeMyActivities } from './firebase.js'; 
+import { onAuth, subscribeGrades, subscribeMyGrades, subscribeMyActivities } from './firebase.js';
 
-// Referencias a los contenedores que YA EXISTEN en tu HTML
-const gradesTableContainer = document.getElementById('grades-table-container');
-const gradesTableBody = document.getElementById('grades-table-body');
-const studentActivitiesContainer = document.getElementById('student-activities-container');
-const studentActivitiesBody = document.getElementById('student-activities-body');
-const gradesTitle = document.getElementById('grades-title');
+let unsubscribeFromGrades = null;
+let unsubscribeFromActivities = null;
 
-let unsubscribeGrades = () => {};
-let unsubscribeActivities = () => {};
+function handleAuthStateChanged(user) {
+    // Limpiar suscripciones anteriores para evitar fugas de memoria y datos incorrectos
+    if (unsubscribeFromGrades) unsubscribeFromGrades();
+    if (unsubscribeFromActivities) unsubscribeFromActivities();
 
-onAuth(user => {
-    if (!user) {
-        // Si no hay usuario, no hacemos nada, auth-guard se encargará de redirigir.
+    const gradesContainer = document.getElementById('grades-table-container');
+    const activitiesContainer = document.getElementById('student-activities-container');
+    const titleEl = document.getElementById('grades-title');
+
+    if (!gradesContainer || !titleEl || !activitiesContainer) {
+        console.error("Error crítico: Faltan elementos clave del HTML.");
         return;
     }
 
-    const role = localStorage.getItem('qs_role');
+    if (user) {
+        const userRole = localStorage.getItem('qs_role');
+        gradesContainer.style.display = 'block';
 
-    if (role === 'docente') {
-        // Lógica para la vista del docente (que ya manejas en otros scripts)
-        gradesTitle.textContent = 'Calificaciones de Estudiantes';
-        // No cargamos datos de un solo estudiante, sino la lista completa.
-        // Esto lo maneja calificaciones-teacher-sync.js
-    } else if (role === 'estudiante') {
-    gradesTitle.textContent = 'Mis Calificaciones';
-    const studentId = localStorage.getItem('qs_student_id');
+        if (userRole === 'docente') {
+            // --- VISTA DEL DOCENTE ---
+            titleEl.textContent = 'Panel de Calificaciones (Promedios Generales)';
+            activitiesContainer.style.display = 'none'; // Ocultamos el desglose, no aplica aquí
+            unsubscribeFromGrades = subscribeGrades(renderGradesTableForTeacher);
 
-    if (studentId) {
-        // Mostramos los contenedores para la vista del estudiante
-        if (gradesTableContainer) gradesTableContainer.style.display = 'block';
-        if (studentActivitiesContainer) studentActivitiesContainer.style.display = 'block';
-
-        // --- CORRECCIÓN CLAVE ---
-        // Iniciamos las dos suscripciones de forma independiente.
-        // Una para los promedios y otra para el desglose de actividades.
-        unsubscribeGrades = subscribeMyGrades(studentId, renderStudentGrades);
-        unsubscribeActivities = subscribeMyActivities(studentId, renderStudentActivities);
-
+        } else { // Asumimos que si no es docente, es estudiante
+            // --- VISTA DEL ESTUDIANTE ---
+            titleEl.textContent = 'Resumen de Mis Calificaciones';
+            activitiesContainer.style.display = 'block';
+            
+            const studentId = localStorage.getItem('qs_student_id'); 
+            
+            if (studentId) {
+                // Suscripciones independientes para la vista del alumno
+                unsubscribeFromGrades = subscribeMyGrades(studentId, renderGradesTableForStudent);
+                unsubscribeFromActivities = subscribeMyActivities(studentId, renderActivitiesForStudent);
+            } else {
+                renderError('No se pudo identificar tu matrícula. Por favor, inicia sesión de nuevo.');
+            }
+        }
     } else {
-        renderError("No se pudo encontrar tu matrícula. Por favor, contacta a tu docente.");
+        // Ocultar todo si no hay sesión
+        gradesContainer.style.display = 'none';
+        activitiesContainer.style.display = 'none';
     }
 }
-});
 
-// Limpiar suscripciones al salir de la página
-window.addEventListener('beforeunload', () => {
-    unsubscribeGrades();
-    unsubscribeActivities();
-});
+function renderGradesTableForTeacher(studentsData) {
+    const tbody = document.getElementById('grades-table-body');
+    if (!tbody) return;
 
-function renderStudentGrades(gradesData) {
-    if (!gradesData || gradesData.length === 0) {
-        gradesTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4">Aún no tienes calificaciones registradas.</td></tr>`;
+    if (!studentsData || studentsData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No hay estudiantes con calificaciones para mostrar.</td></tr>';
         return;
     }
 
-    const student = gradesData[0]; // Para la vista de estudiante, solo vendrá un objeto
-    const finalGrade = (student.finalGrade || 0).toFixed(2);
-
-    gradesTableBody.innerHTML = `
-        <tr class="hover:bg-gray-50">
-            <td class="py-3 px-4 font-semibold">${student.name || 'Estudiante'}</td>
+    // Usamos map y join para mayor eficiencia
+    tbody.innerHTML = studentsData.map(student => `
+        <tr class="border-b hover:bg-gray-50">
+            <td class="py-3 px-4 font-medium text-gray-800">${student.name || 'Sin nombre'}</td>
             <td class="py-3 px-4 text-center">${(student.unit1 || 0).toFixed(2)}</td>
             <td class="py-3 px-4 text-center">${(student.unit2 || 0).toFixed(2)}</td>
             <td class="py-3 px-4 text-center">${(student.projectFinal || 0).toFixed(2)}</td>
-            <td class="py-3 px-4 text-center font-bold text-lg ${finalGrade >= 70 ? 'text-green-600' : 'text-red-600'}">${finalGrade}</td>
+            <td class="py-3 px-4 text-center font-bold text-blue-600">${(student.finalGrade || 0).toFixed(2)}</td>
+        </tr>
+    `).join('');
+}
+
+function renderGradesTableForStudent(myGradesData) {
+    const tbody = document.getElementById('grades-table-body');
+    if (!tbody) return;
+
+    if (!myGradesData || myGradesData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Aún no tienes un resumen de calificaciones.</td></tr>';
+        return;
+    }
+    const myData = myGradesData[0];
+    tbody.innerHTML = `
+        <tr>
+            <td class="py-3 px-4 font-medium text-gray-800">${myData.name || 'Estudiante'}</td>
+            <td class="py-3 px-4 text-center">${(myData.unit1 || 0).toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${(myData.unit2 || 0).toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${(myData.projectFinal || 0).toFixed(2)}</td>
+            <td class="py-3 px-4 text-center font-bold text-blue-600">${(myData.finalGrade || 0).toFixed(2)}</td>
         </tr>
     `;
 }
 
-function renderStudentActivities(activities) {
+function renderActivitiesForStudent(activities) {
+    const tbody = document.getElementById('student-activities-body');
+    if (!tbody) return;
+
     if (!activities || activities.length === 0) {
-        studentActivitiesBody.innerHTML = `<tr><td colspan="4" class="text-center py-4">No hay desglose de actividades disponible.</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4">No hay actividades detalladas para mostrar.</td></tr>';
         return;
     }
-
-    studentActivitiesBody.innerHTML = activities.map(activity => `
-        <tr class="border-t hover:bg-gray-50">
-            <td class="py-2 px-4">${activity.activityName}</td>
-            <td class="py-2 px-4 capitalize">${activity.type}</td>
-            <td class="py-2 px-4">Unidad ${activity.unit.replace('unit', '')}</td>
-            <td class="py-2 px-4 text-right font-mono">${(activity.score || 0).toFixed(1)}</td>
+    tbody.innerHTML = activities.map(activity => `
+        <tr class="border-b">
+            <td class="py-2 px-4">${activity.activityName || 'Sin nombre'}</td>
+            <td class="py-2 px-4 capitalize">${activity.type || 'N/A'}</td>
+            <td class="py-2 px-4 text-center">${(activity.unit || '').replace('unit', '')}</td>
+            <td class="py-2 px-4 text-right font-medium">${(activity.score || 0).toFixed(2)}</td>
         </tr>
     `).join('');
 }
 
 function renderError(message) {
-    gradesTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-600">${message}</td></tr>`;
-    studentActivitiesBody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-red-600">No se pudo cargar el desglose.</td></tr>`;
+    const tbody = document.getElementById('grades-table-body');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">${message}</td></tr>`;
 }
+
+// Punto de entrada del script
+onAuth(handleAuthStateChanged);
