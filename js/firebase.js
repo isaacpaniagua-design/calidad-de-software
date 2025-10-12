@@ -52,8 +52,8 @@ function isPermissionDenied(error) {
 }
 
 let app;
-let auth;
 let db;
+let auth;
 let storage;
 let driveAccessToken = null;
 
@@ -214,18 +214,13 @@ export async function listTeacherNotificationEmails({
 }
 
 export function initFirebase() {
-  if (!app) {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-    storage = getStorage(app);
+  if (app) {
+    return;
   }
-  return { app, auth, db };
-}
-
-export function getAuthInstance() {
-  if (!auth) initFirebase();
-  return auth;
+  app = initializeApp(window.firebaseConfig);
+  db = getFirestore(app);
+  auth = getAuth(app);
+  storage = getStorage(app);
 }
 
 export function getDb() {
@@ -233,8 +228,12 @@ export function getDb() {
   return db;
 }
 
+export function getAuthInstance() {
+  if (!auth) initFirebase();
+  return auth;
+}
+
 export function getStorageInstance() {
-  if (!useStorage) return null;
   if (!storage) initFirebase();
   return storage;
 }
@@ -1383,8 +1382,6 @@ export async function saveTestPlan(planId, planData) {
 }
 
 export { app };
-
-// Añade esto al final de js/firebase.js
 
 /**
  * Se suscribe para obtener las actividades de UN SOLO estudiante en tiempo real.
