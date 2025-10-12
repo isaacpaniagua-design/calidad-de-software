@@ -522,844 +522,221 @@ export function subscribeTodayAttendanceByUser(email, cb, onError) {
  * @returns {Promise<{id: string, data: object}|null>} El ID y datos del estudiante, o null si no se encuentra.
  */
 export async function findStudentByUid(uid) {
-  if (!uid) {
-    console.error("findStudentByUid: Se requiere un UID.");
+  if (!uid) return null;
+  try {
+    const { collection, query, where, getDocs } = await getFirestore();
+    const q = query(collection(db, "students"), where("authUid", "==", uid));
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+      return null;
+    }
+    const studentDoc = querySnapshot.docs[0];
+    return {
+      id: studentDoc.id,
+      ...studentDoc.data(),
+    };
+  } catch (error) {
+    console.error("Error en findStudentByUid:", error);
     return null;
   }
-  try {
-    const studentsRef = collection(getDb(), "students");
-    // Esta consulta ahora está permitida por nuestras nuevas reglas de seguridad
-    const q = query(studentsRef, where("authUid", "==", uid), limit(1));
-    const querySnapshot = await getDocs(q);
+}
 
+/**
+ * Busca un perfil de estudiante en la colección 'students' por su dirección de correo.
+ * @param {string} email El correo electrónico del estudiante.
+ * @returns {Promise<object|null>} El perfil del estudiante o null si no se encuentra.
+ */
+export async function findStudentByEmail(email) {
+  if (!email) return null;
+  try {
+    const { collection, query, where, getDocs } = await getFirestore();
+    const q = query(collection(db, "students"), where("email", "==", email));
+    const querySnapshot = await getDocs(q);
     if (querySnapshot.empty) {
       console.warn(
-        `No se encontró un perfil de estudiante para el UID: ${uid}`
+        `findStudentByEmail: No se encontró estudiante con email ${email}.`
       );
       return null;
     }
-
+    // Se asume que solo hay un documento por email.
     const studentDoc = querySnapshot.docs[0];
-    // Devolvemos el ID del documento (la matrícula) y sus datos
-    return { id: studentDoc.id, ...studentDoc.data() };
+    return {
+      id: studentDoc.id, // El ID del documento (alfanumérico de Firestore)
+      ...studentDoc.data(), // Contiene matrícula, uid (matrícula), etc.
+    };
   } catch (error) {
-    console.error("Error buscando estudiante por UID:", error);
+    console.error("Error en findStudentByEmail:", error);
+    if (error.code === "permission-denied") {
+      console.error(
+        "Error de permisos al buscar por email. Revisa las reglas de seguridad de Firestore para la colección 'students'."
+      );
+    }
     return null;
   }
 }
-export async function fetchAttendancesByDateRange(startDateStr, endDateStr) {
+
+export async function getStudentGradeItems(studentId) {
   const db = getDb();
-  // startDateStr, endDateStr expected in 'YYYY-MM-DD'
-  const qy = query(
-    collection(db, "attendances"),
-    where("date", ">=", startDateStr),
-    where("date", "<=", endDateStr),
-    orderBy("date", "asc")
-  );
-  const snap = await getDocs(qy);
-  const items = [];
-  snap.forEach((docSnap) => {
-    const data = docSnap.data();
-    items.push({
-      id: docSnap.id,
-      name: data.name,
-      email: data.email,
-      type: data.type,
-      date: data.date,
-      timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date(),
-    });
-  });
-  return items;
+  const ref = doc(collection(db, "grades"), studentId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  const data = snap.data() || {};
+  return {
+    id: snap.id,
+    email: data.email || null,
+    unit1: data.unit1 || {
+      participation: 0,
+      assignments: 0,
+      classwork: 0,
+      exam: 0,
+    },
+    unit2: data.unit2 || {
+      participation: 0,
+      assignments: 0,
+      classwork: 0,
+      exam: 0,
+    },
+    unit3: data.unit3 || {
+      participation: 0,
+      assignments: 0,
+      classwork: 0,
+      exam: 0,
+    },
+    projectFinal: data.projectFinal ?? 0,
+  };
 }
 
-export async function fetchAttendancesByDateRangeByUser(
-  email,
-  startDateStr,
-  endDateStr
-) {
-  const lowerEmail = (email || "").toLowerCase();
-  const items = await fetchAttendancesByDateRange(startDateStr, endDateStr);
-  return items.filter(
-    (item) => (item.email || "").toLowerCase() === lowerEmail
-  );
-}
+// --- MÉTODOS PARA PLANES DE PRUEBA ---
 
-// ====== Calificaciones (Grades) ======
-export function subscribeGrades(cb) {
-  const db = getDb();
-  const q = query(collection(db, "grades"), orderBy("name"));
-  return onSnapshot(q, (snap) => {
-    const items = [];
-    snap.forEach((docSnap) => {
-      const d = docSnap.data();
-      items.push({
-        id: docSnap.id,
-        name: d.name,
-        email: d.email,
-        unit1: d.unit1 || {
-          participation: 0,
-          assignments: 0,
-          classwork: 0,
-          exam: 0,
-        },
-        unit2: d.unit2 || {
-          participation: 0,
-          assignments: 0,
-          classwork: 0,
-          exam: 0,
-        },
-        unit3: d.unit3 || {
-          participation: 0,
-          assignments: 0,
-          classwork: 0,
-          exam: 0,
-        },
-        projectFinal: d.projectFinal ?? 0,
-      });
-    });
-    cb(items);
-  });
-}
 /**
- * Se suscribe para obtener las calificaciones de UN SOLO estudiante en tiempo real.
- * @param {string} studentUid - El UID del estudiante logueado.
- * @param {function} cb - El callback que se ejecutará con los datos de las calificaciones.
+ * Guarda (crea o actualiza) un plan de pruebas en Firestore.
+ * @param {string} planId El ID único del documento (del campo 'identificador').
+ * @param {object} planData Objeto con todos los datos del formulario.
+ * @returns {Promise<void>}
+ */
+export async function saveTestPlan(planId, planData) {
+  const db = getDb();
+  const planRef = doc(db, "planesDePrueba", planId);
+  // Añadimos un timestamp para ordenar y saber cuándo se modificó por última vez
+  const dataToSave = {
+    ...planData,
+    lastModified: serverTimestamp(),
+  };
+  return setDoc(planRef, dataToSave, { merge: true }); // merge:true es útil si quieres actualizar sin sobreescribir todo
+}
+
+export { app };
+
+/**
+ * Se suscribe para obtener las actividades de UN SOLO estudiante en tiempo real.
+ * @param {string} studentId - El ID de matrícula del estudiante (ej. "00000249116").
+ * @param {function} cb - El callback que se ejecutará con la lista de actividades.
  * @returns {import("firebase/firestore").Unsubscribe} - La función para cancelar la suscripción.
  */
-export function subscribeMyGrades(studentUid, cb, onError) {
-  if (!studentUid) {
-    const err = new Error(
-      "UID de estudiante es requerido para buscar sus calificaciones."
-    );
-    if (onError) onError(err);
-    return () => {}; // Devuelve una función vacía para no romper la app
-  }
+export function subscribeMyActivities(studentId, cb) {
+  if (!studentId) return () => {};
 
   const db = getDb();
-  const studentRef = doc(db, "grades", studentUid);
+  const activitiesRef = collection(db, "grades", studentId, "activities");
+  const q = query(activitiesRef, orderBy("unit")); // Ordenar por unidad
 
-  return onSnapshot(
-    studentRef,
-    (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        // Devolvemos los datos en un array para que la UI que esperaba una lista no se rompa.
-        cb([{ id: docSnap.id, ...data }]);
-      } else {
-        // El estudiante aún no tiene un registro de calificaciones.
-        cb([]);
-      }
-    },
-    (error) => {
-      console.error("Error al obtener mis calificaciones:", error);
-      if (onError) onError(error);
-    }
-  );
-}
-export async function upsertStudentGrades(studentId, payload) {
-  const db = getDb();
-  const ref = doc(collection(db, "grades"), studentId);
-  const existing = await getDoc(ref);
-  const normalized = { ...(payload || {}) };
-
-  if (Object.prototype.hasOwnProperty.call(normalized, "email")) {
-    const rawEmail = normalized.email;
-    const trimmedEmail =
-      typeof rawEmail === "string" ? rawEmail.trim() : rawEmail;
-    if (typeof trimmedEmail === "string") {
-      normalized.email = trimmedEmail || null;
-      normalized.emailLower = trimmedEmail ? trimmedEmail.toLowerCase() : null;
-    } else {
-      normalized.email = trimmedEmail ?? null;
-      normalized.emailLower = null;
-    }
-  }
-
-  if (Object.prototype.hasOwnProperty.call(normalized, "uid")) {
-    const trimmedUid = normalized.uid ? String(normalized.uid).trim() : "";
-    normalized.uid = trimmedUid || null;
-  }
-
-  const base = { ...normalized, updatedAt: serverTimestamp() };
-  if (!existing.exists()) base.createdAt = serverTimestamp();
-  await setDoc(ref, base, { merge: true });
-}
-
-export async function updateStudentGradePartial(studentId, path, value) {
-  const db = getDb();
-  const ref = doc(collection(db, "grades"), studentId);
-  const updates = { updatedAt: serverTimestamp() };
-
-  if (path === "email") {
-    const trimmedEmail = typeof value === "string" ? value.trim() : value;
-    if (typeof trimmedEmail === "string") {
-      updates.email = trimmedEmail || null;
-      updates.emailLower = trimmedEmail ? trimmedEmail.toLowerCase() : null;
-    } else {
-      updates.email = trimmedEmail ?? null;
-      updates.emailLower = null;
-    }
-  } else if (path === "uid") {
-    const trimmedUid = typeof value === "string" ? value.trim() : value;
-    if (typeof trimmedUid === "string") {
-      const safeUid = trimmedUid.trim();
-      updates.uid = safeUid || null;
-    } else if (trimmedUid) {
-      updates.uid = String(trimmedUid).trim() || null;
-    } else {
-      updates.uid = null;
-    }
-  } else {
-    updates[path] = value;
-  }
-
-  await updateDoc(ref, updates);
-}
-
-// ====== Materiales (Storage + Firestore) ======
-export async function uploadMaterial({
-  file,
-  title,
-  category,
-  description,
-  ownerEmail,
-  onProgress,
-}) {
-  if (!useStorage) {
-    throw new Error(
-      "Firebase Storage está deshabilitado. Usa addMaterialLink con un URL."
-    );
-  }
-  if (!file) {
-    throw new Error("Archivo requerido");
-  }
-  const st = getStorageInstance();
-  if (!st) {
-    throw new Error("Firebase Storage no está inicializado");
-  }
-  const db = getDb();
-  const ts = Date.now();
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const path = `materials/${ts}_${safeName}`;
-  const ref = storageRef(st, path);
-
-  const task = uploadBytesResumable(ref, file);
-  return new Promise((resolve, reject) => {
-    task.on(
-      "state_changed",
-      (snap) => {
-        const progress = (snap.bytesTransferred / snap.totalBytes) * 100;
-        if (onProgress) onProgress(progress);
-      },
-      reject,
-      async () => {
-        const url = await getDownloadURL(ref);
-        const auth = getAuthInstance();
-        const docRef = await addDoc(collection(db, "materials"), {
-          title,
-          category,
-          description,
-          path,
-          url,
-          ownerEmail:
-            ownerEmail?.toLowerCase() ||
-            auth?.currentUser?.email?.toLowerCase() ||
-            null,
-          createdAt: serverTimestamp(),
-          downloads: 0,
-        });
-        resolve({ id: docRef.id, title, category, description, path, url });
-      }
-    );
+  return onSnapshot(q, (snapshot) => {
+    const activities = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    cb(activities);
   });
 }
 
-export async function addMaterialLink({
-  title,
-  category,
-  description,
-  url,
-  ownerEmail,
-}) {
-  const db = getDb();
-  const auth = getAuthInstance();
-  const docRef = await addDoc(collection(db, "materials"), {
-    title,
-    category,
-    description,
-    url,
-    path: null,
-    ownerEmail:
-      ownerEmail?.toLowerCase() ||
-      auth?.currentUser?.email?.toLowerCase() ||
-      null,
-    createdAt: serverTimestamp(),
-    downloads: 0,
-  });
-  return { id: docRef.id, title, category, description, url };
-}
-
-export async function uploadMaterialToDrive({
-  file,
-  title,
-  category,
-  description,
-  ownerEmail,
-  folderId = driveFolderId,
-  onProgress,
-}) {
-  if (!file) throw new Error("Archivo requerido");
-  const token = await getDriveAccessTokenInteractive();
-
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const metadata = {
-    name: safeName,
-    parents: folderId ? [folderId] : undefined,
-    description: description || undefined,
-  };
-  const boundary =
-    "-------driveFormBoundary" + Math.random().toString(16).slice(2);
-  const delimiter = `--${boundary}\r\n`;
-  const closeDelim = `--${boundary}--`;
-
-  const body = new Blob(
-    [
-      delimiter,
-      "Content-Type: application/json; charset=UTF-8\r\n\r\n",
-      JSON.stringify(metadata),
-      "\r\n",
-      delimiter,
-      `Content-Type: ${file.type || "application/octet-stream"}\r\n\r\n`,
-      file,
-      "\r\n",
-      closeDelim,
-    ],
-    { type: `multipart/related; boundary=${boundary}` }
-  );
-
-  const uploadUrl =
-    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,webContentLink";
-
-  const uploadResponse = await new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", uploadUrl, true);
-    xhr.setRequestHeader("Authorization", "Bearer " + token);
-    xhr.setRequestHeader(
-      "Content-Type",
-      `multipart/related; boundary=${boundary}`
-    );
-    if (xhr.upload && onProgress) {
-      xhr.upload.onprogress = (evt) => {
-        if (evt.lengthComputable) {
-          const pct = Math.round((evt.loaded / evt.total) * 100);
-          onProgress(pct);
-        }
-      };
+/**
+ * Busca un documento de estudiante en la colección 'students' por su email.
+ * @param {string} email El email del estudiante a buscar.
+ * @returns {Promise<{id: string, data: object}|null>} El ID y datos del estudiante, o null si no se encuentra.
+ */
+export async function findStudentByUid(uid) {
+  if (!uid) return null;
+  try {
+    const { collection, query, where, getDocs } = await getFirestore();
+    const q = query(collection(db, "students"), where("authUid", "==", uid));
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+      return null;
     }
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState === 4) {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            resolve(JSON.parse(xhr.responseText));
-          } catch (e) {
-            resolve({});
-          }
-        } else {
-          reject(
-            new Error(
-              "Error subiendo a Drive (" + xhr.status + "): " + xhr.responseText
-            )
-          );
-        }
-      }
+    const studentDoc = querySnapshot.docs[0];
+    return {
+      id: studentDoc.id,
+      ...studentDoc.data(),
     };
-    xhr.send(body);
-  });
+  } catch (error) {
+    console.error("Error en findStudentByUid:", error);
+    return null;
+  }
+}
 
-  const id = uploadResponse?.id;
-  let url =
-    uploadResponse?.webViewLink ||
-    uploadResponse?.webContentLink ||
-    (id ? `https://drive.google.com/file/d/${id}/view?usp=sharing` : null);
-
-  // Intentar hacer el archivo accesible con enlace
-  if (id) {
-    try {
-      await fetch(
-        `https://www.googleapis.com/drive/v3/files/${id}/permissions`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: "Bearer " + token,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ role: "reader", type: "anyone" }),
-        }
+/**
+ * Busca un perfil de estudiante en la colección 'students' por su dirección de correo.
+ * @param {string} email El correo electrónico del estudiante.
+ * @returns {Promise<object|null>} El perfil del estudiante o null si no se encuentra.
+ */
+export async function findStudentByEmail(email) {
+  if (!email) return null;
+  try {
+    const { collection, query, where, getDocs } = await getFirestore();
+    const q = query(collection(db, "students"), where("email", "==", email));
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+      console.warn(
+        `findStudentByEmail: No se encontró estudiante con email ${email}.`
       );
-    } catch (_) {}
-  }
-
-  const db = getDb();
-  const auth = getAuthInstance();
-  const docRef = await addDoc(collection(db, "materials"), {
-    title,
-    category,
-    description,
-    url,
-    path: null,
-    ownerEmail:
-      ownerEmail?.toLowerCase() ||
-      auth?.currentUser?.email?.toLowerCase() ||
-      null,
-    createdAt: serverTimestamp(),
-    downloads: 0,
-  });
-  return { id: docRef.id, title, category, description, url };
-}
-
-export function subscribeMaterials(cb) {
-  const db = getDb();
-  const q = query(collection(db, "materials"), orderBy("createdAt", "desc"));
-  return onSnapshot(q, (snap) => {
-    const items = [];
-    snap.forEach((docSnap) => {
-      const d = docSnap.data();
-      items.push({ id: docSnap.id, ...d });
-    });
-    cb(items);
-  });
-}
-
-export async function deleteMaterialById(id) {
-  const db = getDb();
-  const refDoc = doc(collection(db, "materials"), id);
-  const snap = await getDoc(refDoc);
-  if (snap.exists()) {
-    const data = snap.data();
-    if (useStorage && data.path) {
-      try {
-        const st = getStorageInstance();
-        if (st) {
-          const ref = storageRef(st, data.path);
-          await deleteObject(ref).catch(() => {});
-        }
-      } catch (_) {}
+      return null;
     }
-  }
-  await deleteDoc(refDoc);
-}
-
-export async function incrementMaterialDownloads(id) {
-  const db = getDb();
-  const refDoc = doc(collection(db, "materials"), id);
-  await updateDoc(refDoc, { downloads: increment(1) });
-}
-
-// ====== Grades range fetch by updatedAt ======
-export async function fetchGradesByDateRange(startISO, endISO) {
-  const db = getDb();
-  const start = new Date(startISO);
-  const end = new Date(endISO);
-  // Ensure end includes the full day
-  end.setHours(23, 59, 59, 999);
-  const qy = query(
-    collection(db, "grades"),
-    where("updatedAt", ">=", start),
-    where("updatedAt", "<=", end),
-    orderBy("updatedAt", "asc")
-  );
-  const snap = await getDocs(qy);
-  const items = [];
-  snap.forEach((docSnap) => {
-    const d = docSnap.data();
-    items.push({ id: docSnap.id, ...d });
-  });
-  return items;
-}
-
-// ====== Foro (Topics + Replies) ======
-// Collection: forum_topics (doc fields: title, category, content, authorName, authorEmail, createdAt, updatedAt)
-// Subcollection per topic: forum_topics/{topicId}/replies (doc fields: text, authorName, authorEmail, createdAt)
-
-export function subscribeForumTopics(cb, onError) {
-  const db = getDb();
-  const qy = query(
-    collection(db, "forum_topics"),
-    orderBy("updatedAt", "desc")
-  );
-  return onSnapshot(
-    qy,
-    (snap) => {
-      const items = [];
-      snap.forEach((docSnap) => {
-        const d = docSnap.data();
-        items.push({ id: docSnap.id, ...d });
-      });
-      cb(items);
-    },
-    (err) => {
-      if (onError)
-        try {
-          onError(err);
-        } catch (_) {}
-    }
-  );
-}
-
-export async function createForumTopic({
-  title,
-  category,
-  content,
-  authorName,
-  authorEmail,
-}) {
-  const db = getDb();
-  if (!title || !content) throw new Error("T�tulo y contenido son requeridos");
-  const docRef = await addDoc(collection(db, "forum_topics"), {
-    title,
-    category: category || "General",
-    content,
-    authorName: authorName || null,
-    authorEmail: authorEmail || null,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-    repliesCount: 0,
-    lastReplyId: null,
-    lastReplyText: null,
-    lastReplyAuthorName: null,
-    lastReplyAuthorEmail: null,
-    lastReplyParentId: null,
-    lastReplyCreatedAt: null,
-  });
-  return { id: docRef.id };
-}
-
-export async function updateForumTopic(topicId, updates) {
-  const db = getDb();
-  const ref = doc(collection(db, "forum_topics"), topicId);
-  const payload = { ...updates, updatedAt: serverTimestamp() };
-  await updateDoc(ref, payload);
-}
-
-export async function deleteForumTopic(topicId) {
-  const db = getDb();
-  // Delete replies first (best-effort)
-  try {
-    const repliesCol = collection(db, "forum_topics", topicId, "replies");
-    const snap = await getDocs(repliesCol);
-    const dels = [];
-    snap.forEach((r) => dels.push(deleteDoc(r.ref)));
-    await Promise.allSettled(dels);
-  } catch (_) {}
-  // Then delete topic
-  const ref = doc(collection(db, "forum_topics"), topicId);
-  await deleteDoc(ref);
-}
-
-export function subscribeForumReplies(topicId, cb) {
-  const db = getDb();
-  const repliesCol = collection(db, "forum_topics", topicId, "replies");
-  const qy = query(repliesCol, orderBy("createdAt", "asc"));
-  return onSnapshot(qy, (snap) => {
-    const items = [];
-    snap.forEach((docSnap) => {
-      const d = docSnap.data();
-      items.push({ id: docSnap.id, ...d });
-    });
-    cb(items);
-  });
-}
-
-export async function fetchForumRepliesCount(topicId) {
-  if (!topicId) return 0;
-  const db = getDb();
-  try {
-    const repliesCol = collection(db, "forum_topics", topicId, "replies");
-    const snapshot = await getCountFromServer(repliesCol);
-    const data = snapshot?.data ? snapshot.data() : null;
-    const rawCount =
-      data && typeof data.count !== "undefined" ? data.count : snapshot.count;
-    const numeric = Number(rawCount);
-    if (!Number.isFinite(numeric)) return 0;
-    return Math.max(0, Math.trunc(numeric));
+    // Se asume que solo hay un documento por email.
+    const studentDoc = querySnapshot.docs[0];
+    return {
+      id: studentDoc.id, // El ID del documento (alfanumérico de Firestore)
+      ...studentDoc.data(), // Contiene matrícula, uid (matrícula), etc.
+    };
   } catch (error) {
-    console.error("fetchForumRepliesCount:error", error);
+    console.error("Error en findStudentByEmail:", error);
+    if (error.code === "permission-denied") {
+      console.error(
+        "Error de permisos al buscar por email. Revisa las reglas de seguridad de Firestore para la colección 'students'."
+      );
+    }
     return null;
   }
 }
 
-export async function addForumReply(
-  topicId,
-  { text, authorName, authorEmail, parentId = null }
-) {
+export async function getStudentGradeItems(studentId) {
   const db = getDb();
-  if (!topicId) throw new Error("topicId requerido");
-  if (!text || !text.trim()) throw new Error("Texto requerido");
-  const trimmedText = text.trim();
-  const repliesCol = collection(db, "forum_topics", topicId, "replies");
-  const replyRef = await addDoc(repliesCol, {
-    text: trimmedText,
-    authorName: authorName || null,
-    authorEmail: authorEmail || null,
-    createdAt: serverTimestamp(),
-
-    parentId: parentId || null,
-
-    reactions: {
-      like: 0,
+  const ref = doc(collection(db, "grades"), studentId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return null;
+  const data = snap.data() || {};
+  return {
+    id: snap.id,
+    email: data.email || null,
+    unit1: data.unit1 || {
+      participation: 0,
+      assignments: 0,
+      classwork: 0,
+      exam: 0,
     },
-    reactionUsers: {
-      like: {},
+    unit2: data.unit2 || {
+      participation: 0,
+      assignments: 0,
+      classwork: 0,
+      exam: 0,
     },
-  });
-  try {
-    const topicRef = doc(collection(db, "forum_topics"), topicId);
-    await updateDoc(topicRef, {
-      repliesCount: increment(1),
-      updatedAt: serverTimestamp(),
-      lastReplyId: replyRef.id,
-      lastReplyText: trimmedText,
-      lastReplyAuthorName: authorName || null,
-      lastReplyAuthorEmail: authorEmail || null,
-      lastReplyParentId: parentId || null,
-      lastReplyCreatedAt: serverTimestamp(),
-      lastReplyReactions: {
-        like: 0,
-      },
-      lastReplyReactionUsers: {
-        like: {},
-      },
-    });
-  } catch (_) {}
-
-  return { id: replyRef.id };
-}
-
-async function refreshTopicLastReply(topicId) {
-  if (!topicId) return;
-  const db = getDb();
-  try {
-    const topicRef = doc(collection(db, "forum_topics"), topicId);
-    const repliesCol = collection(db, "forum_topics", topicId, "replies");
-    const latestQuery = query(
-      repliesCol,
-      orderBy("createdAt", "desc"),
-      limit(1)
-    );
-    const latestSnap = await getDocs(latestQuery);
-    if (latestSnap.empty) {
-      await updateDoc(topicRef, {
-        lastReplyId: null,
-        lastReplyText: null,
-        lastReplyAuthorName: null,
-        lastReplyAuthorEmail: null,
-        lastReplyParentId: null,
-        lastReplyCreatedAt: null,
-        lastReplyReactions: null,
-        lastReplyReactionUsers: null,
-      });
-      return;
-    }
-    const latestDoc = latestSnap.docs[0];
-    const latestData = latestDoc.data() || {};
-    await updateDoc(topicRef, {
-      lastReplyId: latestDoc.id,
-      lastReplyText: latestData.text || null,
-      lastReplyAuthorName: latestData.authorName || null,
-      lastReplyAuthorEmail: latestData.authorEmail || null,
-      lastReplyParentId: latestData.parentId || null,
-      lastReplyCreatedAt: latestData.createdAt || null,
-      lastReplyReactions: latestData.reactions || null,
-      lastReplyReactionUsers: latestData.reactionUsers || null,
-    });
-  } catch (_) {}
-}
-
-export async function deleteForumReply(topicId, replyId) {
-  const db = getDb();
-  if (!topicId || !replyId) throw new Error("topicId y replyId requeridos");
-  const ref = doc(collection(db, "forum_topics", topicId, "replies"), replyId);
-  await deleteDoc(ref);
-  try {
-    const topicRef = doc(collection(db, "forum_topics"), topicId);
-    await updateDoc(topicRef, {
-      repliesCount: increment(-1),
-      updatedAt: serverTimestamp(),
-    });
-  } catch (_) {}
-  try {
-    const repliesCol = collection(db, "forum_topics", topicId, "replies");
-    const childrenQuery = query(repliesCol, where("parentId", "==", replyId));
-    const childrenSnap = await getDocs(childrenQuery);
-    const deletions = [];
-    childrenSnap.forEach((childDoc) => {
-      deletions.push(deleteForumReply(topicId, childDoc.id));
-    });
-    if (deletions.length) {
-      await Promise.allSettled(deletions);
-    }
-  } catch (_) {}
-  try {
-    await refreshTopicLastReply(topicId);
-  } catch (_) {}
-}
-
-export async function registerForumReplyReaction(
-  topicId,
-  replyId,
-  reaction = "like",
-  reactor = null
-) {
-  const db = getDb();
-  if (!topicId || !replyId) {
-    throw new Error("topicId y replyId requeridos");
-  }
-  if (!reaction) {
-    throw new Error("Tipo de reacción requerido");
-  }
-  const ref = doc(collection(db, "forum_topics", topicId, "replies"), replyId);
-  const fieldPath = `reactions.${reaction}`;
-  const updates = {
-    [fieldPath]: increment(1),
+    unit3: data.unit3 || {
+      participation: 0,
+      assignments: 0,
+      classwork: 0,
+      exam: 0,
+    },
+    projectFinal: data.projectFinal ?? 0,
   };
-
-  if (reactor && typeof reactor === "object") {
-    const keyCandidate = sanitizeFirestoreKey(
-      reactor.uid || reactor.email || ""
-    );
-    if (keyCandidate) {
-      const userField = `reactionUsers.${reaction}.${keyCandidate}`;
-      updates[userField] = {
-        uid: reactor.uid || null,
-        email: reactor.email || null,
-        name: reactor.name || null,
-        reactedAt: serverTimestamp(),
-      };
-    }
-  }
-
-  await updateDoc(ref, updates);
-}
-
-export function subscribeLatestForumReplies(limitOrOptions, onChange, onError) {
-  const db = getDb();
-  let max = 25;
-  if (typeof limitOrOptions === "number" && Number.isFinite(limitOrOptions)) {
-    max = Math.max(1, Math.min(100, Math.trunc(limitOrOptions)));
-  } else if (limitOrOptions && typeof limitOrOptions === "object") {
-    const candidate = Number(limitOrOptions.limit);
-    if (Number.isFinite(candidate) && candidate > 0) {
-      max = Math.max(1, Math.min(100, Math.trunc(candidate)));
-    }
-  }
-
-  const topicsCol = collection(db, "forum_topics");
-  const qy = query(
-    topicsCol,
-    orderBy("lastReplyCreatedAt", "desc"),
-    orderBy("updatedAt", "desc"),
-    limit(max)
-  );
-
-  return onSnapshot(
-    qy,
-    (snap) => {
-      const items = [];
-      snap.forEach((docSnap) => {
-        const data = docSnap.data() || {};
-        const lastReplyId = data.lastReplyId || data.lastReply?.id || null;
-        const createdAt =
-          data.lastReplyCreatedAt || data.lastReply?.createdAt || null;
-        if (!lastReplyId || !createdAt) {
-          return;
-        }
-        const replyText = data.lastReplyText ?? data.lastReply?.text ?? "";
-        const authorName =
-          data.lastReplyAuthorName ?? data.lastReply?.authorName ?? null;
-        const authorEmail =
-          data.lastReplyAuthorEmail ?? data.lastReply?.authorEmail ?? null;
-        const parentId =
-          data.lastReplyParentId ?? data.lastReply?.parentId ?? null;
-        const reactions =
-          data.lastReplyReactions ?? data.lastReply?.reactions ?? null;
-        const reactionUsers =
-          data.lastReplyReactionUsers ?? data.lastReply?.reactionUsers ?? null;
-
-        const payload = {
-          id: lastReplyId,
-          topicId: docSnap.id,
-          topicPath: docSnap.ref.path,
-          createdAt,
-          text: typeof replyText === "string" ? replyText : "",
-          authorName: authorName || null,
-          authorEmail: authorEmail || null,
-        };
-
-        if (parentId) {
-          payload.parentId = parentId;
-        }
-
-        if (reactions && typeof reactions === "object") {
-          payload.reactions = reactions;
-        }
-
-        if (reactionUsers && typeof reactionUsers === "object") {
-          payload.reactionUsers = reactionUsers;
-        }
-
-        items.push(payload);
-      });
-      if (typeof onChange === "function") {
-        onChange(items);
-      }
-    },
-    (error) => {
-      if (isPermissionDenied(error)) {
-        console.warn("subscribeLatestForumReplies:permission-denied", error);
-      } else {
-        console.error("subscribeLatestForumReplies:error", error);
-      }
-
-      if (typeof onError === "function") {
-        try {
-          onError(error);
-        } catch (_) {}
-      }
-    }
-  );
-}
-
-export async function fetchForumTopicSummary(topicId) {
-  if (!topicId) return null;
-  const db = getDb();
-  try {
-    const ref = doc(collection(db, "forum_topics"), topicId);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return null;
-    const data = snap.data();
-    return { id: snap.id, ...data };
-  } catch (error) {
-    console.error("fetchForumTopicSummary:error", error);
-    return null;
-  }
-}
-
-export async function fetchForumReply(topicId, replyId) {
-  if (!topicId || !replyId) return null;
-  const db = getDb();
-  try {
-    const ref = doc(
-      collection(db, "forum_topics", topicId, "replies"),
-      replyId
-    );
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return null;
-    const data = snap.data();
-    return { id: snap.id, ...data };
-  } catch (error) {
-    console.error("fetchForumReply:error", error);
-    return null;
-  }
 }
 
 // --- MÉTODOS PARA PLANES DE PRUEBA ---
