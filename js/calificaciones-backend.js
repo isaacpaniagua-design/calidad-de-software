@@ -2,7 +2,6 @@
 
 // Importamos las funciones necesarias, incluyendo la nueva que creamos.
 import { onAuth, subscribeGrades, subscribeMyActivities } from './firebase.js'; 
-import { getStudentId } from './calificaciones-helpers.js';
 
 // Referencias a los contenedores que YA EXISTEN en tu HTML
 const gradesTableContainer = document.getElementById('grades-table-container');
