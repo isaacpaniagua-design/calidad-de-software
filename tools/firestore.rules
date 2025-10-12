@@ -5,13 +5,24 @@ service cloud.firestore {
 
 // Calificaciones (Colección a nivel raíz)
     match /grades/{studentId} {
-      // Un profesor puede listar toda la colección y escribir/actualizar cualquier documento.
-      allow list, write: if isTeacher();
+      // El docente tiene control total sobre los documentos de calificaciones.
+      allow read, write: if isTeacher();
       
-      // Un estudiante solo puede LEER (get) su propio documento de calificaciones.
-      // El ID del documento DEBE ser igual al UID del estudiante.
-      // ¡Importante! No se le da permiso de 'list', por lo que no puede ver las de otros.
-      allow get: if isAuthenticated() && request.auth.uid == studentId;
+      // Un estudiante puede leer (get) su propio documento de calificaciones.
+      allow get: if isAuthenticated() && get(/databases/$(database)/documents/students/$(studentId)).data.authUid == request.auth.uid;
+
+      // --- REGLA ANIDADA PARA LA SUBCOLECCIÓN 'activities' ---
+      // Esta regla SÓLO se aplica a la ruta /grades/{studentId}/activities/{activityId}
+      match /activities/{activityId} {
+        // El docente puede escribir (crear, actualizar, eliminar).
+        allow write: if isTeacher();
+        
+        // El docente puede leer la LISTA completa de actividades de un estudiante.
+        allow list: if isTeacher();
+
+        // El docente O el estudiante propietario pueden leer un documento de actividad específico (GET).
+        allow get: if isTeacher() || (isAuthenticated() && get(/databases/$(database)/documents/students/$(studentId)).data.authUid == request.auth.uid);
+      }
     }
     // --- Funciones de Ayuda ---
     
@@ -90,15 +101,5 @@ service cloud.firestore {
         allow write: if isTeacher();
     }
     
-     match /activities/{activityId} {
-        // El docente puede escribir (crear, actualizar, eliminar).
-        allow write: if isTeacher();
-        
-        // El docente puede leer la LISTA de actividades de cualquier estudiante.
-        allow list: if isTeacher();
-
-        // El docente O el estudiante propietario pueden leer un documento de actividad específico (GET).
-        allow get: if isTeacher() || (isAuthenticated() && get(/databases/$(database)/documents/students/$(studentId)).data.authUid == request.auth.uid);
-      }
   }
 }
