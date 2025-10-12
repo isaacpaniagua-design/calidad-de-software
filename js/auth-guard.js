@@ -1,38 +1,36 @@
 // js/auth-guard.js
-import { app } from './firebase.js';
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.9.2/firebase-auth.js";
-import { findStudentByEmail } from './firebase.js'; // Importación de la nueva función
+import { findStudentByUid } from './firebase.js'; // CAMBIO IMPORTANTE: Usamos la nueva función
 
-const auth = getAuth(app);
+const auth = getAuth();
 
 const PROTECTED_PAGES = ['calificaciones.html', 'paneldocente.html', 'asistencia.html', 'materiales.html', 'Foro.html'];
 
-/**
- * Gestiona la sesión del usuario, determina su rol y guarda su ID de estudiante si aplica.
- * @param {import("firebase/auth").User|null} user - El objeto de usuario de Firebase o null.
- */
 async function manageUserSession(user) {
     if (user) {
         const isTeacher = user.email === 'isaac.paniagua@potros.itson.edu.mx';
         const role = isTeacher ? 'docente' : 'estudiante';
 
-        // Guardar datos básicos de sesión
-        localStorage.setItem('qs_user_uid', user.uid); // UID de Autenticación
+        localStorage.setItem('qs_user_uid', user.uid);
         localStorage.setItem('qs_user_name', user.displayName);
         localStorage.setItem('qs_user_email', user.email);
         localStorage.setItem('qs_role', role);
         
-        // Si es un estudiante, buscamos su ID de matrícula (document ID)
         if (role === 'estudiante') {
-            const studentProfile = await findStudentByEmail(user.email);
-            if (studentProfile) {
-                // Guardamos el ID de la colección 'students' (ej. "00000099876")
+            // CAMBIO CLAVE: Buscamos al estudiante por su UID de autenticación, no por su email.
+            const studentProfile = await findStudentByUid(user.uid);
+            
+            if (studentProfile && studentProfile.id) {
+                // Guardamos el ID del documento del estudiante (su matrícula), que es lo que necesitamos.
                 localStorage.setItem('qs_student_id', studentProfile.id);
-                console.log(`Auth Guard: ID de estudiante (${studentProfile.id}) encontrado y guardado.`);
+                console.log(`Auth Guard: Perfil de estudiante encontrado para ${user.email}. ID asignado: ${studentProfile.id}`);
             } else {
-                console.warn(`Auth Guard: No se encontró un perfil de estudiante para ${user.email}. El estudiante no podrá ver sus calificaciones.`);
-                localStorage.removeItem('qs_student_id'); // Asegurarse de que no haya un ID antiguo
+                localStorage.removeItem('qs_student_id');
+                console.warn(`Auth Guard: No se encontró un perfil de estudiante para el UID ${user.uid}. Asegúrate de que el campo 'authUid' en la colección 'students' coincida.`);
             }
+        } else {
+            // Si es docente, nos aseguramos de que no haya un ID de estudiante guardado.
+            localStorage.removeItem('qs_student_id');
         }
         
         console.log(`Sesión iniciada para ${user.email}. Rol asignado: ${role.toUpperCase()}`);
@@ -42,9 +40,7 @@ async function manageUserSession(user) {
     }
 }
 
-// Listener principal de autenticación
 onAuthStateChanged(auth, async (user) => {
-    // La función que gestiona la sesión ahora es asíncrona, así que usamos await.
     await manageUserSession(user);
 
     const currentPage = window.location.pathname.split('/').pop();
