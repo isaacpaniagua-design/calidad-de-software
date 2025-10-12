@@ -151,16 +151,20 @@ function buildNavTemplate(basePath, notificationBadge) {
           <span class="sr-only">Abrir menu</span>
         </button>
       </div>
-      <div class="qs-links-region" data-open="false">
-        <nav class="qs-tabs" id="qs-nav-links" aria-label="Navegacion principal">
-          <a class="qs-btn" href="${basePath}materiales.html">Materiales</a>
-          <a class="qs-btn" href="${basePath}asistencia.html">Asistencia</a>
-          <a class="qs-btn" href="${basePath}calificaciones.html">Calificaciones</a>
-          <a class="qs-btn" href="${basePath}Foro.html">Foro</a>
-          <a class="qs-btn nav-link-updates" href="${basePath}updates.html">Actualizaciones ${notificationBadge || ''}</a>
-          <a class="qs-btn teacher-only" data-route="panel" href="${basePath}paneldocente.html" hidden aria-hidden="true">Panel</a>
-        </nav>
-      </div>
+     <nav class="qs-tabs" id="qs-nav-links" aria-label="Navegación principal">
+  <a class="qs-btn" href="${basePath}materiales.html">Materiales</a>
+  <a class="qs-btn" href="${basePath}asistencia.html">Asistencia</a>
+  <a class="qs-btn" href="${basePath}calificaciones.html">Calificaciones</a>
+  <a class="qs-btn teacher-only" href="${basePath}actividades.html">Actividades</a>
+  <a class="qs-btn" href="${basePath}Foro.html">Foro</a>
+  <a
+    class="qs-btn teacher-only"
+    href="${basePath}paneldocente.html"
+    hidden
+    aria-hidden="true"
+    >Panel</a
+  >
+</nav>
       <div class="qs-actions">
         <a class="qs-cta" data-default-auth-link href="${basePath}login.html">Iniciar sesion</a>
       </div>
@@ -860,3 +864,4 @@ if (document.readyState === "loading") {
 } else {
   bootstrapLayout();
 }
+
