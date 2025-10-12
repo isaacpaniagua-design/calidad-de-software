@@ -1377,3 +1377,5 @@ export function subscribeMyActivities(studentId, cb) {
   });
 }
 
+
+export { initFirebase, getDbInstance, getAuthInstance, findStudentByUid }; // <-- CORRECCIÓN AQUÍ
