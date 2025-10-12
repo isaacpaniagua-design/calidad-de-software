@@ -1,51 +1,40 @@
-// Compat layer para vistas que todavía cargan nav-inject.js.
-// Se limita a cargar js/layout.js y delegar en la lógica centralizada.
-(function loadLayoutFromNavInject() {
-  if (window.__qsLayoutBooted) return;
+// Reemplaza el contenido de js/nav-inject.js con esto:
+(function () {
+  const navContainer = document.getElementById("main-nav-container");
+  if (!navContainer) return;
 
-  const currentScript = document.currentScript;
-  let layoutSrc = "js/layout.js";
+  const navHTML = `
+    <div class="qs-nav" data-role="main-nav">
+      <div class="wrap">
+        <div class="qs-brand-shell">
+          <div class="qs-brand-region">
+            <a class="qs-brand" href="index.html">
+              <span class="qs-logo" aria-hidden="true">QS</span>
+              <span class="qs-brand-text">
+                <span class="qs-title">Calidad de Software</span>
+                <span class="qs-subtitle">ITSON</span>
+              </span>
+            </a>
+          </div>
+          <button class="qs-menu-toggle" type="button" aria-expanded="false" aria-controls="qs-nav-links">
+            <span class="qs-menu-icon" aria-hidden="true"></span>
+            <span class="sr-only">Abrir menú</span>
+          </button>
+        </div>
+        <div class="qs-links-region">
+          <nav class="qs-tabs" id="qs-nav-links" aria-label="Navegación principal">
+            <a class="qs-btn" href="materiales.html">Materiales</a>
+            <a class="qs-btn" href="asistencia.html">Asistencia</a>
+            <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+            <a class="qs-btn" href="Foro.html">Foro</a>
+            
+            <a class="qs-btn teacher-only" href="actividades.html">Gestionar Actividades</a>
 
-  if (currentScript) {
-    const configuredSrc = currentScript.getAttribute("data-layout-src");
-    if (configuredSrc) {
-      layoutSrc = configuredSrc;
-    } else if (currentScript.src) {
-      const anchor = document.createElement("a");
-      anchor.href = currentScript.src;
-
-      if (anchor.protocol && anchor.host) {
-        const basePath = anchor.pathname.replace(/[^/]*$/, "");
-        layoutSrc = `${anchor.protocol}//${anchor.host}${basePath}layout.js`;
-      } else {
-        console.warn(
-          "nav-inject.js: no se pudo resolver la ruta hacia layout.js; se usará la predeterminada."
-        );
-      }
-    }
-  }
-
-  if (document.querySelector("script[data-qs='layout-loader']")) return;
-
-  const hasLayoutScript = Array.from(document.querySelectorAll("script[src]"))
-    .filter((script) => script !== currentScript)
-    .some((script) => {
-      const src = script.getAttribute("src") || "";
-      return /(?:^|\/|\\)layout\.js(?:$|[?#])/.test(src);
-    });
-  if (hasLayoutScript) return;
-
-  const loader = document.createElement("script");
-  loader.type = "module";
-  loader.src = layoutSrc;
-  loader.setAttribute("data-qs", "layout-loader");
-  loader.addEventListener("error", () => {
-    console.error("No se pudo cargar js/layout.js desde nav-inject.js");
-  });
-
-  const parent =
-    currentScript && currentScript.parentNode
-      ? currentScript.parentNode
-      : document.head;
-  parent.appendChild(loader);
+            <a class="qs-btn teacher-only" href="paneldocente.html">Panel</a>
+          </nav>
+        </div>
+      </div>
+    </div>
+  `;
+  navContainer.innerHTML = navHTML;
 })();
