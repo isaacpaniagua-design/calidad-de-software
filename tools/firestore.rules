@@ -2,86 +2,84 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  
+
+// Calificaciones (Colección a nivel raíz)
+    match /grades/{studentId} {
+      // Un profesor puede listar toda la colección y escribir/actualizar cualquier documento.
+      allow list, write: if isTeacher();
+      
+      // Un estudiante solo puede LEER (get) su propio documento de calificaciones.
+      // El ID del documento DEBE ser igual al UID del estudiante.
+      // ¡Importante! No se le da permiso de 'list', por lo que no puede ver las de otros.
+      allow get: if isAuthenticated() && request.auth.uid == studentId;
+    }
     // --- Funciones de Ayuda ---
     
+    // Verdadero si el usuario ha iniciado sesión.
     function isAuthenticated() {
       return request.auth != null;
     }
     
+    // Verdadero si el UID del usuario que hace la petición
+    // existe como un documento en la colección 'teachers'.
     function isTeacher() {
-      // Verdadero si el usuario está autenticado y su UID existe en la colección 'teachers'.
       return isAuthenticated() && exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
     }
 
     // --- Reglas por Colección ---
 
+    // Colección de Profesores: Solo los profesores pueden leer la lista. La escritura debe ser manejada con cuidado (ej. desde el admin).
     match /teachers/{teacherId} {
       allow read: if isTeacher();
-      allow write: if false; // Proteger contra escritura desde la app
+      allow write: if false; // Proteger para que solo se pueda modificar desde un backend de confianza o la consola
     }
 
+    // Colección de Estudiantes: Los profesores pueden leer todo, cada estudiante puede leer su propio documento.
     match /students/{studentId} {
-      // Un docente puede leer y escribir.
-      allow read, write: if isTeacher();
-      // Un estudiante puede leer (get) su propio perfil si su authUid coincide.
-      // Asegúrate de que tus documentos de estudiantes tengan un campo 'authUid' con el UID de autenticación.
-      allow get: if isAuthenticated() && request.auth.uid == resource.data.authUid;
-      
-       // NUEVO: Permitir que un estudiante haga una consulta a la lista,
-  // pero solo si está buscando por su propio UID de autenticación.
-  allow list: if isAuthenticated() && request.query.where.authUid == request.auth.uid;
-
-    }
-    
-    // Calificaciones y Actividades
-    match /grades/{studentId} {
-      // El docente tiene control total (leer la lista y escribir).
-      allow read, write: if isTeacher();
-      
-      // Un estudiante puede leer (get) su propio documento de calificaciones.
-      // Esta regla es segura: busca en la colección 'students' el documento con la matrícula
-      // del estudiante y compara el 'authUid' guardado con el UID del usuario que hace la petición.
-      allow get: if isAuthenticated() && 
-                 get(/databases/$(database)/documents/students/$(studentId)).data.authUid == request.auth.uid;
-
-      // REGLA PARA LA SUBCOLECCIÓN DE ACTIVIDADES
-      match /activities/{activityId} {
-        // El docente puede escribir.
-        allow write: if isTeacher();
-        // Tanto el docente como el estudiante dueño del documento pueden leer.
-        allow read: if isTeacher() || (isAuthenticated() && get(/databases/$(database)/documents/students/$(studentId)).data.authUid == request.auth.uid);
-      }
+      allow read: if isTeacher() || (isAuthenticated() && request.auth.uid == studentId);
+      allow write: if isTeacher(); // Permitir a los docentes editar/crear estudiantes
     }
 
+    // Materiales de clase
     match /materials/{materialId} {
-      allow read: if isAuthenticated();
-      allow write: if isTeacher();
+      allow read: if isAuthenticated(); // Todos los autenticados pueden leer
+      allow write: if isTeacher();      // Solo los docentes pueden crear/editar/borrar
     }
 
+    // Entregas de los estudiantes
     match /studentUploads/{uploadId} {
+      // Los docentes tienen acceso total de lectura y escritura.
       allow read, write: if isTeacher();
+      
+      // Un estudiante puede crear su propia entrega y leer/actualizarla.
       allow create: if isAuthenticated() && request.auth.uid == request.resource.data.student.uid;
       allow get, update: if isAuthenticated() && request.auth.uid == resource.data.student.uid;
     }
 
+    // Foro: Temas y Respuestas
     match /forum_topics/{topicId} {
+      // Cualquier usuario autenticado puede leer, crear y modificar temas.
       allow read, write: if isAuthenticated();
       
+      // Regla para la subcolección de respuestas
       match /replies/{replyId} {
         allow read, write: if isAuthenticated();
       }
     }
 
+    // Asistencias
     match /attendances/{attendanceId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated(); // Todos pueden leer la lista de asistencia
+      // Permite a un usuario crear su propia asistencia, y a un docente crear cualquiera.
       allow create: if (isAuthenticated() && request.auth.uid == request.resource.data.uid) || isTeacher();
     }
     
+    // Planes de Prueba
     match /planesDePrueba/{planId} {
-        allow read, write: if isTeacher();
+        allow read, write: if isTeacher(); // Solo los docentes pueden gestionar planes de prueba
     }
     
+    // Colecciones 'courses' y 'grupos' (reglas de ejemplo, ajústalas a tus necesidades)
     match /courses/{courseId} {
       allow read: if isAuthenticated();
       allow write: if isTeacher();
@@ -91,5 +89,16 @@ service cloud.firestore {
         allow read: if isAuthenticated();
         allow write: if isTeacher();
     }
+    
+     match /activities/{activityId} {
+        // El docente puede escribir (crear, actualizar, eliminar).
+        allow write: if isTeacher();
+        
+        // El docente puede leer la LISTA de actividades de cualquier estudiante.
+        allow list: if isTeacher();
+
+        // El docente O el estudiante propietario pueden leer un documento de actividad específico (GET).
+        allow get: if isTeacher() || (isAuthenticated() && get(/databases/$(database)/documents/students/$(studentId)).data.authUid == request.auth.uid);
+      }
   }
 }
