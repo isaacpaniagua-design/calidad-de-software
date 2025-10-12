@@ -1403,3 +1403,15 @@ export async function findStudentByUid(uid) {
   }
 }
 
+export function subscribeMyActivities(studentId, cb) {
+  if (!studentId) return () => {}; // Devuelve una función vacía si no hay ID
+
+  const db = getDb();
+  const activitiesRef = collection(db, 'grades', studentId, 'activities');
+  const q = query(activitiesRef, orderBy('unit'), orderBy('activityName')); // Ordenar por unidad y nombre
+
+  return onSnapshot(q, (snapshot) => {
+    const activities = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    cb(activities);
+  });
+}
