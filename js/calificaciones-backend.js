@@ -5,6 +5,21 @@ import { onAuth, subscribeGrades, subscribeMyGrades, subscribeMyActivities } fro
 let unsubscribeFromGrades = null;
 let unsubscribeFromActivities = null;
 
+/**
+ * Función auxiliar para obtener de forma segura una calificación numérica.
+ * Maneja números, objetos con 'score', y redondea a 2 decimales.
+ */
+function getSafeScore(gradeData) {
+    let score = 0;
+    if (typeof gradeData === 'number') {
+        score = gradeData;
+    } else if (typeof gradeData === 'object' && gradeData !== null && typeof gradeData.score === 'number') {
+        score = gradeData.score;
+    }
+    // Asegurarse de que el valor es numérico antes de fijar decimales
+    return !isNaN(score) ? parseFloat(score.toFixed(2)) : 0;
+}
+
 function handleAuthStateChanged(user) {
     // Limpiar suscripciones anteriores para evitar fugas de memoria y datos incorrectos
     if (unsubscribeFromGrades) unsubscribeFromGrades();
