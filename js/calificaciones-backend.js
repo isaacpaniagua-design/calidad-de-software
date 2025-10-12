@@ -72,6 +72,26 @@ function handleAuthStateChanged(user) {
  * Renderiza la tabla de promedios para la vista del DOCENTE.
  * Las calificaciones son de solo lectura porque se calculan automáticamente.
  */
+// js/calificaciones-backend.js
+
+// ... (código anterior)
+
+/**
+ * Función auxiliar para obtener de forma segura una calificación numérica.
+ * Maneja tanto números directos como objetos con una propiedad 'score'.
+ * @param {any} gradeData - El dato de la calificación.
+ * @returns {number} - La calificación numérica o 0 si no es válida.
+ */
+function getSafeScore(gradeData) {
+    if (typeof gradeData === 'number') {
+        return gradeData;
+    }
+    if (typeof gradeData === 'object' && gradeData !== null && typeof gradeData.score === 'number') {
+        return gradeData.score;
+    }
+    return 0;
+}
+
 function renderGradesTableForTeacher(studentsData) {
     const tbody = document.getElementById('grades-table-body');
     if (!tbody) return;
@@ -84,17 +104,41 @@ function renderGradesTableForTeacher(studentsData) {
 
     studentsData.forEach(student => {
         const row = document.createElement('tr');
-        row.className = 'border-b';
+        // Alternar colores de fila para mejor legibilidad
+        row.className = 'border-b hover:bg-gray-50';
         row.innerHTML = `
-            <td class="py-2 px-4">${student.name || 'Sin nombre'}</td>
-            <td class="py-2 px-4 text-center">${student.unit1 || 0}</td>
-            <td class="py-2 px-4 text-center">${student.unit2 || 0}</td>
-            <td class="py-2 px-4 text-center">${student.projectFinal || 0}</td>
-            <td class="py-2 px-4 text-center font-bold">${student.finalGrade || 0}</td>
+            <td class="py-3 px-4 font-medium text-gray-800">${student.name || 'Sin nombre'}</td>
+            <td class="py-3 px-4 text-center">${getSafeScore(student.unit1)}</td>
+            <td class="py-3 px-4 text-center">${getSafeScore(student.unit2)}</td>
+            <td class="py-3 px-4 text-center">${getSafeScore(student.projectFinal)}</td>
+            <td class="py-3 px-4 text-center font-bold text-blue-600">${getSafeScore(student.finalGrade)}</td>
         `;
         tbody.appendChild(row);
     });
 }
+
+
+function renderGradesTableForStudent(myGradesData) {
+    const tbody = document.getElementById('grades-table-body');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    if (myGradesData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">Aún no tienes un resumen de calificaciones.</td></tr>';
+        return;
+    }
+    const myData = myGradesData[0];
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td class="py-3 px-4 font-medium text-gray-800">${myData.name || 'Estudiante'}</td>
+        <td class="py-3 px-4 text-center">${getSafeScore(myData.unit1)}</td>
+        <td class="py-3 px-4 text-center">${getSafeScore(myData.unit2)}</td>
+        <td class="py-3 px-4 text-center">${getSafeScore(myData.projectFinal)}</td>
+        <td class="py-3 px-4 text-center font-bold text-blue-600">${getSafeScore(myData.finalGrade)}</td>
+    `;
+    tbody.appendChild(row);
+}
+
 
 /**
  * Renderiza la tabla de RESUMEN para la vista del ESTUDIANTE.
