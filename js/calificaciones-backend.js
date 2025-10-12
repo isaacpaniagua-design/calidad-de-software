@@ -38,17 +38,29 @@ function handleAuthStateChanged(user) {
             unsubscribeFromGrades = subscribeGrades(renderGradesTableForTeacher);
 
         } else {
-            // --- VISTA DEL ESTUDIANTE ---
-            titleEl.textContent = 'Resumen de Mis Calificaciones';
-            activitiesContainer.style.display = 'block'; // Mostrar la tabla de desglose
-            
-            const studentId = localStorage.getItem('qs_student_id'); 
-            
-            // Cargar el resumen de promedios del estudiante
-            unsubscribeFromGrades = subscribeMyGrades(studentId, renderGradesTableForStudent);
-            // Cargar la lista detallada de actividades del estudiante
-            unsubscribeFromActivities = subscribeMyActivities(studentId, renderActivitiesForStudent);
+    // --- VISTA DEL ESTUDIANTE ---
+    titleEl.textContent = 'Resumen de Mis Calificaciones';
+    activitiesContainer.style.display = 'block'; // Mostrar la tabla de desglose
+    
+    const studentId = localStorage.getItem('qs_student_id'); 
+    
+    if (studentId) {
+        // Cargar el resumen de promedios del estudiante
+        unsubscribeFromGrades = subscribeMyGrades(studentId, renderGradesTableForStudent);
+        // Cargar la lista detallada de actividades del estudiante
+        unsubscribeFromActivities = subscribeMyActivities(studentId, renderActivitiesForStudent);
+    } else {
+        // Si no se encuentra el ID del estudiante, mostrar un mensaje de error.
+        const tbody = document.getElementById('grades-table-body');
+        const activitiesTbody = document.getElementById('student-activities-body');
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-red-500">Error: No se pudo identificar al estudiante. Inicia sesión de nuevo.</td></tr>';
         }
+        if (activitiesTbody) {
+            activitiesTbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-red-500">No se pueden cargar las actividades.</td></tr>';
+        }
+    }
+}
     } else {
         // Ocultar todo si no hay sesión iniciada
         gradesContainer.style.display = 'none';
