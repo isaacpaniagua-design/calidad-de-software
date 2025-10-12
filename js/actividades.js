@@ -102,13 +102,22 @@ onAuth(user => {
 function loadStudents() {
     subscribeGrades(students => {
         studentsList = students;
-        studentSelect.innerHTML = '<option value="">-- Seleccione un estudiante --</option>';
-        students.forEach(student => {
-            const option = document.createElement('option');
-            option.value = student.id;
-            option.textContent = student.name;
-            studentSelect.appendChild(option);
-        });
+        studentSelect.innerHTML = ''; // Limpiar opciones anteriores
+
+        if (students.length > 0) {
+            studentSelect.innerHTML = '<option value="">-- Seleccione un estudiante --</option>';
+            students.forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.id;
+                // Asegurarse de que el nombre no sea undefined
+                option.textContent = student.name || `ID: ${student.id}`;
+                studentSelect.appendChild(option);
+            });
+        } else {
+            // Si no hay estudiantes, mostrar un mensaje claro.
+            studentSelect.innerHTML = '<option value="">No se encontraron estudiantes registrados.</option>';
+            studentSelect.disabled = true; // Deshabilitar el select
+        }
     });
 }
 
