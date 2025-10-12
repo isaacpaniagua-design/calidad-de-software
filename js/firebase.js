@@ -509,21 +509,28 @@ export function subscribeTodayAttendanceByUser(email, cb, onError) {
  * @param {string} email El email del estudiante a buscar.
  * @returns {Promise<{id: string, data: object}|null>} El ID y datos del estudiante, o null si no se encuentra.
  */
-export async function findStudentByEmail(email) {
-  if (!email) return null;
-  const db = getDb();
-  const studentsRef = collection(db, "students");
-  const q = query(studentsRef, where("email", "==", email.toLowerCase()), limit(1));
-  
-  try {
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      const studentDoc = querySnapshot.docs[0];
-      return { id: studentDoc.id, data: studentDoc.data() }; // Devolvemos el ID del documento (ej. "00000099876")
-    }
+export async function findStudentByUid(uid) {
+  if (!uid) {
+    console.error("findStudentByUid: Se requiere un UID.");
     return null;
+  }
+  try {
+    const studentsRef = collection(getDb(), 'students');
+    // Esta consulta ahora está permitida por nuestras nuevas reglas de seguridad
+    const q = query(studentsRef, where("authUid", "==", uid), limit(1));
+    const querySnapshot = await getDocs(q);
+    
+    if (querySnapshot.empty) {
+      console.warn(`No se encontró un perfil de estudiante para el UID: ${uid}`);
+      return null;
+    }
+    
+    const studentDoc = querySnapshot.docs[0];
+    // Devolvemos el ID del documento (la matrícula) y sus datos
+    return { id: studentDoc.id, ...studentDoc.data() };
+
   } catch (error) {
-    console.error("Error buscando estudiante por email:", error);
+    console.error("Error buscando estudiante por UID:", error);
     return null;
   }
 }
@@ -1376,5 +1383,6 @@ export function subscribeMyActivities(studentId, cb) {
     cb(activities);
   });
 }
+
 
 
