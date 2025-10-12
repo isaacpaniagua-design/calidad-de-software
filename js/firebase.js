@@ -86,16 +86,53 @@ function getStorageInstance() {
 const normalizeEmail = (email) =>
   typeof email === "string" ? email.trim().toLowerCase() : "";
 
-const baseTeacherEmails = Array.isArray(allowedTeacherEmails)
-  ? allowedTeacherEmails.map(normalizeEmail).filter(Boolean)
-  : [];
+function isLikelyIdentityNetworkIssue(error) {
+    if (!error) return false;
+    const code = typeof error.code === "string" ? error.code.toLowerCase() : "";
+    if (code === "auth/network-request-failed") return true;
+    const message = typeof error.message === "string" ? error.message.toLowerCase() : "";
+    return /identitytoolkit|network|err_connection/.test(message);
+}
 
+function createFriendlyIdentityNetworkError(error) {
+    const friendly = new Error("No se pudo conectar con el servicio de autenticación. Verifica tu conexión a internet.");
+    friendly.code = "auth/network-request-failed";
+    friendly.cause = error;
+    return friendly;
+}
+
+async function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms || 0));
+}
+
+async function signInWithPopupSafe(authInstance, provider, { retries = 1 } = {}) {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+        try {
+            return await signInWithPopup(authInstance, provider);
+        } catch (error) {
+            const isNetworkIssue = isLikelyIdentityNetworkIssue(error);
+            if (isNetworkIssue && attempt < retries) {
+                await wait(400 * (attempt + 1));
+                continue;
+            }
+            if (isNetworkIssue) throw createFriendlyIdentityNetworkError(error);
+            throw error;
+        }
+    }
+    throw new Error("No se pudo completar la autenticación.");
+}
+
+const baseTeacherEmails = (allowedTeacherEmails || []).map(normalizeEmail).filter(Boolean);
 const teacherAllowlistSet = new Set(baseTeacherEmails);
 let teacherAllowlistLoaded = false;
 let teacherAllowlistPromise = null;
 
+function getTeacherAllowlistPathSegments() {
+    return (teacherAllowlistDocPath || "").split("/").filter(Boolean);
+}
+
 async function fetchTeacherAllowlistFromFirestore() {
-  const segments = (teacherAllowlistDocPath || "").split("/").filter(Boolean);
+  const segments = getTeacherAllowlistPathSegments();
   if (segments.length < 2) return [];
   const db = getDb();
   const ref = doc(db, ...segments);
@@ -105,6 +142,8 @@ async function fetchTeacherAllowlistFromFirestore() {
   const raw = Array.isArray(data.emails) ? data.emails : [];
   return raw.map(normalizeEmail).filter(Boolean);
 }
+
+// --- FUNCIONES PARA EXPORTAR ---
 
 async function ensureTeacherAllowlistLoaded() {
   if (teacherAllowlistLoaded) return teacherAllowlistSet;
@@ -126,6 +165,21 @@ async function ensureTeacherAllowlistLoaded() {
   return teacherAllowlistPromise;
 }
 
+async function listTeacherNotificationEmails({ domainOnly = true } = {}) {
+    await ensureTeacherAllowlistLoaded();
+    const normalizedDomain = (allowedEmailDomain || "").trim().toLowerCase();
+    const emails = [];
+    const seen = new Set();
+    teacherAllowlistSet.forEach((email) => {
+        const normalized = email.trim().toLowerCase();
+        if (!normalized || seen.has(normalized)) return;
+        if (domainOnly && normalizedDomain && !normalized.endsWith(`@${normalizedDomain}`)) return;
+        seen.add(normalized);
+        emails.push(normalized);
+    });
+    return emails;
+}
+
 function initFirebase() {
     initFirebaseInternal();
     return { app, auth, db };
@@ -135,11 +189,9 @@ async function signInWithGooglePotros() {
   const auth = getAuthInstance();
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ hd: allowedEmailDomain });
-  try {
-    provider.addScope("https://www.googleapis.com/auth/drive.file");
-  } catch (_) {}
+  try { provider.addScope("https://www.googleapis.com/auth/drive.file"); } catch (_) {}
 
-  const result = await signInWithPopup(auth, provider);
+  const result = await signInWithPopupSafe(auth, provider, { retries: 1 });
   const user = result.user;
   try {
     const cred = GoogleAuthProvider.credentialFromResult(result);
@@ -157,10 +209,8 @@ async function getDriveAccessTokenInteractive() {
     const auth = getAuthInstance();
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ hd: allowedEmailDomain });
-    try {
-        provider.addScope("https://www.googleapis.com/auth/drive.file");
-    } catch (_) {}
-    const result = await signInWithPopup(auth, provider);
+    try { provider.addScope("https://www.googleapis.com/auth/drive.file"); } catch (_) {}
+    const result = await signInWithPopupSafe(auth, provider, { retries: 1 });
     const cred = GoogleAuthProvider.credentialFromResult(result);
     driveAccessToken = cred?.accessToken || null;
     if (!driveAccessToken) throw new Error("No se pudo obtener token de Google Drive");
@@ -181,7 +231,7 @@ async function signInWithEmailPassword(email, password) {
 async function signInWithGoogleOpen() {
   const auth = getAuthInstance();
   const provider = new GoogleAuthProvider();
-  const result = await signInWithPopup(auth, provider);
+  const result = await signInWithPopupSafe(auth, provider, { retries: 1 });
   return result?.user || null;
 }
 
@@ -210,217 +260,135 @@ async function isTeacherByDoc(uid) {
 
 async function ensureTeacherDocForUser({ uid, email, displayName }) {
     if (!uid || !email) return false;
-    const lower = (email || "").toLowerCase();
     const db = getDb();
     const ref = doc(collection(db, "teachers"), uid);
     try {
         const snap = await getDoc(ref);
         if (snap.exists()) return true;
         await ensureTeacherAllowlistLoaded();
-        if (!isTeacherEmail(lower)) return false;
-        await setDoc(ref, {
-            email: lower,
-            name: displayName || null,
-            createdAt: serverTimestamp(),
-        });
+        if (!isTeacherEmail(email)) return false;
+        await setDoc(ref, { email: normalizeEmail(email), name: displayName || null, createdAt: serverTimestamp() });
         return true;
     } catch (_) {
         return false;
     }
 }
 
-function todayKey() {
-  const d = new Date();
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${y}-${m}-${day}`;
-}
-
 async function saveTodayAttendance({ uid, name, email, type, manual = false }) {
     const db = getDb();
-    const authInstance = getAuthInstance();
-    const currentUser = authInstance?.currentUser || null;
-    const normalizedUid = String(uid || "").trim();
-    if (!normalizedUid) throw new Error("Identificador de usuario requerido");
-
     const date = todayKey();
-    const attendanceId = `${date}_${normalizedUid}`;
+    const attendanceId = `${date}_${uid}`;
     const ref = doc(collection(db, "attendances"), attendanceId);
-
-    const existing = await getDoc(ref);
-    if (existing.exists()) throw new Error("Ya tienes tu asistencia registrada para el dia de hoy");
-
-    const normalizedEmail = String(email || "").trim().toLowerCase();
-    if (!normalizedEmail) throw new Error("Correo electronico requerido");
-
-    const createdByUid = String(currentUser?.uid || normalizedUid).trim();
-    if (!createdByUid) throw new Error("Sesion invalida para registrar asistencia");
-
-    const createdByEmail = String(currentUser?.email || normalizedEmail).trim().toLowerCase();
-    const normalizedType = String(type || "student").trim();
-
+    if ((await getDoc(ref)).exists()) throw new Error("Ya tienes tu asistencia registrada para hoy");
     await setDoc(ref, {
-        uid: normalizedUid,
-        name,
-        email: normalizedEmail,
-        type: normalizedType,
-        date,
-        manual: !!manual,
-        createdByUid: createdByUid,
-        createdByEmail,
+        uid, name, email: normalizeEmail(email), type: type || 'student', date, manual,
+        createdByUid: getAuthInstance().currentUser?.uid || uid,
+        createdByEmail: normalizeEmail(getAuthInstance().currentUser?.email || email),
         timestamp: serverTimestamp(),
     });
-
-    return { id: attendanceId, uid, name, email: normalizedEmail, type, date };
+    return { id: attendanceId, uid, name, email, type, date };
 }
 
 function subscribeTodayAttendance(cb, onError) {
-  const db = getDb();
-  const date = todayKey();
-  const q = query(collection(db, "attendances"), where("date", "==", date));
-  return onSnapshot(q, (snap) => {
-    const items = snap.docs.map(docSnap => {
-        const data = docSnap.data();
-        return {
-            id: docSnap.id,
-            name: data.name,
-            email: data.email,
-            type: data.type,
-            timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date(),
-        };
-    }).sort((a, b) => (b.timestamp?.getTime?.() || 0) - (a.timestamp?.getTime?.() || 0));
-    cb(items);
-  }, onError);
+    const db = getDb();
+    const q = query(collection(db, "attendances"), where("date", "==", todayKey()));
+    return onSnapshot(q, (snap) => cb(snap.docs.map(d => ({id: d.id, ...d.data()}))), onError);
 }
 
 function subscribeTodayAttendanceByUser(email, cb, onError) {
-  const db = getDb();
-  const date = todayKey();
-  const q = query(collection(db, "attendances"), where("date", "==", date), where("email", "==", (email || "").toLowerCase()));
-  return onSnapshot(q, (snap) => {
-    const items = snap.docs.map(docSnap => {
-        const data = docSnap.data();
-        return {
-            id: docSnap.id,
-            name: data.name,
-            email: data.email,
-            type: data.type,
-            timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date(),
-        };
-    }).sort((a, b) => (b.timestamp?.getTime?.() || 0) - (a.timestamp?.getTime?.() || 0));
-    cb(items);
-  }, onError);
+    const db = getDb();
+    const q = query(collection(db, "attendances"), where("date", "==", todayKey()), where("email", "==", normalizeEmail(email)));
+    return onSnapshot(q, (snap) => cb(snap.docs.map(d => ({id: d.id, ...d.data()}))), onError);
 }
 
 async function findStudentByEmail(email) {
   if (!email) return null;
   const db = getDb();
-  const studentsRef = collection(db, "students");
-  const q = query(studentsRef, where("email", "==", email.toLowerCase()), limit(1));
+  const q = query(collection(db, "students"), where("email", "==", normalizeEmail(email)), limit(1));
   try {
-    const querySnapshot = await getDocs(q);
-    if (!querySnapshot.empty) {
-      const studentDoc = querySnapshot.docs[0];
-      return { id: studentDoc.id, data: studentDoc.data() };
-    }
-    return null;
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    const studentDoc = snap.docs[0];
+    return { id: studentDoc.id, data: studentDoc.data() };
   } catch (error) {
     console.error("Error buscando estudiante por email:", error);
     return null;
   }
 }
 
+// NUEVA FUNCIÓN (SEGURA)
+async function findStudentByUid(uid) {
+    if (!uid) return null;
+    const db = getDb();
+    const q = query(collection(db, "students"), where("authUid", "==", uid), limit(1));
+    try {
+        const snap = await getDocs(q);
+        if (snap.empty) return null;
+        const studentDoc = snap.docs[0];
+        return { id: studentDoc.id, ...studentDoc.data() };
+    } catch (error) {
+        console.error("Error buscando estudiante por UID:", error);
+        return null;
+    }
+}
+
 async function fetchAttendancesByDateRange(startDateStr, endDateStr) {
     const db = getDb();
-    const qy = query(collection(db, "attendances"), where("date", ">=", startDateStr), where("date", "<=", endDateStr), orderBy("date", "asc"));
-    const snap = await getDocs(qy);
-    return snap.docs.map(docSnap => {
-        const data = docSnap.data();
-        return {
-            id: docSnap.id,
-            name: data.name,
-            email: data.email,
-            type: data.type,
-            date: data.date,
-            timestamp: data.timestamp?.toDate ? data.timestamp.toDate() : new Date(),
-        };
-    });
+    const q = query(collection(db, "attendances"), where("date", ">=", startDateStr), where("date", "<=", endDateStr), orderBy("date", "asc"));
+    const snap = await getDocs(q);
+    return snap.docs.map(d => ({id: d.id, ...d.data()}));
 }
 
 async function fetchAttendancesByDateRangeByUser(email, startDateStr, endDateStr) {
-  const lowerEmail = (email || "").toLowerCase();
   const items = await fetchAttendancesByDateRange(startDateStr, endDateStr);
-  return items.filter((item) => (item.email || "").toLowerCase() === lowerEmail);
+  return items.filter(item => normalizeEmail(item.email) === normalizeEmail(email));
 }
 
 function subscribeGrades(cb) {
   const db = getDb();
   const q = query(collection(db, "grades"), orderBy("name"));
-  return onSnapshot(q, (snap) => {
-    const items = snap.docs.map(docSnap => {
-        const d = docSnap.data();
-        return { id: docSnap.id, ...d };
-    });
-    cb(items);
-  });
+  return onSnapshot(q, (snap) => cb(snap.docs.map(d => ({id: d.id, ...d.data()}))));
 }
 
 function subscribeMyGrades(studentUid, cb, onError) {
-  if (!studentUid) {
-    if (onError) onError(new Error("UID de estudiante es requerido."));
-    return () => {};
-  }
+  if (!studentUid) { if (onError) onError(new Error("UID de estudiante es requerido.")); return () => {}; }
   const db = getDb();
-  const studentRef = doc(db, "grades", studentUid);
-  return onSnapshot(studentRef, (docSnap) => {
-    if (docSnap.exists()) {
-      cb([{ id: docSnap.id, ...docSnap.data() }]);
-    } else {
-      cb([]);
-    }
-  }, (error) => {
-    if (onError) onError(error);
-  });
+  return onSnapshot(doc(db, "grades", studentUid), (snap) => {
+    cb(snap.exists() ? [{ id: snap.id, ...snap.data() }] : []);
+  }, onError);
 }
 
 async function upsertStudentGrades(studentId, payload) {
     const db = getDb();
     const ref = doc(collection(db, "grades"), studentId);
-    const existing = await getDoc(ref);
-    const base = { ...(payload || {}), updatedAt: serverTimestamp() };
-    if (!existing.exists()) base.createdAt = serverTimestamp();
-    await setDoc(ref, base, { merge: true });
+    const data = { ...payload, updatedAt: serverTimestamp() };
+    if (!(await getDoc(ref)).exists()) data.createdAt = serverTimestamp();
+    await setDoc(ref, data, { merge: true });
 }
 
 async function updateStudentGradePartial(studentId, path, value) {
   const db = getDb();
-  const ref = doc(collection(db, "grades"), studentId);
-  await updateDoc(ref, { [path]: value, updatedAt: serverTimestamp() });
+  await updateDoc(doc(collection(db, "grades"), studentId), { [path]: value, updatedAt: serverTimestamp() });
 }
 
 async function saveTestPlan(planId, planData) {
   const db = getDb();
-  const planRef = doc(db, "planesDePrueba", planId);
-  const dataToSave = { ...planData, lastModified: serverTimestamp() };
-  return setDoc(planRef, dataToSave, { merge: true });
+  const ref = doc(db, "planesDePrueba", planId);
+  await setDoc(ref, { ...planData, lastModified: serverTimestamp() }, { merge: true });
 }
 
 function subscribeMyActivities(studentId, cb) {
   if (!studentId) return () => {};
   const db = getDb();
-  const activitiesRef = collection(db, 'grades', studentId, 'activities');
-  const q = query(activitiesRef, orderBy('unit'));
-  return onSnapshot(q, (snapshot) => {
-    const activities = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    cb(activities);
-  });
+  const q = query(collection(db, 'grades', studentId, 'activities'), orderBy('unit'));
+  return onSnapshot(q, (snap) => cb(snap.docs.map(d => ({id: d.id, ...d.data()}))));
 }
 
-// --- BLOQUE DE EXPORTACIÓN ---
+// --- BLOQUE ÚNICO DE EXPORTACIÓN ---
 export {
   app,
   ensureTeacherAllowlistLoaded,
+  listTeacherNotificationEmails,
   initFirebase,
   getAuthInstance,
   getDb,
@@ -438,6 +406,7 @@ export {
   subscribeTodayAttendance,
   subscribeTodayAttendanceByUser,
   findStudentByEmail,
+  findStudentByUid, // Exportamos la nueva función segura
   fetchAttendancesByDateRange,
   fetchAttendancesByDateRangeByUser,
   subscribeGrades,
@@ -446,4 +415,5 @@ export {
   updateStudentGradePartial,
   saveTestPlan,
   subscribeMyActivities
+  // No se exporta 'app' individualmente al final
 };
