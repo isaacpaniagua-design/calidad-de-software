@@ -306,6 +306,22 @@ async function ensureTeacherDocForUser({ uid, email, displayName }) {
   }
 }
 
+function todayKey(date = new Date()) {
+  try {
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  } catch (e) {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+}
+
 async function saveTodayAttendance({ uid, name, email, type, manual = false }) {
   const db = getDb();
   const date = todayKey();
