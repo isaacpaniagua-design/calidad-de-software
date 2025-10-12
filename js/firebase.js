@@ -1377,6 +1377,29 @@ export function subscribeMyActivities(studentId, cb) {
   });
 }
 
+export async function findStudentByUid(uid) {
+  if (!uid) {
+    console.error("UID no proporcionado para la búsqueda de estudiante.");
+    return null;
+  }
+  const db = getDb();
+  const studentsRef = collection(db, "students");
+  // La consulta busca un documento en la colección 'students' donde el campo 'authUid' sea igual al uid del usuario logueado.
+  const q = query(studentsRef, where("authUid", "==", uid), limit(1));
 
-export { findStudentByUid }; // <-- CORRECCIÓN AQUÍ
+  try {
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+      console.warn(`No se encontró un estudiante con el authUid: ${uid}`);
+      return null;
+    }
+    
+    // Si se encuentra, devolvemos un objeto que incluye el ID del documento (la matrícula) y el resto de sus datos.
+    const studentDoc = querySnapshot.docs[0];
+    return { id: studentDoc.id, ...studentDoc.data() };
+  } catch (error) {
+    console.error("Error buscando estudiante por UID:", error);
+    return null;
+  }
+}
 
