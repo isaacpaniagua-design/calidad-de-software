@@ -35,13 +35,28 @@ service cloud.firestore {
       // Esto soluciona el error "Error al obtener mis calificaciones".
       // La condición verifica que el 'authUid' del documento del estudiante coincida con el del solicitante.
       allow read: if isTeacher() || (isAuthenticated() && get(/databases/$(database)/documents/students/$(studentId)).data.authUid == request.auth.uid);
+
+      // Permite a los docentes listar todos los documentos.
+      // Permite a los usuarios autenticados listar documentos si la consulta filtra por su UID o, como fallback, por su email.
+      allow list: if isTeacher() || 
+                     (isAuthenticated() && 
+                       (request.query.where.authUid == request.auth.uid || 
+                        request.query.where.email == request.auth.token.email));
+      
+      // Un estudiante puede obtener su documento de calificaciones si su UID coincide.
+      allow get: if isTeacher() || (isAuthenticated() && resource.data.authUid == request.auth.uid);
+
+      // Solo los docentes pueden crear, actualizar o eliminar registros de calificaciones.
       allow write: if isTeacher();
 
-      // Subcolección 'activities'
+      // Subcolección: activities
+      // Contiene las actividades individuales de cada estudiante.
       match /activities/{activityId} {
-        // CORRECCIÓN: Se cambia 'get' y 'list' por una sola regla 'read' para simplificar y
-        // asegurar que tanto la lectura directa como las consultas funcionen para ambos roles.
-        allow read: if isTeacher() || (isAuthenticated() && get(/databases/$(database)/documents/students/$(studentId)).data.authUid == request.auth.uid);
+        // Un estudiante puede leer sus propias actividades.
+        // La condición verifica que el 'authUid' del documento de calificaciones padre coincida con el del solicitante.
+        allow read: if isTeacher() || (isAuthenticated() && get(/databases/$(database)/documents/grades/$(studentId)).data.authUid == request.auth.uid);
+        
+        // Solo los docentes pueden escribir en las actividades.
         allow write: if isTeacher();
       }
     }
