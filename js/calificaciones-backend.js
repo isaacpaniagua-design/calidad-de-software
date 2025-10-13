@@ -104,8 +104,8 @@ function renderGradesTableForTeacher(studentsData) {
             <td class="py-3 px-4 font-medium text-gray-800">${
               student.name || "Sin nombre"
             }</td>
-            <td class="py-3 px-4 text-center">${Math.round(u1 * 10)}</td>
-            <td class="py-3 px-4 text-center">${Math.round(u2 * 10)}</td>
+            <td class="py-3 px-4 text-center">${u1.toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${u2.toFixed(2)}</td>
             <td class="py-3 px-4 text-center">${getSafeScore(
               student.projectFinal
             )}</td>
@@ -132,11 +132,11 @@ function renderGradesTableForStudent(myGradesData) {
             <td class="py-3 px-4 font-medium text-gray-800">${
               myData.name || "Estudiante"
             }</td>
-            <td class="py-3 px-4 text-center">${(
-              calculateUnitGrade(myData.unit1) * 10
+            <td class="py-3 px-4 text-center">${calculateUnitGrade(
+              myData.unit1
             ).toFixed(2)}</td>
-            <td class="py-3 px-4 text-center">${(
-              calculateUnitGrade(myData.unit2) * 10
+            <td class="py-3 px-4 text-center">${calculateUnitGrade(
+              myData.unit2
             ).toFixed(2)}</td>
             <td class="py-3 px-4 text-center">${(
               myData.projectFinal || 0
