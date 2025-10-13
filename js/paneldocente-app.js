@@ -526,9 +526,9 @@ function calculateFinalGrade(grades) {
   const pf = grades.projectFinal || 0;
 
   const finalGrade =
-    u1 * weights.unit1 +
-    u2 * weights.unit2 +
-    u3 * weights.unit3 +
+    u1 * weights.unit1 * 10 +
+    u2 * weights.unit2 * 10 +
+    u3 * weights.unit3 * 10 +
     pf * weights.projectFinal;
 
   return Math.round(finalGrade);
