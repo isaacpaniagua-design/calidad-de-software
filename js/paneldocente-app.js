@@ -1409,10 +1409,7 @@ async function subscribeMembers(options = {}) {
   }
   try {
     const { collection, onSnapshot, orderBy, query } = await getFirestore();
-    const q = query(
-      collection(db, "grupos", state.groupId, "members"),
-      orderBy("nombre", "asc")
-    );
+    const q = query(collection(db, "students"), orderBy("name", "asc"));
     state.unsub.members = onSnapshot(q, (snap) => {
       state.members = snap.docs.map((docSnap) => {
         const data = docSnap.data() || {};
@@ -1420,8 +1417,8 @@ async function subscribeMembers(options = {}) {
           id: docSnap.id,
           uid: data.uid || docSnap.id,
           matricula: data.matricula || docSnap.id,
-          displayName: data.displayName || data.nombre || docSnap.id,
-          nombre: data.nombre || data.displayName || docSnap.id,
+          displayName: data.name || data.displayName || docSnap.id,
+          nombre: data.name || data.displayName || docSnap.id,
           email: data.email || "",
           updatedAt: data.updatedAt
             ? data.updatedAt.toDate().toISOString()
