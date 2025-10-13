@@ -573,24 +573,36 @@ function renderMembers() {
         : "--";
 
       const grades = state.grades[memberId] || {};
+
+      const calculateUnitGrade = (unit) => {
+        if (!unit) return null;
+        const unitWeights = {
+          participation: 0.1,
+          assignments: 0.4,
+          classwork: 0.2,
+          exam: 0.3,
+        };
+        let total = 0;
+        let activitiesCount = 0;
+        for (const activity in unit) {
+          if (typeof unit[activity] === "number" && unitWeights[activity]) {
+            total += unit[activity] * unitWeights[activity];
+            activitiesCount++;
+          }
+        }
+        return activitiesCount > 0 ? total : null;
+      };
+
       const u1 = grades.unit1
-        ? Math.round(
-            Object.values(grades.unit1).reduce((a, b) => a + b, 0) /
-              Object.values(grades.unit1).length
-          )
+        ? Math.round(calculateUnitGrade(grades.unit1) * 10)
         : "--";
       const u2 = grades.unit2
-        ? Math.round(
-            Object.values(grades.unit2).reduce((a, b) => a + b, 0) /
-              Object.values(grades.unit2).length
-          )
+        ? Math.round(calculateUnitGrade(grades.unit2) * 10)
         : "--";
       const u3 = grades.unit3
-        ? Math.round(
-            Object.values(grades.unit3).reduce((a, b) => a + b, 0) /
-              Object.values(grades.unit3).length
-          )
+        ? Math.round(calculateUnitGrade(grades.unit3) * 10)
         : "--";
+
       const pf = grades.projectFinal ?? "--";
       const cf = calculateFinalGrade(grades) || "--";
 
