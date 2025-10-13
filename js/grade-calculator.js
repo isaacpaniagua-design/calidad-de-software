@@ -48,17 +48,17 @@ export function calculateUnitGrade(unit) {
     if (gradeValue === undefined) continue;
 
     let categoryScore = 0;
-    // Si hay sub-calificaciones (ej. múltiples tareas), se promedian.
-    // Si es un número, se usa directamente (ej. examen).
-    if (typeof gradeValue === "object" && gradeValue !== null) {
+    // Si es un número, se usa directamente (ej. examen o una única actividad).
+    if (typeof gradeValue === "number") {
+      categoryScore = gradeValue;
+    } else if (typeof gradeValue === "object" && gradeValue !== null) {
+      // Si hay sub-calificaciones (ej. múltiples tareas), se promedian.
       const scores = Object.values(gradeValue).filter(
         (v) => typeof v === "number"
       );
       if (scores.length > 0) {
         categoryScore = scores.reduce((a, b) => a + b, 0) / scores.length;
       }
-    } else if (typeof gradeValue === "number") {
-      categoryScore = gradeValue;
     }
 
     if (categoryScore > 0) {
