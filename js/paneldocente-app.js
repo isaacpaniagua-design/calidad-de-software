@@ -1354,12 +1354,6 @@ async function subscribeMembers(options = {}) {
       orderBy("nombre", "asc")
     );
     state.unsub.members = onSnapshot(q, (snap) => {
-      if (snap.empty) {
-        // Keep previously loaded members (fallback or last successful fetch) when Firestore
-        // returns an empty snapshot. This avoids wiping the table because of transient
-        // errors/offline states. Only explicit resets (e.g. when switching groups) clear the list.
-        return;
-      }
       state.members = snap.docs.map((docSnap) => {
         const data = docSnap.data() || {};
         return {
