@@ -41,12 +41,9 @@ const userUid = user.uid;
             } else {
                 renderError('No se pudo identificar tu sesión. Por favor, inicia sesión de nuevo.');
             }
-        }
-    } else {
         gradesContainer.style.display = 'none';
         activitiesContainer.style.display = 'none';
     }
-}
 function renderGradesTableForTeacher(studentsData) {
     const tbody = document.getElementById('grades-table-body');
     if (!tbody) return;
