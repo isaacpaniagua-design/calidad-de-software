@@ -27,6 +27,18 @@ let allActivitiesData = null;
 function combineGradesAndActivities(grades, activities) {
   if (!grades) return null;
 
+  // --- DEBUG START ---
+  console.log(`[DEBUG] Combinando datos para: ${grades.name || grades.id}`);
+  console.log(
+    "[DEBUG] Calificaciones base recibidas:",
+    JSON.parse(JSON.stringify(grades))
+  );
+  console.log(
+    "[DEBUG] Actividades individuales recibidas:",
+    JSON.parse(JSON.stringify(activities))
+  );
+  // --- DEBUG END ---
+
   // Clonamos para no mutar el estado original
   const combined = JSON.parse(JSON.stringify(grades));
 
@@ -53,6 +65,13 @@ function combineGradesAndActivities(grades, activities) {
       `item-${Object.keys(combined[unit][type]).length}`;
     combined[unit][type][key] = score;
   });
+
+  // --- DEBUG START ---
+  console.log(
+    "[DEBUG] Objeto combinado final antes del cálculo:",
+    JSON.parse(JSON.stringify(combined))
+  );
+  // --- DEBUG END ---
 
   return combined;
 }
