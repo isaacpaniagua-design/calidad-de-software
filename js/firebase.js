@@ -7,6 +7,7 @@ import {
   signOut,
   onAuthStateChanged,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+import { connectAuthEmulator } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import {
   getFirestore,
   collection,
@@ -26,6 +27,7 @@ import {
   increment,
   getCountFromServer,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+import { connectFirestoreEmulator } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 import {
   getStorage,
   ref as storageRef,
@@ -33,6 +35,10 @@ import {
   getDownloadURL,
   deleteObject,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
+import {
+  getFunctions,
+  connectFunctionsEmulator,
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-functions.js";
 import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import {
   firebaseConfig,
@@ -72,12 +78,17 @@ function isLikelyIdentityNetworkIssue(error) {
   if (!error) return false;
   const code = typeof error.code === "string" ? error.code.toLowerCase() : "";
   if (code === "auth/network-request-failed") return true;
-  const message = typeof error.message === "string" ? error.message.toLowerCase() : "";
+  const message =
+    typeof error.message === "string" ? error.message.toLowerCase() : "";
   if (!message && !code) return false;
-  if (code === "auth/internal-error" && /identitytoolkit|network/.test(message)) {
+  if (
+    code === "auth/internal-error" &&
+    /identitytoolkit|network/.test(message)
+  ) {
     return true;
   }
-  if (/identitytoolkit|accounts:lookup|accounts:sign/.test(message)) return true;
+  if (/identitytoolkit|accounts:lookup|accounts:sign/.test(message))
+    return true;
   if (/err_connection_(?:closed|reset|aborted)/.test(message)) return true;
   if (/network\s?(?:error|request)/.test(message)) return true;
   return false;
@@ -96,7 +107,11 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, Math.max(0, ms || 0)));
 }
 
-async function signInWithPopupSafe(authInstance, provider, { retries = 1 } = {}) {
+async function signInWithPopupSafe(
+  authInstance,
+  provider,
+  { retries = 1 } = {}
+) {
   const normalizedRetries = Number.isFinite(retries) ? Math.max(0, retries) : 0;
   for (let attempt = 0; attempt <= normalizedRetries; attempt++) {
     try {
@@ -170,7 +185,9 @@ export async function ensureTeacherAllowlistLoaded() {
   return teacherAllowlistPromise;
 }
 
-export async function listTeacherNotificationEmails({ domainOnly = true } = {}) {
+export async function listTeacherNotificationEmails({
+  domainOnly = true,
+} = {}) {
   try {
     await ensureTeacherAllowlistLoaded();
   } catch (error) {
@@ -208,6 +225,28 @@ export function initFirebase() {
     auth = getAuth(app);
     db = getFirestore(app);
     storage = getStorage(app);
+    // Optional: connect to local emulators when developing locally.
+    // Enable by setting `window.__USE_EMULATORS__ = true` in the browser or
+    // by serving from `localhost` (uses a hostname guard). This block is
+    // intentionally tolerant of errors so it is safe in production if the
+    // guard is not enabled.
+    try {
+      if (
+        typeof window !== "undefined" &&
+        (window.__USE_EMULATORS__ || location.hostname === "localhost")
+      ) {
+        try {
+          connectFirestoreEmulator(db, "localhost", 8080);
+        } catch (_) {}
+        try {
+          connectAuthEmulator(auth, "http://localhost:9099");
+        } catch (_) {}
+        try {
+          const functionsInstance = getFunctions(app);
+          connectFunctionsEmulator(functionsInstance, "localhost", 5001);
+        } catch (_) {}
+      }
+    } catch (_) {}
   }
   return { app, auth, db };
 }
@@ -382,14 +421,16 @@ export async function saveTodayAttendance({
     throw new Error("Ya tienes tu asistencia registrada para el dia de hoy");
   }
 
-  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const normalizedEmail = String(email || "")
+    .trim()
+    .toLowerCase();
   if (!normalizedEmail) {
     throw new Error("Correo electronico requerido");
   }
 
   const createdByUid =
     typeof (currentUser?.uid || normalizedUid) === "string"
-      ? (currentUser?.uid || normalizedUid)
+      ? currentUser?.uid || normalizedUid
       : String(currentUser?.uid || normalizedUid);
   const normalizedCreatedByUid = String(createdByUid || "").trim();
   if (!normalizedCreatedByUid) {
@@ -492,8 +533,12 @@ export async function findStudentByEmail(email) {
   if (!email) return null;
   const db = getDb();
   const studentsRef = collection(db, "students");
-  const q = query(studentsRef, where("email", "==", email.toLowerCase()), limit(1));
-  
+  const q = query(
+    studentsRef,
+    where("email", "==", email.toLowerCase()),
+    limit(1)
+  );
+
   try {
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
@@ -557,7 +602,7 @@ export async function findStudentByUid(uid) {
       console.warn(`No se encontró un estudiante con el authUid: ${uid}`);
       return null;
     }
-    
+
     const studentDoc = querySnapshot.docs[0];
     return { id: studentDoc.id, ...studentDoc.data() };
   } catch (error) {
@@ -605,47 +650,82 @@ export function subscribeGrades(cb) {
 
 export function subscribeMyGrades(userUid, callback) {
   const db = getDb();
-  const gradesQuery = query(collection(db, 'grades'), where('authUid', '==', userUid), limit(1));
-  
-  return onSnapshot(gradesQuery, (snapshot) => {
-    if (snapshot.empty) {
-      console.warn(`No se encontraron calificaciones para el usuario con UID: ${userUid}`);
+  const gradesQuery = query(
+    collection(db, "grades"),
+    where("authUid", "==", userUid),
+    limit(1)
+  );
+
+  return onSnapshot(
+    gradesQuery,
+    (snapshot) => {
+      if (snapshot.empty) {
+        console.warn(
+          `No se encontraron calificaciones para el usuario con UID: ${userUid}`
+        );
+        callback([]);
+        return;
+      }
+      const gradesData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      callback(gradesData);
+    },
+    (error) => {
+      console.error("Error al obtener mis calificaciones:", error);
       callback([]);
-      return;
     }
-    const gradesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    callback(gradesData);
-  }, (error) => {
-    console.error("Error al obtener mis calificaciones:", error);
-    callback([]);
-  });
+  );
 }
 
 export function subscribeMyActivities(userUid, callback) {
   const db = getDb();
-  const gradesQuery = query(collection(db, 'grades'), where('authUid', '==', userUid), limit(1));
+  const gradesQuery = query(
+    collection(db, "grades"),
+    where("authUid", "==", userUid),
+    limit(1)
+  );
 
-  const unsubscribe = onSnapshot(gradesQuery, (gradeSnapshot) => {
+  const unsubscribe = onSnapshot(
+    gradesQuery,
+    (gradeSnapshot) => {
       if (gradeSnapshot.empty) {
-          callback([]);
-          return;
+        callback([]);
+        return;
       }
-      
+
       const gradeDocId = gradeSnapshot.docs[0].id;
-      const activitiesColRef = collection(db, 'grades', gradeDocId, 'activities');
-      
-      onSnapshot(activitiesColRef, (activitiesSnapshot) => {
-          const activities = activitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const activitiesColRef = collection(
+        db,
+        "grades",
+        gradeDocId,
+        "activities"
+      );
+
+      onSnapshot(
+        activitiesColRef,
+        (activitiesSnapshot) => {
+          const activities = activitiesSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
           callback(activities);
-      }, (error) => {
+        },
+        (error) => {
           console.error("Error al obtener mis actividades:", error);
           callback([]);
-      });
-
-  }, (error) => {
-      console.error("Error al buscar documento de calificaciones para actividades:", error);
+        }
+      );
+    },
+    (error) => {
+      console.error(
+        "Error al buscar documento de calificaciones para actividades:",
+        error
+      );
       callback([]);
-  });
+    }
+  );
 
   return unsubscribe;
 }
@@ -655,18 +735,18 @@ export async function updateStudentGradePartial(studentId, path, value) {
   const ref = doc(collection(db, "grades"), studentId);
   const updates = { updatedAt: serverTimestamp() };
 
-  if (path === 'email') {
-    const trimmedEmail = typeof value === 'string' ? value.trim() : value;
-    if (typeof trimmedEmail === 'string') {
+  if (path === "email") {
+    const trimmedEmail = typeof value === "string" ? value.trim() : value;
+    if (typeof trimmedEmail === "string") {
       updates.email = trimmedEmail || null;
       updates.emailLower = trimmedEmail ? trimmedEmail.toLowerCase() : null;
     } else {
       updates.email = trimmedEmail ?? null;
       updates.emailLower = null;
     }
-  } else if (path === 'uid') {
-    const trimmedUid = typeof value === 'string' ? value.trim() : value;
-    if (typeof trimmedUid === 'string') {
+  } else if (path === "uid") {
+    const trimmedUid = typeof value === "string" ? value.trim() : value;
+    if (typeof trimmedUid === "string") {
       const safeUid = trimmedUid.trim();
       updates.uid = safeUid || null;
     } else if (trimmedUid) {
@@ -1034,7 +1114,8 @@ export async function fetchForumRepliesCount(topicId) {
     const repliesCol = collection(db, "forum_topics", topicId, "replies");
     const snapshot = await getCountFromServer(repliesCol);
     const data = snapshot?.data ? snapshot.data() : null;
-    const rawCount = data && typeof data.count !== "undefined" ? data.count : snapshot.count;
+    const rawCount =
+      data && typeof data.count !== "undefined" ? data.count : snapshot.count;
     const numeric = Number(rawCount);
     if (!Number.isFinite(numeric)) return 0;
     return Math.max(0, Math.trunc(numeric));
@@ -1166,7 +1247,6 @@ export async function registerForumReplyReaction(
   reaction = "like",
   reactor = null
 ) {
-
   const db = getDb();
   if (!topicId || !replyId) {
     throw new Error("topicId y replyId requeridos");
@@ -1181,7 +1261,9 @@ export async function registerForumReplyReaction(
   };
 
   if (reactor && typeof reactor === "object") {
-    const keyCandidate = sanitizeFirestoreKey(reactor.uid || reactor.email || "");
+    const keyCandidate = sanitizeFirestoreKey(
+      reactor.uid || reactor.email || ""
+    );
     if (keyCandidate) {
       const userField = `reactionUsers.${reaction}.${keyCandidate}`;
       updates[userField] = {
@@ -1269,7 +1351,6 @@ export function subscribeLatestForumReplies(limitOrOptions, onChange, onError) {
       }
     },
     (error) => {
-
       if (isPermissionDenied(error)) {
         console.warn("subscribeLatestForumReplies:permission-denied", error);
       } else {
@@ -1304,7 +1385,10 @@ export async function fetchForumReply(topicId, replyId) {
   if (!topicId || !replyId) return null;
   const db = getDb();
   try {
-    const ref = doc(collection(db, "forum_topics", topicId, "replies"), replyId);
+    const ref = doc(
+      collection(db, "forum_topics", topicId, "replies"),
+      replyId
+    );
     const snap = await getDoc(ref);
     if (!snap.exists()) return null;
     const data = snap.data();
@@ -1321,7 +1405,7 @@ export async function saveTestPlan(planId, planData) {
   const planRef = doc(db, "planesDePrueba", planId);
   const dataToSave = {
     ...planData,
-    lastModified: serverTimestamp() 
+    lastModified: serverTimestamp(),
   };
   return setDoc(planRef, dataToSave, { merge: true });
 }
