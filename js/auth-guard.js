@@ -1,5 +1,9 @@
 // js/actividades.js
 import { getDb, collection, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, deleteDoc } from "./firebase.js";
+// js/auth-guard.js
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+import { addDoc, collection } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
+import { auth, db } from "./firebase-config.js"; // Se asume que tienes un archivo firebase-config.js
 
 const db = getDb();
 const activitiesCollection = collection(db, 'course-activities');
