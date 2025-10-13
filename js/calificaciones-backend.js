@@ -6,6 +6,7 @@ import {
   subscribeMyGrades,
   subscribeMyActivities,
 } from "./firebase.js";
+import { calculateUnitGrade, calculateFinalGrade } from "./grade-calculator.js";
 
 let unsubscribeFromGrades = null;
 let unsubscribeFromActivities = null;
@@ -14,74 +15,13 @@ let unsubscribeFromActivities = null;
  * Función auxiliar para obtener de forma segura una calificación numérica.
  */
 function getSafeScore(gradeData) {
-  let score = 0;
-  if (typeof gradeData === "number") {
-    score = gradeData;
-  } else if (
-    typeof gradeData === "object" &&
-    gradeData !== null &&
-    typeof gradeData.score === "number"
-  ) {
-    score = gradeData.score;
+  if (typeof gradeData === "number") return gradeData;
+  if (typeof gradeData === "object" && gradeData !== null) {
+    // Podría ser un objeto con sub-calificaciones, promediarlas si es necesario.
+    // Esta lógica puede expandirse según la estructura de datos.
+    return gradeData.score || 0;
   }
-  return !isNaN(score) ? parseFloat(score.toFixed(2)) : 0;
-}
-
-const unitWeights = {
-  participation: 0.1,
-  assignments: 0.25,
-  classwork: 0.25,
-  exam: 0.4,
-};
-
-function calculateUnitGrade(unit) {
-  if (!unit || typeof unit !== "object") return 0;
-  let total = 0;
-  for (const activityType in unitWeights) {
-    const gradeValue = unit[activityType];
-    if (gradeValue === undefined) continue;
-
-    let categoryScore = 0;
-    if (typeof gradeValue === "number") {
-      categoryScore = gradeValue;
-    } else if (typeof gradeValue === "object" && gradeValue !== null) {
-      const scores = Object.values(gradeValue).filter(
-        (v) => typeof v === "number"
-      );
-      if (scores.length > 0) {
-        categoryScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-      }
-    }
-
-    if (categoryScore > 0) {
-      total += categoryScore * unitWeights[activityType];
-    }
-  }
-  return total;
-}
-
-function calculateFinalGrade(grades) {
-  if (!grades) return 0;
-
-  const finalWeights = {
-    unit1: 0.2,
-    unit2: 0.2,
-    unit3: 0.2,
-    projectFinal: 0.4,
-  };
-
-  const u1 = calculateUnitGrade(grades.unit1);
-  const u2 = calculateUnitGrade(grades.unit2);
-  const u3 = calculateUnitGrade(grades.unit3);
-  const pf = grades.projectFinal || 0;
-
-  const finalGrade =
-    u1 * finalWeights.unit1 * 10 +
-    u2 * finalWeights.unit2 * 10 +
-    u3 * finalWeights.unit3 * 10 +
-    pf * finalWeights.projectFinal;
-
-  return Math.round(finalGrade);
+  return 0;
 }
 
 /**

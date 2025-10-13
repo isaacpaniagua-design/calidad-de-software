@@ -9,6 +9,7 @@ import {
   isTeacherByDoc,
   isTeacherEmail,
 } from "./firebase.js";
+import { calculateFinalGrade } from "./grade-calculator.js";
 import {
   observeAllStudentUploads,
   markStudentUploadAccepted,
@@ -492,46 +493,23 @@ function renderOverview() {
   }
 }
 
-function calculateFinalGrade(grades) {
-  if (!grades) return 0;
-
-  const weights = {
-    unit1: 0.2,
-    unit2: 0.2,
-    unit3: 0.2,
-    projectFinal: 0.4,
-  };
-
+function calculateUnitGrade(unit) {
+  if (!unit) return null;
   const unitWeights = {
     participation: 0.1,
-    assignments: 0.25,
-    classwork: 0.25,
-    exam: 0.4,
+    assignments: 0.4,
+    classwork: 0.2,
+    exam: 0.3,
   };
-
-  const calculateUnitGrade = (unit) => {
-    if (!unit) return 0;
-    let total = 0;
-    for (const activity in unitWeights) {
-      if (typeof unit[activity] === "number") {
-        total += unit[activity] * unitWeights[activity];
-      }
+  let total = 0;
+  let activitiesCount = 0;
+  for (const activity in unit) {
+    if (typeof unit[activity] === "number" && unitWeights[activity]) {
+      total += unit[activity] * unitWeights[activity];
+      activitiesCount++;
     }
-    return total;
-  };
-
-  const u1 = calculateUnitGrade(grades.unit1);
-  const u2 = calculateUnitGrade(grades.unit2);
-  const u3 = calculateUnitGrade(grades.unit3);
-  const pf = grades.projectFinal || 0;
-
-  const finalGrade =
-    u1 * weights.unit1 * 10 +
-    u2 * weights.unit2 * 10 +
-    u3 * weights.unit3 * 10 +
-    pf * weights.projectFinal;
-
-  return Math.round(finalGrade);
+  }
+  return activitiesCount > 0 ? total : null;
 }
 
 function renderMembers() {
