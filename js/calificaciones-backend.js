@@ -29,24 +29,32 @@ function getSafeScore(gradeData) {
 
 const unitWeights = {
   participation: 0.1,
-  assignments: 0.4,
-  classwork: 0.2,
-  exam: 0.3,
-};
-
-const finalWeights = {
-  unit1: 0.2,
-  unit2: 0.2,
-  unit3: 0.2,
-  projectFinal: 0.4,
+  assignments: 0.25,
+  classwork: 0.25,
+  exam: 0.4,
 };
 
 function calculateUnitGrade(unit) {
   if (!unit || typeof unit !== "object") return 0;
   let total = 0;
-  for (const activity in unitWeights) {
-    if (typeof unit[activity] === "number") {
-      total += unit[activity] * unitWeights[activity];
+  for (const activityType in unitWeights) {
+    const gradeValue = unit[activityType];
+    if (gradeValue === undefined) continue;
+
+    let categoryScore = 0;
+    if (typeof gradeValue === "number") {
+      categoryScore = gradeValue;
+    } else if (typeof gradeValue === "object" && gradeValue !== null) {
+      const scores = Object.values(gradeValue).filter(
+        (v) => typeof v === "number"
+      );
+      if (scores.length > 0) {
+        categoryScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+      }
+    }
+
+    if (categoryScore > 0) {
+      total += categoryScore * unitWeights[activityType];
     }
   }
   return total;

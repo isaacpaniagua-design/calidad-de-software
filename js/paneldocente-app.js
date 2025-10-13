@@ -504,9 +504,9 @@ function calculateFinalGrade(grades) {
 
   const unitWeights = {
     participation: 0.1,
-    assignments: 0.4,
-    classwork: 0.2,
-    exam: 0.3,
+    assignments: 0.25,
+    classwork: 0.25,
+    exam: 0.4,
   };
 
   const calculateUnitGrade = (unit) => {
