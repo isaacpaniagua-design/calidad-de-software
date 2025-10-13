@@ -14,14 +14,11 @@ const activitiesListSection = document.getElementById('activities-list-section')
 const studentNameDisplay = document.getElementById('student-name-display');
 const activitiesContainer = document.getElementById('activities-container');
 const mainContent = document.querySelector('.container.mx-auto');
-
-// NUEVAS REFERENCIAS PARA CREACIÓN GRUPAL
 const createGroupActivityForm = document.getElementById('create-group-activity-form');
 const submitGroupActivityBtn = document.getElementById('submit-group-activity');
 const batchStatusDiv = document.getElementById('batch-status');
 
-
-// --- LÓGICA DE CÁLCULO DE CALIFICACIONES (SIN CAMBIOS, YA VALIDADA) ---
+// --- LÓGICA DE CÁLCULO DE CALIFICACIONES (Tu código original - sin cambios) ---
 
 const GRADE_WEIGHTS = {
     UNITS: { unit1: 0.30, unit2: 0.30, unit3: 0.40 },
@@ -81,8 +78,9 @@ function calculateUnitAverage(unitActivities) {
 
 // --- LÓGICA DE LA INTERFAZ (UI) ---
 
-onAuth(user => {
-    const isTeacher = user && localStorage.getItem('qs_role') === 'docente';
+// CORRECCIÓN CLAVE: Envolvemos la lógica principal en una función exportable.
+export function initActividadesPage(user) {
+    const isTeacher = user && (localStorage.getItem('qs_role') || '').toLowerCase() === 'docente';
     
     if (isTeacher) {
         if(mainContent) mainContent.style.display = 'block';
@@ -91,14 +89,16 @@ onAuth(user => {
     } else {
         if(mainContent) mainContent.innerHTML = '<div class="bg-white p-6 rounded-lg shadow-md text-center"><h1 class="text-2xl font-bold text-red-600">Acceso Denegado</h1><p class="text-gray-600 mt-2">Esta página es solo para docentes.</p></div>';
     }
-});
+}
+
+// El resto de tus funciones se mantienen exactamente igual, ahora son llamadas por initActividadesPage.
 
 function loadStudents() {
     studentSelect.disabled = true;
     studentSelect.innerHTML = '<option>Cargando estudiantes...</option>';
 
     subscribeGrades(students => {
-        studentsList = students.filter(s => s.id); // Asegurarnos de que todos los estudiantes tienen un ID
+        studentsList = students.filter(s => s.id);
         studentSelect.innerHTML = '';
 
         if (studentsList.length > 0) {
@@ -173,7 +173,6 @@ function setupEventListeners() {
         }
     });
 
-    // --- NUEVO EVENT LISTENER PARA EL FORMULARIO GRUPAL ---
     createGroupActivityForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -192,7 +191,7 @@ function setupEventListeners() {
             activityName: activityName,
             unit: document.getElementById('group-activity-unit').value,
             type: document.getElementById('group-activity-type').value,
-            score: 0 // Todas las actividades inician con 0
+            score: 0
         };
 
         submitGroupActivityBtn.disabled = true;
