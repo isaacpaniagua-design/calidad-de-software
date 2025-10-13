@@ -2,6 +2,7 @@
 
 // Correcto: Importar helpers locales desde firebase.js
 import { onAuth, getDb, subscribeGrades } from "./firebase.js";
+import { calculateUnitGrade, calculateFinalGrade } from "./grade-calculator.js";
 
 // Correcto: Importar funciones del SDK de Firestore directamente desde la URL oficial.
 import {
@@ -34,75 +35,77 @@ const createGroupActivityForm = document.getElementById(
 const submitGroupActivityBtn = document.getElementById("submit-group-activity");
 const batchStatusDiv = document.getElementById("batch-status");
 
-// --- LÓGICA DE CÁLCULO DE CALIFICACIONES (Tu código original - sin cambios) ---
-
-const GRADE_WEIGHTS = {
-  UNITS: { unit1: 0.3, unit2: 0.3, unit3: 0.4 },
-  UNIT_1_2_TYPES: {
-    actividad: 0.25,
-    asignacion: 0.25,
-    participacion: 0.1,
-    examen: 0.4,
-  },
-};
+// --- LÓGICA DE CÁLCULO DE CALIFICACIONES (Ahora centralizada) ---
 
 async function calculateAndSaveAllGrades(activities) {
   if (!selectedStudentId) return;
 
-  const unit1Activities = activities.filter((a) => a.unit === "unit1");
-  const unit1Score = calculateUnitAverage(unit1Activities);
+  // 1. Agrupar todas las actividades por unidad y tipo
+  const gradesPayload = {
+    unit1: {},
+    unit2: {},
+    unit3: {},
+    projectFinal: 0,
+  };
 
-  const unit2Activities = activities.filter((a) => a.unit === "unit2");
-  const unit2Score = calculateUnitAverage(unit2Activities);
+  const activitiesByUnitAndType = activities.reduce((acc, activity) => {
+    const { unit, type, score } = activity;
+    if (!unit || !type || typeof score !== "number") return acc;
 
+    if (!acc[unit]) acc[unit] = {};
+    if (!acc[unit][type]) acc[unit][type] = [];
+    acc[unit][type].push(score);
+
+    return acc;
+  }, {});
+
+  // 2. Calcular el promedio para cada tipo de actividad dentro de cada unidad
+  for (const unit in gradesPayload) {
+    if (unit.startsWith("unit") && activitiesByUnitAndType[unit]) {
+      for (const type in activitiesByUnitAndType[unit]) {
+        const scores = activitiesByUnitAndType[unit][type];
+        if (scores.length > 0) {
+          const average = scores.reduce((a, b) => a + b, 0) / scores.length;
+          gradesPayload[unit][type] = average;
+        }
+      }
+    }
+  }
+
+  // 3. Manejar el proyecto final (puede estar en unit3 o ser de tipo 'proyecto')
   const projectFinalActivity =
     activities.find((a) => a.unit === "unit3" && a.type === "proyecto") ||
     activities.find((a) => a.type === "proyecto");
-  const projectFinalScore = projectFinalActivity
-    ? projectFinalActivity.score || 0
-    : 0;
+  if (projectFinalActivity) {
+    gradesPayload.projectFinal = projectFinalActivity.score || 0;
+  }
 
-  const finalGrade =
-    unit1Score * GRADE_WEIGHTS.UNITS.unit1 +
-    unit2Score * GRADE_WEIGHTS.UNITS.unit2 +
-    projectFinalScore * GRADE_WEIGHTS.UNITS.unit3;
+  // 4. Calcular calificaciones ponderadas usando el módulo central
+  const u1 = calculateUnitGrade(gradesPayload.unit1);
+  const u2 = calculateUnitGrade(gradesPayload.unit2);
+  const u3 = calculateUnitGrade(gradesPayload.unit3); // Aunque no pondera, se calcula por consistencia
+  const finalGrade = calculateFinalGrade(gradesPayload);
 
+  // 5. Guardar el objeto de calificaciones completo en Firestore
   const studentGradeRef = doc(db, "grades", selectedStudentId);
   try {
     await updateDoc(studentGradeRef, {
-      unit1: parseFloat(unit1Score.toFixed(2)),
-      unit2: parseFloat(unit2Score.toFixed(2)),
-      projectFinal: parseFloat(projectFinalScore.toFixed(2)),
-      finalGrade: parseFloat(finalGrade.toFixed(2)),
+      unit1: gradesPayload.unit1,
+      unit2: gradesPayload.unit2,
+      unit3: gradesPayload.unit3,
+      projectFinal: gradesPayload.projectFinal,
+      finalGrade: finalGrade, // Guardar la calificación final calculada
+      updatedAt: new Date(), // Usar serverTimestamp() si está disponible
     });
     console.log(
-      `Calificaciones actualizadas para ${selectedStudentId}: U1=${unit1Score.toFixed(
-        2
-      )}, U2=${unit2Score.toFixed(2)}, PF=${projectFinalScore.toFixed(
-        2
-      )}, Final=${finalGrade.toFixed(2)}`
+      `Calificaciones actualizadas para ${selectedStudentId}: Final=${finalGrade}`
     );
   } catch (error) {
-    console.error("Error al guardar los promedios generales:", error);
+    console.error("Error al guardar las calificaciones calculadas:", error);
+    batchStatusDiv.textContent =
+      "Error al guardar las calificaciones en la base de datos.";
+    batchStatusDiv.className = "text-red-500";
   }
-}
-
-function calculateUnitAverage(unitActivities) {
-  let weightedScore = 0;
-  const types = GRADE_WEIGHTS.UNIT_1_2_TYPES;
-
-  for (const type in types) {
-    const activitiesOfType = unitActivities.filter((a) => a.type === type);
-    if (activitiesOfType.length > 0) {
-      const sumOfScores = activitiesOfType.reduce(
-        (acc, curr) => acc + (curr.score || 0),
-        0
-      );
-      const averageTypeScore = (sumOfScores / activitiesOfType.length) * 10;
-      weightedScore += averageTypeScore * types[type];
-    }
-  }
-  return weightedScore;
 }
 
 // --- LÓGICA DE LA INTERFAZ (UI) ---
