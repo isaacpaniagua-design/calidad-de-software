@@ -33,39 +33,20 @@ function handleAuthStateChanged(user) {
         console.error("Error crítico: Faltan elementos clave del HTML.");
         return;
     }
-
-    if (user) {
-        const userRole = localStorage.getItem('qs_role');
-        gradesContainer.style.display = 'block';
-
-        if (userRole === 'docente') {
-            // --- VISTA DEL DOCENTE ---
-            titleEl.textContent = 'Panel de Calificaciones (Promedios Generales)';
-            activitiesContainer.style.display = 'none'; // Ocultamos el desglose, no aplica aquí
-            unsubscribeFromGrades = subscribeGrades(renderGradesTableForTeacher);
-
-        } else { // Asumimos que si no es docente, es estudiante
-            // --- VISTA DEL ESTUDIANTE ---
-            titleEl.textContent = 'Resumen de Mis Calificaciones';
-            activitiesContainer.style.display = 'block';
+const userUid = user.uid;
             
-            const studentId = localStorage.getItem('qs_student_id'); 
-            
-            if (studentId) {
-                // Suscripciones independientes para la vista del alumno
-                unsubscribeFromGrades = subscribeMyGrades(studentId, renderGradesTableForStudent);
-                unsubscribeFromActivities = subscribeMyActivities(studentId, renderActivitiesForStudent);
+            if (userUid) {
+                unsubscribeFromGrades = subscribeMyGrades(userUid, renderGradesTableForStudent);
+                unsubscribeFromActivities = subscribeMyActivities(userUid, renderActivitiesForStudent);
             } else {
-                renderError('No se pudo identificar tu matrícula. Por favor, inicia sesión de nuevo.');
+                renderError('No se pudo identificar tu sesión. Por favor, inicia sesión de nuevo.');
             }
         }
     } else {
-        // Ocultar todo si no hay sesión
         gradesContainer.style.display = 'none';
         activitiesContainer.style.display = 'none';
     }
-} // <-- CORRECCIÓN: Esta es la llave de cierre que faltaba.
-
+}
 function renderGradesTableForTeacher(studentsData) {
     const tbody = document.getElementById('grades-table-body');
     if (!tbody) return;
