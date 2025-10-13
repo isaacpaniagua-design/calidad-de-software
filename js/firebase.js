@@ -636,6 +636,15 @@ export function subscribeMyGrades(userUid, callback) {
 }
 
 
+  if (Object.prototype.hasOwnProperty.call(normalized, 'uid')) {
+    const trimmedUid = normalized.uid ? String(normalized.uid).trim() : '';
+    normalized.uid = trimmedUid || null;
+  }
+
+  const base = { ...normalized, updatedAt: serverTimestamp() };
+  if (!existing.exists()) base.createdAt = serverTimestamp();
+  await setDoc(ref, base, { merge: true });
+}
 
 export async function updateStudentGradePartial(studentId, path, value) {
   const db = getDb();
@@ -1334,3 +1343,73 @@ export async function saveTestPlan(planId, planData) {
 
 
 export { app };
+
+// Añade esto al final de js/firebase.js
+
+/**
+ * Se suscribe en tiempo real a las actividades del estudiante actual.
+ * @param {string} userUid - El UID de autenticación del usuario.
+ * @param {function} callback - Función que se ejecuta con los datos.
+ * @returns {function} - Función para cancelar la suscripción.
+ */
+export function subscribeMyActivities(userUid, callback) {
+    const gradesQuery = query(collection(db, 'grades'), where('authUid', '==', userUid));
+
+    // Primero encontramos el documento de calificaciones del estudiante.
+    const unsubscribeGrades = onSnapshot(gradesQuery, (snapshot) => {
+        if (snapshot.empty) {
+            callback([]);
+            return;
+        }
+        
+        // Obtenemos el ID del documento de calificaciones (ej: '00000147818')
+        const gradeDocId = snapshot.docs[0].id;
+        const activitiesColRef = collection(db, 'grades', gradeDocId, 'activities');
+        
+        // Ahora nos suscribimos a la subcolección de actividades.
+        onSnapshot(activitiesColRef, (activitiesSnapshot) => {
+            const activities = activitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            callback(activities);
+        }, (error) => {
+            console.error("Error al obtener mis actividades:", error);
+            callback([]);
+        });
+
+    }, (error) => {
+        console.error("Error al buscar documento de calificaciones para actividades:", error);
+        callback([]);
+    });
+
+    return unsubscribeGrades; // Devolvemos la función para cancelar la suscripción principal.
+}
+
+
+export async function findStudentByUid(uid) {
+  if (!uid) {
+    console.error("UID no proporcionado para la búsqueda de estudiante.");
+    return null;
+  }
+  const db = getDb();
+  const studentsRef = collection(db, "students");
+  // La consulta busca un documento en la colección 'students' donde el campo 'authUid' sea igual al uid del usuario logueado.
+  const q = query(studentsRef, where("authUid", "==", uid), limit(1));
+
+  try {
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+      console.warn(`No se encontró un estudiante con el authUid: ${uid}`);
+      return null;
+    }
+    
+    // Si se encuentra, devolvemos un objeto que incluye el ID del documento (la matrícula) y el resto de sus datos.
+    const studentDoc = querySnapshot.docs[0];
+    return { id: studentDoc.id, ...studentDoc.data() };
+  } catch (error) {
+    console.error("Error buscando estudiante por UID:", error);
+    return null;
+  }
+}
+
+
+
+
