@@ -739,8 +739,19 @@ export function subscribeMyGrades(user, callback) {
   );
 }
 
-export function subscribeMyActivities(userUid, callback) {
+export function subscribeMyActivities(user, callback) {
   const db = getDb();
+  if (!user?.uid) {
+    console.error(
+      "subscribeMyActivities: Se requiere un usuario autenticado con UID."
+    );
+    return () => {}; // Devuelve una función de desuscripción vacía
+  }
+
+  const userUid = user.uid;
+  const userEmail = user.email ? user.email.toLowerCase() : null;
+
+  // Primero, intenta obtener el documento de 'grades' usando el authUid.
   const gradesQuery = query(
     collection(db, "grades"),
     where("authUid", "==", userUid),
@@ -751,32 +762,54 @@ export function subscribeMyActivities(userUid, callback) {
     gradesQuery,
     (gradeSnapshot) => {
       if (gradeSnapshot.empty) {
-        callback([]);
+        // Si no se encuentra por UID, intenta por email como fallback.
+        if (userEmail) {
+          console.warn(
+            `No se encontró documento de 'grades' por UID para ${userUid}. Intentando por email...`
+          );
+          const emailQuery = query(
+            collection(db, "grades"),
+            where("email", "==", userEmail),
+            limit(1)
+          );
+
+          getDocs(emailQuery)
+            .then((emailSnapshot) => {
+              if (emailSnapshot.empty) {
+                console.warn(
+                  `Tampoco se encontró documento de 'grades' por email para ${userEmail}.`
+                );
+                callback([]);
+                return;
+              }
+              const gradeDoc = emailSnapshot.docs[0];
+              console.log(
+                `Encontrado por email. Actualizando ${gradeDoc.id} con authUid.`
+              );
+              updateDoc(doc(db, "grades", gradeDoc.id), { authUid: userUid });
+
+              // Ahora que está (o debería estar) actualizado, suscribe a las actividades.
+              subscribeToActivities(gradeDoc.id, callback);
+            })
+            .catch((error) => {
+              console.error(
+                "Error en fallback de email para subscribeMyActivities:",
+                error
+              );
+              callback([]);
+            });
+        } else {
+          console.error(
+            "No se pudo buscar por email (no disponible) y no se encontró por UID."
+          );
+          callback([]);
+        }
         return;
       }
 
+      // Éxito: se encontró el documento de 'grades' por UID.
       const gradeDocId = gradeSnapshot.docs[0].id;
-      const activitiesColRef = collection(
-        db,
-        "grades",
-        gradeDocId,
-        "activities"
-      );
-
-      onSnapshot(
-        activitiesColRef,
-        (activitiesSnapshot) => {
-          const activities = activitiesSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          callback(activities);
-        },
-        (error) => {
-          console.error("Error al obtener mis actividades:", error);
-          callback([]);
-        }
-      );
+      subscribeToActivities(gradeDocId, callback);
     },
     (error) => {
       console.error(
@@ -786,6 +819,25 @@ export function subscribeMyActivities(userUid, callback) {
       callback([]);
     }
   );
+
+  // Función auxiliar para evitar duplicar el código de suscripción a actividades.
+  function subscribeToActivities(gradeDocId, cb) {
+    const activitiesColRef = collection(db, "grades", gradeDocId, "activities");
+    return onSnapshot(
+      activitiesColRef,
+      (activitiesSnapshot) => {
+        const activities = activitiesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        cb(activities);
+      },
+      (error) => {
+        console.error("Error al obtener mis actividades:", error);
+        cb([]);
+      }
+    );
+  }
 
   return unsubscribe;
 }
