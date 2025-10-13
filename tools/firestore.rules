@@ -64,6 +64,13 @@ service cloud.firestore {
       }
     }
 
+    // Regla para la consulta de grupo de colección 'activities'
+    match /{path=**}/activities/{activityId} {
+      // Permite a un docente autenticado ejecutar una consulta de grupo de colección
+      // en todas las subcolecciones de 'activities'.
+      allow read: if isTeacher();
+    }
+
     // Entregas de los estudiantes
     match /studentUploads/{uploadId} {
       // CORRECCIÓN: Se combinan 'get' y 'create'/'update' en reglas de 'read' y 'write'
