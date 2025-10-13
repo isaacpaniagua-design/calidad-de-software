@@ -606,29 +606,33 @@ export function subscribeGrades(cb) {
  * @param {function} cb - El callback que se ejecutará con los datos de las calificaciones.
  * @returns {import("firebase/firestore").Unsubscribe} - La función para cancelar la suscripción.
  */
-export function subscribeMyGrades(studentUid, cb, onError) {
-  if (!studentUid) {
-    const err = new Error("UID de estudiante es requerido para buscar sus calificaciones.");
-    if (onError) onError(err);
-    return () => {}; // Devuelve una función vacía para no romper la app
+/**
+ * Se suscribe en tiempo real al documento de calificaciones de un estudiante.
+ * @param {string} studentId - El ID del DOCUMENTO del estudiante.
+ * @param {function} callback - Función que se ejecuta con los datos de las calificaciones.
+ * @returns {function} - Función para cancelar la suscripción.
+ */
+export function subscribeMyGrades(studentId, callback) {
+  if (!studentId) {
+    console.error("subscribeMyGrades: Se requiere studentId.");
+    return () => {}; // Devuelve una función vacía si no hay ID
   }
+  const gradeDocRef = doc(db, 'grades', studentId);
   
-  const db = getDb();
-  const studentRef = doc(db, "grades", studentUid);
-  
-  return onSnapshot(studentRef, (docSnap) => {
+  const unsubscribe = onSnapshot(gradeDocRef, (docSnap) => {
     if (docSnap.exists()) {
-      const data = docSnap.data();
-      // Devolvemos los datos en un array para que la UI que esperaba una lista no se rompa.
-      cb([{ id: docSnap.id, ...data }]);
+      // El callback recibe un array para mantener la consistencia con el código anterior
+      callback([{ id: docSnap.id, ...docSnap.data() }]);
     } else {
-      // El estudiante aún no tiene un registro de calificaciones.
-      cb([]); 
+      console.warn(`No se encontró el documento de calificaciones para el estudiante: ${studentId}`);
+      callback([]); // Envía un array vacío si no hay datos
     }
   }, (error) => {
     console.error("Error al obtener mis calificaciones:", error);
-    if (onError) onError(error);
+    callback([]); // Manejo de errores
   });
+
+  return unsubscribe;
 }
 export async function upsertStudentGrades(studentId, payload) {
   const db = getDb();
@@ -1359,22 +1363,27 @@ export { app };
 // Añade esto al final de js/firebase.js
 
 /**
- * Se suscribe para obtener las actividades de UN SOLO estudiante en tiempo real.
- * @param {string} studentId - El ID de matrícula del estudiante (ej. "00000249116").
- * @param {function} cb - El callback que se ejecutará con la lista de actividades.
- * @returns {import("firebase/firestore").Unsubscribe} - La función para cancelar la suscripción.
+ * Se suscribe en tiempo real a la subcolección de actividades de un estudiante.
+ * @param {string} studentId - El ID del DOCUMENTO del estudiante.
+ * @param {function} callback - Función que se ejecuta con la lista de actividades.
+ * @returns {function} - Función para cancelar la suscripción.
  */
-export function subscribeMyActivities(studentId, cb) {
-  if (!studentId) return () => {};
+export function subscribeMyActivities(studentId, callback) {
+  if (!studentId) {
+    console.error("subscribeMyActivities: Se requiere studentId.");
+    return () => {};
+  }
+  const activitiesColRef = collection(db, 'grades', studentId, 'activities');
 
-  const db = getDb();
-  const activitiesRef = collection(db, 'grades', studentId, 'activities');
-  const q = query(activitiesRef, orderBy('unit')); // Ordenar por unidad
-
-  return onSnapshot(q, (snapshot) => {
-    const activities = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    cb(activities);
+  const unsubscribe = onSnapshot(activitiesColRef, (querySnapshot) => {
+    const activities = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    callback(activities);
+  }, (error) => {
+    console.error("Error al obtener mis actividades:", error);
+    callback([]);
   });
+
+  return unsubscribe;
 }
 
 export async function findStudentByUid(uid) {
@@ -1402,6 +1411,7 @@ export async function findStudentByUid(uid) {
     return null;
   }
 }
+
 
 
 
