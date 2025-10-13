@@ -612,29 +612,45 @@ export function subscribeGrades(cb) {
  * @param {function} callback - Función que se ejecuta con los datos de las calificaciones.
  * @returns {function} - Función para cancelar la suscripción.
  */
-/**
- * Se suscribe en tiempo real a las calificaciones del estudiante actual.
- * @param {string} userUid - El UID de autenticación del usuario.
- * @param {function} callback - Función que se ejecuta con los datos.
- * @returns {function} - Función para cancelar la suscripción.
- */
-export function subscribeMyGrades(userUid, callback) {
-  const gradesQuery = query(collection(db, 'grades'), where('authUid', '==', userUid));
+export function subscribeMyGrades(studentId, callback) {
+  if (!studentId) {
+    console.error("subscribeMyGrades: Se requiere studentId.");
+    return () => {}; // Devuelve una función vacía si no hay ID
+  }
+  const gradeDocRef = doc(db, 'grades', studentId);
   
-  return onSnapshot(gradesQuery, (snapshot) => {
-    if (snapshot.empty) {
-      console.warn(`No se encontraron calificaciones para el usuario con UID: ${userUid}`);
-      callback([]);
-      return;
+  const unsubscribe = onSnapshot(gradeDocRef, (docSnap) => {
+    if (docSnap.exists()) {
+      // El callback recibe un array para mantener la consistencia con el código anterior
+      callback([{ id: docSnap.id, ...docSnap.data() }]);
+    } else {
+      console.warn(`No se encontró el documento de calificaciones para el estudiante: ${studentId}`);
+      callback([]); // Envía un array vacío si no hay datos
     }
-    const gradesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    callback(gradesData);
   }, (error) => {
     console.error("Error al obtener mis calificaciones:", error);
-    callback([]);
+    callback([]); // Manejo de errores
   });
-}
 
+  return unsubscribe;
+}
+export async function upsertStudentGrades(studentId, payload) {
+  const db = getDb();
+  const ref = doc(collection(db, "grades"), studentId);
+  const existing = await getDoc(ref);
+  const normalized = { ...(payload || {}) };
+
+  if (Object.prototype.hasOwnProperty.call(normalized, 'email')) {
+    const rawEmail = normalized.email;
+    const trimmedEmail = typeof rawEmail === 'string' ? rawEmail.trim() : rawEmail;
+    if (typeof trimmedEmail === 'string') {
+      normalized.email = trimmedEmail || null;
+      normalized.emailLower = trimmedEmail ? trimmedEmail.toLowerCase() : null;
+    } else {
+      normalized.email = trimmedEmail ?? null;
+      normalized.emailLower = null;
+    }
+  }
 
   if (Object.prototype.hasOwnProperty.call(normalized, 'uid')) {
     const trimmedUid = normalized.uid ? String(normalized.uid).trim() : '';
@@ -1347,42 +1363,28 @@ export { app };
 // Añade esto al final de js/firebase.js
 
 /**
- * Se suscribe en tiempo real a las actividades del estudiante actual.
- * @param {string} userUid - El UID de autenticación del usuario.
- * @param {function} callback - Función que se ejecuta con los datos.
+ * Se suscribe en tiempo real a la subcolección de actividades de un estudiante.
+ * @param {string} studentId - El ID del DOCUMENTO del estudiante.
+ * @param {function} callback - Función que se ejecuta con la lista de actividades.
  * @returns {function} - Función para cancelar la suscripción.
  */
-export function subscribeMyActivities(userUid, callback) {
-    const gradesQuery = query(collection(db, 'grades'), where('authUid', '==', userUid));
+export function subscribeMyActivities(studentId, callback) {
+  if (!studentId) {
+    console.error("subscribeMyActivities: Se requiere studentId.");
+    return () => {};
+  }
+  const activitiesColRef = collection(db, 'grades', studentId, 'activities');
 
-    // Primero encontramos el documento de calificaciones del estudiante.
-    const unsubscribeGrades = onSnapshot(gradesQuery, (snapshot) => {
-        if (snapshot.empty) {
-            callback([]);
-            return;
-        }
-        
-        // Obtenemos el ID del documento de calificaciones (ej: '00000147818')
-        const gradeDocId = snapshot.docs[0].id;
-        const activitiesColRef = collection(db, 'grades', gradeDocId, 'activities');
-        
-        // Ahora nos suscribimos a la subcolección de actividades.
-        onSnapshot(activitiesColRef, (activitiesSnapshot) => {
-            const activities = activitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            callback(activities);
-        }, (error) => {
-            console.error("Error al obtener mis actividades:", error);
-            callback([]);
-        });
+  const unsubscribe = onSnapshot(activitiesColRef, (querySnapshot) => {
+    const activities = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    callback(activities);
+  }, (error) => {
+    console.error("Error al obtener mis actividades:", error);
+    callback([]);
+  });
 
-    }, (error) => {
-        console.error("Error al buscar documento de calificaciones para actividades:", error);
-        callback([]);
-    });
-
-    return unsubscribeGrades; // Devolvemos la función para cancelar la suscripción principal.
+  return unsubscribe;
 }
-
 
 export async function findStudentByUid(uid) {
   if (!uid) {
@@ -1409,7 +1411,6 @@ export async function findStudentByUid(uid) {
     return null;
   }
 }
-
 
 
 
