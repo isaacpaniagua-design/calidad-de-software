@@ -19,20 +19,22 @@ export const FINAL_GRADE_WEIGHTS = {
 /**
  * Pesos para los tipos de actividades dentro de cada unidad.
  * La suma de estos pesos debe ser 1.0 para que el cálculo sea una media ponderada.
- * `actividad`: Corresponde a trabajos en clase o participaciones.
- * `asignacion`: Corresponde a tareas o entregables.
+ * `actividades`: Corresponde a trabajos en clase.
+ * `asignaciones`: Corresponde a tareas o entregables.
  * `examen`: Examen de la unidad.
+ * `participaciones`: Participación en foros u otras actividades.
  */
 export const UNIT_ACTIVITY_WEIGHTS = {
-  actividad: 0.35, // (participations + classwork) from old structure
-  asignacion: 0.25,
+  actividades: 0.25,
+  asignaciones: 0.25,
   examen: 0.4,
+  participaciones: 0.1,
 };
 
 /**
  * Calcula la calificación ponderada de una unidad.
  * @param {object|undefined} unit - Objeto con las calificaciones de las actividades de la unidad.
- *   Ej: { actividad: 8, asignacion: 9, examen: 7 }
+ *   Ej: { actividades: 8, asignaciones: 9, examen: 7, participaciones: 10 }
  * @returns {number} La calificación de la unidad (0-10).
  */
 export function calculateUnitGrade(unit) {
