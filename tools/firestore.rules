@@ -42,8 +42,15 @@ service cloud.firestore {
       // Un estudiante puede obtener su documento de calificaciones si su UID coincide.
       allow get: if isTeacher() || (isAuthenticated() && resource.data.authUid == request.auth.uid);
 
-      // Solo los docentes pueden crear, actualizar o eliminar registros de calificaciones.
-      allow write: if isTeacher();
+      // Solo los docentes pueden crear o eliminar. Un estudiante puede actualizar su propio
+      // documento de calificaciones, pero solo para añadir su `authUid` si no existe.
+      // Esto es clave para el mecanismo de auto-reparación al iniciar sesión.
+      allow create, delete: if isTeacher();
+      allow update: if isTeacher() || 
+                       (isAuthenticated() && 
+                         resource.data.email == request.auth.token.email &&
+                         request.resource.data.authUid == request.auth.uid &&
+                         !('authUid' in resource.data));
 
       // Subcolección: activities
       // Contiene las actividades individuales de cada estudiante.
