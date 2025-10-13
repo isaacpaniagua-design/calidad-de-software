@@ -1,92 +1,61 @@
-// js/actividades.js
-import { getDb, collection, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, deleteDoc } from "./firebase.js";
 // js/auth-guard.js
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
-import { addDoc, collection } from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-import { auth, db } from "./firebase-config.js"; // Se asume que tienes un archivo firebase-config.js
 
-const db = getDb();
-const activitiesCollection = collection(db, 'course-activities');
-let unsubscribe = null;
+// Paso 1: Importar solo las funciones necesarias desde tu módulo local de firebase.
+import { onAuth, isTeacherEmail, ensureTeacherAllowlistLoaded } from './firebase.js';
 
-// CORRECCIÓN: Toda la lógica ahora está dentro de una función que podemos llamar.
-export function initActividadesPage() {
-    const activityForm = document.getElementById('activity-form');
-    const activitiesList = document.getElementById('activities-list');
-    const formTitle = document.getElementById('form-title');
-    const activityIdInput = document.getElementById('activity-id');
-    const cancelEditBtn = document.getElementById('cancel-edit');
+// Esta función se ejecutará tan pronto como el documento HTML esté listo.
+function initializeAuthProtection() {
+    // Verifica si la página es pública (no requiere inicio de sesión).
+    // Puedes añadir el atributo data-public-page al <body> de páginas como login.html.
+    const isPublicPage = document.body.hasAttribute('data-public-page');
+    if (isPublicPage) {
+        return; // No se necesita protección en páginas públicas.
+    }
 
-    // Función para renderizar la lista de actividades
-    const renderActivities = (activities) => {
-        activitiesList.innerHTML = '';
-        activities.forEach(activity => {
-            const li = document.createElement('li');
-            li.className = 'list-group-item d-flex justify-content-between align-items-center';
-            li.innerHTML = `
-                <span>${activity.name} - ${activity.type} (Unidad ${activity.unit})</span>
-                <div>
-                    <button class="btn btn-secondary btn-sm edit-btn">Editar</button>
-                    <button class="btn btn-danger btn-sm delete-btn">Eliminar</button>
-                </div>
-            `;
-            li.querySelector('.edit-btn').addEventListener('click', () => editActivity(activity));
-            li.querySelector('.delete-btn').addEventListener('click', () => deleteActivity(activity.id));
-            activitiesList.appendChild(li);
-        });
-    };
+    // Escucha los cambios en el estado de autenticación (inicio/cierre de sesión).
+    onAuth(async (user) => {
+        const rootElement = document.documentElement;
+        if (user) {
+            // --- Usuario AUTENTICADO ---
+            rootElement.classList.remove('user-signed-out');
+            rootElement.classList.add('user-signed-in');
 
-    // Suscribirse a los cambios en tiempo real
-    if (unsubscribe) unsubscribe(); // Limpia suscripciones anteriores
-    unsubscribe = onSnapshot(activitiesCollection, (snapshot) => {
-        const activities = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderActivities(activities);
-    });
+            // Determinar y almacenar el rol del usuario (docente o estudiante).
+            await ensureTeacherAllowlistLoaded();
+            if (isTeacherEmail(user.email)) {
+                localStorage.setItem('qs_role', 'docente');
+                rootElement.classList.add('role-teacher');
+            } else {
+                localStorage.setItem('qs_role', 'student');
+                rootElement.classList.add('role-student');
+            }
 
-    // Manejar el envío del formulario (crear o actualizar)
-    activityForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const id = activityIdInput.value;
-        const activityData = {
-            name: activityForm.name.value,
-            type: activityForm.type.value,
-            unit: activityForm.unit.value,
-            updatedAt: serverTimestamp()
-        };
+            // Si la página actual tiene una función de inicialización, la ejecutamos.
+            // Esto es útil para que páginas como 'actividades.html' carguen sus datos.
+            if (typeof window.QS_PAGE_INIT === 'function') {
+                window.QS_PAGE_INIT(user);
+            }
 
-        if (id) {
-            // Actualizar
-            await updateDoc(doc(db, 'course-activities', id), activityData);
         } else {
-            // Crear
-            activityData.createdAt = serverTimestamp();
-            await addDoc(activitiesCollection, activityData);
+            // --- Usuario NO AUTENTICADO ---
+            rootElement.classList.remove('user-signed-in', 'role-teacher', 'role-student');
+            rootElement.classList.add('user-signed-out');
+            localStorage.removeItem('qs_role');
+            
+            // Redirigir al usuario a la página de inicio de sesión.
+            const currentPage = window.location.pathname.split('/').pop();
+            if (currentPage !== 'login.html' && currentPage !== '404.html') {
+                // Redirección inteligente para que funcione desde cualquier subdirectorio.
+                const basePath = document.querySelector("script[src*='layout.js']")?.src.replace('js/layout.js', '') || './';
+                window.location.href = `${basePath}login.html`;
+            }
         }
-        resetForm();
     });
+}
 
-    // Funciones para editar, eliminar y resetear
-    const editActivity = (activity) => {
-        formTitle.textContent = 'Editar Actividad';
-        activityIdInput.value = activity.id;
-        activityForm.name.value = activity.name;
-        activityForm.type.value = activity.type;
-        activityForm.unit.value = activity.unit;
-        cancelEditBtn.style.display = 'inline-block';
-    };
-
-    const deleteActivity = async (id) => {
-        if (confirm('¿Estás seguro de que quieres eliminar esta actividad?')) {
-            await deleteDoc(doc(db, 'course-activities', id));
-        }
-    };
-
-    const resetForm = () => {
-        formTitle.textContent = 'Agregar Nueva Actividad';
-        activityForm.reset();
-        activityIdInput.value = '';
-        cancelEditBtn.style.display = 'none';
-    };
-
-    cancelEditBtn.addEventListener('click', resetForm);
+// Asegurarse de que el script se ejecute cuando el DOM esté listo.
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAuthProtection);
+} else {
+    initializeAuthProtection();
 }
