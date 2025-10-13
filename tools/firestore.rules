@@ -30,18 +30,14 @@ service cloud.firestore {
 
     // Calificaciones (Colección a nivel raíz)
     match /grades/{studentId} {
-      // CORRECCIÓN: Se combinan las reglas de lectura. Se cambia 'get' por 'read'
-      // para permitir tanto la lectura directa como las consultas (onSnapshot).
-      // Esto soluciona el error "Error al obtener mis calificaciones".
-      // La condición verifica que el 'authUid' del documento del estudiante coincida con el del solicitante.
-      allow read: if isTeacher() || (isAuthenticated() && get(/databases/$(database)/documents/students/$(studentId)).data.authUid == request.auth.uid);
+      // Un estudiante puede leer su propio documento de calificaciones si su UID o email coinciden.
+      // Esta regla permite las consultas 'where("authUid", "==", ...)' y 'where("email", "==", ...)'
+      // que se usan en `subscribeMyGrades` y `subscribeMyActivities`.
+      allow read: if isTeacher() || (isAuthenticated() && (resource.data.authUid == request.auth.uid || resource.data.email == request.auth.token.email));
 
       // Permite a los docentes listar todos los documentos.
-      // Permite a los usuarios autenticados listar documentos si la consulta filtra por su UID o, como fallback, por su email.
-      allow list: if isTeacher() || 
-                     (isAuthenticated() && 
-                       (request.query.where.authUid == request.auth.uid || 
-                        request.query.where.email == request.auth.token.email));
+      // Esta regla es necesaria para que los docentes vean la lista completa de calificaciones.
+      allow list: if isTeacher();
       
       // Un estudiante puede obtener su documento de calificaciones si su UID coincide.
       allow get: if isTeacher() || (isAuthenticated() && resource.data.authUid == request.auth.uid);
