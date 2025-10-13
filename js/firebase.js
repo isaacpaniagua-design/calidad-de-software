@@ -322,6 +322,20 @@ export async function isTeacherByDoc(uid) {
   }
 }
 
+// CORRECCIÓN: Se añade 'export' a esta función.
+export async function findTeacherByUid(uid) {
+  if (!uid) return false;
+  const db = getDb();
+  try {
+    const ref = doc(db, "teachers", uid);
+    const snap = await getDoc(ref);
+    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  } catch (error) {
+    console.error("Error buscando docente por UID:", error);
+    return false;
+  }
+}
+
 export async function ensureTeacherDocForUser({ uid, email, displayName }) {
   if (!uid || !email) return false;
   const lower = (email || "").toLowerCase();
