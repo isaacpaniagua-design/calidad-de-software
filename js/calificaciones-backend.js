@@ -11,6 +11,70 @@ import { calculateUnitGrade, calculateFinalGrade } from "./grade-calculator.js";
 let unsubscribeFromGrades = null;
 let unsubscribeFromActivities = null;
 
+// Estado local para almacenar los datos del estudiante
+let studentGrades = null;
+let studentActivities = null;
+
+/**
+ * Combina las calificaciones base con las actividades individuales.
+ * @param {object} grades - El objeto de calificaciones principal.
+ * @param {Array} activities - La lista de actividades individuales.
+ * @returns {object} Un nuevo objeto de calificaciones con las actividades agrupadas.
+ */
+function combineGradesAndActivities(grades, activities) {
+  if (!grades) return null;
+
+  // Clonamos para no mutar el estado original
+  const combined = JSON.parse(JSON.stringify(grades));
+
+  activities.forEach((activity) => {
+    const { unit, type, score, activityName } = activity;
+    if (!unit || !type) return;
+
+    if (!combined[unit]) {
+      combined[unit] = {};
+    }
+    if (!combined[unit][type]) {
+      combined[unit][type] = {};
+    }
+
+    // Si ya existe una entrada y no es un objeto, la convertimos
+    if (typeof combined[unit][type] !== "object") {
+      const existingScore = combined[unit][type];
+      combined[unit][type] = { existing: existingScore };
+    }
+
+    // Usamos un nombre de actividad único o un contador como clave
+    const key =
+      activityName.replace(/\s+/g, "-").toLowerCase() ||
+      `item-${Object.keys(combined[unit][type]).length}`;
+    combined[unit][type][key] = score;
+  });
+
+  return combined;
+}
+
+/**
+ * Renderiza la vista completa del estudiante cuando todos los datos están disponibles.
+ */
+function renderStudentView() {
+  if (studentGrades && studentActivities) {
+    const studentData = studentGrades.length > 0 ? studentGrades[0] : null;
+    const combinedData = combineGradesAndActivities(
+      studentData,
+      studentActivities
+    );
+
+    if (combinedData) {
+      renderGradesTableForStudent([combinedData]); // La función espera un array
+    } else {
+      renderGradesTableForStudent([]); // Renderiza la tabla vacía si no hay datos
+    }
+
+    renderActivitiesForStudent(studentActivities);
+  }
+}
+
 /**
  * Función auxiliar para obtener de forma segura una calificación numérica.
  */
@@ -62,13 +126,21 @@ function handleAuthStateChanged(user) {
       activitiesContainer.style.display = "block";
 
       if (user.uid) {
-        unsubscribeFromGrades = subscribeMyGrades(
-          user,
-          renderGradesTableForStudent
-        );
+        // Reiniciar el estado local en cada cambio de autenticación
+        studentGrades = null;
+        studentActivities = null;
+
+        unsubscribeFromGrades = subscribeMyGrades(user, (grades) => {
+          studentGrades = grades;
+          renderStudentView();
+        });
+
         unsubscribeFromActivities = subscribeMyActivities(
           user,
-          renderActivitiesForStudent
+          (activities) => {
+            studentActivities = activities;
+            renderStudentView();
+          }
         );
       } else {
         renderError(
@@ -80,6 +152,9 @@ function handleAuthStateChanged(user) {
     // Ocultar todo si no hay sesión
     gradesContainer.style.display = "none";
     activitiesContainer.style.display = "none";
+    // Limpiar estado al cerrar sesión
+    studentGrades = null;
+    studentActivities = null;
   }
 }
 
