@@ -27,6 +27,48 @@ function getSafeScore(gradeData) {
   return !isNaN(score) ? parseFloat(score.toFixed(2)) : 0;
 }
 
+const unitWeights = {
+  participation: 0.1,
+  assignments: 0.4,
+  classwork: 0.2,
+  exam: 0.3,
+};
+
+const finalWeights = {
+  unit1: 0.2,
+  unit2: 0.2,
+  unit3: 0.2,
+  projectFinal: 0.4,
+};
+
+function calculateUnitGrade(unit) {
+  if (!unit || typeof unit !== "object") return 0;
+  let total = 0;
+  for (const activity in unitWeights) {
+    if (typeof unit[activity] === "number") {
+      total += unit[activity] * unitWeights[activity];
+    }
+  }
+  return total;
+}
+
+function calculateFinalGrade(grades) {
+  if (!grades) return 0;
+
+  const u1 = calculateUnitGrade(grades.unit1);
+  const u2 = calculateUnitGrade(grades.unit2);
+  const u3 = calculateUnitGrade(grades.unit3);
+  const pf = grades.projectFinal || 0;
+
+  const finalGrade =
+    u1 * finalWeights.unit1 * 10 +
+    u2 * finalWeights.unit2 * 10 +
+    u3 * finalWeights.unit3 * 10 +
+    pf * finalWeights.projectFinal;
+
+  return Math.round(finalGrade);
+}
+
 /**
  * Maneja los cambios de estado de autenticación para renderizar la vista correcta.
  * @param {object|null} user - El objeto de usuario de Firebase.
@@ -97,27 +139,25 @@ function renderGradesTableForTeacher(studentsData) {
   }
 
   tbody.innerHTML = studentsData
-    .map(
-      (student) => `
+    .map((student) => {
+      const u1 = calculateUnitGrade(student.unit1);
+      const u2 = calculateUnitGrade(student.unit2);
+      const finalGrade = calculateFinalGrade(student);
+
+      return `
         <tr class="border-b hover:bg-gray-50">
             <td class="py-3 px-4 font-medium text-gray-800">${
               student.name || "Sin nombre"
             }</td>
-            <td class="py-3 px-4 text-center">${getSafeScore(
-              student.unit1
-            )}</td>
-            <td class="py-3 px-4 text-center">${getSafeScore(
-              student.unit2
-            )}</td>
+            <td class="py-3 px-4 text-center">${Math.round(u1 * 10)}</td>
+            <td class="py-3 px-4 text-center">${Math.round(u2 * 10)}</td>
             <td class="py-3 px-4 text-center">${getSafeScore(
               student.projectFinal
             )}</td>
-            <td class="py-3 px-4 text-center font-bold text-blue-600">${getSafeScore(
-              student.finalGrade
-            )}</td>
+            <td class="py-3 px-4 text-center font-bold text-blue-600">${finalGrade}</td>
         </tr>
-    `
-    )
+    `;
+    })
     .join("");
 }
 
@@ -131,23 +171,22 @@ function renderGradesTableForStudent(myGradesData) {
     return;
   }
   const myData = myGradesData[0];
+  const finalGrade = calculateFinalGrade(myData);
   tbody.innerHTML = `
         <tr>
             <td class="py-3 px-4 font-medium text-gray-800">${
               myData.name || "Estudiante"
             }</td>
-            <td class="py-3 px-4 text-center">${(myData.unit1 || 0).toFixed(
-              2
-            )}</td>
-            <td class="py-3 px-4 text-center">${(myData.unit2 || 0).toFixed(
-              2
-            )}</td>
+            <td class="py-3 px-4 text-center">${(
+              calculateUnitGrade(myData.unit1) * 10
+            ).toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${(
+              calculateUnitGrade(myData.unit2) * 10
+            ).toFixed(2)}</td>
             <td class="py-3 px-4 text-center">${(
               myData.projectFinal || 0
             ).toFixed(2)}</td>
-            <td class="py-3 px-4 text-center font-bold text-blue-600">${(
-              myData.finalGrade || 0
-            ).toFixed(2)}</td>
+            <td class="py-3 px-4 text-center font-bold text-blue-600">${finalGrade}</td>
         </tr>
     `;
 }
