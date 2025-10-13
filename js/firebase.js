@@ -26,6 +26,7 @@ import {
   serverTimestamp,
   increment,
   getCountFromServer,
+  collectionGroup,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 import { connectFirestoreEmulator } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 import {
