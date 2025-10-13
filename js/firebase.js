@@ -414,13 +414,7 @@ export async function saveTodayAttendance({
   }
 
   const date = todayKey();
-  const attendanceId = `${date}_${normalizedUid}`;
-  const ref = doc(collection(db, "attendances"), attendanceId);
-
-  const existing = await getDoc(ref);
-  if (existing.exists()) {
-    throw new Error("Ya tienes tu asistencia registrada para el dia de hoy");
-  }
+  const attendanceCollectionRef = collection(db, "attendances");
 
   const normalizedEmail = String(email || "")
     .trim()
@@ -445,7 +439,7 @@ export async function saveTodayAttendance({
       ? type.trim()
       : "student";
 
-  await setDoc(ref, {
+  const docRef = await addDoc(attendanceCollectionRef, {
     uid: normalizedUid,
     name,
     email: normalizedEmail,
@@ -457,7 +451,7 @@ export async function saveTodayAttendance({
     timestamp: serverTimestamp(),
   });
 
-  return { id: attendanceId, uid, name, email: normalizedEmail, type, date };
+  return { id: docRef.id, uid, name, email: normalizedEmail, type, date };
 }
 
 export function subscribeTodayAttendance(cb, onError) {
