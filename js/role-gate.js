@@ -1,10 +1,10 @@
 // js/role-gate.js
 
 /**
- * Este script se encarga de adaptar la interfaz de usuario según el rol del usuario (docente o estudiante).
- * Se ejecuta en cuanto el contenido de la página está listo.
+ * Esta función se encarga de adaptar la interfaz de usuario según el rol del usuario.
+ * Ahora es exportable para que otros módulos (como auth-guard) puedan llamarla.
  */
-document.addEventListener("DOMContentLoaded", function () {
+export function showRoleSpecificUI() {
     try {
         // 1. Obtener el rol del usuario desde el almacenamiento local. Si no existe, se asume 'estudiante'.
         const rol = (localStorage.getItem("qs_role") || "estudiante").toLowerCase();
@@ -12,8 +12,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
         console.log(`Renderizando página para el rol: ${rol.toUpperCase()}`);
 
-        // 2. Añadir una clase al elemento <html> para permitir estilizado específico por rol con CSS.
-        // Ejemplo en CSS: html.role-estudiante .elemento-docente { display: none; }
+        // 2. Limpiar clases de rol anteriores y añadir la actual al <html>.
+        document.documentElement.classList.remove('role-docente', 'role-estudiante', 'role-invitado');
         document.documentElement.classList.add(`role-${rol}`);
 
         // 3. Si el usuario NO es un docente, aplicar restricciones en la UI.
@@ -27,17 +27,14 @@ document.addEventListener("DOMContentLoaded", function () {
             // Recorrer todos los elementos de formulario para deshabilitarlos o ponerlos en modo de solo lectura.
             document.querySelectorAll("input, select, textarea, button").forEach(function (el) {
                 
-                // Definir una lista de clases que exentan a un botón de ser deshabilitado.
                 const isExemptButton = el.classList.contains('tab-button') || 
                                        el.classList.contains('upload-trigger') || 
                                        el.classList.contains('upload-reset') ||
-                                       el.classList.contains('action-button'); // Botones para acciones permitidas (ej. tomar asistencia)
+                                       el.classList.contains('action-button');
 
-                // Si es un botón y no está exento, deshabilitarlo.
                 if (el.tagName === "BUTTON" && !isExemptButton) {
                     el.disabled = true;
                 
-                // Para otros inputs, usar 'readOnly' es mejor que 'disabled' porque permite al usuario seleccionar y copiar el texto.
                 } else if (el.tagName !== "BUTTON") {
                     el.readOnly = true; 
                 }
@@ -47,4 +44,4 @@ document.addEventListener("DOMContentLoaded", function () {
     } catch (e) {
         console.error("Error al aplicar las reglas de rol en la interfaz:", e);
     }
-});
+}
