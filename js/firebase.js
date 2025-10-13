@@ -636,15 +636,14 @@ export function subscribeMyGrades(userUid, callback) {
 }
 
 
-  if (Object.prototype.hasOwnProperty.call(normalized, 'uid')) {
-    const trimmedUid = normalized.uid ? String(normalized.uid).trim() : '';
-    normalized.uid = trimmedUid || null;
-  }
-
-  const base = { ...normalized, updatedAt: serverTimestamp() };
-  if (!existing.exists()) base.createdAt = serverTimestamp();
-  await setDoc(ref, base, { merge: true });
+if (Object.prototype.hasOwnProperty.call(normalized, 'uid')) {
+  const trimmedUid = normalized.uid ? String(normalized.uid).trim() : '';
+  normalized.uid = trimmedUid || null;
 }
+
+const base = { ...normalized, updatedAt: serverTimestamp() };
+if (!existing.exists()) base.createdAt = serverTimestamp();
+await setDoc(ref, base, { merge: true });
 
 export async function updateStudentGradePartial(studentId, path, value) {
   const db = getDb();
@@ -1409,7 +1408,6 @@ export async function findStudentByUid(uid) {
     return null;
   }
 }
-
 
 
 
