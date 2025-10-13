@@ -64,7 +64,7 @@ function handleAuthStateChanged(user) {
         gradesContainer.style.display = 'none';
         activitiesContainer.style.display = 'none';
     }
-}
+} // <-- CORRECCIÓN: Esta es la llave de cierre que faltaba.
 
 function renderGradesTableForTeacher(studentsData) {
     const tbody = document.getElementById('grades-table-body');
