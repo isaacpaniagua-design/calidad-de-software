@@ -1409,7 +1409,7 @@ async function subscribeMembers(options = {}) {
   }
   try {
     const { collection, onSnapshot, orderBy, query } = await getFirestore();
-    const q = query(collection(db, "students"), orderBy("name", "asc"));
+    const q = query(collection(db, "grades"), orderBy("name", "asc"));
     state.unsub.members = onSnapshot(q, (snap) => {
       state.members = snap.docs.map((docSnap) => {
         const data = docSnap.data() || {};
