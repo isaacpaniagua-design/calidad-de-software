@@ -648,8 +648,18 @@ export function subscribeGrades(cb) {
   });
 }
 
-export function subscribeMyGrades(userUid, callback) {
+export function subscribeMyGrades(user, callback) {
   const db = getDb();
+  if (!user?.uid) {
+    console.error(
+      "subscribeMyGrades: Se requiere un usuario autenticado con UID."
+    );
+    return () => {}; // Devuelve una función de desuscripción vacía
+  }
+
+  const userUid = user.uid;
+  const userEmail = user.email ? user.email.toLowerCase() : null;
+
   const gradesQuery = query(
     collection(db, "grades"),
     where("authUid", "==", userUid),
@@ -658,14 +668,64 @@ export function subscribeMyGrades(userUid, callback) {
 
   return onSnapshot(
     gradesQuery,
-    (snapshot) => {
+    async (snapshot) => {
       if (snapshot.empty) {
         console.warn(
-          `No se encontraron calificaciones para el usuario con UID: ${userUid}`
+          `No se encontraron calificaciones por authUid para el usuario: ${userUid}. Intentando buscar por email...`
         );
-        callback([]);
+
+        if (!userEmail) {
+          console.error(
+            "No se puede buscar por email porque el usuario no tiene un email."
+          );
+          callback([]);
+          return;
+        }
+
+        // Fallback: Buscar por email
+        const emailQuery = query(
+          collection(db, "grades"),
+          where("email", "==", userEmail),
+          limit(1)
+        );
+
+        try {
+          const emailSnapshot = await getDocs(emailQuery);
+          if (emailSnapshot.empty) {
+            console.warn(
+              `Tampoco se encontraron calificaciones para el email: ${userEmail}`
+            );
+            callback([]);
+            return;
+          }
+
+          // Se encontró por email, ahora actualizamos el doc con el authUid
+          const gradeDoc = emailSnapshot.docs[0];
+          console.log(
+            `Se encontró el documento de calificación ${gradeDoc.id} por email. Actualizando con authUid...`
+          );
+
+          const gradeRef = doc(db, "grades", gradeDoc.id);
+          await updateDoc(gradeRef, { authUid: userUid });
+
+          // Devolvemos los datos actualizados
+          const updatedData = {
+            id: gradeDoc.id,
+            ...gradeDoc.data(),
+            authUid: userUid,
+          };
+          callback([updatedData]);
+        } catch (error) {
+          console.error(
+            "Error durante el fallback de búsqueda por email:",
+            error
+          );
+          callback([]);
+        }
         return;
       }
+
+      // Éxito en la búsqueda por authUid
       const gradesData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
