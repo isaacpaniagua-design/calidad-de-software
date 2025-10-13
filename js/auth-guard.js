@@ -1,72 +1,88 @@
-// js/auth-guard.js
-import { onAuth, findStudentByUid, findTeacherByUid } from "./firebase.js";
-import { showRoleSpecificUI } from "./role-gate.js";
+// js/actividades.js
+import { getDb, collection, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, deleteDoc } from "./firebase.js";
 
-const PROTECTED_PAGES = [
-  "calificaciones.html",
-  "paneldocente.html",
-  "asistencia.html",
-  "materiales.html",
-  "Foro.html",
-  "actividades.html"
-];
+const db = getDb();
+const activitiesCollection = collection(db, 'course-activities');
+let unsubscribe = null;
 
-async function manageUserSession(user) {
-  localStorage.clear();
+// CORRECCIÓN: Toda la lógica ahora está dentro de una función que podemos llamar.
+export function initActividadesPage() {
+    const activityForm = document.getElementById('activity-form');
+    const activitiesList = document.getElementById('activities-list');
+    const formTitle = document.getElementById('form-title');
+    const activityIdInput = document.getElementById('activity-id');
+    const cancelEditBtn = document.getElementById('cancel-edit');
 
-  if (user) {
-    try {
-      let userProfile = await findStudentByUid(user.uid);
-      let userRole = "ESTUDIANTE";
+    // Función para renderizar la lista de actividades
+    const renderActivities = (activities) => {
+        activitiesList.innerHTML = '';
+        activities.forEach(activity => {
+            const li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+            li.innerHTML = `
+                <span>${activity.name} - ${activity.type} (Unidad ${activity.unit})</span>
+                <div>
+                    <button class="btn btn-secondary btn-sm edit-btn">Editar</button>
+                    <button class="btn btn-danger btn-sm delete-btn">Eliminar</button>
+                </div>
+            `;
+            li.querySelector('.edit-btn').addEventListener('click', () => editActivity(activity));
+            li.querySelector('.delete-btn').addEventListener('click', () => deleteActivity(activity.id));
+            activitiesList.appendChild(li);
+        });
+    };
 
-      if (!userProfile) {
-        userProfile = await findTeacherByUid(user.uid);
-        userRole = "DOCENTE";
-      }
+    // Suscribirse a los cambios en tiempo real
+    if (unsubscribe) unsubscribe(); // Limpia suscripciones anteriores
+    unsubscribe = onSnapshot(activitiesCollection, (snapshot) => {
+        const activities = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderActivities(activities);
+    });
 
-      if (userProfile) {
-        localStorage.setItem("qs_user_uid", user.uid);
-        localStorage.setItem("qs_user_email", user.email);
-        localStorage.setItem("qs_role", userRole);
-        localStorage.setItem("qs_user_name", userProfile.name || user.email);
-        
-        if (userRole === 'ESTUDIANTE') {
-          localStorage.setItem("qs_student_id", user.uid);
+    // Manejar el envío del formulario (crear o actualizar)
+    activityForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = activityIdInput.value;
+        const activityData = {
+            name: activityForm.name.value,
+            type: activityForm.type.value,
+            unit: activityForm.unit.value,
+            updatedAt: serverTimestamp()
+        };
+
+        if (id) {
+            // Actualizar
+            await updateDoc(doc(db, 'course-activities', id), activityData);
+        } else {
+            // Crear
+            activityData.createdAt = serverTimestamp();
+            await addDoc(activitiesCollection, activityData);
         }
-        console.log(`Sesión iniciada para ${user.email}. Rol asignado: ${userRole}`);
-      } else {
-        console.warn(`Auth Guard: El usuario ${user.email} está autenticado pero no tiene un perfil asignado.`);
-        localStorage.setItem("qs_role", "INVITADO");
-      }
-    } catch (error) {
-      console.error("Error crítico al gestionar la sesión del usuario:", error);
-      localStorage.clear();
-    }
-  } else {
-    console.log("Auth Guard: No hay usuario autenticado.");
-  }
+        resetForm();
+    });
 
-  handlePageProtection(user);
-  showRoleSpecificUI();
+    // Funciones para editar, eliminar y resetear
+    const editActivity = (activity) => {
+        formTitle.textContent = 'Editar Actividad';
+        activityIdInput.value = activity.id;
+        activityForm.name.value = activity.name;
+        activityForm.type.value = activity.type;
+        activityForm.unit.value = activity.unit;
+        cancelEditBtn.style.display = 'inline-block';
+    };
+
+    const deleteActivity = async (id) => {
+        if (confirm('¿Estás seguro de que quieres eliminar esta actividad?')) {
+            await deleteDoc(doc(db, 'course-activities', id));
+        }
+    };
+
+    const resetForm = () => {
+        formTitle.textContent = 'Agregar Nueva Actividad';
+        activityForm.reset();
+        activityIdInput.value = '';
+        cancelEditBtn.style.display = 'none';
+    };
+
+    cancelEditBtn.addEventListener('click', resetForm);
 }
-
-function handlePageProtection(user) {
-  const currentPage = window.location.pathname.split("/").pop() || "index.html";
-  const isProtected = PROTECTED_PAGES.includes(currentPage);
-
-  if (user) {
-    if (currentPage === "login.html") {
-      window.location.href = "calificaciones.html";
-    }
-    document.body.classList.remove('no-auth');
-  } else {
-    if (isProtected) {
-      console.log(`Acceso denegado a ${currentPage}. Redirigiendo a login.`);
-      window.location.href = "login.html";
-    }
-    document.body.classList.add('no-auth');
-  }
-}
-
-// Punto de entrada del script
-onAuth(manageUserSession);
