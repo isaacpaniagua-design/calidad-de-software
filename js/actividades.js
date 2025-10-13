@@ -1,6 +1,9 @@
 // js/actividades.js
 
-import { onAuth, getDb, subscribeGrades } from './firebase.js';
+// Correcto: Importar helpers locales desde firebase.js
+import { onAuth, getDb, subscribeGrades } from './firebase.js'; 
+
+// Correcto: Importar funciones del SDK de Firestore directamente desde la URL oficial.
 import { collection, doc, updateDoc, onSnapshot, query, orderBy, deleteDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 const db = getDb();
