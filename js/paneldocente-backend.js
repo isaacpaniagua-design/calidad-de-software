@@ -1,137 +1,218 @@
 // js/paneldocente-backend.js
 // Backend para paneldocente.html (docente). Firebase 10.12.3 · ES2015.
 
-import { initFirebase, getDb, onAuth, isTeacherByDoc, isTeacherEmail, ensureTeacherAllowlistLoaded } from './firebase.js';
-import { initializeFileViewer, openFileViewer } from './file-viewer.js';
+import {
+  initFirebase,
+  getDb,
+  onAuth,
+  isTeacherByDoc,
+  isTeacherEmail,
+  ensureTeacherAllowlistLoaded,
+} from "./firebase.js";
+import { initializeFileViewer, openFileViewer } from "./file-viewer.js";
 import {
   observeAllStudentUploads,
   markStudentUploadAccepted,
   gradeStudentUpload,
-} from './student-uploads.js';
+} from "./student-uploads.js";
 import {
-  collection, doc, getDoc, getDocs, setDoc, updateDoc, addDoc, deleteDoc,
-  query, where, orderBy, limit, startAfter, serverTimestamp, Timestamp,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  addDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  startAfter,
+  serverTimestamp,
+  Timestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+import { calculateUnitGrade, calculateFinalGrade } from "./grade-calculator.js";
 
-function $(sel, root){ return (root || document).querySelector(sel); }
-function $id(id){ return document.getElementById(id); }
-function ready(){ return new Promise(function(r){ if(/complete|interactive/.test(document.readyState)) r(); else document.addEventListener('DOMContentLoaded', r, {once:true}); }); }
-function fmtDate(d){ try{ return d.toLocaleDateString(); }catch(e){ return '—'; } }
-function toDate(v){
-  if (v && typeof v.toDate==='function') return v.toDate();
+function $(sel, root) {
+  return (root || document).querySelector(sel);
+}
+function $id(id) {
+  return document.getElementById(id);
+}
+function ready() {
+  return new Promise(function (r) {
+    if (/complete|interactive/.test(document.readyState)) r();
+    else document.addEventListener("DOMContentLoaded", r, { once: true });
+  });
+}
+function fmtDate(d) {
+  try {
+    return d.toLocaleDateString();
+  } catch (e) {
+    return "—";
+  }
+}
+function toDate(v) {
+  if (v && typeof v.toDate === "function") return v.toDate();
   if (v instanceof Date) return v;
-  if (typeof v==='string') { var t=Date.parse(v); return isNaN(t)? null : new Date(t); }
+  if (typeof v === "string") {
+    var t = Date.parse(v);
+    return isNaN(t) ? null : new Date(t);
+  }
   return null;
 }
-function clamp100(n){ n = Number(n)||0; if(n<0) return 0; if(n>100) return 100; return n; }
-function toEscala5(p){ return (Number(p||0)*0.05).toFixed(1); }
-var ESC_MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" };
-function escHtml(str){ return String(str==null? '': str).replace(/[&<>"']/g, function(ch){ return ESC_MAP[ch] || ch; }); }
-function escAttr(str){ return escHtml(str); }
-function updateSyncStamp(){ var now=new Date(); setText('pd-summary-sync', fmtDate(now)+' '+now.toLocaleTimeString()); }
+function clamp100(n) {
+  n = Number(n) || 0;
+  if (n < 0) return 0;
+  if (n > 100) return 100;
+  return n;
+}
+function toEscala5(p) {
+  return (Number(p || 0) * 0.05).toFixed(1);
+}
+var ESC_MAP = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+function escHtml(str) {
+  return String(str == null ? "" : str).replace(/[&<>"']/g, function (ch) {
+    return ESC_MAP[ch] || ch;
+  });
+}
+function escAttr(str) {
+  return escHtml(str);
+}
+function updateSyncStamp() {
+  var now = new Date();
+  setText("pd-summary-sync", fmtDate(now) + " " + now.toLocaleTimeString());
+}
 
-function formatSize(bytes){
+function formatSize(bytes) {
   var numeric = Number(bytes);
-  if (!numeric || isNaN(numeric)) return '';
-  var units = ['B','KB','MB','GB','TB'];
+  if (!numeric || isNaN(numeric)) return "";
+  var units = ["B", "KB", "MB", "GB", "TB"];
   var value = numeric;
   var unitIndex = 0;
-  while (value >= 1024 && unitIndex < units.length - 1){
+  while (value >= 1024 && unitIndex < units.length - 1) {
     value = value / 1024;
     unitIndex += 1;
   }
-  var precision = (value >= 10 || unitIndex === 0) ? 0 : 1;
-  return value.toFixed(precision) + ' ' + units[unitIndex];
+  var precision = value >= 10 || unitIndex === 0 ? 0 : 1;
+  return value.toFixed(precision) + " " + units[unitIndex];
 }
 
-var ROSTER_STORAGE_KEY = 'qs_roster_cache';
+var ROSTER_STORAGE_KEY = "qs_roster_cache";
 var DATA_COLLECTION_PAGE_SIZE = 50;
 var DATA_COLLECTION_MAX_PAGES = 200;
 
-function normalizeEmail(value){
-  if (value == null) return '';
+function normalizeEmail(value) {
+  if (value == null) return "";
   try {
     return String(value).trim().toLowerCase();
   } catch (_err) {
-    return '';
+    return "";
   }
 }
 
-function normalizeRosterStudent(student){
+function normalizeRosterStudent(student) {
   if (!student) return null;
-  var email = normalizeEmail(student.email || '');
-  var uid = student.uid ? String(student.uid) : '';
-  var matricula = student.matricula || student.id || uid || email || '';
+  var email = normalizeEmail(student.email || "");
+  var uid = student.uid ? String(student.uid) : "";
+  var matricula = student.matricula || student.id || uid || email || "";
   var id = student.id || matricula || email || uid;
   if (!id && !email && !uid) return null;
-  var name = student.displayName || student.nombre || student.name || '';
-  var type = student.type || 'student';
+  var name = student.displayName || student.nombre || student.name || "";
+  var type = student.type || "student";
   return {
     uid: uid,
     id: id,
     matricula: matricula || id,
-    name: name || email || id || 'Estudiante',
+    name: name || email || id || "Estudiante",
     email: email,
     type: type,
   };
 }
 
-function dedupeRosterEntries(list){
+function dedupeRosterEntries(list) {
   var order = [];
   var map = {};
   if (!Array.isArray(list)) return [];
-  for (var i=0; i<list.length; i++){
+  for (var i = 0; i < list.length; i++) {
     var entry = list[i];
     if (!entry) continue;
-    var key = normalizeEmail(entry.email || '') || (entry.id || entry.matricula || entry.uid || entry.name || ('idx'+i)).toLowerCase();
-    if (!map[key]){
+    var key =
+      normalizeEmail(entry.email || "") ||
+      (
+        entry.id ||
+        entry.matricula ||
+        entry.uid ||
+        entry.name ||
+        "idx" + i
+      ).toLowerCase();
+    if (!map[key]) {
       map[key] = Object.assign({}, entry);
       order.push(key);
     } else {
       var current = map[key];
       if (entry.uid && !current.uid) current.uid = entry.uid;
       if (entry.id && !current.id) current.id = entry.id;
-      if (entry.matricula && !current.matricula) current.matricula = entry.matricula;
+      if (entry.matricula && !current.matricula)
+        current.matricula = entry.matricula;
       if (entry.email && !current.email) current.email = entry.email;
       if (entry.type && !current.type) current.type = entry.type;
-      if (entry.name && (!current.name || current.name === current.id || current.name === current.email)){
+      if (
+        entry.name &&
+        (!current.name ||
+          current.name === current.id ||
+          current.name === current.email)
+      ) {
         current.name = entry.name;
       }
     }
   }
   var out = [];
-  for (var j=0; j<order.length; j++){
+  for (var j = 0; j < order.length; j++) {
     var item = map[order[j]];
     if (!item) continue;
-    if (!item.id) item.id = item.matricula || item.email || item.uid || ('student-' + j);
+    if (!item.id)
+      item.id = item.matricula || item.email || item.uid || "student-" + j;
     if (!item.matricula) item.matricula = item.id;
     if (!item.name) item.name = item.email || item.id;
-    if (!item.type) item.type = 'student';
+    if (!item.type) item.type = "student";
     out.push(item);
   }
   return out;
 }
 
-function emitRosterUpdate(detail){
-  if (typeof window === 'undefined' || !window.dispatchEvent) return;
+function emitRosterUpdate(detail) {
+  if (typeof window === "undefined" || !window.dispatchEvent) return;
   try {
-    window.dispatchEvent(new CustomEvent('qs:roster-updated', { detail: detail }));
+    window.dispatchEvent(
+      new CustomEvent("qs:roster-updated", { detail: detail })
+    );
   } catch (_err) {
-    if (typeof document !== 'undefined' && typeof document.createEvent === 'function'){
+    if (
+      typeof document !== "undefined" &&
+      typeof document.createEvent === "function"
+    ) {
       try {
-        var ev = document.createEvent('CustomEvent');
-        ev.initCustomEvent('qs:roster-updated', false, false, detail);
+        var ev = document.createEvent("CustomEvent");
+        ev.initCustomEvent("qs:roster-updated", false, false, detail);
         window.dispatchEvent(ev);
       } catch (__err) {}
     }
   }
 }
 
-function syncRosterCache(students){
-  if (typeof window === 'undefined') return [];
+function syncRosterCache(students) {
+  if (typeof window === "undefined") return [];
   var list = Array.isArray(students) ? students : [];
   var normalized = [];
-  for (var i=0; i<list.length; i++){
+  for (var i = 0; i < list.length; i++) {
     var item = normalizeRosterStudent(list[i]);
     if (item) normalized.push(item);
   }
@@ -141,7 +222,8 @@ function syncRosterCache(students){
     students: deduped,
   };
   try {
-    if (window.localStorage) window.localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(payload));
+    if (window.localStorage)
+      window.localStorage.setItem(ROSTER_STORAGE_KEY, JSON.stringify(payload));
   } catch (_err) {}
   try {
     window.students = deduped.slice();
@@ -151,34 +233,35 @@ function syncRosterCache(students){
 }
 
 var UPLOAD_KIND_LABELS = {
-  activity: 'Actividad',
-  homework: 'Tarea',
-  evidence: 'Evidencia',
+  activity: "Actividad",
+  homework: "Tarea",
+  evidence: "Evidencia",
 };
 
 var UPLOAD_KIND_TITLES = {
-  activity: 'Actividades',
-  homework: 'Tareas',
-  evidence: 'Evidencias',
-  other: 'Otros envíos',
+  activity: "Actividades",
+  homework: "Tareas",
+  evidence: "Evidencias",
+  other: "Otros envíos",
 };
 
-var UPLOAD_KIND_ORDER = ['activity', 'homework', 'evidence', 'other'];
+var UPLOAD_KIND_ORDER = ["activity", "homework", "evidence", "other"];
 
-function normalizeKind(value){
-  var key = (value == null ? '' : String(value)).toLowerCase().trim();
-  if (key === 'activity' || key === 'homework' || key === 'evidence') return key;
-  return 'other';
+function normalizeKind(value) {
+  var key = (value == null ? "" : String(value)).toLowerCase().trim();
+  if (key === "activity" || key === "homework" || key === "evidence")
+    return key;
+  return "other";
 }
 
-function getKindTitle(key){
-  return UPLOAD_KIND_TITLES[key] || 'Otros envíos';
+function getKindTitle(key) {
+  return UPLOAD_KIND_TITLES[key] || "Otros envíos";
 }
 
-function countUploadsByKind(list){
+function countUploadsByKind(list) {
   var counts = { activity: 0, homework: 0, evidence: 0, other: 0, total: 0 };
   if (!Array.isArray(list)) return counts;
-  for (var i=0;i<list.length;i++){
+  for (var i = 0; i < list.length; i++) {
     var kindKey = normalizeKind(list[i] && list[i].kind);
     if (!counts.hasOwnProperty(kindKey)) counts[kindKey] = 0;
     counts[kindKey] += 1;
@@ -187,10 +270,10 @@ function countUploadsByKind(list){
   return counts;
 }
 
-function groupUploadsByKind(list){
+function groupUploadsByKind(list) {
   var groups = { activity: [], homework: [], evidence: [], other: [] };
-  if (Array.isArray(list)){
-    for (var i=0;i<list.length;i++){
+  if (Array.isArray(list)) {
+    for (var i = 0; i < list.length; i++) {
       var upload = list[i];
       var key = normalizeKind(upload && upload.kind);
       if (!groups[key]) groups[key] = [];
@@ -198,7 +281,7 @@ function groupUploadsByKind(list){
     }
   }
   var sections = [];
-  for (var j=0;j<UPLOAD_KIND_ORDER.length;j++){
+  for (var j = 0; j < UPLOAD_KIND_ORDER.length; j++) {
     var key = UPLOAD_KIND_ORDER[j];
     var arr = groups[key] || [];
     if (!arr.length) continue;
@@ -208,39 +291,39 @@ function groupUploadsByKind(list){
 }
 
 var DATA_ADMIN_ALLOWLIST = {
-  'isaac.paniagua@potros.itson.edu.mx': true,
+  "isaac.paniagua@potros.itson.edu.mx": true,
 };
 
-function isDataAdminUser(user){
+function isDataAdminUser(user) {
   if (!user || !user.email) return false;
   return !!DATA_ADMIN_ALLOWLIST[normalizeEmail(user.email)];
 }
 
-function replaceDataPathTokens(path, grupo){
-  var value = (path == null ? '' : String(path)).trim();
-  if (!value) return '';
+function replaceDataPathTokens(path, grupo) {
+  var value = (path == null ? "" : String(path)).trim();
+  if (!value) return "";
   var replaced = value
     .replace(/:grupo\b/gi, grupo)
     .replace(/:group\b/gi, grupo)
     .replace(/\{grupo\}/gi, grupo)
     .replace(/\{group\}/gi, grupo);
   // Normalizar diagonales duplicadas y eliminar la final.
-  replaced = replaced.replace(new RegExp('\\/+', 'g'), '/');
-  if (replaced.length > 1 && replaced.endsWith('/')){
-    replaced = replaced.replace(new RegExp('\\/+$', 'g'), '');
+  replaced = replaced.replace(new RegExp("\\/+", "g"), "/");
+  if (replaced.length > 1 && replaced.endsWith("/")) {
+    replaced = replaced.replace(new RegExp("\\/+$", "g"), "");
   }
   return replaced;
 }
 
-function parseDataPathSegments(path){
-  var source = (path == null ? '' : String(path)).trim();
+function parseDataPathSegments(path) {
+  var source = (path == null ? "" : String(path)).trim();
   if (!source) return [];
-  var parts = source.split('/');
+  var parts = source.split("/");
   var segments = [];
-  for (var i=0; i<parts.length; i++){
+  for (var i = 0; i < parts.length; i++) {
     var seg = parts[i].trim();
     if (!seg) continue;
-    if (seg === '.' || seg === '..'){
+    if (seg === "." || seg === "..") {
       throw new Error('La ruta no puede contener ".." ni ".".');
     }
     segments.push(seg);
@@ -248,26 +331,26 @@ function parseDataPathSegments(path){
   return segments;
 }
 
-function formatDataPreview(data){
+function formatDataPreview(data) {
   try {
     var str = JSON.stringify(data);
-    if (str.length > 140) return str.slice(0, 137) + '…';
+    if (str.length > 140) return str.slice(0, 137) + "…";
     return str;
   } catch (_err) {
     try {
       return String(data);
     } catch (__err) {
-      return '[No disponible]';
+      return "[No disponible]";
     }
   }
 }
 
-function ensureDataAdminStore(state){
+function ensureDataAdminStore(state) {
   var defaults = {
-    lastInputPath: '',
+    lastInputPath: "",
     currentCollectionSegments: [],
-    currentPathResolved: '',
-    selectedId: '',
+    currentPathResolved: "",
+    selectedId: "",
     docExists: false,
     editorEnabled: false,
     lastDocs: [],
@@ -275,132 +358,152 @@ function ensureDataAdminStore(state){
     lastQuery: null,
   };
   if (!state) return Object.assign({}, defaults);
-  if (!state.dataAdmin){
+  if (!state.dataAdmin) {
     state.dataAdmin = Object.assign({}, defaults);
     return state.dataAdmin;
   }
   var store = state.dataAdmin;
-  if (!Array.isArray(store.currentCollectionSegments)) store.currentCollectionSegments = [];
+  if (!Array.isArray(store.currentCollectionSegments))
+    store.currentCollectionSegments = [];
   if (!Array.isArray(store.lastDocs)) store.lastDocs = [];
   if (!store.docsMap) store.docsMap = {};
   if (!store.lastQuery) store.lastQuery = null;
-  if (typeof store.lastInputPath !== 'string') store.lastInputPath = '';
-  if (typeof store.currentPathResolved !== 'string') store.currentPathResolved = '';
-  if (typeof store.selectedId !== 'string') store.selectedId = '';
+  if (typeof store.lastInputPath !== "string") store.lastInputPath = "";
+  if (typeof store.currentPathResolved !== "string")
+    store.currentPathResolved = "";
+  if (typeof store.selectedId !== "string") store.selectedId = "";
   store.docExists = !!store.docExists;
   store.editorEnabled = !!store.editorEnabled;
   return store;
 }
 
 var UPLOAD_STATUS_LABELS = {
-  enviado: 'Enviado',
-  aceptado: 'Aceptado',
-  calificado: 'Calificado',
-  rechazado: 'Rechazado',
+  enviado: "Enviado",
+  aceptado: "Aceptado",
+  calificado: "Calificado",
+  rechazado: "Rechazado",
 };
 
-function normalizeStatus(value){
-  var status = value == null ? 'enviado' : String(value);
+function normalizeStatus(value) {
+  var status = value == null ? "enviado" : String(value);
   status = status.toLowerCase().trim();
-  if (!UPLOAD_STATUS_LABELS[status]) return 'enviado';
+  if (!UPLOAD_STATUS_LABELS[status]) return "enviado";
   return status;
 }
 
-function formatDateTime(value){
+function formatDateTime(value) {
   var date = toDate(value);
-  if (!date) return '';
+  if (!date) return "";
   var result = fmtDate(date);
   try {
-    var time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    if (time) result += ' · ' + time;
+    var time = date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    if (time) result += " · " + time;
   } catch (_err) {}
   return result;
 }
 
-function formatReviewInfo(upload){
-  if (!upload) return '';
+function formatReviewInfo(upload) {
+  if (!upload) return "";
   var reviewer = upload.gradedBy || upload.reviewedBy || null;
   var parts = [];
-  if (reviewer && (reviewer.displayName || reviewer.email)){
-    parts.push('por ' + (reviewer.displayName || reviewer.email));
+  if (reviewer && (reviewer.displayName || reviewer.email)) {
+    parts.push("por " + (reviewer.displayName || reviewer.email));
   }
-  var when = toDate(upload.gradedAt || upload.acceptedAt || upload.reviewedAt || upload.updatedAt);
-  if (when){
+  var when = toDate(
+    upload.gradedAt ||
+      upload.acceptedAt ||
+      upload.reviewedAt ||
+      upload.updatedAt
+  );
+  if (when) {
     try {
-      var tm = when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      parts.push('el ' + fmtDate(when) + ' · ' + tm);
+      var tm = when.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      parts.push("el " + fmtDate(when) + " · " + tm);
     } catch (_err) {
-      parts.push('el ' + fmtDate(when));
+      parts.push("el " + fmtDate(when));
     }
   }
-  if (!parts.length) return '';
-  return 'Revisado ' + parts.join(' ');
+  if (!parts.length) return "";
+  return "Revisado " + parts.join(" ");
 }
 
-function countPendingUploads(list){
+function countPendingUploads(list) {
   if (!Array.isArray(list)) return 0;
   var pending = 0;
-  for (var i=0;i<list.length;i++){
+  for (var i = 0; i < list.length; i++) {
     var status = normalizeStatus(list[i] && list[i].status);
-    if (status !== 'calificado') pending += 1;
+    if (status !== "calificado") pending += 1;
   }
   return pending;
 }
 
-function getUploadStudentEntries(state){
+function getUploadStudentEntries(state) {
   var entries = [];
   var grouped = state && state.uploadGroups ? state.uploadGroups : {};
   var students = state && state.students ? state.students : [];
   var seen = {};
-  for (var i=0;i<students.length;i++){
+  for (var i = 0; i < students.length; i++) {
     var stu = students[i] || {};
-    var uid = stu.uid || '';
+    var uid = stu.uid || "";
     var group = grouped[uid] || { uploads: [] };
     entries.push({
       uid: uid,
-      displayName: stu.displayName || stu.nombre || 'Alumno',
-      email: stu.email || '',
+      displayName: stu.displayName || stu.nombre || "Alumno",
+      email: stu.email || "",
       uploads: group.uploads || [],
       pending: countPendingUploads(group.uploads || []),
     });
     if (uid) seen[uid] = true;
   }
   var keys = Object.keys(grouped);
-  for (var j=0;j<keys.length;j++){
+  for (var j = 0; j < keys.length; j++) {
     var uidKey = keys[j];
     if (seen[uidKey]) continue;
     var g = grouped[uidKey] || {};
     var info = g.student || {};
     entries.push({
       uid: uidKey,
-      displayName: info.displayName || info.nombre || info.email || 'Estudiante',
-      email: info.email || '',
+      displayName:
+        info.displayName || info.nombre || info.email || "Estudiante",
+      email: info.email || "",
       uploads: g.uploads || [],
       pending: countPendingUploads(g.uploads || []),
     });
   }
-  entries.sort(function(a,b){
-    var an = a.displayName || '';
-    var bn = b.displayName || '';
-    return an.localeCompare(bn, 'es', { sensitivity: 'base' });
+  entries.sort(function (a, b) {
+    var an = a.displayName || "";
+    var bn = b.displayName || "";
+    return an.localeCompare(bn, "es", { sensitivity: "base" });
   });
   return entries;
 }
 
-function ensureUploadSelection(state, entries){
+function ensureUploadSelection(state, entries) {
   var list = entries || getUploadStudentEntries(state);
-  if (state.selectedUploadStudent){
-    for (var i=0;i<list.length;i++){
+  if (state.selectedUploadStudent) {
+    for (var i = 0; i < list.length; i++) {
       if (list[i].uid === state.selectedUploadStudent) return list;
     }
   }
   var choice = null;
-  for (var j=0;j<list.length;j++){
-    if (list[j].pending > 0){ choice = list[j]; break; }
+  for (var j = 0; j < list.length; j++) {
+    if (list[j].pending > 0) {
+      choice = list[j];
+      break;
+    }
   }
-  if (!choice && list.length){
-    for (var k=0;k<list.length;k++){
-      if ((list[k].uploads || []).length){ choice = list[k]; break; }
+  if (!choice && list.length) {
+    for (var k = 0; k < list.length; k++) {
+      if ((list[k].uploads || []).length) {
+        choice = list[k];
+        break;
+      }
     }
   }
   if (!choice && list.length) choice = list[0];
@@ -408,123 +511,179 @@ function ensureUploadSelection(state, entries){
   return list;
 }
 
-
-function showStatusBanner(title, message, variant){
-  var banner = $id('pd-status-banner');
+function showStatusBanner(title, message, variant) {
+  var banner = $id("pd-status-banner");
   if (!banner) return;
-  var titleEl = $id('pd-status-title');
-  var msgEl = $id('pd-status-message');
-  if (titleEl) titleEl.textContent = title || '';
-  if (msgEl) msgEl.textContent = message || '';
-  banner.setAttribute('data-variant', variant || 'info');
+  var titleEl = $id("pd-status-title");
+  var msgEl = $id("pd-status-message");
+  if (titleEl) titleEl.textContent = title || "";
+  if (msgEl) msgEl.textContent = message || "";
+  banner.setAttribute("data-variant", variant || "info");
   banner.hidden = false;
 }
 
-function hideStatusBanner(){
-  var banner = $id('pd-status-banner');
+function hideStatusBanner() {
+  var banner = $id("pd-status-banner");
   if (banner) banner.hidden = true;
 }
 
-function setPanelLocked(root, locked){
-  var target = root || $id('paneldocente-root');
+function setPanelLocked(root, locked) {
+  var target = root || $id("paneldocente-root");
   if (!target) return;
-  if (locked) target.setAttribute('data-locked', 'true');
-  else target.removeAttribute('data-locked');
+  if (locked) target.setAttribute("data-locked", "true");
+  else target.removeAttribute("data-locked");
 }
 
-async function computeTeacherState(user){
-  var email = user && user.email ? user.email : '';
+async function computeTeacherState(user) {
+  var email = user && user.email ? user.email : "";
   var teacher = false;
   await ensureTeacherAllowlistLoaded();
-  if (user && user.uid){
-    try { teacher = await isTeacherByDoc(user.uid); }
-    catch(_){ teacher = false; }
+  if (user && user.uid) {
+    try {
+      teacher = await isTeacherByDoc(user.uid);
+    } catch (_) {
+      teacher = false;
+    }
   }
-  if (!teacher && email){
-    try { teacher = isTeacherEmail(email); }
-    catch(_){ teacher = false; }
+  if (!teacher && email) {
+    try {
+      teacher = isTeacherEmail(email);
+    } catch (_) {
+      teacher = false;
+    }
   }
   return { user: user || null, email: email, isTeacher: !!teacher };
 }
 
-
-// ===== Cálculo de calificaciones =====
-function inferUnidad(it){
-  if (it.unidad!=null) return Number(it.unidad);
-  var n = String(it.nombre||it.title||'').toLowerCase();
+// ===== Cálculo de calificaciones (obsoleto, usar grade-calculator.js) =====
+function inferUnidad(it) {
+  if (it.unidad != null) return Number(it.unidad);
+  var n = String(it.nombre || it.title || "").toLowerCase();
   if (/\bu1\b|unidad\s*1/.test(n)) return 1;
   if (/\bu2\b|unidad\s*2/.test(n)) return 2;
   if (/\bu3\b|unidad\s*3/.test(n)) return 3;
   return 0;
 }
-function resumenGlobal(items){
-  var porc=0, pond=0;
-  for (var i=0;i<items.length;i++){
-    var it=items[i];
-    var max=Number(it.maxPuntos)||0, pts=Number(it.puntos)||0, pnd=Number(it.ponderacion)||0;
-    if (max>0) porc += (pts/max)*pnd;
-    pond += pnd;
-  }
-  return { porcentaje: clamp100(porc), pondSum: clamp100(pond) };
-}
-function bucketsPorUnidad(items){
-  var B={1:[],2:[],3:[]};
-  for(var i=0;i<items.length;i++){ var u=inferUnidad(items[i]); if(u===1||u===2||u===3) B[u].push(items[i]); }
-  return B;
-}
-function scoreUnidad(arr){ if(!arr.length) return 0; return resumenGlobal(arr).porcentaje; }
-function final3040(u1,u2,u3){ return clamp100(u1*0.3 + u2*0.3 + u3*0.4); }
 
-function computeMetricsFromItems(items){
-  var b=bucketsPorUnidad(items);
-  var u1=scoreUnidad(b[1]), u2=scoreUnidad(b[2]), u3=scoreUnidad(b[3]);
-  return { u1:u1, u2:u2, u3:u3, finalPct: final3040(u1,u2,u3) };
+function groupItemsByUnitAndType(items) {
+  const units = {
+    1: { actividades: [], asignaciones: [], examen: [], participaciones: [] },
+    2: { actividades: [], asignaciones: [], examen: [], participaciones: [] },
+    3: { project: [] },
+  };
+
+  for (const item of items) {
+    const unitNum = inferUnidad(item);
+    if (!unitNum || !units[unitNum]) continue;
+
+    const type = item.calItemKey || "unknown";
+    if (unitNum === 3) {
+      if (type.includes("project")) {
+        units[3].project.push(item.puntos || 0);
+      }
+    } else {
+      if (type.includes("actividad")) {
+        units[unitNum].actividades.push(item.puntos || 0);
+      } else if (type.includes("asignacion")) {
+        units[unitNum].asignaciones.push(item.puntos || 0);
+      } else if (type.includes("examen")) {
+        units[unitNum].examen.push(item.puntos || 0);
+      } else if (type.includes("participacion")) {
+        units[unitNum].participaciones.push(item.puntos || 0);
+      }
+    }
+  }
+
+  const avg = (arr) =>
+    arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+
+  const grades = {
+    unit1: {
+      actividades: avg(units[1].actividades),
+      asignaciones: avg(units[1].asignaciones),
+      examen: avg(units[1].examen),
+      participaciones: avg(units[1].participaciones),
+    },
+    unit2: {
+      actividades: avg(units[2].actividades),
+      asignaciones: avg(units[2].asignaciones),
+      examen: avg(units[2].examen),
+      participaciones: avg(units[2].participaciones),
+    },
+    unit3: {
+      project: avg(units[3].project),
+    },
+  };
+
+  return grades;
+}
+
+function computeMetricsFromItems(items) {
+  const groupedGrades = groupItemsByUnitAndType(items);
+  const finalGrade = calculateFinalGrade(groupedGrades);
+
+  return {
+    u1: calculateUnitGrade(groupedGrades.unit1, 1) * 10,
+    u2: calculateUnitGrade(groupedGrades.unit2, 2) * 10,
+    u3: calculateUnitGrade(groupedGrades.unit3, 3) * 10,
+    finalPct: finalGrade,
+  };
 }
 
 // ===== Student fallback (sin Firebase) =====
-var STUDENT_FALLBACK_KEY = 'pd_student_fallback_data';
+var STUDENT_FALLBACK_KEY = "pd_student_fallback_data";
 var STUDENT_FALLBACK_CACHE = null;
 var STUDENT_FALLBACK_ACTIVE = false;
 
-function cloneStudentEntry(entry){
-  if (!entry) return { uid: '', displayName: 'Alumno', email: '', matricula: null };
+function cloneStudentEntry(entry) {
+  if (!entry)
+    return { uid: "", displayName: "Alumno", email: "", matricula: null };
   return {
-    uid: entry.uid || '',
-    displayName: entry.displayName || 'Alumno',
-    email: entry.email || '',
+    uid: entry.uid || "",
+    displayName: entry.displayName || "Alumno",
+    email: entry.email || "",
     matricula: entry.matricula != null ? entry.matricula : null,
   };
 }
 
-function clampMetricValue(value){
+function clampMetricValue(value) {
   return clamp100(Number(value || 0));
 }
 
-function normalizeMetricEntry(entry){
+function normalizeMetricEntry(entry) {
   entry = entry || {};
   var u1 = clampMetricValue(entry.u1 != null ? entry.u1 : entry.unidad1);
   var u2 = clampMetricValue(entry.u2 != null ? entry.u2 : entry.unidad2);
   var u3 = clampMetricValue(entry.u3 != null ? entry.u3 : entry.unidad3);
-  var finalPct = clampMetricValue(entry.finalPct != null ? entry.finalPct : (entry.final != null ? entry.final : final3040(u1, u2, u3)));
+
+  const finalPct = calculateFinalGrade({
+    unit1: { score: u1 / 10 },
+    unit2: { score: u2 / 10 },
+    unit3: { project: u3 / 10 },
+  });
+
   return { u1: u1, u2: u2, u3: u3, finalPct: finalPct };
 }
 
-function scoreStudentPriority(student, metrics){
+function scoreStudentPriority(student, metrics) {
   if (!student) return 0;
   var score = 0;
-  var uid = student.uid || '';
-  var matricula = student.matricula != null ? String(student.matricula).trim() : '';
-  var displayName = student.displayName || '';
-  if (matricula && matricula !== uid && matricula !== student.email) score += 30;
-  if (displayName && displayName !== uid && displayName !== student.email) score += 10;
+  var uid = student.uid || "";
+  var matricula =
+    student.matricula != null ? String(student.matricula).trim() : "";
+  var displayName = student.displayName || "";
+  if (matricula && matricula !== uid && matricula !== student.email)
+    score += 30;
+  if (displayName && displayName !== uid && displayName !== student.email)
+    score += 10;
   if (uid && /^local-/.test(uid)) score += 8;
   if (uid && uid.length >= 20) score += 2;
   if (uid) score += 1;
-  if (student.__order != null){
+  if (student.__order != null) {
     var orderScore = Number(student.__order);
     if (!isNaN(orderScore)) score += orderScore * 0.0001;
   }
-  if (metrics && metrics[uid]){
+  if (metrics && metrics[uid]) {
     var metric = normalizeMetricEntry(metrics[uid]);
     if (metric.finalPct > 0) score += 5;
     if (metric.u1 > 0 || metric.u2 > 0 || metric.u3 > 0) score += 3;
@@ -532,29 +691,29 @@ function scoreStudentPriority(student, metrics){
   return score;
 }
 
-function applyStudentEmailDeduplication(state){
+function applyStudentEmailDeduplication(state) {
   if (!state || !Array.isArray(state.students)) return;
   var metricsMap = state.metrics || {};
   var groups = {};
   var order = [];
 
-  for (var i=0; i<state.students.length; i++){
+  for (var i = 0; i < state.students.length; i++) {
     var original = state.students[i];
     if (!original) continue;
     var entry = cloneStudentEntry(original);
-    entry.uid = original.uid || entry.uid || '';
-    entry.email = entry.email || '';
+    entry.uid = original.uid || entry.uid || "";
+    entry.email = entry.email || "";
     entry.__order = i;
-    var emailKey = entry.email ? normalizeEmail(entry.email) : '';
+    var emailKey = entry.email ? normalizeEmail(entry.email) : "";
     var key;
     var skipMerge = false;
-    if (emailKey){
-      key = 'email:' + emailKey;
+    if (emailKey) {
+      key = "email:" + emailKey;
     } else {
-      key = 'uid:' + (entry.uid || ('idx' + i));
+      key = "uid:" + (entry.uid || "idx" + i);
       skipMerge = true;
     }
-    if (!groups[key]){
+    if (!groups[key]) {
       groups[key] = { entries: [], order: i, skipMerge: skipMerge };
       order.push(key);
     }
@@ -562,37 +721,39 @@ function applyStudentEmailDeduplication(state){
     if (i < groups[key].order) groups[key].order = i;
   }
 
-  order.sort(function(a, b){ return groups[a].order - groups[b].order; });
+  order.sort(function (a, b) {
+    return groups[a].order - groups[b].order;
+  });
 
   var deduped = [];
   var aggregatedMetrics = {};
   var aliasMap = {};
 
-  function normalizedMetric(uid){
-    if (metricsMap && metricsMap[uid]){
+  function normalizedMetric(uid) {
+    if (metricsMap && metricsMap[uid]) {
       return normalizeMetricEntry(metricsMap[uid]);
     }
     return { u1: 0, u2: 0, u3: 0, finalPct: 0 };
   }
 
-  for (var oi=0; oi<order.length; oi++){
+  for (var oi = 0; oi < order.length; oi++) {
     var key = order[oi];
     var group = groups[key];
     if (!group || !group.entries.length) continue;
-    if (group.skipMerge || group.entries.length === 1){
+    if (group.skipMerge || group.entries.length === 1) {
       var single = group.entries[0];
       single.sourceUids = single.uid ? [single.uid] : [];
       aggregatedMetrics[single.uid] = normalizedMetric(single.uid);
-      if (single.hasOwnProperty('__order')) delete single.__order;
+      if (single.hasOwnProperty("__order")) delete single.__order;
       deduped.push(single);
       continue;
     }
     var best = group.entries[0];
     var bestScore = scoreStudentPriority(best, metricsMap);
-    for (var gi=1; gi<group.entries.length; gi++){
+    for (var gi = 1; gi < group.entries.length; gi++) {
       var candidate = group.entries[gi];
       var candidateScore = scoreStudentPriority(candidate, metricsMap);
-      if (candidateScore > bestScore){
+      if (candidateScore > bestScore) {
         best = candidate;
         bestScore = candidateScore;
       }
@@ -600,105 +761,148 @@ function applyStudentEmailDeduplication(state){
     if (!best.sourceUids) best.sourceUids = [];
     var combinedMetric = { u1: 0, u2: 0, u3: 0, finalPct: 0 };
     var hasMetric = false;
-    for (var mj=0; mj<group.entries.length; mj++){
+    for (var mj = 0; mj < group.entries.length; mj++) {
       var member = group.entries[mj];
       if (!member) continue;
-      if (best.sourceUids.indexOf(member.uid) === -1 && member.uid){
+      if (best.sourceUids.indexOf(member.uid) === -1 && member.uid) {
         best.sourceUids.push(member.uid);
       }
-      if (member.uid && member.uid !== best.uid){
+      if (member.uid && member.uid !== best.uid) {
         aliasMap[member.uid] = best.uid;
       }
-      if ((!best.displayName || best.displayName === best.email || best.displayName === best.uid) && member.displayName && member.displayName !== member.email){
+      if (
+        (!best.displayName ||
+          best.displayName === best.email ||
+          best.displayName === best.uid) &&
+        member.displayName &&
+        member.displayName !== member.email
+      ) {
         best.displayName = member.displayName;
       }
-      if ((!best.matricula || best.matricula === best.uid || best.matricula === best.email) && member.matricula){
+      if (
+        (!best.matricula ||
+          best.matricula === best.uid ||
+          best.matricula === best.email) &&
+        member.matricula
+      ) {
         best.matricula = member.matricula;
       }
-      if (!best.email && member.email){
+      if (!best.email && member.email) {
         best.email = member.email;
       }
       var metric = metricsMap ? metricsMap[member.uid] : null;
-      if (metric){
+      if (metric) {
         var normalized = normalizeMetricEntry(metric);
         hasMetric = true;
         combinedMetric.u1 = Math.max(combinedMetric.u1, normalized.u1);
         combinedMetric.u2 = Math.max(combinedMetric.u2, normalized.u2);
         combinedMetric.u3 = Math.max(combinedMetric.u3, normalized.u3);
-        combinedMetric.finalPct = Math.max(combinedMetric.finalPct, normalized.finalPct);
+        combinedMetric.finalPct = Math.max(
+          combinedMetric.finalPct,
+          normalized.finalPct
+        );
       }
     }
-    if (!best.sourceUids.length && best.uid){
+    if (!best.sourceUids.length && best.uid) {
       best.sourceUids.push(best.uid);
     }
-    aggregatedMetrics[best.uid] = hasMetric ? combinedMetric : { u1: 0, u2: 0, u3: 0, finalPct: 0 };
-    if (best.hasOwnProperty('__order')) delete best.__order;
+    aggregatedMetrics[best.uid] = hasMetric
+      ? combinedMetric
+      : { u1: 0, u2: 0, u3: 0, finalPct: 0 };
+    if (best.hasOwnProperty("__order")) delete best.__order;
     deduped.push(best);
   }
 
   state.students = deduped;
   state.metrics = aggregatedMetrics;
   state.studentAliasMap = aliasMap;
-  if (state.selectedUploadStudent && aliasMap[state.selectedUploadStudent]){
+  if (state.selectedUploadStudent && aliasMap[state.selectedUploadStudent]) {
     state.selectedUploadStudent = aliasMap[state.selectedUploadStudent];
   }
 }
 
-function cloneMetrics(metrics){
+function cloneMetrics(metrics) {
   var out = {};
-  for (var key in metrics){
-    if (Object.prototype.hasOwnProperty.call(metrics, key)){
+  for (var key in metrics) {
+    if (Object.prototype.hasOwnProperty.call(metrics, key)) {
       out[key] = normalizeMetricEntry(metrics[key]);
     }
   }
   return out;
 }
 
-function sortFallbackStudents(list){
-  list.sort(function(a, b){
-    var rawA = a && a.displayName ? a.displayName : '';
-    var rawB = b && b.displayName ? b.displayName : '';
+function sortFallbackStudents(list) {
+  list.sort(function (a, b) {
+    var rawA = a && a.displayName ? a.displayName : "";
+    var rawB = b && b.displayName ? b.displayName : "";
     var nameA;
     var nameB;
-    try { nameA = rawA.toLocaleLowerCase('es-MX'); }
-    catch (_errA){ nameA = rawA.toLowerCase(); }
-    try { nameB = rawB.toLocaleLowerCase('es-MX'); }
-    catch (_errB){ nameB = rawB.toLowerCase(); }
+    try {
+      nameA = rawA.toLocaleLowerCase("es-MX");
+    } catch (_errA) {
+      nameA = rawA.toLowerCase();
+    }
+    try {
+      nameB = rawB.toLocaleLowerCase("es-MX");
+    } catch (_errB) {
+      nameB = rawB.toLowerCase();
+    }
     if (nameA < nameB) return -1;
     if (nameA > nameB) return 1;
     return 0;
   });
 }
 
-function normalizeFallbackSource(data){
+function normalizeFallbackSource(data) {
   var list = [];
   var metrics = {};
   var students = data && Array.isArray(data.students) ? data.students : [];
-  for (var i=0; i<students.length; i++){
+  for (var i = 0; i < students.length; i++) {
     var src = students[i] || {};
-    var uid = String(src.uid || src.id || src.matricula || ('fallback-' + i)).trim();
-    if (!uid) uid = 'fallback-' + i;
-    var displayName = src.displayName || src.nombre || src.name || ('Estudiante ' + (i+1));
-    var email = src.email || src.correo || '';
-    var matricula = src.matricula != null ? String(src.matricula) : (src.id != null ? String(src.id) : null);
-    list.push({ uid: uid, displayName: displayName, email: email, matricula: matricula });
+    var uid = String(
+      src.uid || src.id || src.matricula || "fallback-" + i
+    ).trim();
+    if (!uid) uid = "fallback-" + i;
+    var displayName =
+      src.displayName || src.nombre || src.name || "Estudiante " + (i + 1);
+    var email = src.email || src.correo || "";
+    var matricula =
+      src.matricula != null
+        ? String(src.matricula)
+        : src.id != null
+        ? String(src.id)
+        : null;
+    list.push({
+      uid: uid,
+      displayName: displayName,
+      email: email,
+      matricula: matricula,
+    });
 
     var grades = src.grades || src.calificaciones || {};
-    if (grades && (grades.u1 != null || grades.u2 != null || grades.u3 != null || grades.unidad1 != null || grades.unidad2 != null || grades.unidad3 != null)){
+    if (
+      grades &&
+      (grades.u1 != null ||
+        grades.u2 != null ||
+        grades.u3 != null ||
+        grades.unidad1 != null ||
+        grades.unidad2 != null ||
+        grades.unidad3 != null)
+    ) {
       metrics[uid] = normalizeMetricEntry(grades);
     }
   }
 
   var metricEntries = data && data.metrics ? data.metrics : {};
-  for (var key in metricEntries){
-    if (Object.prototype.hasOwnProperty.call(metricEntries, key)){
+  for (var key in metricEntries) {
+    if (Object.prototype.hasOwnProperty.call(metricEntries, key)) {
       metrics[key] = normalizeMetricEntry(metricEntries[key]);
     }
   }
 
-  for (var j=0; j<list.length; j++){
+  for (var j = 0; j < list.length; j++) {
     var stu = list[j];
-    if (!metrics[stu.uid]){
+    if (!metrics[stu.uid]) {
       metrics[stu.uid] = { u1: 0, u2: 0, u3: 0, finalPct: 0 };
     }
   }
@@ -707,15 +911,15 @@ function normalizeFallbackSource(data){
   return { students: list, metrics: metrics };
 }
 
-function setFallbackCache(data){
+function setFallbackCache(data) {
   STUDENT_FALLBACK_CACHE = {
     students: (data.students || []).map(cloneStudentEntry),
     metrics: cloneMetrics(data.metrics || {}),
   };
 }
 
-function cloneFallbackData(){
-  if (!STUDENT_FALLBACK_CACHE){
+function cloneFallbackData() {
+  if (!STUDENT_FALLBACK_CACHE) {
     return { students: [], metrics: {} };
   }
   return {
@@ -724,8 +928,8 @@ function cloneFallbackData(){
   };
 }
 
-function readFallbackStorage(){
-  if (typeof window === 'undefined' || !window.localStorage) return null;
+function readFallbackStorage() {
+  if (typeof window === "undefined" || !window.localStorage) return null;
   try {
     var raw = window.localStorage.getItem(STUDENT_FALLBACK_KEY);
     if (!raw) return null;
@@ -736,8 +940,8 @@ function readFallbackStorage(){
   }
 }
 
-function persistFallbackData(){
-  if (typeof window === 'undefined' || !window.localStorage) return;
+function persistFallbackData() {
+  if (typeof window === "undefined" || !window.localStorage) return;
   if (!STUDENT_FALLBACK_CACHE) return;
   try {
     var payload = {
@@ -749,105 +953,123 @@ function persistFallbackData(){
   } catch (_err) {}
 }
 
-async function ensureStudentFallbackLoaded(){
+async function ensureStudentFallbackLoaded() {
   if (STUDENT_FALLBACK_CACHE) return;
   var stored = readFallbackStorage();
-  if (stored){
+  if (stored) {
     setFallbackCache(stored);
     return;
   }
   try {
-    var res = await fetch('./data/students.json', { cache: 'no-store' });
-    if (!res || !res.ok){
-      throw new Error('Respuesta inválida al cargar base local de estudiantes');
+    var res = await fetch("./data/students.json", { cache: "no-store" });
+    if (!res || !res.ok) {
+      throw new Error("Respuesta inválida al cargar base local de estudiantes");
     }
     var json = await res.json();
     setFallbackCache(normalizeFallbackSource(json));
   } catch (err) {
-    console.error('No se pudo cargar la base local de estudiantes', err);
+    console.error("No se pudo cargar la base local de estudiantes", err);
     setFallbackCache({ students: [], metrics: {} });
   }
 }
 
-async function loadStudentFallbackData(){
+async function loadStudentFallbackData() {
   await ensureStudentFallbackLoaded();
   return cloneFallbackData();
 }
 
-function mutateFallbackData(mutator){
+function mutateFallbackData(mutator) {
   if (!STUDENT_FALLBACK_CACHE) return;
   try {
     mutator(STUDENT_FALLBACK_CACHE);
   } catch (err) {
-    console.error('No se pudo actualizar la base local de estudiantes', err);
+    console.error("No se pudo actualizar la base local de estudiantes", err);
   }
   sortFallbackStudents(STUDENT_FALLBACK_CACHE.students);
   persistFallbackData();
 }
 
-function generateFallbackId(){
-  return 'local-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+function generateFallbackId() {
+  return (
+    "local-" +
+    Date.now().toString(36) +
+    "-" +
+    Math.random().toString(36).slice(2, 8)
+  );
 }
 
-function markStudentFallbackActive(flag){
+function markStudentFallbackActive(flag) {
   STUDENT_FALLBACK_ACTIVE = !!flag;
 }
 
-function isStudentFallbackActive(){
+function isStudentFallbackActive() {
   return !!STUDENT_FALLBACK_ACTIVE;
 }
 
-function sanitizeStudentInput(data){
+function sanitizeStudentInput(data) {
   data = data || {};
   return {
-    displayName: (data.displayName || data.nombre || '').trim(),
-    email: (data.email || '').trim(),
-    matricula: data.matricula != null && String(data.matricula).trim() !== '' ? String(data.matricula).trim() : null,
+    displayName: (data.displayName || data.nombre || "").trim(),
+    email: (data.email || "").trim(),
+    matricula:
+      data.matricula != null && String(data.matricula).trim() !== ""
+        ? String(data.matricula).trim()
+        : null,
   };
 }
 
 // ===== Firestore =====
-async function fetchStudents(db, grupoId){
+async function fetchStudents(db, grupoId) {
   var out = [];
   var seen = {};
 
-  function pushFromSnapshot(snap){
+  function pushFromSnapshot(snap) {
     if (!snap || snap.empty) return;
-    snap.forEach(function(docSnap){
+    snap.forEach(function (docSnap) {
       var data = docSnap.data() || {};
       var uid = docSnap.id;
       if (seen[uid]) return;
       seen[uid] = 1;
       out.push({
         uid: uid,
-        displayName: data.displayName || data.nombre || 'Alumno',
-        email: data.email || '',
+        displayName: data.displayName || data.nombre || "Alumno",
+        email: data.email || "",
         matricula: data.matricula || null,
       });
     });
   }
 
   try {
-    var courseRef = doc(db, 'courses', grupoId);
-    var courseMembers = collection(courseRef, 'members');
-    var snapCourse = await getDocs(query(courseMembers, where('role', '==', 'student')));
+    var courseRef = doc(db, "courses", grupoId);
+    var courseMembers = collection(courseRef, "members");
+    var snapCourse = await getDocs(
+      query(courseMembers, where("role", "==", "student"))
+    );
     pushFromSnapshot(snapCourse);
   } catch (_err) {
     // Ignorar y continuar con otras rutas.
   }
 
   try {
-    var grupoRef = doc(db, 'grupos', grupoId);
-    var grupoMembers = collection(grupoRef, 'members');
-    var snapGrupo = await getDocs(query(grupoMembers, where('role', '==', 'student')));
+    var grupoRef = doc(db, "grupos", grupoId);
+    var grupoMembers = collection(grupoRef, "members");
+    var snapGrupo = await getDocs(
+      query(grupoMembers, where("role", "==", "student"))
+    );
     pushFromSnapshot(snapGrupo);
   } catch (_err2) {
     // Ignorar y continuar con otras rutas.
   }
 
-  if (!out.length){
+  if (!out.length) {
     try {
-      var usersSnap = await getDocs(query(collection(db, 'users'), where('role', '==', 'student'), limit(300)));
+      var usersSnap = await getDocs(
+        query(
+          collection(db, "users"),
+          where("role", "==", "student"),
+          limit(300)
+        )
+      );
       pushFromSnapshot(usersSnap);
     } catch (_err3) {
       // Ignorar error final y regresar lo que se tenga.
@@ -857,194 +1079,259 @@ async function fetchStudents(db, grupoId){
   return out;
 }
 
-function normalizeStudentPayload(data, opts){
+function normalizeStudentPayload(data, opts) {
   data = data || {};
-  var name = data.displayName || data.nombre || '';
+  var name = data.displayName || data.nombre || "";
   var payload = {
     displayName: name,
     nombre: name,
-    email: data.email || '',
+    email: data.email || "",
     matricula: data.matricula ? data.matricula : null,
-    role: 'student',
+    role: "student",
     updatedAt: serverTimestamp(),
   };
-  if (opts && opts.includeCreatedAt){
+  if (opts && opts.includeCreatedAt) {
     payload.createdAt = serverTimestamp();
   }
-  if (data.uid){
+  if (data.uid) {
     payload.uid = data.uid;
   }
   return payload;
 }
 
-async function createGroupStudent(db, grupoId, data){
-  if (isStudentFallbackActive()){
+async function createGroupStudent(db, grupoId, data) {
+  if (isStudentFallbackActive()) {
     await ensureStudentFallbackLoaded();
     var clean = sanitizeStudentInput(data);
-    var docId = data && data.uid ? String(data.uid).trim() : '';
+    var docId = data && data.uid ? String(data.uid).trim() : "";
     if (!docId) docId = generateFallbackId();
     var newStudent = {
       uid: docId,
-      displayName: clean.displayName || 'Alumno',
-      email: clean.email || '',
+      displayName: clean.displayName || "Alumno",
+      email: clean.email || "",
       matricula: clean.matricula,
     };
-    mutateFallbackData(function(cache){
+    mutateFallbackData(function (cache) {
       var list = cache.students;
       var replaced = false;
-      for (var i=0; i<list.length; i++){
-        if (list[i] && list[i].uid === docId){
+      for (var i = 0; i < list.length; i++) {
+        if (list[i] && list[i].uid === docId) {
           list[i] = newStudent;
           replaced = true;
           break;
         }
       }
-      if (!replaced){
+      if (!replaced) {
         list.push(newStudent);
       }
-      if (!cache.metrics[docId]){
+      if (!cache.metrics[docId]) {
         cache.metrics[docId] = { u1: 0, u2: 0, u3: 0, finalPct: 0 };
       }
     });
     return docId;
   }
 
-  var membersCol = collection(db, 'grupos', grupoId, 'members');
-  var docIdFs = data && data.uid ? String(data.uid).trim() : '';
-  if (docIdFs){
-    var payloadExisting = normalizeStudentPayload(Object.assign({}, data, { uid: docIdFs }), { includeCreatedAt: true });
+  var membersCol = collection(db, "grupos", grupoId, "members");
+  var docIdFs = data && data.uid ? String(data.uid).trim() : "";
+  if (docIdFs) {
+    var payloadExisting = normalizeStudentPayload(
+      Object.assign({}, data, { uid: docIdFs }),
+      { includeCreatedAt: true }
+    );
     await setDoc(doc(membersCol, docIdFs), payloadExisting);
     return docIdFs;
   }
   var newRef = doc(membersCol);
-  var payload = normalizeStudentPayload(Object.assign({}, data, { uid: newRef.id }), { includeCreatedAt: true });
+  var payload = normalizeStudentPayload(
+    Object.assign({}, data, { uid: newRef.id }),
+    { includeCreatedAt: true }
+  );
   await setDoc(newRef, payload);
   return newRef.id;
 }
 
-async function updateGroupStudent(db, grupoId, uid, data){
-  if (!uid){ throw new Error('Identificador no válido'); }
-  if (isStudentFallbackActive()){
+async function updateGroupStudent(db, grupoId, uid, data) {
+  if (!uid) {
+    throw new Error("Identificador no válido");
+  }
+  if (isStudentFallbackActive()) {
     await ensureStudentFallbackLoaded();
     var clean = sanitizeStudentInput(data);
-    mutateFallbackData(function(cache){
-      for (var i=0; i<cache.students.length; i++){
-        if (cache.students[i] && cache.students[i].uid === uid){
+    mutateFallbackData(function (cache) {
+      for (var i = 0; i < cache.students.length; i++) {
+        if (cache.students[i] && cache.students[i].uid === uid) {
           cache.students[i] = Object.assign({}, cache.students[i], {
-            displayName: clean.displayName || cache.students[i].displayName || 'Alumno',
-            email: clean.email || cache.students[i].email || '',
-            matricula: clean.matricula != null ? clean.matricula : cache.students[i].matricula,
+            displayName:
+              clean.displayName || cache.students[i].displayName || "Alumno",
+            email: clean.email || cache.students[i].email || "",
+            matricula:
+              clean.matricula != null
+                ? clean.matricula
+                : cache.students[i].matricula,
           });
           return;
         }
       }
       cache.students.push({
         uid: uid,
-        displayName: clean.displayName || 'Alumno',
-        email: clean.email || '',
+        displayName: clean.displayName || "Alumno",
+        email: clean.email || "",
         matricula: clean.matricula,
       });
-      if (!cache.metrics[uid]){
+      if (!cache.metrics[uid]) {
         cache.metrics[uid] = { u1: 0, u2: 0, u3: 0, finalPct: 0 };
       }
     });
     return;
   }
-  var payload = normalizeStudentPayload(Object.assign({}, data, { uid: uid }), {});
-  await updateDoc(doc(db, 'grupos', grupoId, 'members', uid), payload);
+  var payload = normalizeStudentPayload(
+    Object.assign({}, data, { uid: uid }),
+    {}
+  );
+  await updateDoc(doc(db, "grupos", grupoId, "members", uid), payload);
 }
 
-async function deleteGroupStudent(db, grupoId, uid){
-  if (!uid){ throw new Error('Identificador no válido'); }
-  if (isStudentFallbackActive()){
+async function deleteGroupStudent(db, grupoId, uid) {
+  if (!uid) {
+    throw new Error("Identificador no válido");
+  }
+  if (isStudentFallbackActive()) {
     await ensureStudentFallbackLoaded();
-    mutateFallbackData(function(cache){
-      cache.students = cache.students.filter(function(stu){ return !stu || stu.uid !== uid; });
-      if (cache.metrics && cache.metrics[uid]){
+    mutateFallbackData(function (cache) {
+      cache.students = cache.students.filter(function (stu) {
+        return !stu || stu.uid !== uid;
+      });
+      if (cache.metrics && cache.metrics[uid]) {
         delete cache.metrics[uid];
       }
     });
     return;
   }
-  await deleteDoc(doc(db, 'grupos', grupoId, 'members', uid));
+  await deleteDoc(doc(db, "grupos", grupoId, "members", uid));
 }
-async function fetchCalifItems(db, grupoId, uid){
+async function fetchCalifItems(db, grupoId, uid) {
   try {
-    var snap = await getDocs(query(collection(db, 'grupos', grupoId, 'calificaciones', uid, 'items'), orderBy('fecha','asc')));
-    var arr=[]; snap.forEach(function(d){ var o=d.data(); o.id=d.id; arr.push(o); });
+    var snap = await getDocs(
+      query(
+        collection(db, "grupos", grupoId, "calificaciones", uid, "items"),
+        orderBy("fecha", "asc")
+      )
+    );
+    var arr = [];
+    snap.forEach(function (d) {
+      var o = d.data();
+      o.id = d.id;
+      arr.push(o);
+    });
     return arr;
   } catch (e) {
-    console.error('Error al obtener calificaciones para', uid, e);
+    console.error("Error al obtener calificaciones para", uid, e);
     return [];
   }
 }
-async function fetchDeliverables(db, grupoId){
+async function fetchDeliverables(db, grupoId) {
   try {
-    var snap = await getDocs(query(collection(db, 'grupos', grupoId, 'deliverables'), orderBy('dueAt','asc')));
-    var arr=[]; snap.forEach(function(d){ var o=d.data(); o.id=d.id; arr.push(o); });
+    var snap = await getDocs(
+      query(
+        collection(db, "grupos", grupoId, "deliverables"),
+        orderBy("dueAt", "asc")
+      )
+    );
+    var arr = [];
+    snap.forEach(function (d) {
+      var o = d.data();
+      o.id = d.id;
+      arr.push(o);
+    });
     return arr;
   } catch (e) {
-    console.error('Error al obtener entregables', e);
+    console.error("Error al obtener entregables", e);
     return [];
   }
 }
-async function fetchExams(db, grupoId){
+async function fetchExams(db, grupoId) {
   try {
-    var snap = await getDocs(query(collection(db, 'grupos', grupoId, 'exams')));
-    var map={}; snap.forEach(function(d){ map[d.id]=d.data(); });
+    var snap = await getDocs(query(collection(db, "grupos", grupoId, "exams")));
+    var map = {};
+    snap.forEach(function (d) {
+      map[d.id] = d.data();
+    });
     return map; // u1/u2
   } catch (e) {
-    console.error('Error al obtener ligas de exámenes', e);
+    console.error("Error al obtener ligas de exámenes", e);
     return {};
   }
 }
-async function fetchGantt(db, grupoId){
+async function fetchGantt(db, grupoId) {
   try {
-    var snap = await getDocs(query(collection(db, 'grupos', grupoId, 'gantt'), orderBy('startAt','asc')));
-    var arr=[]; snap.forEach(function(d){ var o=d.data(); o.id=d.id; arr.push(o); });
+    var snap = await getDocs(
+      query(
+        collection(db, "grupos", grupoId, "gantt"),
+        orderBy("startAt", "asc")
+      )
+    );
+    var arr = [];
+    snap.forEach(function (d) {
+      var o = d.data();
+      o.id = d.id;
+      arr.push(o);
+    });
     return arr;
   } catch (e) {
-    console.error('Error al obtener el cronograma', e);
+    console.error("Error al obtener el cronograma", e);
     return [];
   }
 }
-async function getRubric(db, grupoId){
+async function getRubric(db, grupoId) {
   try {
-    var r = await getDoc(doc(db, 'grupos', grupoId, 'rubric', 'main'));
-    return r.exists() ? r.data() : { content: '' };
+    var r = await getDoc(doc(db, "grupos", grupoId, "rubric", "main"));
+    return r.exists() ? r.data() : { content: "" };
   } catch (e) {
-    console.error('Error al obtener la rúbrica', e);
-    return { content: '' };
+    console.error("Error al obtener la rúbrica", e);
+    return { content: "" };
   }
 }
-async function saveRubric(db, grupoId, content){
-  await setDoc(doc(db, 'grupos', grupoId, 'rubric', 'main'), { content: content, updatedAt: serverTimestamp() }, { merge: true });
+async function saveRubric(db, grupoId, content) {
+  await setDoc(
+    doc(db, "grupos", grupoId, "rubric", "main"),
+    { content: content, updatedAt: serverTimestamp() },
+    { merge: true }
+  );
 }
-async function createDeliverable(db, grupoId, payload){
-  var ref = await addDoc(collection(db, 'grupos', grupoId, 'deliverables'), Object.assign({}, payload, { createdAt: serverTimestamp() }));
+async function createDeliverable(db, grupoId, payload) {
+  var ref = await addDoc(
+    collection(db, "grupos", grupoId, "deliverables"),
+    Object.assign({}, payload, { createdAt: serverTimestamp() })
+  );
   return ref.id;
 }
-async function updateDeliverable(db, grupoId, id, patch){
-  await updateDoc(doc(db, 'grupos', grupoId, 'deliverables', id), Object.assign({}, patch, { updatedAt: serverTimestamp() }));
+async function updateDeliverable(db, grupoId, id, patch) {
+  await updateDoc(
+    doc(db, "grupos", grupoId, "deliverables", id),
+    Object.assign({}, patch, { updatedAt: serverTimestamp() })
+  );
 }
-async function deleteDeliverable(db, grupoId, id){
-  await updateDoc(doc(db, 'grupos', grupoId, 'deliverables', id), { deleted: true, updatedAt: serverTimestamp() });
+async function deleteDeliverable(db, grupoId, id) {
+  await updateDoc(doc(db, "grupos", grupoId, "deliverables", id), {
+    deleted: true,
+    updatedAt: serverTimestamp(),
+  });
 }
 
-function rebuildStudentIndex(state){
+function rebuildStudentIndex(state) {
   var list = state && Array.isArray(state.students) ? state.students : [];
   var index = {};
-  for (var i=0; i<list.length; i++){
+  for (var i = 0; i < list.length; i++) {
     var stu = list[i];
-    if (stu && stu.uid){
+    if (stu && stu.uid) {
       index[stu.uid] = stu;
     }
   }
   var aliasMap = state && state.studentAliasMap ? state.studentAliasMap : {};
-  for (var alias in aliasMap){
+  for (var alias in aliasMap) {
     if (!Object.prototype.hasOwnProperty.call(aliasMap, alias)) continue;
     var target = aliasMap[alias];
-    if (target && index[target]){
+    if (target && index[target]) {
       index[alias] = index[target];
     }
   }
@@ -1052,13 +1339,13 @@ function rebuildStudentIndex(state){
   return index;
 }
 
-function ensureMetricsForStudents(state){
+function ensureMetricsForStudents(state) {
   var metrics = state && state.metrics ? state.metrics : {};
   var list = state && Array.isArray(state.students) ? state.students : [];
   var next = {};
-  for (var i=0; i<list.length; i++){
+  for (var i = 0; i < list.length; i++) {
     var stu = list[i];
-    var uid = stu && stu.uid ? stu.uid : '';
+    var uid = stu && stu.uid ? stu.uid : "";
     if (!uid) continue;
     next[uid] = metrics[uid] || { u1: 0, u2: 0, u3: 0, finalPct: 0 };
   }
@@ -1066,8 +1353,8 @@ function ensureMetricsForStudents(state){
   return next;
 }
 
-async function reloadStudents(db, grupoId, state){
-  if (isStudentFallbackActive() || (state && state.isUsingStudentFallback)){
+async function reloadStudents(db, grupoId, state) {
+  if (isStudentFallbackActive() || (state && state.isUsingStudentFallback)) {
     await ensureStudentFallbackLoaded();
     var fallback = cloneFallbackData();
     state.students = fallback.students;
@@ -1097,69 +1384,114 @@ async function reloadStudents(db, grupoId, state){
 }
 
 // ===== Render =====
-function setText(id, value){ var el=$id(id); if(el) el.textContent = String(value); }
-function renderSummaryStats(students, metrics){
+function setText(id, value) {
+  var el = $id(id);
+  if (el) el.textContent = String(value);
+}
+function renderSummaryStats(students, metrics) {
   var list = Array.isArray(students) ? students : [];
-  setText('pd-summary-total-students', list.length);
+  setText("pd-summary-total-students", list.length);
   var finals = [];
-  for (var i=0; i<list.length; i++){
+  for (var i = 0; i < list.length; i++) {
     var stu = list[i];
     if (!stu || !stu.uid) continue;
     var m = metrics && metrics[stu.uid] ? metrics[stu.uid] : null;
     if (m && !isNaN(m.finalPct)) finals.push(m.finalPct);
   }
-  var avg = finals.length ? finals.reduce(function(a,b){return a+b;},0)/finals.length : 0;
-  setText('pd-summary-avg-final', toEscala5(avg));
+  var avg = finals.length
+    ? finals.reduce(function (a, b) {
+        return a + b;
+      }, 0) / finals.length
+    : 0;
+  setText("pd-summary-avg-final", toEscala5(avg));
 }
 
-function renderDeliverablesList(arr){
-  var tbody = $id('pd-deliverables-tbody'); if (!tbody) return;
-  tbody.innerHTML='';
+function renderDeliverablesList(arr) {
+  var tbody = $id("pd-deliverables-tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
   var countActive = 0;
-  if (!Array.isArray(arr) || !arr.length){
-    setText('pd-summary-active-deliverables', 0);
-    tbody.innerHTML = '<tr><td colspan="6" class="pd-empty">Sin entregables.</td></tr>';
+  if (!Array.isArray(arr) || !arr.length) {
+    setText("pd-summary-active-deliverables", 0);
+    tbody.innerHTML =
+      '<tr><td colspan="6" class="pd-empty">Sin entregables.</td></tr>';
     return;
   }
-  for (var i=0;i<arr.length;i++){
+  for (var i = 0; i < arr.length; i++) {
     var d = arr[i];
     var due = toDate(d.dueAt);
-    var dueTxt = due ? fmtDate(due) : '—';
-    var w = (d.weight!=null) ? (d.weight+'%') : '—';
+    var dueTxt = due ? fmtDate(due) : "—";
+    var w = d.weight != null ? d.weight + "%" : "—";
     if (!d.deleted) countActive++;
-    var deleted = d.deleted ? ' (eliminado)' : '';
-    var row = '\
-      <tr data-id="'+ escAttr(d.id) +'">\
-        <td>'+ escHtml(d.title||'Entregable') + deleted +'</td>\
-        <td>'+ escHtml(d.description||'—') +'</td>\
-        <td style="text-align:center">'+ escHtml(d.unidad||'—') +'</td>\
-        <td style="text-align:right">'+ escHtml(w) +'</td>\
-        <td style="text-align:center">'+ escHtml(dueTxt) +'</td>\
+    var deleted = d.deleted ? " (eliminado)" : "";
+    var row =
+      '\
+      <tr data-id="' +
+      escAttr(d.id) +
+      '">\
+        <td>' +
+      escHtml(d.title || "Entregable") +
+      deleted +
+      "</td>\
+        <td>" +
+      escHtml(d.description || "—") +
+      '</td>\
+        <td style="text-align:center">' +
+      escHtml(d.unidad || "—") +
+      '</td>\
+        <td style="text-align:right">' +
+      escHtml(w) +
+      '</td>\
+        <td style="text-align:center">' +
+      escHtml(dueTxt) +
+      '</td>\
         <td style="text-align:right"><button class="pd-deliv-edit pd-action-btn">Editar</button> <button class="pd-deliv-del pd-action-btn">Eliminar</button></td>\
       </tr>';
-    tbody.insertAdjacentHTML('beforeend', row);
+    tbody.insertAdjacentHTML("beforeend", row);
   }
-  setText('pd-summary-active-deliverables', countActive);
+  setText("pd-summary-active-deliverables", countActive);
 }
 
-function renderStudentsTable(students, metrics){
-  var tbody = $id('pd-students-tbody'); if (!tbody) return;
-  tbody.innerHTML='';
+function renderStudentsTable(students, metrics) {
+  var tbody = $id("pd-students-tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
   var list = Array.isArray(students) ? students : [];
-  if (!list.length){ tbody.innerHTML = '<tr><td colspan="8" class="pd-empty">Sin estudiantes.</td></tr>'; return; }
-  for (var i=0;i<list.length;i++){
+  if (!list.length) {
+    tbody.innerHTML =
+      '<tr><td colspan="8" class="pd-empty">Sin estudiantes.</td></tr>';
+    return;
+  }
+  for (var i = 0; i < list.length; i++) {
     var s = list[i] || {};
-    var uid = s.uid || '';
-    var m = metrics[s.uid] || { u1:0,u2:0,u3:0, finalPct:0 };
-    var row = '\
-      <tr data-id="'+ escAttr(uid) +'">\
-        <td style="text-align:center"><input type="checkbox" class="pd-student-check" data-email="'+ escAttr(s.email||'') +'" aria-label="Seleccionar estudiante" /></td>\
-        <td>'+ escHtml(s.displayName||'Alumno') +'</td>\
-        <td>'+ escHtml(s.email||'') +'</td>\
-        <td style="text-align:right">'+ escHtml(toEscala5(m.u1)) +'</td>\
-        <td style="text-align:right">'+ escHtml(toEscala5(m.u2)) +'</td>\
-        <td style="text-align:right">'+ escHtml(toEscala5(m.u3)) +'</td>\
-        <td style="text-align:right; font-weight:700">'+ escHtml(toEscala5(m.finalPct)) +'</td>\
+    var uid = s.uid || "";
+    var m = metrics[s.uid] || { u1: 0, u2: 0, u3: 0, finalPct: 0 };
+    var row =
+      '\
+      <tr data-id="' +
+      escAttr(uid) +
+      '">\
+        <td style="text-align:center"><input type="checkbox" class="pd-student-check" data-email="' +
+      escAttr(s.email || "") +
+      '" aria-label="Seleccionar estudiante" /></td>\
+        <td>' +
+      escHtml(s.displayName || "Alumno") +
+      "</td>\
+        <td>" +
+      escHtml(s.email || "") +
+      '</td>\
+        <td style="text-align:right">' +
+      escHtml(toEscala5(m.u1)) +
+      '</td>\
+        <td style="text-align:right">' +
+      escHtml(toEscala5(m.u2)) +
+      '</td>\
+        <td style="text-align:right">' +
+      escHtml(toEscala5(m.u3)) +
+      '</td>\
+        <td style="text-align:right; font-weight:700">' +
+      escHtml(toEscala5(m.finalPct)) +
+      '</td>\
         <td>\
           <div class="pd-student-actions">\
             <button type="button" class="pd-action-btn pd-student-edit">Editar</button>\
@@ -1167,247 +1499,381 @@ function renderStudentsTable(students, metrics){
           </div>\
         </td>\
       </tr>';
-    tbody.insertAdjacentHTML('beforeend', row);
+    tbody.insertAdjacentHTML("beforeend", row);
   }
 }
 
-function renderUploadStudentsList(state, providedEntries){
-  var listEl = $id('pd-upload-student-list');
-  var emptyEl = $id('pd-upload-empty');
+function renderUploadStudentsList(state, providedEntries) {
+  var listEl = $id("pd-upload-student-list");
+  var emptyEl = $id("pd-upload-empty");
   if (!listEl) return;
   var entries = providedEntries || getUploadStudentEntries(state);
-  if (!entries.length){
-    listEl.innerHTML='';
+  if (!entries.length) {
+    listEl.innerHTML = "";
     listEl.hidden = true;
-    if (emptyEl){
+    if (emptyEl) {
       emptyEl.hidden = false;
-      emptyEl.textContent = 'No hay evidencias registradas todavía.';
+      emptyEl.textContent = "No hay evidencias registradas todavía.";
     }
     return;
   }
   listEl.hidden = false;
   if (emptyEl) emptyEl.hidden = true;
 
-  var html='';
-  for (var i=0;i<entries.length;i++){
+  var html = "";
+  for (var i = 0; i < entries.length; i++) {
     var entry = entries[i];
-    var pressed = state.selectedUploadStudent === entry.uid ? 'true' : 'false';
+    var pressed = state.selectedUploadStudent === entry.uid ? "true" : "false";
     var breakdown = countUploadsByKind(entry.uploads);
-    html += '\
+    html +=
+      '\
       <li class="pd-uploads__student">\
-        <button type="button" data-uid="'+ escAttr(entry.uid||'') +'" aria-pressed="'+ pressed +'">\
-          <span class="pd-uploads__student-name">'+ escHtml(entry.displayName || entry.email || 'Estudiante') +'</span>';
-    if (entry.email){
-      html += '<span class="pd-uploads__student-email">'+ escHtml(entry.email) +'</span>';
+        <button type="button" data-uid="' +
+      escAttr(entry.uid || "") +
+      '" aria-pressed="' +
+      pressed +
+      '">\
+          <span class="pd-uploads__student-name">' +
+      escHtml(entry.displayName || entry.email || "Estudiante") +
+      "</span>";
+    if (entry.email) {
+      html +=
+        '<span class="pd-uploads__student-email">' +
+        escHtml(entry.email) +
+        "</span>";
     }
-    html += '<span class="pd-uploads__student-counts">\
-        <span class="pd-uploads__student-count" title="Total de entregas">'+ escHtml(String((entry.uploads||[]).length)) +'</span>';
-    if (entry.pending > 0){
-      html += '<span class="pd-uploads__student-pending">'+ escHtml(entry.pending===1 ? '1 pendiente' : entry.pending + ' pendientes') +'</span>';
+    html +=
+      '<span class="pd-uploads__student-counts">\
+        <span class="pd-uploads__student-count" title="Total de entregas">' +
+      escHtml(String((entry.uploads || []).length)) +
+      "</span>";
+    if (entry.pending > 0) {
+      html +=
+        '<span class="pd-uploads__student-pending">' +
+        escHtml(
+          entry.pending === 1 ? "1 pendiente" : entry.pending + " pendientes"
+        ) +
+        "</span>";
     }
-    html += '</span>\
-          ';
-    if (breakdown.total > 0){
+    html +=
+      "</span>\
+          ";
+    if (breakdown.total > 0) {
       html += '<span class="pd-uploads__student-breakdown">';
-      if (breakdown.activity > 0){
-        html += '<span class="pd-uploads__student-chip" title="Actividades">A: '+ escHtml(String(breakdown.activity)) +'</span>';
+      if (breakdown.activity > 0) {
+        html +=
+          '<span class="pd-uploads__student-chip" title="Actividades">A: ' +
+          escHtml(String(breakdown.activity)) +
+          "</span>";
       }
-      if (breakdown.homework > 0){
-        html += '<span class="pd-uploads__student-chip" title="Tareas">T: '+ escHtml(String(breakdown.homework)) +'</span>';
+      if (breakdown.homework > 0) {
+        html +=
+          '<span class="pd-uploads__student-chip" title="Tareas">T: ' +
+          escHtml(String(breakdown.homework)) +
+          "</span>";
       }
-      if (breakdown.evidence > 0){
-        html += '<span class="pd-uploads__student-chip" title="Evidencias">E: '+ escHtml(String(breakdown.evidence)) +'</span>';
+      if (breakdown.evidence > 0) {
+        html +=
+          '<span class="pd-uploads__student-chip" title="Evidencias">E: ' +
+          escHtml(String(breakdown.evidence)) +
+          "</span>";
       }
-      if (breakdown.other > 0){
-        html += '<span class="pd-uploads__student-chip" title="Otros envíos">O: '+ escHtml(String(breakdown.other)) +'</span>';
+      if (breakdown.other > 0) {
+        html +=
+          '<span class="pd-uploads__student-chip" title="Otros envíos">O: ' +
+          escHtml(String(breakdown.other)) +
+          "</span>";
       }
-      html += '</span>';
+      html += "</span>";
     }
-    html += '\
+    html +=
+      "\
         </button>\
-      </li>';
+      </li>";
   }
   listEl.innerHTML = html;
 }
 
-function buildUploadCard(upload){
-  if (!upload) return '';
+function buildUploadCard(upload) {
+  if (!upload) return "";
   var status = normalizeStatus(upload.status);
-  var statusClass = 'pd-uploads__item-status--' + status;
-  if (!UPLOAD_STATUS_LABELS[status]){
-    status = 'enviado';
-    statusClass = 'pd-uploads__item-status--enviado';
+  var statusClass = "pd-uploads__item-status--" + status;
+  if (!UPLOAD_STATUS_LABELS[status]) {
+    status = "enviado";
+    statusClass = "pd-uploads__item-status--enviado";
   }
-  var statusLabel = UPLOAD_STATUS_LABELS[status] || 'Enviado';
-  var kind = UPLOAD_KIND_LABELS[(upload.kind || '').toLowerCase()] || 'Entrega';
+  var statusLabel = UPLOAD_STATUS_LABELS[status] || "Enviado";
+  var kind = UPLOAD_KIND_LABELS[(upload.kind || "").toLowerCase()] || "Entrega";
   var metaParts = [];
-  var submittedTxt = formatDateTime(upload.submittedAt || upload.createdAt || upload.updatedAt);
-  if (submittedTxt) metaParts.push('Enviado: ' + submittedTxt);
+  var submittedTxt = formatDateTime(
+    upload.submittedAt || upload.createdAt || upload.updatedAt
+  );
+  if (submittedTxt) metaParts.push("Enviado: " + submittedTxt);
   if (upload.fileName) metaParts.push(upload.fileName);
   var sizeTxt = formatSize(upload.fileSize);
   if (sizeTxt) metaParts.push(sizeTxt);
-  var description = (upload.description || '').trim();
-  var hasGrade = typeof upload.grade === 'number' && !isNaN(upload.grade);
-  var gradeTxt = hasGrade ? 'Calificación: ' + upload.grade + ' / 100' : 'Sin calificación registrada';
+  var description = (upload.description || "").trim();
+  var hasGrade = typeof upload.grade === "number" && !isNaN(upload.grade);
+  var gradeTxt = hasGrade
+    ? "Calificación: " + upload.grade + " / 100"
+    : "Sin calificación registrada";
   var reviewInfo = formatReviewInfo(upload);
 
-  var html = '\
-    <article class="pd-uploads__item" data-id="'+ escAttr(upload.id||'') +'">\
+  var html =
+    '\
+    <article class="pd-uploads__item" data-id="' +
+    escAttr(upload.id || "") +
+    '">\
       <header class="pd-uploads__item-header">\
         <div class="pd-uploads__item-heading">\
-          <h4>'+ escHtml(upload.title || 'Entrega sin título') +'</h4>\
-          <span class="pd-uploads__item-chip">'+ escHtml(kind) +'</span>\
+          <h4>' +
+    escHtml(upload.title || "Entrega sin título") +
+    '</h4>\
+          <span class="pd-uploads__item-chip">' +
+    escHtml(kind) +
+    '</span>\
         </div>\
-        <span class="pd-uploads__item-status '+ escAttr(statusClass) +'">'+ escHtml(statusLabel) +'</span>\
-      </header>';
+        <span class="pd-uploads__item-status ' +
+    escAttr(statusClass) +
+    '">' +
+    escHtml(statusLabel) +
+    "</span>\
+      </header>";
 
-  if (metaParts.length){
-    html += '<p class="pd-uploads__item-meta">'+ escHtml(metaParts.join(' · ')) +'</p>';
+  if (metaParts.length) {
+    html +=
+      '<p class="pd-uploads__item-meta">' +
+      escHtml(metaParts.join(" · ")) +
+      "</p>";
   }
-  if (description){
-    html += '<p class="pd-uploads__item-description">'+ escHtml(description) +'</p>';
+  if (description) {
+    html +=
+      '<p class="pd-uploads__item-description">' +
+      escHtml(description) +
+      "</p>";
   }
-  if (gradeTxt){
-    var gradeClass = hasGrade ? 'pd-uploads__item-grade' : 'pd-uploads__item-grade pd-uploads__item-grade--pending';
-    html += '<p class="'+ gradeClass +'">'+ escHtml(gradeTxt) +'</p>';
+  if (gradeTxt) {
+    var gradeClass = hasGrade
+      ? "pd-uploads__item-grade"
+      : "pd-uploads__item-grade pd-uploads__item-grade--pending";
+    html += '<p class="' + gradeClass + '">' + escHtml(gradeTxt) + "</p>";
   }
-  if (upload.teacherFeedback){
-    html += '<p class="pd-uploads__item-feedback"><strong>Comentarios:</strong> '+ escHtml(upload.teacherFeedback) +'</p>';
+  if (upload.teacherFeedback) {
+    html +=
+      '<p class="pd-uploads__item-feedback"><strong>Comentarios:</strong> ' +
+      escHtml(upload.teacherFeedback) +
+      "</p>";
   }
-  if (reviewInfo){
-    html += '<p class="pd-uploads__item-reviewer">'+ escHtml(reviewInfo) +'</p>';
+  if (reviewInfo) {
+    html +=
+      '<p class="pd-uploads__item-reviewer">' + escHtml(reviewInfo) + "</p>";
   }
 
   html += '<div class="pd-uploads__item-actions">';
-  if (upload.fileUrl){
+  if (upload.fileUrl) {
     var fileUrlAttr = escAttr(upload.fileUrl);
-    var fileTitleAttr = escAttr(upload.title || 'Entrega sin título');
-    var fileNameAttr = escAttr(upload.fileName || '');
-    html += '<button type="button" class="pd-action-btn pd-uploads__action" data-action="preview" data-file-url="'+ fileUrlAttr +'" data-file-title="'+ fileTitleAttr +'" data-file-name="'+ fileNameAttr +'">Visualizar</button>';
-    html += '<a class="pd-action-btn" href="'+ fileUrlAttr +'" target="_blank" rel="noopener">Abrir en pestaña nueva</a>';
+    var fileTitleAttr = escAttr(upload.title || "Entrega sin título");
+    var fileNameAttr = escAttr(upload.fileName || "");
+    html +=
+      '<button type="button" class="pd-action-btn pd-uploads__action" data-action="preview" data-file-url="' +
+      fileUrlAttr +
+      '" data-file-title="' +
+      fileTitleAttr +
+      '" data-file-name="' +
+      fileNameAttr +
+      '">Visualizar</button>';
+    html +=
+      '<a class="pd-action-btn" href="' +
+      fileUrlAttr +
+      '" target="_blank" rel="noopener">Abrir en pestaña nueva</a>';
   } else {
-    html += '<span class="pd-uploads__item-link-disabled">Archivo no disponible</span>';
+    html +=
+      '<span class="pd-uploads__item-link-disabled">Archivo no disponible</span>';
   }
-  var disableAccept = status === 'aceptado' || status === 'calificado';
-  html += '<button type="button" class="pd-action-btn pd-uploads__action" data-action="accept"'+ (disableAccept ? ' disabled' : '') +'>Marcar como aceptada</button>';
-  var gradeLabel = hasGrade ? 'Actualizar calificación' : 'Registrar calificación';
-  html += '<button type="button" class="pd-action-btn pd-uploads__action" data-action="grade">'+ escHtml(gradeLabel) +'</button>';
-  html += '</div>';
+  var disableAccept = status === "aceptado" || status === "calificado";
+  html +=
+    '<button type="button" class="pd-action-btn pd-uploads__action" data-action="accept"' +
+    (disableAccept ? " disabled" : "") +
+    ">Marcar como aceptada</button>";
+  var gradeLabel = hasGrade
+    ? "Actualizar calificación"
+    : "Registrar calificación";
+  html +=
+    '<button type="button" class="pd-action-btn pd-uploads__action" data-action="grade">' +
+    escHtml(gradeLabel) +
+    "</button>";
+  html += "</div>";
 
-  html += '</article>';
+  html += "</article>";
   return html;
 }
 
-function renderUploadDetail(state, providedEntries){
-  var container = $id('pd-upload-detail');
+function renderUploadDetail(state, providedEntries) {
+  var container = $id("pd-upload-detail");
   if (!container) return;
   var entries = providedEntries || getUploadStudentEntries(state);
   var uid = state.selectedUploadStudent;
-  container.innerHTML='';
-  if (!uid){
-    container.insertAdjacentHTML('beforeend', '<p class="pd-empty">Selecciona un estudiante para revisar sus evidencias.</p>');
+  container.innerHTML = "";
+  if (!uid) {
+    container.insertAdjacentHTML(
+      "beforeend",
+      '<p class="pd-empty">Selecciona un estudiante para revisar sus evidencias.</p>'
+    );
     return;
   }
   var grouped = state.uploadGroups || {};
   var group = grouped[uid] || null;
-  var info = (state.studentIndex && state.studentIndex[uid]) || (group && group.student) || {};
-  var header = '\
+  var info =
+    (state.studentIndex && state.studentIndex[uid]) ||
+    (group && group.student) ||
+    {};
+  var header =
+    '\
     <div class="pd-uploads__detail-header">\
-      <h3>'+ escHtml(info.displayName || info.nombre || info.email || 'Estudiante') +'</h3>';
-  if (info.email){
-    header += '<span>'+ escHtml(info.email) +'</span>';
+      <h3>' +
+    escHtml(info.displayName || info.nombre || info.email || "Estudiante") +
+    "</h3>";
+  if (info.email) {
+    header += "<span>" + escHtml(info.email) + "</span>";
   }
-  header += '</div>';
-  container.insertAdjacentHTML('beforeend', header);
+  header += "</div>";
+  container.insertAdjacentHTML("beforeend", header);
 
-  if (!group || !group.uploads || !group.uploads.length){
-    container.insertAdjacentHTML('beforeend', '<p class="pd-empty">Este estudiante aún no registra entregas.</p>');
+  if (!group || !group.uploads || !group.uploads.length) {
+    container.insertAdjacentHTML(
+      "beforeend",
+      '<p class="pd-empty">Este estudiante aún no registra entregas.</p>'
+    );
     return;
   }
 
   var sections = groupUploadsByKind(group.uploads);
-  for (var si=0; si<sections.length; si++){
+  for (var si = 0; si < sections.length; si++) {
     var section = sections[si];
     var count = section.uploads.length;
-    var badge = count === 1 ? '1 entrega' : count + ' entregas';
-    var secHtml = '\
-      <section class="pd-uploads__kind-section" data-kind="'+ escAttr(section.key) +'">\
+    var badge = count === 1 ? "1 entrega" : count + " entregas";
+    var secHtml =
+      '\
+      <section class="pd-uploads__kind-section" data-kind="' +
+      escAttr(section.key) +
+      '">\
         <header class="pd-uploads__kind-header">\
-          <h4 class="pd-uploads__kind-heading">'+ escHtml(section.title) +'</h4>\
-          <span class="pd-uploads__kind-badge">'+ escHtml(badge) +'</span>\
+          <h4 class="pd-uploads__kind-heading">' +
+      escHtml(section.title) +
+      '</h4>\
+          <span class="pd-uploads__kind-badge">' +
+      escHtml(badge) +
+      '</span>\
         </header>\
         <div class="pd-uploads__kind-list">';
-    for (var ui=0; ui<section.uploads.length; ui++){
+    for (var ui = 0; ui < section.uploads.length; ui++) {
       secHtml += buildUploadCard(section.uploads[ui]);
     }
-    secHtml += '</div>\
-      </section>';
-    container.insertAdjacentHTML('beforeend', secHtml);
+    secHtml +=
+      "</div>\
+      </section>";
+    container.insertAdjacentHTML("beforeend", secHtml);
   }
 }
 
-function renderExams(exams){
-  var u1 = exams['u1'] || exams['unidad1'];
-  var u2 = exams['u2'] || exams['unidad2'];
-  var a1 = $id('pd-exam-u1-link');
-  var a2 = $id('pd-exam-u2-link');
-  if (a1 && u1 && u1.url) { a1.href = u1.url; a1.removeAttribute('aria-disabled'); }
-  if (a2 && u2 && u2.url) { a2.href = u2.url; a2.removeAttribute('aria-disabled'); }
+function renderExams(exams) {
+  var u1 = exams["u1"] || exams["unidad1"];
+  var u2 = exams["u2"] || exams["unidad2"];
+  var a1 = $id("pd-exam-u1-link");
+  var a2 = $id("pd-exam-u2-link");
+  if (a1 && u1 && u1.url) {
+    a1.href = u1.url;
+    a1.removeAttribute("aria-disabled");
+  }
+  if (a2 && u2 && u2.url) {
+    a2.href = u2.url;
+    a2.removeAttribute("aria-disabled");
+  }
 }
 
-function renderGanttTable(rows){
-  var ganttTbody = $id('pd-gantt-tbody');
+function renderGanttTable(rows) {
+  var ganttTbody = $id("pd-gantt-tbody");
   if (!ganttTbody) return;
-  ganttTbody.innerHTML='';
-  if (!Array.isArray(rows) || !rows.length){
-    ganttTbody.innerHTML = '<tr><td colspan="5" class="pd-empty">Sin actividades programadas.</td></tr>';
+  ganttTbody.innerHTML = "";
+  if (!Array.isArray(rows) || !rows.length) {
+    ganttTbody.innerHTML =
+      '<tr><td colspan="5" class="pd-empty">Sin actividades programadas.</td></tr>';
     return;
   }
-  for (var i=0;i<rows.length;i++){
+  for (var i = 0; i < rows.length; i++) {
     var t = rows[i] || {};
     var s = toDate(t.startAt);
     var e = toDate(t.endAt);
-    var row='\
+    var row =
+      "\
       <tr>\
-        <td>'+ escHtml(t.title||'Tarea') +'</td>\
-        <td>'+ escHtml(s?fmtDate(s):'—') +'</td>\
-        <td>'+ escHtml(e?fmtDate(e):'—') +'</td>\
-        <td>'+ escHtml(t.owner||'—') +'</td>\
-        <td>'+ escHtml(t.status||'pendiente') +'</td>\
-      </tr>';
-    ganttTbody.insertAdjacentHTML('beforeend', row);
+        <td>" +
+      escHtml(t.title || "Tarea") +
+      "</td>\
+        <td>" +
+      escHtml(s ? fmtDate(s) : "—") +
+      "</td>\
+        <td>" +
+      escHtml(e ? fmtDate(e) : "—") +
+      "</td>\
+        <td>" +
+      escHtml(t.owner || "—") +
+      "</td>\
+        <td>" +
+      escHtml(t.status || "pendiente") +
+      "</td>\
+      </tr>";
+    ganttTbody.insertAdjacentHTML("beforeend", row);
   }
 }
 
-async function populateAssignments(db, grupoId){
-  var asgTbody = $id('pd-assignments-tbody');
+async function populateAssignments(db, grupoId) {
+  var asgTbody = $id("pd-assignments-tbody");
   if (!asgTbody) return;
   try {
-    var asnap = await getDocs(query(collection(db, 'grupos', grupoId, 'assignments'), orderBy('unidad','asc')));
-    asgTbody.innerHTML='';
-    if (asnap.empty){
-      asgTbody.innerHTML = '<tr><td colspan="5" class="pd-empty">Sin asignaciones.</td></tr>';
+    var asnap = await getDocs(
+      query(
+        collection(db, "grupos", grupoId, "assignments"),
+        orderBy("unidad", "asc")
+      )
+    );
+    asgTbody.innerHTML = "";
+    if (asnap.empty) {
+      asgTbody.innerHTML =
+        '<tr><td colspan="5" class="pd-empty">Sin asignaciones.</td></tr>';
       return;
     }
-    asnap.forEach(function(d){
+    asnap.forEach(function (d) {
       var a = d.data() || {};
-      var row='\
+      var row =
+        "\
         <tr>\
-          <td>'+ escHtml(a.title||'Asignación') +'</td>\
-          <td style="text-align:center">'+ escHtml(a.unidad||'—') +'</td>\
-          <td style="text-align:right">'+ ((a.ponderacion!=null)? escHtml(a.ponderacion+'%') : '—') +'</td>\
-          <td>'+ escHtml(a.calItemKey||'—') +'</td>\
-          <td>'+ escHtml(a.description||'—') +'</td>\
-        </tr>';
-      asgTbody.insertAdjacentHTML('beforeend', row);
+          <td>" +
+        escHtml(a.title || "Asignación") +
+        '</td>\
+          <td style="text-align:center">' +
+        escHtml(a.unidad || "—") +
+        '</td>\
+          <td style="text-align:right">' +
+        (a.ponderacion != null ? escHtml(a.ponderacion + "%") : "—") +
+        "</td>\
+          <td>" +
+        escHtml(a.calItemKey || "—") +
+        "</td>\
+          <td>" +
+        escHtml(a.description || "—") +
+        "</td>\
+        </tr>";
+      asgTbody.insertAdjacentHTML("beforeend", row);
     });
   } catch (e) {
-    console.error('Error al obtener asignaciones', e);
-    asgTbody.innerHTML = '<tr><td colspan="5" class="pd-empty">No fue posible cargar las asignaciones.</td></tr>';
+    console.error("Error al obtener asignaciones", e);
+    asgTbody.innerHTML =
+      '<tr><td colspan="5" class="pd-empty">No fue posible cargar las asignaciones.</td></tr>';
   }
 }
 
-function clearUploadsState(state){
+function clearUploadsState(state) {
   if (!state) return;
   state.uploads = [];
   state.uploadGroups = {};
@@ -1417,32 +1883,39 @@ function clearUploadsState(state){
   renderUploadDetail(state, []);
 }
 
-function handleUploadsSnapshot(state, items){
+function handleUploadsSnapshot(state, items) {
   if (!state) return;
   var docs = Array.isArray(items) ? items.slice() : [];
   state.uploads = docs;
   var grouped = {};
   var index = {};
   var aliasMap = state && state.studentAliasMap ? state.studentAliasMap : {};
-  for (var i=0;i<docs.length;i++){
+  for (var i = 0; i < docs.length; i++) {
     var upload = docs[i];
     if (!upload || !upload.id) continue;
     index[upload.id] = upload;
-    var rawUid = (upload.student && upload.student.uid) ? upload.student.uid : '__sinuid__';
+    var rawUid =
+      upload.student && upload.student.uid ? upload.student.uid : "__sinuid__";
     var uid = aliasMap[rawUid] || rawUid;
-    if (upload.student && aliasMap[rawUid]){
+    if (upload.student && aliasMap[rawUid]) {
       upload.student = Object.assign({}, upload.student, { uid: uid });
     }
-    if (!grouped[uid]) grouped[uid] = { uploads: [], student: upload.student || null };
+    if (!grouped[uid])
+      grouped[uid] = { uploads: [], student: upload.student || null };
     grouped[uid].uploads.push(upload);
-    if (!grouped[uid].student && upload.student) grouped[uid].student = upload.student;
+    if (!grouped[uid].student && upload.student)
+      grouped[uid].student = upload.student;
   }
   var keys = Object.keys(grouped);
-  for (var j=0;j<keys.length;j++){
+  for (var j = 0; j < keys.length; j++) {
     var arr = grouped[keys[j]].uploads || [];
-    arr.sort(function(a,b){
-      var ad = toDate(a && (a.submittedAt || a.gradedAt || a.acceptedAt || a.updatedAt));
-      var bd = toDate(b && (b.submittedAt || b.gradedAt || b.acceptedAt || b.updatedAt));
+    arr.sort(function (a, b) {
+      var ad = toDate(
+        a && (a.submittedAt || a.gradedAt || a.acceptedAt || a.updatedAt)
+      );
+      var bd = toDate(
+        b && (b.submittedAt || b.gradedAt || b.acceptedAt || b.updatedAt)
+      );
       var at = ad ? ad.getTime() : 0;
       var bt = bd ? bd.getTime() : 0;
       return bt - at;
@@ -1456,14 +1929,17 @@ function handleUploadsSnapshot(state, items){
   renderUploadDetail(state, entries);
 }
 
-function bindUploadStudentList(state){
-  var listEl = $id('pd-upload-student-list');
+function bindUploadStudentList(state) {
+  var listEl = $id("pd-upload-student-list");
   if (!listEl || listEl.__pdBound) return;
   listEl.__pdBound = true;
-  listEl.addEventListener('click', function(ev){
-    var btn = ev.target && ev.target.closest ? ev.target.closest('button[data-uid]') : null;
+  listEl.addEventListener("click", function (ev) {
+    var btn =
+      ev.target && ev.target.closest
+        ? ev.target.closest("button[data-uid]")
+        : null;
     if (!btn) return;
-    var uid = btn.getAttribute('data-uid');
+    var uid = btn.getAttribute("data-uid");
     if (!uid || state.selectedUploadStudent === uid) return;
     state.selectedUploadStudent = uid;
     var entries = getUploadStudentEntries(state);
@@ -1472,92 +1948,120 @@ function bindUploadStudentList(state){
   });
 }
 
-function bindUploadDetail(state){
-  var container = $id('pd-upload-detail');
+function bindUploadDetail(state) {
+  var container = $id("pd-upload-detail");
   if (!container || container.__pdBound) return;
   container.__pdBound = true;
-  container.addEventListener('click', function(ev){
-    var btn = ev.target && ev.target.closest ? ev.target.closest('button[data-action]') : null;
+  container.addEventListener("click", function (ev) {
+    var btn =
+      ev.target && ev.target.closest
+        ? ev.target.closest("button[data-action]")
+        : null;
     if (!btn) return;
-    var action = btn.getAttribute('data-action');
-    var item = btn.closest ? btn.closest('.pd-uploads__item') : null;
-    var uploadId = item ? item.getAttribute('data-id') : null;
+    var action = btn.getAttribute("data-action");
+    var item = btn.closest ? btn.closest(".pd-uploads__item") : null;
+    var uploadId = item ? item.getAttribute("data-id") : null;
     if (!uploadId) return;
-    if (action === 'preview'){
-      var url = btn.getAttribute('data-file-url');
+    if (action === "preview") {
+      var url = btn.getAttribute("data-file-url");
       if (!url) return;
-      var title = btn.getAttribute('data-file-title') || 'Entrega';
-      var fileName = btn.getAttribute('data-file-name') || '';
-      openFileViewer(url, { title: title, downloadUrl: url, fileName: fileName });
+      var title = btn.getAttribute("data-file-title") || "Entrega";
+      var fileName = btn.getAttribute("data-file-name") || "";
+      openFileViewer(url, {
+        title: title,
+        downloadUrl: url,
+        fileName: fileName,
+      });
       return;
     }
-    if (action === 'accept'){
+    if (action === "accept") {
       handleAcceptAction(state, uploadId, btn);
-    } else if (action === 'grade'){
+    } else if (action === "grade") {
       handleGradeAction(state, uploadId, btn);
     }
   });
 }
 
-async function handleAcceptAction(state, uploadId, btn){
+async function handleAcceptAction(state, uploadId, btn) {
   var teacher = state && state.currentTeacher ? state.currentTeacher : null;
-  if (!teacher){
-    alert('No se pudo identificar al docente autenticado.');
+  if (!teacher) {
+    alert("No se pudo identificar al docente autenticado.");
     return;
   }
   if (btn && !btn.disabled) btn.disabled = true;
   try {
     await markStudentUploadAccepted(uploadId, teacher);
-    alert('Entrega marcada como aceptada. El estudiante verá la actualización en su panel.');
+    alert(
+      "Entrega marcada como aceptada. El estudiante verá la actualización en su panel."
+    );
     updateSyncStamp();
   } catch (err) {
-    console.error('markStudentUploadAccepted:error', err);
-    alert('No se pudo marcar la entrega como aceptada: ' + (err && err.message ? err.message : err));
+    console.error("markStudentUploadAccepted:error", err);
+    alert(
+      "No se pudo marcar la entrega como aceptada: " +
+        (err && err.message ? err.message : err)
+    );
   } finally {
     if (btn) btn.disabled = false;
   }
 }
 
-async function handleGradeAction(state, uploadId, btn){
+async function handleGradeAction(state, uploadId, btn) {
   var teacher = state && state.currentTeacher ? state.currentTeacher : null;
-  if (!teacher){
-    alert('No se pudo identificar al docente autenticado.');
+  if (!teacher) {
+    alert("No se pudo identificar al docente autenticado.");
     return;
   }
   var current = state && state.uploadIndex ? state.uploadIndex[uploadId] : null;
-  var defaultGrade = (current && typeof current.grade === 'number' && !isNaN(current.grade)) ? String(current.grade) : '';
-  var gradeInput = window.prompt('Calificación (0-100):', defaultGrade);
+  var defaultGrade =
+    current && typeof current.grade === "number" && !isNaN(current.grade)
+      ? String(current.grade)
+      : "";
+  var gradeInput = window.prompt("Calificación (0-100):", defaultGrade);
   if (gradeInput === null) return;
   var grade = Number(gradeInput);
-  if (!isFinite(grade) || grade < 0 || grade > 100){
-    alert('Ingresa una calificación numérica entre 0 y 100.');
+  if (!isFinite(grade) || grade < 0 || grade > 100) {
+    alert("Ingresa una calificación numérica entre 0 y 100.");
     return;
   }
-  var defaultFeedback = current && current.teacherFeedback ? current.teacherFeedback : '';
-  var feedbackInput = window.prompt('Comentarios para el estudiante (opcional):', defaultFeedback);
+  var defaultFeedback =
+    current && current.teacherFeedback ? current.teacherFeedback : "";
+  var feedbackInput = window.prompt(
+    "Comentarios para el estudiante (opcional):",
+    defaultFeedback
+  );
   if (feedbackInput === null) feedbackInput = defaultFeedback;
   if (btn && !btn.disabled) btn.disabled = true;
   try {
-    if (!current || normalizeStatus(current.status) === 'enviado'){
+    if (!current || normalizeStatus(current.status) === "enviado") {
       await markStudentUploadAccepted(uploadId, teacher);
     }
     var rosterStudent = null;
-    if (current && current.student && current.student.uid && state.studentIndex){
+    if (
+      current &&
+      current.student &&
+      current.student.uid &&
+      state.studentIndex
+    ) {
       rosterStudent = state.studentIndex[current.student.uid] || null;
     }
     var deliverable = null;
-    var activityId = current && current.extra ? (current.extra.activityId || current.extra.deliverableId) : null;
-    if (!activityId && current && current.extra && current.extra.assignmentId){
+    var activityId =
+      current && current.extra
+        ? current.extra.activityId || current.extra.deliverableId
+        : null;
+    if (!activityId && current && current.extra && current.extra.assignmentId) {
       activityId = current.extra.assignmentId;
     }
-    if (activityId && Array.isArray(state.deliverables)){
+    if (activityId && Array.isArray(state.deliverables)) {
       var targetId = String(activityId).trim();
-      for (var di=0; di<state.deliverables.length; di++){
+      for (var di = 0; di < state.deliverables.length; di++) {
         var del = state.deliverables[di];
         if (!del) continue;
-        var delId = del.id != null ? String(del.id).trim() : '';
-        var delKey = del.calItemKey != null ? String(del.calItemKey).trim() : '';
-        if ((delId && delId === targetId) || (delKey && delKey === targetId)){
+        var delId = del.id != null ? String(del.id).trim() : "";
+        var delKey =
+          del.calItemKey != null ? String(del.calItemKey).trim() : "";
+        if ((delId && delId === targetId) || (delKey && delKey === targetId)) {
           deliverable = del;
           break;
         }
@@ -1573,149 +2077,188 @@ async function handleGradeAction(state, uploadId, btn){
       groupId: state.groupId || grupo,
       deliverable: deliverable,
     });
-    alert('Calificación registrada. El estudiante recibirá la notificación en su panel.');
+    alert(
+      "Calificación registrada. El estudiante recibirá la notificación en su panel."
+    );
     updateSyncStamp();
   } catch (err) {
-    console.error('gradeStudentUpload:error', err);
-    alert('No se pudo registrar la calificación: ' + (err && err.message ? err.message : err));
+    console.error("gradeStudentUpload:error", err);
+    alert(
+      "No se pudo registrar la calificación: " +
+        (err && err.message ? err.message : err)
+    );
   } finally {
     if (btn) btn.disabled = false;
   }
 }
 
 // ===== Mailto =====
-function openMailTo(list, subject, body){
+function openMailTo(list, subject, body) {
   if (!list || !list.length) return;
-  var emails = list.map(function(x){ return x.email; }).filter(Boolean);
+  var emails = list
+    .map(function (x) {
+      return x.email;
+    })
+    .filter(Boolean);
   if (!emails.length) return;
-  var mailto = 'mailto:'+ encodeURIComponent(emails.join(',')) +
-    '?subject=' + encodeURIComponent(subject||'Recordatorio') +
-    '&body=' + encodeURIComponent(body||'Hola, este es un recordatorio.');
+  var mailto =
+    "mailto:" +
+    encodeURIComponent(emails.join(",")) +
+    "?subject=" +
+    encodeURIComponent(subject || "Recordatorio") +
+    "&body=" +
+    encodeURIComponent(body || "Hola, este es un recordatorio.");
   window.location.href = mailto;
 }
 
-function bindRubricSave(db, grupo){
-  var btn = $id('pd-rubric-save');
+function bindRubricSave(db, grupo) {
+  var btn = $id("pd-rubric-save");
   if (!btn || btn.__pdBound) return;
   btn.__pdBound = true;
-  btn.addEventListener('click', async function(){
-    var textarea = $id('pd-rubric-text');
-    var val = textarea && textarea.value ? textarea.value : '';
+  btn.addEventListener("click", async function () {
+    var textarea = $id("pd-rubric-text");
+    var val = textarea && textarea.value ? textarea.value : "";
     try {
       await saveRubric(db, grupo, val);
-      alert('Rúbrica guardada.');
+      alert("Rúbrica guardada.");
     } catch (err) {
-      console.error('No se pudo guardar la rúbrica', err);
-      alert('No se pudo guardar la rúbrica: ' + (err && err.message ? err.message : err));
+      console.error("No se pudo guardar la rúbrica", err);
+      alert(
+        "No se pudo guardar la rúbrica: " +
+          (err && err.message ? err.message : err)
+      );
     }
   });
 }
 
-function bindDeliverableForm(db, grupo, state){
-  var form = $id('pd-new-deliverable-form');
+function bindDeliverableForm(db, grupo, state) {
+  var form = $id("pd-new-deliverable-form");
   if (!form || form.__pdBound) return;
   form.__pdBound = true;
-  form.addEventListener('submit', async function(ev){
+  form.addEventListener("submit", async function (ev) {
     ev.preventDefault();
-    var title = ($id('pd-deliv-title') && $id('pd-deliv-title').value) || '';
-    var desc  = ($id('pd-deliv-desc') && $id('pd-deliv-desc').value) || '';
-    var unidad= ($id('pd-deliv-unidad') && $id('pd-deliv-unidad').value) || '';
-    var weight= Number(($id('pd-deliv-weight') && $id('pd-deliv-weight').value) || 0);
-    var due   = toDate(($id('pd-deliv-due') && $id('pd-deliv-due').value) || '');
-    var payload = { title:title, description:desc, unidad: unidad? Number(unidad):null, weight:weight };
+    var title = ($id("pd-deliv-title") && $id("pd-deliv-title").value) || "";
+    var desc = ($id("pd-deliv-desc") && $id("pd-deliv-desc").value) || "";
+    var unidad = ($id("pd-deliv-unidad") && $id("pd-deliv-unidad").value) || "";
+    var weight = Number(
+      ($id("pd-deliv-weight") && $id("pd-deliv-weight").value) || 0
+    );
+    var due = toDate(($id("pd-deliv-due") && $id("pd-deliv-due").value) || "");
+    var payload = {
+      title: title,
+      description: desc,
+      unidad: unidad ? Number(unidad) : null,
+      weight: weight,
+    };
     if (due) payload.dueAt = Timestamp.fromDate(due);
     try {
       await createDeliverable(db, grupo, payload);
       state.deliverables = await fetchDeliverables(db, grupo);
       renderDeliverablesList(state.deliverables);
       updateSyncStamp();
-      if ($id('pd-deliv-title')) $id('pd-deliv-title').value='';
-      if ($id('pd-deliv-desc')) $id('pd-deliv-desc').value='';
-      if ($id('pd-deliv-unidad')) $id('pd-deliv-unidad').value='';
-      if ($id('pd-deliv-weight')) $id('pd-deliv-weight').value='';
-      if ($id('pd-deliv-due')) $id('pd-deliv-due').value='';
+      if ($id("pd-deliv-title")) $id("pd-deliv-title").value = "";
+      if ($id("pd-deliv-desc")) $id("pd-deliv-desc").value = "";
+      if ($id("pd-deliv-unidad")) $id("pd-deliv-unidad").value = "";
+      if ($id("pd-deliv-weight")) $id("pd-deliv-weight").value = "";
+      if ($id("pd-deliv-due")) $id("pd-deliv-due").value = "";
     } catch (err) {
-      console.error('No se pudo crear el entregable', err);
-      alert('No se pudo crear el entregable: ' + (err && err.message ? err.message : err));
+      console.error("No se pudo crear el entregable", err);
+      alert(
+        "No se pudo crear el entregable: " +
+          (err && err.message ? err.message : err)
+      );
     }
   });
 }
 
-function bindDeliverableTable(db, grupo, state){
-  var delTbody = $id('pd-deliverables-tbody');
+function bindDeliverableTable(db, grupo, state) {
+  var delTbody = $id("pd-deliverables-tbody");
   if (!delTbody || delTbody.__pdBound) return;
   delTbody.__pdBound = true;
-  delTbody.addEventListener('click', async function(ev){
+  delTbody.addEventListener("click", async function (ev) {
     var btn = ev.target;
-    var tr = btn && btn.closest ? btn.closest('tr[data-id]') : null;
-    var id = tr ? tr.getAttribute('data-id') : null;
+    var tr = btn && btn.closest ? btn.closest("tr[data-id]") : null;
+    var id = tr ? tr.getAttribute("data-id") : null;
     if (!id) return;
-    if (btn.classList.contains('pd-deliv-del')){
-      if (!confirm('¿Eliminar entregable?')) return;
+    if (btn.classList.contains("pd-deliv-del")) {
+      if (!confirm("¿Eliminar entregable?")) return;
       try {
         await deleteDeliverable(db, grupo, id);
         state.deliverables = await fetchDeliverables(db, grupo);
         renderDeliverablesList(state.deliverables);
         updateSyncStamp();
       } catch (err) {
-        console.error('No se pudo eliminar el entregable', err);
-        alert('No se pudo eliminar el entregable: ' + (err && err.message ? err.message : err));
+        console.error("No se pudo eliminar el entregable", err);
+        alert(
+          "No se pudo eliminar el entregable: " +
+            (err && err.message ? err.message : err)
+        );
       }
-    } else if (btn.classList.contains('pd-deliv-edit')){
-      var firstCell = tr ? tr.querySelector('td') : null;
-      var nuevo = prompt('Nuevo título:', firstCell ? firstCell.textContent : '');
-      if (nuevo && nuevo.trim()){
+    } else if (btn.classList.contains("pd-deliv-edit")) {
+      var firstCell = tr ? tr.querySelector("td") : null;
+      var nuevo = prompt(
+        "Nuevo título:",
+        firstCell ? firstCell.textContent : ""
+      );
+      if (nuevo && nuevo.trim()) {
         var trimmed = nuevo.trim();
         try {
           await updateDeliverable(db, grupo, id, { title: trimmed });
           if (firstCell) firstCell.textContent = trimmed;
           updateSyncStamp();
         } catch (err) {
-          console.error('No se pudo actualizar el entregable', err);
-          alert('No se pudo actualizar el entregable: ' + (err && err.message ? err.message : err));
+          console.error("No se pudo actualizar el entregable", err);
+          alert(
+            "No se pudo actualizar el entregable: " +
+              (err && err.message ? err.message : err)
+          );
         }
       }
     }
   });
 }
 
-function bindReminder(state){
-  var remindBtn = $id('pd-remind-selected');
+function bindReminder(state) {
+  var remindBtn = $id("pd-remind-selected");
   if (!remindBtn || remindBtn.__pdBound) return;
   remindBtn.__pdBound = true;
-  remindBtn.addEventListener('click', function(){
-    var checks = document.querySelectorAll('.pd-student-check:checked');
+  remindBtn.addEventListener("click", function () {
+    var checks = document.querySelectorAll(".pd-student-check:checked");
     var list = [];
-    for (var i=0;i<checks.length;i++){
-      var em = checks[i].getAttribute('data-email') || '';
+    for (var i = 0; i < checks.length; i++) {
+      var em = checks[i].getAttribute("data-email") || "";
       if (em) list.push({ email: em });
     }
     if (!list.length) list = state.students || [];
-    openMailTo(list, 'Recordatorio del curso', 'Hola, este es un recordatorio del curso de Calidad.');
+    openMailTo(
+      list,
+      "Recordatorio del curso",
+      "Hola, este es un recordatorio del curso de Calidad."
+    );
   });
 }
 
-function bindDataAdmin(db, grupo, state){
-  var panel = $id('tab-datastore');
+function bindDataAdmin(db, grupo, state) {
+  var panel = $id("tab-datastore");
   if (!panel) return;
 
-  var consoleCard = $id('pd-data-console');
-  var lockedCard = $id('pd-data-locked');
-  var resultsCard = $id('pd-data-results-card');
-  var resultsTbody = $id('pd-data-results');
-  var form = $id('pd-data-path-form');
-  var pathInput = $id('pd-data-path');
-  var docInput = $id('pd-data-doc');
-  var jsonInput = $id('pd-data-json');
-  var statusEl = $id('pd-data-status');
-  var saveBtn = $id('pd-data-save');
-  var deleteBtn = $id('pd-data-delete');
-  var refreshBtn = $id('pd-data-refresh');
-  var newBtn = $id('pd-data-create');
-  var shortcuts = panel.querySelectorAll('[data-data-shortcut]');
+  var consoleCard = $id("pd-data-console");
+  var lockedCard = $id("pd-data-locked");
+  var resultsCard = $id("pd-data-results-card");
+  var resultsTbody = $id("pd-data-results");
+  var form = $id("pd-data-path-form");
+  var pathInput = $id("pd-data-path");
+  var docInput = $id("pd-data-doc");
+  var jsonInput = $id("pd-data-json");
+  var statusEl = $id("pd-data-status");
+  var saveBtn = $id("pd-data-save");
+  var deleteBtn = $id("pd-data-delete");
+  var refreshBtn = $id("pd-data-refresh");
+  var newBtn = $id("pd-data-create");
+  var shortcuts = panel.querySelectorAll("[data-data-shortcut]");
 
   var isAdmin = isDataAdminUser(state.currentTeacher);
-  if (!isAdmin){
+  if (!isAdmin) {
     if (lockedCard) lockedCard.hidden = false;
     if (consoleCard) consoleCard.hidden = true;
     if (resultsCard) resultsCard.hidden = true;
@@ -1729,115 +2272,129 @@ function bindDataAdmin(db, grupo, state){
   store.lastDocs = Array.isArray(store.lastDocs) ? store.lastDocs : [];
   store.docsMap = store.docsMap || {};
 
-  if (consoleCard){
+  if (consoleCard) {
     consoleCard.__pdDb = db;
     consoleCard.__pdGrupo = grupo;
     consoleCard.__pdStore = store;
   }
 
-  function getActiveStore(){
-    return (consoleCard && consoleCard.__pdStore) ? consoleCard.__pdStore : store;
+  function getActiveStore() {
+    return consoleCard && consoleCard.__pdStore ? consoleCard.__pdStore : store;
   }
 
-  function getActiveDb(){
-    return (consoleCard && consoleCard.__pdDb) ? consoleCard.__pdDb : db;
+  function getActiveDb() {
+    return consoleCard && consoleCard.__pdDb ? consoleCard.__pdDb : db;
   }
 
-  function getActiveGroup(){
-    return (consoleCard && consoleCard.__pdGrupo) ? consoleCard.__pdGrupo : grupo;
+  function getActiveGroup() {
+    return consoleCard && consoleCard.__pdGrupo ? consoleCard.__pdGrupo : grupo;
   }
 
-  function setStatus(message){
-    if (statusEl) statusEl.textContent = message || '';
+  function setStatus(message) {
+    if (statusEl) statusEl.textContent = message || "";
   }
 
-  function setBusy(flag){
+  function setBusy(flag) {
     if (!consoleCard) return;
-    if (flag){
-      consoleCard.setAttribute('aria-busy', 'true');
+    if (flag) {
+      consoleCard.setAttribute("aria-busy", "true");
     } else {
-      consoleCard.removeAttribute('aria-busy');
+      consoleCard.removeAttribute("aria-busy");
     }
   }
 
-  function syncInputs(){
+  function syncInputs() {
     var current = getActiveStore();
-    if (pathInput && current.lastInputPath){
+    if (pathInput && current.lastInputPath) {
       pathInput.value = current.lastInputPath;
     }
-    if (docInput){
-      docInput.value = current.selectedId || '';
+    if (docInput) {
+      docInput.value = current.selectedId || "";
     }
-    if (jsonInput){
+    if (jsonInput) {
       jsonInput.disabled = !current.editorEnabled;
     }
     if (saveBtn) saveBtn.disabled = !current.editorEnabled;
-    if (deleteBtn) deleteBtn.disabled = !current.editorEnabled || !current.docExists || !(current.selectedId && current.selectedId.length);
+    if (deleteBtn)
+      deleteBtn.disabled =
+        !current.editorEnabled ||
+        !current.docExists ||
+        !(current.selectedId && current.selectedId.length);
   }
 
-  function clearEditor(){
+  function clearEditor() {
     var current = getActiveStore();
     current.editorEnabled = false;
     current.docExists = false;
-    current.selectedId = '';
-    if (jsonInput){
-      jsonInput.value = '';
+    current.selectedId = "";
+    if (jsonInput) {
+      jsonInput.value = "";
       jsonInput.disabled = true;
     }
-    if (docInput) docInput.value = '';
+    if (docInput) docInput.value = "";
     syncInputs();
   }
 
-  function renderCollection(){
+  function renderCollection() {
     var current = getActiveStore();
     if (!resultsTbody || !resultsCard) return;
     var docs = Array.isArray(current.lastDocs) ? current.lastDocs : [];
-    if (!docs.length){
-      resultsTbody.innerHTML = '<tr><td colspan="3" class="pd-empty">No se encontraron documentos.</td></tr>';
+    if (!docs.length) {
+      resultsTbody.innerHTML =
+        '<tr><td colspan="3" class="pd-empty">No se encontraron documentos.</td></tr>';
     } else {
-      resultsTbody.innerHTML = '';
-      for (var i=0; i<docs.length; i++){
+      resultsTbody.innerHTML = "";
+      for (var i = 0; i < docs.length; i++) {
         var entry = docs[i] || {};
-        var docId = entry.id != null ? String(entry.id) : '';
+        var docId = entry.id != null ? String(entry.id) : "";
         var preview = formatDataPreview(entry.data);
         resultsTbody.insertAdjacentHTML(
-          'beforeend',
-          '<tr>' +
-            '<td><code>' + escHtml(docId || '(sin id)') + '</code></td>' +
-            '<td><code>' + escHtml(preview) + '</code></td>' +
-            '<td class="pd-col-actions"><button type="button" class="pd-button secondary" data-doc-open="' + escAttr(docId) + '">Abrir</button></td>' +
-          '</tr>'
+          "beforeend",
+          "<tr>" +
+            "<td><code>" +
+            escHtml(docId || "(sin id)") +
+            "</code></td>" +
+            "<td><code>" +
+            escHtml(preview) +
+            "</code></td>" +
+            '<td class="pd-col-actions"><button type="button" class="pd-button secondary" data-doc-open="' +
+            escAttr(docId) +
+            '">Abrir</button></td>' +
+            "</tr>"
         );
       }
     }
     resultsCard.hidden = false;
   }
 
-  function clearCollection(){
-    if (resultsTbody) resultsTbody.innerHTML = '<tr><td colspan="3" class="pd-empty">Sin resultados por mostrar.</td></tr>';
+  function clearCollection() {
+    if (resultsTbody)
+      resultsTbody.innerHTML =
+        '<tr><td colspan="3" class="pd-empty">Sin resultados por mostrar.</td></tr>';
     if (resultsCard) resultsCard.hidden = true;
   }
 
   syncInputs();
-  if (store.lastDocs && store.lastDocs.length){
+  if (store.lastDocs && store.lastDocs.length) {
     renderCollection();
   } else {
     clearCollection();
   }
 
-  function resolvePath(rawPath, rawDocId){
+  function resolvePath(rawPath, rawDocId) {
     var groupId = getActiveGroup();
     var normalized = replaceDataPathTokens(rawPath, groupId);
     var segments = parseDataPathSegments(normalized);
-    if (!segments.length) throw new Error('La ruta no puede estar vacía.');
-    var docId = rawDocId != null ? String(rawDocId).trim() : '';
+    if (!segments.length) throw new Error("La ruta no puede estar vacía.");
+    var docId = rawDocId != null ? String(rawDocId).trim() : "";
     var docFromPath = false;
-    if (!docId && segments.length % 2 === 0){
+    if (!docId && segments.length % 2 === 0) {
       docId = segments[segments.length - 1];
       segments = segments.slice(0, segments.length - 1);
       docFromPath = true;
     }
-    if (!segments.length) throw new Error('La ruta debe apuntar a una colección de Firestore.');
+    if (!segments.length)
+      throw new Error("La ruta debe apuntar a una colección de Firestore.");
     return {
       rawPath: rawPath,
       resolvedPath: normalized,
@@ -1847,7 +2404,7 @@ function bindDataAdmin(db, grupo, state){
     };
   }
 
-  async function fetchEntireCollection(colRef, pageSize){
+  async function fetchEntireCollection(colRef, pageSize) {
     var docs = [];
     var map = {};
     var lastDoc = null;
@@ -1855,18 +2412,19 @@ function bindDataAdmin(db, grupo, state){
     var guard = 0;
     var truncated = false;
     var limitPerPage = Number(pageSize) || DATA_COLLECTION_PAGE_SIZE;
-    if (!limitPerPage || limitPerPage < 1) limitPerPage = DATA_COLLECTION_PAGE_SIZE;
-    while (hasMore && guard < DATA_COLLECTION_MAX_PAGES){
+    if (!limitPerPage || limitPerPage < 1)
+      limitPerPage = DATA_COLLECTION_PAGE_SIZE;
+    while (hasMore && guard < DATA_COLLECTION_MAX_PAGES) {
       guard += 1;
       var constraints = [limit(limitPerPage)];
       if (lastDoc) constraints.push(startAfter(lastDoc));
       var q = query(colRef, ...constraints);
       var snap = await getDocs(q);
-      if (snap.empty){
+      if (snap.empty) {
         break;
       }
       var snapDocs = snap.docs || [];
-      for (var i = 0; i < snapDocs.length; i++){
+      for (var i = 0; i < snapDocs.length; i++) {
         var docSnap = snapDocs[i];
         var data = docSnap.data();
         docs.push({ id: docSnap.id, data: data });
@@ -1875,60 +2433,78 @@ function bindDataAdmin(db, grupo, state){
       lastDoc = snapDocs[snapDocs.length - 1] || null;
       hasMore = snap.size >= limitPerPage && !!lastDoc;
     }
-    if (hasMore){
+    if (hasMore) {
       truncated = true;
-      console.warn('pd-data:collection', 'Se alcanzó el máximo de páginas permitidas al cargar la colección.');
+      console.warn(
+        "pd-data:collection",
+        "Se alcanzó el máximo de páginas permitidas al cargar la colección."
+      );
     }
     return { docs: docs, map: map, truncated: truncated };
   }
 
-  async function loadCollection(rawPath, opts){
+  async function loadCollection(rawPath, opts) {
     opts = opts || {};
     var info;
     try {
-      info = resolvePath(rawPath, '');
+      info = resolvePath(rawPath, "");
     } catch (err) {
       setStatus(err && err.message ? err.message : String(err));
       return;
     }
-    if (info.docId){
+    if (info.docId) {
       if (docInput) docInput.value = info.docId;
-      await loadDocument(rawPath, info.docId, Object.assign({}, opts, { preferCache: true }));
+      await loadDocument(
+        rawPath,
+        info.docId,
+        Object.assign({}, opts, { preferCache: true })
+      );
       return;
     }
     var current = getActiveStore();
     current.lastInputPath = rawPath;
     current.currentCollectionSegments = info.collectionSegments.slice();
     current.currentPathResolved = info.resolvedPath;
-    current.lastQuery = { type: 'collection', path: rawPath, docId: '' };
+    current.lastQuery = { type: "collection", path: rawPath, docId: "" };
     setBusy(true);
     try {
       var args = info.collectionSegments.slice();
       args.unshift(getActiveDb());
       var colRef = collection.apply(null, args);
-      var result = await fetchEntireCollection(colRef, DATA_COLLECTION_PAGE_SIZE);
+      var result = await fetchEntireCollection(
+        colRef,
+        DATA_COLLECTION_PAGE_SIZE
+      );
       var docs = result.docs;
       var map = result.map;
       current.lastDocs = docs;
       current.docsMap = map;
       clearEditor();
       renderCollection();
-      if (!opts.silent){
-        var statusMsg = docs.length ? ('Se listaron ' + docs.length + ' documento(s).') : 'La colección está vacía.';
-        if (result.truncated){
-          statusMsg += ' Se mostraron los primeros ' + docs.length + ' documentos. Refina la ruta o filtra los datos para ver más.';
+      if (!opts.silent) {
+        var statusMsg = docs.length
+          ? "Se listaron " + docs.length + " documento(s)."
+          : "La colección está vacía.";
+        if (result.truncated) {
+          statusMsg +=
+            " Se mostraron los primeros " +
+            docs.length +
+            " documentos. Refina la ruta o filtra los datos para ver más.";
         }
         setStatus(statusMsg);
       }
     } catch (err) {
-      console.error('pd-data:collection', err);
-      setStatus('No se pudo obtener la colección: ' + (err && err.message ? err.message : err));
+      console.error("pd-data:collection", err);
+      setStatus(
+        "No se pudo obtener la colección: " +
+          (err && err.message ? err.message : err)
+      );
     } finally {
       setBusy(false);
     }
   }
 
-  async function loadDocument(rawPath, rawDocId, options){
+  async function loadDocument(rawPath, rawDocId, options) {
     options = options || {};
     var info;
     try {
@@ -1937,8 +2513,8 @@ function bindDataAdmin(db, grupo, state){
       setStatus(err && err.message ? err.message : String(err));
       return;
     }
-    if (!info.docId){
-      setStatus('Captura el ID del documento que deseas consultar.');
+    if (!info.docId) {
+      setStatus("Captura el ID del documento que deseas consultar.");
       if (docInput) docInput.focus();
       return;
     }
@@ -1947,12 +2523,19 @@ function bindDataAdmin(db, grupo, state){
     current.currentCollectionSegments = info.collectionSegments.slice();
     current.currentPathResolved = info.resolvedPath;
     current.selectedId = info.docId;
-    current.lastQuery = { type: 'document', path: rawPath, docId: info.docId };
+    current.lastQuery = { type: "document", path: rawPath, docId: info.docId };
     if (docInput) docInput.value = info.docId;
 
-    var cached = options && options.preferCache && current.docsMap ? current.docsMap[info.docId] : null;
-    if (cached && jsonInput){
-      try { jsonInput.value = JSON.stringify(cached, null, 2); } catch (_err) { jsonInput.value = ''; }
+    var cached =
+      options && options.preferCache && current.docsMap
+        ? current.docsMap[info.docId]
+        : null;
+    if (cached && jsonInput) {
+      try {
+        jsonInput.value = JSON.stringify(cached, null, 2);
+      } catch (_err) {
+        jsonInput.value = "";
+      }
       jsonInput.disabled = false;
       current.editorEnabled = true;
       syncInputs();
@@ -1970,15 +2553,26 @@ function bindDataAdmin(db, grupo, state){
       current.docsMap[info.docId] = data;
       current.docExists = snap.exists();
       current.editorEnabled = true;
-      if (jsonInput){
-        try { jsonInput.value = JSON.stringify(data, null, 2); } catch (_err2) { jsonInput.value = ''; }
+      if (jsonInput) {
+        try {
+          jsonInput.value = JSON.stringify(data, null, 2);
+        } catch (_err2) {
+          jsonInput.value = "";
+        }
         jsonInput.disabled = false;
       }
       syncInputs();
-      setStatus(snap.exists() ? 'Documento cargado correctamente.' : 'El documento no existe. Guarda para crearlo.');
+      setStatus(
+        snap.exists()
+          ? "Documento cargado correctamente."
+          : "El documento no existe. Guarda para crearlo."
+      );
     } catch (err) {
-      console.error('pd-data:document', err);
-      setStatus('No se pudo obtener el documento: ' + (err && err.message ? err.message : err));
+      console.error("pd-data:document", err);
+      setStatus(
+        "No se pudo obtener el documento: " +
+          (err && err.message ? err.message : err)
+      );
       var fallback = getActiveStore();
       fallback.editorEnabled = false;
       fallback.docExists = false;
@@ -1988,31 +2582,33 @@ function bindDataAdmin(db, grupo, state){
     }
   }
 
-  function refreshLastQuery(){
+  function refreshLastQuery() {
     var current = getActiveStore();
-    if (!current.lastQuery || !current.lastQuery.path){
-      setStatus('Primero realiza una consulta.');
+    if (!current.lastQuery || !current.lastQuery.path) {
+      setStatus("Primero realiza una consulta.");
       return;
     }
-    if (current.lastQuery.type === 'collection'){
+    if (current.lastQuery.type === "collection") {
       loadCollection(current.lastQuery.path, { silent: true });
     } else {
-      loadDocument(current.lastQuery.path, current.lastQuery.docId || '', { preferCache: false });
+      loadDocument(current.lastQuery.path, current.lastQuery.docId || "", {
+        preferCache: false,
+      });
     }
   }
 
-  if (form && !form.__pdBound){
+  if (form && !form.__pdBound) {
     form.__pdBound = true;
-    form.addEventListener('submit', function(ev){
+    form.addEventListener("submit", function (ev) {
       ev.preventDefault();
-      var rawPath = pathInput ? pathInput.value.trim() : '';
-      var rawDoc = docInput ? docInput.value.trim() : '';
-      if (!rawPath){
-        setStatus('Captura la ruta de la colección.');
+      var rawPath = pathInput ? pathInput.value.trim() : "";
+      var rawDoc = docInput ? docInput.value.trim() : "";
+      if (!rawPath) {
+        setStatus("Captura la ruta de la colección.");
         if (pathInput) pathInput.focus();
         return;
       }
-      if (rawDoc){
+      if (rawDoc) {
         loadDocument(rawPath, rawDoc);
       } else {
         loadCollection(rawPath);
@@ -2020,22 +2616,25 @@ function bindDataAdmin(db, grupo, state){
     });
   }
 
-  if (saveBtn && !saveBtn.__pdBound){
+  if (saveBtn && !saveBtn.__pdBound) {
     saveBtn.__pdBound = true;
-    saveBtn.addEventListener('click', async function(){
-      var rawPath = pathInput ? pathInput.value.trim() : '';
-      var rawDoc = docInput ? docInput.value.trim() : '';
-      if (!rawPath){
-        setStatus('Captura la ruta de la colección.');
+    saveBtn.addEventListener("click", async function () {
+      var rawPath = pathInput ? pathInput.value.trim() : "";
+      var rawDoc = docInput ? docInput.value.trim() : "";
+      if (!rawPath) {
+        setStatus("Captura la ruta de la colección.");
         if (pathInput) pathInput.focus();
         return;
       }
-      var payloadText = jsonInput ? jsonInput.value : '';
+      var payloadText = jsonInput ? jsonInput.value : "";
       var payload;
       try {
         payload = payloadText ? JSON.parse(payloadText) : {};
       } catch (err) {
-        alert('Revisa el JSON del documento: ' + (err && err.message ? err.message : err));
+        alert(
+          "Revisa el JSON del documento: " +
+            (err && err.message ? err.message : err)
+        );
         if (jsonInput) jsonInput.focus();
         return;
       }
@@ -2047,8 +2646,8 @@ function bindDataAdmin(db, grupo, state){
         return;
       }
       var segments = info.collectionSegments.slice();
-      if (!segments.length){
-        setStatus('La ruta debe apuntar a una colección de Firestore.');
+      if (!segments.length) {
+        setStatus("La ruta debe apuntar a una colección de Firestore.");
         return;
       }
       var current = getActiveStore();
@@ -2057,73 +2656,79 @@ function bindDataAdmin(db, grupo, state){
       setBusy(true);
       try {
         var docId = info.docId;
-        if (!docId){
+        if (!docId) {
           var colRef = collection.apply(null, baseArgs);
           var newRef = await addDoc(colRef, payload);
           docId = newRef.id;
           if (docInput) docInput.value = docId;
-          setStatus('Documento creado con ID ' + docId + '.');
+          setStatus("Documento creado con ID " + docId + ".");
         } else {
           var docArgs = baseArgs.slice();
           docArgs.push(docId);
           var ref = doc.apply(null, docArgs);
           await setDoc(ref, payload);
-          setStatus('Documento guardado correctamente.');
+          setStatus("Documento guardado correctamente.");
         }
         current.lastInputPath = rawPath;
         current.currentCollectionSegments = segments;
-        current.currentPathResolved = replaceDataPathTokens(rawPath, getActiveGroup());
+        current.currentPathResolved = replaceDataPathTokens(
+          rawPath,
+          getActiveGroup()
+        );
         current.selectedId = docId;
         current.docExists = true;
         current.editorEnabled = true;
         current.docsMap = current.docsMap || {};
         current.docsMap[docId] = payload;
-        current.lastQuery = { type: 'document', path: rawPath, docId: docId };
+        current.lastQuery = { type: "document", path: rawPath, docId: docId };
         if (jsonInput) jsonInput.disabled = false;
         syncInputs();
-        if (current.lastDocs && current.lastDocs.length){
+        if (current.lastDocs && current.lastDocs.length) {
           var updated = false;
-          for (var i=0; i<current.lastDocs.length; i++){
-            if (current.lastDocs[i].id === docId){
+          for (var i = 0; i < current.lastDocs.length; i++) {
+            if (current.lastDocs[i].id === docId) {
               current.lastDocs[i] = { id: docId, data: payload };
               updated = true;
               break;
             }
           }
-          if (!updated && current.lastDocs.length < 50){
+          if (!updated && current.lastDocs.length < 50) {
             current.lastDocs.push({ id: docId, data: payload });
           }
           renderCollection();
         }
       } catch (err) {
-        console.error('pd-data:save', err);
-        alert('No se pudo guardar el documento: ' + (err && err.message ? err.message : err));
+        console.error("pd-data:save", err);
+        alert(
+          "No se pudo guardar el documento: " +
+            (err && err.message ? err.message : err)
+        );
       } finally {
         setBusy(false);
       }
     });
   }
 
-  if (deleteBtn && !deleteBtn.__pdBound){
+  if (deleteBtn && !deleteBtn.__pdBound) {
     deleteBtn.__pdBound = true;
-    deleteBtn.addEventListener('click', async function(){
-      var rawPath = pathInput ? pathInput.value.trim() : '';
-      var rawDoc = docInput ? docInput.value.trim() : '';
-      if (!rawDoc){
-        alert('Selecciona el documento que deseas eliminar.');
+    deleteBtn.addEventListener("click", async function () {
+      var rawPath = pathInput ? pathInput.value.trim() : "";
+      var rawDoc = docInput ? docInput.value.trim() : "";
+      if (!rawDoc) {
+        alert("Selecciona el documento que deseas eliminar.");
         return;
       }
-      if (!confirm('¿Eliminar el documento seleccionado?')) return;
+      if (!confirm("¿Eliminar el documento seleccionado?")) return;
       var info;
       try {
-        info = resolvePath(rawPath || store.lastInputPath || '', rawDoc);
+        info = resolvePath(rawPath || store.lastInputPath || "", rawDoc);
       } catch (err) {
         setStatus(err && err.message ? err.message : String(err));
         return;
       }
       var segments = info.collectionSegments.slice();
-      if (!segments.length){
-        setStatus('La ruta es inválida.');
+      if (!segments.length) {
+        setStatus("La ruta es inválida.");
         return;
       }
       var docArgs = segments.slice();
@@ -2136,18 +2741,18 @@ function bindDataAdmin(db, grupo, state){
         if (current.docsMap) delete current.docsMap[info.docId];
         current.docExists = false;
         current.editorEnabled = false;
-        current.selectedId = '';
-        if (jsonInput) jsonInput.value = '';
-        if (docInput) docInput.value = '';
+        current.selectedId = "";
+        if (jsonInput) jsonInput.value = "";
+        if (docInput) docInput.value = "";
         syncInputs();
-        setStatus('Documento eliminado correctamente.');
-        if (current.lastDocs && current.lastDocs.length){
-          for (var i=current.lastDocs.length-1; i>=0; i--){
-            if (current.lastDocs[i].id === info.docId){
+        setStatus("Documento eliminado correctamente.");
+        if (current.lastDocs && current.lastDocs.length) {
+          for (var i = current.lastDocs.length - 1; i >= 0; i--) {
+            if (current.lastDocs[i].id === info.docId) {
               current.lastDocs.splice(i, 1);
             }
           }
-          if (current.lastDocs.length){
+          if (current.lastDocs.length) {
             renderCollection();
           } else {
             clearCollection();
@@ -2156,62 +2761,71 @@ function bindDataAdmin(db, grupo, state){
           clearCollection();
         }
       } catch (err) {
-        console.error('pd-data:delete', err);
-        alert('No se pudo eliminar el documento: ' + (err && err.message ? err.message : err));
+        console.error("pd-data:delete", err);
+        alert(
+          "No se pudo eliminar el documento: " +
+            (err && err.message ? err.message : err)
+        );
       } finally {
         setBusy(false);
       }
     });
   }
 
-  if (refreshBtn && !refreshBtn.__pdBound){
+  if (refreshBtn && !refreshBtn.__pdBound) {
     refreshBtn.__pdBound = true;
-    refreshBtn.addEventListener('click', function(){
+    refreshBtn.addEventListener("click", function () {
       refreshLastQuery();
     });
   }
 
-  if (newBtn && !newBtn.__pdBound){
+  if (newBtn && !newBtn.__pdBound) {
     newBtn.__pdBound = true;
-    newBtn.addEventListener('click', function(){
-      if (pathInput && !pathInput.value.trim()){
-        setStatus('Captura primero la ruta de la colección.');
+    newBtn.addEventListener("click", function () {
+      if (pathInput && !pathInput.value.trim()) {
+        setStatus("Captura primero la ruta de la colección.");
         pathInput.focus();
         return;
       }
       var current = getActiveStore();
       current.editorEnabled = true;
       current.docExists = false;
-      current.selectedId = '';
-      if (docInput) docInput.value = '';
-      if (jsonInput){
+      current.selectedId = "";
+      if (docInput) docInput.value = "";
+      if (jsonInput) {
         jsonInput.disabled = false;
-        jsonInput.value = '{\n  \n}';
+        jsonInput.value = "{\n  \n}";
         jsonInput.focus();
       }
       syncInputs();
-      setStatus('Define el contenido y un ID opcional, luego presiona "Guardar cambios".');
+      setStatus(
+        'Define el contenido y un ID opcional, luego presiona "Guardar cambios".'
+      );
     });
   }
 
-  if (resultsTbody && !resultsTbody.__pdBound){
+  if (resultsTbody && !resultsTbody.__pdBound) {
     resultsTbody.__pdBound = true;
-    resultsTbody.addEventListener('click', function(ev){
+    resultsTbody.addEventListener("click", function (ev) {
       var target = ev.target || ev.srcElement;
-      var btn = target && target.closest ? target.closest('[data-doc-open]') : null;
+      var btn =
+        target && target.closest ? target.closest("[data-doc-open]") : null;
       if (!btn) return;
-      var docId = btn.getAttribute('data-doc-open') || '';
-      if (!docId){
-        setStatus('El documento seleccionado no tiene ID.');
+      var docId = btn.getAttribute("data-doc-open") || "";
+      if (!docId) {
+        setStatus("El documento seleccionado no tiene ID.");
         return;
       }
       var current = getActiveStore();
-      var rawPath = current.lastQuery && current.lastQuery.type === 'collection'
-        ? current.lastQuery.path
-        : (pathInput ? pathInput.value.trim() : '');
-      if (!rawPath) rawPath = current.lastInputPath || '';
-      if (!rawPath){
-        setStatus('No se pudo determinar la ruta actual de la colección.');
+      var rawPath =
+        current.lastQuery && current.lastQuery.type === "collection"
+          ? current.lastQuery.path
+          : pathInput
+          ? pathInput.value.trim()
+          : "";
+      if (!rawPath) rawPath = current.lastInputPath || "";
+      if (!rawPath) {
+        setStatus("No se pudo determinar la ruta actual de la colección.");
         return;
       }
       if (docInput) docInput.value = docId;
@@ -2219,12 +2833,12 @@ function bindDataAdmin(db, grupo, state){
     });
   }
 
-  for (var si=0; si<shortcuts.length; si++){
-    (function(btn){
+  for (var si = 0; si < shortcuts.length; si++) {
+    (function (btn) {
       if (!btn || btn.__pdBound) return;
       btn.__pdBound = true;
-      btn.addEventListener('click', function(){
-        var raw = btn.getAttribute('data-data-path') || '';
+      btn.addEventListener("click", function () {
+        var raw = btn.getAttribute("data-data-path") || "";
         if (!raw) return;
         if (pathInput) pathInput.value = raw;
         store.lastInputPath = raw;
@@ -2235,78 +2849,79 @@ function bindDataAdmin(db, grupo, state){
   }
 }
 
-function readStudentFormValues(){
-  var nameInput = $id('pd-student-name');
-  var emailInput = $id('pd-student-email');
-  var matriculaInput = $id('pd-student-matricula');
+function readStudentFormValues() {
+  var nameInput = $id("pd-student-name");
+  var emailInput = $id("pd-student-email");
+  var matriculaInput = $id("pd-student-matricula");
   return {
-    displayName: nameInput ? nameInput.value.trim() : '',
-    email: emailInput ? emailInput.value.trim() : '',
-    matricula: matriculaInput ? matriculaInput.value.trim() : '',
+    displayName: nameInput ? nameInput.value.trim() : "",
+    email: emailInput ? emailInput.value.trim() : "",
+    matricula: matriculaInput ? matriculaInput.value.trim() : "",
   };
 }
 
-function setStudentFormDisabled(form, disabled){
+function setStudentFormDisabled(form, disabled) {
   if (!form) return;
-  var controls = form.querySelectorAll('input, button, textarea, select');
-  for (var i=0; i<controls.length; i++){
+  var controls = form.querySelectorAll("input, button, textarea, select");
+  for (var i = 0; i < controls.length; i++) {
     controls[i].disabled = !!disabled;
   }
-  if (disabled){
-    form.setAttribute('aria-busy', 'true');
+  if (disabled) {
+    form.setAttribute("aria-busy", "true");
   } else {
-    form.removeAttribute('aria-busy');
+    form.removeAttribute("aria-busy");
   }
 }
 
-function setStudentFormMode(form, state, mode, student){
+function setStudentFormMode(form, state, mode, student) {
   if (!form) return;
-  var title = $id('pd-student-form-title');
-  var submit = $id('pd-student-form-submit');
-  var cancel = $id('pd-student-form-cancel');
-  var nameInput = $id('pd-student-name');
-  var emailInput = $id('pd-student-email');
-  var matriculaInput = $id('pd-student-matricula');
-  if (mode === 'edit' && student){
-    var uid = student.uid || '';
-    form.dataset.mode = 'edit';
+  var title = $id("pd-student-form-title");
+  var submit = $id("pd-student-form-submit");
+  var cancel = $id("pd-student-form-cancel");
+  var nameInput = $id("pd-student-name");
+  var emailInput = $id("pd-student-email");
+  var matriculaInput = $id("pd-student-matricula");
+  if (mode === "edit" && student) {
+    var uid = student.uid || "";
+    form.dataset.mode = "edit";
     form.dataset.id = uid;
-    if (title) title.textContent = 'Editar estudiante';
-    if (submit) submit.textContent = 'Guardar cambios';
+    if (title) title.textContent = "Editar estudiante";
+    if (submit) submit.textContent = "Guardar cambios";
     if (cancel) cancel.hidden = false;
-    if (nameInput) nameInput.value = student.displayName || student.nombre || '';
-    if (emailInput) emailInput.value = student.email || '';
-    if (matriculaInput) matriculaInput.value = student.matricula || '';
+    if (nameInput)
+      nameInput.value = student.displayName || student.nombre || "";
+    if (emailInput) emailInput.value = student.email || "";
+    if (matriculaInput) matriculaInput.value = student.matricula || "";
     state.editingStudentId = uid;
   } else {
-    form.dataset.mode = 'create';
-    form.dataset.id = '';
-    if (title) title.textContent = 'Agregar estudiante';
-    if (submit) submit.textContent = 'Agregar estudiante';
+    form.dataset.mode = "create";
+    form.dataset.id = "";
+    if (title) title.textContent = "Agregar estudiante";
+    if (submit) submit.textContent = "Agregar estudiante";
     if (cancel) cancel.hidden = true;
-    if (nameInput) nameInput.value = '';
-    if (emailInput) emailInput.value = '';
-    if (matriculaInput) matriculaInput.value = '';
+    if (nameInput) nameInput.value = "";
+    if (emailInput) emailInput.value = "";
+    if (matriculaInput) matriculaInput.value = "";
     state.editingStudentId = null;
   }
 }
 
-function bindStudentsManager(db, grupo, state){
-  var form = $id('pd-student-form');
-  var cancelBtn = $id('pd-student-form-cancel');
-  if (form && !form.__pdBound){
+function bindStudentsManager(db, grupo, state) {
+  var form = $id("pd-student-form");
+  var cancelBtn = $id("pd-student-form-cancel");
+  if (form && !form.__pdBound) {
     form.__pdBound = true;
-    setStudentFormMode(form, state, 'create');
-    form.addEventListener('submit', async function(ev){
+    setStudentFormMode(form, state, "create");
+    form.addEventListener("submit", async function (ev) {
       ev.preventDefault();
       if (form.__pdBusy) return;
       var values = readStudentFormValues();
-      if (!values.displayName){
-        alert('Captura el nombre del estudiante.');
+      if (!values.displayName) {
+        alert("Captura el nombre del estudiante.");
         return;
       }
-      if (!values.email){
-        alert('Captura el correo electrónico del estudiante.');
+      if (!values.email) {
+        alert("Captura el correo electrónico del estudiante.");
         return;
       }
       form.__pdBusy = true;
@@ -2317,66 +2932,76 @@ function bindStudentsManager(db, grupo, state){
           email: values.email,
           matricula: values.matricula || null,
         };
-        var mode = form.dataset.mode || 'create';
-        if (mode === 'edit' && form.dataset.id){
+        var mode = form.dataset.mode || "create";
+        if (mode === "edit" && form.dataset.id) {
           await updateGroupStudent(db, grupo, form.dataset.id, payload);
         } else {
           var newId = await createGroupStudent(db, grupo, payload);
-          if (newId && !state.metrics[newId]){
+          if (newId && !state.metrics[newId]) {
             state.metrics[newId] = { u1: 0, u2: 0, u3: 0, finalPct: 0 };
           }
         }
         await reloadStudents(db, grupo, state);
         updateSyncStamp();
-        setStudentFormMode(form, state, 'create');
+        setStudentFormMode(form, state, "create");
       } catch (err) {
-        console.error('No se pudo guardar el estudiante', err);
-        alert('No se pudo guardar el estudiante: ' + (err && err.message ? err.message : err));
+        console.error("No se pudo guardar el estudiante", err);
+        alert(
+          "No se pudo guardar el estudiante: " +
+            (err && err.message ? err.message : err)
+        );
       } finally {
         form.__pdBusy = false;
         setStudentFormDisabled(form, false);
       }
     });
-    if (cancelBtn && !cancelBtn.__pdBound){
+    if (cancelBtn && !cancelBtn.__pdBound) {
       cancelBtn.__pdBound = true;
-      cancelBtn.addEventListener('click', function(){
-        setStudentFormMode(form, state, 'create');
+      cancelBtn.addEventListener("click", function () {
+        setStudentFormMode(form, state, "create");
       });
     }
   }
 
-  var tbody = $id('pd-students-tbody');
-  if (tbody && !tbody.__pdStudentsBound){
+  var tbody = $id("pd-students-tbody");
+  if (tbody && !tbody.__pdStudentsBound) {
     tbody.__pdStudentsBound = true;
-    tbody.addEventListener('click', async function(ev){
+    tbody.addEventListener("click", async function (ev) {
       var btn = ev.target;
       if (!btn || !btn.classList) return;
-      if (btn.classList.contains('pd-student-edit')){
-        var tr = btn.closest('tr[data-id]');
+      if (btn.classList.contains("pd-student-edit")) {
+        var tr = btn.closest("tr[data-id]");
         if (!tr) return;
-        var id = tr.getAttribute('data-id') || '';
+        var id = tr.getAttribute("data-id") || "";
         if (!id) return;
         var student = state.studentIndex[id] || null;
-        if (!student){
-          for (var i=0;i<state.students.length;i++){
-            if (state.students[i] && state.students[i].uid === id){
+        if (!student) {
+          for (var i = 0; i < state.students.length; i++) {
+            if (state.students[i] && state.students[i].uid === id) {
               student = state.students[i];
               break;
             }
           }
         }
         if (!student) return;
-        setStudentFormMode(form, state, 'edit', student);
-        var nameInput = $id('pd-student-name');
+        setStudentFormMode(form, state, "edit", student);
+        var nameInput = $id("pd-student-name");
         if (nameInput) nameInput.focus();
-      } else if (btn.classList.contains('pd-student-delete')){
-        var trDel = btn.closest('tr[data-id]');
+      } else if (btn.classList.contains("pd-student-delete")) {
+        var trDel = btn.closest("tr[data-id]");
         if (!trDel) return;
-        var delId = trDel.getAttribute('data-id') || '';
+        var delId = trDel.getAttribute("data-id") || "";
         if (!delId) return;
         var studentDel = state.studentIndex[delId] || null;
-        var label = studentDel ? (studentDel.displayName || studentDel.email || 'este estudiante') : 'este estudiante';
-        if (!confirm('¿Eliminar a ' + label + '? Esta acción no se puede deshacer.')) return;
+        var label = studentDel
+          ? studentDel.displayName || studentDel.email || "este estudiante"
+          : "este estudiante";
+        if (
+          !confirm(
+            "¿Eliminar a " + label + "? Esta acción no se puede deshacer."
+          )
+        )
+          return;
         var prevDisabled = btn.disabled;
         btn.disabled = true;
         try {
@@ -2384,12 +3009,15 @@ function bindStudentsManager(db, grupo, state){
           delete state.metrics[delId];
           await reloadStudents(db, grupo, state);
           updateSyncStamp();
-          if (state.editingStudentId === delId){
-            setStudentFormMode(form, state, 'create');
+          if (state.editingStudentId === delId) {
+            setStudentFormMode(form, state, "create");
           }
         } catch (err) {
-          console.error('No se pudo eliminar al estudiante', err);
-          alert('No se pudo eliminar al estudiante: ' + (err && err.message ? err.message : err));
+          console.error("No se pudo eliminar al estudiante", err);
+          alert(
+            "No se pudo eliminar al estudiante: " +
+              (err && err.message ? err.message : err)
+          );
         } finally {
           btn.disabled = prevDisabled;
         }
@@ -2398,7 +3026,7 @@ function bindStudentsManager(db, grupo, state){
   }
 }
 
-async function loadDataForGroup(db, grupo, state){
+async function loadDataForGroup(db, grupo, state) {
   if (state) state.groupId = grupo;
   markStudentFallbackActive(false);
   state.isUsingStudentFallback = false;
@@ -2407,37 +3035,46 @@ async function loadDataForGroup(db, grupo, state){
   try {
     state.students = await fetchStudents(db, grupo);
   } catch (err) {
-    console.error('No se pudieron obtener estudiantes desde Firebase', err);
+    console.error("No se pudieron obtener estudiantes desde Firebase", err);
     state.students = [];
   }
 
-  if (!Array.isArray(state.students) || !state.students.length){
+  if (!Array.isArray(state.students) || !state.students.length) {
     var fallback = await loadStudentFallbackData();
     state.students = fallback.students;
     state.metrics = fallback.metrics;
     state.isUsingStudentFallback = true;
     markStudentFallbackActive(true);
-    console.warn('Usando base de datos local de estudiantes (sin conexión a Firebase).');
+    console.warn(
+      "Usando base de datos local de estudiantes (sin conexión a Firebase)."
+    );
   } else {
     state.metrics = {};
   }
 
-  if (!state.isUsingStudentFallback){
+  if (!state.isUsingStudentFallback) {
     var metrics = state.metrics;
-    var CONC=5, idx=0;
-    async function nextBatch(){
-      var batch=[];
-      for (var k=0; k<CONC && idx<state.students.length; k++, idx++){
-        (function(s){
-          batch.push((async function(){
-            try {
-              var items = await fetchCalifItems(db, grupo, s.uid);
-              metrics[s.uid] = computeMetricsFromItems(items);
-            } catch (err) {
-              console.error('No se pudieron calcular métricas para', s.uid, err);
-              metrics[s.uid] = { u1:0, u2:0, u3:0, finalPct:0 };
-            }
-          })());
+    var CONC = 5,
+      idx = 0;
+    async function nextBatch() {
+      var batch = [];
+      for (var k = 0; k < CONC && idx < state.students.length; k++, idx++) {
+        (function (s) {
+          batch.push(
+            (async function () {
+              try {
+                var items = await fetchCalifItems(db, grupo, s.uid);
+                metrics[s.uid] = computeMetricsFromItems(items);
+              } catch (err) {
+                console.error(
+                  "No se pudieron calcular métricas para",
+                  s.uid,
+                  err
+                );
+                metrics[s.uid] = { u1: 0, u2: 0, u3: 0, finalPct: 0 };
+              }
+            })()
+          );
         })(state.students[idx]);
       }
       if (!batch.length) return;
@@ -2466,8 +3103,8 @@ async function loadDataForGroup(db, grupo, state){
   updateSyncStamp();
 
   var rub = await getRubric(db, grupo);
-  if ($id('pd-rubric-text')) $id('pd-rubric-text').value = rub && rub.content ? rub.content : '';
-
+  if ($id("pd-rubric-text"))
+    $id("pd-rubric-text").value = rub && rub.content ? rub.content : "";
 
   bindRubricSave(db, grupo);
   bindDeliverableForm(db, grupo, state);
@@ -2481,18 +3118,21 @@ async function loadDataForGroup(db, grupo, state){
   await populateAssignments(db, grupo);
 }
 
-
 // ===== Main =====
-async function main(){
+async function main() {
   await ready();
   initializeFileViewer();
   initFirebase();
   var db = getDb();
 
-  var root = $id('paneldocente-root') || document.body;
+  var root = $id("paneldocente-root") || document.body;
   var params = new URLSearchParams(location.search);
   var dataset = root && root.dataset ? root.dataset : {};
-  var grupo = (dataset && dataset.grupo ? dataset.grupo : (params.get('grupo') || 'calidad-2025')).trim();
+  var grupo = (
+    dataset && dataset.grupo
+      ? dataset.grupo
+      : params.get("grupo") || "calidad-2025"
+  ).trim();
 
   var state = {
     students: [],
@@ -2519,53 +3159,61 @@ async function main(){
   bindUploadDetail(state);
 
   setPanelLocked(root, true);
-  showStatusBanner('Preparando panel…', 'Esperando autenticación.', 'info');
+  showStatusBanner("Preparando panel…", "Esperando autenticación.", "info");
 
-  onAuth(function(user){
-    handleAuthChange(user).catch(function(err){ console.error(err); });
+  onAuth(function (user) {
+    handleAuthChange(user).catch(function (err) {
+      console.error(err);
+    });
   });
 
-  async function handleAuthChange(user){
+  async function handleAuthChange(user) {
     var info = await computeTeacherState(user);
     var body = document.body;
     if (body) {
-      body.classList.toggle('teacher-yes', !!info.isTeacher);
-      body.classList.toggle('teacher-no', !info.isTeacher);
+      body.classList.toggle("teacher-yes", !!info.isTeacher);
+      body.classList.toggle("teacher-no", !info.isTeacher);
     }
 
-
-    if (!info.isTeacher){
+    if (!info.isTeacher) {
       hasLoaded = false;
       lastLoadedUid = null;
-      if (state.unsubscribeUploads){ state.unsubscribeUploads(); state.unsubscribeUploads = null; }
+      if (state.unsubscribeUploads) {
+        state.unsubscribeUploads();
+        state.unsubscribeUploads = null;
+      }
       state.currentTeacher = null;
       clearUploadsState(state);
       setPanelLocked(root, true);
       showStatusBanner(
-        user ? 'Sin privilegios de docente' : 'Autenticación requerida',
+        user ? "Sin privilegios de docente" : "Autenticación requerida",
         user
-          ? 'Tu cuenta no tiene permisos para ver este panel. Solicita acceso al coordinador.'
-          : 'Inicia sesión con tu cuenta institucional de docente para revisar este panel.',
-        user ? 'warning' : 'info'
+          ? "Tu cuenta no tiene permisos para ver este panel. Solicita acceso al coordinador."
+          : "Inicia sesión con tu cuenta institucional de docente para revisar este panel.",
+        user ? "warning" : "info"
       );
       return;
     }
 
     var uid = user && user.uid ? user.uid : null;
     state.currentTeacher = {
-      uid: uid || '',
-      email: user && user.email ? user.email : '',
-      displayName: user && user.displayName ? user.displayName : '',
+      uid: uid || "",
+      email: user && user.email ? user.email : "",
+      displayName: user && user.displayName ? user.displayName : "",
     };
 
-    if (!state.unsubscribeUploads){
+    if (!state.unsubscribeUploads) {
       state.unsubscribeUploads = observeAllStudentUploads(
-        function(items){ handleUploadsSnapshot(state, items); },
-        function(err){ console.error('observeAllStudentUploads:error', err); }
+        function (items) {
+          handleUploadsSnapshot(state, items);
+        },
+        function (err) {
+          console.error("observeAllStudentUploads:error", err);
+        }
       );
     }
 
-    if (hasLoaded && lastLoadedUid === uid){
+    if (hasLoaded && lastLoadedUid === uid) {
       hideStatusBanner();
       setPanelLocked(root, false);
       return;
@@ -2573,7 +3221,11 @@ async function main(){
 
     if (isLoading) return;
     isLoading = true;
-    showStatusBanner('Cargando información del grupo…', 'Obteniendo datos desde Firebase.', 'info');
+    showStatusBanner(
+      "Cargando información del grupo…",
+      "Obteniendo datos desde Firebase.",
+      "info"
+    );
     try {
       await loadDataForGroup(db, grupo, state);
       hideStatusBanner();
@@ -2581,18 +3233,17 @@ async function main(){
       hasLoaded = true;
       lastLoadedUid = uid;
     } catch (err) {
-      console.error('No se pudo cargar la información del panel', err);
+      console.error("No se pudo cargar la información del panel", err);
       showStatusBanner(
-        'No se pudieron cargar los datos',
-        'Verifica tu conexión o permisos e intenta nuevamente.',
-        'error'
+        "No se pudieron cargar los datos",
+        "Verifica tu conexión o permisos e intenta nuevamente.",
+        "error"
       );
       setPanelLocked(root, true);
       hasLoaded = false;
       lastLoadedUid = null;
     } finally {
       isLoading = false;
-
     }
   }
 }
