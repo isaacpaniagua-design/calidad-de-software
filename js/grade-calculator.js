@@ -83,10 +83,11 @@ export function calculateFinalGrade(grades) {
   const pf = grades.projectFinal || 0;
 
   const finalGrade =
-    u1 * FINAL_GRADE_WEIGHTS.unit1 * 10 +
-    u2 * FINAL_GRADE_WEIGHTS.unit2 * 10 +
-    u3 * FINAL_GRADE_WEIGHTS.unit3 * 10 +
-    pf * FINAL_GRADE_WEIGHTS.projectFinal;
+    (u1 * FINAL_GRADE_WEIGHTS.unit1 +
+      u2 * FINAL_GRADE_WEIGHTS.unit2 +
+      u3 * FINAL_GRADE_WEIGHTS.unit3 +
+      pf * FINAL_GRADE_WEIGHTS.projectFinal) *
+    10;
 
   return Math.round(finalGrade);
 }
