@@ -221,7 +221,7 @@ export function getDb() {
   if (!db) initFirebase();
   return db;
 }
--------------
+
 export function getStorageInstance() {
   if (!useStorage) return null;
   if (!storage) initFirebase();
@@ -231,9 +231,7 @@ export function getStorageInstance() {
 export async function signInWithGooglePotros() {
   const auth = getAuthInstance();
   const provider = new GoogleAuthProvider();
-  // Sugerencia visual del dominio (no es seguridad)
   provider.setCustomParameters({ hd: allowedEmailDomain });
-  // Permiso para subir a Google Drive (archivos creados por la app)
   try {
     provider.addScope("https://www.googleapis.com/auth/drive.file");
   } catch (_) {}
@@ -269,7 +267,6 @@ export async function signInWithGooglePotros() {
 
 export async function getDriveAccessTokenInteractive() {
   if (driveAccessToken) return driveAccessToken;
-  // Intentar re-solicitar el token con alcance de Drive
   const auth = getAuthInstance();
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ hd: allowedEmailDomain });
@@ -290,21 +287,11 @@ export async function signOutCurrent() {
   driveAccessToken = null;
 }
 
-// --- Autenticación con correo y contraseña ---
-// Permite iniciar sesión con credenciales de email/password previamente
-// registradas en Firebase Authentication. No realiza ninguna validación de
-// dominio; se espera que el rol de docente o estudiante se determine después
-// mediante isTeacherEmail/isTeacherByDoc.
 export async function signInWithEmailPassword(email, password) {
   const auth = getAuthInstance();
   return signInWithEmailAndPassword(auth, email, password);
 }
 
-// --- Autenticación con Google sin restricción de dominio ---
-// Permite iniciar sesión con cualquier cuenta de Google. Útil para pruebas con
-// correos que no pertenecen al dominio institucional. Tras iniciar sesión, el
-// rol de docente o estudiante se determinará mediante isTeacherEmail o
-// isTeacherByDoc. No solicita permisos de Drive.
 export async function signInWithGoogleOpen() {
   const auth = getAuthInstance();
   const provider = new GoogleAuthProvider();
@@ -317,7 +304,6 @@ export function onAuth(cb) {
   return onAuthStateChanged(auth, cb);
 }
 
-// ====== Roles ======
 export function isTeacherEmail(email) {
   const normalized = normalizeEmail(email);
   if (!normalized) return false;
@@ -348,7 +334,6 @@ export async function ensureTeacherDocForUser({ uid, email, displayName }) {
     }
     await ensureTeacherAllowlistLoaded();
     if (!isTeacherEmail(lower)) {
-      // No intentamos crear el documento si el correo no tiene privilegios de docente.
       return false;
     }
     await setDoc(ref, {
@@ -363,7 +348,6 @@ export async function ensureTeacherDocForUser({ uid, email, displayName }) {
 }
 
 function todayKey() {
-  // YYYY-MM-DD en hora local
   const d = new Date();
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -390,7 +374,7 @@ export async function saveTodayAttendance({
   }
 
   const date = todayKey();
-  const attendanceId = `${date}_${normalizedUid}`; // evita duplicados por dia-usuario
+  const attendanceId = `${date}_${normalizedUid}`;
   const ref = doc(collection(db, "attendances"), attendanceId);
 
   const existing = await getDoc(ref);
@@ -504,11 +488,6 @@ export function subscribeTodayAttendanceByUser(email, cb, onError) {
   );
 }
 
-/**
- * Busca un documento de estudiante en la colección 'students' por su email.
- * @param {string} email El email del estudiante a buscar.
- * @returns {Promise<{id: string, data: object}|null>} El ID y datos del estudiante, o null si no se encuentra.
- */
 export async function findStudentByEmail(email) {
   if (!email) return null;
   const db = getDb();
@@ -519,7 +498,7 @@ export async function findStudentByEmail(email) {
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
       const studentDoc = querySnapshot.docs[0];
-      return { id: studentDoc.id, data: studentDoc.data() }; // Devolvemos el ID del documento (ej. "00000099876")
+      return { id: studentDoc.id, data: studentDoc.data() };
     }
     return null;
   } catch (error) {
@@ -529,7 +508,6 @@ export async function findStudentByEmail(email) {
 }
 export async function fetchAttendancesByDateRange(startDateStr, endDateStr) {
   const db = getDb();
-  // startDateStr, endDateStr expected in 'YYYY-MM-DD'
   const qy = query(
     collection(db, "attendances"),
     where("date", ">=", startDateStr),
@@ -562,6 +540,30 @@ export async function fetchAttendancesByDateRangeByUser(
   return items.filter(
     (item) => (item.email || "").toLowerCase() === lowerEmail
   );
+}
+
+export async function findStudentByUid(uid) {
+  if (!uid) {
+    console.error("UID no proporcionado para la búsqueda de estudiante.");
+    return null;
+  }
+  const db = getDb();
+  const studentsRef = collection(db, "students");
+  const q = query(studentsRef, where("authUid", "==", uid), limit(1));
+
+  try {
+    const querySnapshot = await getDocs(q);
+    if (querySnapshot.empty) {
+      console.warn(`No se encontró un estudiante con el authUid: ${uid}`);
+      return null;
+    }
+    
+    const studentDoc = querySnapshot.docs[0];
+    return { id: studentDoc.id, ...studentDoc.data() };
+  } catch (error) {
+    console.error("Error buscando estudiante por UID:", error);
+    return null;
+  }
 }
 
 // ====== Calificaciones (Grades) ======
@@ -600,66 +602,52 @@ export function subscribeGrades(cb) {
     cb(items);
   });
 }
-/**
- * Se suscribe para obtener las calificaciones de UN SOLO estudiante en tiempo real.
- * @param {string} studentUid - El UID del estudiante logueado.
- * @param {function} cb - El callback que se ejecutará con los datos de las calificaciones.
- * @returns {import("firebase/firestore").Unsubscribe} - La función para cancelar la suscripción.
- */
-/**
- * Se suscribe en tiempo real al documento de calificaciones de un estudiante.
- * @param {string} studentId - El ID del DOCUMENTO del estudiante.
- * @param {function} callback - Función que se ejecuta con los datos de las calificaciones.
- * @returns {function} - Función para cancelar la suscripción.
- */
-export function subscribeMyGrades(studentId, callback) {
-  if (!studentId) {
-    console.error("subscribeMyGrades: Se requiere studentId.");
-    return () => {}; // Devuelve una función vacía si no hay ID
-  }
-  const gradeDocRef = doc(db, 'grades', studentId);
+
+export function subscribeMyGrades(userUid, callback) {
+  const db = getDb();
+  const gradesQuery = query(collection(db, 'grades'), where('authUid', '==', userUid), limit(1));
   
-  const unsubscribe = onSnapshot(gradeDocRef, (docSnap) => {
-    if (docSnap.exists()) {
-      // El callback recibe un array para mantener la consistencia con el código anterior
-      callback([{ id: docSnap.id, ...docSnap.data() }]);
-    } else {
-      console.warn(`No se encontró el documento de calificaciones para el estudiante: ${studentId}`);
-      callback([]); // Envía un array vacío si no hay datos
+  return onSnapshot(gradesQuery, (snapshot) => {
+    if (snapshot.empty) {
+      console.warn(`No se encontraron calificaciones para el usuario con UID: ${userUid}`);
+      callback([]);
+      return;
     }
+    const gradesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    callback(gradesData);
   }, (error) => {
     console.error("Error al obtener mis calificaciones:", error);
-    callback([]); // Manejo de errores
+    callback([]);
+  });
+}
+
+export function subscribeMyActivities(userUid, callback) {
+  const db = getDb();
+  const gradesQuery = query(collection(db, 'grades'), where('authUid', '==', userUid), limit(1));
+
+  const unsubscribe = onSnapshot(gradesQuery, (gradeSnapshot) => {
+      if (gradeSnapshot.empty) {
+          callback([]);
+          return;
+      }
+      
+      const gradeDocId = gradeSnapshot.docs[0].id;
+      const activitiesColRef = collection(db, 'grades', gradeDocId, 'activities');
+      
+      onSnapshot(activitiesColRef, (activitiesSnapshot) => {
+          const activities = activitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          callback(activities);
+      }, (error) => {
+          console.error("Error al obtener mis actividades:", error);
+          callback([]);
+      });
+
+  }, (error) => {
+      console.error("Error al buscar documento de calificaciones para actividades:", error);
+      callback([]);
   });
 
   return unsubscribe;
-}
-export async function upsertStudentGrades(studentId, payload) {
-  const db = getDb();
-  const ref = doc(collection(db, "grades"), studentId);
-  const existing = await getDoc(ref);
-  const normalized = { ...(payload || {}) };
-
-  if (Object.prototype.hasOwnProperty.call(normalized, 'email')) {
-    const rawEmail = normalized.email;
-    const trimmedEmail = typeof rawEmail === 'string' ? rawEmail.trim() : rawEmail;
-    if (typeof trimmedEmail === 'string') {
-      normalized.email = trimmedEmail || null;
-      normalized.emailLower = trimmedEmail ? trimmedEmail.toLowerCase() : null;
-    } else {
-      normalized.email = trimmedEmail ?? null;
-      normalized.emailLower = null;
-    }
-  }
-
-  if (Object.prototype.hasOwnProperty.call(normalized, 'uid')) {
-    const trimmedUid = normalized.uid ? String(normalized.uid).trim() : '';
-    normalized.uid = trimmedUid || null;
-  }
-
-  const base = { ...normalized, updatedAt: serverTimestamp() };
-  if (!existing.exists()) base.createdAt = serverTimestamp();
-  await setDoc(ref, base, { merge: true });
 }
 
 export async function updateStudentGradePartial(studentId, path, value) {
@@ -859,7 +847,6 @@ export async function uploadMaterialToDrive({
     uploadResponse?.webContentLink ||
     (id ? `https://drive.google.com/file/d/${id}/view?usp=sharing` : null);
 
-  // Intentar hacer el archivo accesible con enlace
   if (id) {
     try {
       await fetch(
@@ -932,12 +919,10 @@ export async function incrementMaterialDownloads(id) {
   await updateDoc(refDoc, { downloads: increment(1) });
 }
 
-// ====== Grades range fetch by updatedAt ======
 export async function fetchGradesByDateRange(startISO, endISO) {
   const db = getDb();
   const start = new Date(startISO);
   const end = new Date(endISO);
-  // Ensure end includes the full day
   end.setHours(23, 59, 59, 999);
   const qy = query(
     collection(db, "grades"),
@@ -955,9 +940,6 @@ export async function fetchGradesByDateRange(startISO, endISO) {
 }
 
 // ====== Foro (Topics + Replies) ======
-// Collection: forum_topics (doc fields: title, category, content, authorName, authorEmail, createdAt, updatedAt)
-// Subcollection per topic: forum_topics/{topicId}/replies (doc fields: text, authorName, authorEmail, createdAt)
-
 export function subscribeForumTopics(cb, onError) {
   const db = getDb();
   const qy = query(
@@ -991,7 +973,7 @@ export async function createForumTopic({
   authorEmail,
 }) {
   const db = getDb();
-  if (!title || !content) throw new Error("T�tulo y contenido son requeridos");
+  if (!title || !content) throw new Error("Título y contenido son requeridos");
   const docRef = await addDoc(collection(db, "forum_topics"), {
     title,
     category: category || "General",
@@ -1020,7 +1002,6 @@ export async function updateForumTopic(topicId, updates) {
 
 export async function deleteForumTopic(topicId) {
   const db = getDb();
-  // Delete replies first (best-effort)
   try {
     const repliesCol = collection(db, "forum_topics", topicId, "replies");
     const snap = await getDocs(repliesCol);
@@ -1028,7 +1009,6 @@ export async function deleteForumTopic(topicId) {
     snap.forEach((r) => dels.push(deleteDoc(r.ref)));
     await Promise.allSettled(dels);
   } catch (_) {}
-  // Then delete topic
   const ref = doc(collection(db, "forum_topics"), topicId);
   await deleteDoc(ref);
 }
@@ -1335,133 +1315,15 @@ export async function fetchForumReply(topicId, replyId) {
   }
 }
 
-
-
 // --- MÉTODOS PARA PLANES DE PRUEBA ---
-
-/**
- * Guarda (crea o actualiza) un plan de pruebas en Firestore.
- * @param {string} planId El ID único del documento (del campo 'identificador').
- * @param {object} planData Objeto con todos los datos del formulario.
- * @returns {Promise<void>}
- */
 export async function saveTestPlan(planId, planData) {
   const db = getDb();
   const planRef = doc(db, "planesDePrueba", planId);
-  // Añadimos un timestamp para ordenar y saber cuándo se modificó por última vez
   const dataToSave = {
     ...planData,
     lastModified: serverTimestamp() 
   };
-  return setDoc(planRef, dataToSave, { merge: true }); // merge:true es útil si quieres actualizar sin sobreescribir todo
+  return setDoc(planRef, dataToSave, { merge: true });
 }
-
-
 
 export { app };
-
-export async function findStudentByUid(uid) {
-  if (!uid) return null;
-  const db = getDb();
-  try {
-    const q = query(collection(db, "students"), where("authUid", "==", uid), limit(1));
-    const querySnapshot = await getDocs(q);
-    if (querySnapshot.empty) {
-      return null;
-    }
-    const studentDoc = querySnapshot.docs[0];
-    return { id: studentDoc.id, ...studentDoc.data() };
-  } catch (error) {
-    console.error("Error buscando estudiante por UID:", error);
-    return null;
-  }
-}
-
-/**
- * Busca un perfil de docente usando el UID de autenticación.
- * @param {string} uid - El UID del usuario de Firebase Authentication.
- * @returns {Promise<object|null>} El perfil del docente o null si no se encuentra.
- */
-export async function findTeacherByUid(uid) {
-  if (!uid) return false;
-  const db = getDb();
-  try {
-    const ref = doc(db, "teachers", uid); // Asume que el ID del documento es el UID
-    const snap = await getDoc(ref);
-    return snap.exists() ? { id: snap.id, ...snap.data() } : null;
-  } catch (error) {
-    console.error("Error buscando docente por UID:", error);
-    return false;
-  }
-}
-
-
-// --- SUSCRIPCIONES EN TIEMPO REAL (CORREGIDAS) ---
-
-/**
- * Para la vista del DOCENTE: Se suscribe a las calificaciones de TODOS los estudiantes.
- */
-export function subscribeGrades(callback) {
-  const db = getDb();
-  const q = query(collection(db, "grades"), orderBy("name"));
-  return onSnapshot(q, (snap) => {
-    const items = snap.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
-    callback(items);
-  }, (error) => {
-    console.error("Error al obtener calificaciones generales:", error);
-    callback([]);
-  });
-}
-
-/**
- * Para la vista del ESTUDIANTE: Se suscribe a las calificaciones del usuario actual.
- */
-export function subscribeMyGrades(userUid, callback) {
-  const db = getDb();
-  const gradesQuery = query(collection(db, 'grades'), where('authUid', '==', userUid), limit(1));
-  
-  return onSnapshot(gradesQuery, (snapshot) => {
-    if (snapshot.empty) {
-      console.warn(`No se encontraron calificaciones para el usuario con UID: ${userUid}`);
-      callback([]);
-      return;
-    }
-    const gradesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    callback(gradesData);
-  }, (error) => {
-    console.error("Error al obtener mis calificaciones:", error);
-    callback([]);
-  });
-}
-
-/**
- * Para la vista del ESTUDIANTE: Se suscribe a las actividades del usuario actual.
- */
-export function subscribeMyActivities(userUid, callback) {
-    const db = getDb();
-    const gradesQuery = query(collection(db, 'grades'), where('authUid', '==', userUid), limit(1));
-
-    const unsubscribe = onSnapshot(gradesQuery, (gradeSnapshot) => {
-        if (gradeSnapshot.empty) {
-            callback([]);
-            return;
-        }
-        
-        const gradeDocId = gradeSnapshot.docs[0].id;
-        const activitiesColRef = collection(db, 'grades', gradeDocId, 'activities');
-        
-        onSnapshot(activitiesColRef, (activitiesSnapshot) => {
-            const activities = activitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            callback(activities);
-        }, (error) => {
-            console.error("Error al obtener mis actividades:", error);
-            callback([]);
-        });
-
-    }, (error) => {
-        console.error("Error al buscar documento de calificaciones para actividades:", error);
-        callback([]);
-    });
-
-    return unsubscribe;
-}
