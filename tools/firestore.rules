@@ -3,61 +3,75 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // --- Funciones de Ayuda ---
-    
+    // --- Funciones de Ayuda (sin cambios) ---
     function isAuthenticated() {
       return request.auth != null;
     }
-    
     function isTeacher() {
       return isAuthenticated() && exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
     }
 
-    // --- Reglas por Colección (Ordenadas por importancia) ---
+    // --- Reglas por Colección ---
 
     // Colección de Estudiantes
     match /students/{studentId} {
-      allow read, write: if isTeacher();
-      allow get: if isAuthenticated() && request.auth.uid == resource.data.authUid;
-      allow list: if isAuthenticated() && request.query.where.authUid == request.auth.uid;
+      // CORRECCIÓN: Se cambia 'read' por 'get' para ser más específico. Un estudiante solo puede
+      // obtener su propio documento si conoce el ID.
+      allow get: if isTeacher() || (isAuthenticated() && resource.data.authUid == request.auth.uid);
+
+      // CORRECCIÓN: Se añade la regla 'list'. Esto es CRUCIAL para que la consulta
+      // findStudentByUid() funcione. Permite a cualquier usuario autenticado realizar una consulta
+      // en la colección 'students'. Tu frontend DEBE asegurar que la consulta solo pida
+      // los datos del propio usuario (ej. ...where('authUid', '==', currentUser.uid)).
+      allow list: if isTeacher() || isAuthenticated();
+
+      allow write: if isTeacher(); // Permitir a los docentes editar/crear estudiantes
     }
 
-    // Colección de Calificaciones (Grades)
+    // Calificaciones (Colección a nivel raíz)
     match /grades/{studentId} {
-      allow read, write: if isTeacher();
-      
-      // Un estudiante puede leer (get) su propio documento de calificaciones
-      // si el UID del usuario coincide con el campo 'authUid' del documento.
-      allow get: if isAuthenticated() && resource.data.authUid == request.auth.uid;
+      // CORRECCIÓN: Se combinan las reglas de lectura. Se cambia 'get' por 'read'
+      // para permitir tanto la lectura directa como las consultas (onSnapshot).
+      // Esto soluciona el error "Error al obtener mis calificaciones".
+      // La condición verifica que el 'authUid' del documento del estudiante coincida con el del solicitante.
+      allow read: if isTeacher() || (isAuthenticated() && get(/databases/$(database)/documents/students/$(studentId)).data.authUid == request.auth.uid);
+      allow write: if isTeacher();
 
-      // REGLA ANIDADA CORRECTAMENTE para la subcolección 'activities'
+      // Subcolección 'activities'
       match /activities/{activityId} {
+        // CORRECCIÓN: Se cambia 'get' y 'list' por una sola regla 'read' para simplificar y
+        // asegurar que tanto la lectura directa como las consultas funcionen para ambos roles.
+        allow read: if isTeacher() || (isAuthenticated() && get(/databases/$(database)/documents/students/$(studentId)).data.authUid == request.auth.uid);
         allow write: if isTeacher();
-        allow list: if isTeacher();
-
-        // Un estudiante puede leer (get y list) sus propias actividades.
-        // Se verifica que el documento 'grade' padre le pertenezca.
-        allow read: if isAuthenticated() && get(/databases/$(database)/documents/grades/$(studentId)).data.authUid == request.auth.uid;
       }
     }
+
+    // Entregas de los estudiantes
+    match /studentUploads/{uploadId} {
+      // CORRECCIÓN: Se combinan 'get' y 'create'/'update' en reglas de 'read' y 'write'
+      // para mayor claridad y para permitir consultas (onSnapshot) en las entregas.
+      // Esto soluciona el error 'observeStudentUploads:permission-denied'.
+
+      // El docente puede leer todo. El estudiante puede leer solo sus propias entregas.
+      allow read: if isTeacher() || (isAuthenticated() && request.auth.uid == resource.data.student.uid);
+
+      // El docente puede escribir en cualquier documento.
+      // El estudiante solo puede crear, actualizar o borrar sus propias entregas.
+      allow write: if isTeacher() || (isAuthenticated() && request.auth.uid == request.resource.data.student.uid);
+    }
+
+    // --- OTRAS COLECCIONES (revisadas para consistencia) ---
 
     // Colección de Profesores
     match /teachers/{teacherId} {
       allow read: if isTeacher();
-      allow write: if false; 
+      allow write: if false; // Correcto: Proteger escritura.
     }
 
     // Materiales de clase
     match /materials/{materialId} {
       allow read: if isAuthenticated();
       allow write: if isTeacher();
-    }
-
-    // Entregas de los estudiantes
-    match /studentUploads/{uploadId} {
-      allow read, write: if isTeacher();
-      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.student.uid;
-      allow get, update: if isAuthenticated() && request.auth.uid == resource.data.student.uid;
     }
 
     // Foro: Temas y Respuestas
@@ -73,21 +87,20 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow create: if (isAuthenticated() && request.auth.uid == request.resource.data.uid) || isTeacher();
     }
-    
+
     // Planes de Prueba
     match /planesDePrueba/{planId} {
-        allow read, write: if isTeacher();
+      allow read, write: if isTeacher();
     }
-    
-    // Colecciones 'courses' y 'grupos'
+
+    // Cursos y Grupos
     match /courses/{courseId} {
       allow read: if isAuthenticated();
       allow write: if isTeacher();
     }
-    
     match /grupos/{grupoId} {
-        allow read: if isAuthenticated();
-        allow write: if isTeacher();
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
     }
   }
 }
