@@ -5,15 +5,18 @@ import {
   subscribeGrades,
   subscribeMyGrades,
   subscribeMyActivities,
+  subscribeAllActivities,
 } from "./firebase.js";
 import { calculateUnitGrade, calculateFinalGrade } from "./grade-calculator.js";
 
 let unsubscribeFromGrades = null;
 let unsubscribeFromActivities = null;
 
-// Estado local para almacenar los datos del estudiante
+// Estado local para almacenar datos
 let studentGrades = null;
 let studentActivities = null;
+let allStudentsData = null;
+let allActivitiesData = null;
 
 /**
  * Combina las calificaciones base con las actividades individuales.
@@ -76,6 +79,21 @@ function renderStudentView() {
 }
 
 /**
+ * Combina las calificaciones de todos los estudiantes con sus actividades.
+ */
+function renderTeacherView() {
+  if (allStudentsData && allActivitiesData) {
+    const combinedStudents = allStudentsData.map((student) => {
+      const studentActivities = allActivitiesData.filter(
+        (activity) => activity.studentId === student.id
+      );
+      return combineGradesAndActivities(student, studentActivities);
+    });
+    renderGradesTableForTeacher(combinedStudents);
+  }
+}
+
+/**
  * Función auxiliar para obtener de forma segura una calificación numérica.
  */
 function getSafeScore(gradeData) {
@@ -117,8 +135,20 @@ function handleAuthStateChanged(user) {
       // --- VISTA DEL DOCENTE ---
       titleEl.textContent = "Panel de Calificaciones (Promedios Generales)";
       activitiesContainer.style.display = "none";
-      // Llama a la función correcta para el docente.
-      unsubscribeFromGrades = subscribeGrades(renderGradesTableForTeacher);
+
+      // Reiniciar estado del docente
+      allStudentsData = null;
+      allActivitiesData = null;
+
+      unsubscribeFromGrades = subscribeGrades((students) => {
+        allStudentsData = students;
+        renderTeacherView();
+      });
+
+      unsubscribeFromActivities = subscribeAllActivities((activities) => {
+        allActivitiesData = activities;
+        renderTeacherView();
+      });
     } else {
       // Asumimos rol de estudiante
       // --- VISTA DEL ESTUDIANTE ---
@@ -155,6 +185,8 @@ function handleAuthStateChanged(user) {
     // Limpiar estado al cerrar sesión
     studentGrades = null;
     studentActivities = null;
+    allStudentsData = null;
+    allActivitiesData = null;
   }
 }
 

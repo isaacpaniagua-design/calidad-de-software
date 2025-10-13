@@ -842,6 +842,33 @@ export function subscribeMyActivities(user, callback) {
   return unsubscribe;
 }
 
+export function subscribeAllActivities(callback) {
+  const db = getDb();
+  const activitiesQuery = query(collectionGroup(db, "activities"));
+
+  return onSnapshot(
+    activitiesQuery,
+    (snapshot) => {
+      const allActivities = [];
+      snapshot.forEach((doc) => {
+        // La ruta del padre es grades/{student_id}
+        const parentPath = doc.ref.parent.parent.path;
+        const studentId = parentPath.split("/")[1];
+        allActivities.push({
+          studentId: studentId,
+          id: doc.id,
+          ...doc.data(),
+        });
+      });
+      callback(allActivities);
+    },
+    (error) => {
+      console.error("Error al obtener todas las actividades:", error);
+      callback([]);
+    }
+  );
+}
+
 export async function updateStudentGradePartial(studentId, path, value) {
   const db = getDb();
   const ref = doc(collection(db, "grades"), studentId);
