@@ -7,7 +7,6 @@ let unsubscribeFromActivities = null;
 
 /**
  * Función auxiliar para obtener de forma segura una calificación numérica.
- * Maneja números, objetos con 'score', y redondea a 2 decimales.
  */
 function getSafeScore(gradeData) {
     let score = 0;
@@ -16,12 +15,15 @@ function getSafeScore(gradeData) {
     } else if (typeof gradeData === 'object' && gradeData !== null && typeof gradeData.score === 'number') {
         score = gradeData.score;
     }
-    // Asegurarse de que el valor es numérico antes de fijar decimales
     return !isNaN(score) ? parseFloat(score.toFixed(2)) : 0;
 }
 
+/**
+ * Maneja los cambios de estado de autenticación para renderizar la vista correcta.
+ * @param {object|null} user - El objeto de usuario de Firebase.
+ */
 function handleAuthStateChanged(user) {
-    // Limpiar suscripciones anteriores para evitar fugas de memoria y datos incorrectos
+    // Limpiar suscripciones anteriores para evitar fugas de memoria.
     if (unsubscribeFromGrades) unsubscribeFromGrades();
     if (unsubscribeFromActivities) unsubscribeFromActivities();
 
@@ -33,17 +35,38 @@ function handleAuthStateChanged(user) {
         console.error("Error crítico: Faltan elementos clave del HTML.");
         return;
     }
-const userUid = user.uid;
+
+    if (user) {
+        // CORRECCIÓN CLAVE: Convertimos el rol a minúsculas para una comparación segura.
+        const userRole = (localStorage.getItem('qs_role') || '').toLowerCase();
+        gradesContainer.style.display = 'block';
+
+        if (userRole === 'docente') {
+            // --- VISTA DEL DOCENTE ---
+            titleEl.textContent = 'Panel de Calificaciones (Promedios Generales)';
+            activitiesContainer.style.display = 'none';
+            // Llama a la función correcta para el docente.
+            unsubscribeFromGrades = subscribeGrades(renderGradesTableForTeacher);
+
+        } else { // Asumimos rol de estudiante
+            // --- VISTA DEL ESTUDIANTE ---
+            titleEl.textContent = 'Resumen de Mis Calificaciones';
+            activitiesContainer.style.display = 'block';
             
-            if (userUid) {
-                unsubscribeFromGrades = subscribeMyGrades(userUid, renderGradesTableForStudent);
-                unsubscribeFromActivities = subscribeMyActivities(userUid, renderActivitiesForStudent);
+            if (user.uid) {
+                unsubscribeFromGrades = subscribeMyGrades(user.uid, renderGradesTableForStudent);
+                unsubscribeFromActivities = subscribeMyActivities(user.uid, renderActivitiesForStudent);
             } else {
                 renderError('No se pudo identificar tu sesión. Por favor, inicia sesión de nuevo.');
             }
+        }
+    } else {
+        // Ocultar todo si no hay sesión
         gradesContainer.style.display = 'none';
         activitiesContainer.style.display = 'none';
     }
+}
+
 function renderGradesTableForTeacher(studentsData) {
     const tbody = document.getElementById('grades-table-body');
     if (!tbody) return;
@@ -53,16 +76,13 @@ function renderGradesTableForTeacher(studentsData) {
         return;
     }
 
-    // Usamos map y join para mayor eficiencia
     tbody.innerHTML = studentsData.map(student => `
         <tr class="border-b hover:bg-gray-50">
             <td class="py-3 px-4 font-medium text-gray-800">${student.name || 'Sin nombre'}</td>
-            
             <td class="py-3 px-4 text-center">${getSafeScore(student.unit1)}</td>
             <td class="py-3 px-4 text-center">${getSafeScore(student.unit2)}</td>
             <td class="py-3 px-4 text-center">${getSafeScore(student.projectFinal)}</td>
             <td class="py-3 px-4 text-center font-bold text-blue-600">${getSafeScore(student.finalGrade)}</td>
-
         </tr>
     `).join('');
 }
