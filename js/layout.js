@@ -3,7 +3,7 @@
 
 // CAMBIO: 1. Importar las variables desde el módulo de actualizaciones.
 // Asegúrate de que el archivo 'updates.js' que te proporcioné antes exista en la misma carpeta 'js/'.
-import { latestVersion, lastSeenVersionKey } from './updates.js';
+import { latestVersion, lastSeenVersionKey } from "./updates.js";
 
 (function initializeLoadingOverlay() {
   ensureLoadingOverlay();
@@ -44,7 +44,9 @@ function bootstrapLayout() {
 
   const html = pageDoc.documentElement;
   const body = pageDoc.body || pageDoc.documentElement;
-  const currentPage = (location.pathname.split("/").pop() || "index.html").toLowerCase();
+  const currentPage = (
+    location.pathname.split("/").pop() || "index.html"
+  ).toLowerCase();
   const isLogin = currentPage === "login.html";
   const isNotFound = currentPage === "404.html";
 
@@ -56,7 +58,9 @@ function bootstrapLayout() {
   const footer = ensureFooter(pageDoc, body);
 
   toggleTeacherNavLinks(nav, html.classList.contains("role-teacher"));
-  observeRoleClassChanges(html, (isTeacher) => toggleTeacherNavLinks(nav, isTeacher));
+  observeRoleClassChanges(html, (isTeacher) =>
+    toggleTeacherNavLinks(nav, isTeacher)
+  );
 
   updateAuthAppearance(nav, readStoredAuthState());
   bindNavAuthRedirect(nav, basePath);
@@ -82,21 +86,23 @@ function bootstrapLayout() {
   window.__qsLayoutReadAuthState = readStoredAuthState;
   window.__qsLayoutPersistAuthState = persistAuthState;
   window.__qsLayoutPersistRole = (role) => persistRole(role, nav);
-  window.__qsLayoutToggleTeacherNavLinks = (isTeacher) => toggleTeacherNavLinks(nav, isTeacher);
+  window.__qsLayoutToggleTeacherNavLinks = (isTeacher) =>
+    toggleTeacherNavLinks(nav, isTeacher);
 }
 
 function computeBasePath(doc) {
   try {
-    const script = doc.currentScript || doc.querySelector("script[src*='layout.js']");
-    if (!script) return './';
-    const src = script.getAttribute('src') || 'layout.js';
+    const script =
+      doc.currentScript || doc.querySelector("script[src*='layout.js']");
+    if (!script) return "./";
+    const src = script.getAttribute("src") || "layout.js";
     const scriptUrl = new URL(src, location.href);
-    if (scriptUrl.protocol === 'file:') return './';
-    const baseUrl = new URL('../', scriptUrl);
+    if (scriptUrl.protocol === "file:") return "./";
+    const baseUrl = new URL("../", scriptUrl);
     const href = baseUrl.href;
-    return href.endsWith('/') ? href : href + '/';
+    return href.endsWith("/") ? href : href + "/";
   } catch (_) {
-    return './';
+    return "./";
   }
 }
 
@@ -107,10 +113,10 @@ function ensureNavigation(doc, body, basePath) {
   // Esto se hace ANTES de construir el template del menú.
   const lastSeenVersion = localStorage.getItem(lastSeenVersionKey);
   const hasNewUpdate = latestVersion !== lastSeenVersion;
-  const notificationBadge = hasNewUpdate 
-    ? '<span class="notification-dot" title="¡Nuevas actualizaciones disponibles!"></span>' 
-    : '';
-  
+  const notificationBadge = hasNewUpdate
+    ? '<span class="notification-dot" title="¡Nuevas actualizaciones disponibles!"></span>'
+    : "";
+
   const template = buildNavTemplate(basePath, notificationBadge); // Pasamos el badge al template
 
   if (!nav) {
@@ -160,6 +166,7 @@ function buildNavTemplate(basePath, notificationBadge) {
   <a
     class="qs-btn teacher-only"
     href="${basePath}paneldocente.html"
+    data-route="panel"
     hidden
     aria-hidden="true"
     >Panel</a
@@ -209,7 +216,10 @@ function ensureRealtimeCenter(doc, body, nav) {
   }
 
   const referenceParent = body;
-  const referenceSibling = nav && nav.parentNode === referenceParent ? nav.nextSibling : referenceParent.firstChild;
+  const referenceSibling =
+    nav && nav.parentNode === referenceParent
+      ? nav.nextSibling
+      : referenceParent.firstChild;
   referenceParent.insertBefore(center, referenceSibling || null);
 
   return center;
@@ -324,7 +334,8 @@ function setupNavToggle(nav) {
   });
 
   region.addEventListener("click", (evt) => {
-    const anchor = evt.target && evt.target.closest ? evt.target.closest("a") : null;
+    const anchor =
+      evt.target && evt.target.closest ? evt.target.closest("a") : null;
     if (anchor) setState(false);
   });
 
@@ -362,7 +373,12 @@ function highlightActiveLink(nav, currentPage) {
       const href = (link.getAttribute("href") || "").toLowerCase();
       const normalized = href.split("#")[0].split("?")[0];
       const isIndex = !currentPage || currentPage === "index.html";
-      const matches = normalized === currentPage || (isIndex && (normalized === "" || normalized === "./" || normalized === "index.html"));
+      const matches =
+        normalized === currentPage ||
+        (isIndex &&
+          (normalized === "" ||
+            normalized === "./" ||
+            normalized === "index.html"));
       if (matches) {
         link.setAttribute("aria-current", "page");
       } else {
@@ -378,7 +394,8 @@ function bindNavAuthRedirect(nav, basePath) {
   nav.addEventListener(
     "click",
     (evt) => {
-      const anchor = evt.target && evt.target.closest ? evt.target.closest("a[href]") : null;
+      const anchor =
+        evt.target && evt.target.closest ? evt.target.closest("a[href]") : null;
       if (!anchor || !nav.contains(anchor)) return;
       const href = anchor.getAttribute("href") || "";
       if (shouldBypassAuth(href)) return;
@@ -388,7 +405,7 @@ function bindNavAuthRedirect(nav, basePath) {
         location.href = `${basePath}login.html`;
       }
     },
-    true,
+    true
   );
 }
 
@@ -399,7 +416,12 @@ function shouldBypassAuth(href) {
   const lower = trimmed.split("#")[0].split("?")[0].toLowerCase();
   if (!lower) return true;
   // Permitimos el acceso a 'updates.html' sin necesidad de autenticación.
-  if (lower === "updates.html" || lower === "login.html" || lower === "404.html") return true;
+  if (
+    lower === "updates.html" ||
+    lower === "login.html" ||
+    lower === "404.html"
+  )
+    return true;
   if (/^https?:\/\//.test(trimmed)) return true;
   if (trimmed.startsWith("#")) return true;
   if (trimmed.startsWith("mailto:")) return true;
@@ -532,7 +554,7 @@ function injectAuthIntegration(doc, basePath, nav) {
         persistAuthState("awaiting");
       }
     } catch (error) {
-      console.error('[layout] auth integration failed', error);
+      console.error("[layout] auth integration failed", error);
     }
   });
 }
@@ -566,15 +588,15 @@ function setupSlideAssist(doc) {
 
         const prevBtn =
           doc.getElementById("prevBtn") ||
-          doc.querySelector('[data-slide-prev]') ||
+          doc.querySelector("[data-slide-prev]") ||
           doc.querySelector('[data-action="slide-prev"]');
         const nextBtn =
           doc.getElementById("nextBtn") ||
-          doc.querySelector('[data-slide-next]') ||
+          doc.querySelector("[data-slide-next]") ||
           doc.querySelector('[data-action="slide-next"]');
         const slideCounter =
           doc.getElementById("currentSlide") ||
-          doc.querySelector('[data-slide-current]');
+          doc.querySelector("[data-slide-current]");
 
         decorateSlideNavigation(doc, prevBtn, slideCounter);
         ensureSlideFloatingControls(doc, {
@@ -600,9 +622,7 @@ function decorateSlideNavigation(doc, prevBtn, slideCounter) {
 
     const view = doc.defaultView;
     const isFixed =
-      view && nav
-        ? view.getComputedStyle(nav).position === "fixed"
-        : false;
+      view && nav ? view.getComputedStyle(nav).position === "fixed" : false;
 
     if (isFixed && doc.body) {
       doc.body.classList.add("has-slide-nav");
@@ -688,7 +708,8 @@ function ensureSlideFloatingControls(doc, refs) {
         }
         const fnName = direction === "prev" ? "previousSlide" : "nextSlide";
         const view = doc.defaultView;
-        const fn = view && typeof view[fnName] === "function" ? view[fnName] : null;
+        const fn =
+          view && typeof view[fnName] === "function" ? view[fnName] : null;
         if (fn) fn.call(view);
       } catch (_) {}
     };
@@ -803,7 +824,8 @@ function isNativeDisabled(btn) {
   try {
     if (!btn) return false;
     if (btn.disabled) return true;
-    if (btn.getAttribute && btn.getAttribute("aria-disabled") === "true") return true;
+    if (btn.getAttribute && btn.getAttribute("aria-disabled") === "true")
+      return true;
     if (btn.classList) {
       if (btn.classList.contains("opacity-50")) return true;
       if (btn.classList.contains("cursor-not-allowed")) return true;
@@ -862,9 +884,9 @@ function markLayoutReady() {
 window.addEventListener("load", markLayoutReady, { once: true });
 
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", bootstrapLayout, { once: true });
+  document.addEventListener("DOMContentLoaded", bootstrapLayout, {
+    once: true,
+  });
 } else {
   bootstrapLayout();
 }
-
-
