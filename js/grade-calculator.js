@@ -19,18 +19,20 @@ export const FINAL_GRADE_WEIGHTS = {
 /**
  * Pesos para los tipos de actividades dentro de cada unidad.
  * La suma de estos pesos debe ser 1.0 para que el cálculo sea una media ponderada.
+ * `actividad`: Corresponde a trabajos en clase o participaciones.
+ * `asignacion`: Corresponde a tareas o entregables.
+ * `examen`: Examen de la unidad.
  */
 export const UNIT_ACTIVITY_WEIGHTS = {
-  participation: 0.1,
-  assignments: 0.25,
-  classwork: 0.25,
-  exam: 0.4,
+  actividad: 0.35, // (participations + classwork) from old structure
+  asignacion: 0.25,
+  examen: 0.4,
 };
 
 /**
  * Calcula la calificación ponderada de una unidad.
  * @param {object|undefined} unit - Objeto con las calificaciones de las actividades de la unidad.
- *   Ej: { participation: 8, assignments: 9, classwork: 10, exam: 7 }
+ *   Ej: { actividad: 8, asignacion: 9, examen: 7 }
  * @returns {number} La calificación de la unidad (0-10).
  */
 export function calculateUnitGrade(unit) {
@@ -44,16 +46,17 @@ export function calculateUnitGrade(unit) {
     if (gradeValue === undefined) continue;
 
     let categoryScore = 0;
-    if (typeof gradeValue === "number") {
-      categoryScore = gradeValue;
-    } else if (typeof gradeValue === "object" && gradeValue !== null) {
-      // Si hay sub-calificaciones (ej. múltiples tareas), se promedian.
+    // Si hay sub-calificaciones (ej. múltiples tareas), se promedian.
+    // Si es un número, se usa directamente (ej. examen).
+    if (typeof gradeValue === "object" && gradeValue !== null) {
       const scores = Object.values(gradeValue).filter(
         (v) => typeof v === "number"
       );
       if (scores.length > 0) {
         categoryScore = scores.reduce((a, b) => a + b, 0) / scores.length;
       }
+    } else if (typeof gradeValue === "number") {
+      categoryScore = gradeValue;
     }
 
     if (categoryScore > 0) {
