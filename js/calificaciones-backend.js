@@ -63,6 +63,13 @@ function calculateUnitGrade(unit) {
 function calculateFinalGrade(grades) {
   if (!grades) return 0;
 
+  const finalWeights = {
+    unit1: 0.2,
+    unit2: 0.2,
+    unit3: 0.2,
+    projectFinal: 0.4,
+  };
+
   const u1 = calculateUnitGrade(grades.unit1);
   const u2 = calculateUnitGrade(grades.unit2);
   const u3 = calculateUnitGrade(grades.unit3);
