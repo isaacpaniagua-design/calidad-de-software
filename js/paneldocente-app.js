@@ -58,11 +58,13 @@ const state = {
   activityLog: [],
   allowlist: [],
   collections: createEmptyCollectionsState(),
+  grades: {},
   collectionLoading: {},
   unsub: {
     members: null,
     uploads: null,
     materials: null,
+    grades: null,
   },
 };
 
@@ -514,11 +516,53 @@ function renderOverview() {
   }
 }
 
+function calculateFinalGrade(grades) {
+  if (!grades) return 0;
+
+  const weights = {
+    unit1: 0.2,
+    unit2: 0.2,
+    unit3: 0.2,
+    projectFinal: 0.4,
+  };
+
+  const unitWeights = {
+    participation: 0.1,
+    assignments: 0.4,
+    classwork: 0.2,
+    exam: 0.3,
+  };
+
+  const calculateUnitGrade = (unit) => {
+    if (!unit) return 0;
+    let total = 0;
+    for (const activity in unitWeights) {
+      if (typeof unit[activity] === "number") {
+        total += unit[activity] * unitWeights[activity];
+      }
+    }
+    return total;
+  };
+
+  const u1 = calculateUnitGrade(grades.unit1);
+  const u2 = calculateUnitGrade(grades.unit2);
+  const u3 = calculateUnitGrade(grades.unit3);
+  const pf = grades.projectFinal || 0;
+
+  const finalGrade =
+    u1 * weights.unit1 +
+    u2 * weights.unit2 +
+    u3 * weights.unit3 +
+    pf * weights.projectFinal;
+
+  return Math.round(finalGrade);
+}
+
 function renderMembers() {
   if (!membersBody) return;
   if (!state.members.length) {
     membersBody.innerHTML =
-      '<tr><td colspan="6" class="pd-empty">Sin alumnos registrados.</td></tr>';
+      '<tr><td colspan="11" class="pd-empty">Sin alumnos registrados.</td></tr>';
     return;
   }
   membersBody.innerHTML = state.members
@@ -527,11 +571,39 @@ function renderMembers() {
       const updated = member.updatedAt
         ? new Date(member.updatedAt).toLocaleString()
         : "--";
+
+      const grades = state.grades[memberId] || {};
+      const u1 = grades.unit1
+        ? Math.round(
+            Object.values(grades.unit1).reduce((a, b) => a + b, 0) /
+              Object.values(grades.unit1).length
+          )
+        : "--";
+      const u2 = grades.unit2
+        ? Math.round(
+            Object.values(grades.unit2).reduce((a, b) => a + b, 0) /
+              Object.values(grades.unit2).length
+          )
+        : "--";
+      const u3 = grades.unit3
+        ? Math.round(
+            Object.values(grades.unit3).reduce((a, b) => a + b, 0) /
+              Object.values(grades.unit3).length
+          )
+        : "--";
+      const pf = grades.projectFinal ?? "--";
+      const cf = calculateFinalGrade(grades) || "--";
+
       return `
         <tr data-member-id="${memberId}">
           <td><input type="checkbox" name="student_select" value="${memberId}" /></td>
           <td>${member.displayName || member.nombre || "Sin nombre"}</td>
           <td>${member.matricula || "--"}</td>
+          <td>${u1}</td>
+          <td>${u2}</td>
+          <td>${u3}</td>
+          <td>${pf}</td>
+          <td>${cf}</td>
           <td>${member.email || "--"}</td>
           <td>${member.uid || "--"}</td>
           <td>${updated}</td>
@@ -1429,6 +1501,25 @@ async function subscribeMaterials() {
   }
 }
 
+async function subscribeGrades() {
+  if (!state.isTeacher) return;
+  if (state.unsub.grades) state.unsub.grades();
+
+  try {
+    const { collection, onSnapshot } = await getFirestore();
+    const q = collection(db, "grades");
+    state.unsub.grades = onSnapshot(q, (snap) => {
+      snap.forEach((docSnap) => {
+        state.grades[docSnap.id] = docSnap.data();
+      });
+      renderMembers();
+    });
+  } catch (error) {
+    console.error("grades snapshot", error);
+    showBanner("No se pudieron cargar las calificaciones.", "error");
+  }
+}
+
 function stopAllSubscriptions() {
   cleanupSubscriptions();
   state.members = [];
@@ -1506,6 +1597,7 @@ async function handleAuth(user) {
   subscribeMembers();
   subscribeUploads();
   subscribeMaterials();
+  subscribeGrades();
   await loadAllCollections({ silent: true });
   renderOverview();
 }
