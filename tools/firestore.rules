@@ -119,6 +119,10 @@ service cloud.firestore {
     match /grupos/{grupoId} {
       allow read: if isAuthenticated();
       allow write: if isTeacher();
+      // Permitir a los docentes leer y escribir en la lista de miembros de un grupo.
+      match /members/{memberId} {
+        allow read, write: if isTeacher();
+      }
     }
   }
 }
