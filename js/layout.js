@@ -507,6 +507,13 @@ function updateAuthAppearance(nav, state) {
   } catch (_) {}
 }
 
+// Expone la función de actualización para que otras páginas puedan llamarla.
+window.updateQsAuthButton = () => {
+  const nav = document.querySelector(".qs-nav");
+  const state = readStoredAuthState();
+  updateAuthAppearance(nav, state);
+};
+
 function injectAuthGuard(doc, basePath) {
   try {
     if (doc.querySelector("script[data-qs-auth-guard]")) return;
