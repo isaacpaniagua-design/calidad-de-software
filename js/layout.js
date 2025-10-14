@@ -549,6 +549,9 @@ function injectAuthIntegration(doc, basePath, nav) {
           await module.signOutCurrent();
           persistAuthState("signed-out");
           updateAuthAppearance(nav, "signed-out");
+          // Forzar un refresco de la página para asegurar que todos los
+          // scripts específicos de la página re-evalúen el estado de autenticación.
+          window.location.reload();
         }
       } else {
         persistAuthState("awaiting");
