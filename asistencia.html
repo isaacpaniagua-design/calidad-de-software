@@ -784,19 +784,80 @@
     <script type="module">
       import {
         initFirebase,
+        getDb,
+        getAuthInstance,
         onAuth,
         signInWithGooglePotros,
         signOutCurrent,
-        saveTodayAttendance,
-        subscribeTodayAttendance,
-        subscribeTodayAttendanceByUser,
         isTeacherEmail,
+        allowedEmailDomain,
         ensureTeacherAllowlistLoaded,
       } from "./js/firebase.js";
-      import { allowedEmailDomain } from "./js/firebase-config.js";
+      import {
+        collection,
+        doc,
+        onSnapshot,
+        query,
+        where,
+        addDoc,
+        serverTimestamp,
+        Timestamp,
+        getDocs,
+        limit,
+        orderBy,
+      } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
+      // --- FIRESTORE HELPERS (specific to this page) ---
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayTimestamp = Timestamp.fromDate(today);
+
+      function getAttendanceCollectionRef() {
+        const db = getDb();
+        return collection(db, "asistencia");
+      }
+
+      function subscribeTodayAttendance(callback) {
+        const q = query(
+          getAttendanceCollectionRef(),
+          where("timestamp", ">=", todayTimestamp)
+        );
+        return onSnapshot(q, (snapshot) => {
+          const records = [];
+          snapshot.forEach((doc) =>
+            records.push({ id: doc.id, ...doc.data() })
+          );
+          callback(records);
+        });
+      }
+
+      function subscribeTodayAttendanceByUser(userUid, callback) {
+        const q = query(
+          getAttendanceCollectionRef(),
+          where("uid", "==", userUid),
+          where("timestamp", ">=", todayTimestamp)
+        );
+        return onSnapshot(q, (snapshot) => {
+          const records = [];
+          snapshot.forEach((doc) =>
+            records.push({ id: doc.id, ...doc.data() })
+          );
+          callback(records);
+        });
+      }
+
+      async function saveTodayAttendance(payload) {
+        if (!payload.uid) throw new Error("User ID is required");
+        const attendanceRef = getAttendanceCollectionRef();
+        return await addDoc(attendanceRef, {
+          ...payload,
+          timestamp: serverTimestamp(),
+        });
+      }
 
       // --- ROSTER AND STUDENT DATA ---
       const ROSTER_STORAGE_KEY = "qs_roster_cache";
+      let students = []; // This will be populated from JSON
 
       function normalizeRosterEntry(entry) {
         if (!entry) return null;
@@ -873,177 +934,26 @@
         }
       }
 
-      const baseRoster = [
-        {
-          id: "00000249116",
-          name: "Arana Guerrero, Danett Itzanami",
-          email: "danett.arana249116@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000147818",
-          name: "Araujo Godoy, Abraham Francisco",
-          email: "abraham.araujo@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000244228",
-          name: "Avalos Morales, Egla Icel",
-          email: "egla.avalos244228@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000244442",
-          name: "Blasco Villagomez, Luis Mario",
-          email: "luis.blasco244442@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000244242",
-          name: "Duarte Lopez, Adlemi Guadalupe",
-          email: "adlemi.duarte244242@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000244473",
-          name: "Espericueta Ramos, Jesus Alan",
-          email: "jesus.espericueta244473@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000244608",
-          name: "Gracia Morales, Sergio Alejandro",
-          email: "sergio.gracia244608@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000228847",
-          name: "Hernandez Gonzalez, Julian Ricardo",
-          email: "julian.hernandez228847@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000248997",
-          name: "Le Blohic Garay, Mario Enrique",
-          email: "mario.leblohic248997@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000249012",
-          name: "Lopez Guerrero, Luis Carlos",
-          email: "luis.lopez249012@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000248990",
-          name: "Maldonado Montoya, Jose Gabriel",
-          email: "jose.maldonado248990@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000244378",
-          name: "Martínez Santacruz, Yolanda",
-          email: "yolanda.martinez244378@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000217812",
-          name: "Martínez Soto, Dainiz Raí",
-          email: "dainiz.martinez217812@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000244321",
-          name: "Nevescanin Moreno, Angel Stipe",
-          email: "angel.nevescanin244321@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000244477",
-          name: "Osuna Aguilera, Erik David",
-          email: "erik.osuna244477@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000244711",
-          name: "Palacios Cardenas, Jorge Eduardo",
-          email: "jorge.palacios244711@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000244569",
-          name: "Preciado Ruiz, Juan Carlos",
-          email: "juan.preciado244569@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000244373",
-          name: "Reyes Galaz, Jose Abelardo",
-          email: "jose.reyes244373@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000240691",
-          name: "Rivas Quintana, Emmanuel",
-          email: "emmanuel.rivas240691@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000244266",
-          name: "Rocha Aguilar, Víctor Emmanuel",
-          email: "victor.rocha244266@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000244312",
-          name: "Rodriguez Alvarado, Jose Agustin",
-          email: "jose.rodriguez244312@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000244621",
-          name: "Soto Carrazco, Francisco Javier",
-          email: "francisco.soto244621@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000216759",
-          name: "Sánchez Zavala, Dulce María",
-          email: "dulce.sanchez216759@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000244689",
-          name: "Villegas Sosa, Ramsés Mauricio",
-          email: "ramses.villegas244689@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "00000244679",
-          name: "Viveros Zavala, Angel Gael",
-          email: "angel.viveros244679@potros.itson.edu.mx",
-          type: "student",
-        },
-        {
-          id: "99645",
-          name: "Paniagua Ruiz, Isaac Noé",
-          email: "isaac.paniagua@potros.itson.edu.mx",
-          type: "teacher",
-        },
-      ].map(normalizeRosterEntry);
-
-      let students = mergeRosterLists(baseRoster, readCachedRoster());
-      window.students = students;
-
-      window.addEventListener("storage", (event) => {
-        if (event.key === ROSTER_STORAGE_KEY) {
-          students = mergeRosterLists(
-            baseRoster,
-            parseRosterPayload(event.newValue)
+      async function loadRoster() {
+        try {
+          const response = await fetch("./data/students.json");
+          if (!response.ok) {
+            throw new Error("Could not fetch student list");
+          }
+          const baseRosterData = await response.json();
+          const baseRoster = (baseRosterData.students || []).map(
+            normalizeRosterEntry
           );
+          const cachedRoster = readCachedRoster();
+          students = mergeRosterLists(baseRoster, cachedRoster);
+          window.students = students;
+        } catch (error) {
+          console.error("Failed to load student roster:", error);
+          // Fallback to cached roster if fetch fails
+          students = mergeRosterLists([], readCachedRoster());
           window.students = students;
         }
-      });
+      }
 
       // --- GLOBAL STATE AND DOM REFS ---
       let registeredAttendances = [];
@@ -1180,7 +1090,7 @@
           .map((r) => {
             const timestamp = r.timestamp?.seconds
               ? new Date(r.timestamp.seconds * 1000)
-              : new Date();
+              : new Date(); // Fallback for safety
             return { ...r, timestamp };
           })
           .sort((a, b) => b.timestamp - a.timestamp);
@@ -1224,8 +1134,9 @@
       }
 
       // --- INITIALIZATION AND EVENT BINDING ---
-      document.addEventListener("DOMContentLoaded", () => {
+      document.addEventListener("DOMContentLoaded", async () => {
         initFirebase(); // Ensure Firebase is initialized first
+        await loadRoster(); // Load student list
 
         // Bind event listeners
         if (signInBtn) {
