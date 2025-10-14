@@ -24,20 +24,28 @@ let allActivitiesData = null;
  * @returns {object} Un nuevo objeto de calificaciones con las actividades agrupadas.
  */
 function combineGradesAndActivities(grades, activities) {
-  if (!grades) return null;
+  // Empezar con una copia profunda de las calificaciones base o un objeto vacío si no existen.
+  const combined = grades ? JSON.parse(JSON.stringify(grades)) : {};
 
-  const combined = JSON.parse(JSON.stringify(grades));
+  // Inicializar las unidades si no existen en el objeto base.
+  if (!combined.unit1) combined.unit1 = {};
+  if (!combined.unit2) combined.unit2 = {};
+  if (!combined.unit3) combined.unit3 = {};
 
   // Objeto para agrupar actividades por unidad y tipo
-  const activitiesByUnit = {};
+  const activitiesByUnit = {
+    unit1: {},
+    unit2: {},
+    unit3: {},
+  };
 
   activities.forEach((activity) => {
     const { unit, type, score } = activity;
     if (!unit || !type || typeof score !== "number") return;
 
-    if (!activitiesByUnit[unit]) {
-      activitiesByUnit[unit] = {};
-    }
+    // Asegurarse de que la unidad es válida
+    if (!activitiesByUnit[unit]) return;
+
     if (!activitiesByUnit[unit][type]) {
       activitiesByUnit[unit][type] = [];
     }
@@ -46,22 +54,22 @@ function combineGradesAndActivities(grades, activities) {
 
   // Procesar las actividades agrupadas y calcular promedios
   for (const unit in activitiesByUnit) {
-    if (!combined[unit]) {
-      combined[unit] = {};
-    }
     for (const type in activitiesByUnit[unit]) {
       const scores = activitiesByUnit[unit][type];
       if (scores.length > 0) {
-        // Para tipos como 'examen', que suelen ser únicos, se toma el valor directamente si solo hay uno.
-        // Para otros, se promedia. Esto es más robusto.
-        if (scores.length === 1) {
-          combined[unit][type] = scores[0];
-        } else {
-          const average = scores.reduce((a, b) => a + b, 0) / scores.length;
-          combined[unit][type] = average;
-        }
+        const average = scores.reduce((a, b) => a + b, 0) / scores.length;
+        combined[unit][type] = average;
       }
     }
+  }
+
+  // Lógica para el proyecto final: buscarlo específicamente
+  const projectActivity = activities.find((a) => a.type === "proyecto");
+  if (projectActivity) {
+    combined.projectFinal = projectActivity.score;
+  } else if (combined.projectFinal === undefined) {
+    // Si no hay actividad de proyecto y no hay valor previo, inicializar en 0.
+    combined.projectFinal = 0;
   }
 
   return combined;

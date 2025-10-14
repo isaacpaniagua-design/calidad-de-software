@@ -2,7 +2,6 @@
 
 // Correcto: Importar helpers locales desde firebase.js
 import { onAuth, getDb, subscribeGrades } from "./firebase.js";
-import { calculateUnitGrade, calculateFinalGrade } from "./grade-calculator.js";
 
 // Correcto: Importar funciones del SDK de Firestore directamente desde la URL oficial.
 import {
@@ -34,68 +33,6 @@ const createGroupActivityForm = document.getElementById(
 );
 const submitGroupActivityBtn = document.getElementById("submit-group-activity");
 const batchStatusDiv = document.getElementById("batch-status");
-
-// --- LÓGICA DE CÁLCULO DE CALIFICACIONES (Ahora centralizada) ---
-
-async function calculateAndSaveAllGrades(activities) {
-  if (!selectedStudentId) return;
-
-  // 1. Agrupar actividades por unidad y tipo
-  const activitiesByUnitAndType = activities.reduce((acc, activity) => {
-    const { unit, type, score } = activity;
-    if (!unit || !type || typeof score !== "number") return acc;
-    if (!acc[unit]) acc[unit] = {};
-    if (!acc[unit][type]) acc[unit][type] = [];
-    acc[unit][type].push(score);
-    return acc;
-  }, {});
-
-  // 2. Calcular promedios para cada categoría y preparar el payload
-  const gradesPayload = {
-    unit1: {},
-    unit2: {},
-    unit3: {},
-  };
-
-  for (const unit in activitiesByUnitAndType) {
-    if (!gradesPayload[unit]) continue;
-    for (const type in activitiesByUnitAndType[unit]) {
-      const scores = activitiesByUnitAndType[unit][type];
-      if (scores.length > 0) {
-        const average = scores.reduce((a, b) => a + b, 0) / scores.length;
-        gradesPayload[unit][type] = average;
-      }
-    }
-  }
-
-  // 3. Manejar el proyecto final (puede estar en unit3 o ser de tipo 'proyecto')
-  const projectFinalActivity =
-    activities.find((a) => a.type === "proyecto") ||
-    activities.find((a) => a.unit === "unit3");
-  const projectFinalScore = projectFinalActivity
-    ? projectFinalActivity.score
-    : 0;
-
-  // 4. Guardar el objeto de calificaciones completo en Firestore
-  const studentGradeRef = doc(db, "grades", selectedStudentId);
-  try {
-    await updateDoc(studentGradeRef, {
-      unit1: gradesPayload.unit1,
-      unit2: gradesPayload.unit2,
-      unit3: gradesPayload.unit3,
-      projectFinal: projectFinalScore,
-      updatedAt: new Date(), // Usar serverTimestamp() si está disponible
-    });
-    console.log(`Calificaciones actualizadas para ${selectedStudentId}`);
-  } catch (error) {
-    console.error("Error al guardar las calificaciones calculadas:", error);
-    if (batchStatusDiv) {
-      batchStatusDiv.textContent =
-        "Error al guardar las calificaciones en la base de datos.";
-      batchStatusDiv.className = "text-red-500";
-    }
-  }
-}
 
 // --- LÓGICA DE LA INTERFAZ (UI) ---
 
@@ -194,7 +131,6 @@ function loadActivitiesForStudent(studentId) {
         ...doc.data(),
       }));
       renderActivities(activities);
-      calculateAndSaveAllGrades(activities);
     },
     (error) => {
       console.error("Error al cargar actividades:", error);
