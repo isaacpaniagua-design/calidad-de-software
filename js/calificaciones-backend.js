@@ -23,87 +23,21 @@ let allActivitiesData = null;
  * @param {Array} activities - La lista de actividades individuales.
  * @returns {object} Un nuevo objeto de calificaciones con las actividades agrupadas.
  */
-function combineGradesAndActivities(grades, activities) {
-  // Empezar con una copia profunda de las calificaciones base o un objeto vacío si no existen.
-  const combined = grades ? JSON.parse(JSON.stringify(grades)) : {};
-
-  // Inicializar las unidades si no existen en el objeto base.
-  if (!combined.unit1) combined.unit1 = {};
-  if (!combined.unit2) combined.unit2 = {};
-  if (!combined.unit3) combined.unit3 = {};
-
-  // Objeto para agrupar actividades por unidad y tipo
-  const activitiesByUnit = {
-    unit1: {},
-    unit2: {},
-    unit3: {},
-  };
-
-  activities.forEach((activity) => {
-    const { unit, type, score } = activity;
-    if (!unit || !type || typeof score !== "number") return;
-
-    // Asegurarse de que la unidad es válida
-    if (!activitiesByUnit[unit]) return;
-
-    if (!activitiesByUnit[unit][type]) {
-      activitiesByUnit[unit][type] = [];
-    }
-    activitiesByUnit[unit][type].push(score);
-  });
-
-  // Procesar las actividades agrupadas y calcular promedios
-  for (const unit in activitiesByUnit) {
-    for (const type in activitiesByUnit[unit]) {
-      const scores = activitiesByUnit[unit][type];
-      if (scores.length > 0) {
-        const average = scores.reduce((a, b) => a + b, 0) / scores.length;
-        combined[unit][type] = average;
-      }
-    }
-  }
-
-  // Lógica para el proyecto final: buscarlo específicamente
-  const projectActivity = activities.find((a) => a.type === "proyecto");
-  if (projectActivity) {
-    combined.projectFinal = projectActivity.score;
-  } else if (combined.projectFinal === undefined) {
-    // Si no hay actividad de proyecto y no hay valor previo, inicializar en 0.
-    combined.projectFinal = 0;
-  }
-
-  return combined;
-}
+// Ya no se combinan ni recalculan actividades aquí. Solo se muestran los datos calculados por actividades.js
 
 /**
  * Renderiza la vista completa del estudiante cuando todos los datos están disponibles.
  */
 function renderStudentView() {
-  if (!studentGrades || !studentActivities) {
-    return; // No renderizar si falta alguna de las fuentes de datos.
+  if (!studentGrades) {
+    return;
   }
-
   const studentData = studentGrades.length > 0 ? studentGrades[0] : null;
-  const combinedData = combineGradesAndActivities(
-    studentData,
-    studentActivities
-  );
-
-  if (combinedData) {
-    const u1 = calculateUnitGrade(combinedData.unit1 || {});
-    const u2 = calculateUnitGrade(combinedData.unit2 || {});
-    const finalGrade = calculateFinalGrade(combinedData);
-    const processedData = {
-      ...combinedData,
-      u1,
-      u2,
-      finalGrade,
-    };
-    renderGradesTableForStudent([processedData]); // La función espera un array
+  if (studentData) {
+    renderGradesTableForStudent([studentData]);
   } else {
-    renderGradesTableForStudent([]); // Renderiza la tabla vacía si no hay datos
+    renderGradesTableForStudent([]);
   }
-
   renderActivitiesForStudent(studentActivities);
 }
 
@@ -111,30 +45,10 @@ function renderStudentView() {
  * Combina las calificaciones de todos los estudiantes con sus actividades.
  */
 function renderTeacherView() {
-  if (!allStudentsData || !allActivitiesData) {
-    return; // No renderizar si falta alguna de las fuentes de datos.
+  if (!allStudentsData) {
+    return;
   }
-
-  const combinedStudents = allStudentsData.map((student) => {
-    const studentActivities = allActivitiesData.filter(
-      (activity) => activity.studentId === student.id
-    );
-    const combinedData = combineGradesAndActivities(student, studentActivities);
-
-    // Pre-calcular calificaciones para pasar a la función de renderizado
-    const u1 = calculateUnitGrade(combinedData.unit1 || {});
-    const u2 = calculateUnitGrade(combinedData.unit2 || {});
-    const finalGrade = calculateFinalGrade(combinedData);
-
-    return {
-      ...combinedData,
-      u1,
-      u2,
-      finalGrade,
-    };
-  });
-
-  renderGradesTableForTeacher(combinedStudents);
+  renderGradesTableForTeacher(allStudentsData);
 }
 
 /**
@@ -247,19 +161,23 @@ function renderGradesTableForTeacher(studentsData) {
 
   tbody.innerHTML = studentsData
     .map((student) => {
+      const unit1 = student.unit1?.average ?? student.unit1 ?? 0;
+      const unit2 = student.unit2?.average ?? student.unit2 ?? 0;
+      const projectFinal = student.projectFinal ?? 0;
+      const finalGrade = student.finalGrade ?? student.final ?? 0;
       return `
         <tr class="border-b hover:bg-gray-50">
             <td class="py-3 px-4 font-medium text-gray-800">${
-              student.name || "Sin nombre"
+              student.name || student.displayName || "Sin nombre"
             }</td>
-            <td class="py-3 px-4 text-center">${student.u1.toFixed(2)}</td>
-            <td class="py-3 px-4 text-center">${student.u2.toFixed(2)}</td>
-            <td class="py-3 px-4 text-center">${getSafeScore(
-              student.projectFinal
+            <td class="py-3 px-4 text-center">${Number(unit1).toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${Number(unit2).toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${Number(projectFinal).toFixed(
+              2
             )}</td>
-            <td class="py-3 px-4 text-center font-bold text-blue-600">${
-              student.finalGrade
-            }</td>
+            <td class="py-3 px-4 text-center font-bold text-blue-600">${Number(
+              finalGrade
+            ).toFixed(1)}</td>
         </tr>
     `;
     })
@@ -276,19 +194,23 @@ function renderGradesTableForStudent(myGradesData) {
     return;
   }
   const myData = myGradesData[0];
+  const unit1 = myData.unit1?.average ?? myData.unit1 ?? 0;
+  const unit2 = myData.unit2?.average ?? myData.unit2 ?? 0;
+  const projectFinal = myData.projectFinal ?? 0;
+  const finalGrade = myData.finalGrade ?? myData.final ?? 0;
   tbody.innerHTML = `
         <tr>
             <td class="py-3 px-4 font-medium text-gray-800">${
-              myData.name || "Estudiante"
+              myData.name || myData.displayName || "Estudiante"
             }</td>
-            <td class="py-3 px-4 text-center">${myData.u1.toFixed(2)}</td>
-            <td class="py-3 px-4 text-center">${myData.u2.toFixed(2)}</td>
-            <td class="py-3 px-4 text-center">${(
-              myData.projectFinal || 0
-            ).toFixed(2)}</td>
-            <td class="py-3 px-4 text-center font-bold text-blue-600">${
-              myData.finalGrade
-            }</td>
+            <td class="py-3 px-4 text-center">${Number(unit1).toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${Number(unit2).toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${Number(projectFinal).toFixed(
+              2
+            )}</td>
+            <td class="py-3 px-4 text-center font-bold text-blue-600">${Number(
+              finalGrade
+            ).toFixed(1)}</td>
         </tr>
     `;
 }
