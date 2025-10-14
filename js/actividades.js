@@ -1,7 +1,12 @@
 // js/actividades.js
 
 // Correcto: Importar helpers locales desde firebase.js
-import { onAuth, getDb, subscribeGrades } from "./firebase.js";
+import {
+  onAuth,
+  getDb,
+  subscribeGrades,
+  updateStudentGrades,
+} from "./firebase.js";
 
 // Correcto: Importar funciones del SDK de Firestore directamente desde la URL oficial.
 import {
@@ -33,6 +38,54 @@ const createGroupActivityForm = document.getElementById(
 );
 const submitGroupActivityBtn = document.getElementById("submit-group-activity");
 const batchStatusDiv = document.getElementById("batch-status");
+
+// --- LÓGICA DE CÁLCULO Y GUARDADO DE CALIFICACIONES ---
+async function calculateAndSaveGrades(studentId, activities) {
+  if (!studentId) return;
+
+  const gradesPayload = {
+    unit1: {},
+    unit2: {},
+    unit3: {},
+    projectFinal: 0,
+  };
+
+  const activitiesByUnit = {
+    unit1: {},
+    unit2: {},
+    unit3: {},
+  };
+
+  activities.forEach((activity) => {
+    const { unit, type, score } = activity;
+    if (!unit || !type || typeof score !== "number") return;
+    if (!activitiesByUnit[unit]) activitiesByUnit[unit] = {};
+    if (!activitiesByUnit[unit][type]) activitiesByUnit[unit][type] = [];
+    activitiesByUnit[unit][type].push(score);
+  });
+
+  for (const unit in activitiesByUnit) {
+    for (const type in activitiesByUnit[unit]) {
+      const scores = activitiesByUnit[unit][type];
+      if (scores.length > 0) {
+        const average = scores.reduce((a, b) => a + b, 0) / scores.length;
+        gradesPayload[unit][type] = average;
+      }
+    }
+  }
+
+  const projectActivity = activities.find((a) => a.type === "proyecto");
+  if (projectActivity) {
+    gradesPayload.projectFinal = projectActivity.score;
+  }
+
+  try {
+    await updateStudentGrades(studentId, gradesPayload);
+    console.log(`Calificaciones actualizadas para el estudiante ${studentId}`);
+  } catch (error) {
+    console.error("Error al guardar las calificaciones calculadas:", error);
+  }
+}
 
 // --- LÓGICA DE LA INTERFAZ (UI) ---
 
@@ -131,6 +184,8 @@ function loadActivitiesForStudent(studentId) {
         ...doc.data(),
       }));
       renderActivities(activities);
+      // Volver a calcular y guardar cada vez que las actividades cambian.
+      calculateAndSaveGrades(studentId, activities);
     },
     (error) => {
       console.error("Error al cargar actividades:", error);

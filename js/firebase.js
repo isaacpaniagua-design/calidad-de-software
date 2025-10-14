@@ -894,6 +894,16 @@ export async function updateStudentGradePartial(studentId, path, value) {
   await updateDoc(ref, updates);
 }
 
+export async function updateStudentGrades(studentId, gradesPayload) {
+  const db = getDb();
+  const studentRef = doc(db, "grades", studentId);
+  const payload = {
+    ...gradesPayload,
+    updatedAt: serverTimestamp(),
+  };
+  return updateDoc(studentRef, payload);
+}
+
 // ====== Materiales (Storage + Firestore) ======
 export async function uploadMaterial({
   file,
