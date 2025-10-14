@@ -72,36 +72,62 @@ function combineGradesAndActivities(grades, activities) {
  * Renderiza la vista completa del estudiante cuando todos los datos están disponibles.
  */
 function renderStudentView() {
-  if (studentGrades && studentActivities) {
-    const studentData = studentGrades.length > 0 ? studentGrades[0] : null;
-    const combinedData = combineGradesAndActivities(
-      studentData,
-      studentActivities
-    );
-
-    if (combinedData) {
-      renderGradesTableForStudent([combinedData]); // La función espera un array
-    } else {
-      renderGradesTableForStudent([]); // Renderiza la tabla vacía si no hay datos
-    }
-
-    renderActivitiesForStudent(studentActivities);
+  if (!studentGrades || !studentActivities) {
+    return; // No renderizar si falta alguna de las fuentes de datos.
   }
+
+  const studentData = studentGrades.length > 0 ? studentGrades[0] : null;
+  const combinedData = combineGradesAndActivities(
+    studentData,
+    studentActivities
+  );
+
+  if (combinedData) {
+    const u1 = calculateUnitGrade(combinedData.unit1 || {});
+    const u2 = calculateUnitGrade(combinedData.unit2 || {});
+    const finalGrade = calculateFinalGrade(combinedData);
+    const processedData = {
+      ...combinedData,
+      u1,
+      u2,
+      finalGrade,
+    };
+    renderGradesTableForStudent([processedData]); // La función espera un array
+  } else {
+    renderGradesTableForStudent([]); // Renderiza la tabla vacía si no hay datos
+  }
+
+  renderActivitiesForStudent(studentActivities);
 }
 
 /**
  * Combina las calificaciones de todos los estudiantes con sus actividades.
  */
 function renderTeacherView() {
-  if (allStudentsData && allActivitiesData) {
-    const combinedStudents = allStudentsData.map((student) => {
-      const studentActivities = allActivitiesData.filter(
-        (activity) => activity.studentId === student.id
-      );
-      return combineGradesAndActivities(student, studentActivities);
-    });
-    renderGradesTableForTeacher(combinedStudents);
+  if (!allStudentsData || !allActivitiesData) {
+    return; // No renderizar si falta alguna de las fuentes de datos.
   }
+
+  const combinedStudents = allStudentsData.map((student) => {
+    const studentActivities = allActivitiesData.filter(
+      (activity) => activity.studentId === student.id
+    );
+    const combinedData = combineGradesAndActivities(student, studentActivities);
+
+    // Pre-calcular calificaciones para pasar a la función de renderizado
+    const u1 = calculateUnitGrade(combinedData.unit1 || {});
+    const u2 = calculateUnitGrade(combinedData.unit2 || {});
+    const finalGrade = calculateFinalGrade(combinedData);
+
+    return {
+      ...combinedData,
+      u1,
+      u2,
+      finalGrade,
+    };
+  });
+
+  renderGradesTableForTeacher(combinedStudents);
 }
 
 /**
@@ -213,22 +239,19 @@ function renderGradesTableForTeacher(studentsData) {
 
   tbody.innerHTML = studentsData
     .map((student) => {
-      // Asegurarse de que las unidades sean objetos válidos antes de calcular
-      const u1 = calculateUnitGrade(student.unit1 || {});
-      const u2 = calculateUnitGrade(student.unit2 || {});
-      const finalGrade = calculateFinalGrade(student);
-
       return `
         <tr class="border-b hover:bg-gray-50">
             <td class="py-3 px-4 font-medium text-gray-800">${
               student.name || "Sin nombre"
             }</td>
-            <td class="py-3 px-4 text-center">${u1.toFixed(2)}</td>
-            <td class="py-3 px-4 text-center">${u2.toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${student.u1.toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${student.u2.toFixed(2)}</td>
             <td class="py-3 px-4 text-center">${getSafeScore(
               student.projectFinal
             )}</td>
-            <td class="py-3 px-4 text-center font-bold text-blue-600">${finalGrade}</td>
+            <td class="py-3 px-4 text-center font-bold text-blue-600">${
+              student.finalGrade
+            }</td>
         </tr>
     `;
     })
@@ -245,22 +268,19 @@ function renderGradesTableForStudent(myGradesData) {
     return;
   }
   const myData = myGradesData[0];
-  const finalGrade = calculateFinalGrade(myData);
   tbody.innerHTML = `
         <tr>
             <td class="py-3 px-4 font-medium text-gray-800">${
               myData.name || "Estudiante"
             }</td>
-            <td class="py-3 px-4 text-center">${calculateUnitGrade(
-              myData.unit1
-            ).toFixed(2)}</td>
-            <td class="py-3 px-4 text-center">${calculateUnitGrade(
-              myData.unit2
-            ).toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${myData.u1.toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${myData.u2.toFixed(2)}</td>
             <td class="py-3 px-4 text-center">${(
               myData.projectFinal || 0
             ).toFixed(2)}</td>
-            <td class="py-3 px-4 text-center font-bold text-blue-600">${finalGrade}</td>
+            <td class="py-3 px-4 text-center font-bold text-blue-600">${
+              myData.finalGrade
+            }</td>
         </tr>
     `;
 }
