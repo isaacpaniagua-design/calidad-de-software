@@ -14,7 +14,7 @@ export const firebaseConfig = {
   // El dominio firebasestorage.app se usa en URLs de descarga, no como nombre de bucket
   storageBucket: "calidad-de-software-v2.appspot.com",
   messagingSenderId: "220818066383",
-  appId: "1:220818066383:web:0c2119f470a5f9711b60ba"
+  appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
 };
 
 // Initialize Firebase
@@ -30,7 +30,8 @@ export const allowedEmailDomain = "potros.itson.edu.mx";
 // Correos con permisos de docente (pueden editar calificaciones y materiales)
 // Mantener sincronizado con tools/firestore.rules > allowedTeacherEmails().
 export const allowedTeacherEmails = [
-  "isaac.paniagua@potros.itson.edu.mx"
+  "isaac.paniagua@potros.itson.edu.mx",
+  "profe.paniagua@gmail.com",
 ];
 
 // Documento en Firestore que puede contener correos adicionales autorizados

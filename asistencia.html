@@ -1091,6 +1091,7 @@
       }
 
       function applyRoleVisibility(isTeacher) {
+        const role = isTeacher ? "docente" : "estudiante";
         document
           .querySelectorAll(".teacher-only, .docente-only")
           .forEach((el) => (el.style.display = isTeacher ? "" : "none"));
@@ -1176,10 +1177,12 @@
 
       function setRemoteAttendanceRecords(items) {
         registeredAttendances = (items || [])
-          .map((r) => ({
-            ...r,
-            timestamp: new Date(r.timestamp.seconds * 1000),
-          }))
+          .map((r) => {
+            const timestamp = r.timestamp?.seconds
+              ? new Date(r.timestamp.seconds * 1000)
+              : new Date();
+            return { ...r, timestamp };
+          })
           .sort((a, b) => b.timestamp - a.timestamp);
         updateAttendanceList();
         updateAttendanceCount();
