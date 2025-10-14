@@ -49,48 +49,25 @@ export function calculateUnitGrade(unit, unitNumber = 1) {
 
   // La unidad 3 es solo el proyecto final, su calificación se toma directamente.
   if (unitNumber === 3) {
-    return typeof unit.project === "number" ? unit.project : 0;
+    return typeof unit.proyecto === "number" ? unit.proyecto : 0;
   }
 
   const weights = UNIT_ACTIVITY_WEIGHTS_U1_U2;
   let total = 0;
-  let totalWeight = 0; // Para normalizar si no todas las categorías tienen nota
+  let totalWeight = 0;
 
   for (const activityType in weights) {
     const gradeValue = unit[activityType];
-    if (gradeValue === undefined) continue;
-
-    let categoryScore = 0;
-    let hasScore = false;
-
-    // Si es un número, se usa directamente (ej. examen o una única actividad).
     if (typeof gradeValue === "number") {
-      categoryScore = gradeValue;
-      hasScore = true;
-    } else if (typeof gradeValue === "object" && gradeValue !== null) {
-      // Si hay sub-calificaciones (ej. múltiples tareas), se promedian.
-      const scores = Object.values(gradeValue).filter(
-        (v) => typeof v === "number"
-      );
-      if (scores.length > 0) {
-        categoryScore = scores.reduce((a, b) => a + b, 0) / scores.length;
-        hasScore = true;
-      }
-    }
-
-    if (hasScore) {
-      total += categoryScore * weights[activityType];
+      total += gradeValue * weights[activityType];
       totalWeight += weights[activityType];
     }
   }
 
-  // Normalizar el resultado basado en los pesos de las actividades presentes.
-  // Evita que la calificación sea más baja si faltan categorías de calificación.
   if (totalWeight === 0) {
     return 0;
   }
 
-  // Se retorna el promedio ponderado normalizado.
   return total / totalWeight;
 }
 

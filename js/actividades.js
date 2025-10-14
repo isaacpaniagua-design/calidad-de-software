@@ -40,71 +40,60 @@ const batchStatusDiv = document.getElementById("batch-status");
 async function calculateAndSaveAllGrades(activities) {
   if (!selectedStudentId) return;
 
-  // 1. Agrupar todas las actividades por unidad y tipo
+  // 1. Agrupar actividades por unidad y tipo
+  const activitiesByUnitAndType = activities.reduce((acc, activity) => {
+    const { unit, type, score } = activity;
+    if (!unit || !type || typeof score !== "number") return acc;
+    if (!acc[unit]) acc[unit] = {};
+    if (!acc[unit][type]) acc[unit][type] = [];
+    acc[unit][type].push(score);
+    return acc;
+  }, {});
+
+  // 2. Calcular promedios para cada categoría y preparar el payload
   const gradesPayload = {
     unit1: {},
     unit2: {},
     unit3: {},
-    projectFinal: 0,
   };
 
-  const activitiesByUnitAndType = activities.reduce((acc, activity) => {
-    const { unit, type, score } = activity;
-    if (!unit || !type || typeof score !== "number") return acc;
-
-    if (!acc[unit]) acc[unit] = {};
-    if (!acc[unit][type]) acc[unit][type] = [];
-    acc[unit][type].push(score);
-
-    return acc;
-  }, {});
-
-  // 2. Calcular el promedio para cada tipo de actividad dentro de cada unidad
-  for (const unit in gradesPayload) {
-    if (unit.startsWith("unit") && activitiesByUnitAndType[unit]) {
-      for (const type in activitiesByUnitAndType[unit]) {
-        const scores = activitiesByUnitAndType[unit][type];
-        if (scores.length > 0) {
-          const average = scores.reduce((a, b) => a + b, 0) / scores.length;
-          gradesPayload[unit][type] = average;
-        }
+  for (const unit in activitiesByUnitAndType) {
+    if (!gradesPayload[unit]) continue;
+    for (const type in activitiesByUnitAndType[unit]) {
+      const scores = activitiesByUnitAndType[unit][type];
+      if (scores.length > 0) {
+        const average = scores.reduce((a, b) => a + b, 0) / scores.length;
+        gradesPayload[unit][type] = average;
       }
     }
   }
 
   // 3. Manejar el proyecto final (puede estar en unit3 o ser de tipo 'proyecto')
   const projectFinalActivity =
-    activities.find((a) => a.unit === "unit3" && a.type === "proyecto") ||
-    activities.find((a) => a.type === "proyecto");
-  if (projectFinalActivity) {
-    gradesPayload.projectFinal = projectFinalActivity.score || 0;
-  }
+    activities.find((a) => a.type === "proyecto") ||
+    activities.find((a) => a.unit === "unit3");
+  const projectFinalScore = projectFinalActivity
+    ? projectFinalActivity.score
+    : 0;
 
-  // 4. Calcular calificaciones ponderadas usando el módulo central
-  const u1 = calculateUnitGrade(gradesPayload.unit1);
-  const u2 = calculateUnitGrade(gradesPayload.unit2);
-  const u3 = calculateUnitGrade(gradesPayload.unit3); // Aunque no pondera, se calcula por consistencia
-  const finalGrade = calculateFinalGrade(gradesPayload);
-
-  // 5. Guardar el objeto de calificaciones completo en Firestore
+  // 4. Guardar el objeto de calificaciones completo en Firestore
   const studentGradeRef = doc(db, "grades", selectedStudentId);
   try {
     await updateDoc(studentGradeRef, {
       unit1: gradesPayload.unit1,
       unit2: gradesPayload.unit2,
       unit3: gradesPayload.unit3,
-      projectFinal: gradesPayload.projectFinal,
-      finalGrade: finalGrade, // Guardar la calificación final calculada
+      projectFinal: projectFinalScore,
       updatedAt: new Date(), // Usar serverTimestamp() si está disponible
     });
-    console.log(
-      `Calificaciones actualizadas para ${selectedStudentId}: Final=${finalGrade}`
-    );
+    console.log(`Calificaciones actualizadas para ${selectedStudentId}`);
   } catch (error) {
     console.error("Error al guardar las calificaciones calculadas:", error);
-    batchStatusDiv.textContent =
-      "Error al guardar las calificaciones en la base de datos.";
-    batchStatusDiv.className = "text-red-500";
+    if (batchStatusDiv) {
+      batchStatusDiv.textContent =
+        "Error al guardar las calificaciones en la base de datos.";
+      batchStatusDiv.className = "text-red-500";
+    }
   }
 }
 
