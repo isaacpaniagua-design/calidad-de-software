@@ -141,13 +141,13 @@ function renderTeacherView() {
  * Función auxiliar para obtener de forma segura una calificación numérica.
  */
 function getSafeScore(gradeData) {
-  if (typeof gradeData === "number") return gradeData;
-  if (typeof gradeData === "object" && gradeData !== null) {
-    // Podría ser un objeto con sub-calificaciones, promediarlas si es necesario.
-    // Esta lógica puede expandirse según la estructura de datos.
-    return gradeData.score || 0;
+  let score = 0;
+  if (typeof gradeData === "number") {
+    score = gradeData;
+  } else if (typeof gradeData === "object" && gradeData !== null) {
+    score = gradeData.score || 0;
   }
-  return 0;
+  return score.toFixed(2);
 }
 
 /**
