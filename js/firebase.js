@@ -661,77 +661,94 @@ export function subscribeMyGrades(user, callback) {
     limit(1)
   );
 
-  return onSnapshot(
+  // Esta función se llamará cuando se encuentre un documento de 'grades'
+  const handleGradeDoc = (gradeDoc) => {
+    const gradeData = { id: gradeDoc.id, ...gradeDoc.data() };
+    const activitiesRef = collection(db, "grades", gradeDoc.id, "activities");
+
+    // Suscribirse a las actividades de este estudiante
+    const unsubscribeActivities = onSnapshot(
+      activitiesRef,
+      (activitiesSnapshot) => {
+        const activities = activitiesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        // Combinar los datos de 'grades' con las 'activities'
+        const combinedData = { ...gradeData, activities };
+        callback([combinedData]); // Enviar el objeto combinado
+      },
+      (error) => {
+        console.error("Error al suscribirse a las actividades:", error);
+        // Enviar solo los datos de 'grades' si falla la suscripción a actividades
+        callback([gradeData]);
+      }
+    );
+
+    return unsubscribeActivities;
+  };
+
+  // Suscribirse al documento principal de 'grades'
+  const unsubscribeGrades = onSnapshot(
     gradesQuery,
     async (snapshot) => {
-      if (snapshot.empty) {
-        console.warn(
-          `No se encontraron calificaciones por authUid para el usuario: ${userUid}. Intentando buscar por email...`
-        );
+      if (!snapshot.empty) {
+        // Éxito en la búsqueda por authUid
+        const gradeDoc = snapshot.docs[0];
+        return handleGradeDoc(gradeDoc);
+      }
 
-        if (!userEmail) {
-          console.error(
-            "No se puede buscar por email porque el usuario no tiene un email."
+      // Si no se encuentra por UID, intentar buscar por email
+      console.warn(
+        `No se encontraron calificaciones por authUid para ${userUid}. Intentando por email...`
+      );
+
+      if (!userEmail) {
+        console.error("No se puede buscar por email (no disponible).");
+        callback([]);
+        return;
+      }
+
+      const emailQuery = query(
+        collection(db, "grades"),
+        where("email", "==", userEmail),
+        limit(1)
+      );
+
+      try {
+        const emailSnapshot = await getDocs(emailQuery);
+        if (emailSnapshot.empty) {
+          console.warn(
+            `Tampoco se encontraron calificaciones para ${userEmail}`
           );
           callback([]);
           return;
         }
 
-        // Fallback: Buscar por email
-        const emailQuery = query(
-          collection(db, "grades"),
-          where("email", "==", userEmail),
-          limit(1)
+        const gradeDoc = emailSnapshot.docs[0];
+        console.log(
+          `Encontrado por email. Actualizando ${gradeDoc.id} con authUid.`
         );
+        await updateDoc(doc(db, "grades", gradeDoc.id), { authUid: userUid });
 
-        try {
-          const emailSnapshot = await getDocs(emailQuery);
-          if (emailSnapshot.empty) {
-            console.warn(
-              `Tampoco se encontraron calificaciones para el email: ${userEmail}`
-            );
-            callback([]);
-            return;
-          }
-
-          // Se encontró por email, ahora actualizamos el doc con el authUid
-          const gradeDoc = emailSnapshot.docs[0];
-          console.log(
-            `Se encontró el documento de calificación ${gradeDoc.id} por email. Actualizando con authUid...`
-          );
-
-          const gradeRef = doc(db, "grades", gradeDoc.id);
-          await updateDoc(gradeRef, { authUid: userUid });
-
-          // Devolvemos los datos actualizados
-          const updatedData = {
-            id: gradeDoc.id,
-            ...gradeDoc.data(),
-            authUid: userUid,
-          };
-          callback([updatedData]);
-        } catch (error) {
-          console.error(
-            "Error durante el fallback de búsqueda por email:",
-            error
-          );
-          callback([]);
-        }
-        return;
+        // Después de actualizar, manejamos el documento como si lo hubiéramos encontrado por UID
+        return handleGradeDoc(gradeDoc);
+      } catch (error) {
+        console.error("Error en fallback de búsqueda por email:", error);
+        callback([]);
       }
-
-      // Éxito en la búsqueda por authUid
-      const gradesData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      callback(gradesData);
     },
     (error) => {
       console.error("Error al obtener mis calificaciones:", error);
       callback([]);
     }
   );
+
+  // La función de desuscripción debe manejar ambas suscripciones
+  return () => {
+    if (unsubscribeGrades) unsubscribeGrades();
+    // La desuscripción de actividades se maneja dentro del ciclo de vida de la de 'grades'
+  };
 }
 
 export function subscribeMyActivities(user, callback) {
