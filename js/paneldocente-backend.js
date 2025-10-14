@@ -1776,67 +1776,34 @@ function renderUploadDetail(state, providedEntries) {
   }
 }
 
-function renderGradesTable(students, weights) {
+// Solo mostrar los datos ya calculados y guardados por actividades.js
+function renderGradesTable(students) {
   const tableBody = document.getElementById("grades-table-body");
   if (!tableBody) return;
 
-  tableBody.innerHTML = ""; // Limpiar la tabla antes de renderizar
-
+  tableBody.innerHTML = "";
   students.forEach((student) => {
-    // Usa los promedios de unidad directamente del objeto student,
-    // que ya fueron calculados y guardados por actividades.js
-    const unit1Avg = student.unit1?.average || 0;
-    const unit2Avg = student.unit2?.average || 0;
-    const projectFinal = student.projectFinal || 0;
-
-    const finalGrade = calculateFinalGrade(
-      {
-        unit1: { average: unit1Avg },
-        unit2: { average: unit2Avg },
-        projectFinal: projectFinal,
-      },
-      weights
-    );
+    // Lee los promedios y calificaciones ya calculados
+    const unit1 = student.unit1?.average ?? student.unit1 ?? 0;
+    const unit2 = student.unit2?.average ?? student.unit2 ?? 0;
+    const projectFinal = student.projectFinal ?? 0;
+    const finalGrade = student.finalGrade ?? student.final ?? 0;
 
     const row = document.createElement("tr");
     row.className = "border-b hover:bg-gray-50";
     row.innerHTML = `
-        <td class="py-3 px-4 font-medium text-gray-800">${
-          student.name || "Nombre no disponible"
-        }</td>
-        <td class="py-3 px-4 text-center">${unit1Avg.toFixed(2)}</td>
-        <td class="py-3 px-4 text-center">${unit2Avg.toFixed(2)}</td>
-        <td class="py-3 px-4 text-center">${projectFinal.toFixed(2)}</td>
-        <td class="py-3 px-4 text-center font-bold text-blue-600">${finalGrade.toFixed(
-          1
-        )}</td>
+      <td class="py-3 px-4 font-medium text-gray-800">${
+        student.name || student.displayName || "Nombre no disponible"
+      }</td>
+      <td class="py-3 px-4 text-center">${Number(unit1).toFixed(2)}</td>
+      <td class="py-3 px-4 text-center">${Number(unit2).toFixed(2)}</td>
+      <td class="py-3 px-4 text-center">${Number(projectFinal).toFixed(2)}</td>
+      <td class="py-3 px-4 text-center font-bold text-blue-600">${Number(
+        finalGrade
+      ).toFixed(1)}</td>
     `;
     tableBody.appendChild(row);
   });
-}
-
-function calculateFinalGrade(student, weights) {
-  const u1 = student.unit1?.average || 0;
-  const u2 = student.unit2?.average || 0;
-  const pf = student.projectFinal || 0;
-
-  const final = u1 * weights.unit1 + u2 * weights.unit2 + pf * weights.project;
-  return final;
-}
-
-function calculateUnitAverage(unit) {
-  if (!unit || !Array.isArray(unit.actividades) || !unit.actividades.length)
-    return 0;
-  var total = 0;
-  var count = 0;
-  for (var i = 0; i < unit.actividades.length; i++) {
-    var item = unit.actividades[i];
-    if (item && typeof item.puntos === "number") {
-      total += item.puntos;
-      count += 1;
-    }
-  }
-  return count > 0 ? total / count : 0;
 }
 
 // ===== Panel docente =====
