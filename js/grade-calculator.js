@@ -84,13 +84,16 @@ export function calculateFinalGrade(grades) {
 
   const u1 = calculateUnitGrade(grades.unit1, 1);
   const u2 = calculateUnitGrade(grades.unit2, 2);
-  const u3 = calculateUnitGrade(grades.unit3, 3);
+
+  // La calificación del proyecto final se toma directamente del campo `projectFinal`.
+  const projectScore =
+    typeof grades.projectFinal === "number" ? grades.projectFinal : 0;
 
   const finalGrade =
-    (u1 * FINAL_GRADE_WEIGHTS.unit1 +
-      u2 * FINAL_GRADE_WEIGHTS.unit2 +
-      u3 * FINAL_GRADE_WEIGHTS.unit3) *
-    10;
+    u1 * FINAL_GRADE_WEIGHTS.unit1 +
+    u2 * FINAL_GRADE_WEIGHTS.unit2 +
+    projectScore * FINAL_GRADE_WEIGHTS.unit3;
 
-  return Math.round(finalGrade);
+  // La calificación final debe estar en una escala de 0 a 10 y se redondea a 2 decimales.
+  return parseFloat(finalGrade.toFixed(2));
 }
