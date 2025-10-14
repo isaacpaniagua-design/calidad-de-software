@@ -213,8 +213,9 @@ function renderGradesTableForTeacher(studentsData) {
 
   tbody.innerHTML = studentsData
     .map((student) => {
-      const u1 = calculateUnitGrade(student.unit1);
-      const u2 = calculateUnitGrade(student.unit2);
+      // Asegurarse de que las unidades sean objetos válidos antes de calcular
+      const u1 = calculateUnitGrade(student.unit1 || {});
+      const u2 = calculateUnitGrade(student.unit2 || {});
       const finalGrade = calculateFinalGrade(student);
 
       return `
