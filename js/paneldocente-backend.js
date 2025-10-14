@@ -1777,17 +1777,28 @@ function renderUploadDetail(state, providedEntries) {
 }
 
 // Solo mostrar los datos ya calculados y guardados por actividades.js
+function safeNumber(val) {
+  if (typeof val === "number" && isFinite(val)) return val;
+  if (
+    typeof val === "object" &&
+    val !== null &&
+    typeof val.average === "number" &&
+    isFinite(val.average)
+  )
+    return val.average;
+  return 0;
+}
+
 function renderGradesTable(students) {
   const tableBody = document.getElementById("grades-table-body");
   if (!tableBody) return;
 
   tableBody.innerHTML = "";
   students.forEach((student) => {
-    // Lee los promedios y calificaciones ya calculados
-    const unit1 = student.unit1?.average ?? student.unit1 ?? 0;
-    const unit2 = student.unit2?.average ?? student.unit2 ?? 0;
-    const projectFinal = student.projectFinal ?? 0;
-    const finalGrade = student.finalGrade ?? student.final ?? 0;
+    const unit1 = safeNumber(student.unit1);
+    const unit2 = safeNumber(student.unit2);
+    const projectFinal = safeNumber(student.projectFinal);
+    const finalGrade = safeNumber(student.finalGrade ?? student.final);
 
     const row = document.createElement("tr");
     row.className = "border-b hover:bg-gray-50";
@@ -1795,12 +1806,12 @@ function renderGradesTable(students) {
       <td class="py-3 px-4 font-medium text-gray-800">${
         student.name || student.displayName || "Nombre no disponible"
       }</td>
-      <td class="py-3 px-4 text-center">${Number(unit1).toFixed(2)}</td>
-      <td class="py-3 px-4 text-center">${Number(unit2).toFixed(2)}</td>
-      <td class="py-3 px-4 text-center">${Number(projectFinal).toFixed(2)}</td>
-      <td class="py-3 px-4 text-center font-bold text-blue-600">${Number(
-        finalGrade
-      ).toFixed(1)}</td>
+      <td class="py-3 px-4 text-center">${unit1.toFixed(2)}</td>
+      <td class="py-3 px-4 text-center">${unit2.toFixed(2)}</td>
+      <td class="py-3 px-4 text-center">${projectFinal.toFixed(2)}</td>
+      <td class="py-3 px-4 text-center font-bold text-blue-600">${finalGrade.toFixed(
+        1
+      )}</td>
     `;
     tableBody.appendChild(row);
   });

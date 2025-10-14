@@ -419,65 +419,10 @@ async function persistRemoteItems(profile, items) {
   const studentUid = normalized.uid ? String(normalized.uid).trim() : null;
   const primaryId =
     normalized.studentId || normalized.id || normalized.matricula || null;
-  const calificacionesRef = doc(
-    db,
-    "grupos",
-    GRUPO_ID,
-    "calificaciones",
-    docId
-  );
-  let existingSnap = null;
-  try {
-    existingSnap = await getDoc(calificacionesRef);
-  } catch (err) {
-    console.warn("[calificaciones-teacher-sync] primary lookup", err);
-  }
-
-  const fallbackIds = candidates.filter(
-    (candidate) => candidate && candidate !== docId
-  );
-  let legacyRef = null;
-  let legacyData = null;
-
-  if ((!existingSnap || !existingSnap.exists()) && fallbackIds.length) {
-    for (let i = 0; i < fallbackIds.length; i++) {
-      try {
-        const candidateId = fallbackIds[i];
-        const candidateRef = doc(
-          db,
-          "grupos",
-          GRUPO_ID,
-          "calificaciones",
-          candidateId
-        );
-        const candidateSnap = await getDoc(candidateRef);
-        if (candidateSnap.exists()) {
-          legacyRef = candidateRef;
-          legacyData = candidateSnap.data() || {};
-          break;
-        }
-      } catch (err) {
-        console.warn("[calificaciones-teacher-sync] legacy lookup", err);
-      }
-    }
-  }
-
-  const existingData =
-    existingSnap && existingSnap.exists() ? existingSnap.data() || {} : {};
-  const legacyBase = legacyData || {};
-  const itemsToPersist = Array.isArray(items)
-    ? items.map((item) => ({ ...item }))
-    : [];
-
-  const payload = {
-    ...legacyBase,
-    ...existingData,
-    items: itemsToPersist,
-    studentId:
-      primaryId || existingData.studentId || legacyBase.studentId || null,
-    studentName:
-      normalized.name ||
-      existingData.studentName ||
+  // js/calificaciones-teacher-sync.js
+  // Este archivo ha sido limpiado. Toda la lógica de edición y sincronización de calificaciones
+  // debe ocurrir únicamente desde actividades.js y actividades.html.
+  // No debe haber lógica de edición, sincronización ni inputs locales aquí.
       legacyBase.studentName ||
       null,
     studentEmail:
