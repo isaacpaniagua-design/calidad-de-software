@@ -90,8 +90,8 @@ export function calculateUnitGrade(unit, unitNumber = 1) {
     return 0;
   }
 
-  // Se retorna el promedio ponderado. Si todas las actividades están presentes, totalWeight será 1.
-  return total;
+  // Se retorna el promedio ponderado normalizado.
+  return total / totalWeight;
 }
 
 /**
