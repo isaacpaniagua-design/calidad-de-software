@@ -643,17 +643,46 @@ export function subscribeGrades(cb) {
   });
 }
 
-export function subscribeMyGrades(user, callback) {
+export function subscribeMyGradesAndActivities(user, callback) {
   const db = getDb();
   if (!user?.uid) {
     console.error(
-      "subscribeMyGrades: Se requiere un usuario autenticado con UID."
+      "subscribeMyGradesAndActivities: Se requiere un usuario autenticado con UID."
     );
+    callback({ grades: null, activities: [] });
     return () => {}; // Devuelve una función de desuscripción vacía
   }
 
   const userUid = user.uid;
   const userEmail = user.email ? user.email.toLowerCase() : null;
+
+  let unsubscribeGrades = () => {};
+  let unsubscribeActivities = () => {};
+
+  const handleGradeDoc = (gradeDoc) => {
+    const gradeData = { id: gradeDoc.id, ...gradeDoc.data() };
+    const activitiesRef = collection(db, "grades", gradeDoc.id, "activities");
+
+    // Cancela la suscripción anterior a actividades si existe
+    if (unsubscribeActivities) unsubscribeActivities();
+
+    unsubscribeActivities = onSnapshot(
+      activitiesRef,
+      (activitiesSnapshot) => {
+        const activities = activitiesSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        // Llama al callback con ambos conjuntos de datos
+        callback({ grades: gradeData, activities });
+      },
+      (error) => {
+        console.error("Error al suscribirse a las actividades:", error);
+        // Si falla, envía solo los datos de 'grades'
+        callback({ grades: gradeData, activities: [] });
+      }
+    );
+  };
 
   const gradesQuery = query(
     collection(db, "grades"),
@@ -661,51 +690,17 @@ export function subscribeMyGrades(user, callback) {
     limit(1)
   );
 
-  // Esta función se llamará cuando se encuentre un documento de 'grades'
-  const handleGradeDoc = (gradeDoc) => {
-    const gradeData = { id: gradeDoc.id, ...gradeDoc.data() };
-    const activitiesRef = collection(db, "grades", gradeDoc.id, "activities");
-
-    // Suscribirse a las actividades de este estudiante
-    const unsubscribeActivities = onSnapshot(
-      activitiesRef,
-      (activitiesSnapshot) => {
-        const activities = activitiesSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        // Combinar los datos de 'grades' con las 'activities'
-        const combinedData = { ...gradeData, activities };
-        callback([combinedData]); // Enviar el objeto combinado
-      },
-      (error) => {
-        console.error("Error al suscribirse a las actividades:", error);
-        // Enviar solo los datos de 'grades' si falla la suscripción a actividades
-        callback([gradeData]);
-      }
-    );
-
-    return unsubscribeActivities;
-  };
-
-  // Suscribirse al documento principal de 'grades'
-  const unsubscribeGrades = onSnapshot(
+  unsubscribeGrades = onSnapshot(
     gradesQuery,
     async (snapshot) => {
       if (!snapshot.empty) {
-        // Éxito en la búsqueda por authUid
-        const gradeDoc = snapshot.docs[0];
-        return handleGradeDoc(gradeDoc);
+        handleGradeDoc(snapshot.docs[0]);
+        return;
       }
 
-      // Si no se encuentra por UID, intentar buscar por email
-      console.warn(
-        `No se encontraron calificaciones por authUid para ${userUid}. Intentando por email...`
-      );
-
+      // Fallback a búsqueda por email si no se encuentra por UID
       if (!userEmail) {
-        console.error("No se puede buscar por email (no disponible).");
-        callback([]);
+        callback({ grades: null, activities: [] });
         return;
       }
 
@@ -714,40 +709,27 @@ export function subscribeMyGrades(user, callback) {
         where("email", "==", userEmail),
         limit(1)
       );
+      const emailSnapshot = await getDocs(emailQuery);
 
-      try {
-        const emailSnapshot = await getDocs(emailQuery);
-        if (emailSnapshot.empty) {
-          console.warn(
-            `Tampoco se encontraron calificaciones para ${userEmail}`
-          );
-          callback([]);
-          return;
-        }
-
-        const gradeDoc = emailSnapshot.docs[0];
-        console.log(
-          `Encontrado por email. Actualizando ${gradeDoc.id} con authUid.`
-        );
-        await updateDoc(doc(db, "grades", gradeDoc.id), { authUid: userUid });
-
-        // Después de actualizar, manejamos el documento como si lo hubiéramos encontrado por UID
-        return handleGradeDoc(gradeDoc);
-      } catch (error) {
-        console.error("Error en fallback de búsqueda por email:", error);
-        callback([]);
+      if (emailSnapshot.empty) {
+        callback({ grades: null, activities: [] });
+        return;
       }
+
+      const gradeDoc = emailSnapshot.docs[0];
+      await updateDoc(doc(db, "grades", gradeDoc.id), { authUid: userUid });
+      handleGradeDoc(gradeDoc);
     },
     (error) => {
       console.error("Error al obtener mis calificaciones:", error);
-      callback([]);
+      callback({ grades: null, activities: [] });
     }
   );
 
-  // La función de desuscripción debe manejar ambas suscripciones
+  // Devuelve una función que cancela ambas suscripciones
   return () => {
-    if (unsubscribeGrades) unsubscribeGrades();
-    // La desuscripción de actividades se maneja dentro del ciclo de vida de la de 'grades'
+    unsubscribeGrades();
+    unsubscribeActivities();
   };
 }
 

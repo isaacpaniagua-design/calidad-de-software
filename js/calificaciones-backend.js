@@ -3,8 +3,7 @@
 import {
   onAuth,
   subscribeGrades,
-  subscribeMyGrades,
-  subscribeMyActivities,
+  subscribeMyGradesAndActivities,
   subscribeAllActivities,
 } from "./firebase.js";
 import { calculateUnitGrade, calculateFinalGrade } from "./grade-calculator.js";
@@ -197,18 +196,19 @@ function handleAuthStateChanged(user) {
         studentGrades = null;
         studentActivities = null;
 
-        unsubscribeFromGrades = subscribeMyGrades(user, (grades) => {
-          studentGrades = grades;
-          renderStudentView();
-        });
-
-        unsubscribeFromActivities = subscribeMyActivities(
+        // Usar la nueva función unificada para obtener calificaciones y actividades
+        unsubscribeFromGrades = subscribeMyGradesAndActivities(
           user,
-          (activities) => {
+          ({ grades, activities }) => {
+            // El callback recibe ambos conjuntos de datos
+            studentGrades = grades ? [grades] : []; // La vista espera un array
             studentActivities = activities;
             renderStudentView();
           }
         );
+
+        // Nos aseguramos de que la otra variable de desuscripción esté limpia
+        unsubscribeFromActivities = null;
       } else {
         renderError(
           "No se pudo identificar tu sesión. Por favor, inicia sesión de nuevo."
