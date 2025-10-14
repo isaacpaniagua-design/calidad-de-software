@@ -419,10 +419,11 @@ async function persistRemoteItems(profile, items) {
   const studentUid = normalized.uid ? String(normalized.uid).trim() : null;
   const primaryId =
     normalized.studentId || normalized.id || normalized.matricula || null;
-  // js/calificaciones-teacher-sync.js
-  // Este archivo ha sido limpiado. Toda la lógica de edición y sincronización de calificaciones
-  // debe ocurrir únicamente desde actividades.js y actividades.html.
-  // No debe haber lógica de edición, sincronización ni inputs locales aquí.
+
+  const payload = {
+    studentName:
+      normalized.name ||
+      existingData.studentName ||
       legacyBase.studentName ||
       null,
     studentEmail:
