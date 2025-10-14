@@ -27,51 +27,43 @@ let allActivitiesData = null;
 function combineGradesAndActivities(grades, activities) {
   if (!grades) return null;
 
-  // --- DEBUG START ---
-  console.log(`[DEBUG] Combinando datos para: ${grades.name || grades.id}`);
-  console.log(
-    "[DEBUG] Calificaciones base recibidas:",
-    JSON.parse(JSON.stringify(grades))
-  );
-  console.log(
-    "[DEBUG] Actividades individuales recibidas:",
-    JSON.parse(JSON.stringify(activities))
-  );
-  // --- DEBUG END ---
-
-  // Clonamos para no mutar el estado original
   const combined = JSON.parse(JSON.stringify(grades));
 
-  activities.forEach((activity) => {
-    const { unit, type, score, activityName } = activity;
-    if (!unit || !type) return;
+  // Objeto para agrupar actividades por unidad y tipo
+  const activitiesByUnit = {};
 
+  activities.forEach((activity) => {
+    const { unit, type, score } = activity;
+    if (!unit || !type || typeof score !== "number") return;
+
+    if (!activitiesByUnit[unit]) {
+      activitiesByUnit[unit] = {};
+    }
+    if (!activitiesByUnit[unit][type]) {
+      activitiesByUnit[unit][type] = [];
+    }
+    activitiesByUnit[unit][type].push(score);
+  });
+
+  // Procesar las actividades agrupadas y calcular promedios
+  for (const unit in activitiesByUnit) {
     if (!combined[unit]) {
       combined[unit] = {};
     }
-    if (!combined[unit][type]) {
-      combined[unit][type] = {};
+    for (const type in activitiesByUnit[unit]) {
+      const scores = activitiesByUnit[unit][type];
+      if (scores.length > 0) {
+        // Para tipos como 'examen', que suelen ser únicos, se toma el valor directamente si solo hay uno.
+        // Para otros, se promedia. Esto es más robusto.
+        if (scores.length === 1) {
+          combined[unit][type] = scores[0];
+        } else {
+          const average = scores.reduce((a, b) => a + b, 0) / scores.length;
+          combined[unit][type] = average;
+        }
+      }
     }
-
-    // Si ya existe una entrada y no es un objeto, la convertimos
-    if (typeof combined[unit][type] !== "object") {
-      const existingScore = combined[unit][type];
-      combined[unit][type] = { existing: existingScore };
-    }
-
-    // Usamos un nombre de actividad único o un contador como clave
-    const key =
-      activityName.replace(/\s+/g, "-").toLowerCase() ||
-      `item-${Object.keys(combined[unit][type]).length}`;
-    combined[unit][type][key] = score;
-  });
-
-  // --- DEBUG START ---
-  console.log(
-    "[DEBUG] Objeto combinado final antes del cálculo:",
-    JSON.parse(JSON.stringify(combined))
-  );
-  // --- DEBUG END ---
+  }
 
   return combined;
 }
