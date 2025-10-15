@@ -914,14 +914,20 @@ export async function updateStudentGradePartial(studentId, path, value) {
   await updateDoc(ref, updates);
 }
 
-export async function updateStudentGrades(studentId, gradesPayload) {
-  const db = getDb();
-  const studentRef = doc(db, "grades", studentId);
-  const payload = {
-    ...gradesPayload,
-    updatedAt: serverTimestamp(),
-  };
-  return updateDoc(studentRef, payload);
+export async function updateStudentGrades(studentId, gradesData) {
+  if (!studentId) {
+    console.error("Se requiere un ID de estudiante para actualizar las calificaciones.");
+    return;
+  }
+  try {
+    const gradeRef = doc(db, "grades", studentId);
+    // ¡CORRECCIÓN CLAVE! Usamos setDoc con merge para actualizar o crear de forma segura.
+    await setDoc(gradeRef, gradesData, { merge: true });
+  } catch (error) {
+    console.error(`Error al actualizar las calificaciones para el estudiante ${studentId}:`, error);
+    // Propaga el error para que la función que lo llama pueda manejarlo si es necesario.
+    throw error;
+  }
 }
 
 // ====== Materiales (Storage + Firestore) ======
@@ -1574,4 +1580,5 @@ export async function saveTestPlan(planId, planData) {
 }
 
 export { app };
+
 
