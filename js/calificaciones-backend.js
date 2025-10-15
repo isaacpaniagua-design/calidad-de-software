@@ -198,6 +198,8 @@ function renderGradesTableForTeacher(studentsData) {
     .join("");
 }
 
+// js/calificaciones-backend.js
+
 function renderGradesTableForStudent(myGradesData) {
   const tbody = document.getElementById("grades-table-body");
   if (!tbody) return;
@@ -207,22 +209,15 @@ function renderGradesTableForStudent(myGradesData) {
       '<tr><td colspan="5" class="text-center py-4">Aún no tienes un resumen de calificaciones.</td></tr>';
     return;
   }
-  const getUnitAverage = (unitData) => {
-    if (!unitData || typeof unitData !== 'object') return 0;
-    // Si ya existe un 'average', lo usamos.
-    if (typeof unitData.average === 'number') return unitData.average;
-    // Si no, calculamos el promedio de los tipos de actividad que existan.
-    const scores = Object.values(unitData).filter(v => typeof v === 'number');
-    if (scores.length === 0) return 0;
-    return scores.reduce((a, b) => a + b, 0) / scores.length;
-  };
 
-  // Usamos la nueva función auxiliar
-  const unit1 = getUnitAverage(myData.unit1);
-  const unit2 = getUnitAverage(myData.unit2);
+  const myData = myGradesData[0];
   
-  const projectFinal = myData.projectFinal ?? 0;
-  const finalGrade = myData.finalGrade ?? myData.final ?? 0;
+  // LECTURA DIRECTA Y SEGURA DE LOS PROMEDIOS
+  const unit1 = myData.unit1 || 0;
+  const unit2 = myData.unit2 || 0;
+  const projectFinal = myData.projectFinal || 0;
+  const finalGrade = myData.finalGrade || 0;
+
   tbody.innerHTML = `
         <tr>
             <td class="py-3 px-4 font-medium text-gray-800">${
