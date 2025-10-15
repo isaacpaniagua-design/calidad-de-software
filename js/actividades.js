@@ -56,34 +56,37 @@ async function calculateAndSaveGrades(studentId, activities) {
     unit3: {},
   };
 
-  activities.forEach((activity) => {
-    const { unit, type, score } = activity;
-    if (!unit || !type || typeof score !== "number") return;
-    if (!activitiesByUnit[unit]) activitiesByUnit[unit] = {};
-    if (!activitiesByUnit[unit][type]) activitiesByUnit[unit][type] = [];
-    activitiesByUnit[unit][type].push(score);
+ activities.forEach((activity) => {
+    const { unit, score } = activity;
+    if (unit && typeof score === 'number' && activitiesByUnit[unit]) {
+      activitiesByUnit[unit].push(score);
+    }
   });
 
-  for (const unit in activitiesByUnit) {
-    for (const type in activitiesByUnit[unit]) {
-      const scores = activitiesByUnit[unit][type];
-      if (scores.length > 0) {
-        const average = scores.reduce((a, b) => a + b, 0) / scores.length;
-        gradesPayload[unit][type] = average;
-      }
+ for (const unit in activitiesByUnit) {
+    const scores = activitiesByUnit[unit];
+    if (scores.length > 0) {
+      const average = scores.reduce((a, b) => a + b, 0) / scores.length;
+      // ¡CORRECCIÓN CLAVE! Guardamos el promedio general de la unidad.
+      gradesPayload[unit] = average;
+    } else {
+      gradesPayload[unit] = 0; // Si no hay actividades, el promedio es 0
     }
   }
 
-  const projectActivity = activities.find((a) => a.type === "proyecto");
-  if (projectActivity) {
+const projectActivity = activities.find((a) => a.type === "proyecto");
+  if (projectActivity && typeof projectActivity.score === 'number') {
     gradesPayload.projectFinal = projectActivity.score;
+    // Si el proyecto pertenece a la "Unidad 3", se promediará allí también.
   }
 
   try {
+    // La función updateStudentGrades en firebase.js usará setDoc con merge:true,
+    // por lo que esto actualizará los campos unit1, unit2, etc., en el documento del estudiante.
     await updateStudentGrades(studentId, gradesPayload);
-    console.log(`Calificaciones actualizadas para el estudiante ${studentId}`);
+    console.log(`Promedios de unidad actualizados para el estudiante ${studentId}`);
   } catch (error) {
-    console.error("Error al guardar las calificaciones calculadas:", error);
+    console.error("Error al guardar los promedios de unidad calculados:", error);
   }
 }
 
