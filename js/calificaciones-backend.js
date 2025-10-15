@@ -3,16 +3,12 @@
 import {
   onAuth,
   subscribeMyGradesAndActivities,
-  subscribeGrades, // Usaremos esta función centralizada
+  subscribeGrades,
 } from "./firebase.js";
 
 let unsubscribeFromData = null;
 
-/**
- * Función principal que se activa cuando cambia el estado de autenticación.
- */
 async function handleAuthStateChanged(user) {
-  // Limpiar suscripción anterior para evitar duplicados
   if (unsubscribeFromData) unsubscribeFromData();
 
   const gradesContainer = document.getElementById("grades-table-container");
@@ -20,7 +16,6 @@ async function handleAuthStateChanged(user) {
   const titleEl = document.getElementById("grades-title");
 
   if (!user) {
-    // Si no hay sesión, ocultar todo
     gradesContainer.style.display = "none";
     activitiesContainer.style.display = "none";
     return;
@@ -29,19 +24,16 @@ async function handleAuthStateChanged(user) {
   const userRole = (localStorage.getItem("qs_role") || "").toLowerCase();
   gradesContainer.style.display = "block";
 
-  // Cargar la lista maestra de estudiantes desde el JSON
-  const response = await fetch('../data/students.json');
+  // ✅ *** CORRECCIÓN DE RUTA ***
+  const response = await fetch('./data/students.json');
   const rosterData = await response.json();
   const rosterMap = new Map(rosterData.students.map(s => [s.id, s.name]));
 
   if (userRole === "docente") {
-    // --- VISTA DEL DOCENTE ---
     titleEl.textContent = "Panel de Calificaciones (Promedios Generales)";
     activitiesContainer.style.display = "none";
 
-    // Suscribirse a TODOS los documentos de calificaciones
     unsubscribeFromData = subscribeGrades((allStudentGrades) => {
-      // Enriquecer los datos de calificaciones con los nombres del JSON
       const fullStudentData = allStudentGrades.map(grade => ({
         ...grade,
         name: rosterMap.get(grade.id) || grade.name || "Estudiante sin nombre",
@@ -50,22 +42,19 @@ async function handleAuthStateChanged(user) {
     });
 
   } else {
-    // --- VISTA DEL ESTUDIANTE ---
     titleEl.textContent = "Resumen de Mis Calificaciones";
     activitiesContainer.style.display = "block";
 
     if (user.uid) {
-      // Suscribirse solo a MIS calificaciones y actividades
       unsubscribeFromData = subscribeMyGradesAndActivities(
         user,
         ({ grades, activities }) => {
           if (grades) {
-            // Enriquecer mis datos con mi nombre del JSON
             const myFullData = {
               ...grades,
               name: rosterMap.get(grades.id) || grades.name || "Estudiante",
             };
-            renderGradesTable([myFullData]); // La función espera un array
+            renderGradesTable([myFullData]);
           } else {
             renderGradesTable([]);
           }
@@ -76,10 +65,6 @@ async function handleAuthStateChanged(user) {
   }
 }
 
-/**
- * Renderiza la tabla de calificaciones. Funciona tanto para docentes como para estudiantes.
- * @param {Array} studentsData - Un array con los datos de los estudiantes y sus promedios.
- */
 function renderGradesTable(studentsData) {
   const tbody = document.getElementById("grades-table-body");
   if (!tbody) return;
@@ -88,8 +73,7 @@ function renderGradesTable(studentsData) {
     tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4">No hay calificaciones para mostrar.</td></tr>';
     return;
   }
-
-  // Ordenar por nombre para consistencia
+  
   studentsData.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
 
   tbody.innerHTML = studentsData.map((student) => {
@@ -109,13 +93,9 @@ function renderGradesTable(studentsData) {
     }).join("");
 }
 
-/**
- * Renderiza la tabla de actividades detalladas para la vista del estudiante.
- */
 function renderActivitiesForStudent(activities) {
   const tbody = document.getElementById("student-activities-body");
   if (!tbody) return;
-
   if (!activities || activities.length === 0) {
     tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4">No hay actividades detalladas.</td></tr>';
     return;
@@ -130,5 +110,4 @@ function renderActivitiesForStudent(activities) {
     `).join("");
 }
 
-// Punto de entrada del script
 onAuth(handleAuthStateChanged);
