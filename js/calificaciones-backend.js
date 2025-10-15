@@ -68,6 +68,10 @@ function getSafeScore(gradeData) {
  * Maneja los cambios de estado de autenticación para renderizar la vista correcta.
  * @param {object|null} user - El objeto de usuario de Firebase.
  */
+/**
+ * Maneja los cambios de estado de autenticación para renderizar la vista correcta.
+ * @param {object|null} user - El objeto de usuario de Firebase.
+ */
 function handleAuthStateChanged(user) {
   // Limpiar suscripciones anteriores para evitar fugas de memoria.
   if (unsubscribeFromGrades) unsubscribeFromGrades();
@@ -84,8 +88,13 @@ function handleAuthStateChanged(user) {
     return;
   }
 
+  // CAMBIO: Se define una función de manejo de errores reutilizable.
+  const handleSubscriptionError = (error) => {
+    console.error("Error al suscribirse a los datos de Firestore:", error);
+    renderError("No se pudieron cargar los datos. Revisa tu conexión o contacta al soporte.");
+  };
+
   if (user) {
-    // CORRECCIÓN CLAVE: Convertimos el rol a minúsculas para una comparación segura.
     const userRole = (localStorage.getItem("qs_role") || "").toLowerCase();
     gradesContainer.style.display = "block";
 
@@ -93,43 +102,48 @@ function handleAuthStateChanged(user) {
       // --- VISTA DEL DOCENTE ---
       titleEl.textContent = "Panel de Calificaciones (Promedios Generales)";
       activitiesContainer.style.display = "none";
-
-      // Reiniciar estado del docente
       allStudentsData = null;
       allActivitiesData = null;
 
+      // CAMBIO: Se añade el manejador de errores a la suscripción.
       unsubscribeFromGrades = subscribeGrades((students) => {
         allStudentsData = students;
         renderTeacherView();
-      });
+      }, handleSubscriptionError); // <--- SEGUNDO ARGUMENTO AÑADIDO
 
+      // CAMBIO: Se añade el manejador de errores a la suscripción.
       unsubscribeFromActivities = subscribeAllActivities((activities) => {
         allActivitiesData = activities;
         renderTeacherView();
-      });
+      }, handleSubscriptionError); // <--- SEGUNDO ARGUMENTO AÑADIDO
+
     } else {
-      // Asumimos rol de estudiante
       // --- VISTA DEL ESTUDIANTE ---
       titleEl.textContent = "Resumen de Mis Calificaciones";
       activitiesContainer.style.display = "block";
 
       if (user.uid) {
-        // Reiniciar el estado local en cada cambio de autenticación
         studentGrades = null;
         studentActivities = null;
 
-        // Usar la nueva función unificada para obtener calificaciones y actividades
+        // CAMBIO: Se modifica la llamada para incluir el manejador de errores.
+        // Asumimos que tu función puede recibir un segundo argumento o un objeto con callbacks.
+        // Si tu función `subscribeMyGradesAndActivities` solo acepta un callback,
+        // necesitarás modificarla en `firebase.js` para que acepte un segundo callback de error.
         unsubscribeFromGrades = subscribeMyGradesAndActivities(
           user,
-          ({ grades, activities }) => {
-            // El callback recibe ambos conjuntos de datos
-            studentGrades = grades ? [grades] : []; // La vista espera un array
-            studentActivities = activities;
-            renderStudentView();
+          {
+            // Callback de éxito
+            next: ({ grades, activities }) => {
+              studentGrades = grades ? [grades] : [];
+              studentActivities = activities;
+              renderStudentView();
+            },
+            // Callback de error
+            error: handleSubscriptionError
           }
         );
 
-        // Nos aseguramos de que la otra variable de desuscripción esté limpia
         unsubscribeFromActivities = null;
       } else {
         renderError(
@@ -141,7 +155,6 @@ function handleAuthStateChanged(user) {
     // Ocultar todo si no hay sesión
     gradesContainer.style.display = "none";
     activitiesContainer.style.display = "none";
-    // Limpiar estado al cerrar sesión
     studentGrades = null;
     studentActivities = null;
     allStudentsData = null;
