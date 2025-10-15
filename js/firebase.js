@@ -150,6 +150,19 @@ export function subscribeGrades(callback, errorCallback) {
   }, errorCallback);
 }
 
+export async function isTeacherEmail(email) {
+  if (!email) {
+    return false; // Si no hay email, no puede ser de un docente.
+  }
+
+  // 1. Llama a la función que ya creamos para cargar la lista desde Firestore (o desde la caché).
+  const allowlist = await ensureTeacherAllowlistLoaded();
+
+  // 2. Comprueba si el email (convertido a minúsculas para evitar errores de mayúsculas/minúsculas)
+  //    está incluido en la lista.
+  return allowlist.includes(email.toLowerCase());
+}
+
 /**
  * --- ¡NUEVA FUNCIÓN! ---
  * Reemplaza la necesidad de 'collectionGroup'.
@@ -597,6 +610,7 @@ export async function saveTestPlan(planId, planData) {
 }
 
 export { app };
+
 
 
 
