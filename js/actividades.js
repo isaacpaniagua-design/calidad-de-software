@@ -5,10 +5,11 @@ import {
   onAuth,
   getDb,
   subscribeGrades,
-  updateStudentGrades,
+  updateStudentGrades, // Aunque no la usaremos directamente, es bueno mantenerla por si acaso
 } from "./firebase.js";
 
 // Correcto: Importar funciones del SDK de Firestore directamente desde la URL oficial.
+// MODIFICADO: Añadimos getDoc para poder leer la calificación del proyecto final.
 import {
   collection,
   doc,
@@ -18,6 +19,8 @@ import {
   orderBy,
   deleteDoc,
   writeBatch,
+  getDoc, // <--- AÑADIDO
+  setDoc, // <--- AÑADIDO para actualizar el documento de calificaciones
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 const db = getDb();
@@ -39,57 +42,72 @@ const createGroupActivityForm = document.getElementById(
 const submitGroupActivityBtn = document.getElementById("submit-group-activity");
 const batchStatusDiv = document.getElementById("batch-status");
 
-// --- LÓGICA DE CÁLCULO Y GUARDADO DE CALIFICACIONES ---
-async function calculateAndSaveGrades(studentId, activities) {
+// --- LÓGICA DE CÁLCULO Y GUARDADO DE CALIFICACIONES (VERSIÓN MEJORADA) ---
+/**
+ * Recalcula los promedios de las unidades y la calificación final para un
+ * estudiante basándose en todas sus actividades, y actualiza Firestore.
+ * @param {string} studentId - El ID del estudiante a recalcular.
+ * @param {Array} activities - La lista de actividades del estudiante.
+ */
+async function recalculateAndSaveGrades(studentId, activities) {
   if (!studentId) return;
 
-  const gradesPayload = {
-    unit1: {},
-    unit2: {},
-    unit3: {},
-    projectFinal: 0,
-  };
-
-  const activitiesByUnit = {
-    unit1: {},
-    unit2: {},
-    unit3: {},
-  };
-
-  activities.forEach((activity) => {
-    const { unit, type, score } = activity;
-    if (!unit || !type || typeof score !== "number") return;
-    if (!activitiesByUnit[unit]) activitiesByUnit[unit] = {};
-    if (!activitiesByUnit[unit][type]) activitiesByUnit[unit][type] = [];
-    activitiesByUnit[unit][type].push(score);
-  });
-
-  for (const unit in activitiesByUnit) {
-    for (const type in activitiesByUnit[unit]) {
-      const scores = activitiesByUnit[unit][type];
-      if (scores.length > 0) {
-        const average = scores.reduce((a, b) => a + b, 0) / scores.length;
-        gradesPayload[unit][type] = average;
-      }
-    }
-  }
-
-  const projectActivity = activities.find((a) => a.type === "proyecto");
-  if (projectActivity) {
-    gradesPayload.projectFinal = projectActivity.score;
-  }
+  const studentGradesRef = doc(db, "grades", studentId);
 
   try {
-    await updateStudentGrades(studentId, gradesPayload);
-    console.log(`Calificaciones actualizadas para el estudiante ${studentId}`);
+    // 1. Calcular los promedios por unidad
+    const gradesByUnit = activities.reduce((acc, activity) => {
+      const unit = activity.unit; // ej. "unit1"
+      const score = typeof activity.score === 'number' ? activity.score : 0;
+      if (!unit) return acc; // Ignorar actividades sin unidad
+
+      if (!acc[unit]) {
+        acc[unit] = { totalScore: 0, count: 0 };
+      }
+      acc[unit].totalScore += score;
+      acc[unit].count++;
+      return acc;
+    }, {});
+
+    const unitAverages = {};
+    for (const unit in gradesByUnit) {
+      if (gradesByUnit[unit].count > 0) {
+        // Guardamos el objeto completo con el promedio
+        unitAverages[unit] = {
+          average: gradesByUnit[unit].totalScore / gradesByUnit[unit].count
+        };
+      }
+    }
+
+    // 2. Obtener la calificación del proyecto final directamente del documento
+    const studentDoc = await getDoc(studentGradesRef);
+    const projectFinalScore = studentDoc.exists() && studentDoc.data().projectFinal ? studentDoc.data().projectFinal : 0;
+
+    // 3. Calcular la calificación final (puedes ajustar esta fórmula)
+    const unitAverageValues = Object.values(unitAverages).map(u => u.average);
+    const averageOfUnits = unitAverageValues.length > 0 ? unitAverageValues.reduce((sum, avg) => sum + avg, 0) / unitAverageValues.length : 0;
+
+    // Fórmula de ejemplo: 40% promedio de unidades + 60% proyecto final.
+    const finalGrade = (averageOfUnits * 0.4) + (projectFinalScore * 0.6);
+
+    // 4. Preparar los datos para actualizar en Firestore
+    const dataToUpdate = {
+      ...unitAverages, // ej. { unit1: { average: 8.5 }, unit2: { average: 9.0 } }
+      finalGrade: finalGrade,
+    };
+
+    // 5. Actualizar el documento del estudiante con los nuevos promedios
+    await setDoc(studentGradesRef, dataToUpdate, { merge: true });
+    console.log(`Promedios para el estudiante ${studentId} actualizados correctamente.`);
+
   } catch (error) {
-    console.error("Error al guardar las calificaciones calculadas:", error);
+    console.error("Error al recalcular los promedios del estudiante:", error);
   }
 }
 
+
 // --- LÓGICA DE LA INTERFAZ (UI) ---
 
-// CORRECCIÓN CLAVE: Envolvemos la lógica principal en una función exportable.
 export function initActividadesPage(user) {
   const isTeacher =
     user && (localStorage.getItem("qs_role") || "").toLowerCase() === "docente";
@@ -104,8 +122,6 @@ export function initActividadesPage(user) {
         '<div class="bg-white p-6 rounded-lg shadow-md text-center"><h1 class="text-2xl font-bold text-red-600">Acceso Denegado</h1><p class="text-gray-600 mt-2">Esta página es solo para docentes.</p></div>';
   }
 }
-
-// El resto de tus funciones se mantienen exactamente igual, ahora son llamadas por initActividadesPage.
 
 function loadStudents() {
   studentSelect.disabled = true;
@@ -147,10 +163,10 @@ function renderActivities(activities) {
     card.innerHTML = `
             <div class="col-span-1 md:col-span-2">
                 <p class="font-bold text-lg">${activity.activityName}</p>
-                <p class="text-sm text-gray-500">Unidad: ${activity.unit.replace(
+                <p class="text-sm text-gray-500">Unidad: ${(activity.unit || "").replace(
                   "unit",
                   ""
-                )} | Tipo: ${activity.type}</p>
+                )} | Tipo: ${activity.type || "N/A"}</p>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">Calificación (0-10)</label>
@@ -184,8 +200,9 @@ function loadActivitiesForStudent(studentId) {
         ...doc.data(),
       }));
       renderActivities(activities);
-      // Volver a calcular y guardar cada vez que las actividades cambian.
-      calculateAndSaveGrades(studentId, activities);
+      // ¡AQUÍ ESTÁ LA MAGIA!
+      // Se llama a la nueva función de recálculo cada vez que hay un cambio.
+      recalculateAndSaveGrades(studentId, activities);
     },
     (error) => {
       console.error("Error al cargar actividades:", error);
@@ -200,7 +217,7 @@ function setupEventListeners() {
     selectedStudentId = studentSelect.value;
     if (selectedStudentId) {
       const student = studentsList.find((s) => s.id === selectedStudentId);
-      studentNameDisplay.textContent = student.name;
+      studentNameDisplay.textContent = student ? student.name : "Estudiante no encontrado";
       activitiesListSection.style.display = "block";
       loadActivitiesForStudent(selectedStudentId);
     } else {
@@ -269,21 +286,30 @@ function setupEventListeners() {
   activitiesContainer.addEventListener("change", async (e) => {
     if (e.target.classList.contains("score-input")) {
       const input = e.target;
+      input.disabled = true; // Deshabilitar mientras se guarda
       const activityId = input.dataset.activityId;
       let newScore = parseFloat(input.value);
 
       if (isNaN(newScore) || newScore < 0) newScore = 0;
       if (newScore > 10) newScore = 10;
-      input.value = newScore;
+      input.value = newScore.toFixed(1);
 
-      const activityRef = doc(
-        db,
-        "grades",
-        selectedStudentId,
-        "activities",
-        activityId
-      );
-      await updateDoc(activityRef, { score: newScore });
+      try {
+        const activityRef = doc(
+          db,
+          "grades",
+          selectedStudentId,
+          "activities",
+          activityId
+        );
+        await updateDoc(activityRef, { score: newScore });
+        // No es necesario llamar a recalcular aquí, onSnapshot lo hará por nosotros.
+      } catch (error) {
+          console.error("Error al actualizar la calificación:", error);
+          alert("No se pudo guardar la calificación.");
+      } finally {
+          input.disabled = false; // Rehabilitar el input
+      }
     }
   });
 
@@ -307,6 +333,7 @@ function setupEventListeners() {
             activityId
           );
           await deleteDoc(activityRef);
+          // onSnapshot se encargará de actualizar la UI y los promedios.
         } catch (error) {
           console.error("Error al eliminar actividad:", error);
           alert("No se pudo eliminar la actividad.");
@@ -317,8 +344,6 @@ function setupEventListeners() {
 }
 
 // --- INICIALIZACIÓN ---
-// Espera a que el estado de autenticación se resuelva y luego inicializa la página.
 onAuth((user) => {
-  // La función initActividadesPage ya contiene la lógica para verificar si el usuario es docente.
   initActividadesPage(user);
 });
