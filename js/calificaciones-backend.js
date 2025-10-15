@@ -198,8 +198,6 @@ function renderGradesTableForTeacher(studentsData) {
     .join("");
 }
 
-// js/calificaciones-backend.js
-
 function renderGradesTableForStudent(myGradesData) {
   const tbody = document.getElementById("grades-table-body");
   if (!tbody) return;
@@ -209,15 +207,11 @@ function renderGradesTableForStudent(myGradesData) {
       '<tr><td colspan="5" class="text-center py-4">Aún no tienes un resumen de calificaciones.</td></tr>';
     return;
   }
-
   const myData = myGradesData[0];
-  
-  // LECTURA DIRECTA Y SEGURA DE LOS PROMEDIOS
-  const unit1 = myData.unit1 || 0;
-  const unit2 = myData.unit2 || 0;
-  const projectFinal = myData.projectFinal || 0;
-  const finalGrade = myData.finalGrade || 0;
-
+  const unit1 = myData.unit1?.average ?? myData.unit1 ?? 0;
+  const unit2 = myData.unit2?.average ?? myData.unit2 ?? 0;
+  const projectFinal = myData.projectFinal ?? 0;
+  const finalGrade = myData.finalGrade ?? myData.final ?? 0;
   tbody.innerHTML = `
         <tr>
             <td class="py-3 px-4 font-medium text-gray-800">${
