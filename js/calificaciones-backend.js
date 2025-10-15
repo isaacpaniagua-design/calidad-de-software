@@ -2,31 +2,23 @@
 
 import {
   onAuth,
-  subscribeGrades,
-  subscribeToStudentList, // NUEVA función necesaria en firebase.js
-  getGradeForStudent, // NUEVA función necesaria en firebase.js
   subscribeMyGradesAndActivities,
   subscribeAllActivities,
+  // --- NUEVAS FUNCIONES REQUERIDAS en firebase.js ---
+  subscribeToStudentList, // Para obtener la lista de estudiantes
+  getGradeForStudent,      // Para obtener las calificaciones de un estudiante específico
 } from "./firebase.js";
 import { calculateUnitGrade, calculateFinalGrade } from "./grade-calculator.js";
 
 let unsubscribeFromGrades = null;
 let unsubscribeFromActivities = null;
-let studentSubscriptions = []; // Para manejar múltiples suscripciones
+let studentSubscriptions = []; // Array para manejar múltiples suscripciones a estudiantes
 
 // Estado local para almacenar datos
 let studentGrades = null;
 let studentActivities = null;
 let allStudentsData = null;
 let allActivitiesData = null;
-
-/**
- * Combina las calificaciones base con las actividades individuales.
- * @param {object} grades - El objeto de calificaciones principal.
- * @param {Array} activities - La lista de actividades individuales.
- * @returns {object} Un nuevo objeto de calificaciones con las actividades agrupadas.
- */
-// Ya no se combinan ni recalculan actividades aquí. Solo se muestran los datos calculados por actividades.js
 
 /**
  * Renderiza la vista completa del estudiante cuando todos los datos están disponibles.
@@ -45,7 +37,7 @@ function renderStudentView() {
 }
 
 /**
- * Combina las calificaciones de todos los estudiantes con sus actividades.
+ * Renderiza la vista del profesor cuando los datos de los estudiantes están disponibles.
  */
 function renderTeacherView() {
   if (!allStudentsData) {
@@ -75,7 +67,7 @@ function handleAuthStateChanged(user) {
   // Limpiar suscripciones anteriores para evitar fugas de memoria.
   if (unsubscribeFromGrades) unsubscribeFromGrades();
   if (unsubscribeFromActivities) unsubscribeFromActivities();
-    studentSubscriptions.forEach(unsub => unsub()); // Limpia las suscripciones de estudiantes
+  studentSubscriptions.forEach(unsub => unsub()); // Limpia las suscripciones individuales
   studentSubscriptions = [];
 
   const gradesContainer = document.getElementById("grades-table-container");
@@ -90,24 +82,31 @@ function handleAuthStateChanged(user) {
   }
 
   if (user) {
-    // CORRECCIÓN CLAVE: Convertimos el rol a minúsculas para una comparación segura.
     const userRole = (localStorage.getItem("qs_role") || "").toLowerCase();
     gradesContainer.style.display = "block";
 
     if (userRole === "docente") {
-      // --- VISTA DEL DOCENTE ---
-     titleEl.textContent = "Panel de Calificaciones (Promedios Generales)";
+      // --- VISTA DEL DOCENTE (LÓGICA CORREGIDA) ---
+      titleEl.textContent = "Panel de Calificaciones (Promedios Generales)";
       activitiesContainer.style.display = "none";
 
-      allStudentsData = []; // Inicializar como un array vacío
+      allStudentsData = []; // Inicializar como array vacío
 
-    for (const student of students) {
-          const studentId = student.id; // Asumiendo que el ID del documento es el UID
+      // 1. Suscribirse a la lista de estudiantes (requiere la nueva función en firebase.js)
+      unsubscribeFromGrades = subscribeToStudentList((students) => {
+        // Limpiar suscripciones anteriores a calificaciones para evitar duplicados
+        studentSubscriptions.forEach(unsub => unsub());
+        studentSubscriptions = [];
+        allStudentsData = []; // Reiniciar en cada actualización de la lista
+
+        // 2. Para cada estudiante, obtener su documento de calificaciones.
+        students.forEach(student => {
+          const studentId = student.id; // Asumiendo que el doc ID es el UID
           
-          // Suscribirse a las calificaciones de cada estudiante
-          const unsubscribe = await getGradeForStudent(studentId, (gradeData) => {
+          // Suscribirse a las calificaciones de este estudiante
+          const unsubscribe = getGradeForStudent(studentId, (gradeData) => {
             const studentInfo = {
-              ...student, // Datos del estudiante (nombre, etc.)
+              ...student, // Datos base del estudiante (nombre, etc.)
               ...(gradeData || {}), // Datos de sus calificaciones
               id: studentId,
             };
@@ -123,39 +122,33 @@ function handleAuthStateChanged(user) {
             // Renderizar la tabla con los datos actualizados
             renderTeacherView();
           });
-          studentSubscriptions.push(unsubscribe);
-        }
+          studentSubscriptions.push(unsubscribe); // Guardar para poder desuscribirse luego
+        });
       });
 
-
-
+      // La suscripción a todas las actividades debería funcionar si tienes la regla correcta
       unsubscribeFromActivities = subscribeAllActivities((activities) => {
         allActivitiesData = activities;
-        renderTeacherView();
+        renderTeacherView(); // Volver a renderizar si es necesario
       });
+
     } else {
-      // Asumimos rol de estudiante
-      // --- VISTA DEL ESTUDIANTE ---
+      // --- VISTA DEL ESTUDIANTE (Sin cambios, es correcta) ---
       titleEl.textContent = "Resumen de Mis Calificaciones";
       activitiesContainer.style.display = "block";
 
       if (user.uid) {
-        // Reiniciar el estado local en cada cambio de autenticación
         studentGrades = null;
         studentActivities = null;
 
-        // Usar la nueva función unificada para obtener calificaciones y actividades
         unsubscribeFromGrades = subscribeMyGradesAndActivities(
           user,
           ({ grades, activities }) => {
-            // El callback recibe ambos conjuntos de datos
             studentGrades = grades ? [grades] : []; // La vista espera un array
             studentActivities = activities;
             renderStudentView();
           }
         );
-
-        // Nos aseguramos de que la otra variable de desuscripción esté limpia
         unsubscribeFromActivities = null;
       } else {
         renderError(
@@ -164,10 +157,9 @@ function handleAuthStateChanged(user) {
       }
     }
   } else {
-    // Ocultar todo si no hay sesión
+    // Ocultar y limpiar todo si no hay sesión
     gradesContainer.style.display = "none";
     activitiesContainer.style.display = "none";
-    // Limpiar estado al cerrar sesión
     studentGrades = null;
     studentActivities = null;
     allStudentsData = null;
@@ -198,12 +190,8 @@ function renderGradesTableForTeacher(studentsData) {
             }</td>
             <td class="py-3 px-4 text-center">${Number(unit1).toFixed(2)}</td>
             <td class="py-3 px-4 text-center">${Number(unit2).toFixed(2)}</td>
-            <td class="py-3 px-4 text-center">${Number(projectFinal).toFixed(
-              2
-            )}</td>
-            <td class="py-3 px-4 text-center font-bold text-blue-600">${Number(
-              finalGrade
-            ).toFixed(1)}</td>
+            <td class="py-3 px-4 text-center">${Number(projectFinal).toFixed(2)}</td>
+            <td class="py-3 px-4 text-center font-bold text-blue-600">${Number(finalGrade).toFixed(1)}</td>
         </tr>
     `;
     })
@@ -231,12 +219,8 @@ function renderGradesTableForStudent(myGradesData) {
             }</td>
             <td class="py-3 px-4 text-center">${Number(unit1).toFixed(2)}</td>
             <td class="py-3 px-4 text-center">${Number(unit2).toFixed(2)}</td>
-            <td class="py-3 px-4 text-center">${Number(projectFinal).toFixed(
-              2
-            )}</td>
-            <td class="py-3 px-4 text-center font-bold text-blue-600">${Number(
-              finalGrade
-            ).toFixed(1)}</td>
+            <td class="py-3 px-4 text-center">${Number(projectFinal).toFixed(2)}</td>
+            <td class="py-3 px-4 text-center font-bold text-blue-600">${Number(finalGrade).toFixed(1)}</td>
         </tr>
     `;
 }
