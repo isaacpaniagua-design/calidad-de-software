@@ -1,148 +1,253 @@
-// =================================================================================================
-// ARCHIVO: js/calificaciones-backend.js
-// VERSIÓN FINAL CON LA NUEVA LÓGICA SECUENCIAL
-// =================================================================================================
+// js/calificaciones-backend.js
 
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
-import { auth } from "./firebase-config.js";
 import {
+  onAuth,
   subscribeGrades,
   subscribeMyGradesAndActivities,
-  fetchAllActivitiesByStudent, // Importamos la NUEVA función
+  subscribeAllActivities,
 } from "./firebase.js";
-import { calculateWeightedAverage } from "./grade-calculator.js";
+import { calculateUnitGrade, calculateFinalGrade } from "./grade-calculator.js";
 
-// Variables globales para el estado.
+let unsubscribeFromGrades = null;
+let unsubscribeFromActivities = null;
+
+// Estado local para almacenar datos
+let studentGrades = null;
+let studentActivities = null;
 let allStudentsData = null;
 let allActivitiesData = null;
-let unsubscribeFromGrades = null;
 
+/**
+ * Combina las calificaciones base con las actividades individuales.
+ * @param {object} grades - El objeto de calificaciones principal.
+ * @param {Array} activities - La lista de actividades individuales.
+ * @returns {object} Un nuevo objeto de calificaciones con las actividades agrupadas.
+ */
+// Ya no se combinan ni recalculan actividades aquí. Solo se muestran los datos calculados por actividades.js
+
+/**
+ * Renderiza la vista completa del estudiante cuando todos los datos están disponibles.
+ */
+function renderStudentView() {
+  if (!studentGrades) {
+    return;
+  }
+  const studentData = studentGrades.length > 0 ? studentGrades[0] : null;
+  if (studentData) {
+    renderGradesTableForStudent([studentData]);
+  } else {
+    renderGradesTableForStudent([]);
+  }
+  renderActivitiesForStudent(studentActivities);
+}
+
+/**
+ * Combina las calificaciones de todos los estudiantes con sus actividades.
+ */
+function renderTeacherView() {
+  if (!allStudentsData) {
+    return;
+  }
+  renderGradesTableForTeacher(allStudentsData);
+}
+
+/**
+ * Función auxiliar para obtener de forma segura una calificación numérica.
+ */
+function getSafeScore(gradeData) {
+  let score = 0;
+  if (typeof gradeData === "number") {
+    score = gradeData;
+  } else if (typeof gradeData === "object" && gradeData !== null) {
+    score = gradeData.score || 0;
+  }
+  return score.toFixed(2);
+}
+
+/**
+ * Maneja los cambios de estado de autenticación para renderizar la vista correcta.
+ * @param {object|null} user - El objeto de usuario de Firebase.
+ */
 function handleAuthStateChanged(user) {
+  // Limpiar suscripciones anteriores para evitar fugas de memoria.
   if (unsubscribeFromGrades) unsubscribeFromGrades();
+  if (unsubscribeFromActivities) unsubscribeFromActivities();
 
   const gradesContainer = document.getElementById("grades-table-container");
-  const activitiesContainer = document.getElementById("student-activities-container");
+  const activitiesContainer = document.getElementById(
+    "student-activities-container"
+  );
   const titleEl = document.getElementById("grades-title");
 
   if (!gradesContainer || !titleEl || !activitiesContainer) {
-    console.error("Error crítico: Faltan elementos del HTML.");
+    console.error("Error crítico: Faltan elementos clave del HTML.");
     return;
   }
-  
-  const handleSubscriptionError = (error) => {
-    console.error("Error crítico de Firestore:", error);
-    renderError("No se pudieron cargar los datos. Revisa los permisos en las reglas de seguridad.");
-  };
 
   if (user) {
-    const userRole = localStorage.getItem("qs_role");
+    // CORRECCIÓN CLAVE: Convertimos el rol a minúsculas para una comparación segura.
+    const userRole = (localStorage.getItem("qs_role") || "").toLowerCase();
     gradesContainer.style.display = "block";
 
     if (userRole === "docente") {
-      // --- VISTA DEL DOCENTE (NUEVA LÓGICA) ---
+      // --- VISTA DEL DOCENTE ---
       titleEl.textContent = "Panel de Calificaciones (Promedios Generales)";
       activitiesContainer.style.display = "none";
-      
+
+      // Reiniciar estado del docente
       allStudentsData = null;
       allActivitiesData = null;
-      renderTeacherView(); // Muestra "Cargando..."
 
-      // 1. Nos suscribimos a la lista de estudiantes.
-      unsubscribeFromGrades = subscribeGrades(async (students) => {
+      unsubscribeFromGrades = subscribeGrades((students) => {
         allStudentsData = students;
-        
-        // 2. UNA VEZ que tenemos los estudiantes, usamos la nueva función para buscar sus actividades.
-        //    Esto evita por completo el 'collectionGroup' y el problema del índice.
-        allActivitiesData = await fetchAllActivitiesByStudent(students);
-        
-        // 3. Con AMBOS datos en mano, renderizamos la tabla final.
         renderTeacherView();
-      }, handleSubscriptionError);
+      });
 
+      unsubscribeFromActivities = subscribeAllActivities((activities) => {
+        allActivitiesData = activities;
+        renderTeacherView();
+      });
     } else {
-      // --- VISTA DEL ESTUDIANTE (SIN CAMBIOS) ---
+      // Asumimos rol de estudiante
+      // --- VISTA DEL ESTUDIANTE ---
       titleEl.textContent = "Resumen de Mis Calificaciones";
       activitiesContainer.style.display = "block";
-      unsubscribeFromGrades = subscribeMyGradesAndActivities(user, {
-        next: ({ grades, activities }) => {
-          const studentGrades = grades ? [grades] : [];
-          const studentActivities = activities;
-          renderStudentView(studentGrades, studentActivities);
-        },
-        error: handleSubscriptionError
-      });
+
+      if (user.uid) {
+        // Reiniciar el estado local en cada cambio de autenticación
+        studentGrades = null;
+        studentActivities = null;
+
+        // Usar la nueva función unificada para obtener calificaciones y actividades
+        unsubscribeFromGrades = subscribeMyGradesAndActivities(
+          user,
+          ({ grades, activities }) => {
+            // El callback recibe ambos conjuntos de datos
+            studentGrades = grades ? [grades] : []; // La vista espera un array
+            studentActivities = activities;
+            renderStudentView();
+          }
+        );
+
+        // Nos aseguramos de que la otra variable de desuscripción esté limpia
+        unsubscribeFromActivities = null;
+      } else {
+        renderError(
+          "No se pudo identificar tu sesión. Por favor, inicia sesión de nuevo."
+        );
+      }
     }
   } else {
+    // Ocultar todo si no hay sesión
     gradesContainer.style.display = "none";
+    activitiesContainer.style.display = "none";
+    // Limpiar estado al cerrar sesión
+    studentGrades = null;
+    studentActivities = null;
+    allStudentsData = null;
+    allActivitiesData = null;
   }
 }
 
-// --- FUNCIONES DE RENDERIZADO (SIN CAMBIOS) ---
-function renderTeacherView() {
-    const tableBody = document.querySelector("#grades-table tbody");
-    if (!tableBody) return;
-    if (allStudentsData === null || allActivitiesData === null) {
-        tableBody.innerHTML = '<tr><td colspan="10">Cargando datos...</td></tr>';
-        return;
-    }
-    if (allStudentsData.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="10">No hay estudiantes para mostrar.</td></tr>';
-        return;
-    }
-    allStudentsData.sort((a, b) => a.name.localeCompare(b.name));
-    let tableHTML = "";
-    allStudentsData.forEach(student => {
-        const studentActivities = allActivitiesData[student.id] || [];
-        const { p1, p2, p3, project, final } = calculateWeightedAverage(student, studentActivities);
-        const status = final >= 70 ? 'Aprobado' : 'No Aprobado';
-        tableHTML += `
-            <tr>
-                <td>${student.name || 'N/A'}</td>
-                <td>${student.id || 'N/A'}</td>
-                <td>${p1.toFixed(2)}</td>
-                <td>${p2.toFixed(2)}</td>
-                <td>${p3.toFixed(2)}</td>
-                <td>${project.toFixed(2)}</td>
-                <td>${final.toFixed(2)}</td>
-                <td>${student.absences || 0}</td>
-                <td>${student.delays || 0}</td>
-                <td class="${status.replace(' ', '-').toLowerCase()}">${status}</td>
-            </tr>
-        `;
-    });
-    tableBody.innerHTML = tableHTML;
-}
+function renderGradesTableForTeacher(studentsData) {
+  const tbody = document.getElementById("grades-table-body");
+  if (!tbody) return;
 
-function renderStudentView(studentGrades, studentActivities) {
-  const tableBody = document.querySelector("#grades-table tbody");
-  if (!tableBody) return;
-  if (!studentGrades || studentGrades.length === 0) {
-    tableBody.innerHTML = '<tr><td colspan="10">Aún no tienes calificaciones registradas.</td></tr>';
+  if (!studentsData || studentsData.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="5" class="text-center py-4">No hay estudiantes con calificaciones para mostrar.</td></tr>';
     return;
   }
-  const grades = studentGrades[0];
-  const { p1, p2, p3, project, final } = calculateWeightedAverage(grades, studentActivities);
-  tableBody.innerHTML = `
-    <tr>
-      <td>${grades.name || 'N/A'}</td>
-      <td>${grades.id || 'N/A'}</td>
-      <td>${p1.toFixed(2)}</td>
-      <td>${p2.toFixed(2)}</td>
-      <td>${p3.toFixed(2)}</td>
-      <td>${project.toFixed(2)}</td>
-      <td>${final.toFixed(2)}</td>
-      <td>${grades.absences || 0}</td>
-      <td>${grades.delays || 0}</td>
-      <td><strong>${final >= 70 ? 'Aprobado' : 'No Aprobado'}</strong></td>
-    </tr>
-  `;
+
+  tbody.innerHTML = studentsData
+    .map((student) => {
+      const unit1 = student.unit1?.average ?? student.unit1 ?? 0;
+      const unit2 = student.unit2?.average ?? student.unit2 ?? 0;
+      const projectFinal = student.projectFinal ?? 0;
+      const finalGrade = student.finalGrade ?? student.final ?? 0;
+      return `
+        <tr class="border-b hover:bg-gray-50">
+            <td class="py-3 px-4 font-medium text-gray-800">${
+              student.name || student.displayName || "Sin nombre"
+            }</td>
+            <td class="py-3 px-4 text-center">${Number(unit1).toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${Number(unit2).toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${Number(projectFinal).toFixed(
+              2
+            )}</td>
+            <td class="py-3 px-4 text-center font-bold text-blue-600">${Number(
+              finalGrade
+            ).toFixed(1)}</td>
+        </tr>
+    `;
+    })
+    .join("");
+}
+
+function renderGradesTableForStudent(myGradesData) {
+  const tbody = document.getElementById("grades-table-body");
+  if (!tbody) return;
+
+  if (!myGradesData || myGradesData.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="5" class="text-center py-4">Aún no tienes un resumen de calificaciones.</td></tr>';
+    return;
+  }
+  const myData = myGradesData[0];
+  const unit1 = myData.unit1?.average ?? myData.unit1 ?? 0;
+  const unit2 = myData.unit2?.average ?? myData.unit2 ?? 0;
+  const projectFinal = myData.projectFinal ?? 0;
+  const finalGrade = myData.finalGrade ?? myData.final ?? 0;
+  tbody.innerHTML = `
+        <tr>
+            <td class="py-3 px-4 font-medium text-gray-800">${
+              myData.name || myData.displayName || "Estudiante"
+            }</td>
+            <td class="py-3 px-4 text-center">${Number(unit1).toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${Number(unit2).toFixed(2)}</td>
+            <td class="py-3 px-4 text-center">${Number(projectFinal).toFixed(
+              2
+            )}</td>
+            <td class="py-3 px-4 text-center font-bold text-blue-600">${Number(
+              finalGrade
+            ).toFixed(1)}</td>
+        </tr>
+    `;
+}
+
+function renderActivitiesForStudent(activities) {
+  const tbody = document.getElementById("student-activities-body");
+  if (!tbody) return;
+
+  if (!activities || activities.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="4" class="text-center py-4">No hay actividades detalladas para mostrar.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = activities
+    .map(
+      (activity) => `
+        <tr class="border-b">
+            <td class="py-2 px-4">${activity.activityName || "Sin nombre"}</td>
+            <td class="py-2 px-4 capitalize">${activity.type || "N/A"}</td>
+            <td class="py-2 px-4 text-center">${(activity.unit || "").replace(
+              "unit",
+              ""
+            )}</td>
+            <td class="py-2 px-4 text-right font-medium">${(
+              activity.score || 0
+            ).toFixed(2)}</td>
+        </tr>
+    `
+    )
+    .join("");
 }
 
 function renderError(message) {
-  const tableBody = document.querySelector("#grades-table tbody");
-  if (tableBody) {
-    tableBody.innerHTML = `<tr><td colspan="10" class="error-message">${message}</td></tr>`;
-  }
+  const tbody = document.getElementById("grades-table-body");
+  if (tbody)
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">${message}</td></tr>`;
 }
 
-onAuthStateChanged(auth, handleAuthStateChanged);
+// Punto de entrada del script
+onAuth(handleAuthStateChanged);
