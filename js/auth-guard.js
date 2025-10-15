@@ -1,7 +1,7 @@
 // js/auth-guard.js
 
 // Paso 1: Importar solo las funciones necesarias desde tu módulo local de firebase.
-import {  onAuthStateChanged, isTeacherEmail, ensureTeacherAllowlistLoaded } from './firebase.js';
+import {  onAuth, onAuthStateChanged, isTeacherEmail, ensureTeacherAllowlistLoaded } from './firebase.js';
 
 // Esta función se ejecutará tan pronto como el documento HTML esté listo.
 function initializeAuthProtection() {
