@@ -1,139 +1,100 @@
 // =================================================================================================
 // ARCHIVO: js/calificaciones-backend.js
-// VERSIÓN COMPLETA Y REVISADA
+// VERSIÓN FINAL CON LA NUEVA LÓGICA SECUENCIAL
 // =================================================================================================
 
-// --- Importaciones de Módulos ES6 ---
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import { auth } from "./firebase-config.js";
 import {
   subscribeGrades,
-  subscribeAllActivities,
   subscribeMyGradesAndActivities,
+  fetchAllActivitiesByStudent, // Importamos la NUEVA función
 } from "./firebase.js";
 import { calculateWeightedAverage } from "./grade-calculator.js";
 
-// --- Almacenamiento de Datos en Memoria ---
-// Variables globales para mantener el estado de los datos recibidos de Firestore.
-let studentGrades = null;
-let studentActivities = null;
+// Variables globales para el estado.
 let allStudentsData = null;
 let allActivitiesData = null;
-
-// Variables para gestionar las suscripciones en tiempo real y evitar fugas de memoria.
 let unsubscribeFromGrades = null;
-let unsubscribeFromActivities = null;
 
-// =================================================================================================
-// FUNCIÓN PRINCIPAL DE CONTROL
-// =================================================================================================
-
-/**
- * Maneja los cambios de estado de autenticación para renderizar la vista correcta.
- * Este es el "cerebro" que decide qué datos cargar basándose en el rol del usuario.
- * @param {object|null} user - El objeto de usuario de Firebase.
- */
 function handleAuthStateChanged(user) {
-  // 1. Limpieza de suscripciones anteriores
   if (unsubscribeFromGrades) unsubscribeFromGrades();
-  if (unsubscribeFromActivities) unsubscribeFromActivities();
 
-  // 2. Obtención de Elementos del DOM
   const gradesContainer = document.getElementById("grades-table-container");
   const activitiesContainer = document.getElementById("student-activities-container");
   const titleEl = document.getElementById("grades-title");
 
   if (!gradesContainer || !titleEl || !activitiesContainer) {
-    console.error("Error crítico: Faltan elementos clave del HTML en la página de calificaciones.");
+    console.error("Error crítico: Faltan elementos del HTML.");
     return;
   }
-
-  // 3. Manejador de errores centralizado
+  
   const handleSubscriptionError = (error) => {
     console.error("Error crítico de Firestore:", error);
-    // Este es el error que probablemente ves. Te indica que necesitas crear un índice en Firestore.
-    // Busca en la consola de tu navegador el link para crearlo automáticamente.
-    renderError("No se pudieron cargar los datos. Es muy probable que falte un índice en la base de datos. Revisa la consola del navegador para encontrar un enlace para crearlo.");
+    renderError("No se pudieron cargar los datos. Revisa los permisos en las reglas de seguridad.");
   };
 
   if (user) {
-    // 4. Lógica de Usuario Autenticado
     const userRole = localStorage.getItem("qs_role");
     gradesContainer.style.display = "block";
 
     if (userRole === "docente") {
-      // --- VISTA DEL DOCENTE ---
-      console.log("Rol DOCENTE detectado. Iniciando carga del panel de calificaciones.");
+      // --- VISTA DEL DOCENTE (NUEVA LÓGICA) ---
       titleEl.textContent = "Panel de Calificaciones (Promedios Generales)";
       activitiesContainer.style.display = "none";
       
-      // Resetea los datos y muestra el estado "Cargando..."
       allStudentsData = null;
       allActivitiesData = null;
-      renderTeacherView(); 
+      renderTeacherView(); // Muestra "Cargando..."
 
-      // Suscripción a los datos de TODOS los estudiantes
-      unsubscribeFromGrades = subscribeGrades(students => {
+      // 1. Nos suscribimos a la lista de estudiantes.
+      unsubscribeFromGrades = subscribeGrades(async (students) => {
         allStudentsData = students;
-        renderTeacherView();
-      }, handleSubscriptionError);
-
-      // Suscripción a TODAS las actividades (esta es la que necesita el índice)
-      unsubscribeFromActivities = subscribeAllActivities(activities => {
-        allActivitiesData = activities;
+        
+        // 2. UNA VEZ que tenemos los estudiantes, usamos la nueva función para buscar sus actividades.
+        //    Esto evita por completo el 'collectionGroup' y el problema del índice.
+        allActivitiesData = await fetchAllActivitiesByStudent(students);
+        
+        // 3. Con AMBOS datos en mano, renderizamos la tabla final.
         renderTeacherView();
       }, handleSubscriptionError);
 
     } else {
-      // --- VISTA DEL ESTUDIANTE ---
+      // --- VISTA DEL ESTUDIANTE (SIN CAMBIOS) ---
       titleEl.textContent = "Resumen de Mis Calificaciones";
       activitiesContainer.style.display = "block";
       unsubscribeFromGrades = subscribeMyGradesAndActivities(user, {
         next: ({ grades, activities }) => {
-          studentGrades = grades ? [grades] : [];
-          studentActivities = activities;
-          renderStudentView();
+          const studentGrades = grades ? [grades] : [];
+          const studentActivities = activities;
+          renderStudentView(studentGrades, studentActivities);
         },
         error: handleSubscriptionError
       });
     }
   } else {
-    // 5. Usuario no autenticado
     gradesContainer.style.display = "none";
-    activitiesContainer.style.display = "none";
   }
 }
 
-// =================================================================================================
-// FUNCIONES DE RENDERIZADO (UI)
-// =================================================================================================
-
-/**
- * Renderiza la vista de la tabla para el docente.
- */
+// --- FUNCIONES DE RENDERIZADO (SIN CAMBIOS) ---
 function renderTeacherView() {
     const tableBody = document.querySelector("#grades-table tbody");
     if (!tableBody) return;
-
-    // Muestra "Cargando..." mientras no lleguen AMBOS conjuntos de datos.
     if (allStudentsData === null || allActivitiesData === null) {
-        tableBody.innerHTML = '<tr><td colspan="10">Cargando datos de estudiantes y actividades...</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="10">Cargando datos...</td></tr>';
         return;
     }
-
     if (allStudentsData.length === 0) {
-        tableBody.innerHTML = '<tr><td colspan="10">No hay estudiantes registrados para mostrar.</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="10">No hay estudiantes para mostrar.</td></tr>';
         return;
     }
-
     allStudentsData.sort((a, b) => a.name.localeCompare(b.name));
-
     let tableHTML = "";
     allStudentsData.forEach(student => {
         const studentActivities = allActivitiesData[student.id] || [];
         const { p1, p2, p3, project, final } = calculateWeightedAverage(student, studentActivities);
         const status = final >= 70 ? 'Aprobado' : 'No Aprobado';
-        
         tableHTML += `
             <tr>
                 <td>${student.name || 'N/A'}</td>
@@ -152,21 +113,15 @@ function renderTeacherView() {
     tableBody.innerHTML = tableHTML;
 }
 
-/**
- * Renderiza la vista de la tabla para el estudiante.
- */
-function renderStudentView() {
+function renderStudentView(studentGrades, studentActivities) {
   const tableBody = document.querySelector("#grades-table tbody");
   if (!tableBody) return;
-
   if (!studentGrades || studentGrades.length === 0) {
     tableBody.innerHTML = '<tr><td colspan="10">Aún no tienes calificaciones registradas.</td></tr>';
     return;
   }
-
   const grades = studentGrades[0];
   const { p1, p2, p3, project, final } = calculateWeightedAverage(grades, studentActivities);
-
   tableBody.innerHTML = `
     <tr>
       <td>${grades.name || 'N/A'}</td>
@@ -183,10 +138,6 @@ function renderStudentView() {
   `;
 }
 
-/**
- * Muestra un mensaje de error genérico en la tabla.
- * @param {string} message - El mensaje a mostrar.
- */
 function renderError(message) {
   const tableBody = document.querySelector("#grades-table tbody");
   if (tableBody) {
@@ -194,9 +145,4 @@ function renderError(message) {
   }
 }
 
-// =================================================================================================
-// INICIALIZACIÓN
-// =================================================================================================
-
-// El punto de entrada: escucha los cambios de autenticación y arranca la lógica.
 onAuthStateChanged(auth, handleAuthStateChanged);
