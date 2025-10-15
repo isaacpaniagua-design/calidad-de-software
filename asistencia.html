@@ -729,439 +729,332 @@
       type="module"
       src="https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js"
     ></script>
-    <script type="module">
-      import {
-        initFirebase,
-        getDb,
-        getAuthInstance,
-        onAuth,
-        signInWithGooglePotros,
-        signOutCurrent,
-        isTeacherEmail,
-        ensureTeacherAllowlistLoaded,
-      } from "./js/firebase.js";
-      import { allowedEmailDomain } from "./js/firebase-config.js";
-      import {
-        collection,
-        doc,
-        onSnapshot,
-        query,
-        where,
-        addDoc,
-        serverTimestamp,
-        Timestamp,
-        getDocs,
-        limit,
-        orderBy,
-      } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+   <script type="module">
+  // Importaciones de Firebase
+  import {
+    initFirebase,
+    getDb,
+    getAuthInstance,
+    onAuth,
+    signInWithGooglePotros,
+    signOutCurrent,
+    isTeacherEmail, // Se mantiene para lógica visual inicial
+    ensureTeacherAllowlistLoaded,
+  } from "./js/firebase.js";
+  import { allowedEmailDomain } from "./js/firebase-config.js";
+  import {
+    collection,
+    doc,
+    onSnapshot,
+    query,
+    where,
+    addDoc,
+    serverTimestamp,
+    Timestamp,
+    getDocs,
+    limit,
+    orderBy,
+  } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-      // --- FIRESTORE HELPERS (specific to this page) ---
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayTimestamp = Timestamp.fromDate(today);
+  // --- CONFIGURACIÓN Y ESTADO GLOBAL ---
+  const ROSTER_STORAGE_KEY = "qs_roster_cache";
+  let students = []; // Lista completa de estudiantes y docentes
+  let registeredAttendances = new Map(); // Usar un Map para un acceso y actualización eficientes
+  let currentUserProfile = null;
+  let unsubscribeAttendance = () => {}; // Función para cancelar la suscripción de Firebase
 
-      function getAttendanceCollectionRef() {
-        const db = getDb();
-        return collection(db, "attendances");
-      }
+  // --- REFERENCIAS AL DOM (CACHEADAS PARA MEJOR RENDIMIENTO) ---
+  const dom = {
+    signInBtn: document.getElementById("signInBtn"),
+    userInfo: document.getElementById("userInfo"),
+    userName: document.getElementById("userName"),
+    userPhoto: document.getElementById("userPhoto"),
+    attendanceBtn: document.getElementById("attendanceBtn"),
+    attendanceListContainer: document.getElementById("attendanceList"),
+    noAttendanceEl: document.getElementById("noAttendance"),
+    attendanceCountEl: document.getElementById("attendanceCount"),
+    successModal: document.getElementById("successModal"),
+    successMessage: document.getElementById("successMessage"),
+    successTimestamp: document.getElementById("successTimestamp"),
+    currentDate: document.getElementById("currentDate"),
+    currentTime: document.getElementById("currentTime"),
+  };
 
-      function subscribeTodayAttendance(callback) {
-        const q = query(
-          getAttendanceCollectionRef(),
-          where("timestamp", ">=", todayTimestamp)
-        );
-        return onSnapshot(q, (snapshot) => {
-          const records = [];
-          snapshot.forEach((doc) =>
-            records.push({ id: doc.id, ...doc.data() })
-          );
-          callback(records);
+  // --- FUNCIONES DE LÓGICA DE NEGOCIO ---
+
+  /**
+   * Carga la lista de participantes (roster) desde un JSON y la fusiona
+   * con datos en caché para disponibilidad offline.
+   */
+  async function loadRoster() {
+    try {
+      const response = await fetch("./data/students.json");
+      if (!response.ok) throw new Error("Could not fetch student list");
+      const baseRosterData = await response.json();
+      const baseRoster = parseRosterPayload(baseRosterData);
+      const cachedRoster = parseRosterPayload(localStorage.getItem(ROSTER_STORAGE_KEY));
+      students = mergeRosterLists(baseRoster, cachedRoster);
+      window.students = students; // Para depuración
+    } catch (error) {
+      console.error("Failed to load student roster:", error);
+      students = parseRosterPayload(localStorage.getItem(ROSTER_STORAGE_KEY)); // Fallback a caché
+      showNotification("No se pudo cargar la lista de alumnos, se usará la versión en caché.", "warning");
+    }
+  }
+
+  /**
+   * Registra la asistencia del usuario actual.
+   * Valida que el usuario esté en la lista del curso antes de guardar.
+   */
+  async function registerAttendance() {
+    if (!currentUserProfile) {
+      return showNotification("Primero inicia sesión con tu cuenta @" + allowedEmailDomain, "error");
+    }
+    if (dom.attendanceBtn.disabled) return; // Evitar doble clic
+
+    const { email, uid, name } = currentUserProfile;
+    const rosterEntry = students.find(s => s.email.toLowerCase() === email.toLowerCase());
+
+    if (!rosterEntry) {
+      return showNotification("Tu correo no está en la lista del curso. Contacta al docente.", "error");
+    }
+
+    try {
+      setAttendanceEnabled(false, "Registrando...");
+      const payload = {
+        uid,
+        name: rosterEntry.name || name,
+        email,
+        type: rosterEntry.type || "student",
+        createdByUid: uid,
+        timestamp: serverTimestamp(),
+      };
+      await addDoc(collection(getDb(), "attendances"), payload);
+      showSuccessModal(rosterEntry, new Date());
+    } catch (e) {
+      console.error("Error saving attendance:", e);
+      showNotification(e?.message || "No se pudo registrar la asistencia.", "error");
+    } finally {
+      setAttendanceEnabled(true);
+    }
+  }
+
+  // --- FUNCIONES DE MANIPULACIÓN DE DATOS (HELPERS) ---
+
+  const parseRosterPayload = (data) => {
+    try {
+      const parsed = typeof data === "string" ? JSON.parse(data) : data;
+      return (Array.isArray(parsed) ? parsed : parsed.students || []).map(e => ({
+        ...e,
+        email: (e.email || "").toLowerCase()
+      })).filter(Boolean);
+    } catch {
+      return [];
+    }
+  };
+
+  const mergeRosterLists = (primary, secondary) => {
+    const map = new Map(primary.map(item => [item.email, item]));
+    secondary.forEach(item => {
+      if (!map.has(item.email)) map.set(item.email, item);
+    });
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, "es"));
+  };
+
+  // --- FUNCIONES DE UI ---
+
+  const updateDateTime = () => {
+    const now = new Date();
+    dom.currentDate.textContent = now.toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+    dom.currentTime.textContent = now.toLocaleTimeString("es-ES");
+  };
+
+  const setAttendanceEnabled = (enabled, text = "Registrar Asistencia") => {
+    if (!dom.attendanceBtn) return;
+    dom.attendanceBtn.disabled = !enabled;
+    dom.attendanceBtn.classList.toggle("opacity-60", !enabled);
+    dom.attendanceBtn.classList.toggle("cursor-not-allowed", !enabled);
+    dom.attendanceBtn.querySelector("span").textContent = text;
+  };
+
+  const applyRoleVisibility = (isTeacher) => {
+    document.querySelectorAll(".teacher-only").forEach(el => el.style.display = isTeacher ? "" : "none");
+    document.querySelectorAll(".student-only").forEach(el => el.style.display = isTeacher ? "none" : "");
+  };
+  
+  const showSuccessModal = (student, timestamp) => {
+    const typeText = student.type === "teacher" ? "Docente" : "Estudiante";
+    dom.successMessage.textContent = `${typeText}: ${student.name}`;
+    dom.successTimestamp.textContent = `Registrado a las ${timestamp.toLocaleTimeString("es-ES")}`;
+    dom.successModal.classList.remove("hidden");
+    dom.successModal.classList.add("flex");
+  };
+  
+  window.closeSuccessModal = () => {
+    dom.successModal.classList.add("hidden");
+    dom.successModal.classList.remove("flex");
+  };
+
+  /**
+   * Muestra notificaciones flotantes (toasts) para feedback.
+   * type: 'success', 'error', 'warning'
+   */
+  const showNotification = (message, type = 'info') => {
+    const colors = {
+      info: 'bg-blue-500',
+      success: 'bg-green-600',
+      error: 'bg-red-600',
+      warning: 'bg-yellow-500',
+    };
+    const notification = document.createElement('div');
+    notification.className = `fixed bottom-5 right-5 text-white p-4 rounded-lg shadow-lg transform transition-all duration-300 ease-out slide-in ${colors[type]}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+      notification.style.transform = 'translateX(120%)';
+      setTimeout(() => notification.remove(), 300);
+    }, 4000);
+  };
+
+  // --- RENDERIZADO DE LA LISTA DE ASISTENCIA (MÁS EFICIENTE) ---
+  
+  const renderAttendanceList = () => {
+    dom.noAttendanceEl.style.display = registeredAttendances.size === 0 ? "block" : "none";
+    dom.attendanceCountEl.textContent = `${registeredAttendances.size} ${registeredAttendances.size === 1 ? "registrado" : "registrados"}`;
+    
+    // Convertir a array y ordenar por fecha más reciente
+    const sortedRecords = Array.from(registeredAttendances.values()).sort((a, b) => b.timestamp - a.timestamp);
+
+    dom.attendanceListContainer.innerHTML = sortedRecords.map(createAttendanceRecordHTML).join('');
+  };
+
+  const createAttendanceRecordHTML = (record) => {
+    const isTeacher = record.type === "teacher";
+    const icon = isTeacher
+      ? `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253z"></path></svg>`
+      : `<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>`;
+
+    return `
+      <div id="att-${record.id}" class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4 fade-in">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 rounded-full ${isTeacher ? 'bg-purple-500' : 'bg-blue-500'} flex items-center justify-center shadow-lg">${icon}</div>
+            <div>
+              <h3 class="font-semibold text-gray-900">${record.name}</h3>
+              <p class="text-sm text-gray-600">${record.email}</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-sm font-medium text-green-700">Registrado</p>
+            <p class="text-xs text-gray-500">${record.timestamp.toLocaleTimeString("es-ES")}</p>
+          </div>
+        </div>
+      </div>`;
+  };
+
+  // --- LÓGICA DE FIREBASE ---
+  
+  /**
+   * Se suscribe a los cambios en la colección de asistencias.
+   * Unificada para docentes y estudiantes.
+   */
+  function subscribeToAttendance(user) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayTimestamp = Timestamp.fromDate(today);
+
+    let q = query(
+        collection(getDb(), "attendances"),
+        where("timestamp", ">=", todayTimestamp),
+        orderBy("timestamp", "desc")
+    );
+    
+    // Si no es docente, filtra solo por su UID.
+    if (!user.isTeacher) {
+        q = query(q, where("uid", "==", user.uid));
+    }
+
+    unsubscribeAttendance(); // Cancela suscripción anterior
+    unsubscribeAttendance = onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+            const docData = { id: change.doc.id, ...change.doc.data(), timestamp: change.doc.data().timestamp.toDate() };
+            if (change.type === "added" || change.type === "modified") {
+                registeredAttendances.set(docData.id, docData);
+            }
+            if (change.type === "removed") {
+                registeredAttendances.delete(docData.id);
+            }
         });
-      }
+        renderAttendanceList();
+    });
+  }
+  
+  // --- AUTENTICACIÓN Y CICLO DE VIDA ---
+  
+  const handleAuthStateChanged = async (user) => {
+    if (user && user.email.toLowerCase().endsWith("@" + allowedEmailDomain)) {
+      // Usuario autenticado y con dominio correcto
+      await ensureTeacherAllowlistLoaded();
+      const email = user.email.toLowerCase();
+      const rosterEntry = students.find(s => s.email === email);
+      const isTeacher = isTeacherEmail(email); // **Mejora de seguridad: usar Custom Claims en un entorno de producción**
 
-      function subscribeTodayAttendanceByUser(userUid, callback) {
-        const q = query(
-          getAttendanceCollectionRef(),
-          where("uid", "==", userUid),
-          where("timestamp", ">=", todayTimestamp)
-        );
-        return onSnapshot(q, (snapshot) => {
-          const records = [];
-          snapshot.forEach((doc) =>
-            records.push({ id: doc.id, ...doc.data() })
-          );
-          callback(records);
-        });
-      }
-
-      async function saveTodayAttendance(payload) {
-        if (!payload.uid) throw new Error("User ID is required");
-        const attendanceRef = getAttendanceCollectionRef();
-        return await addDoc(attendanceRef, {
-          ...payload,
-          timestamp: serverTimestamp(),
-        });
-      }
-
-      // --- ROSTER AND STUDENT DATA ---
-      const ROSTER_STORAGE_KEY = "qs_roster_cache";
-      let students = []; // This will be populated from JSON
-
-      function normalizeRosterEntry(entry) {
-        if (!entry) return null;
-        const email =
-          typeof entry.email === "string" ? entry.email.toLowerCase() : "";
-        const uid = entry.uid ? String(entry.uid) : "";
-        const matricula = entry.matricula || entry.id || uid || email || "";
-        const id = entry.id || matricula || email || uid;
-        if (!id && !email && !uid) return null;
-        const name = entry.name || entry.displayName || entry.nombre || "";
-        const type = entry.type || "student";
-        return {
-          uid,
-          id,
-          matricula: matricula || id,
-          name: name || email || id || "Estudiante",
-          email,
-          type,
-        };
-      }
-
-      function mergeRosterLists(primary, extras) {
-        const map = new Map();
-        const addEntry = (item) => {
-          if (!item) return;
-          const key = (
-            item.email ||
-            item.id ||
-            item.matricula ||
-            item.uid ||
-            item.name ||
-            ""
-          )
-            .toString()
-            .toLowerCase();
-          if (!key) return;
-          if (!map.has(key)) {
-            map.set(key, Object.assign({}, item));
-            return;
-          }
-          const current = map.get(key);
-          Object.assign(current, item);
-        };
-        primary.forEach(addEntry);
-        extras.forEach(addEntry);
-        const result = Array.from(map.values());
-        result.sort((a, b) =>
-          (a.name || "").localeCompare(b.name || "", "es", {
-            sensitivity: "base",
-          })
-        );
-        return result;
-      }
-
-      function parseRosterPayload(value) {
-        if (!value) return [];
-        try {
-          const parsed = typeof value === "string" ? JSON.parse(value) : value;
-          return (Array.isArray(parsed) ? parsed : parsed.students || [])
-            .map(normalizeRosterEntry)
-            .filter(Boolean);
-        } catch (_err) {
-          return [];
-        }
-      }
-
-      function readCachedRoster() {
-        try {
-          return parseRosterPayload(
-            window.localStorage.getItem(ROSTER_STORAGE_KEY)
-          );
-        } catch (_err) {
-          return [];
-        }
-      }
-
-      async function loadRoster() {
-        try {
-          const response = await fetch("./data/students.json");
-          if (!response.ok) {
-            throw new Error("Could not fetch student list");
-          }
-          const baseRosterData = await response.json();
-          const baseRoster = (baseRosterData.students || []).map(
-            normalizeRosterEntry
-          );
-          const cachedRoster = readCachedRoster();
-          students = mergeRosterLists(baseRoster, cachedRoster);
-          window.students = students;
-        } catch (error) {
-          console.error("Failed to load student roster:", error);
-          // Fallback to cached roster if fetch fails
-          students = mergeRosterLists([], readCachedRoster());
-          window.students = students;
-        }
-      }
-
-      // --- GLOBAL STATE AND DOM REFS ---
-      let registeredAttendances = [];
-      let currentUserProfile = null;
-      let unsubscribeAttendance = null;
-
-      const signInBtn = document.getElementById("signInBtn");
-      const signOutBtn = document.getElementById("signOutBtn");
-      const userInfo = document.getElementById("userInfo");
-      const userName = document.getElementById("userName");
-      const userPhoto = document.getElementById("userPhoto");
-      const attendanceBtn = document.getElementById("attendanceBtn");
-      const attendanceListContainer = document.getElementById("attendanceList");
-      const noAttendanceEl = document.getElementById("noAttendance");
-      const attendanceCountEl = document.getElementById("attendanceCount");
-      const successModal = document.getElementById("successModal");
-      const successMessage = document.getElementById("successMessage");
-      const successTimestamp = document.getElementById("successTimestamp");
-
-      // --- UI HELPER FUNCTIONS ---
-      function updateDateTime() {
-        const now = new Date();
-        const dateOptions = {
-          weekday: "long",
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        };
-        const timeOptions = {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        };
-        document.getElementById("currentDate").textContent =
-          now.toLocaleDateString("es-ES", dateOptions);
-        document.getElementById("currentTime").textContent =
-          now.toLocaleTimeString("es-ES", timeOptions);
-      }
-
-      function setAttendanceEnabled(enabled) {
-        if (!attendanceBtn) return;
-        attendanceBtn.disabled = !enabled;
-        attendanceBtn.classList.toggle("opacity-60", !enabled);
-        attendanceBtn.classList.toggle("cursor-not-allowed", !enabled);
-      }
-
-      function applyRoleVisibility(isTeacher) {
-        const role = isTeacher ? "docente" : "estudiante";
-        document
-          .querySelectorAll(".teacher-only, .docente-only")
-          .forEach((el) => (el.style.display = isTeacher ? "" : "none"));
-        document
-          .querySelectorAll(".student-only, .estudiante-only")
-          .forEach((el) => (el.style.display = isTeacher ? "none" : ""));
-      }
-
-      function showSuccessModal(student, timestamp) {
-        if (!successModal) return;
-        const typeText = student.type === "teacher" ? "Docente" : "Estudiante";
-        successMessage.textContent = `${typeText}: ${student.name}`;
-        successTimestamp.textContent = `Registrado el ${timestamp.toLocaleDateString(
-          "es-ES"
-        )} a las ${timestamp.toLocaleTimeString("es-ES")}`;
-        successModal.classList.remove("hidden");
-        successModal.classList.add("flex");
-      }
-
-      window.closeSuccessModal = () => {
-        if (successModal) {
-          successModal.classList.add("hidden");
-          successModal.classList.remove("flex");
-        }
+      currentUserProfile = {
+        uid: user.uid,
+        email,
+        name: rosterEntry?.name || user.displayName,
+        isTeacher,
+        type: isTeacher ? "teacher" : "student",
       };
 
-      function updateAttendanceList() {
-        if (!attendanceListContainer || !noAttendanceEl) return;
+      // Actualizar UI
+      dom.userName.textContent = currentUserProfile.name;
+      dom.userPhoto.src = user.photoURL;
+      dom.userInfo.classList.remove("hidden");
+      dom.signInBtn.classList.add("hidden");
 
-        if (registeredAttendances.length === 0) {
-          noAttendanceEl.style.display = "block";
-          attendanceListContainer.innerHTML = "";
-          return;
-        }
+      applyRoleVisibility(isTeacher);
+      setAttendanceEnabled(true);
+      
+      subscribeToAttendance(currentUserProfile);
+    } else {
+      // Usuario no autenticado o con dominio incorrecto
+      currentUserProfile = null;
+      dom.userInfo.classList.add("hidden");
+      dom.signInBtn.classList.remove("hidden");
+      applyRoleVisibility(false); // Vista de estudiante por defecto
+      setAttendanceEnabled(false);
+      registeredAttendances.clear();
+      renderAttendanceList();
+      if (unsubscribeAttendance) unsubscribeAttendance();
+    }
+  };
 
-        noAttendanceEl.style.display = "none";
-        attendanceListContainer.innerHTML = registeredAttendances
-          .map((record, index) => {
-            const isTeacher = record.type === "teacher";
-            return `
-            <div class="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4" style="animation-delay: ${
-              index * 0.1
-            }s;">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                  <div class="flex-shrink-0">
-                    <div class="w-12 h-12 rounded-full ${
-                      isTeacher
-                        ? "bg-gradient-to-r from-purple-400 to-purple-600"
-                        : "bg-gradient-to-r from-blue-400 to-blue-600"
-                    } flex items-center justify-center shadow-lg">
-                      ${
-                        isTeacher
-                          ? '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253z"></path></svg>'
-                          : '<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>'
-                      }
-                    </div>
-                  </div>
-                  <div>
-                    <h3 class="font-semibold text-gray-900">${record.name}</h3>
-                    <p class="text-sm text-gray-600">${record.email}</p>
-                  </div>
-                </div>
-                <div class="text-right">
-                  <p class="text-sm font-medium text-green-700">Registrado</p>
-                  <p class="text-xs text-gray-500">${record.timestamp.toLocaleTimeString(
-                    "es-ES"
-                  )}</p>
-                </div>
-              </div>
-            </div>`;
-          })
-          .join("");
-      }
+  /**
+   * Función de inicialización principal.
+   */
+  async function main() {
+    initFirebase();
+    await loadRoster();
+    
+    // Event Listeners
+    dom.signInBtn.addEventListener("click", () => signInWithGooglePotros());
+    // El botón de signOut debe estar en el layout, pero si estuviera aquí, sería:
+    // document.getElementById("signOutBtn")?.addEventListener("click", () => signOutCurrent());
+    dom.attendanceBtn.addEventListener("click", registerAttendance);
+    
+    // Suscripción al estado de autenticación
+    onAuth(handleAuthStateChanged);
 
-      function updateAttendanceCount() {
-        if (!attendanceCountEl) return;
-        const count = registeredAttendances.length;
-        attendanceCountEl.textContent = `${count} ${
-          count === 1 ? "registrado" : "registrados"
-        }`;
-      }
+    // Reloj
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+  }
 
-      function setRemoteAttendanceRecords(items) {
-        registeredAttendances = (items || [])
-          .map((r) => {
-            const timestamp = r.timestamp?.seconds
-              ? new Date(r.timestamp.seconds * 1000)
-              : new Date(); // Fallback for safety
-            return { ...r, timestamp };
-          })
-          .sort((a, b) => b.timestamp - a.timestamp);
-        updateAttendanceList();
-        updateAttendanceCount();
-      }
+  // --- INICIO DE LA APLICACIÓN ---
+  document.addEventListener("DOMContentLoaded", main);
 
-      // --- CORE LOGIC ---
-      async function registerAttendance() {
-        if (!currentUserProfile) {
-          alert("Primero inicia sesión con tu cuenta @" + allowedEmailDomain);
-          return;
-        }
-
-        const { email, uid, name, type } = currentUserProfile;
-        const rosterEntry = students.find(
-          (s) => (s.email || "").toLowerCase() === email
-        );
-
-        if (!rosterEntry) {
-          alert(
-            "Tu correo no está en la lista del curso. Contacta al docente."
-          );
-          return;
-        }
-
-        try {
-          setAttendanceEnabled(false);
-          await saveTodayAttendance({
-            uid,
-            name: rosterEntry.name || name,
-            email,
-            type: rosterEntry.type || type,
-            createdByUid: uid, // Requerido por la regla de seguridad
-          });
-          showSuccessModal(rosterEntry, new Date());
-        } catch (e) {
-          alert(e?.message || "No se pudo registrar la asistencia.");
-        } finally {
-          setAttendanceEnabled(true);
-        }
-      }
-
-      // --- INITIALIZATION AND EVENT BINDING ---
-      document.addEventListener("DOMContentLoaded", async () => {
-        initFirebase(); // Ensure Firebase is initialized first
-        await loadRoster(); // Load student list
-
-        // Bind event listeners
-        if (signInBtn) {
-          signInBtn.addEventListener("click", () => signInWithGooglePotros());
-        }
-        if (signOutBtn) {
-          signOutBtn.addEventListener("click", () => signOutCurrent());
-        }
-        if (attendanceBtn) {
-          attendanceBtn.addEventListener("click", registerAttendance);
-        }
-
-        // Set up auth state listener
-        onAuth(async (user) => {
-          if (
-            user &&
-            (user.email || "").toLowerCase().endsWith("@" + allowedEmailDomain)
-          ) {
-            // User is signed in
-            window.__qsLayoutPersistAuthState?.("signed-in");
-            window.updateQsAuthButton?.(); // Actualiza el botón del layout
-            await ensureTeacherAllowlistLoaded();
-            const normalizedEmail = user.email.toLowerCase();
-            const rosterEntry = students.find(
-              (s) => (s.email || "").toLowerCase() === normalizedEmail
-            );
-            const isTeacher = isTeacherEmail(normalizedEmail);
-
-            currentUserProfile = {
-              uid: user.uid,
-              email: normalizedEmail,
-              name: rosterEntry?.name || user.displayName,
-              type: isTeacher ? "teacher" : "student",
-              isTeacher,
-            };
-
-            // Update UI
-            if (userName) userName.textContent = currentUserProfile.name;
-            if (userPhoto) {
-              userPhoto.src = user.photoURL;
-              userPhoto.classList.remove("hidden");
-            }
-            if (userInfo) userInfo.classList.remove("hidden");
-            if (signInBtn) signInBtn.classList.add("hidden");
-            if (signOutBtn) signOutBtn.classList.remove("hidden");
-
-            applyRoleVisibility(isTeacher);
-            setAttendanceEnabled(true);
-
-            // Subscribe to attendance data
-            if (unsubscribeAttendance) unsubscribeAttendance();
-            unsubscribeAttendance = isTeacher
-              ? subscribeTodayAttendance(setRemoteAttendanceRecords)
-              : subscribeTodayAttendanceByUser(
-                  user.uid,
-                  setRemoteAttendanceRecords
-                );
-          } else {
-            // User is signed out
-            currentUserProfile = null;
-            if (userInfo) userInfo.classList.add("hidden");
-            if (signInBtn) signInBtn.classList.remove("hidden");
-            if (signOutBtn) signOutBtn.classList.add("hidden");
-            applyRoleVisibility(false);
-            setAttendanceEnabled(false);
-            setRemoteAttendanceRecords([]);
-            if (unsubscribeAttendance) unsubscribeAttendance();
-          }
-        });
-
-        // Start clocks and intervals
-        updateDateTime();
-        setInterval(updateDateTime, 1000);
-        setInterval(updateAttendanceList, 60000); // Refresh list
-      });
-    </script>
+</script>
     <script type="module" src="js/layout.js" defer></script>
   </body>
 </html>
