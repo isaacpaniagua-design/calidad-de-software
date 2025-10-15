@@ -3,6 +3,8 @@
 import {
   onAuth,
   subscribeGrades,
+  subscribeToStudentList, // NUEVA función necesaria en firebase.js
+  getGradeForStudent, // NUEVA función necesaria en firebase.js
   subscribeMyGradesAndActivities,
   subscribeAllActivities,
 } from "./firebase.js";
@@ -10,6 +12,7 @@ import { calculateUnitGrade, calculateFinalGrade } from "./grade-calculator.js";
 
 let unsubscribeFromGrades = null;
 let unsubscribeFromActivities = null;
+let studentSubscriptions = []; // Para manejar múltiples suscripciones
 
 // Estado local para almacenar datos
 let studentGrades = null;
@@ -72,6 +75,8 @@ function handleAuthStateChanged(user) {
   // Limpiar suscripciones anteriores para evitar fugas de memoria.
   if (unsubscribeFromGrades) unsubscribeFromGrades();
   if (unsubscribeFromActivities) unsubscribeFromActivities();
+    studentSubscriptions.forEach(unsub => unsub()); // Limpia las suscripciones de estudiantes
+  studentSubscriptions = [];
 
   const gradesContainer = document.getElementById("grades-table-container");
   const activitiesContainer = document.getElementById(
@@ -91,17 +96,38 @@ function handleAuthStateChanged(user) {
 
     if (userRole === "docente") {
       // --- VISTA DEL DOCENTE ---
-      titleEl.textContent = "Panel de Calificaciones (Promedios Generales)";
+     titleEl.textContent = "Panel de Calificaciones (Promedios Generales)";
       activitiesContainer.style.display = "none";
 
-      // Reiniciar estado del docente
-      allStudentsData = null;
-      allActivitiesData = null;
+      allStudentsData = []; // Inicializar como un array vacío
 
-      unsubscribeFromGrades = subscribeGrades((students) => {
-        allStudentsData = students;
-        renderTeacherView();
+    for (const student of students) {
+          const studentId = student.id; // Asumiendo que el ID del documento es el UID
+          
+          // Suscribirse a las calificaciones de cada estudiante
+          const unsubscribe = await getGradeForStudent(studentId, (gradeData) => {
+            const studentInfo = {
+              ...student, // Datos del estudiante (nombre, etc.)
+              ...(gradeData || {}), // Datos de sus calificaciones
+              id: studentId,
+            };
+
+            // Actualizar o agregar al estudiante en el estado local
+            const existingStudentIndex = allStudentsData.findIndex(s => s.id === studentId);
+            if (existingStudentIndex > -1) {
+              allStudentsData[existingStudentIndex] = studentInfo;
+            } else {
+              allStudentsData.push(studentInfo);
+            }
+            
+            // Renderizar la tabla con los datos actualizados
+            renderTeacherView();
+          });
+          studentSubscriptions.push(unsubscribe);
+        }
       });
+
+
 
       unsubscribeFromActivities = subscribeAllActivities((activities) => {
         allActivitiesData = activities;
