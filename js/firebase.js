@@ -487,6 +487,26 @@ export function subscribeTodayAttendance(cb, onError) {
   );
 }
 
+export function subscribeToStudentList(callback) {
+  const studentsCollection = collection(db, "students");
+  const unsubscribe = onSnapshot(studentsCollection, (snapshot) => {
+    const students = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    callback(students);
+  });
+  return unsubscribe; // Devuelve la función para desuscribirse
+}
+
+export function getGradeForStudent(studentId, callback) {
+  const gradeDocRef = doc(db, "grades", studentId);
+  const unsubscribe = onSnapshot(gradeDocRef, (doc) => {
+    callback(doc.exists() ? doc.data() : null);
+  });
+  return unsubscribe; // Devuelve la función para desuscribirse
+}
+
 export function subscribeTodayAttendanceByUser(email, cb, onError) {
   const db = getDb();
   const date = todayKey();
@@ -1554,3 +1574,4 @@ export async function saveTestPlan(planId, planData) {
 }
 
 export { app };
+
