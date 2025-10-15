@@ -738,7 +738,7 @@
     onAuth,
     signInWithGooglePotros,
     signOutCurrent,
-    isTeacherEmail, // Se mantiene para lógica visual inicial
+    isTeacherEmail,
     ensureTeacherAllowlistLoaded,
   } from "./js/firebase.js";
   import { allowedEmailDomain } from "./js/firebase-config.js";
@@ -758,12 +758,12 @@
 
   // --- CONFIGURACIÓN Y ESTADO GLOBAL ---
   const ROSTER_STORAGE_KEY = "qs_roster_cache";
-  let students = []; // Lista completa de estudiantes y docentes
-  let registeredAttendances = new Map(); // Usar un Map para un acceso y actualización eficientes
+  let students = [];
+  let registeredAttendances = new Map();
   let currentUserProfile = null;
-  let unsubscribeAttendance = () => {}; // Función para cancelar la suscripción de Firebase
+  let unsubscribeAttendance = () => {};
 
-  // --- REFERENCIAS AL DOM (CACHEADAS PARA MEJOR RENDIMIENTO) ---
+  // --- REFERENCIAS AL DOM ---
   const dom = {
     signInBtn: document.getElementById("signInBtn"),
     userInfo: document.getElementById("userInfo"),
@@ -780,12 +780,7 @@
     currentTime: document.getElementById("currentTime"),
   };
 
-  // --- FUNCIONES DE LÓGICA DE NEGOCIO ---
-
-  /**
-   * Carga la lista de participantes (roster) desde un JSON y la fusiona
-   * con datos en caché para disponibilidad offline.
-   */
+  // --- LÓGICA DE NEGOCIO ---
   async function loadRoster() {
     try {
       const response = await fetch("./data/students.json");
@@ -794,26 +789,22 @@
       const baseRoster = parseRosterPayload(baseRosterData);
       const cachedRoster = parseRosterPayload(localStorage.getItem(ROSTER_STORAGE_KEY));
       students = mergeRosterLists(baseRoster, cachedRoster);
-      window.students = students; // Para depuración
+      window.students = students;
     } catch (error) {
       console.error("Failed to load student roster:", error);
-      students = parseRosterPayload(localStorage.getItem(ROSTER_STORAGE_KEY)); // Fallback a caché
+      students = parseRosterPayload(localStorage.getItem(ROSTER_STORAGE_KEY));
       showNotification("No se pudo cargar la lista de alumnos, se usará la versión en caché.", "warning");
     }
   }
 
-  /**
-   * Registra la asistencia del usuario actual.
-   * Valida que el usuario esté en la lista del curso antes de guardar.
-   */
   async function registerAttendance() {
     if (!currentUserProfile) {
       return showNotification("Primero inicia sesión con tu cuenta @" + allowedEmailDomain, "error");
     }
-    if (dom.attendanceBtn.disabled) return; // Evitar doble clic
+    if (dom.attendanceBtn.disabled) return;
 
     const { email, uid, name } = currentUserProfile;
-    const rosterEntry = students.find(s => s.email.toLowerCase() === email.toLowerCase());
+    const rosterEntry = students.find(s => (s.email || "").toLowerCase() === email.toLowerCase());
 
     if (!rosterEntry) {
       return showNotification("Tu correo no está en la lista del curso. Contacta al docente.", "error");
@@ -839,8 +830,7 @@
     }
   }
 
-  // --- FUNCIONES DE MANIPULACIÓN DE DATOS (HELPERS) ---
-
+  // --- FUNCIONES HELPERS ---
   const parseRosterPayload = (data) => {
     try {
       const parsed = typeof data === "string" ? JSON.parse(data) : data;
@@ -853,16 +843,23 @@
     }
   };
 
+  // 🔽 *** AQUÍ ESTÁ LA CORRECCIÓN *** 🔽
   const mergeRosterLists = (primary, secondary) => {
     const map = new Map(primary.map(item => [item.email, item]));
     secondary.forEach(item => {
-      if (!map.has(item.email)) map.set(item.email, item);
+      if (item && item.email && !map.has(item.email)) {
+        map.set(item.email, item);
+      }
     });
-    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name, "es"));
+    return Array.from(map.values()).sort((a, b) => {
+      // Si 'a' o 'b' no tienen nombre, usa una cadena vacía para evitar el error.
+      const nameA = a.name || '';
+      const nameB = b.name || '';
+      return nameA.localeCompare(nameB, "es");
+    });
   };
 
   // --- FUNCIONES DE UI ---
-
   const updateDateTime = () => {
     const now = new Date();
     dom.currentDate.textContent = now.toLocaleDateString("es-ES", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
@@ -895,10 +892,6 @@
     dom.successModal.classList.remove("flex");
   };
 
-  /**
-   * Muestra notificaciones flotantes (toasts) para feedback.
-   * type: 'success', 'error', 'warning'
-   */
   const showNotification = (message, type = 'info') => {
     const colors = {
       info: 'bg-blue-500',
@@ -916,15 +909,11 @@
     }, 4000);
   };
 
-  // --- RENDERIZADO DE LA LISTA DE ASISTENCIA (MÁS EFICIENTE) ---
-  
+  // --- RENDERIZADO DE LA LISTA ---
   const renderAttendanceList = () => {
     dom.noAttendanceEl.style.display = registeredAttendances.size === 0 ? "block" : "none";
     dom.attendanceCountEl.textContent = `${registeredAttendances.size} ${registeredAttendances.size === 1 ? "registrado" : "registrados"}`;
-    
-    // Convertir a array y ordenar por fecha más reciente
     const sortedRecords = Array.from(registeredAttendances.values()).sort((a, b) => b.timestamp - a.timestamp);
-
     dom.attendanceListContainer.innerHTML = sortedRecords.map(createAttendanceRecordHTML).join('');
   };
 
@@ -953,28 +942,17 @@
   };
 
   // --- LÓGICA DE FIREBASE ---
-  
-  /**
-   * Se suscribe a los cambios en la colección de asistencias.
-   * Unificada para docentes y estudiantes.
-   */
   function subscribeToAttendance(user) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayTimestamp = Timestamp.fromDate(today);
-
-    let q = query(
-        collection(getDb(), "attendances"),
-        where("timestamp", ">=", todayTimestamp),
-        orderBy("timestamp", "desc")
-    );
     
-    // Si no es docente, filtra solo por su UID.
+    let q = query(collection(getDb(), "attendances"), where("timestamp", ">=", todayTimestamp), orderBy("timestamp", "desc"));
     if (!user.isTeacher) {
         q = query(q, where("uid", "==", user.uid));
     }
 
-    unsubscribeAttendance(); // Cancela suscripción anterior
+    unsubscribeAttendance();
     unsubscribeAttendance = onSnapshot(q, (snapshot) => {
         snapshot.docChanges().forEach((change) => {
             const docData = { id: change.doc.id, ...change.doc.data(), timestamp: change.doc.data().timestamp.toDate() };
@@ -989,15 +967,13 @@
     });
   }
   
-  // --- AUTENTICACIÓN Y CICLO DE VIDA ---
-  
+  // --- AUTENTICACIÓN ---
   const handleAuthStateChanged = async (user) => {
     if (user && user.email.toLowerCase().endsWith("@" + allowedEmailDomain)) {
-      // Usuario autenticado y con dominio correcto
       await ensureTeacherAllowlistLoaded();
       const email = user.email.toLowerCase();
-      const rosterEntry = students.find(s => s.email === email);
-      const isTeacher = isTeacherEmail(email); // **Mejora de seguridad: usar Custom Claims en un entorno de producción**
+      const rosterEntry = students.find(s => (s.email || "").toLowerCase() === email);
+      const isTeacher = isTeacherEmail(email);
 
       currentUserProfile = {
         uid: user.uid,
@@ -1007,7 +983,6 @@
         type: isTeacher ? "teacher" : "student",
       };
 
-      // Actualizar UI
       dom.userName.textContent = currentUserProfile.name;
       dom.userPhoto.src = user.photoURL;
       dom.userInfo.classList.remove("hidden");
@@ -1015,14 +990,12 @@
 
       applyRoleVisibility(isTeacher);
       setAttendanceEnabled(true);
-      
       subscribeToAttendance(currentUserProfile);
     } else {
-      // Usuario no autenticado o con dominio incorrecto
       currentUserProfile = null;
       dom.userInfo.classList.add("hidden");
       dom.signInBtn.classList.remove("hidden");
-      applyRoleVisibility(false); // Vista de estudiante por defecto
+      applyRoleVisibility(false);
       setAttendanceEnabled(false);
       registeredAttendances.clear();
       renderAttendanceList();
@@ -1030,30 +1003,21 @@
     }
   };
 
-  /**
-   * Función de inicialización principal.
-   */
+  // --- INICIALIZACIÓN ---
   async function main() {
     initFirebase();
     await loadRoster();
     
-    // Event Listeners
     dom.signInBtn.addEventListener("click", () => signInWithGooglePotros());
-    // El botón de signOut debe estar en el layout, pero si estuviera aquí, sería:
-    // document.getElementById("signOutBtn")?.addEventListener("click", () => signOutCurrent());
     dom.attendanceBtn.addEventListener("click", registerAttendance);
     
-    // Suscripción al estado de autenticación
     onAuth(handleAuthStateChanged);
 
-    // Reloj
     updateDateTime();
     setInterval(updateDateTime, 1000);
   }
 
-  // --- INICIO DE LA APLICACIÓN ---
   document.addEventListener("DOMContentLoaded", main);
-
 </script>
     <script type="module" src="js/layout.js" defer></script>
   </body>
