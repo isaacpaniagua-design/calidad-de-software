@@ -90,11 +90,48 @@ export function getDb() {
   return db;
 }
 
-// ... (El resto de tus funciones de ayuda y autenticación como signInWithGooglePotros, signOutCurrent, etc. van aquí.
-// No las modificaremos ya que no están relacionadas con el problema de las calificaciones)
-// Para mantener la respuesta concisa, me centraré en las funciones de calificaciones que corregimos.
-// El archivo que te entrego sí las contiene todas.
+// =====================================================================
+// AÑADE ESTE BLOQUE DE CÓDIGO A TU ARCHIVO js/firebase.js
+// =====================================================================
 
+// Variable global para almacenar la lista de docentes permitidos y evitar leerla múltiples veces.
+let teacherAllowlist = null;
+
+/**
+ * Asegura que la lista de correos de docentes permitidos se haya cargado desde Firestore.
+ * Si ya se cargó, la devuelve inmediatamente. Si no, la carga y la almacena.
+ * @returns {Promise<Array<string>>} Una promesa que resuelve a un array con los correos de los docentes.
+ */
+export async function ensureTeacherAllowlistLoaded() {
+  // Si ya tenemos la lista en memoria, la devolvemos para no leer la base de datos de nuevo.
+  if (teacherAllowlist !== null) {
+    return teacherAllowlist;
+  }
+
+  const db = getDb();
+  try {
+    // Apunta al documento específico que contiene la lista de correos.
+    const docRef = doc(db, "config", "teacher_allowlist");
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists() && docSnap.data().emails) {
+      // Si el documento existe y tiene el campo 'emails', lo guardamos en nuestra variable global.
+      teacherAllowlist = docSnap.data().emails;
+      console.log("Lista de docentes permitidos cargada:", teacherAllowlist);
+    } else {
+      // Si no existe, asumimos una lista vacía para que la app no se rompa.
+      console.warn("No se encontró el documento de la lista de docentes permitidos en 'config/teacher_allowlist'.");
+      teacherAllowlist = [];
+    }
+  } catch (error) {
+    console.error("Error al cargar la lista de docentes permitidos:", error);
+    teacherAllowlist = []; // En caso de error, devuelve una lista vacía.
+  }
+
+  return teacherAllowlist;
+}
+
+// =====================================================================
 // --- FUNCIONES DE CALIFICACIONES (CORREGIDAS) ---
 
 /**
@@ -560,5 +597,6 @@ export async function saveTestPlan(planId, planData) {
 }
 
 export { app };
+
 
 
