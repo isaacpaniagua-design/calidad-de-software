@@ -3,7 +3,7 @@
 import {
   onAuth,
   getDb,
-  subscribeGrades, // Usaremos esta para obtener la lista inicial
+  subscribeGrades,
 } from "./firebase.js";
 
 import {
@@ -16,12 +16,11 @@ import {
   deleteDoc,
   writeBatch,
   getDoc,
-
   setDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 const db = getDb();
-let studentsList = []; // Lista de estudiantes del curso
+let studentsList = [];
 let selectedStudentId = null;
 let unsubscribeFromActivities = null;
 
@@ -35,22 +34,14 @@ const createGroupActivityForm = document.getElementById("create-group-activity-f
 const submitGroupActivityBtn = document.getElementById("submit-group-activity");
 const batchStatusDiv = document.getElementById("batch-status");
 
-/**
- * Función central para recalcular promedios y guardarlos en Firestore.
- * Se activa cada vez que una actividad cambia.
- */
 async function recalculateAndSaveGrades(studentId, activities) {
   if (!studentId) return;
-
   const studentGradesRef = doc(db, "grades", studentId);
-
   try {
-    // 1. Calcular promedios por unidad
     const gradesByUnit = activities.reduce((acc, activity) => {
       const unit = activity.unit;
       const score = typeof activity.score === 'number' ? activity.score : 0;
       if (!unit) return acc;
-
       if (!acc[unit]) {
         acc[unit] = { totalScore: 0, count: 0 };
       }
@@ -68,35 +59,26 @@ async function recalculateAndSaveGrades(studentId, activities) {
       }
     }
 
-    // 2. Obtener calificación del proyecto final (si ya existe)
     const studentDoc = await getDoc(studentGradesRef);
     const projectFinalScore = studentDoc.exists() && studentDoc.data().projectFinal ? studentDoc.data().projectFinal : 0;
 
-    // 3. Calcular calificación final (40% unidades + 60% proyecto)
     const unitAverageValues = Object.values(unitAverages).map(u => u.average);
     const averageOfUnits = unitAverageValues.length > 0 ? unitAverageValues.reduce((sum, avg) => sum + avg, 0) / unitAverageValues.length : 0;
     const finalGrade = (averageOfUnits * 0.4) + (projectFinalScore * 0.6);
 
-    // 4. Preparar datos para actualizar
     const dataToUpdate = {
       ...unitAverages,
       finalGrade: finalGrade,
     };
-
-    // 5. Actualizar Firestore
     await setDoc(studentGradesRef, dataToUpdate, { merge: true });
     console.log(`Promedios para ${studentId} actualizados.`);
-
   } catch (error) {
     console.error("Error recalculando promedios:", error);
   }
 }
 
-// --- LÓGICA DE LA INTERFAZ (UI) ---
-
 export function initActividadesPage(user) {
   const isTeacher = user && (localStorage.getItem("qs_role") || "").toLowerCase() === "docente";
-
   if (isTeacher) {
     if (mainContent) mainContent.style.display = "block";
     loadStudents();
@@ -107,29 +89,24 @@ export function initActividadesPage(user) {
   }
 }
 
-/**
- * Carga la lista de estudiantes desde students.json y la cruza con los datos de 'grades'.
- */
 async function loadStudents() {
   studentSelect.disabled = true;
   studentSelect.innerHTML = "<option>Cargando estudiantes...</option>";
-
   try {
-    // Primero, carga la lista "maestra" desde el JSON
-    const response = await fetch('../data/students.json');
+    // ✅ *** CORRECCIÓN DE RUTA ***
+    const response = await fetch('./data/students.json');
+    if (!response.ok) {
+        throw new Error(`Error ${response.status}: No se encontró el archivo students.json`);
+    }
     const rosterData = await response.json();
     const rosterStudents = rosterData.students || [];
 
-    // Luego, usa subscribeGrades para saber quiénes ya tienen registro en la BD
     subscribeGrades((gradedStudents) => {
-      // Mapea los estudiantes de la lista maestra para fácil acceso
       const rosterMap = new Map(rosterStudents.map(s => [s.id, s]));
-
       studentsList = gradedStudents.map(gs => ({
-        ...gs, // Datos de la BD (calificaciones)
-        name: rosterMap.get(gs.id)?.name || gs.name || `Estudiante (ID: ${gs.id})` // Nombre del JSON, o de respaldo
+        ...gs,
+        name: rosterMap.get(gs.id)?.name || gs.name || `Estudiante (ID: ${gs.id})`
       }));
-      
       studentsList.sort((a, b) => a.name.localeCompare(b.name));
 
       studentSelect.innerHTML = '<option value="">-- Seleccione un estudiante --</option>';
@@ -143,7 +120,7 @@ async function loadStudents() {
     });
   } catch (error) {
     console.error("Error cargando la lista de estudiantes:", error);
-    studentSelect.innerHTML = '<option value="">Error al cargar estudiantes</option>';
+    studentSelect.innerHTML = `<option value="">${error.message}</option>`;
   }
 }
 
@@ -177,14 +154,12 @@ function renderActivities(activities) {
 
 function loadActivitiesForStudent(studentId) {
     if (unsubscribeFromActivities) unsubscribeFromActivities();
-
     const activitiesRef = collection(db, "grades", studentId, "activities");
     const q = query(activitiesRef, orderBy("activityName"));
-
     unsubscribeFromActivities = onSnapshot(q, (snapshot) => {
         const activities = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         renderActivities(activities);
-        recalculateAndSaveGrades(studentId, activities); // Recalcula con cada cambio
+        recalculateAndSaveGrades(studentId, activities);
     }, (error) => {
         console.error("Error al cargar actividades:", error);
         activitiesContainer.innerHTML = '<p class="text-center text-red-500 py-4">Error al cargar actividades.</p>';
@@ -207,21 +182,17 @@ function setupEventListeners() {
     createGroupActivityForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         if (studentsList.length === 0) return alert("No hay estudiantes cargados.");
-
         const activityName = document.getElementById("group-activity-name").value.trim();
         if (!activityName) return alert("El nombre de la actividad es requerido.");
-
         const newActivityData = {
             activityName,
             unit: document.getElementById("group-activity-unit").value,
             type: document.getElementById("group-activity-type").value,
             score: 0,
         };
-
         submitGroupActivityBtn.disabled = true;
         submitGroupActivityBtn.textContent = "Procesando...";
         batchStatusDiv.textContent = `Asignando a ${studentsList.length} estudiantes...`;
-
         try {
             const batch = writeBatch(db);
             studentsList.forEach((student) => {
@@ -247,11 +218,9 @@ function setupEventListeners() {
             input.disabled = true;
             const activityId = input.dataset.activityId;
             let newScore = parseFloat(input.value);
-
             if (isNaN(newScore) || newScore < 0) newScore = 0;
             if (newScore > 10) newScore = 10;
             input.value = newScore.toFixed(1);
-
             try {
                 const activityRef = doc(db, "grades", selectedStudentId, "activities", activityId);
                 await updateDoc(activityRef, { score: newScore });
@@ -279,5 +248,4 @@ function setupEventListeners() {
     });
 }
 
-// --- INICIALIZACIÓN ---
 onAuth(initActividadesPage);
