@@ -836,32 +836,36 @@ export function subscribeMyActivities(user, callback) {
   return unsubscribe;
 }
 
-export function subscribeAllActivities(callback) {
-  const db = getDb();
-  const activitiesQuery = query(collectionGroup(db, "activities"));
-
-  return onSnapshot(
-    activitiesQuery,
-    (snapshot) => {
-      const allActivities = [];
-      snapshot.forEach((doc) => {
-        // La ruta del padre es grades/{student_id}
-        const parentPath = doc.ref.parent.parent.path;
-        const studentId = parentPath.split("/")[1];
-        allActivities.push({
-          studentId: studentId,
-          id: doc.id,
-          ...doc.data(),
-        });
-      });
-      callback(allActivities);
-    },
-    (error) => {
-      console.error("Error al obtener todas las actividades:", error);
-      callback([]);
-    }
-  );
+async function fetchAllActivitiesByStudent(students) {
+    const allActivitiesMap = {};
+    
+    // Creamos una lista de promesas, una por cada estudiante.
+    const promises = students.map(async (student) => {
+        const activitiesRef = collection(db, 'grades', student.id, 'activities');
+        const activitiesSnapshot = await getDocs(activitiesRef);
+        
+        const studentActivities = activitiesSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        
+        allActivitiesMap[student.id] = studentActivities;
+    });
+    
+    // Esperamos a que TODAS las búsquedas de actividades terminen.
+    await Promise.all(promises);
+    
+    // Devolvemos el mapa completo.
+    return allActivitiesMap;
 }
+
+// Exportamos las funciones que usaremos.
+export {
+  getDb,
+  subscribeGrades,
+  subscribeMyGradesAndActivities,
+  fetchAllActivitiesByStudent, // Exportamos la nueva función
+};
 
 export async function updateStudentGradePartial(studentId, path, value) {
   const db = getDb();
@@ -1554,3 +1558,4 @@ export async function saveTestPlan(planId, planData) {
 }
 
 export { app };
+
