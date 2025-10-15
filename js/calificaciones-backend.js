@@ -207,9 +207,20 @@ function renderGradesTableForStudent(myGradesData) {
       '<tr><td colspan="5" class="text-center py-4">Aún no tienes un resumen de calificaciones.</td></tr>';
     return;
   }
-  const myData = myGradesData[0];
-  const unit1 = myData.unit1?.average ?? myData.unit1 ?? 0;
-  const unit2 = myData.unit2?.average ?? myData.unit2 ?? 0;
+  const getUnitAverage = (unitData) => {
+    if (!unitData || typeof unitData !== 'object') return 0;
+    // Si ya existe un 'average', lo usamos.
+    if (typeof unitData.average === 'number') return unitData.average;
+    // Si no, calculamos el promedio de los tipos de actividad que existan.
+    const scores = Object.values(unitData).filter(v => typeof v === 'number');
+    if (scores.length === 0) return 0;
+    return scores.reduce((a, b) => a + b, 0) / scores.length;
+  };
+
+  // Usamos la nueva función auxiliar
+  const unit1 = getUnitAverage(myData.unit1);
+  const unit2 = getUnitAverage(myData.unit2);
+  
   const projectFinal = myData.projectFinal ?? 0;
   const finalGrade = myData.finalGrade ?? myData.final ?? 0;
   tbody.innerHTML = `
