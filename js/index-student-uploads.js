@@ -1,6 +1,6 @@
 // js/index-student-uploads.js
-import { onAuth, getFirestore } from './firebase.js';
-import { addDoc,  collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
+import { onAuth } from './firebase.js';
+import { addDoc, getFirestore, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 
 // --- 🔽 ¡IMPORTANTE! CONFIGURA ESTOS VALORES 🔽 ---
 const CLOUDINARY_CLOUD_NAME = "do8hy56ur"; // Pega tu Cloud Name de Cloudinary aquí
