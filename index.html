@@ -11,16 +11,9 @@
     <title>Plataforma QS · Calidad de Software</title>
 
     <link rel="stylesheet" href="css/layout.css" />
-    <script>
-      UPLOADCARE_PUBLIC_KEY = "85eb5471d305dcd08e71";
-      UPLOADCARE_LOCALE = "es";
-    </script>
-    <script
-      src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"
-      charset="utf-8"
-      defer
-    ></script>
-
+    
+<script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
+    
     <style>
       :root {
         --page-max-width: min(1180px, 94vw);
@@ -41,6 +34,35 @@
         --shadow-card: 0 26px 65px rgba(99, 102, 241, 0.15);
         --dashboard-grid-gap: clamp(28px, 4vw, 36px);
       }
+
+      /* Estilos para el nuevo botón de Cloudinary */
+        .cloudinary-button {
+            display: inline-block;
+            background-color: #4f46e5;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            width: 100%;
+            text-align: center;
+        }
+
+        .cloudinary-button:hover {
+            background-color: #4338ca;
+        }
+
+        .file-info-chip {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background-color: #eef2ff;
+            color: #312e81;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
 
       *,
       *::before,
@@ -2063,396 +2085,99 @@
 
 
 
-        <details class="student-uploads" id="studentUploadsSection">
+      <details class="student-uploads" id="studentUploadsSection" open="">
+                <summary class="student-uploads__summary">
+                    <div class="student-uploads__header">
+                        <span class="student-uploads__eyebrow">Evidencias en línea</span>
+                        <h2 class="student-uploads__title">Entrega tus actividades y tareas</h2>
+                        <p class="student-uploads__description">
+                            Comparte tus avances con el equipo docente sin salir de la vista principal. Cada archivo que subas quedará asociado a tu cuenta para que puedas consultarlo cuando lo necesites.
+                        </p>
+                    </div>
+                    <span class="student-uploads__chevron" aria-hidden="true"></span>
+                </summary>
+                <div class="student-uploads__body">
+                    <div class="student-uploads__grid">
+                        <form class="student-uploads__form" id="studentUploadForm" autocomplete="off">
+                            <div class="field">
+                                <label for="studentUploadTitle">Actividad entregada</label>
+                                <select id="studentUploadTitle" name="studentUploadTitle" required="">
+                                    <option value="" disabled="" selected="">Selecciona la actividad o asignación</option>
+                                    <optgroup label="Unidad 1 · Fundamentos de Calidad de Software">
+                                        <option value="unit1-foro-ejemplo-metricas" data-unit-id="unit1" data-unit-label="Unidad 1 · Fundamentos de Calidad de Software">Foro: Ejemplo de Métricas</option>
+                                        <option value="unit1-taller-complejidad-ciclomatica" data-unit-id="unit1" data-unit-label="Unidad 1 · Fundamentos de Calidad de Software">Taller de Complejidad Ciclomática</option>
+                                        <option value="unit1-plan-pruebas-ieee-829" data-unit-id="unit1" data-unit-label="Unidad 1 · Fundamentos de Calidad de Software">Plan de Pruebas (IEEE 829)</option>
+                                        <option value="unit1-simulacion-revision-tecnica" data-unit-id="unit1" data-unit-label="Unidad 1 · Fundamentos de Calidad de Software">Simulación de Revisión Técnica</option>
+                                        <option value="unit1-diseno-casos-prueba" data-unit-id="unit1" data-unit-label="Unidad 1 · Fundamentos de Calidad de Software">Diseño de Casos de Prueba</option>
+                                        <option value="unit1-foro-seguridad" data-unit-id="unit1" data-unit-label="Unidad 1 · Fundamentos de Calidad de Software">Foro de Seguridad</option>
+                                        <option value="unit1-presentacion-metricas" data-unit-id="unit1" data-unit-label="Unidad 1 · Fundamentos de Calidad de Software">Presentación de métricas (producto, proceso, proyecto)</option>
+                                        <option value="unit1-participacion-clase" data-unit-id="unit1" data-unit-label="Unidad 1 · Fundamentos de Calidad de Software">Participación en Clase</option>
+                                        <option value="unit1-examen" data-unit-id="unit1" data-unit-label="Unidad 1 · Fundamentos de Calidad de Software">Examen Unidad I</option>
+                                    </optgroup>
+                                    <optgroup label="Unidad 2 · Modelos y Estándares de Calidad">
+                                        <option value="unit2-role-playing-auditoria" data-unit-id="unit2" data-unit-label="Unidad 2 · Modelos y Estándares de Calidad">Role-Playing de Auditoría</option>
+                                        <option value="unit2-informe-comparativo-modelos" data-unit-id="unit2" data-unit-label="Unidad 2 · Modelos y Estándares de Calidad">Informe Comparativo de Modelos</option>
+                                        <option value="unit2-mapa-conceptual-colaborativo" data-unit-id="unit2" data-unit-label="Unidad 2 · Modelos y Estándares de Calidad">Mapa Conceptual Colaborativo</option>
+                                        <option value="unit2-participacion-clase" data-unit-id="unit2" data-unit-label="Unidad 2 · Modelos y Estándares de Calidad">Participación en Clase</option>
+                                        <option value="unit2-examen" data-unit-id="unit2" data-unit-label="Unidad 2 · Modelos y Estándares de Calidad">Examen Unidad II</option>
+                                    </optgroup>
+                                    <optgroup label="Unidad 3 · Plan de Certificación de Calidad">
+                                        <option value="unit3-proyecto-fase1-diagnostico" data-unit-id="unit3" data-unit-label="Unidad 3 · Plan de Certificación de Calidad">Proyecto Final – Fase 1 (Diagnóstico)</option>
+                                        <option value="unit3-proyecto-fase2-gap-analysis" data-unit-id="unit3" data-unit-label="Unidad 3 · Plan de Certificación de Calidad">Proyecto Final – Fase 2 (Gap Analysis)</option>
+                                        <option value="unit3-proyecto-fases-3-4-roadmap" data-unit-id="unit3" data-unit-label="Unidad 3 · Plan de Certificación de Calidad">Proyecto Final – Fases 3 y 4 (Roadmap y Gestión de Cambio)</option>
+                                        <option value="unit3-presentacion-proyecto-final" data-unit-id="unit3" data-unit-label="Unidad 3 · Plan de Certificación de Calidad">Presentación del Proyecto Final</option>
+                                        <option value="unit3-examen-final-integrador" data-unit-id="unit3" data-unit-label="Unidad 3 · Plan de Certificación de Calidad">Examen Final Integrador</option>
+                                    </optgroup>
+                                    <optgroup label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">
+                                        <option value="project-fase1-claridad-diagnostico" data-unit-id="project" data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">Claridad y completitud del diagnóstico</option>
+                                        <option value="project-fase1-justificacion-modelo" data-unit-id="project" data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">Justificación de la selección del modelo</option>
+                                        <option value="project-fase1-presentacion-formato" data-unit-id="project" data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">Presentación y formato</option>
+                                        <option value="project-fase2-identificacion-brechas" data-unit-id="project" data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">Identificación de brechas</option>
+                                        <option value="project-fase2-acciones-priorizacion" data-unit-id="project" data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">Acciones recomendadas y priorización</option>
+                                        <option value="project-fase2-claridad-visual" data-unit-id="project" data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">Claridad visual del documento</option>
+                                        <option value="project-roadmap-secuencia-hitos" data-unit-id="project" data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">Secuencia lógica y realista de hitos</option>
+                                        <option value="project-roadmap-factibilidad" data-unit-id="project" data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">Factibilidad de recursos, tiempos y responsables</option>
+                                        <option value="project-roadmap-plan-comunicacion" data-unit-id="project" data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">Plan de comunicación y capacitación</option>
+                                        <option value="project-roadmap-presentacion-formato" data-unit-id="project" data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">Presentación y formato</option>
+                                        <option value="project-presentacion-claridad-estructura" data-unit-id="project" data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">Claridad y estructura de la exposición</option>
+                                        <option value="project-presentacion-dominio-tema" data-unit-id="project" data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">Dominio del tema y respuesta a preguntas</option>
+                                        <option value="project-presentacion-calidad-visuales" data-unit-id="project" data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">Calidad de diapositivas y visuales</option>
+                                        <option value="project-presentacion-valor-negocio" data-unit-id="project" data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">Justificación del valor de negocio (ROI)</option>
+                                        <option value="project-presentacion-trabajo-equipo" data-unit-id="project" data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">Trabajo en equipo y participación equitativa</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="studentUploadDescription">Descripción (opcional)</label>
+                                <textarea id="studentUploadDescription" name="studentUploadDescription" rows="3" placeholder="Describe brevemente qué contiene tu archivo o a qué sesión corresponde"></textarea>
+                            </div>
+                            <div class="field">
+                                <label>Archivo</label>
+                                <button type="button" id="upload_widget_opener" class="cloudinary-button">
+                                    Adjuntar Archivo
+                                </button>
+                                <div id="file-upload-info" class="file-info-chip" style="display: none;"></div>
+                            </div>
+                            <div class="student-uploads__actions">
+                                <button type="submit" class="student-uploads__submit">Enviar entrega</button>
+                                <button type="button" class="student-uploads__reset" id="studentUploadReset">Limpiar formulario</button>
+                            </div>
+                        </form>
 
-
-          <summary class="student-uploads__summary">
-            <div class="student-uploads__header">
-              <span class="student-uploads__eyebrow">Evidencias en línea</span>
-              <h2 class="student-uploads__title">Entrega tus actividades y tareas</h2>
-              <p class="student-uploads__description">
-                Comparte tus avances con el equipo docente sin salir de la vista principal. Cada archivo que subas quedará asociado a tu cuenta para que puedas consultarlo cuando lo necesites.
-              </p>
-            </div>
-            <span class="student-uploads__chevron" aria-hidden="true"></span>
-          </summary>
-
-          <div class="student-uploads__body">
-
-            <div class="student-uploads__grid">
-
-            <form class="student-uploads__form" id="studentUploadForm" autocomplete="off">
-
-              <div class="field">
-
-                <label for="studentUploadTitle">Actividad entregada</label>
-
-                <select
-                  id="studentUploadTitle"
-                  name="studentUploadTitle"
-                  required
-                >
-                  <option value="" disabled selected>
-                    Selecciona la actividad o asignación
-                  </option>
-                  <optgroup label="Unidad 1 · Fundamentos de Calidad de Software">
-                    <option
-                      value="unit1-foro-ejemplo-metricas"
-                      data-unit-id="unit1"
-                      data-unit-label="Unidad 1 · Fundamentos de Calidad de Software"
-                    >
-                      Foro: Ejemplo de Métricas
-                    </option>
-                    <option
-                      value="unit1-taller-complejidad-ciclomatica"
-                      data-unit-id="unit1"
-                      data-unit-label="Unidad 1 · Fundamentos de Calidad de Software"
-                    >
-                      Taller de Complejidad Ciclomática
-                    </option>
-                    <option
-                      value="unit1-plan-pruebas-ieee-829"
-                      data-unit-id="unit1"
-                      data-unit-label="Unidad 1 · Fundamentos de Calidad de Software"
-                    >
-                      Plan de Pruebas (IEEE 829)
-                    </option>
-                    <option
-                      value="unit1-simulacion-revision-tecnica"
-                      data-unit-id="unit1"
-                      data-unit-label="Unidad 1 · Fundamentos de Calidad de Software"
-                    >
-                      Simulación de Revisión Técnica
-                    </option>
-                    <option
-                      value="unit1-diseno-casos-prueba"
-                      data-unit-id="unit1"
-                      data-unit-label="Unidad 1 · Fundamentos de Calidad de Software"
-                    >
-                      Diseño de Casos de Prueba
-                    </option>
-                    <option
-                      value="unit1-foro-seguridad"
-                      data-unit-id="unit1"
-                      data-unit-label="Unidad 1 · Fundamentos de Calidad de Software"
-                    >
-                      Foro de Seguridad
-                    </option>
-                    <option
-                      value="unit1-presentacion-metricas"
-                      data-unit-id="unit1"
-                      data-unit-label="Unidad 1 · Fundamentos de Calidad de Software"
-                    >
-                      Presentación de métricas (producto, proceso, proyecto)
-                    </option>
-                    <option
-                      value="unit1-participacion-clase"
-                      data-unit-id="unit1"
-                      data-unit-label="Unidad 1 · Fundamentos de Calidad de Software"
-                    >
-                      Participación en Clase
-                    </option>
-                    <option
-                      value="unit1-examen"
-                      data-unit-id="unit1"
-                      data-unit-label="Unidad 1 · Fundamentos de Calidad de Software"
-                    >
-                      Examen Unidad I
-                    </option>
-                  </optgroup>
-                  <optgroup label="Unidad 2 · Modelos y Estándares de Calidad">
-                    <option
-                      value="unit2-role-playing-auditoria"
-                      data-unit-id="unit2"
-                      data-unit-label="Unidad 2 · Modelos y Estándares de Calidad"
-                    >
-                      Role-Playing de Auditoría
-                    </option>
-                    <option
-                      value="unit2-informe-comparativo-modelos"
-                      data-unit-id="unit2"
-                      data-unit-label="Unidad 2 · Modelos y Estándares de Calidad"
-                    >
-                      Informe Comparativo de Modelos
-                    </option>
-                    <option
-                      value="unit2-mapa-conceptual-colaborativo"
-                      data-unit-id="unit2"
-                      data-unit-label="Unidad 2 · Modelos y Estándares de Calidad"
-                    >
-                      Mapa Conceptual Colaborativo
-                    </option>
-                    <option
-                      value="unit2-participacion-clase"
-                      data-unit-id="unit2"
-                      data-unit-label="Unidad 2 · Modelos y Estándares de Calidad"
-                    >
-                      Participación en Clase
-                    </option>
-                    <option
-                      value="unit2-examen"
-                      data-unit-id="unit2"
-                      data-unit-label="Unidad 2 · Modelos y Estándares de Calidad"
-                    >
-                      Examen Unidad II
-                    </option>
-                  </optgroup>
-                  <optgroup label="Unidad 3 · Plan de Certificación de Calidad">
-                    <option
-                      value="unit3-proyecto-fase1-diagnostico"
-                      data-unit-id="unit3"
-                      data-unit-label="Unidad 3 · Plan de Certificación de Calidad"
-                    >
-                      Proyecto Final – Fase 1 (Diagnóstico)
-                    </option>
-                    <option
-                      value="unit3-proyecto-fase2-gap-analysis"
-                      data-unit-id="unit3"
-                      data-unit-label="Unidad 3 · Plan de Certificación de Calidad"
-                    >
-                      Proyecto Final – Fase 2 (Gap Analysis)
-                    </option>
-                    <option
-                      value="unit3-proyecto-fases-3-4-roadmap"
-                      data-unit-id="unit3"
-                      data-unit-label="Unidad 3 · Plan de Certificación de Calidad"
-                    >
-                      Proyecto Final – Fases 3 y 4 (Roadmap y Gestión de Cambio)
-                    </option>
-                    <option
-                      value="unit3-presentacion-proyecto-final"
-                      data-unit-id="unit3"
-                      data-unit-label="Unidad 3 · Plan de Certificación de Calidad"
-                    >
-                      Presentación del Proyecto Final
-                    </option>
-                    <option
-                      value="unit3-examen-final-integrador"
-                      data-unit-id="unit3"
-                      data-unit-label="Unidad 3 · Plan de Certificación de Calidad"
-                    >
-                      Examen Final Integrador
-                    </option>
-                  </optgroup>
-                  <optgroup label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad">
-                    <option
-                      value="project-fase1-claridad-diagnostico"
-                      data-unit-id="project"
-                      data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad"
-                    >
-                      Claridad y completitud del diagnóstico
-                    </option>
-                    <option
-                      value="project-fase1-justificacion-modelo"
-                      data-unit-id="project"
-                      data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad"
-                    >
-                      Justificación de la selección del modelo
-                    </option>
-                    <option
-                      value="project-fase1-presentacion-formato"
-                      data-unit-id="project"
-                      data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad"
-                    >
-                      Presentación y formato
-                    </option>
-                    <option
-                      value="project-fase2-identificacion-brechas"
-                      data-unit-id="project"
-                      data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad"
-                    >
-                      Identificación de brechas
-                    </option>
-                    <option
-                      value="project-fase2-acciones-priorizacion"
-                      data-unit-id="project"
-                      data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad"
-                    >
-                      Acciones recomendadas y priorización
-                    </option>
-                    <option
-                      value="project-fase2-claridad-visual"
-                      data-unit-id="project"
-                      data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad"
-                    >
-                      Claridad visual del documento
-                    </option>
-                    <option
-                      value="project-roadmap-secuencia-hitos"
-                      data-unit-id="project"
-                      data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad"
-                    >
-                      Secuencia lógica y realista de hitos
-                    </option>
-                    <option
-                      value="project-roadmap-factibilidad"
-                      data-unit-id="project"
-                      data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad"
-                    >
-                      Factibilidad de recursos, tiempos y responsables
-                    </option>
-                    <option
-                      value="project-roadmap-plan-comunicacion"
-                      data-unit-id="project"
-                      data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad"
-                    >
-                      Plan de comunicación y capacitación
-                    </option>
-                    <option
-                      value="project-roadmap-presentacion-formato"
-                      data-unit-id="project"
-                      data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad"
-                    >
-                      Presentación y formato
-                    </option>
-                    <option
-                      value="project-presentacion-claridad-estructura"
-                      data-unit-id="project"
-                      data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad"
-                    >
-                      Claridad y estructura de la exposición
-                    </option>
-                    <option
-                      value="project-presentacion-dominio-tema"
-                      data-unit-id="project"
-                      data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad"
-                    >
-                      Dominio del tema y respuesta a preguntas
-                    </option>
-                    <option
-                      value="project-presentacion-calidad-visuales"
-                      data-unit-id="project"
-                      data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad"
-                    >
-                      Calidad de diapositivas y visuales
-                    </option>
-                    <option
-                      value="project-presentacion-valor-negocio"
-                      data-unit-id="project"
-                      data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad"
-                    >
-                      Justificación del valor de negocio (ROI)
-                    </option>
-                    <option
-                      value="project-presentacion-trabajo-equipo"
-                      data-unit-id="project"
-                      data-unit-label="Rúbrica del Proyecto Final – Plan de Certificación de Calidad"
-                    >
-                      Trabajo en equipo y participación equitativa
-                    </option>
-                  </optgroup>
-                </select>
-
-              </div>
-
-              <div class="field">
-
-                <label for="studentUploadType">Tipo de evidencia</label>
-
-                <select id="studentUploadType" name="studentUploadType">
-
-                  <option value="activity">Actividad</option>
-
-                  <option value="homework">Tarea</option>
-
-                  <option value="evidence">Evidencia</option>
-
-                </select>
-
-              </div>
-
-              <div class="field">
-
-                <label for="studentUploadDescription">Descripción (opcional)</label>
-
-                <textarea
-
-                  id="studentUploadDescription"
-
-                  name="studentUploadDescription"
-
-                  rows="3"
-
-                  placeholder="Describe brevemente qué contiene tu archivo o a qué sesión corresponde"
-
-                ></textarea>
-
-              </div>
-
-              <div class="field">
-
-                <label for="studentUploadFile">Archivo</label>
-
-                <input
-
-                  type="hidden"
-
-                  role="uploadcare-uploader"
-
-                  id="studentUploadFile"
-
-                  name="studentUploadFile"
-
-                  data-multiple="false"
-
-                />
-
-                <p class="student-uploads__help">
-
-                  Acepta formatos comunes como PDF, DOCX, PPTX o ZIP de hasta 100&nbsp;MB.
-
-                </p>
-
-              </div>
-
-              <div class="student-uploads__actions">
-
-                <button type="submit" class="student-uploads__submit">Enviar entrega</button>
-
-                <button type="button" class="student-uploads__reset" id="studentUploadReset">
-
-                  Limpiar formulario
-
-                </button>
-
-              </div>
-
-            </form>
-
-            <div class="student-uploads__records">
-
-              <div class="student-uploads__records-header">
-
-                <h3 class="student-uploads__records-title">Tus últimas entregas</h3>
-
-                <span class="student-uploads__count" data-upload-count="">0</span>
-
-              </div>
-
-              <p class="student-uploads__empty" id="studentUploadEmpty">
-
-                Todavía no registras evidencias. Cuando subas actividades aparecerán en este espacio.
-
-              </p>
-
-              <ul class="student-uploads__list" id="studentUploadList" aria-live="polite"></ul>
-
-            </div>
-
-          </div>
-
-            <div
-              class="student-uploads__status is-info"
-              id="studentUploadStatus"
-              role="status"
-              aria-live="polite"
-            >
-              Aún no registras entregas. Usa el formulario para subir la primera.
-            </div>
-
-          </div>
-
-        </details>
+                        <div class="student-uploads__records">
+                            <div class="student-uploads__records-header">
+                                <h3 class="student-uploads__records-title">Tus últimas entregas</h3>
+                                <span class="student-uploads__count" data-upload-count="">0</span>
+                            </div>
+                            <p class="student-uploads__empty" id="studentUploadEmpty">
+                                Todavía no registras evidencias. Cuando subas actividades aparecerán en este espacio.
+                            </p>
+                            <ul class="student-uploads__list" id="studentUploadList" aria-live="polite"></ul>
+                        </div>
+                    </div>
+                    <div class="student-uploads__status is-info" id="upload-status" role="status" aria-live="polite">Aún no registras entregas. Usa el formulario para subir la primera.</div>
+                </div>
+            </details>
 
 
 
