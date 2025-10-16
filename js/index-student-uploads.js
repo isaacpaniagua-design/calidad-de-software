@@ -111,4 +111,5 @@ onAuth(user => {
             type === 'warning' ? 'text-yellow-600' : 'text-gray-600'
         }`;
     }
-});
+
+
