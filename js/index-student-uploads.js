@@ -1,18 +1,19 @@
 // js/index-student-uploads.js
-import { onAuth } from './firebase.js';
-import { addDoc, getFirestore, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
+
+import { onAuth } from './firebase.js'; 
+import { getFirestore, addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 
 // --- 🔽 ¡IMPORTANTE! CONFIGURA ESTOS VALORES 🔽 ---
 const CLOUDINARY_CLOUD_NAME = "do8hy56ur"; // Pega tu Cloud Name de Cloudinary aquí
 const CLOUDINARY_UPLOAD_PRESET = "qs_student_uploads"; // Pega el nombre de tu Upload Preset aquí
 // ----------------------------------------------------
+
 let uploadedFileInfo = null;
 
 onAuth(user => {
     const uploadSection = document.getElementById('studentUploadsSection');
     const userRole = (localStorage.getItem("qs_role") || "estudiante").toLowerCase();
 
-    // La sección de subida solo debe aparecer para estudiantes autenticados
     if (!user || userRole === 'docente') {
         if (uploadSection) uploadSection.style.display = 'none';
         return;
@@ -23,11 +24,11 @@ onAuth(user => {
     const uploadButton = document.getElementById('upload_widget_opener');
     const fileInfoChip = document.getElementById('file-upload-info');
     const statusDiv = document.getElementById('upload-status');
+    const resetButton = document.getElementById('studentUploadReset');
 
-    if (!uploadButton) return;
+    if (!uploadButton || !form) return;
 
-    // Configura el widget de Cloudinary
-   const myWidget = cloudinary.createUploadWidget({
+    const myWidget = cloudinary.createUploadWidget({
         cloudName: CLOUDINARY_CLOUD_NAME,
         uploadPreset: CLOUDINARY_UPLOAD_PRESET,
         folder: `calidad-de-software/${user.uid}`,
@@ -50,7 +51,6 @@ onAuth(user => {
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-
         const titleSelect = document.getElementById('studentUploadTitle');
         const descriptionText = document.getElementById('studentUploadDescription');
 
@@ -82,34 +82,46 @@ onAuth(user => {
             form.querySelector('button[type="submit"]').disabled = false;
         }
     });
-});
-        
-    async function saveUploadInfoToFirestore(user, fileInfo) {
-        const db = getFirestore();
-        await addDoc(collection(db, "studentUploads"), {
-            student: {
-                uid: user.uid,
-                displayName: user.displayName,
-                email: user.email,
-            },
-            fileName: fileInfo.original_filename + '.' + fileInfo.format,
-            fileUrl: fileInfo.secure_url,
-            fileSize: fileInfo.bytes,
-            fileType: fileInfo.resource_type,
-            submittedAt: serverTimestamp(),
-            status: 'enviado',
-            uploadSource: 'cloudinary',
+
+    if(resetButton) {
+        resetButton.addEventListener('click', () => {
+            form.reset();
+            fileInfoChip.style.display = 'none';
+            uploadedFileInfo = null;
+            showStatus('Formulario limpiado. Listo para una nueva entrega.', 'info');
         });
     }
 
+    // ✅ FUNCIÓN DE AYUDA MOVIDA AQUÍ DENTRO
+    // Ahora puede "ver" la variable statusDiv definida arriba.
     function showStatus(message, type) {
         if (!statusDiv) return;
         statusDiv.textContent = message;
-        statusDiv.className = `mt-4 text-center font-semibold ${
-            type === 'success' ? 'text-green-600' :
-            type === 'error'   ? 'text-red-600'   :
-            type === 'warning' ? 'text-yellow-600' : 'text-gray-600'
+        statusDiv.className = `student-uploads__status ${
+            type === 'success' ? 'is-success' :
+            type === 'error'   ? 'is-danger'  : 'is-info'
         }`;
     }
+});
 
-
+// Esta función es llamada desde arriba, por lo que puede permanecer aquí.
+async function saveUploadInfoToFirestore(user, data) {
+    const db = getFirestore();
+    await addDoc(collection(db, "studentUploads"), {
+        student: {
+            uid: user.uid,
+            displayName: user.displayName,
+            email: user.email,
+        },
+        title: data.title,
+        titleId: data.titleId,
+        description: data.description,
+        fileName: data.fileInfo.original_filename + '.' + data.fileInfo.format,
+        fileUrl: data.fileInfo.secure_url,
+        fileSize: data.fileInfo.bytes,
+        fileType: data.fileInfo.resource_type,
+        submittedAt: serverTimestamp(),
+        status: 'enviado',
+        uploadSource: 'cloudinary',
+    });
+}
