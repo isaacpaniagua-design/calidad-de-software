@@ -1,6 +1,5 @@
-import { getFirestore, doc, setDoc, getDoc, serverTimestamp, collection, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js";
 
+document.addEventListener('DOMContentLoaded', () => {
 // ============================================================================
 // ¡IMPORTANTE! REEMPLAZA ESTOS VALORES
 // ============================================================================
@@ -277,3 +276,4 @@ function updateGlobalStatus(message, type = 'is-info') {
 
 // Inicia la aplicación
 main();
+});
