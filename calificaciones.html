@@ -9,18 +9,10 @@
     <link rel="stylesheet" href="css/calificaciones.css" />
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      UPLOADCARE_PUBLIC_KEY = "85eb5471d305dcd08e71";
-      UPLOADCARE_LOCALE = "es";
-    </script>
-    <script
-      src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"
-      charset="utf-8"
-      defer
-    ></script>
+    
+    <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
 
     <style>
-      /* Se mantiene este estilo base para la fuente, ya que es global */
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
       body {
         font-family: "Inter", sans-serif;
@@ -28,6 +20,7 @@
     </style>
   </head>
   <body id="calificaciones-root">
+    
     <div class="qs-nav" data-role="main-nav">
       <div class="wrap">
         <div class="qs-brand-shell">
@@ -115,7 +108,7 @@
           </div>
           <div class="grades-hero__stat">
             <span>Sincronización</span>
-            <span>Compatible con Uploadcare para adjuntar evidencias.</span>
+            <span>Compatible con Cloudinary para adjuntar evidencias.</span>
           </div>
         </div>
       </div>
@@ -165,34 +158,30 @@
         </div>
       </div>
 
-      <div
-        id="student-activities-container"
-        class="container mx-auto px-4 py-8"
-        style="display: none"
-      >
-        <div class="bg-white rounded-lg card-shadow p-6">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4">
-            Desglose de Actividades
-          </h2>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left">
-              <thead>
-                <tr class="border-b">
-                  <th class="py-2 px-4">Actividad</th>
-                  <th class="py-2 px-4">Tipo</th>
-                  <th class="py-2 px-4">Unidad</th>
-                  <th class="py-2 px-4 text-right">Calificación (0-10)</th>
-                </tr>
-              </thead>
-              <tbody id="student-activities-body"></tbody>
-            </table>
-          </div>
-        </div>
+      <div id="student-uploads-container" class="container mx-auto px-4 py-8" style="display: none;">
+        <details class="student-uploads" open>
+            <summary class="student-uploads__summary">
+                <div class="student-uploads__header">
+                    <span class="student-uploads__eyebrow">Evidencias en línea</span>
+                    <h2 class="student-uploads__title">Entrega tus actividades y tareas</h2>
+                    <p class="student-uploads__description">
+                        Sube tus archivos directamente a la plataforma. Cada entrega quedará asociada a tu cuenta para su revisión.
+                    </p>
+                </div>
+                <span class="student-uploads__chevron" aria-hidden="true"></span>
+            </summary>
+            <div class="student-uploads__panel">
+                <button id="upload_widget_opener" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-md hover:bg-indigo-700 transition">
+                    Seleccionar Archivo para Subir
+                </button>
+                <div id="upload-status" class="mt-4 text-center font-semibold"></div>
+            </div>
+        </details>
       </div>
-    </div>
+
+      </div>
 
     <script type="module" src="js/calificaciones-uploads-ui.js"></script>
-
     <script type="module" src="js/calificaciones-teacher-sync.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
@@ -267,10 +256,7 @@
     </script>
 
     <script src="js/auth-guard.js" type="module"></script>
-
     <script src="js/grade-calculator.js" type="module"></script>
-    
-
     <script defer src="js/nav-inject.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
@@ -283,8 +269,9 @@
       });
     </script>
     <script src="js/calificaciones-backend.js" type="module"></script>
+    <script src="js/student-file-uploader.js" type="module"></script>
     <script type="module" src="js/layout.js"></script>
     <script defer src="js/back-home.js"></script>
-    <script src="js/maintenance.js" type="module></script>
+    <script src="js/maintenance.js" type="module"></script>
   </body>
 </html>
