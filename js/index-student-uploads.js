@@ -6,8 +6,14 @@ import { courseActivities } from './course-activities.js';
 import { initDriveUploader, uploadFile } from "./student-file-uploader.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-    // --- Referencias al DOM ---
+    // --- Referencias al DOM (con validación) ---
     const form = document.getElementById("studentUploadForm");
+    // Si el formulario no existe, detenemos la ejecución de este script para evitar errores.
+    if (!form) {
+        console.log("El formulario de entrega de actividades no se encuentra en esta página. Script detenido.");
+        return;
+    }
+
     const titleSelect = document.getElementById("studentUploadTitle");
     const typeSelect = document.getElementById("studentUploadType");
     const descriptionTextarea = document.getElementById("studentUploadDescription");
@@ -15,39 +21,39 @@ document.addEventListener("DOMContentLoaded", () => {
     const submitBtn = form.querySelector('button[type="submit"]');
     const resetBtn = document.getElementById("studentUploadReset");
     
-    // Contenedores de listas y botones del historial
     const listEl = document.getElementById("studentUploadList");
     const emptyEl = document.getElementById("studentUploadEmpty");
     const fullHistoryListEl = document.getElementById("fullHistoryList");
     const btnVerHistorial = document.getElementById("btn-ver-historial");
     
     const countEl = document.querySelector("[data-upload-count]");
+    const statusModalEl = document.getElementById('statusModal');
+    const historialModalEl = document.getElementById('historialModal');
 
     // --- Variables de Estado y Modales ---
     let currentUser = null;
     let todasLasEntregas = [];
     let statusModalInstance, historialModalInstance;
 
-    // Se asume que Bootstrap JS está cargado en la página para que esto funcione
     try {
-        statusModalInstance = new bootstrap.Modal(document.getElementById('statusModal'));
-        historialModalInstance = new bootstrap.Modal(document.getElementById('historialModal'));
+        statusModalInstance = new bootstrap.Modal(statusModalEl);
+        historialModalInstance = new bootstrap.Modal(historialModalEl);
     } catch (e) {
         console.error("Error inicializando los modales de Bootstrap. Asegúrate de que el JS de Bootstrap esté cargado.", e);
     }
     
     // --- Autenticación y Carga Inicial ---
-    populateActivitiesSelect();
+    populateActivitiesSelect(); // <-- Esta es la función clave
     const auth = getAuth();
     onAuthStateChanged(auth, (user) => {
         currentUser = user;
         if (user) {
             submitBtn.disabled = false;
-            initDriveUploader(); // Pre-cargamos la API de Google Drive
+            initDriveUploader();
             startObserver(user.uid);
         } else {
             submitBtn.disabled = true;
-            renderAllLists([]); // Limpiar listas si el usuario cierra sesión
+            renderAllLists([]);
         }
     });
 
@@ -59,27 +65,35 @@ document.addEventListener("DOMContentLoaded", () => {
         mostrarModalDeEstado("Formulario Limpiado", "Puedes registrar una nueva entrega.", "info");
     });
 
-    btnVerHistorial.addEventListener('click', () => {
-        renderUploads(todasLasEntregas, fullHistoryListEl); // Renderiza todas las entregas
-        if (historialModalInstance) historialModalInstance.show();
-    });
+    if (btnVerHistorial) {
+        btnVerHistorial.addEventListener('click', () => {
+            renderUploads(todasLasEntregas, fullHistoryListEl);
+            if (historialModalInstance) historialModalInstance.show();
+        });
+    }
+
+    if (historialModalEl) {
+        historialModalEl.addEventListener('hidden.bs.modal', () => {
+            if (btnVerHistorial) btnVerHistorial.focus();
+        });
+    }
+    if (statusModalEl) {
+        statusModalEl.addEventListener('hidden.bs.modal', () => {
+            if (submitBtn) submitBtn.focus();
+        });
+    }
 
     // --- Lógica Principal ---
 
     async function handleFormSubmit(e) {
         e.preventDefault();
-        if (!currentUser) {
-            return mostrarModalDeEstado("Error de Autenticación", "Debes iniciar sesión para hacer una entrega.", "error");
-        }
-        if (!fileInput.files || fileInput.files.length === 0) {
-            return mostrarModalDeEstado("Archivo Faltante", "Por favor, selecciona un archivo para subir.", "error");
-        }
+        if (!currentUser) return mostrarModalDeEstado("Error de Autenticación", "Debes iniciar sesión para hacer una entrega.", "error");
+        if (!fileInput.files || fileInput.files.length === 0) return mostrarModalDeEstado("Archivo Faltante", "Por favor, selecciona un archivo para subir.", "error");
 
-        const file = fileInput.files[0];
         const selectedOption = titleSelect.options[titleSelect.selectedIndex];
-        if (!selectedOption || selectedOption.disabled) {
-            return mostrarModalDeEstado("Actividad no seleccionada", "Por favor, selecciona una actividad de la lista.", "error");
-        }
+        if (!selectedOption || selectedOption.disabled) return mostrarModalDeEstado("Actividad no seleccionada", "Por favor, selecciona una actividad de la lista.", "error");
+        
+        const file = fileInput.files[0];
         const unitLabel = selectedOption.dataset.unitLabel || "General";
         const activityTitle = selectedOption.text;
 
@@ -103,13 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 fileSize: file.size,
                 mimeType: file.type,
                 student: { uid: currentUser.uid, displayName: currentUser.displayName, email: currentUser.email },
-                extra: {
-                    uploadBackend: "googledrive",
-                    driveFileId: driveResponse.id,
-                    unitId: selectedOption.dataset.unitId,
-                    unitLabel: unitLabel,
-                    activityTitle: activityTitle,
-                },
+                extra: { uploadBackend: "googledrive", driveFileId: driveResponse.id, unitId: selectedOption.dataset.unitId, unitLabel, activityTitle },
             };
             
             await createStudentUpload(payload);
@@ -120,7 +128,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }, 500);
             
             form.reset();
-            populateActivitiesSelect(); // Resetea el selector a su estado inicial
+            populateActivitiesSelect();
 
         } catch (error) {
             console.error("Error en el proceso de entrega:", error);
@@ -133,7 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function startObserver(uid) {
         observeStudentUploads(uid, (items) => {
-            todasLasEntregas = items; // Almacenamos la lista completa
+            todasLasEntregas = items;
             renderAllLists(items);
         }, (error) => {
             console.error("Error observando entregas:", error);
@@ -143,19 +151,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderAllLists(items) {
         if (countEl) countEl.textContent = items.length;
-        const tresUltimas = items.slice(0, 3);
-        renderUploads(tresUltimas, listEl, emptyEl);
+        if (listEl) renderUploads(items.slice(0, 3), listEl, emptyEl);
     }
     
     function renderUploads(items = [], listContainer, emptyContainer) {
         if (!listContainer) return;
-        
         const hasItems = items.length > 0;
-        if (emptyContainer) emptyContainer.hidden = hasItems;
+        if (emptyContainer) emptyContainer.hidden = !hasItems;
         listContainer.innerHTML = !hasItems ? '' : items.map(item => {
             const submittedDate = item.submittedAt?.toDate ? new Date(item.submittedAt.toDate()).toLocaleString() : 'Fecha no disponible';
             const descriptionHTML = item.description ? `<p class="student-uploads__item-description">${item.description}</p>` : '';
-            
             return `
                 <li class="student-uploads__item">
                     <div class="student-uploads__item-header">
@@ -179,27 +184,22 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!statusModalInstance) return;
         const modalTitle = document.getElementById('statusModalLabel');
         const modalBody = document.getElementById('statusModalBody');
-        
         const iconMap = {
-            success: 'fa-check-circle',
-            loading: 'fa-spinner fa-spin',
-            error: 'fa-times-circle',
-            info: 'fa-info-circle'
+            success: 'fa-check-circle', loading: 'fa-spinner fa-spin',
+            error: 'fa-times-circle', info: 'fa-info-circle'
         };
-        
         const iconHtml = `<div class="modal-icon icon-${type}"><i class="fas ${iconMap[type]}"></i></div>`;
-
         modalTitle.textContent = title;
         modalBody.innerHTML = `${iconHtml}<p class="text-center">${message}</p>`;
         statusModalInstance.show();
     }
 
     function populateActivitiesSelect() {
-        const selectEl = document.getElementById('studentUploadTitle');
-        selectEl.innerHTML = '';
+        if (!titleSelect) return;
+        titleSelect.innerHTML = '';
         const defaultOption = new Option('Selecciona la actividad o asignación', '', true, true);
         defaultOption.disabled = true;
-        selectEl.add(defaultOption);
+        titleSelect.add(defaultOption);
 
         courseActivities.forEach(unit => {
             const optgroup = document.createElement('optgroup');
@@ -210,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 option.dataset.unitLabel = unit.unitLabel;
                 optgroup.appendChild(option);
             });
-            selectEl.appendChild(optgroup);
+            titleSelect.appendChild(optgroup);
         });
     }
 });
