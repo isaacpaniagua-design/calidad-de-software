@@ -1,29 +1,33 @@
-/* En: css/dashboard.css */
+/* ==========================================================================
+   CSS para el Dashboard Principal (/index.html)
+   ========================================================================== */
 
 /* --- Contenedor Principal del Dashboard --- */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   gap: var(--dashboard-grid-gap, clamp(28px, 4vw, 36px));
-  align-items: start; /* Alinear arriba para expansión independiente */
+  align-items: start;
 }
 
 /* ==================================================================
-   ESTILOS UNIFICADOS PARA TODAS LAS TARJETAS DEL DASHBOARD
+   ESTILOS BASE UNIFICADOS PARA TODAS LAS TARJETAS DEL DASHBOARD
    ================================================================== */
 .session-card,
 .student-uploads {
   grid-column: span 12;
   position: relative;
-  display: flex; /* Usar flex para controlar el crecimiento interno */
+  display: flex;
   flex-direction: column;
   width: 100%;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(148, 163, 184, 0.3);
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.12); /* Sombra estándar */
   overflow: hidden;
   isolation: isolate;
+  padding: 0; /* Quitamos el padding de la tarjeta principal */
+  transition: all var(--motion-duration) var(--motion-easing);
 }
 
 .session-card::before,
@@ -34,6 +38,12 @@
   background: linear-gradient(120deg, rgba(99, 102, 241, 0.08), transparent 60%);
   opacity: 0.9;
   pointer-events: none;
+  z-index: -1;
+}
+
+details[open].session-card,
+details[open].student-uploads {
+    box-shadow: 0 25px 55px rgba(15, 23, 42, 0.18); /* Sombra más pronunciada al abrir */
 }
 
 .session-card > *,
@@ -42,59 +52,48 @@
   z-index: 1;
 }
 
+/* --- Estilos para el <summary> de las tarjetas --- */
 .session-card__summary,
 .student-uploads__summary {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 18px;
+  gap: 1rem;
   cursor: pointer;
-  list-style: none;
+  list-style: none; /* Oculta el marcador por defecto */
   margin: 0;
-  padding: clamp(30px, 4.5vw, 42px); /* Mover el padding aquí */
-  border: none;
-  background: none;
+  padding: clamp(1.5rem, 4vw, 2rem);
+  width: 100%;
 }
 
-/* Remove padding from the main card element since it's now on the summary */
-.session-card, .student-uploads {
-    padding: 0;
+.session-card__summary::-webkit-details-marker,
+.student-uploads__summary::-webkit-details-marker {
+  display: none; /* Oculta el marcador en Webkit */
 }
 
-/* The body of the details should have padding when it opens */
-.session-card__body,
-.student-uploads__body {
-  display: grid;
-  gap: 20px;
-  padding: clamp(20px, 4vw, 30px);
-  padding-top: 0;
-  border-top: 1px solid rgba(148, 163, 184, 0.24);
-  margin: 0 clamp(10px, 2vw, 12px); /* Margen para que no toque los bordes */
-}
-
-/* --- Forzamos la misma altura en los headers contraídos --- */
-.session-summary,
+/* --- Header dentro del <summary> --- */
+.session-card__header,
 .student-uploads__header {
   display: grid;
-  gap: 10px;
+  gap: 0.5rem;
   flex: 1;
-  min-height: 155px; /* Altura mínima consistente para el contenido del header */
 }
 
 .session-card__eyebrow,
 .student-uploads__eyebrow {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-weight: 600;
+  letter-spacing: 0.1em;
+  font-weight: 700;
   color: var(--accent-hover);
 }
 
 .session-card h2,
 .student-uploads__title {
   margin: 0;
-  font-size: clamp(1.8rem, 3.2vw, 2.2rem);
+  font-size: clamp(1.6rem, 4vw, 2rem);
   font-weight: 700;
+  color: var(--text-primary);
 }
 
 .session-card p,
@@ -102,37 +101,42 @@
   margin: 0;
   color: var(--text-secondary);
   font-size: 1rem;
-  max-width: 560px;
+  max-width: 55ch;
 }
 
+/* --- Chevrón (flecha) --- */
 .session-card__chevron,
 .student-uploads__chevron {
   flex-shrink: 0;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: rgba(99, 102, 241, 0.12);
-  color: var(--accent-hover);
-  transition: background 0.2s ease, transform 0.25s ease;
-  margin-top: 4px;
+  background: var(--accent-soft-stronger, rgba(99, 102, 241, 0.08));
+  color: var(--accent, #6366f1);
+  transition: transform var(--motion-duration-slow) var(--motion-easing-emphasized);
+}
+
+details[open] > summary .session-card__chevron,
+details[open] > summary .student-uploads__chevron {
+  transform: rotate(90deg);
 }
 
 .session-card__chevron::before,
 .student-uploads__chevron::before {
-  content: "";
-  width: 10px;
-  height: 10px;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(45deg);
+  content: '→';
+  font-weight: bold;
+  font-size: 1.2rem;
   transition: transform 0.25s ease;
 }
 
-details[open] > .session-card__summary > .session-card__chevron::before,
-details[open] > .student-uploads__summary > .student-uploads__chevron::before {
-  transform: rotate(-135deg);
+/* --- Contenido del <body> de las tarjetas --- */
+.session-card__body,
+.student-uploads__body {
+  padding: 0 clamp(1.5rem, 4vw, 2rem) clamp(1.5rem, 4vw, 2rem);
+  border-top: 1px solid rgba(148, 163, 184, 0.24);
+  margin: 0;
 }
 
 /* --- Contenido Específico de Sesiones --- */
@@ -142,7 +146,7 @@ details[open] > .student-uploads__summary > .student-uploads__chevron::before {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   align-items: start;
 }
-/* ... (resto de los estilos de .session-group, .session-btn, etc. se mantienen igual) ... */
+
 .session-group {
   display: grid;
   gap: clamp(12px, 2vw, 16px);
@@ -199,12 +203,12 @@ details[open] > .student-uploads__summary > .student-uploads__chevron::before {
   background: rgba(255, 255, 255, 0.95);
 }
 
-/* --- Media Queries para Layout --- */
+/* --- Media Queries para Layout del Dashboard --- */
 @media (min-width: 1080px) {
   .session-card {
     grid-column: span 7;
   }
-  .student-uploads-container {
+  .student-uploads {
     grid-column: span 5;
   }
   .session-group__list {
