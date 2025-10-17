@@ -5,20 +5,34 @@
   display: grid;
   grid-template-columns: repeat(12, 1fr); /* Rejilla de 12 columnas */
   gap: var(--dashboard-grid-gap, clamp(28px, 4vw, 36px));
-  align-items: start;
+  align-items: stretch; /* Alinear elementos para que tengan la misma altura */
 }
 
 /* ==================================================================
    ESTILOS UNIFICADOS PARA TODAS LAS TARJETAS DEL DASHBOARD
-   Ahora `.session-card` y `.student-uploads` comparten este diseño
+   Ahora `.session-card` y `.student-uploads-container` se ajustan a esto.
    ================================================================== */
 .session-card,
-.student-uploads {
+.student-uploads-container {
   grid-column: span 12; /* Ocupan todo el ancho por defecto */
+  display: flex; /* Usamos flex para que el <details> interior ocupe todo el alto */
+  flex-direction: column;
+}
+
+.session-card > details,
+.student-uploads-container > details {
+  height: 100%; /* El <details> se expande para llenar el contenedor */
+  display: flex;
+  flex-direction: column;
+}
+
+.session-card,
+.student-uploads {
+  width: 100%;
+  flex-grow: 1; /* Permite que el contenido crezca para igualar alturas */
   position: relative;
   display: grid;
   gap: clamp(22px, 3vw, 28px);
-  width: 100%;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(148, 163, 184, 0.3);
   border-radius: var(--radius-xl);
@@ -46,8 +60,7 @@
 
 .session-card__summary,
 .student-uploads__summary {
-  position: relative;
-  display: flex; /* Usamos flex para alinear mejor el título y el chevron */
+  display: flex;
   justify-content: space-between;
   align-items: flex-start;
   gap: 18px;
@@ -71,11 +84,11 @@
   border-radius: var(--radius-md);
 }
 
-.session-summary, /* Contenedor del texto del header */
+.session-summary,
 .student-uploads__header {
   display: grid;
   gap: 10px;
-  flex: 1; /* Permite que el texto ocupe el espacio disponible */
+  flex: 1;
 }
 
 .session-card__eyebrow,
@@ -112,7 +125,7 @@
 
 .session-card__chevron,
 .student-uploads__chevron {
-  flex-shrink: 0; /* Evita que el chevron se encoja */
+  flex-shrink: 0;
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -121,7 +134,7 @@
   background: rgba(99, 102, 241, 0.12);
   color: var(--accent-hover);
   transition: background 0.2s ease, transform 0.25s ease;
-  margin-top: 4px; /* Pequeño ajuste vertical */
+  margin-top: 4px;
 }
 
 .session-card__chevron::before,
@@ -205,20 +218,14 @@
 }
 
 
-/* --- Contenedor de Entregas --- */
-.student-uploads-container {
-  grid-column: span 12;
-}
-
-
 /* --- Media Queries para Layout --- */
 @media (min-width: 1080px) {
   /* En pantallas grandes, divide el dashboard en dos columnas */
   .session-card {
-    grid-column: span 7; /* Las sesiones ocupan 7 de 12 columnas */
+    grid-column: span 7;
   }
   .student-uploads-container {
-    grid-column: span 5; /* Las entregas ocupan 5 de 12 columnas */
+    grid-column: span 5;
   }
   .session-group__list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
