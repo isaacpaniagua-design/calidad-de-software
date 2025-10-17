@@ -16,48 +16,69 @@ const GOOGLE_CLIENT_ID = "TU_CLIENT_ID.apps.googleusercontent.com"; // <-- REEMP
 const SCOPES = "https://www.googleapis.com/auth/drive.file";
 const DISCOVERY_DOC = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest";
 
-// --- Variables de estado del módulo ---
+// --- Variables de estado y promesas de inicialización ---
 let tokenClient;
-let gapiInited = false;
-let gisInited = false;
+let gapiLoadPromise = null;
+let gisLoadPromise = null;
 
 /**
  * Carga e inicializa los clientes de las APIs de Google (GAPI y GIS).
- * Evita la recarga de scripts si ya han sido inyectados en el DOM.
+ * Devuelve una promesa que se resuelve cuando ambas APIs están listas para usarse.
+ * Este enfoque evita condiciones de carrera.
+ * @returns {Promise<[void, void]>}
  */
 export function initDriveUploader() {
-    if (gapiInited && gisInited) return;
+    // Si las promesas de inicialización ya existen, las reutilizamos para no recargar los scripts.
+    if (gapiLoadPromise && gisLoadPromise) {
+        return Promise.all([gapiLoadPromise, gisLoadPromise]);
+    }
 
-    if (!document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
+    // --- Carga de Google Identity Services (GIS) para OAuth ---
+    gisLoadPromise = new Promise((resolve, reject) => {
+        if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
+            return resolve(); // Si el script ya está en el DOM, asumimos que está cargado o cargándose.
+        }
         const script = document.createElement('script');
         script.src = 'https://accounts.google.com/gsi/client';
         script.async = true;
         script.defer = true;
         script.onload = () => {
-            tokenClient = google.accounts.oauth2.initTokenClient({
+            tokenClient = google.accounts.oauth2.initTokenComponent({
                 client_id: GOOGLE_CLIENT_ID,
                 scope: SCOPES,
-                callback: '', 
+                callback: '', // El callback se manejará por promesa en uploadFile
             });
-            gisInited = true;
+            resolve();
         };
+        script.onerror = () => reject(new Error("No se pudo cargar el script de Google Identity Services."));
         document.body.appendChild(script);
-    }
+    });
 
-    if (!document.querySelector('script[src="https://apis.google.com/js/api.js"]')) {
+    // --- Carga de Google API Client (GAPI) para interactuar con Drive ---
+    gapiLoadPromise = new Promise((resolve, reject) => {
         const gapiScript = document.createElement('script');
         gapiScript.src = 'https://apis.google.com/js/api.js';
+        gapiScript.async = true;
+        gapiScript.defer = true;
         gapiScript.onload = () => {
             gapi.load('client', async () => {
-                await gapi.client.init({
-                    apiKey: GOOGLE_API_KEY,
-                    discoveryDocs: [DISCOVERY_DOC],
-                });
-                gapiInited = true;
+                try {
+                    await gapi.client.init({
+                        apiKey: GOOGLE_API_KEY,
+                        discoveryDocs: [DISCOVERY_DOC],
+                    });
+                    resolve();
+                } catch (error) {
+                    console.error("Error al inicializar el cliente GAPI:", error);
+                    reject(error);
+                }
             });
         };
+        gapiScript.onerror = () => reject(new Error("No se pudo cargar el script de GAPI."));
         document.body.appendChild(gapiScript);
-    }
+    });
+
+    return Promise.all([gapiLoadPromise, gisLoadPromise]);
 }
 
 /**
@@ -96,23 +117,31 @@ async function getOrCreateFolder(name, parentId = 'root') {
  * @returns {Promise<{id: string, webViewLink: string}>} El ID y enlace de vista del archivo.
  */
 export async function uploadFile(file, details = {}) {
-    if (!gapiInited || !gisInited) {
-        throw new Error("La API de Google Drive aún no está lista. Intenta de nuevo.");
+    // Paso 1: Asegurarse de que las APIs están inicializadas antes de continuar.
+    try {
+        await initDriveUploader();
+    } catch (error) {
+        console.error("Fallo en la inicialización de la API de Google Drive:", error);
+        throw new Error("No se pudo inicializar la API de Google Drive. Revisa la consola.");
     }
+
     if (!tokenClient) {
         throw new Error("El cliente de autenticación de Google no se ha inicializado.");
     }
 
+    // Paso 2: Solicitar el token de acceso al usuario.
     await new Promise((resolve, reject) => {
         tokenClient.callback = (resp) => (resp.error ? reject(resp) : resolve(resp));
         tokenClient.requestAccessToken({ prompt: 'consent' });
     });
 
+    // Paso 3: Crear la estructura de carpetas.
     const rootFolderId = await getOrCreateFolder("Calidad de Software (Entregas)");
     const unitFolderId = await getOrCreateFolder(details.unit || "Unidad General", rootFolderId);
     const activityFolderId = await getOrCreateFolder(details.activity || "Actividad General", unitFolderId);
     const studentFolderId = await getOrCreateFolder(details.studentName || "Alumno", activityFolderId);
     
+    // Paso 4: Preparar y subir el archivo.
     const metadata = {
         name: file.name,
         parents: [studentFolderId],
@@ -129,6 +158,7 @@ export async function uploadFile(file, details = {}) {
 
     if (!response.ok) {
         const error = await response.json();
+        console.error("Error detallado de la API de Drive:", error);
         throw new Error(error.error.message || 'Fallo la subida del archivo a Drive.');
     }
 
