@@ -36,7 +36,7 @@ import {
   driveFolderId,
   allowedTeacherEmails,
   teacherAllowlistDocPath,
-} from "./index-student-uploads.js"; 
+} from "./index-student-uploads.js";
 import {
   getFunctions,
   connectFunctionsEmulator,
