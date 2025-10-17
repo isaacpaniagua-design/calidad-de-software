@@ -311,13 +311,6 @@ function buildDisplayForItem(item) {
   buttonsWrapper.appendChild(viewLink);
   viewWrapper.appendChild(buttonsWrapper);
 
-  const status = document.createElement("span");
-  status.className = "upload-status";
-  status.setAttribute("aria-live", "polite");
-  status.textContent = activity ? "Sin entrega registrada" : "Actividad no vinculada";
-  const statusId = `upload-status-${displays.size + 1}`;
-  status.id = statusId;
-  viewWrapper.appendChild(status);
 
   if (gradeInput) {
     gradeInput.setAttribute("aria-describedby", statusId);
@@ -979,3 +972,4 @@ export function initUploadsUI(user, claims) {
         }
     });
 }
+
