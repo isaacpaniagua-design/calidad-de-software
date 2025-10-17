@@ -1,5 +1,6 @@
 // js/index-student-uploads.js
 
+// ÚNICA FUENTE DE CONFIGURACIÓN
 // Rellena este archivo con la configuración de tu proyecto Firebase.
 export const firebaseConfig = {
   apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
