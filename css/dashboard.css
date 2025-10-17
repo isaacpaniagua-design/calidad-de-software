@@ -8,9 +8,13 @@
   align-items: start;
 }
 
-/* --- Tarjeta de Sesiones --- */
-.session-card {
-  grid-column: span 12; /* Ocupa todo el ancho por defecto */
+/* ==================================================================
+   ESTILOS UNIFICADOS PARA TODAS LAS TARJETAS DEL DASHBOARD
+   Ahora `.session-card` y `.student-uploads` comparten este diseño
+   ================================================================== */
+.session-card,
+.student-uploads {
+  grid-column: span 12; /* Ocupan todo el ancho por defecto */
   position: relative;
   display: grid;
   gap: clamp(22px, 3vw, 28px);
@@ -24,7 +28,8 @@
   isolation: isolate;
 }
 
-.session-card::before {
+.session-card::before,
+.student-uploads::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -33,42 +38,48 @@
   pointer-events: none;
 }
 
-.session-card > * {
+.session-card > *,
+.student-uploads > * {
   position: relative;
   z-index: 1;
 }
 
-.session-card__summary {
+.session-card__summary,
+.student-uploads__summary {
   position: relative;
-  display: grid;
+  display: flex; /* Usamos flex para alinear mejor el título y el chevron */
+  justify-content: space-between;
+  align-items: flex-start;
   gap: 18px;
-  align-items: start;
-  grid-template-columns: minmax(0, 1fr);
   cursor: pointer;
   list-style: none;
   margin: 0;
   padding: 0;
-  padding-right: 44px; /* Espacio para el chevron */
   border: none;
   background: none;
 }
 
-.session-card__summary::-webkit-details-marker {
+.session-card__summary::-webkit-details-marker,
+.student-uploads__summary::-webkit-details-marker {
   display: none;
 }
 
-.session-card__summary:focus-visible {
+.session-card__summary:focus-visible,
+.student-uploads__summary:focus-visible {
   outline: 3px solid rgba(99, 102, 241, 0.35);
   outline-offset: 6px;
+  border-radius: var(--radius-md);
 }
 
-.session-summary {
+.session-summary, /* Contenedor del texto del header */
+.student-uploads__header {
   display: grid;
   gap: 10px;
-  max-width: 560px;
+  flex: 1; /* Permite que el texto ocupe el espacio disponible */
 }
 
-.session-card__eyebrow {
+.session-card__eyebrow,
+.student-uploads__eyebrow {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
@@ -76,30 +87,32 @@
   color: var(--accent-hover);
 }
 
-.session-card h2 {
+.session-card h2,
+.student-uploads__title {
   margin: 0;
   font-size: clamp(1.8rem, 3.2vw, 2.2rem);
   font-weight: 700;
 }
 
-.session-card p {
+.session-card p,
+.student-uploads__description {
   margin: 0;
   color: var(--text-secondary);
   font-size: 1rem;
+  max-width: 560px;
 }
 
-.session-card__body {
+.session-card__body,
+.student-uploads__body {
   display: grid;
   gap: 20px;
   padding-top: clamp(12px, 2.5vw, 20px);
   border-top: 1px solid rgba(148, 163, 184, 0.24);
 }
 
-.session-card__chevron {
-  position: absolute;
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
+.session-card__chevron,
+.student-uploads__chevron {
+  flex-shrink: 0; /* Evita que el chevron se encoja */
   width: 28px;
   height: 28px;
   border-radius: 50%;
@@ -107,11 +120,12 @@
   place-items: center;
   background: rgba(99, 102, 241, 0.12);
   color: var(--accent-hover);
-  transition: background 0.2s ease;
-  pointer-events: none;
+  transition: background 0.2s ease, transform 0.25s ease;
+  margin-top: 4px; /* Pequeño ajuste vertical */
 }
 
-.session-card__chevron::before {
+.session-card__chevron::before,
+.student-uploads__chevron::before {
   content: "";
   width: 10px;
   height: 10px;
@@ -121,17 +135,19 @@
   transition: transform 0.25s ease;
 }
 
-.session-card[open] .session-card__chevron::before {
+.session-card[open] .session-card__chevron::before,
+.student-uploads[open] .student-uploads__chevron::before {
   transform: rotate(-135deg);
 }
 
+
+/* --- Contenido Específico de Sesiones --- */
 .sessions-grid {
   display: grid;
   gap: clamp(18px, 3vw, 24px);
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   align-items: start;
 }
-
 .session-group {
   display: grid;
   gap: clamp(12px, 2vw, 16px);
@@ -141,13 +157,7 @@
   border: 1px solid rgba(148, 163, 184, 0.28);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
-
-.session-group__header {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
+.session-group__header { display: flex; flex-direction: column; gap: 6px; }
 .session-group__badge {
   align-self: flex-start;
   padding: 4px 10px;
@@ -159,20 +169,17 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-
 .session-group__title {
   margin: 0;
   font-size: clamp(1rem, 2.2vw, 1.1rem);
   font-weight: 600;
   color: var(--text-primary);
 }
-
 .session-group__list {
   display: grid;
   gap: clamp(6px, 1.6vw, 10px);
   grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
 }
-
 .session-btn {
   display: flex;
   align-items: center;
@@ -187,22 +194,22 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, color 0.25s ease;
+  transition: all 0.25s ease;
   font-size: clamp(0.85rem, 2vw, 0.95rem);
 }
-
-.session-btn:hover,
-.session-btn:focus-visible {
+.session-btn:hover, .session-btn:focus-visible {
   transform: translateY(-2px);
   border-color: rgba(99, 102, 241, 0.45);
   box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
   background: rgba(255, 255, 255, 0.95);
 }
 
+
 /* --- Contenedor de Entregas --- */
 .student-uploads-container {
-  grid-column: span 12; /* Ocupa todo el ancho por defecto */
+  grid-column: span 12;
 }
+
 
 /* --- Media Queries para Layout --- */
 @media (min-width: 1080px) {
