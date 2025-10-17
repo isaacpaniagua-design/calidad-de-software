@@ -1,16 +1,13 @@
 // En: js/student-file-uploader.js
 
-// Importamos la configuración de Firebase para reutilizar la apiKey
 import { firebaseConfig } from './firebase-config.js';
 
 // --- CONFIGURACIÓN DE GOOGLE DRIVE API ---
-
-// 1. La API Key se reutiliza desde tu configuración de Firebase.
-//    ASEGÚRATE DE QUE EL PROYECTO DE FIREBASE Y EL DE GOOGLE CLOUD SEAN EL MISMO.
 const GOOGLE_API_KEY = firebaseConfig.apiKey;
-
-// 2. CORRECCIÓN DEFINITIVA: Usamos el Client ID correcto que proporcionaste.
 const GOOGLE_CLIENT_ID = "220818066383-opt4vno9it90l5md8u80884p35rn4q5c.apps.googleusercontent.com";
+
+// ⭐️ ID de la carpeta compartida del docente ya integrado.
+const TEACHER_SHARED_FOLDER_ID = "1WPZ9AvDxVF8GasTuDPYeaU8unw7e3fM3";
 
 const SCOPES = "https://www.googleapis.com/auth/drive.file";
 const DISCOVERY_DOC = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest";
@@ -21,7 +18,7 @@ let gapiLoadPromise = null;
 let gisLoadPromise = null;
 
 /**
- * Carga e inicializa los clientes de las APIs de Google (GAPI y GIS).
+ * Carga e inicializa los clientes de las APIs de Google.
  */
 export function initDriveUploader() {
     if (gapiLoadPromise && gisLoadPromise) {
@@ -42,7 +39,7 @@ export function initDriveUploader() {
                 });
                 resolve();
             } catch (error) {
-                reject(new Error("Fallo al inicializar el cliente de token de Google. ¿El Client ID es correcto?"));
+                reject(error);
             }
         };
         script.onerror = () => reject(new Error("No se pudo cargar el script de Google Identity Services."));
@@ -75,18 +72,10 @@ export function initDriveUploader() {
 }
 
 /**
- * Sanea un nombre de carpeta para evitar caracteres inválidos.
+ * Busca o crea una carpeta dentro de una carpeta padre.
  */
-function sanitizeFolderName(name) {
-    if (typeof name !== 'string') return "Nombre Inválido";
-    return name.replace(/[\\/]/g, '_');
-}
-
-/**
- * Busca o crea una carpeta en Google Drive y devuelve su ID.
- */
-async function getOrCreateFolder(name, parentId = 'root') {
-    const saneName = sanitizeFolderName(name);
+async function getOrCreateFolder(name, parentId) {
+    const saneName = name.replace(/[\\/]/g, '_'); // Evita caracteres inválidos.
     const query = `name='${saneName}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`;
     
     const response = await gapi.client.drive.files.list({ q: query, fields: 'files(id)' });
@@ -105,13 +94,9 @@ async function getOrCreateFolder(name, parentId = 'root') {
 }
 
 /**
- * Sube un archivo a una estructura de carpetas específica en Google Drive.
+ * Sube un archivo a la carpeta compartida del docente.
  */
 export async function uploadFile(file, details = {}) {
-    if (!file || !(file instanceof File)) {
-        throw new Error("El objeto de archivo proporcionado no es válido.");
-    }
-    
     await initDriveUploader();
 
     const tokenResponse = await new Promise((resolve, reject) => {
@@ -119,8 +104,8 @@ export async function uploadFile(file, details = {}) {
         tokenClient.requestAccessToken({ prompt: 'consent' });
     });
 
-    const rootFolderId = await getOrCreateFolder("Calidad de Software (Entregas)", 'root');
-    const unitFolderId = await getOrCreateFolder(details.unit, rootFolderId);
+    // La creación de carpetas comienza dentro de la carpeta del docente.
+    const unitFolderId = await getOrCreateFolder(details.unit, TEACHER_SHARED_FOLDER_ID);
     const activityFolderId = await getOrCreateFolder(details.activity, unitFolderId);
     const studentFolderId = await getOrCreateFolder(details.studentName, activityFolderId);
     
