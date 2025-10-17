@@ -20,14 +20,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const submitBtn = form.querySelector('button[type="submit"]');
     const resetBtn = document.getElementById("studentUploadReset");
     
-    const listEl = document.getElementById("studentUploadList");
-    const emptyEl = document.getElementById("studentUploadEmpty");
     const countEl = document.querySelector("[data-upload-count]");
     const uploadStatusDiv = document.getElementById('studentUploadStatus');
 
     // --- Variables de Estado ---
     let currentUser = null;
-    let todasLasEntregas = [];
     let defaultStatusMessage = '';
     
     // --- Autenticación y Carga Inicial ---
@@ -45,7 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
             defaultStatusMessage = 'Debes iniciar sesión para poder registrar entregas.';
             updateUploadStatus(defaultStatusMessage, 'error', false);
             submitBtn.disabled = true;
-            renderAllLists([]);
+            if (countEl) countEl.textContent = 0; // Resetea el contador al cerrar sesión
         }
     });
 
@@ -62,9 +59,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /**
      * Actualiza el texto y la apariencia del div de estado, y opcionalmente hace scroll.
-     * @param {string} message - El mensaje a mostrar.
-     * @param {'loading'|'success'|'error'|'info'} type - El tipo de estado.
-     * @param {boolean} [doScroll=true] - Si es true, se desplazará para hacer visible el mensaje.
      */
     function updateUploadStatus(message, type, doScroll = true) {
         if (!uploadStatusDiv) return;
@@ -133,44 +127,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function startObserver(uid) {
+        // El observador ahora solo actualiza el contador total de entregas.
         observeStudentUploads(uid, (items) => {
-            todasLasEntregas = items;
-            renderAllLists(items);
+            if (countEl) countEl.textContent = items.length;
         }, (error) => {
             console.error("Error observando entregas:", error);
             updateUploadStatus("Error al cargar tus entregas anteriores.", "error");
         });
-    }
-
-    function renderAllLists(items) {
-        if (countEl) countEl.textContent = items.length;
-        if (listEl) renderUploads(items.slice(0, 3), listEl, emptyEl);
-    }
-    
-    function renderUploads(items = [], listContainer, emptyContainer) {
-        if (!listContainer) return;
-        const hasItems = items.length > 0;
-        if (emptyContainer) emptyContainer.hidden = !hasItems;
-        listContainer.innerHTML = !hasItems ? '' : items.map(item => {
-            const submittedDate = item.submittedAt?.toDate ? new Date(item.submittedAt.toDate()).toLocaleString() : 'Fecha no disponible';
-            const descriptionHTML = item.description ? `<p class="student-uploads__item-description">${item.description}</p>` : '';
-            return `
-                <li class="student-uploads__item">
-                    <div class="student-uploads__item-header">
-                        <div class="student-uploads__item-heading">
-                            <span class="student-uploads__item-title">${item.extra?.activityTitle || item.title}</span>
-                            <span class="student-uploads__item-chip">${item.kind || 'Entrega'}</span>
-                        </div>
-                        <span class="student-uploads__item-status student-uploads__item-status--${item.status || 'enviado'}">${item.status || 'enviado'}</span>
-                    </div>
-                    <p class="student-uploads__item-meta">Enviado: ${submittedDate}</p>
-                    ${descriptionHTML}
-                    <div class="student-uploads__item-actions">
-                        <a href="${item.fileUrl}" target="_blank" rel="noopener noreferrer" class="student-uploads__item-link">Ver Archivo en Drive</a>
-                    </div>
-                </li>
-            `;
-        }).join('');
     }
 
     function populateActivitiesSelect() {
