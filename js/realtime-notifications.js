@@ -9,7 +9,7 @@ import {
   subscribeLatestForumReplies,
   fetchForumTopicSummary,
   fetchForumReply,
-} from "./firebase.js";
+} from "./firebase-config.js";
 import { observeAllStudentUploads, observeStudentUploads } from "./student-uploads.js";
 
 import { allowedEmailDomain } from "./index-student-uploads.js";
