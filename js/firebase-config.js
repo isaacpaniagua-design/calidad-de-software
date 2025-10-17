@@ -36,7 +36,7 @@ import {
   driveFolderId,
   allowedTeacherEmails,
   teacherAllowlistDocPath,
-} from "./index-student-uploads.js";} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
+} from {"./index-student-uploads.js";} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
 import {
   getFunctions,
   connectFunctionsEmulator,
