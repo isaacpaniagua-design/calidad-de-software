@@ -1,6 +1,5 @@
 // En: js/student-file-uploader.js
 
-// Importamos la configuración de Firebase para reutilizar la apiKey
 import { firebaseConfig } from './firebase-config.js';
 
 // --- CONFIGURACIÓN DE GOOGLE DRIVE API ---
@@ -20,12 +19,10 @@ let gisLoadPromise = null;
  * @returns {Promise<[void, void]>}
  */
 export function initDriveUploader() {
-    // Reutilizamos las promesas si la inicialización ya está en curso.
     if (gapiLoadPromise && gisLoadPromise) {
         return Promise.all([gapiLoadPromise, gisLoadPromise]);
     }
 
-    // --- Carga de Google Identity Services (GIS) para OAuth ---
     gisLoadPromise = new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.src = 'https://accounts.google.com/gsi/client';
@@ -33,11 +30,10 @@ export function initDriveUploader() {
         script.defer = true;
         script.onload = () => {
             try {
-                // CORRECCIÓN: La función correcta es 'initTokenClient'.
                 tokenClient = google.accounts.oauth2.initTokenClient({
                     client_id: GOOGLE_CLIENT_ID,
                     scope: SCOPES,
-                    callback: '', // Se gestiona con promesas más adelante.
+                    callback: '',
                 });
                 resolve();
             } catch (error) {
@@ -48,7 +44,6 @@ export function initDriveUploader() {
         document.body.appendChild(script);
     });
 
-    // --- Carga de Google API Client (GAPI) para interactuar con Drive ---
     gapiLoadPromise = new Promise((resolve, reject) => {
         const gapiScript = document.createElement('script');
         gapiScript.src = 'https://apis.google.com/js/api.js';
@@ -122,8 +117,16 @@ export async function uploadFile(file, details = {}) {
         throw new Error("El cliente de autenticación de Google no se ha inicializado.");
     }
 
-    await new Promise((resolve, reject) => {
-        tokenClient.callback = (resp) => (resp.error ? reject(resp) : resolve(resp));
+    // CORRECCIÓN 1: Capturamos el token directamente de la respuesta de autenticación.
+    const tokenResponse = await new Promise((resolve, reject) => {
+        tokenClient.callback = (resp) => {
+            if (resp.error) {
+                return reject(resp);
+            }
+            // Sincronizamos el token con la librería GAPI también, por si se usa en otro lado.
+            gapi.client.setToken(resp); 
+            resolve(resp);
+        };
         tokenClient.requestAccessToken({ prompt: 'consent' });
     });
 
@@ -142,7 +145,10 @@ export async function uploadFile(file, details = {}) {
 
     const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink', {
         method: 'POST',
-        headers: new Headers({ 'Authorization': `Bearer ${gapi.client.getToken().access_token}` }),
+        // CORRECCIÓN 2: Usamos un objeto simple para las cabeceras y el token directo.
+        headers: {
+            'Authorization': `Bearer ${tokenResponse.access_token}`,
+        },
         body: formData,
     });
 
