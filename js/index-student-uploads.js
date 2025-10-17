@@ -28,6 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const countEl = document.querySelector("[data-upload-count]");
     const statusModalEl = document.getElementById('statusModal');
     const historialModalEl = document.getElementById('historialModal');
+    // --- INICIA CORRECCIÓN 1: Obtener referencia al div de estado ---
+    const uploadStatusDiv = document.getElementById('studentUploadStatus'); 
+    // --- TERMINA CORRECCIÓN 1 ---
 
     // --- Variables de Estado y Modales ---
     let currentUser = null;
@@ -47,12 +50,26 @@ document.addEventListener("DOMContentLoaded", () => {
     onAuthStateChanged(auth, (user) => {
         currentUser = user;
         if (user) {
-            // La retroalimentación al usuario es que el botón de envío se activa.
+            // --- INICIA CORRECCIÓN 2: Actualizar mensaje de bienvenida ---
+            if (uploadStatusDiv && user.displayName) {
+                uploadStatusDiv.textContent = `Sesión iniciada como ${user.displayName}. Ya puedes registrar entregas.`;
+                uploadStatusDiv.classList.add('is-success');
+                uploadStatusDiv.classList.remove('is-error');
+            }
+            // --- TERMINA CORRECCIÓN 2 ---
+
             submitBtn.disabled = false; 
             initDriveUploader();
             startObserver(user.uid);
         } else {
-            // La retroalimentación es que el botón se desactiva.
+            // --- INICIA CORRECCIÓN 3: Actualizar mensaje al cerrar sesión ---
+            if (uploadStatusDiv) {
+                uploadStatusDiv.textContent = 'Debes iniciar sesión para poder registrar entregas.';
+                uploadStatusDiv.classList.remove('is-success');
+                uploadStatusDiv.classList.add('is-error'); // Opcional: para mostrarlo con otro estilo
+            }
+            // --- TERMINA CORRECCIÓN 3 ---
+
             submitBtn.disabled = true;
             renderAllLists([]);
         }
