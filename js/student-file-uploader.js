@@ -4,15 +4,8 @@
 import { firebaseConfig } from './firebase-config.js';
 
 // --- CONFIGURACIÓN DE GOOGLE DRIVE API ---
-
-// 1. La API Key se reutiliza desde tu configuración de Firebase.
 const GOOGLE_API_KEY = firebaseConfig.apiKey;
-
-// 2. ¡IMPORTANTE! Debes generar este ID de Cliente de OAuth 2.0 en tu Google Cloud Console.
-//    Ve a APIs y Servicios > Credenciales > Crear Credenciales > ID de cliente de OAuth.
-//    Asegúrate de que sea de tipo "Aplicación web" y añade tu dominio a los "Orígenes de JavaScript autorizados".
 const GOOGLE_CLIENT_ID = "TU_CLIENT_ID.apps.googleusercontent.com"; // <-- REEMPLAZA ESTO
-
 const SCOPES = "https://www.googleapis.com/auth/drive.file";
 const DISCOVERY_DOC = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest";
 
@@ -24,31 +17,32 @@ let gisLoadPromise = null;
 /**
  * Carga e inicializa los clientes de las APIs de Google (GAPI y GIS).
  * Devuelve una promesa que se resuelve cuando ambas APIs están listas para usarse.
- * Este enfoque evita condiciones de carrera.
  * @returns {Promise<[void, void]>}
  */
 export function initDriveUploader() {
-    // Si las promesas de inicialización ya existen, las reutilizamos para no recargar los scripts.
+    // Reutilizamos las promesas si la inicialización ya está en curso.
     if (gapiLoadPromise && gisLoadPromise) {
         return Promise.all([gapiLoadPromise, gisLoadPromise]);
     }
 
     // --- Carga de Google Identity Services (GIS) para OAuth ---
     gisLoadPromise = new Promise((resolve, reject) => {
-        if (document.querySelector('script[src="https://accounts.google.com/gsi/client"]')) {
-            return resolve(); // Si el script ya está en el DOM, asumimos que está cargado o cargándose.
-        }
         const script = document.createElement('script');
         script.src = 'https://accounts.google.com/gsi/client';
         script.async = true;
         script.defer = true;
         script.onload = () => {
-            tokenClient = google.accounts.oauth2.initTokenComponent({
-                client_id: GOOGLE_CLIENT_ID,
-                scope: SCOPES,
-                callback: '', // El callback se manejará por promesa en uploadFile
-            });
-            resolve();
+            try {
+                // CORRECCIÓN: La función correcta es 'initTokenClient'.
+                tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: GOOGLE_CLIENT_ID,
+                    scope: SCOPES,
+                    callback: '', // Se gestiona con promesas más adelante.
+                });
+                resolve();
+            } catch (error) {
+                reject(error);
+            }
         };
         script.onerror = () => reject(new Error("No se pudo cargar el script de Google Identity Services."));
         document.body.appendChild(script);
@@ -117,7 +111,6 @@ async function getOrCreateFolder(name, parentId = 'root') {
  * @returns {Promise<{id: string, webViewLink: string}>} El ID y enlace de vista del archivo.
  */
 export async function uploadFile(file, details = {}) {
-    // Paso 1: Asegurarse de que las APIs están inicializadas antes de continuar.
     try {
         await initDriveUploader();
     } catch (error) {
@@ -129,19 +122,16 @@ export async function uploadFile(file, details = {}) {
         throw new Error("El cliente de autenticación de Google no se ha inicializado.");
     }
 
-    // Paso 2: Solicitar el token de acceso al usuario.
     await new Promise((resolve, reject) => {
         tokenClient.callback = (resp) => (resp.error ? reject(resp) : resolve(resp));
         tokenClient.requestAccessToken({ prompt: 'consent' });
     });
 
-    // Paso 3: Crear la estructura de carpetas.
     const rootFolderId = await getOrCreateFolder("Calidad de Software (Entregas)");
     const unitFolderId = await getOrCreateFolder(details.unit || "Unidad General", rootFolderId);
     const activityFolderId = await getOrCreateFolder(details.activity || "Actividad General", unitFolderId);
     const studentFolderId = await getOrCreateFolder(details.studentName || "Alumno", activityFolderId);
     
-    // Paso 4: Preparar y subir el archivo.
     const metadata = {
         name: file.name,
         parents: [studentFolderId],
