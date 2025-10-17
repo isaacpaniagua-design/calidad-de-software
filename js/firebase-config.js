@@ -1,6 +1,5 @@
 // js/firebase-config.js
-
-// ARCHIVO DE PURA CONFIGURACIÓN. NO INICIALIZA NADA.
+// RESPONSABILIDAD: Ser el ÚNICO archivo que contiene y exporta la configuración del proyecto.
 
 export const firebaseConfig = {
   apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
@@ -14,16 +13,17 @@ export const firebaseConfig = {
 // Dominio permitido para acceso de alumnos
 export const allowedEmailDomain = "potros.itson.edu.mx";
 
-// Correos con permisos de docente
+// Correos con permisos de docente (lista unificada)
 export const allowedTeacherEmails = [
-  "isaac.paniagua@potros.itson.edu.mx"
+  "isaac.paniagua@potros.itson.edu.mx",
+  "profe.paniagua@gmail.com",
 ];
 
-// Documento en Firestore con lista de docentes adicionales
+// Documento en Firestore que puede contener correos adicionales autorizados
 export const teacherAllowlistDocPath = "config/teacherAllowlist";
 
 // Habilitar o deshabilitar Firebase Storage
 export const useStorage = true;
 
-// Carpeta de Google Drive para materiales
+// Carpeta de Google Drive para materiales (ID extraído del enlace compartido)
 export const driveFolderId = "1kHZa-58lXRWniS8O5tAUG933g4oDs8_L";
