@@ -37,7 +37,7 @@ export function initDriveUploader() {
                 });
                 resolve();
             } catch (error) {
-                reject(error);
+                reject(new Error("Fallo al inicializar el cliente de token de Google. ¿El Client ID es correcto?"));
             }
         };
         script.onerror = () => reject(new Error("No se pudo cargar el script de Google Identity Services."));
@@ -71,30 +71,46 @@ export function initDriveUploader() {
 }
 
 /**
+ * Sanea un nombre de carpeta para evitar caracteres inválidos.
+ * Google Drive es bastante permisivo, pero '/' y '\' son problemáticos.
+ * @param {string} name - El nombre original.
+ * @returns {string} - El nombre saneado.
+ */
+function sanitizeFolderName(name) {
+    if (typeof name !== 'string') return "Nombre Inválido";
+    return name.replace(/[\\/]/g, '_'); // Reemplaza \ y / con guiones bajos.
+}
+
+
+/**
  * Busca o crea una carpeta en Google Drive y devuelve su ID.
  * @param {string} name - El nombre de la carpeta.
- * @param {string} parentId - El ID de la carpeta padre (por defecto es 'root').
+ * @param {string} parentId - El ID de la carpeta padre.
  * @returns {Promise<string>} El ID de la carpeta encontrada o creada.
  */
-async function getOrCreateFolder(name, parentId = 'root') {
-    const query = `name='${name}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`;
-    const response = await gapi.client.drive.files.list({
-        q: query,
-        fields: 'files(id)',
-    });
+async function getOrCreateFolder(name, parentId) {
+    // Validación crucial
+    if (!name || typeof name !== 'string' || name.trim() === "") {
+        throw new Error(`El nombre de la carpeta no puede estar vacío.`);
+    }
+     if (!parentId) {
+        throw new Error(`Se requiere un ID de carpeta padre para crear la carpeta "${name}".`);
+    }
+
+    const saneName = sanitizeFolderName(name);
+    const query = `name='${saneName}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`;
+    
+    const response = await gapi.client.drive.files.list({ q: query, fields: 'files(id)' });
 
     if (response.result.files && response.result.files.length > 0) {
         return response.result.files[0].id;
     } else {
         const fileMetadata = {
-            name,
+            name: saneName,
             mimeType: 'application/vnd.google-apps.folder',
             parents: [parentId],
         };
-        const newFolder = await gapi.client.drive.files.create({
-            resource: fileMetadata,
-            fields: 'id',
-        });
+        const newFolder = await gapi.client.drive.files.create({ resource: fileMetadata, fields: 'id' });
         return newFolder.result.id;
     }
 }
@@ -106,57 +122,72 @@ async function getOrCreateFolder(name, parentId = 'root') {
  * @returns {Promise<{id: string, webViewLink: string}>} El ID y enlace de vista del archivo.
  */
 export async function uploadFile(file, details = {}) {
+    console.log("🚀 Iniciando proceso de subida...");
+    
+    // --- PASO 1: VALIDACIÓN INICIAL ---
+    if (!file || !(file instanceof File)) {
+        throw new Error("El objeto de archivo proporcionado no es válido.");
+    }
+    if (!details.studentName || !details.unit || !details.activity) {
+         throw new Error("Faltan detalles esenciales (unit, activity, studentName).");
+    }
+
+    console.log("Archivo a subir:", file);
+    console.log("Detalles recibidos:", details);
+
+    // --- PASO 2: INICIALIZACIÓN Y AUTENTICACIÓN ---
     try {
         await initDriveUploader();
     } catch (error) {
-        console.error("Fallo en la inicialización de la API de Google Drive:", error);
+        console.error("Fallo CRÍTICO en la inicialización:", error);
         throw new Error("No se pudo inicializar la API de Google Drive. Revisa la consola.");
     }
 
-    if (!tokenClient) {
-        throw new Error("El cliente de autenticación de Google no se ha inicializado.");
-    }
-
-    // CORRECCIÓN 1: Capturamos el token directamente de la respuesta de autenticación.
     const tokenResponse = await new Promise((resolve, reject) => {
-        tokenClient.callback = (resp) => {
-            if (resp.error) {
-                return reject(resp);
-            }
-            // Sincronizamos el token con la librería GAPI también, por si se usa en otro lado.
-            gapi.client.setToken(resp); 
-            resolve(resp);
-        };
+        tokenClient.callback = (resp) => (resp.error ? reject(resp) : resolve(resp));
         tokenClient.requestAccessToken({ prompt: 'consent' });
     });
+    console.log("✅ Token de acceso obtenido con éxito.");
 
-    const rootFolderId = await getOrCreateFolder("Calidad de Software (Entregas)");
-    const unitFolderId = await getOrCreateFolder(details.unit || "Unidad General", rootFolderId);
-    const activityFolderId = await getOrCreateFolder(details.activity || "Actividad General", unitFolderId);
-    const studentFolderId = await getOrCreateFolder(details.studentName || "Alumno", activityFolderId);
-    
-    const metadata = {
-        name: file.name,
-        parents: [studentFolderId],
-    };
-    const formData = new FormData();
-    formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-    formData.append('file', file);
+    // --- PASO 3: CREACIÓN DE CARPETAS ---
+    try {
+        console.log("📂 Creando/verificando estructura de carpetas...");
+        const rootFolderId = await getOrCreateFolder("Calidad de Software (Entregas)", 'root');
+        const unitFolderId = await getOrCreateFolder(details.unit, rootFolderId);
+        const activityFolderId = await getOrCreateFolder(details.activity, unitFolderId);
+        const studentFolderId = await getOrCreateFolder(details.studentName, activityFolderId);
+        console.log(`ID de carpeta final para el alumno: ${studentFolderId}`);
 
-    const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink', {
-        method: 'POST',
-        // CORRECCIÓN 2: Usamos un objeto simple para las cabeceras y el token directo.
-        headers: {
-            'Authorization': `Bearer ${tokenResponse.access_token}`,
-        },
-        body: formData,
-    });
+        // --- PASO 4: CONSTRUCCIÓN Y SUBIDA DE LA SOLICITUD ---
+        const metadata = {
+            name: file.name,
+            parents: [studentFolderId],
+        };
 
-    if (!response.ok) {
-        const error = await response.json();
-        console.error("Error detallado de la API de Drive:", error);
-        throw new Error(error.error.message || 'Fallo la subida del archivo a Drive.');
+        const formData = new FormData();
+        formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+        formData.append('file', file);
+
+        console.log("📦 Metadata a enviar:", JSON.stringify(metadata, null, 2));
+        console.log("📡 Enviando solicitud a la API de Google Drive...");
+
+        const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${tokenResponse.access_token}` },
+            body: formData,
+        });
+
+        if (!response.ok) {
+            const errorBody = await response.json();
+            console.error("❌ ERROR DE LA API DE DRIVE:", errorBody);
+            throw new Error(errorBody.error.message || 'Fallo la subida del archivo. El servidor devolvió un error.');
+        }
+
+        console.log("✅ ¡Archivo subido con éxito!");
+        return await response.json();
+
+    } catch (error) {
+        console.error("Ha ocurrido un error durante la creación de carpetas o la subida:", error);
+        throw new Error(`Error en el proceso de entrega: ${error.message}`);
     }
-
-    return await response.json();
 }
