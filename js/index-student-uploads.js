@@ -473,7 +473,162 @@ if (form) {
       setSubmittingState(false);
     }
   });
+// js/index-student-uploads.js
 
+// --- CONFIGURACIÓN PRINCIPAL ---
+export const firebaseConfig = {
+  apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
+  authDomain: "calidad-de-software-v2.firebaseapp.com",
+  projectId: "calidad-de-software-v2",
+  storageBucket: "calidad-de-software-v2.appspot.com",
+  messagingSenderId: "220818066383",
+  appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
+};
+
+export const allowedEmailDomain = "potros.itson.edu.mx";
+export const allowedTeacherEmails = [
+  "isaac.paniagua@potros.itson.edu.mx",
+  "profe.paniagua@gmail.com",
+];
+export const teacherAllowlistDocPath = "config/teacherAllowlist";
+export const useStorage = true;
+export const driveFolderId = "1kHZa-58lXRWniS8O5tAUG933g4oDs8_L";
+
+// --- LÓGICA DE SUBIDA A GOOGLE DRIVE ---
+
+/**
+ * Carga dinámicamente el módulo de Firebase para evitar dependencias circulares.
+ * Esto nos permite tener la lógica de Drive en el mismo archivo que la configuración.
+ */
+async function getFirebaseCore() {
+  return await import('./firebase-config.js');
+}
+
+/**
+ * Inicia el proceso de autenticación con Google para obtener un token de acceso a Drive.
+ * Esta función es necesaria para autorizar la subida de archivos en nombre del usuario.
+ */
+async function getDriveAccessTokenInteractive() {
+  const { getAuthInstance, GoogleAuthProvider, signInWithPopupSafe } = await getFirebaseCore();
+  const auth = getAuthInstance();
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ hd: allowedEmailDomain });
+  provider.addScope("https://www.googleapis.com/auth/drive.file");
+
+  const result = await signInWithPopupSafe(auth, provider, { retries: 1 });
+  const cred = GoogleAuthProvider.credentialFromResult(result);
+  const accessToken = cred?.accessToken || null;
+  
+  if (!accessToken) {
+    throw new Error("No se pudo obtener el token de acceso de Google Drive.");
+  }
+  return accessToken;
+}
+
+/**
+ * Sube un archivo directamente a una carpeta específica en Google Drive y
+ * crea un registro del material en Firestore.
+ */
+export async function uploadMaterialToDrive({
+  file,
+  title,
+  category,
+  description,
+  ownerEmail,
+  folderId = driveFolderId,
+  onProgress,
+}) {
+  if (!file) throw new Error("Archivo requerido para subir a Drive.");
+
+  // Obtenemos las funciones y la configuración de Firebase dinámicamente.
+  const { getDb, addDoc, collection, serverTimestamp, getAuthInstance } = await getFirebaseCore();
+  const token = await getDriveAccessTokenInteractive();
+
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const metadata = {
+    name: safeName,
+    parents: folderId ? [folderId] : undefined,
+    description: description || undefined,
+  };
+
+  // Construcción del cuerpo de la solicitud multipart para la API de Drive
+  const boundary = `-------driveFormBoundary${Math.random().toString(16).slice(2)}`;
+  const delimiter = `--${boundary}\r\n`;
+  const closeDelim = `--${boundary}--`;
+
+  const body = new Blob([
+    delimiter,
+    'Content-Type: application/json; charset=UTF-8\r\n\r\n',
+    JSON.stringify(metadata),
+    '\r\n',
+    delimiter,
+    `Content-Type: ${file.type || "application/octet-stream"}\r\n\r\n`,
+    file,
+    '\r\n',
+    closeDelim,
+  ], { type: `multipart/related; boundary=${boundary}` });
+
+  const uploadUrl = `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,webContentLink`;
+
+  // Usamos XMLHttpRequest para poder monitorear el progreso de la subida
+  const uploadResponse = await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", uploadUrl, true);
+    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.setRequestHeader("Content-Type", `multipart/related; boundary=${boundary}`);
+    
+    if (xhr.upload && onProgress) {
+      xhr.upload.onprogress = (evt) => {
+        if (evt.lengthComputable) {
+          onProgress(Math.round((evt.loaded / evt.total) * 100));
+        }
+      };
+    }
+    
+    xhr.onreadystatechange = () => {
+      if (xhr.readyState === 4) {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          resolve(JSON.parse(xhr.responseText));
+        } else {
+          reject(new Error(`Error subiendo a Drive (${xhr.status}): ${xhr.responseText}`));
+        }
+      }
+    };
+    xhr.send(body);
+  });
+
+  // Hacemos público el archivo en Drive para que cualquiera con el enlace pueda verlo
+  if (uploadResponse?.id) {
+    try {
+      await fetch(`https://www.googleapis.com/drive/v3/files/${uploadResponse.id}/permissions`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ role: "reader", type: "anyone" }),
+      });
+    } catch (permError) {
+      console.warn("No se pudo establecer el permiso público en el archivo de Drive:", permError);
+    }
+  }
+
+  // Guardamos la referencia del archivo en nuestra base de datos Firestore
+  const db = getDb();
+  const auth = getAuthInstance();
+  const url = uploadResponse?.webViewLink || `https://drive.google.com/file/d/${uploadResponse.id}/view`;
+  
+  const docRef = await addDoc(collection(db, "materials"), {
+    title,
+    category,
+    description,
+    url,
+    path: null, // No aplica para Drive
+    ownerEmail: ownerEmail?.toLowerCase() || auth?.currentUser?.email?.toLowerCase() || null,
+    createdAt: serverTimestamp(),
+    downloads: 0,
+    storage: 'drive', // Indicamos que está en Google Drive
+  });
+
+  return { id: docRef.id, url };
+}
   if (resetBtn) {
     resetBtn.addEventListener("click", (event) => {
       event.preventDefault();
