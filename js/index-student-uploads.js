@@ -26,22 +26,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const btnVerHistorial = document.getElementById("btn-ver-historial");
     
     const countEl = document.querySelector("[data-upload-count]");
-    const statusModalEl = document.getElementById('statusModal');
     const historialModalEl = document.getElementById('historialModal');
-    // --- INICIA CORRECCIÓN 1: Obtener referencia al div de estado ---
-    const uploadStatusDiv = document.getElementById('studentUploadStatus'); 
-    // --- TERMINA CORRECCIÓN 1 ---
+    const uploadStatusDiv = document.getElementById('studentUploadStatus');
 
     // --- Variables de Estado y Modales ---
     let currentUser = null;
     let todasLasEntregas = [];
-    let statusModalInstance, historialModalInstance;
+    let historialModalInstance;
+    let defaultStatusMessage = '';
 
     try {
-        statusModalInstance = new bootstrap.Modal(statusModalEl);
-        historialModalInstance = new bootstrap.Modal(historialModalEl);
+        if (historialModalEl) {
+            historialModalInstance = new bootstrap.Modal(historialModalEl);
+        }
     } catch (e) {
-        console.error("Error inicializando los modales de Bootstrap. Asegúrate de que el JS de Bootstrap esté cargado.", e);
+        console.error("Error inicializando el modal de Bootstrap. Asegúrate de que el JS de Bootstrap esté cargado.", e);
     }
     
     // --- Autenticación y Carga Inicial ---
@@ -50,26 +49,14 @@ document.addEventListener("DOMContentLoaded", () => {
     onAuthStateChanged(auth, (user) => {
         currentUser = user;
         if (user) {
-            // --- INICIA CORRECCIÓN 2: Actualizar mensaje de bienvenida ---
-            if (uploadStatusDiv && user.displayName) {
-                uploadStatusDiv.textContent = `Sesión iniciada como ${user.displayName}. Ya puedes registrar entregas.`;
-                uploadStatusDiv.classList.add('is-success');
-                uploadStatusDiv.classList.remove('is-error');
-            }
-            // --- TERMINA CORRECCIÓN 2 ---
-
+            defaultStatusMessage = `Sesión iniciada como ${user.displayName}. Ya puedes registrar entregas.`;
+            updateUploadStatus(defaultStatusMessage, 'success', false); // No hacer scroll al iniciar
             submitBtn.disabled = false; 
             initDriveUploader();
             startObserver(user.uid);
         } else {
-            // --- INICIA CORRECCIÓN 3: Actualizar mensaje al cerrar sesión ---
-            if (uploadStatusDiv) {
-                uploadStatusDiv.textContent = 'Debes iniciar sesión para poder registrar entregas.';
-                uploadStatusDiv.classList.remove('is-success');
-                uploadStatusDiv.classList.add('is-error'); // Opcional: para mostrarlo con otro estilo
-            }
-            // --- TERMINA CORRECCIÓN 3 ---
-
+            defaultStatusMessage = 'Debes iniciar sesión para poder registrar entregas.';
+            updateUploadStatus(defaultStatusMessage, 'error', false);
             submitBtn.disabled = true;
             renderAllLists([]);
         }
@@ -80,52 +67,69 @@ document.addEventListener("DOMContentLoaded", () => {
 
     resetBtn.addEventListener('click', () => {
         form.reset();
-        mostrarModalDeEstado("Formulario Limpiado", "Puedes registrar una nueva entrega.", "info");
+        updateUploadStatus("Formulario limpiado.", "info", false);
+         setTimeout(() => {
+            updateUploadStatus(defaultStatusMessage, 'success', false);
+        }, 3000);
     });
 
     if (btnVerHistorial) {
         btnVerHistorial.addEventListener('click', () => {
-            renderUploads(todasLasEntregas, fullHistoryListEl);
+            renderUploads(todasLasEntregas, fullHistoryListEl); // Renderiza todas las entregas en el modal
             if (historialModalInstance) historialModalInstance.show();
         });
     }
 
+    // --- CÓDIGO RESTAURADO: Manejador de accesibilidad para el modal de historial ---
     if (historialModalEl) {
         historialModalEl.addEventListener('hidden.bs.modal', () => {
             if (btnVerHistorial) btnVerHistorial.focus();
         });
     }
-    if (statusModalEl) {
-        statusModalEl.addEventListener('hidden.bs.modal', () => {
-            if (submitBtn) submitBtn.focus();
-        });
+    // --- FIN DEL CÓDIGO RESTAURADO ---
+
+    /**
+     * Actualiza el texto y la apariencia del div de estado, y opcionalmente hace scroll.
+     * @param {string} message - El mensaje a mostrar.
+     * @param {'loading'|'success'|'error'|'info'} type - El tipo de estado.
+     * @param {boolean} [doScroll=true] - Si es true, se desplazará para hacer visible el mensaje.
+     */
+    function updateUploadStatus(message, type, doScroll = true) {
+        if (!uploadStatusDiv) return;
+        uploadStatusDiv.textContent = message;
+        uploadStatusDiv.classList.remove('is-loading', 'is-success', 'is-error', 'is-info');
+        const typeClass = `is-${type}`;
+        uploadStatusDiv.classList.add(typeClass);
+        if (doScroll) {
+            uploadStatusDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
     }
 
     // --- Lógica Principal ---
 
     async function handleFormSubmit(e) {
         e.preventDefault();
-        if (!currentUser) return mostrarModalDeEstado("Error de Autenticación", "Debes iniciar sesión para hacer una entrega.", "error");
-        if (!fileInput.files || fileInput.files.length === 0) return mostrarModalDeEstado("Archivo Faltante", "Por favor, selecciona un archivo para subir.", "error");
-
+        if (!currentUser) return updateUploadStatus("Error: No has iniciado sesión.", "error");
+        if (!fileInput.files || fileInput.files.length === 0) return updateUploadStatus("Error: Debes seleccionar un archivo.", "error");
+        
         const selectedOption = titleSelect.options[titleSelect.selectedIndex];
-        if (!selectedOption || selectedOption.disabled) return mostrarModalDeEstado("Actividad no seleccionada", "Por favor, selecciona una actividad de la lista.", "error");
+        if (!selectedOption || selectedOption.disabled) return updateUploadStatus("Error: Debes seleccionar una actividad.", "error");
         
         const file = fileInput.files[0];
         const unitLabel = selectedOption.dataset.unitLabel || "General";
         const activityTitle = selectedOption.text;
 
-        mostrarModalDeEstado("Procesando...", "Subiendo archivo a Google Drive...", "loading");
+        submitBtn.disabled = true;
 
         try {
+            updateUploadStatus("Subiendo archivo a Drive...", "loading");
             const driveResponse = await uploadFile(file, {
                 unit: unitLabel,
                 activity: activityTitle,
                 studentName: currentUser.displayName || currentUser.email,
             });
 
-            mostrarModalDeEstado("Procesando...", "Registrando entrega en la plataforma...", "loading");
-            
+            updateUploadStatus("Registrando entrega en la plataforma...", "loading");
             const payload = {
                 title: titleSelect.value,
                 description: descriptionTextarea.value,
@@ -139,37 +143,36 @@ document.addEventListener("DOMContentLoaded", () => {
             };
             
             await createStudentUpload(payload);
-
-            if (statusModalInstance) statusModalInstance.hide();
-            setTimeout(() => {
-                mostrarModalDeEstado("¡Entrega Exitosa!", "Tu archivo ha sido registrado correctamente.", "success");
-            }, 500);
+            updateUploadStatus("¡Entrega exitosa! Tu archivo fue registrado.", "success");
             
             form.reset();
             populateActivitiesSelect();
 
+            setTimeout(() => {
+                updateUploadStatus(defaultStatusMessage, 'success', false);
+            }, 5000);
+
         } catch (error) {
             console.error("Error en el proceso de entrega:", error);
-            if (statusModalInstance) statusModalInstance.hide();
-            setTimeout(() => {
-                mostrarModalDeEstado("Error en la Entrega", `No se pudo completar el proceso: ${error.message}`, "error");
-            }, 500);
+            updateUploadStatus(`Error en la entrega: ${error.message}`, "error");
+        } finally {
+            submitBtn.disabled = false;
         }
     }
 
     function startObserver(uid) {
         observeStudentUploads(uid, (items) => {
-            todasLasEntregas = items;
+            todasLasEntregas = items; // Guarda todas las entregas para el historial
             renderAllLists(items);
         }, (error) => {
             console.error("Error observando entregas:", error);
-            mostrarModalDeEstado("Error de Carga", "No se pudieron cargar tus entregas anteriores.", "error");
+            updateUploadStatus("Error al cargar tus entregas anteriores.", "error");
         });
     }
 
     function renderAllLists(items) {
         if (countEl) countEl.textContent = items.length;
-        if (listEl) renderUploads(items.slice(0, 3), listEl, emptyEl);
+        if (listEl) renderUploads(items.slice(0, 3), listEl, emptyEl); // Renderiza solo las últimas 3 en la lista principal
     }
     
     function renderUploads(items = [], listContainer, emptyContainer) {
@@ -196,20 +199,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 </li>
             `;
         }).join('');
-    }
-
-    function mostrarModalDeEstado(title, message, type) {
-        if (!statusModalInstance) return;
-        const modalTitle = document.getElementById('statusModalLabel');
-        const modalBody = document.getElementById('statusModalBody');
-        const iconMap = {
-            success: 'fa-check-circle', loading: 'fa-spinner fa-spin',
-            error: 'fa-times-circle', info: 'fa-info-circle'
-        };
-        const iconHtml = `<div class="modal-icon icon-${type}"><i class="fas ${iconMap[type]}"></i></div>`;
-        modalTitle.textContent = title;
-        modalBody.innerHTML = `${iconHtml}<p class="text-center">${message}</p>`;
-        statusModalInstance.show();
     }
 
     function populateActivitiesSelect() {
