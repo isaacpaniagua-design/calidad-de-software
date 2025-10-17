@@ -30,12 +30,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 import { connectFirestoreEmulator } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 import {
-  getStorage,
-  ref as storageRef,
-  uploadBytesResumable,
-  getDownloadURL,
-  deleteObject,
-} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
+  firebaseConfig,
+  allowedEmailDomain,
+  useStorage,
+  driveFolderId,
+  allowedTeacherEmails,
+  teacherAllowlistDocPath,
+} from "./index-student-uploads.js";} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
 import {
   getFunctions,
   connectFunctionsEmulator,
