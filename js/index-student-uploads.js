@@ -22,26 +22,13 @@ document.addEventListener("DOMContentLoaded", () => {
     
     const listEl = document.getElementById("studentUploadList");
     const emptyEl = document.getElementById("studentUploadEmpty");
-    const fullHistoryListEl = document.getElementById("fullHistoryList");
-    const btnVerHistorial = document.getElementById("btn-ver-historial");
-    
     const countEl = document.querySelector("[data-upload-count]");
-    const historialModalEl = document.getElementById('historialModal');
     const uploadStatusDiv = document.getElementById('studentUploadStatus');
 
-    // --- Variables de Estado y Modales ---
+    // --- Variables de Estado ---
     let currentUser = null;
     let todasLasEntregas = [];
-    let historialModalInstance;
     let defaultStatusMessage = '';
-
-    try {
-        if (historialModalEl) {
-            historialModalInstance = new bootstrap.Modal(historialModalEl);
-        }
-    } catch (e) {
-        console.error("Error inicializando el modal de Bootstrap. Asegúrate de que el JS de Bootstrap esté cargado.", e);
-    }
     
     // --- Autenticación y Carga Inicial ---
     populateActivitiesSelect();
@@ -50,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
         currentUser = user;
         if (user) {
             defaultStatusMessage = `Sesión iniciada como ${user.displayName}. Ya puedes registrar entregas.`;
-            updateUploadStatus(defaultStatusMessage, 'success', false); // No hacer scroll al iniciar
+            updateUploadStatus(defaultStatusMessage, 'success', false);
             submitBtn.disabled = false; 
             initDriveUploader();
             startObserver(user.uid);
@@ -72,21 +59,6 @@ document.addEventListener("DOMContentLoaded", () => {
             updateUploadStatus(defaultStatusMessage, 'success', false);
         }, 3000);
     });
-
-    if (btnVerHistorial) {
-        btnVerHistorial.addEventListener('click', () => {
-            renderUploads(todasLasEntregas, fullHistoryListEl); // Renderiza todas las entregas en el modal
-            if (historialModalInstance) historialModalInstance.show();
-        });
-    }
-
-    // --- CÓDIGO RESTAURADO: Manejador de accesibilidad para el modal de historial ---
-    if (historialModalEl) {
-        historialModalEl.addEventListener('hidden.bs.modal', () => {
-            if (btnVerHistorial) btnVerHistorial.focus();
-        });
-    }
-    // --- FIN DEL CÓDIGO RESTAURADO ---
 
     /**
      * Actualiza el texto y la apariencia del div de estado, y opcionalmente hace scroll.
@@ -162,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function startObserver(uid) {
         observeStudentUploads(uid, (items) => {
-            todasLasEntregas = items; // Guarda todas las entregas para el historial
+            todasLasEntregas = items;
             renderAllLists(items);
         }, (error) => {
             console.error("Error observando entregas:", error);
@@ -172,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderAllLists(items) {
         if (countEl) countEl.textContent = items.length;
-        if (listEl) renderUploads(items.slice(0, 3), listEl, emptyEl); // Renderiza solo las últimas 3 en la lista principal
+        if (listEl) renderUploads(items.slice(0, 3), listEl, emptyEl);
     }
     
     function renderUploads(items = [], listContainer, emptyContainer) {
