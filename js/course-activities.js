@@ -60,3 +60,54 @@ export const courseActivities = [
         ]
     }
 ];
+
+/**
+ * Busca una actividad por su ID a través de todas las unidades.
+ * @param {string} activityId - El ID de la actividad a buscar.
+ * @returns {Object|null} El objeto de la actividad o null si no se encuentra.
+ */
+export function getActivityById(activityId) {
+    if (!activityId) return null;
+    for (const unit of courseActivities) {
+        const activity = unit.activities.find(act => act.id === activityId);
+        if (activity) {
+            return { ...activity, unitId: unit.unitId, unitLabel: unit.unitLabel };
+        }
+    }
+    return null;
+}
+
+/**
+ * Busca una actividad por su título, opcionalmente dentro de una unidad específica.
+ * @param {string} title - El título de la actividad a buscar.
+ * @param {string} [unitId] - El ID opcional de la unidad para limitar la búsqueda.
+ * @returns {Object|null} El objeto de la actividad o null si no se encuentra.
+ */
+export function findActivityByTitle(title, unitId) {
+    if (!title) return null;
+    const normalizedTitle = title.trim().toLowerCase();
+
+    const searchInUnit = (unit) => {
+        const activity = unit.activities.find(act => act.title.trim().toLowerCase() === normalizedTitle);
+        if (activity) {
+            return { ...activity, unitId: unit.unitId, unitLabel: unit.unitLabel };
+        }
+        return null;
+    };
+
+    if (unitId) {
+        const unit = courseActivities.find(u => u.unitId === unitId);
+        if (unit) {
+            return searchInUnit(unit);
+        }
+    }
+
+    for (const unit of courseActivities) {
+        const activity = searchInUnit(unit);
+        if (activity) {
+            return activity;
+        }
+    }
+
+    return null;
+}
