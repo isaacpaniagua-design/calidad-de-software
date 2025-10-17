@@ -1,7 +1,7 @@
 // js/index-student-uploads.js
-
+import { onAuth, getDb, getAuthInstance } from "./firebase.js";
 // --- IMPORTACIONES ---
-import { onAuth, getDb, getAuthInstance, addDoc, collection, serverTimestamp } from "./firebase.js";
+import { addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 import { initializeFileViewer, openFileViewer } from "./file-viewer.js";
 import { observeStudentUploads, createStudentUpload } from "./student-uploads.js";
 import { courseActivities, getActivityById, findActivityByTitle } from "./course-activities.js";
