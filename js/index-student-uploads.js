@@ -1,376 +1,202 @@
-// js/index-student-uploads.js
-import { onAuth, getDb, getAuthInstance } from "./firebase.js";
-// --- IMPORTACIONES ---
-import { addDoc, collection, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
-import { initializeFileViewer, openFileViewer } from "./file-viewer.js";
-import { observeStudentUploads, createStudentUpload } from "./student-uploads.js";
-import { courseActivities, getActivityById, findActivityByTitle } from "./course-activities.js";
+// En: js/index-student-uploads.js
 
-// ¡CORRECCIÓN CLAVE!
-// Importamos la configuración desde la fuente única en lugar de declararla aquí.
-// Esto resuelve el error "Unexpected token 'export'".
-import { driveFolderId, allowedEmailDomain } from "./firebase-config.js";
-
-// ============================================================================
-// Toda tu lógica original se mantiene intacta desde aquí hacia abajo.
-// ============================================================================
-
-initializeFileViewer();
-
-const activitySelect = document.getElementById("studentUploadTitle");
-const typeSelect = document.getElementById("studentUploadType");
-const descriptionInput = document.getElementById("studentUploadDescription");
-const statusEl = document.getElementById("studentUploadStatus");
-const listEl = document.getElementById("studentUploadList");
-const emptyEl = document.getElementById("studentUploadEmpty");
-const countEl = document.querySelector("[data-upload-count]");
-const resetBtn = document.getElementById("studentUploadReset");
-const form = document.getElementById("studentUploadForm");
-
-const typeLabels = {
-  activity: "Actividad",
-  homework: "Tarea",
-  evidence: "Evidencia",
-};
-
-const statusLabels = {
-  enviado: "Enviado",
-  aceptado: "Aceptado",
-  calificado: "Calificado",
-  rechazado: "Rechazado",
-};
-
-const knownStatuses = new Map();
-let statusesInitialized = false;
-
-const dateFormatter = new Intl.DateTimeFormat("es-MX", {
-  dateStyle: "medium",
-  timeStyle: "short",
-});
-
-let widget = null;
-let currentUser = null;
-let unsubscribe = null;
-let submitting = false;
-let justSubmitted = false;
-let submissionTimer = null;
-
-function populateActivitySelect() {
-  if (!activitySelect) return;
-  activitySelect.innerHTML = `<option value="">Selecciona una actividad...</option>`;
-  courseActivities.forEach((activity) => {
-    const option = document.createElement("option");
-    option.value = activity.id;
-    option.textContent = activity.title;
-    activitySelect.appendChild(option);
-  });
-}
-
-function updateStatus(message, { isError = false, autoClear = 0 } = {}) {
-  if (!statusEl) return;
-  statusEl.textContent = message || "";
-  statusEl.className = isError ? "status-message is-error" : "status-message";
-  statusEl.hidden = !message;
-  if (autoClear > 0) {
-    setTimeout(() => {
-      if (statusEl.textContent === message) {
-        updateStatus("");
-      }
-    }, autoClear);
-  }
-}
-
-function renderUploads(items) {
-  if (!listEl) return;
-  listEl.innerHTML = "";
-  if (!Array.isArray(items) || items.length === 0) {
-    if (emptyEl) emptyEl.hidden = false;
-    if (countEl) countEl.textContent = "0";
-    return;
-  }
-
-  if (emptyEl) emptyEl.hidden = true;
-  if (countEl) countEl.textContent = String(items.length);
-
-  items.forEach((item) => {
-    const li = document.createElement("li");
-    li.className = "upload-item";
-    li.dataset.id = item.id;
-    li.dataset.status = item.status || "enviado";
-
-    const title = item.title || "Entrega sin título";
-    const type = typeLabels[item.kind] || "Archivo";
-    const status = statusLabels[item.status] || "Enviado";
-    const date = item.submittedAt?.toDate ? dateFormatter.format(item.submittedAt.toDate()) : "Fecha desconocida";
-    const grade = item.grade !== null && typeof item.grade !== "undefined" ? `Calificación: ${item.grade}` : "";
-
-    li.innerHTML = `
-      <div class="upload-item__meta">
-        <span class="upload-item__type">${type}</span>
-        <span class="upload-item__date">${date}</span>
-      </div>
-      <strong class="upload-item__title">${title}</strong>
-      <div class="upload-item__status">
-        <span class="badge status--${item.status || "enviado"}">${status}</span>
-        ${grade ? `<span class="upload-item__grade">${grade}</span>` : ""}
-      </div>
-      <div class="upload-item__actions">
-        ${item.fileUrl ? `<button type="button" class="btn-link" data-action="view">Ver archivo</button>` : ""}
-        ${item.teacherFeedback ? `<button type="button" class="btn-link" data-action="feedback">Ver retroalimentación</button>` : ""}
-      </div>
-    `;
-
-    li.querySelector('[data-action="view"]')?.addEventListener("click", () => {
-      openFileViewer({ url: item.fileUrl, name: item.fileName });
-    });
-
-    li.querySelector('[data-action="feedback"]')?.addEventListener("click", () => {
-      alert(`Retroalimentación:\n\n${item.teacherFeedback}`);
-    });
-
-    listEl.appendChild(li);
-  });
-}
-
-function handleUploadsSnapshot(items) {
-  if (!statusesInitialized) {
-    items.forEach(item => knownStatuses.set(item.id, item.status));
-    statusesInitialized = true;
-  } else {
-    items.forEach(item => {
-      const prevStatus = knownStatuses.get(item.id);
-      if (prevStatus && prevStatus !== item.status) {
-        const title = item.title || "Tu entrega";
-        const statusLabel = statusLabels[item.status] || item.status;
-        showToast(`El estado de "${title}" cambió a: ${statusLabel}`);
-      }
-      knownStatuses.set(item.id, item.status);
-    });
-  }
-  renderUploads(items);
-}
-
-function showToast(message) {
-  const toast = document.createElement("div");
-  toast.className = "toast-notification";
-  toast.textContent = message;
-  document.body.appendChild(toast);
-  setTimeout(() => {
-    toast.classList.add("is-visible");
-  }, 10);
-  setTimeout(() => {
-    toast.classList.remove("is-visible");
-    setTimeout(() => toast.remove(), 300);
-  }, 4000);
-}
-
-function handleFormSubmit(event) {
-  event.preventDefault();
-  if (submitting || !currentUser) return;
-
-  const title = activitySelect.value ? getActivityById(activitySelect.value)?.title : "Entrega personalizada";
-  const kind = typeSelect.value;
-  const description = descriptionInput.value;
-  const file = widget?.getFile();
-
-  if (!title || !kind) {
-    updateStatus("Por favor, selecciona una actividad y un tipo.", { isError: true, autoClear: 3000 });
-    return;
-  }
-  if (!file) {
-    updateStatus("Por favor, selecciona un archivo para subir.", { isError: true, autoClear: 3000 });
-    return;
-  }
-
-  submitting = true;
-  updateStatus("Subiendo archivo, por favor espera...");
-  form.classList.add("is-submitting");
-
-  createStudentUpload({
-    file: file.fileInfo,
-    title,
-    kind,
-    description,
-    student: {
-      uid: currentUser.uid,
-      email: currentUser.email,
-      displayName: currentUser.displayName,
-    },
-    onProgress: (progress) => {
-      updateStatus(`Subiendo... ${progress.toFixed(0)}%`);
-    }
-  })
-  .then(() => {
-    justSubmitted = true;
-    updateStatus("¡Archivo subido con éxito!", { autoClear: 4000 });
-    form.reset();
-    widget.clearAll();
-    
-    clearTimeout(submissionTimer);
-    submissionTimer = setTimeout(() => {
-      justSubmitted = false;
-    }, 2000);
-  })
-  .catch((error) => {
-    console.error("Error al subir archivo:", error);
-    updateStatus(`Error al subir: ${error.message}`, { isError: true, autoClear: 5000 });
-  })
-  .finally(() => {
-    submitting = false;
-    form.classList.remove("is-submitting");
-  });
-}
-
-onAuth(user => {
-  currentUser = user;
-  if (unsubscribe) {
-    unsubscribe();
-    unsubscribe = null;
-  }
-  if (user) {
-    document.body.classList.remove("is-logged-out");
-    unsubscribe = observeStudentUploads(user.uid, handleUploadsSnapshot);
-  } else {
-    document.body.classList.add("is-logged-out");
-    renderUploads([]);
-  }
-});
-
-if (form) {
-  form.addEventListener("submit", handleFormSubmit);
-}
-
-if (resetBtn) {
-  resetBtn.addEventListener("click", (event) => {
-    event.preventDefault();
-    if (confirm("¿Estás seguro de que quieres limpiar el formulario?")) {
-      form.reset();
-      widget?.clearAll();
-      updateStatus("");
-    }
-  });
-}
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+import { createStudentUpload, observeStudentUploads } from "./student-uploads.js";
+import { courseActivities } from './course-activities.js';
+import { initDriveUploader, uploadFile } from "./student-file-uploader.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  if (window.uploadcare) {
-    widget = uploadcare.Widget("[role=uploadcare-uploader]");
-  }
-  populateActivitySelect();
-});
+    // Llenar el selector de actividades tan pronto como el DOM esté listo
+    populateActivitiesSelect();
 
-export async function uploadMaterialToDrive({
-  file,
-  title,
-  category,
-  description,
-  ownerEmail,
-  folderId = driveFolderId,
-  onProgress,
-}) {
-  if (!file) throw new Error("Archivo requerido para subir a Drive.");
+    // --- Referencias al DOM ---
+    const form = document.getElementById("studentUploadForm");
+    const titleSelect = document.getElementById("studentUploadTitle");
+    const typeSelect = document.getElementById("studentUploadType");
+    const descriptionTextarea = document.getElementById("studentUploadDescription");
+    const fileInput = document.getElementById("studentUploadFile");
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const resetBtn = document.getElementById("studentUploadReset");
+    const statusEl = document.getElementById("studentUploadStatus");
+    const listEl = document.getElementById("studentUploadList");
+    const emptyEl = document.getElementById("studentUploadEmpty");
+    const countEl = document.querySelector("[data-upload-count]");
 
-  async function getFirebaseCore() {
-    return await import('./firebase.js');
-  }
+    let currentUser = null;
 
-  const { getAuthInstance, GoogleAuthProvider, signInWithPopupSafe } = await getFirebaseCore();
-  
-  async function getDriveAccessTokenInteractive() {
-    const auth = getAuthInstance();
-    const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({ hd: allowedEmailDomain });
-    provider.addScope("https://www.googleapis.com/auth/drive.file");
-
-    const result = await signInWithPopupSafe(auth, provider, { retries: 1 });
-    const cred = GoogleAuthProvider.credentialFromResult(result);
-    const accessToken = cred?.accessToken || null;
-    
-    if (!accessToken) {
-      throw new Error("No se pudo obtener el token de acceso de Google Drive.");
-    }
-    return accessToken;
-  }
-
-  const token = await getDriveAccessTokenInteractive();
-
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const metadata = {
-    name: safeName,
-    parents: folderId ? [folderId] : undefined,
-    description: description || undefined,
-  };
-
-  const boundary = `-------driveFormBoundary${Math.random().toString(16).slice(2)}`;
-  const delimiter = `--${boundary}\r\n`;
-  const closeDelim = `--${boundary}--`;
-
-  const body = new Blob([
-    delimiter,
-    'Content-Type: application/json; charset=UTF-8\r\n\r\n',
-    JSON.stringify(metadata),
-    '\r\n',
-    delimiter,
-    `Content-Type: ${file.type || "application/octet-stream"}\r\n\r\n`,
-    file,
-    '\r\n',
-    closeDelim,
-  ], { type: `multipart/related; boundary=${boundary}` });
-
-  const uploadUrl = `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink,webContentLink`;
-
-  const uploadResponse = await new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", uploadUrl, true);
-    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-    xhr.setRequestHeader("Content-Type", `multipart/related; boundary=${boundary}`);
-    
-    if (xhr.upload && onProgress) {
-      xhr.upload.onprogress = (evt) => {
-        if (evt.lengthComputable) {
-          onProgress(Math.round((evt.loaded / evt.total) * 100));
-        }
-      };
-    }
-    
-    xhr.onreadystatechange = () => {
-      if (xhr.readyState === 4) {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve(JSON.parse(xhr.responseText));
+    // --- Autenticación y Estado Inicial ---
+    const auth = getAuth();
+    onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        if (user) {
+            updateStatus(`Sesión iniciada como ${user.displayName || user.email}. Ya puedes registrar entregas.`, 'success');
+            submitBtn.disabled = false;
+            initDriveUploader(); // Inicializamos el cliente de Google Drive
+            startObserver(user.uid);
         } else {
-          reject(new Error(`Error subiendo a Drive (${xhr.status}): ${xhr.responseText}`));
+            updateStatus("Inicia sesión con Google para poder subir y registrar tus entregas.", 'warning');
+            submitBtn.disabled = true;
+            renderUploads([]); // Limpiar la lista si el usuario cierra sesión
         }
-      }
-    };
-    xhr.send(body);
-  });
+    });
 
-  if (uploadResponse?.id) {
-    try {
-      await fetch(`https://www.googleapis.com/drive/v3/files/${uploadResponse.id}/permissions`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ role: "reader", type: "anyone" }),
-      });
-    } catch (permError) {
-      console.warn("No se pudo establecer el permiso público en el archivo de Drive:", permError);
+    /**
+     * Llena el <select> de actividades a partir de la lista en course-activities.js
+     */
+    function populateActivitiesSelect() {
+        const selectEl = document.getElementById('studentUploadTitle');
+        selectEl.innerHTML = ''; // Limpiar opciones para evitar duplicados
+
+        const defaultOption = new Option('Selecciona la actividad o asignación', '', true, true);
+        defaultOption.disabled = true;
+        selectEl.add(defaultOption);
+
+        courseActivities.forEach(unit => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = unit.unitLabel;
+            unit.activities.forEach(activity => {
+                const option = new Option(activity.title, activity.id);
+                option.dataset.unitId = unit.unitId;
+                option.dataset.unitLabel = unit.unitLabel;
+                optgroup.appendChild(option);
+            });
+            selectEl.appendChild(optgroup);
+        });
     }
-  }
 
-  const db = getDb();
-  const auth = getAuthInstance();
-  const url = uploadResponse?.webViewLink || `https://drive.google.com/file/d/${uploadResponse.id}/view`;
-  
-  const docRef = await addDoc(collection(db, "materials"), {
-    title,
-    category,
-    description,
-    url,
-    path: null,
-    ownerEmail: ownerEmail?.toLowerCase() || auth?.currentUser?.email?.toLowerCase() || null,
-    createdAt: serverTimestamp(),
-    downloads: 0,
-    storage: 'drive',
-  });
+    // --- Manejo del Formulario ---
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (!currentUser) {
+            updateStatus("Error: Debes iniciar sesión para hacer una entrega.", "error");
+            return;
+        }
+        if (!fileInput.files || fileInput.files.length === 0) {
+            updateStatus("Por favor, selecciona un archivo para subir.", "error");
+            return;
+        }
 
-  return { id: docRef.id, url };
-}
+        const file = fileInput.files[0];
+        const selectedOption = titleSelect.options[titleSelect.selectedIndex];
+        const unitLabel = selectedOption.dataset.unitLabel || "General";
+        const activityTitle = selectedOption.text;
+
+        setLoadingState(true, 'Subiendo a Google Drive...');
+
+        try {
+            // 1. Subir a Google Drive
+            const driveResponse = await uploadFile(file, {
+                unit: unitLabel,
+                activity: activityTitle,
+                studentName: currentUser.displayName || currentUser.email,
+            });
+
+            // 2. Preparar payload para Firestore
+            const payload = {
+                title: titleSelect.value,
+                description: descriptionTextarea.value,
+                kind: typeSelect.value,
+                fileUrl: driveResponse.webViewLink,
+                fileName: file.name,
+                fileSize: file.size,
+                mimeType: file.type,
+                student: {
+                    uid: currentUser.uid,
+                    displayName: currentUser.displayName,
+                    email: currentUser.email
+                },
+                extra: {
+                    uploadBackend: "googledrive",
+                    driveFileId: driveResponse.id,
+                    unitId: selectedOption.dataset.unitId,
+                    unitLabel: unitLabel,
+                    activityTitle: activityTitle,
+                },
+            };
+            
+            // 3. Registrar en Firestore
+            setLoadingState(true, 'Registrando entrega en la plataforma...');
+            await createStudentUpload(payload);
+
+            updateStatus("¡Entrega registrada con éxito!", "success");
+            form.reset();
+
+        } catch (error) {
+            console.error("Error en el proceso de entrega:", error);
+            updateStatus(`Error: ${error.message || "No se pudo completar la entrega."}`, "error");
+        } finally {
+            setLoadingState(false);
+        }
+    });
+
+    resetBtn.addEventListener('click', () => {
+        form.reset();
+        updateStatus("Formulario limpiado. Listo para una nueva entrega.", "info");
+    });
+
+    // --- Lógica de UI (Observador y Renderizado) ---
+    function startObserver(uid) {
+        observeStudentUploads(uid, 
+            (items) => { renderUploads(items); }, 
+            (error) => {
+                console.error("Error observando entregas:", error);
+                updateStatus("No se pudieron cargar tus entregas anteriores.", "error");
+            }
+        );
+    }
+
+    function renderUploads(items = []) {
+        if(countEl) countEl.textContent = items.length;
+        
+        if (items.length === 0) {
+            if(emptyEl) emptyEl.hidden = false;
+            if(listEl) listEl.innerHTML = "";
+            return;
+        }
+
+        if(emptyEl) emptyEl.hidden = true;
+        if(listEl) {
+            listEl.innerHTML = items.map(item => {
+                const submittedDate = item.submittedAt?.toDate ? new Date(item.submittedAt.toDate()).toLocaleString() : 'Fecha no disponible';
+                const descriptionHTML = item.description ? `<p class="student-uploads__item-description">${item.description}</p>` : '';
+                
+                return `
+                    <li class="student-uploads__item">
+                        <div class="student-uploads__item-header">
+                            <div class="student-uploads__item-heading">
+                                <span class="student-uploads__item-title">${item.extra?.activityTitle || item.title}</span>
+                                <span class="student-uploads__item-chip">${item.kind || 'Entrega'}</span>
+                            </div>
+                            <span class="student-uploads__item-status student-uploads__item-status--${item.status || 'enviado'}">${item.status || 'enviado'}</span>
+                        </div>
+                        <p class="student-uploads__item-meta">Enviado: ${submittedDate}</p>
+                        ${descriptionHTML}
+                        <div class="student-uploads__item-actions">
+                            <a href="${item.fileUrl}" target="_blank" rel="noopener noreferrer" class="student-uploads__item-link">Ver Archivo en Drive</a>
+                        </div>
+                    </li>
+                `;
+            }).join('');
+        }
+    }
+
+    function updateStatus(message, type) {
+        if(statusEl) {
+            statusEl.textContent = message;
+            statusEl.className = `student-uploads__status is-${type}`;
+        }
+    }
+
+    function setLoadingState(isLoading, message = '') {
+        if(submitBtn) {
+            submitBtn.disabled = isLoading;
+            if (isLoading) {
+                submitBtn.textContent = message || "Procesando...";
+                updateStatus(message, "info");
+            } else {
+                submitBtn.textContent = "Enviar entrega";
+            }
+        }
+        form.classList.toggle('is-submitting', isLoading);
+    }
+});
