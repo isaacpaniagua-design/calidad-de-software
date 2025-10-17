@@ -8,7 +8,6 @@ import { initDriveUploader, uploadFile } from "./student-file-uploader.js";
 document.addEventListener("DOMContentLoaded", () => {
     // --- Referencias al DOM (con validación) ---
     const form = document.getElementById("studentUploadForm");
-    // Si el formulario no existe, detenemos la ejecución de este script para evitar errores.
     if (!form) {
         console.log("El formulario de entrega de actividades no se encuentra en esta página. Script detenido.");
         return;
@@ -43,15 +42,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     // --- Autenticación y Carga Inicial ---
-    populateActivitiesSelect(); // <-- Esta es la función clave
+    populateActivitiesSelect();
     const auth = getAuth();
     onAuthStateChanged(auth, (user) => {
         currentUser = user;
         if (user) {
-            submitBtn.disabled = false;
+            // La retroalimentación al usuario es que el botón de envío se activa.
+            submitBtn.disabled = false; 
             initDriveUploader();
             startObserver(user.uid);
         } else {
+            // La retroalimentación es que el botón se desactiva.
             submitBtn.disabled = true;
             renderAllLists([]);
         }
