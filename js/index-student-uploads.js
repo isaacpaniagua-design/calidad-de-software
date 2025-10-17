@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const submitBtn = form.querySelector('button[type="submit"]');
     const resetBtn = document.getElementById("studentUploadReset");
     
-    // Contenedores de listas
+    // Contenedores de listas y botones del historial
     const listEl = document.getElementById("studentUploadList");
     const emptyEl = document.getElementById("studentUploadEmpty");
     const fullHistoryListEl = document.getElementById("fullHistoryList");
@@ -28,10 +28,14 @@ document.addEventListener("DOMContentLoaded", () => {
     let todasLasEntregas = [];
     let statusModalInstance, historialModalInstance;
 
-    // Inicializar modales de Bootstrap (requiere que Bootstrap JS esté cargado)
-    statusModalInstance = new bootstrap.Modal(document.getElementById('statusModal'));
-    historialModalInstance = new bootstrap.Modal(document.getElementById('historialModal'));
-
+    // Se asume que Bootstrap JS está cargado en la página para que esto funcione
+    try {
+        statusModalInstance = new bootstrap.Modal(document.getElementById('statusModal'));
+        historialModalInstance = new bootstrap.Modal(document.getElementById('historialModal'));
+    } catch (e) {
+        console.error("Error inicializando los modales de Bootstrap. Asegúrate de que el JS de Bootstrap esté cargado.", e);
+    }
+    
     // --- Autenticación y Carga Inicial ---
     populateActivitiesSelect();
     const auth = getAuth();
@@ -56,8 +60,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     btnVerHistorial.addEventListener('click', () => {
-        renderUploads(todasLasEntregas, fullHistoryListEl); // Renderiza todas
-        historialModalInstance.show();
+        renderUploads(todasLasEntregas, fullHistoryListEl); // Renderiza todas las entregas
+        if (historialModalInstance) historialModalInstance.show();
     });
 
     // --- Lógica Principal ---
@@ -65,16 +69,17 @@ document.addEventListener("DOMContentLoaded", () => {
     async function handleFormSubmit(e) {
         e.preventDefault();
         if (!currentUser) {
-            mostrarModalDeEstado("Error de Autenticación", "Debes iniciar sesión para hacer una entrega.", "error");
-            return;
+            return mostrarModalDeEstado("Error de Autenticación", "Debes iniciar sesión para hacer una entrega.", "error");
         }
         if (!fileInput.files || fileInput.files.length === 0) {
-            mostrarModalDeEstado("Archivo Faltante", "Por favor, selecciona un archivo para subir.", "error");
-            return;
+            return mostrarModalDeEstado("Archivo Faltante", "Por favor, selecciona un archivo para subir.", "error");
         }
 
         const file = fileInput.files[0];
         const selectedOption = titleSelect.options[titleSelect.selectedIndex];
+        if (!selectedOption || selectedOption.disabled) {
+            return mostrarModalDeEstado("Actividad no seleccionada", "Por favor, selecciona una actividad de la lista.", "error");
+        }
         const unitLabel = selectedOption.dataset.unitLabel || "General";
         const activityTitle = selectedOption.text;
 
@@ -97,11 +102,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 fileName: file.name,
                 fileSize: file.size,
                 mimeType: file.type,
-                student: {
-                    uid: currentUser.uid,
-                    displayName: currentUser.displayName,
-                    email: currentUser.email
-                },
+                student: { uid: currentUser.uid, displayName: currentUser.displayName, email: currentUser.email },
                 extra: {
                     uploadBackend: "googledrive",
                     driveFileId: driveResponse.id,
@@ -113,16 +114,17 @@ document.addEventListener("DOMContentLoaded", () => {
             
             await createStudentUpload(payload);
 
-            statusModalInstance.hide();
+            if (statusModalInstance) statusModalInstance.hide();
             setTimeout(() => {
                 mostrarModalDeEstado("¡Entrega Exitosa!", "Tu archivo ha sido registrado correctamente.", "success");
-            }, 500); // Pequeño delay para una mejor transición visual
+            }, 500);
             
             form.reset();
+            populateActivitiesSelect(); // Resetea el selector a su estado inicial
 
         } catch (error) {
             console.error("Error en el proceso de entrega:", error);
-            statusModalInstance.hide();
+            if (statusModalInstance) statusModalInstance.hide();
             setTimeout(() => {
                 mostrarModalDeEstado("Error en la Entrega", `No se pudo completar el proceso: ${error.message}`, "error");
             }, 500);
@@ -139,28 +141,18 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    /**
-     * Dispara el renderizado de la lista principal (3 items)
-     */
     function renderAllLists(items) {
         if (countEl) countEl.textContent = items.length;
         const tresUltimas = items.slice(0, 3);
         renderUploads(tresUltimas, listEl, emptyEl);
     }
     
-    /**
-     * Renderiza una lista de items en el contenedor especificado.
-     */
     function renderUploads(items = [], listContainer, emptyContainer) {
-        if (items.length === 0) {
-            if (emptyContainer) emptyContainer.hidden = false;
-            listContainer.innerHTML = "";
-            return;
-        }
-
-        if (emptyContainer) emptyContainer.hidden = true;
+        if (!listContainer) return;
         
-        listContainer.innerHTML = items.map(item => {
+        const hasItems = items.length > 0;
+        if (emptyContainer) emptyContainer.hidden = hasItems;
+        listContainer.innerHTML = !hasItems ? '' : items.map(item => {
             const submittedDate = item.submittedAt?.toDate ? new Date(item.submittedAt.toDate()).toLocaleString() : 'Fecha no disponible';
             const descriptionHTML = item.description ? `<p class="student-uploads__item-description">${item.description}</p>` : '';
             
@@ -183,13 +175,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }).join('');
     }
 
-    /**
-     * Muestra un modal de estado con un mensaje y un icono.
-     * @param {string} title Título del modal.
-     * @param {string} message Mensaje a mostrar.
-     * @param {'success'|'loading'|'error'|'info'} type El tipo de icono a mostrar.
-     */
     function mostrarModalDeEstado(title, message, type) {
+        if (!statusModalInstance) return;
         const modalTitle = document.getElementById('statusModalLabel');
         const modalBody = document.getElementById('statusModalBody');
         
