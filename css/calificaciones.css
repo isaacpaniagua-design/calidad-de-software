@@ -405,3 +405,265 @@ html:not(.role-teacher) #viewStudentPreviewBtn {
 #calificaciones-root .qsc-muted {
   opacity: 0.7;
 }
+/* ==========================================================================
+   Estilos para el Módulo de Carga de Evidencias del Estudiante
+   ========================================================================== */
+
+.student-uploads {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: var(--radius-xl, 28px);
+  box-shadow: 0 20px 48px rgba(15, 23, 42, 0.12);
+  margin: clamp(2rem, 5vw, 3.5rem) auto;
+  overflow: hidden;
+  transition: all var(--motion-duration) var(--motion-easing);
+  max-width: 1100px; /* Consistente con .qsc-wrap */
+  padding: 0 16px;
+}
+
+.student-uploads[open] {
+  box-shadow: 0 25px 55px rgba(15, 23, 42, 0.18);
+}
+
+.student-uploads__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: clamp(1.5rem, 4vw, 2rem);
+  cursor: pointer;
+  list-style: none; /* Eliminar marcador por defecto */
+}
+
+.student-uploads__summary::-webkit-details-marker {
+  display: none; /* Ocultar marcador en Chrome/Safari */
+}
+
+.student-uploads__header {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.student-uploads__eyebrow {
+  color: var(--accent-hover, #4f46e5);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.student-uploads__title {
+  font-size: clamp(1.4rem, 4vw, 1.75rem);
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary, #111827);
+}
+
+.student-uploads__description {
+  margin: 0;
+  color: var(--text-secondary, #475569);
+  max-width: 55ch;
+}
+
+.student-uploads__chevron {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: var(--accent-soft-stronger, rgba(99, 102, 241, 0.08));
+  color: var(--accent, #6366f1);
+  transition: transform var(--motion-duration-slow) var(--motion-easing-emphasized);
+}
+
+.student-uploads__chevron::before {
+  content: '→';
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.student-uploads[open] > .student-uploads__summary .student-uploads__chevron {
+  transform: rotate(90deg);
+}
+
+.student-uploads__body {
+  padding: 0 clamp(1.5rem, 4vw, 2rem) clamp(1.5rem, 4vw, 2rem);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(2rem, 5vw, 3.5rem);
+}
+
+@media (min-width: 960px) {
+  .student-uploads__body {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  }
+}
+
+/* --- Estilos del Formulario --- */
+.student-uploads__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.student-uploads__form .field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.student-uploads__form label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.student-uploads__form input,
+.student-uploads__form select,
+.student-uploads__form textarea {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md, 16px);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background-color: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  color: var(--text-primary);
+  transition: all var(--motion-duration) var(--motion-easing);
+}
+
+.student-uploads__form input:focus,
+.student-uploads__form select:focus,
+.student-uploads__form textarea:focus {
+  outline: none;
+  border-color: var(--accent, #6366f1);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.student-uploads__form input[type="file"] {
+  padding: 0;
+  border: none;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+/* --- Estilos para los Botones de Acción --- */
+.student-uploads__actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.student-uploads__submit,
+.student-uploads__reset {
+  padding: 0.8rem 1.5rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all var(--motion-duration) var(--motion-easing);
+}
+
+.student-uploads__submit {
+  background-color: var(--accent, #6366f1);
+  color: #fff;
+}
+.student-uploads__submit:hover {
+  background-color: var(--accent-hover, #4f46e5);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(79, 70, 229, 0.25);
+}
+
+.student-uploads__reset {
+  background-color: transparent;
+  color: var(--text-secondary, #475569);
+  border-color: rgba(148, 163, 184, 0.45);
+}
+
+.student-uploads__reset:hover {
+  background-color: rgba(148, 163, 184, 0.1);
+  border-color: rgba(148, 163, 184, 0.6);
+}
+
+/* --- Estilos para la sección de Registros --- */
+.student-uploads__records {
+    background: var(--accent-soft-stronger, rgba(99, 102, 241, 0.08));
+    border-radius: var(--radius-lg, 22px);
+    padding: clamp(1.25rem, 3vw, 1.75rem);
+}
+
+.student-uploads__records-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.student-uploads__records-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.student-uploads__count {
+  background-color: var(--accent, #6366f1);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.student-uploads__empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  border: 2px dashed rgba(148, 163, 184, 0.3);
+  border-radius: var(--radius-md, 16px);
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* --- Mensaje de Estado --- */
+.student-uploads__status {
+  grid-column: 1 / -1; /* Ocupa todo el ancho */
+  text-align: center;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md, 16px);
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.student-uploads__status.is-success {
+  background-color: rgba(34, 197, 94, 0.12);
+  color: #047857;
+}
+
+.student-uploads__status.is-error {
+  background-color: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+
+/* --- Lista de Archivos (ejemplo de cómo se vería un item) --- */
+.student-uploads__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.student-uploads__item {
+  background: #fff;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+  border-left: 4px solid var(--accent);
+  /* Agrega más estilos para el contenido del item aquí */
+}
