@@ -16,8 +16,7 @@ export const allowedEmailDomain = "potros.itson.edu.mx";
 
 // Correos con permisos de docente
 export const allowedTeacherEmails = [
-  "isaac.paniagua@potros.itson.edu.mx",
-  "profe.paniagua@gmail.com",
+  "isaac.paniagua@potros.itson.edu.mx"
 ];
 
 // Documento en Firestore con lista de docentes adicionales
