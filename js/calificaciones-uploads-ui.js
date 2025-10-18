@@ -489,7 +489,7 @@ function createStudentUploadItemHTML(upload) {
             <p class="student-uploads__item-meta">Enviado: ${submittedDate}</p>
             ${descriptionHTML}
             <div class="student-uploads__item-actions">
-                <a href="${fileUrl}" target="_blank" rel="noopener noreferrer" class="student-uploads__item-link">Ver Archivo en Drive</a>
+                <a href="${fileUrl}" target="_blank" rel="noopener noreferrer" class="student-uploads__item-link">Ver Archivo</a>
             </div>
         </li>
     `;
@@ -1052,5 +1052,3 @@ export function initUploadsUI(user, claims) {
         setupStudentUploadsView(user);
     }
 }
-
-
