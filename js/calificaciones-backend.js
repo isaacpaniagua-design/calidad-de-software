@@ -111,3 +111,67 @@ function renderActivitiesForStudent(activities) {
 }
 
 onAuth(handleAuthStateChanged);
+
+/**
+ * Obtiene y muestra el historial de entregas del estudiante desde Firestore.
+ * @param {string} authUid - El UID de autenticación del estudiante.
+ */
+async function displaySubmissionHistory(authUid) {
+    const historyContainer = document.getElementById('submission-history-container');
+    if (!historyContainer) {
+        console.error("El contenedor del historial de entregas no se encontró en el DOM.");
+        return;
+    }
+
+    try {
+        // Referencia a la colección 'student_uploads'
+        const uploadsRef = collection(db, 'student_uploads');
+
+        // Creamos la consulta: buscar documentos por authUid y ordenar por fecha descendente
+        const q = query(uploadsRef, where("authUid", "==", authUid), orderBy("timestamp", "desc"));
+
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            historyContainer.innerHTML = '<p class="text-gray-400">Aún no has realizado ninguna entrega.</p>';
+            return;
+        }
+
+        // Si hay documentos, construimos el HTML
+        let historyHtml = '<ul class="divide-y divide-gray-700">';
+        querySnapshot.forEach((doc) => {
+            const upload = doc.data();
+            const submissionDate = upload.timestamp.toDate().toLocaleString('es-MX'); // Formato de fecha amigable
+
+            historyHtml += `
+                <li class="py-3 sm:py-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex-shrink-0">
+                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-white truncate">
+                                ${upload.fileName}
+                            </p>
+                            <p class="text-sm text-gray-400 truncate">
+                                Entregado: ${submissionDate}
+                            </p>
+                        </div>
+                        <div class="inline-flex items-center text-base font-semibold text-white">
+                            <a href="${upload.fileURL}" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">
+                                Ver/Descargar
+                            </a>
+                        </div>
+                    </div>
+                </li>
+            `;
+        });
+        historyHtml += '</ul>';
+
+        historyContainer.innerHTML = historyHtml;
+
+    } catch (error) {
+        console.error("Error al obtener el historial de entregas:", error);
+        historyContainer.innerHTML = '<p class="text-red-500">No se pudo cargar el historial. Intenta recargar la página.</p>';
+    }
+}
