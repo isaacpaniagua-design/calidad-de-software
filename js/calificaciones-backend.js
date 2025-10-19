@@ -4,6 +4,12 @@ import {
   onAuth,
   subscribeMyGradesAndActivities,
   subscribeGrades,
+  db, // Importa la instancia de la base de datos
+  collection,
+  query,
+  where,
+  getDocs,
+  orderBy,
 } from "./firebase.js";
 
 let unsubscribeFromData = null;
