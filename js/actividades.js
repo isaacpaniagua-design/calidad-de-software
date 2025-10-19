@@ -12,7 +12,6 @@ import {
 } from './firebase.js';
 import { courseActivities } from './course-activities.js';
 
-import { addDoc } from 'https://www.gstatic.com/firebase/9.6.10/firebase-firestore.js';
 const db = getDb();
 const app = getApp();
 
@@ -82,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             batchStatus.textContent = `Actividad "${name}" creada exitosamente para todos.`;
             batchStatus.className = "text-green-600";
-            createGroupActivityForm.reset();
+            createGroup-activity-form.reset();
 
         } catch (error) {
             console.error("Error al crear actividad grupal:", error);
