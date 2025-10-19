@@ -1,17 +1,20 @@
 
 import {
+    getApp,
     getDb,
     collection,
     onSnapshot,
     doc,
     addDoc,
-    updateDoc,
     query,
     where,
-    getDocs
+ updateDoc,
+    getDocs,
 } from './firebase.js';
+import { courseActivities } from '/js/course-activities.js';
 
 const db = getDb();
+const app = getApp();
 
 document.addEventListener('DOMContentLoaded', () => {
     // Shared student dropdowns
@@ -30,6 +33,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Individual Activity Form
     const assignIndividualActivityForm = document.getElementById('assign-individual-activity-form');
     const individualStatus = document.getElementById('individual-status');
+    const individualActivitySelect = document.getElementById('individual-activity-select');
+
+    // Populate individual activity dropdown
+    let activityOptions = '<option value="">Seleccione una actividad</option>';
+    courseActivities.forEach(activity => {
+        activityOptions += `<option value="${activity.id}">${activity.title}</option>`;
+    });
+    individualActivitySelect.innerHTML = activityOptions;
 
     // --- Student Loading ---
     const studentsCollection = collection(db, "students");
@@ -90,32 +101,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedOption = studentSelectForIndividual.options[studentSelectForIndividual.selectedIndex];
         const studentUid = selectedOption.dataset.uid;
         const studentName = selectedOption.text;
-        
-        const name = document.getElementById('individual-activity-name').value;
-        const unit = document.getElementById('individual-activity-unit').value;
-        const type = document.getElementById('individual-activity-type').value;
+        const selectedActivityId = individualActivitySelect.value;
+        const selectedActivityText = individualActivitySelect.options[individualActivitySelect.selectedIndex].text;
 
-        if (!studentDocId || !name) {
-            individualStatus.textContent = "Debe seleccionar un estudiante y nombrar la actividad.";
+        if (!studentDocId || !selectedActivityId) {
+            individualStatus.textContent = "Debe seleccionar un estudiante y una actividad.";
             return;
         }
 
         const submitButton = document.getElementById('submit-individual-activity');
         submitButton.disabled = true;
-        submitButton.textContent = "Asignando...";
+        submitButton.textContent = "Creando entrega...";
 
         try {
-            // Step 1: Create the master activity
-            const activitiesCollection = collection(db, "activities");
-            const activityRef = await addDoc(activitiesCollection, {
-                title: name,
-                description: `Actividad de tipo ${type} para la ${unit} (Individual)`,
-                unit: unit,
-                type: type,
-                createdAt: new Date()
-            });
-
-            // Step 2: Create the submission record to link it to the student
             const submissionsCollection = collection(db, "submissions");
             await addDoc(submissionsCollection, {
                 studentUid: studentUid,
@@ -126,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 assignedAt: new Date()
             });
 
-            individualStatus.textContent = `Actividad "${name}" asignada a ${studentName} exitosamente.`;
+            individualStatus.textContent = `Entrega para "${selectedActivityText}" asignada a ${studentName} exitosamente.`;
             individualStatus.className = "text-green-600";
             assignIndividualActivityForm.reset();
             
