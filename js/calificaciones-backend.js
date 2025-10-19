@@ -12,26 +12,28 @@ async function handleAuthStateChanged(user) {
   if (unsubscribeFromData) unsubscribeFromData();
 
   const gradesContainer = document.getElementById("grades-table-container");
-  const activitiesContainer = document.getElementById("student-activities-container");
+  // Se mantiene la referencia, pero se usará de forma segura.
+  const activitiesContainer = document.getElementById("student-activities-container"); 
   const titleEl = document.getElementById("grades-title");
 
   if (!user) {
-    gradesContainer.style.display = "none";
-    activitiesContainer.style.display = "none";
+    if (gradesContainer) gradesContainer.style.display = "none";
+    // ✅ CORRECCIÓN: Se comprueba si el contenedor de actividades existe antes de manipularlo.
+    if (activitiesContainer) activitiesContainer.style.display = "none";
     return;
   }
 
   const userRole = (localStorage.getItem("qs_role") || "").toLowerCase();
-  gradesContainer.style.display = "block";
+  if (gradesContainer) gradesContainer.style.display = "block";
 
-  // ✅ *** CORRECCIÓN DE RUTA ***
   const response = await fetch('./data/students.json');
   const rosterData = await response.json();
   const rosterMap = new Map(rosterData.students.map(s => [s.id, s.name]));
 
   if (userRole === "docente") {
-    titleEl.textContent = "Panel de Calificaciones (Promedios Generales)";
-    activitiesContainer.style.display = "none";
+    if (titleEl) titleEl.textContent = "Panel de Calificaciones (Promedios Generales)";
+    // ✅ CORRECCIÓN: Se comprueba si el contenedor de actividades existe.
+    if (activitiesContainer) activitiesContainer.style.display = "none";
 
     unsubscribeFromData = subscribeGrades((allStudentGrades) => {
       const fullStudentData = allStudentGrades.map(grade => ({
@@ -42,8 +44,9 @@ async function handleAuthStateChanged(user) {
     });
 
   } else {
-    titleEl.textContent = "Resumen de Mis Calificaciones";
-    activitiesContainer.style.display = "block";
+    if (titleEl) titleEl.textContent = "Resumen de Mis Calificaciones";
+    // ✅ CORRECCIÓN: Se comprueba si el contenedor de actividades existe.
+    if (activitiesContainer) activitiesContainer.style.display = "block";
 
     if (user.uid) {
       unsubscribeFromData = subscribeMyGradesAndActivities(
@@ -58,7 +61,11 @@ async function handleAuthStateChanged(user) {
           } else {
             renderGradesTable([]);
           }
-          renderActivitiesForStudent(activities);
+          // La función de renderizado de actividades ya no es necesaria aquí,
+          // pero la mantenemos por si se reutiliza en el futuro.
+          if (activitiesContainer) {
+            renderActivitiesForStudent(activities);
+          }
         }
       );
     }
