@@ -15,6 +15,31 @@ import {
   teacherAllowlistDocPath,
 } from "./firebase-config.js";
 
+
+/* * =================================================================
+ * ============= INICIO: EXPORTACIONES ADICIONALES =================
+ * =================================================================
+ *
+ * Se añaden estas exportaciones para que otros módulos puedan construir
+ * sus propias consultas a Firestore.
+ */
+export {
+  db,
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  orderBy,
+  Timestamp
+};
+/* * ===============================================================
+ * ============= FIN: EXPORTACIONES ADICIONALES ==================
+ * ===============================================================
+ */
+
 function isPermissionDenied(error) {
   if (!error) return false;
   const code = typeof error.code === "string" ? error.code.toLowerCase() : "";
