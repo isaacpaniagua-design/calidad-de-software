@@ -18,7 +18,7 @@ import { courseActivities } from './course-activities.js';
 initFirebase();
 const db = getDb();
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const studentSelectForGrading = document.getElementById('student-select');
     const studentSelectForIndividual = document.getElementById('individual-student-select');
     const activitiesListSection = document.getElementById('activities-list-section');
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const individualStatus = document.getElementById('individual-status');
     const individualActivitySelect = document.getElementById('individual-activity-select');
 
-    // --- Correctly populate individual activity dropdown ---
+    // Populate individual activity dropdown
     let activityOptions = '<option value="">Seleccione una actividad</option>';
     courseActivities.forEach(unit => {
         activityOptions += `<optgroup label="${unit.unitLabel}">`;
@@ -41,19 +41,46 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     individualActivitySelect.innerHTML = activityOptions;
 
-    // --- Correctly load students from Firestore ---
-    const studentsCollection = collection(db, "students");
-    onSnapshot(studentsCollection, (snapshot) => {
-        let options = '<option value="">Seleccione un estudiante</option>';
-        snapshot.forEach(doc => {
-            const student = doc.data();
-            // Use fullName first, then name, then a fallback.
-            const studentName = student.fullName || student.name || '(Sin Nombre)';
-            options += `<option value="${doc.id}" data-uid="${student.authUid || ''}">${studentName}</option>`;
+    // --- Load students by combining Firestore data and JSON names ---
+    async function loadStudentDropdowns() {
+        const studentNameMap = new Map();
+        try {
+            const response = await fetch('data/students.json');
+            if (response.ok) {
+                const data = await response.json();
+                data.students.forEach(student => {
+                    if (student.email && student.name) {
+                        studentNameMap.set(student.email.toLowerCase(), student.name);
+                    }
+                });
+            }
+        } catch (error) {
+            console.error("Could not load or parse students.json for names", error);
+        }
+
+        const studentsCollection = collection(db, "students");
+        onSnapshot(studentsCollection, (snapshot) => {
+            let options = '<option value="">Seleccione un estudiante</option>';
+            const studentDocs = snapshot.docs.sort((a, b) => {
+                const studentA = a.data();
+                const studentB = b.data();
+                const nameA = studentNameMap.get(studentA.email?.toLowerCase()) || studentA.displayName || studentA.name || '';
+                const nameB = studentNameMap.get(studentB.email?.toLowerCase()) || studentB.displayName || studentB.name || '';
+                return nameA.localeCompare(nameB);
+            });
+
+            studentDocs.forEach(doc => {
+                const student = doc.data();
+                const email = student.email ? student.email.toLowerCase() : null;
+                const studentName = studentNameMap.get(email) || student.displayName || student.name || '(Sin Nombre)';
+                options += `<option value="${doc.id}" data-uid="${student.authUid || ''}">${studentName}</option>`;
+            });
+            studentSelectForGrading.innerHTML = options;
+            studentSelectForIndividual.innerHTML = options;
         });
-        studentSelectForGrading.innerHTML = options;
-        studentSelectForIndividual.innerHTML = options;
-    });
+    }
+
+    await loadStudentDropdowns();
 
     // --- 1. Group Activity Creation ---
     createGroupActivityForm.addEventListener('submit', async (e) => {
@@ -119,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             await addDoc(submissionsCollection, {
                 studentUid: studentUid,
-                activityId: selectedActivityId, // Use the correct ID from the dropdown
+                activityId: selectedActivityId,
                 grade: null,
                 fileUrl: null,
                 submittedAt: null,
@@ -179,7 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
         activitiesContainer.innerHTML = '';
         
-        // This logic shows all global activities PLUS any activity that has a submission for this student.
         const relevantActivityIds = new Set(allActivities.map(a => a.id));
         studentSubmissions.forEach(s => relevantActivityIds.add(s.activityId));
 
