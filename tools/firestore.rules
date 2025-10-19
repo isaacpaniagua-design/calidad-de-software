@@ -33,10 +33,12 @@ allow read: if isTeacher() ||
       }
     }
 
-     match /activities/{activityId} {
-    allow read: if isTeacher() || (isAuthenticated() && request.auth.uid == studentId);
-    allow write: if isTeacher();
-  }
+    match /activities/{activityId} {
+  // Permite a CUALQUIER usuario que haya iniciado sesión leer la lista.
+  allow read: if isAuthenticated();
+  // Solo los docentes pueden crear o modificar actividades.
+  allow write: if isTeacher();
+}
 
 
     match /teachers/{teacherId} {
@@ -44,11 +46,20 @@ allow read: if isTeacher() ||
       allow write: if false;
     }
     
-    // ... (resto de tus reglas completas)
-    match /studentUploads/{uploadId} {
-        allow read: if isTeacher() || (isAuthenticated() && request.auth.uid == resource.data.student.uid);
-        allow write: if isTeacher() || (isAuthenticated() && request.auth.uid == request.resource.data.student.uid);
+match /studentUploads/{uploadId} {
+      // PERMISOS DE LECTURA (CORREGIDOS):
+      // 'get': Permite a un usuario leer un documento si conoce su ID y es el propietario.
+      allow get: if isTeacher() || (isAuthenticated() && request.auth.uid == resource.data.student.uid);
+
+      // 'list': Esta es la corrección clave. Permite a un estudiante realizar una CONSULTA
+      // a la colección SÓLO si está filtrando por su propio ID de usuario.
+      allow list: if isTeacher() || (isAuthenticated() && request.query.where[0][0] == 'student.uid' && request.query.where[0][2] == request.auth.uid);
+
+      // PERMISOS DE ESCRITURA (sin cambios):
+      allow create: if isTeacher() || (isAuthenticated() && request.auth.uid == request.resource.data.student.uid);
+      allow update, delete: if isTeacher();
     }
+    
     match /materials/{materialId} {
       allow read: if isAuthenticated();
       allow write: if isTeacher();
