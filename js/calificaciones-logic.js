@@ -12,36 +12,28 @@ import {
   query,
   where,
   getDocs,
-  doc,
-  getDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 
 const db = getDb();
-const auth = getAuthInstance();
+getAuthInstance();
 
-/**
- * Initializes the activity breakdown section.
- * This function will fetch and display the activities for the logged-in user or a selected student.
- */
 async function initActivityBreakdown() {
   onAuth(async (user) => {
     if (user) {
-      const userRole = await getUserRole(user.uid);
-      if (userRole === "teacher") {
+      const isTeacher = await isTeacherByDoc(user.uid);
+      if (isTeacher) {
         setupTeacherView();
       } else {
-        displayStudentActivities(user.uid);
+        const student = await findStudentByUid(user.uid);
+        if (student) {
+          displayStudentActivities(user.uid);
+        }
       }
     }
   });
 }
 
-/**
- * Gets the role of the user by checking the 'teachers' and 'students' collections.
- * @param {string} uid - The user ID.
- * @returns {Promise<string|null>} The user role ('teacher', 'student') or null if not found.
- */
 async function getUserRole(uid) {
   if (await isTeacherByDoc(uid)) {
     return "teacher";
@@ -52,10 +44,6 @@ async function getUserRole(uid) {
   return null;
 }
 
-
-/**
- * Sets up the teacher's view, including the student selector.
- */
 async function setupTeacherView() {
   const selectorContainer = document.getElementById("teacher-student-selector-container");
   if (!selectorContainer) return;
@@ -64,27 +52,23 @@ async function setupTeacherView() {
   
   selectorContainer.hidden = false;
 
-  // Populate student selector
   const students = await getStudents();
-  studentSelector.innerHTML = students
+  studentSelector.innerHTML = '<option value="">Seleccione un estudiante</option>' + students
     .map(student => `<option value="${student.uid}">${student.name}</option>`)
     .join('');
 
-  // Add event listener to selector
   studentSelector.addEventListener("change", (e) => {
-    displayStudentActivities(e.target.value);
+    const studentUid = e.target.value;
+    if (studentUid) {
+      displayStudentActivities(studentUid);
+    } else {
+      document.getElementById("activity-list").innerHTML = '';
+      document.getElementById("activity-list-empty").hidden = false;
+      document.getElementById("activity-list-empty").textContent = 'Seleccione un estudiante para ver sus actividades.';
+    }
   });
-
-  // Display activities for the first student by default
-  if (students.length > 0) {
-    displayStudentActivities(students[0].uid);
-  }
 }
 
-/**
- * Fetches all students from the 'students' collection.
- * @returns {Promise<Array<Object>>} A list of student objects.
- */
 async function getStudents() {
   const studentsRef = collection(db, "students");
   const querySnapshot = await getDocs(studentsRef);
@@ -98,12 +82,7 @@ async function getStudents() {
   return students.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-
-/**
- * Displays the activities for a given student.
- * @param {string} studentId - The ID of the student.
- */
-async function displayStudentActivities(studentId) {
+async function displayStudentActivities(studentUid) {
   const loadingEl = document.getElementById("activity-list-loading");
   const emptyEl = document.getElementById("activity-list-empty");
   const listEl = document.getElementById("activity-list");
@@ -112,14 +91,15 @@ async function displayStudentActivities(studentId) {
   if (!loadingEl || !emptyEl || !listEl || !template) return;
 
   loadingEl.hidden = false;
-  listEl.innerHTML = ''; // Clear previous list
+  listEl.innerHTML = '';
   emptyEl.hidden = true;
 
   try {
     const activities = await getAssignedActivities();
-    const submissions = await getStudentSubmissions(studentId);
+    const submissions = await getStudentSubmissions(studentUid);
 
     if (activities.length === 0) {
+      emptyEl.textContent = 'No hay actividades asignadas por el momento.';
       emptyEl.hidden = false;
       return;
     }
@@ -143,22 +123,34 @@ async function displayStudentActivities(studentId) {
       const noSubmissionText = clone.querySelector('.no-submission-text');
       
       if (submission) {
-        if(gradeBadge) gradeBadge.textContent = submission.grade || 'N/A';
+        if(gradeBadge) gradeBadge.textContent = typeof submission.grade === 'number' ? submission.grade : 'N/A';
+        
         if(statusBadge) {
-            statusBadge.textContent = 'Entregado';
-            statusBadge.classList.add('bg-green-100', 'text-green-800');
-            statusBadge.classList.remove('bg-yellow-100', 'text-yellow-800');
+            if (submission.fileUrl) {
+                statusBadge.textContent = 'Entregado';
+                statusBadge.className = 'status-badge bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full';
+            } else if (typeof submission.grade === 'number') {
+                statusBadge.textContent = 'Calificado';
+                statusBadge.className = 'status-badge bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full';
+            }
         }
-        if(submissionLink) submissionLink.href = submission.fileUrl;
+        
         if(noSubmissionText) noSubmissionText.style.display = 'none';
-        if(submissionLink && !submission.fileUrl) submissionLink.style.display = 'none';
+
+        if(submissionLink) {
+            if (submission.fileUrl) {
+                submissionLink.href = submission.fileUrl;
+                submissionLink.style.display = 'inline';
+            } else {
+                submissionLink.style.display = 'none';
+            }
+        }
 
       } else {
         if(gradeBadge) gradeBadge.textContent = 'N/A';
         if(statusBadge) {
             statusBadge.textContent = 'Pendiente';
-            statusBadge.classList.add('bg-yellow-100', 'text-yellow-800');
-            statusBadge.classList.remove('bg-green-100', 'text-green-800');
+            statusBadge.className = 'status-badge bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full';
         }
         if(submissionLink) submissionLink.style.display = 'none';
         if(noSubmissionText) noSubmissionText.style.display = 'block';
@@ -175,33 +167,19 @@ async function displayStudentActivities(studentId) {
   }
 }
 
-/**
- * Fetches all assigned activities from the 'activities' collection.
- * @returns {Promise<Array<Object>>} A list of activity objects.
- */
 async function getAssignedActivities() {
   const activitiesCol = collection(db, "activities");
-  const activitySnapshot = await getDocs(activitiesCol);
-  const activitiesList = activitySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  return activitiesList;
+  const q = query(activitiesCol);
+  const activitySnapshot = await getDocs(q);
+  return activitySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
 
-/**
- * Fetches all submissions for a specific student from the 'submissions' collection.
- * @param {string} studentId - The authUid of the student.
- * @returns {Promise<Array<Object>>} A list of submission objects.
- */
-async function getStudentSubmissions(studentId) {
+async function getStudentSubmissions(studentUid) {
+  if (!studentUid) return [];
   const submissionsRef = collection(db, "submissions");
-  // Assuming the student's auth UID is stored in a field called 'studentUid'
-  const q = query(submissionsRef, where("studentUid", "==", studentId));
+  const q = query(submissionsRef, where("studentUid", "==", studentUid));
   const querySnapshot = await getDocs(q);
-  const submissions = [];
-  querySnapshot.forEach((doc) => {
-    submissions.push({ id: doc.id, ...doc.data() });
-  });
-  return submissions;
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
 
-// Initialize the module
 document.addEventListener("DOMContentLoaded", initActivityBreakdown);
