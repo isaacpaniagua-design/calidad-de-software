@@ -1,251 +1,199 @@
-// js/actividades.js
 
 import {
-  onAuth,
-  getDb,
-  subscribeGrades,
-} from "./firebase.js";
-
-import {
-  collection,
-  doc,
-  updateDoc,
-  onSnapshot,
-  query,
-  orderBy,
-  deleteDoc,
-  writeBatch,
-  getDoc,
-  setDoc,
-} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    getDb,
+    collection,
+    onSnapshot,
+    doc,
+    addDoc,
+    updateDoc,
+    query,
+    where,
+    getDocs
+} from './firebase.js';
 
 const db = getDb();
-let studentsList = [];
-let selectedStudentId = null;
-let unsubscribeFromActivities = null;
 
-// Referencias al DOM
-const studentSelect = document.getElementById("student-select");
-const activitiesListSection = document.getElementById("activities-list-section");
-const studentNameDisplay = document.getElementById("student-name-display");
-const activitiesContainer = document.getElementById("activities-container");
-const mainContent = document.querySelector(".container.mx-auto");
-const createGroupActivityForm = document.getElementById("create-group-activity-form");
-const submitGroupActivityBtn = document.getElementById("submit-group-activity");
-const batchStatusDiv = document.getElementById("batch-status");
+document.addEventListener('DOMContentLoaded', () => {
+    const studentSelect = document.getElementById('student-select');
+    const activitiesListSection = document.getElementById('activities-list-section');
+    const activitiesContainer = document.getElementById('activities-container');
+    const studentNameDisplay = document.getElementById('student-name-display');
+    const createActivityForm = document.getElementById('create-group-activity-form');
+    const batchStatus = document.getElementById('batch-status');
 
-async function recalculateAndSaveGrades(studentId, activities) {
-  if (!studentId) return;
-  const studentGradesRef = doc(db, "grades", studentId);
-  try {
-    const gradesByUnit = activities.reduce((acc, activity) => {
-      const unit = activity.unit;
-      const score = typeof activity.score === 'number' ? activity.score : 0;
-      if (!unit) return acc;
-      if (!acc[unit]) {
-        acc[unit] = { totalScore: 0, count: 0 };
-      }
-      acc[unit].totalScore += score;
-      acc[unit].count++;
-      return acc;
-    }, {});
-
-    const unitAverages = {};
-    for (const unit in gradesByUnit) {
-      if (gradesByUnit[unit].count > 0) {
-        unitAverages[unit] = {
-          average: gradesByUnit[unit].totalScore / gradesByUnit[unit].count
-        };
-      }
-    }
-
-    const studentDoc = await getDoc(studentGradesRef);
-    const projectFinalScore = studentDoc.exists() && studentDoc.data().projectFinal ? studentDoc.data().projectFinal : 0;
-
-    const unitAverageValues = Object.values(unitAverages).map(u => u.average);
-    const averageOfUnits = unitAverageValues.length > 0 ? unitAverageValues.reduce((sum, avg) => sum + avg, 0) / unitAverageValues.length : 0;
-    const finalGrade = (averageOfUnits * 0.4) + (projectFinalScore * 0.6);
-
-    const dataToUpdate = {
-      ...unitAverages,
-      finalGrade: finalGrade,
-    };
-    await setDoc(studentGradesRef, dataToUpdate, { merge: true });
-    console.log(`Promedios para ${studentId} actualizados.`);
-  } catch (error) {
-    console.error("Error recalculando promedios:", error);
-  }
-}
-
-export function initActividadesPage(user) {
-  const isTeacher = user && (localStorage.getItem("qs_role") || "").toLowerCase() === "docente";
-  if (isTeacher) {
-    if (mainContent) mainContent.style.display = "block";
-    loadStudents();
-    setupEventListeners();
-  } else {
-    if (mainContent)
-      mainContent.innerHTML = '<div class="bg-white p-6 rounded-lg shadow-md text-center"><h1 class="text-2xl font-bold text-red-600">Acceso Denegado</h1><p class="text-gray-600 mt-2">Esta página es solo para docentes.</p></div>';
-  }
-}
-
-async function loadStudents() {
-  studentSelect.disabled = true;
-  studentSelect.innerHTML = "<option>Cargando estudiantes...</option>";
-  try {
-    // ✅ *** CORRECCIÓN DE RUTA ***
-    const response = await fetch('./data/students.json');
-    if (!response.ok) {
-        throw new Error(`Error ${response.status}: No se encontró el archivo students.json`);
-    }
-    const rosterData = await response.json();
-    const rosterStudents = rosterData.students || [];
-
-    subscribeGrades((gradedStudents) => {
-      const rosterMap = new Map(rosterStudents.map(s => [s.id, s]));
-      studentsList = gradedStudents.map(gs => ({
-        ...gs,
-        name: rosterMap.get(gs.id)?.name || gs.name || `Estudiante (ID: ${gs.id})`
-      }));
-      studentsList.sort((a, b) => a.name.localeCompare(b.name));
-
-      studentSelect.innerHTML = '<option value="">-- Seleccione un estudiante --</option>';
-      studentsList.forEach((student) => {
-        const option = document.createElement("option");
-        option.value = student.id;
-        option.textContent = student.name;
-        studentSelect.appendChild(option);
-      });
-      studentSelect.disabled = false;
-    });
-  } catch (error) {
-    console.error("Error cargando la lista de estudiantes:", error);
-    studentSelect.innerHTML = `<option value="">${error.message}</option>`;
-  }
-}
-
-function renderActivities(activities) {
-    activitiesContainer.innerHTML = "";
-    if (activities.length === 0) {
-        activitiesContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Este estudiante no tiene actividades.</p>';
-        return;
-    }
-    activities.forEach((activity) => {
-        const card = document.createElement("div");
-        card.className = "activity-card bg-white p-4 rounded-lg shadow grid grid-cols-1 md:grid-cols-4 gap-4 items-center";
-        card.innerHTML = `
-            <div class="col-span-1 md:col-span-2">
-                <p class="font-bold text-lg">${activity.activityName}</p>
-                <p class="text-sm text-gray-500">Unidad: ${(activity.unit || "").replace("unit","")} | Tipo: ${activity.type || "N/A"}</p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700">Calificación (0-10)</label>
-                <input type="number" step="0.1" min="0" max="10" value="${activity.score || 0}"
-                       data-activity-id="${activity.id}"
-                       class="score-input mt-1 w-full p-2 border rounded-md shadow-sm">
-            </div>
-            <div class="text-right">
-              <button data-action="delete-activity" data-activity-id="${activity.id}" class="bg-red-100 text-red-700 font-semibold py-2 px-3 rounded-md hover:bg-red-200">Eliminar</button>
-            </div>
-        `;
-        activitiesContainer.appendChild(card);
-    });
-}
-
-function loadActivitiesForStudent(studentId) {
-    if (unsubscribeFromActivities) unsubscribeFromActivities();
-    const activitiesRef = collection(db, "grades", studentId, "activities");
-    const q = query(activitiesRef, orderBy("activityName"));
-    unsubscribeFromActivities = onSnapshot(q, (snapshot) => {
-        const activities = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        renderActivities(activities);
-        recalculateAndSaveGrades(studentId, activities);
-    }, (error) => {
-        console.error("Error al cargar actividades:", error);
-        activitiesContainer.innerHTML = '<p class="text-center text-red-500 py-4">Error al cargar actividades.</p>';
-    });
-}
-
-function setupEventListeners() {
-    studentSelect.addEventListener("change", () => {
-        selectedStudentId = studentSelect.value;
-        if (selectedStudentId) {
-            const student = studentsList.find((s) => s.id === selectedStudentId);
-            studentNameDisplay.textContent = student ? student.name : "N/A";
-            activitiesListSection.style.display = "block";
-            loadActivitiesForStudent(selectedStudentId);
-        } else {
-            activitiesListSection.style.display = "none";
-        }
+    // Cargar estudiantes en el selector
+    const studentsCollection = collection(db, "students");
+    onSnapshot(studentsCollection, (snapshot) => {
+        let options = '<option value="">Seleccione un estudiante</option>';
+        snapshot.forEach(doc => {
+            const student = doc.data();
+            options += `<option value="${doc.id}" data-uid="${student.authUid || ''}">${student.name}</option>`;
+        });
+        studentSelect.innerHTML = options;
     });
 
-    createGroupActivityForm.addEventListener("submit", async (e) => {
+    // Crear actividad grupal
+    createActivityForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (studentsList.length === 0) return alert("No hay estudiantes cargados.");
-        const activityName = document.getElementById("group-activity-name").value.trim();
-        if (!activityName) return alert("El nombre de la actividad es requerido.");
-        const newActivityData = {
-            activityName,
-            unit: document.getElementById("group-activity-unit").value,
-            type: document.getElementById("group-activity-type").value,
-            score: 0,
-        };
-        submitGroupActivityBtn.disabled = true;
-        submitGroupActivityBtn.textContent = "Procesando...";
-        batchStatusDiv.textContent = `Asignando a ${studentsList.length} estudiantes...`;
+        const name = document.getElementById('group-activity-name').value;
+        const unit = document.getElementById('group-activity-unit').value;
+        const type = document.getElementById('group-activity-type').value;
+
+        if (!name) {
+            batchStatus.textContent = "El nombre de la actividad es obligatorio.";
+            batchStatus.className = "text-red-600";
+            return;
+        }
+
+        const submitButton = document.getElementById('submit-group-activity');
+        submitButton.disabled = true;
+        submitButton.textContent = "Procesando...";
+
         try {
-            const batch = writeBatch(db);
-            studentsList.forEach((student) => {
-                const activityRef = doc(collection(db, "grades", student.id, "activities"));
-                batch.set(activityRef, newActivityData);
+            // 1. Guardar la actividad maestra
+            const activitiesCollection = collection(db, "activities");
+            const activityRef = await addDoc(activitiesCollection, {
+                title: name,
+                description: `Actividad de tipo ${type} para la ${unit}`,
+                unit: unit,
+                type: type,
+                createdAt: new Date()
             });
-            await batch.commit();
-            batchStatusDiv.textContent = `¡Éxito! Actividad asignada.`;
-            createGroupActivityForm.reset();
+
+            batchStatus.textContent = `Actividad "${name}" creada exitosamente.`;
+            batchStatus.className = "text-green-600";
+            createActivityForm.reset();
+
+            // Opcional: Si se seleccionó un estudiante, recargar sus actividades
+            if (studentSelect.value) {
+                await loadStudentActivities(studentSelect.value, studentSelect.options[studentSelect.selectedIndex].text);
+            }
+
         } catch (error) {
-            console.error("Error en lote:", error);
-            batchStatusDiv.textContent = "Error al asignar.";
+            console.error("Error al crear actividad:", error);
+            batchStatus.textContent = "Error al crear la actividad.";
+            batchStatus.className = "text-red-600";
         } finally {
-            submitGroupActivityBtn.disabled = false;
-            submitGroupActivityBtn.textContent = "Añadir Actividad a Todos";
-            setTimeout(() => { batchStatusDiv.textContent = ""; }, 5000);
+            submitButton.disabled = false;
+            submitButton.textContent = "Añadir Actividad a Todos";
         }
     });
 
-    activitiesContainer.addEventListener("change", async (e) => {
-        if (e.target.classList.contains("score-input")) {
-            const input = e.target;
-            input.disabled = true;
+
+    // Cargar actividades del estudiante seleccionado
+    studentSelect.addEventListener('change', async (e) => {
+        const studentId = e.target.value;
+        if (studentId) {
+            const studentName = e.target.options[e.target.selectedIndex].text;
+            const studentUid = e.target.options[e.target.selectedIndex].dataset.uid;
+            studentNameDisplay.textContent = studentName;
+            activitiesListSection.style.display = 'block';
+            await loadStudentActivities(studentId, studentUid);
+        } else {
+            activitiesListSection.style.display = 'none';
+        }
+    });
+
+    async function loadStudentActivities(studentDocId, studentAuthUid) {
+        activitiesContainer.innerHTML = '<p>Cargando actividades...</p>';
+    
+        // 1. Obtener todas las actividades maestras
+        const activitiesCollection = collection(db, "activities");
+        const activitiesSnapshot = await getDocs(activitiesCollection);
+        const allActivities = activitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+        // 2. Obtener todas las entregas para este estudiante
+        const submissionsCollection = collection(db, "submissions");
+        const submissionsQuery = query(submissionsCollection, where("studentUid", "==", studentAuthUid));
+        const submissionsSnapshot = await getDocs(submissionsQuery);
+        const studentSubmissions = submissionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+        // 3. Renderizar la lista
+        activitiesContainer.innerHTML = '';
+        if (allActivities.length === 0) {
+            activitiesContainer.innerHTML = '<p>No hay actividades creadas en el sistema.</p>';
+            return;
+        }
+    
+        allActivities.forEach(activity => {
+            const submission = studentSubmissions.find(s => s.activityId === activity.id);
+            const submissionId = submission ? submission.id : null;
+            const currentGrade = submission ? submission.grade : '';
+    
+            const activityEl = document.createElement('div');
+            activityEl.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-md';
+            activityEl.innerHTML = `
+                <div>
+                    <p class="font-semibold">${activity.title}</p>
+                    <p class="text-sm text-gray-500">${activity.description}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="number" min="0" max="100" placeholder="N/A" 
+                           class="w-20 p-1 border border-gray-300 rounded-md text-center" 
+                           value="${currentGrade}" 
+                           data-activity-id="${activity.id}" 
+                           data-submission-id="${submissionId || ''}">
+                    <button class="save-grade-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600">Guardar</button>
+                </div>
+            `;
+            activitiesContainer.appendChild(activityEl);
+        });
+    }
+    
+    // Guardar calificación
+    activitiesContainer.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('save-grade-btn')) {
+            const button = e.target;
+            const input = button.previousElementSibling;
+            const grade = input.value;
             const activityId = input.dataset.activityId;
-            let newScore = parseFloat(input.value);
-            if (isNaN(newScore) || newScore < 0) newScore = 0;
-            if (newScore > 10) newScore = 10;
-            input.value = newScore.toFixed(1);
+            let submissionId = input.dataset.submissionId;
+    
+            const selectedOption = studentSelect.options[studentSelect.selectedIndex];
+            const studentUid = selectedOption.dataset.uid;
+    
+            if (!studentUid) {
+                alert("Error: No se pudo identificar al estudiante (authUid no encontrado).");
+                return;
+            }
+    
+            button.disabled = true;
+            button.textContent = '...';
+    
             try {
-                const activityRef = doc(db, "grades", selectedStudentId, "activities", activityId);
-                await updateDoc(activityRef, { score: newScore });
-            } catch (error) {
-                console.error("Error actualizando calificación:", error);
-            } finally {
-                input.disabled = false;
-            }
-        }
-    });
-
-    activitiesContainer.addEventListener("click", async (e) => {
-        const targetButton = e.target.closest('button[data-action="delete-activity"]');
-        if (targetButton) {
-            const activityId = targetButton.dataset.activityId;
-            if (confirm("¿Eliminar esta actividad?")) {
-                try {
-                    const activityRef = doc(db, "grades", selectedStudentId, "activities", activityId);
-                    await deleteDoc(activityRef);
-                } catch (error) {
-                    console.error("Error eliminando actividad:", error);
+                const submissionsCollection = collection(db, "submissions");
+                
+                // Si ya existe una entrega (submission), la actualizamos.
+                // Si no, creamos una nueva.
+                if (submissionId && submissionId !== 'null') {
+                    const submissionRef = doc(db, "submissions", submissionId);
+                    await updateDoc(submissionRef, {
+                        grade: Number(grade),
+                        gradedAt: new Date()
+                    });
+                } else {
+                    const newSubmissionRef = await addDoc(submissionsCollection, {
+                        studentUid: studentUid,
+                        activityId: activityId,
+                        grade: Number(grade),
+                        fileUrl: null, // El archivo se sube por separado por el estudiante
+                        submittedAt: null,
+                        gradedAt: new Date()
+                    });
+                    // Actualizamos el UI para la próxima vez que se guarde
+                    input.dataset.submissionId = newSubmissionRef.id;
                 }
+    
+                button.textContent = 'Hecho';
+                setTimeout(() => button.textContent = 'Guardar', 2000);
+    
+            } catch (error) {
+                console.error("Error al guardar la calificación:", error);
+                button.textContent = 'Error';
+                setTimeout(() => button.textContent = 'Guardar', 2000);
+            } finally {
+                button.disabled = false;
             }
         }
     });
-}
-
-onAuth(initActividadesPage);
+});
