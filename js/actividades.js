@@ -1,15 +1,18 @@
 
 import {
     getApp,
-    getDb,
+    getDb
+} from './firebase.js';
+import {
     collection,
     onSnapshot,
     doc,
     query,
     where,
- updateDoc,
+    updateDoc,
     getDocs,
-} from './firebase.js';
+    addDoc
+} from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 import { courseActivities } from './course-activities.js';
 
 const db = getDb();
@@ -81,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             batchStatus.textContent = `Actividad "${name}" creada exitosamente para todos.`;
             batchStatus.className = "text-green-600";
-            createGroup-activity-form.reset();
+            createGroupActivityForm.reset();
 
         } catch (error) {
             console.error("Error al crear actividad grupal:", error);
@@ -114,6 +117,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const submissionsCollection = collection(db, "submissions");
+            // Find the activity details from courseActivities array
+            const activityRef = courseActivities.find(a => a.id === selectedActivityId);
+
+            if (!activityRef) {
+                throw new Error("Actividad seleccionada no encontrada.");
+            }
+
             await addDoc(submissionsCollection, {
                 studentUid: studentUid,
                 activityId: activityRef.id,
