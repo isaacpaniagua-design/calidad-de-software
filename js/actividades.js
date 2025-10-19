@@ -19,42 +19,40 @@ initFirebase();
 const db = getDb();
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Shared student dropdowns
     const studentSelectForGrading = document.getElementById('student-select');
     const studentSelectForIndividual = document.getElementById('individual-student-select');
-    
-    // Section-specific elements
     const activitiesListSection = document.getElementById('activities-list-section');
     const activitiesContainer = document.getElementById('activities-container');
     const studentNameDisplay = document.getElementById('student-name-display');
-    
-    // Group Activity Form
     const createGroupActivityForm = document.getElementById('create-group-activity-form');
     const batchStatus = document.getElementById('batch-status');
-
-    // Individual Activity Form
     const assignIndividualActivityForm = document.getElementById('assign-individual-activity-form');
     const individualStatus = document.getElementById('individual-status');
     const individualActivitySelect = document.getElementById('individual-activity-select');
 
-    // Populate individual activity dropdown
+    // --- Correctly populate individual activity dropdown ---
     let activityOptions = '<option value="">Seleccione una actividad</option>';
-    courseActivities.forEach(activity => {
-        activityOptions += `<option value="${activity.activityId}">${activity.activityTitle || '(Sin Título)'}</option>`;
+    courseActivities.forEach(unit => {
+        activityOptions += `<optgroup label="${unit.unitLabel}">`;
+        unit.activities.forEach(activity => {
+            activityOptions += `<option value="${activity.id}">${activity.title || '(Sin Título)'}</option>`;
+        });
+        activityOptions += `</optgroup>`;
     });
     individualActivitySelect.innerHTML = activityOptions;
 
-    // --- Student Loading ---
+    // --- Correctly load students from Firestore ---
     const studentsCollection = collection(db, "students");
     onSnapshot(studentsCollection, (snapshot) => {
         let options = '<option value="">Seleccione un estudiante</option>';
         snapshot.forEach(doc => {
             const student = doc.data();
-            const studentName = student.fullName || '(Sin Nombre)';
+            // Use fullName first, then name, then a fallback.
+            const studentName = student.fullName || student.name || '(Sin Nombre)';
             options += `<option value="${doc.id}" data-uid="${student.authUid || ''}">${studentName}</option>`;
         });
         studentSelectForGrading.innerHTML = options;
-        studentSelectForIndividual.innerHTML = options; // Populate both dropdowns
+        studentSelectForIndividual.innerHTML = options;
     });
 
     // --- 1. Group Activity Creation ---
@@ -95,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
             submitButton.textContent = "Añadir Actividad a Todos";
         }
     });
-    
+
     // --- 2. Individual Activity Assignment ---
     assignIndividualActivityForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -118,15 +116,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const submissionsCollection = collection(db, "submissions");
-            const activityRef = courseActivities.find(a => a.activityId === selectedActivityId);
-
-            if (!activityRef) {
-                throw new Error("Actividad seleccionada no encontrada.");
-            }
-
+            
             await addDoc(submissionsCollection, {
                 studentUid: studentUid,
-                activityId: activityRef.activityId,
+                activityId: selectedActivityId, // Use the correct ID from the dropdown
                 grade: null,
                 fileUrl: null,
                 submittedAt: null,
@@ -168,6 +161,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     async function loadStudentActivities(studentDocId, studentAuthUid) {
+        if (!studentAuthUid) {
+            activitiesContainer.innerHTML = '<p class="text-red-500">Error: Este estudiante no tiene un UID de autenticación asignado.</p>';
+            return;
+        }
+
         activitiesContainer.innerHTML = '<p>Cargando actividades...</p>';
     
         const activitiesCollection = collection(db, "activities");
@@ -181,28 +179,39 @@ document.addEventListener('DOMContentLoaded', () => {
     
         activitiesContainer.innerHTML = '';
         
-        const relevantActivities = allActivities.filter(activity => {
-            const isAssigned = studentSubmissions.some(s => s.activityId === activity.id);
-            return !activity.description.includes("(Individual)") || isAssigned;
-        });
+        // This logic shows all global activities PLUS any activity that has a submission for this student.
+        const relevantActivityIds = new Set(allActivities.map(a => a.id));
+        studentSubmissions.forEach(s => relevantActivityIds.add(s.activityId));
+
+        const combinedActivities = courseActivities
+            .flatMap(unit => unit.activities)
+            .concat(allActivities)
+            .filter(a => relevantActivityIds.has(a.id));
+
+        const uniqueActivities = Array.from(new Set(combinedActivities.map(a => a.id)))
+            .map(id => {
+                return combinedActivities.find(a => a.id === id) || allActivities.find(a => a.id === id);
+            });
 
 
-        if (relevantActivities.length === 0) {
+        if (uniqueActivities.length === 0) {
             activitiesContainer.innerHTML = '<p>No hay actividades grupales creadas o individuales asignadas.</p>';
             return;
         }
     
-        relevantActivities.forEach(activity => {
+        uniqueActivities.forEach(activity => {
             const submission = studentSubmissions.find(s => s.activityId === activity.id);
             const submissionId = submission ? submission.id : null;
             const currentGrade = submission ? submission.grade : '';
+            const title = activity.title || '(Sin Título)';
+            const description = activity.description || '(Sin descripción)';
     
             const activityEl = document.createElement('div');
             activityEl.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-md';
             activityEl.innerHTML = `
                 <div>
-                    <p class="font-semibold">${activity.title || '(Sin Título)'}</p>
-                    <p class="text-sm text-gray-500">${activity.description || '(Sin descripción)'}</p>
+                    <p class="font-semibold">${title}</p>
+                    <p class="text-sm text-gray-500">${description}</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <input type="number" min="0" max="100" placeholder="N/A" 
@@ -229,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const studentUid = selectedOption.dataset.uid;
     
             if (!studentUid) {
-                alert("Error: No se pudo identificar al estudiante.");
+                alert("Error: No se pudo identificar al estudiante (UID no encontrado).");
                 return;
             }
     
@@ -247,18 +256,26 @@ document.addEventListener('DOMContentLoaded', () => {
                         studentUid: studentUid,
                         activityId: activityId,
                         grade: Number(grade),
-                        gradedAt: new Date()
+                        gradedAt: new Date(),
+                        submittedAt: null,
+                        fileUrl: null
                     });
                     input.dataset.submissionId = newSubmissionRef.id;
                 }
     
                 button.textContent = 'Hecho';
-                setTimeout(() => button.textContent = 'Guardar', 2000);
+                setTimeout(() => {
+                    button.textContent = 'Guardar';
+                    button.disabled = false;
+                }, 2000);
     
             } catch (error) {
                 console.error("Error al guardar la calificación:", error);
-            } finally {
-                button.disabled = false;
+                button.textContent = 'Error';
+                setTimeout(() => {
+                     button.textContent = 'Guardar';
+                     button.disabled = false;
+                }, 3000);
             }
         }
     });
