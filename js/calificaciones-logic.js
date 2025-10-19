@@ -26,7 +26,7 @@ function init() {
         displayStudentActivities(user.uid);
       }
     } else {
-      console.log("No user is signed in. Public view, if any.");
+      console.log("No user is signed in.");
     }
   });
 }
@@ -39,13 +39,14 @@ async function setupTeacherView() {
   const studentSelector = document.getElementById("student-selector");
   
   if (!selectorContainer || !studentSelector) {
-    console.error("Teacher view elements not found. Cannot set up student selector.");
+    console.error("Teacher view elements not found.");
     return;
   }
   
   selectorContainer.hidden = false;
 
   try {
+    // Fetch students from the local JSON file for reliability and speed.
     const students = await getStudents();
     studentSelector.innerHTML = '<option value="">Seleccione un estudiante</option>' + students
       .map(student => `<option value="${student.uid}">${student.name}</option>`)
@@ -65,26 +66,33 @@ async function setupTeacherView() {
       }
     });
   } catch (error) {
-    console.error("Failed to get students for teacher view:", error);
+    console.error("Failed to load students from JSON file:", error);
     studentSelector.innerHTML = '<option value="">Error al cargar estudiantes</option>';
   }
 }
 
 /**
- * Fetches all students from the 'students' collection.
+ * Fetches all students from the local data/students.json file.
  * @returns {Promise<Array<Object>>} A list of student objects.
  */
 async function getStudents() {
-  const studentsRef = collection(db, "students");
-  const querySnapshot = await getDocs(studentsRef);
-  const students = [];
-  querySnapshot.forEach((doc) => {
-    const data = doc.data();
-    if (data.authUid && data.name) {
-      students.push({ uid: data.authUid, name: data.name });
+  try {
+    const response = await fetch('data/students.json');
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  });
-  return students.sort((a, b) => a.name.localeCompare(b.name));
+    const studentsData = await response.json();
+    // Map the data to the required format { uid, name }
+    return studentsData.students
+      .map(student => ({
+        uid: student.authUid,
+        name: student.name
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  } catch (error) {
+    console.error("Could not fetch or parse students.json:", error);
+    return []; // Return an empty array on failure
+  }
 }
 
 /**
@@ -104,7 +112,6 @@ async function displayStudentActivities(studentUid) {
   emptyEl.hidden = true;
 
   try {
-    // Fetch activities and submissions in parallel for efficiency and robustness.
     const [activities, submissions] = await Promise.all([
       getAssignedActivities(),
       getStudentSubmissions(studentUid)
@@ -175,7 +182,7 @@ async function displayStudentActivities(studentUid) {
     });
   } catch (error) {
       console.error("Error displaying student activities:", error);
-      emptyEl.textContent = "Error al cargar las actividades. Revise la consola para más detalles.";
+      emptyEl.textContent = "Error al cargar las actividades.";
       emptyEl.hidden = false;
   } finally {
       loadingEl.hidden = true;
@@ -184,7 +191,6 @@ async function displayStudentActivities(studentUid) {
 
 /**
  * Fetches all assigned activities from the 'activities' collection.
- * This is a simplified and more direct query.
  * @returns {Promise<Array<Object>>} A list of activity objects.
  */
 async function getAssignedActivities() {
