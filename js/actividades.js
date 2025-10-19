@@ -14,14 +14,24 @@ import {
 const db = getDb();
 
 document.addEventListener('DOMContentLoaded', () => {
-    const studentSelect = document.getElementById('student-select');
+    // Shared student dropdowns
+    const studentSelectForGrading = document.getElementById('student-select');
+    const studentSelectForIndividual = document.getElementById('individual-student-select');
+    
+    // Section-specific elements
     const activitiesListSection = document.getElementById('activities-list-section');
     const activitiesContainer = document.getElementById('activities-container');
     const studentNameDisplay = document.getElementById('student-name-display');
-    const createActivityForm = document.getElementById('create-group-activity-form');
+    
+    // Group Activity Form
+    const createGroupActivityForm = document.getElementById('create-group-activity-form');
     const batchStatus = document.getElementById('batch-status');
 
-    // Cargar estudiantes en el selector
+    // Individual Activity Form
+    const assignIndividualActivityForm = document.getElementById('assign-individual-activity-form');
+    const individualStatus = document.getElementById('individual-status');
+
+    // --- Student Loading ---
     const studentsCollection = collection(db, "students");
     onSnapshot(studentsCollection, (snapshot) => {
         let options = '<option value="">Seleccione un estudiante</option>';
@@ -29,11 +39,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const student = doc.data();
             options += `<option value="${doc.id}" data-uid="${student.authUid || ''}">${student.name}</option>`;
         });
-        studentSelect.innerHTML = options;
+        studentSelectForGrading.innerHTML = options;
+        studentSelectForIndividual.innerHTML = options; // Populate both dropdowns
     });
 
-    // Crear actividad grupal
-    createActivityForm.addEventListener('submit', async (e) => {
+    // --- 1. Group Activity Creation ---
+    createGroupActivityForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('group-activity-name').value;
         const unit = document.getElementById('group-activity-unit').value;
@@ -41,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!name) {
             batchStatus.textContent = "El nombre de la actividad es obligatorio.";
-            batchStatus.className = "text-red-600";
             return;
         }
 
@@ -50,9 +60,8 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.textContent = "Procesando...";
 
         try {
-            // 1. Guardar la actividad maestra
             const activitiesCollection = collection(db, "activities");
-            const activityRef = await addDoc(activitiesCollection, {
+            await addDoc(activitiesCollection, {
                 title: name,
                 description: `Actividad de tipo ${type} para la ${unit}`,
                 unit: unit,
@@ -60,32 +69,90 @@ document.addEventListener('DOMContentLoaded', () => {
                 createdAt: new Date()
             });
 
-            batchStatus.textContent = `Actividad "${name}" creada exitosamente.`;
+            batchStatus.textContent = `Actividad "${name}" creada exitosamente para todos.`;
             batchStatus.className = "text-green-600";
-            createActivityForm.reset();
-
-            // Opcional: Si se seleccionó un estudiante, recargar sus actividades
-            if (studentSelect.value) {
-                await loadStudentActivities(studentSelect.value, studentSelect.options[studentSelect.selectedIndex].text);
-            }
+            createGroupActivityForm.reset();
 
         } catch (error) {
-            console.error("Error al crear actividad:", error);
+            console.error("Error al crear actividad grupal:", error);
             batchStatus.textContent = "Error al crear la actividad.";
-            batchStatus.className = "text-red-600";
         } finally {
             submitButton.disabled = false;
             submitButton.textContent = "Añadir Actividad a Todos";
         }
     });
+    
+    // --- 2. Individual Activity Assignment ---
+    assignIndividualActivityForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const studentDocId = studentSelectForIndividual.value;
+        const selectedOption = studentSelectForIndividual.options[studentSelectForIndividual.selectedIndex];
+        const studentUid = selectedOption.dataset.uid;
+        const studentName = selectedOption.text;
+        
+        const name = document.getElementById('individual-activity-name').value;
+        const unit = document.getElementById('individual-activity-unit').value;
+        const type = document.getElementById('individual-activity-type').value;
+
+        if (!studentDocId || !name) {
+            individualStatus.textContent = "Debe seleccionar un estudiante y nombrar la actividad.";
+            return;
+        }
+
+        const submitButton = document.getElementById('submit-individual-activity');
+        submitButton.disabled = true;
+        submitButton.textContent = "Asignando...";
+
+        try {
+            // Step 1: Create the master activity
+            const activitiesCollection = collection(db, "activities");
+            const activityRef = await addDoc(activitiesCollection, {
+                title: name,
+                description: `Actividad de tipo ${type} para la ${unit} (Individual)`,
+                unit: unit,
+                type: type,
+                createdAt: new Date()
+            });
+
+            // Step 2: Create the submission record to link it to the student
+            const submissionsCollection = collection(db, "submissions");
+            await addDoc(submissionsCollection, {
+                studentUid: studentUid,
+                activityId: activityRef.id,
+                grade: null,
+                fileUrl: null,
+                submittedAt: null,
+                assignedAt: new Date()
+            });
+
+            individualStatus.textContent = `Actividad "${name}" asignada a ${studentName} exitosamente.`;
+            individualStatus.className = "text-green-600";
+            assignIndividualActivityForm.reset();
+            
+            // Refresh the grading list if that student is currently selected
+            if(studentSelectForGrading.value === studentDocId) {
+                await loadStudentActivities(studentDocId, studentUid);
+            }
+
+        } catch (error) {
+            console.error("Error al asignar actividad individual:", error);
+            individualStatus.textContent = "Error al asignar la actividad.";
+        } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = "Asignar a Estudiante";
+        }
+    });
 
 
-    // Cargar actividades del estudiante seleccionado
-    studentSelect.addEventListener('change', async (e) => {
+    // --- 3. Grading Section ---
+    studentSelectForGrading.addEventListener('change', async (e) => {
         const studentId = e.target.value;
         if (studentId) {
-            const studentName = e.target.options[e.target.selectedIndex].text;
-            const studentUid = e.target.options[e.target.selectedIndex].dataset.uid;
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            const studentName = selectedOption.text;
+            const studentUid = selectedOption.dataset.uid;
+            
             studentNameDisplay.textContent = studentName;
             activitiesListSection.style.display = 'block';
             await loadStudentActivities(studentId, studentUid);
@@ -97,25 +164,32 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadStudentActivities(studentDocId, studentAuthUid) {
         activitiesContainer.innerHTML = '<p>Cargando actividades...</p>';
     
-        // 1. Obtener todas las actividades maestras
         const activitiesCollection = collection(db, "activities");
         const activitiesSnapshot = await getDocs(activitiesCollection);
         const allActivities = activitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     
-        // 2. Obtener todas las entregas para este estudiante
         const submissionsCollection = collection(db, "submissions");
         const submissionsQuery = query(submissionsCollection, where("studentUid", "==", studentAuthUid));
         const submissionsSnapshot = await getDocs(submissionsQuery);
         const studentSubmissions = submissionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     
-        // 3. Renderizar la lista
         activitiesContainer.innerHTML = '';
-        if (allActivities.length === 0) {
-            activitiesContainer.innerHTML = '<p>No hay actividades creadas en el sistema.</p>';
+        
+        const relevantActivities = allActivities.filter(activity => {
+            // An activity is relevant if it's a group activity (no individual flag)
+            // OR if there's a specific submission for this student for this activity.
+            const isAssigned = studentSubmissions.some(s => s.activityId === activity.id);
+            // This logic is simplified: we show all group activities PLUS any activity this student has a submission for.
+            return !activity.description.includes("(Individual)") || isAssigned;
+        });
+
+
+        if (relevantActivities.length === 0) {
+            activitiesContainer.innerHTML = '<p>No hay actividades grupales creadas o individuales asignadas.</p>';
             return;
         }
     
-        allActivities.forEach(activity => {
+        relevantActivities.forEach(activity => {
             const submission = studentSubmissions.find(s => s.activityId === activity.id);
             const submissionId = submission ? submission.id : null;
             const currentGrade = submission ? submission.grade : '';
@@ -130,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="flex items-center gap-2">
                     <input type="number" min="0" max="100" placeholder="N/A" 
                            class="w-20 p-1 border border-gray-300 rounded-md text-center" 
-                           value="${currentGrade}" 
+                           value="${currentGrade !== null ? currentGrade : ''}" 
                            data-activity-id="${activity.id}" 
                            data-submission-id="${submissionId || ''}">
                     <button class="save-grade-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600">Guardar</button>
@@ -140,7 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // Guardar calificación
     activitiesContainer.addEventListener('click', async (e) => {
         if (e.target.classList.contains('save-grade-btn')) {
             const button = e.target;
@@ -149,11 +222,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const activityId = input.dataset.activityId;
             let submissionId = input.dataset.submissionId;
     
-            const selectedOption = studentSelect.options[studentSelect.selectedIndex];
+            const selectedOption = studentSelectForGrading.options[studentSelectForGrading.selectedIndex];
             const studentUid = selectedOption.dataset.uid;
     
             if (!studentUid) {
-                alert("Error: No se pudo identificar al estudiante (authUid no encontrado).");
+                alert("Error: No se pudo identificar al estudiante.");
                 return;
             }
     
@@ -163,24 +236,16 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const submissionsCollection = collection(db, "submissions");
                 
-                // Si ya existe una entrega (submission), la actualizamos.
-                // Si no, creamos una nueva.
                 if (submissionId && submissionId !== 'null') {
                     const submissionRef = doc(db, "submissions", submissionId);
-                    await updateDoc(submissionRef, {
-                        grade: Number(grade),
-                        gradedAt: new Date()
-                    });
+                    await updateDoc(submissionRef, { grade: Number(grade), gradedAt: new Date() });
                 } else {
                     const newSubmissionRef = await addDoc(submissionsCollection, {
                         studentUid: studentUid,
                         activityId: activityId,
                         grade: Number(grade),
-                        fileUrl: null, // El archivo se sube por separado por el estudiante
-                        submittedAt: null,
                         gradedAt: new Date()
                     });
-                    // Actualizamos el UI para la próxima vez que se guarde
                     input.dataset.submissionId = newSubmissionRef.id;
                 }
     
@@ -189,8 +254,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
             } catch (error) {
                 console.error("Error al guardar la calificación:", error);
-                button.textContent = 'Error';
-                setTimeout(() => button.textContent = 'Guardar', 2000);
             } finally {
                 button.disabled = false;
             }
