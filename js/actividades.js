@@ -11,7 +11,7 @@ import {
  updateDoc,
     getDocs,
 } from './firebase.js';
-import { courseActivities } from '/js/course-activities.js';
+import { courseActivities } from './course-activities.js';
 
 const db = getDb();
 const app = getApp();
