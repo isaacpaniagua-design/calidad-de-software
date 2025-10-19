@@ -1,28 +1,28 @@
 // js/calificaciones-logic.js
 
 import {
-  getFirestore,
+  getDb,
+  getAuthInstance,
+  onAuth,
   collection,
   query,
   where,
   getDocs,
   doc,
   getDoc,
-} from "https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-} from "https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js";
+  isTeacherByDoc,
+  findStudentByUid,
+} from "./firebase.js";
 
-const db = getFirestore();
-const auth = getAuth();
+const db = getDb();
+const auth = getAuthInstance();
 
 /**
  * Initializes the activity breakdown section.
  * This function will fetch and display the activities for the logged-in user or a selected student.
  */
 async function initActivityBreakdown() {
-  onAuthStateChanged(auth, async (user) => {
+  onAuth(async (user) => {
     if (user) {
       const userRole = await getUserRole(user.uid);
       if (userRole === "teacher") {
@@ -35,25 +35,29 @@ async function initActivityBreakdown() {
 }
 
 /**
- * Gets the role of the user from the Firestore 'users' collection.
+ * Gets the role of the user by checking the 'teachers' and 'students' collections.
  * @param {string} uid - The user ID.
- * @returns {Promise<string|null>} The user role or null if not found.
+ * @returns {Promise<string|null>} The user role ('teacher', 'student') or null if not found.
  */
 async function getUserRole(uid) {
-  const userRef = doc(db, "users", uid);
-  const userSnap = await getDoc(userRef);
-  if (userSnap.exists()) {
-    return userSnap.data().role;
+  if (await isTeacherByDoc(uid)) {
+    return "teacher";
+  }
+  if (await findStudentByUid(uid)) {
+    return "student";
   }
   return null;
 }
+
 
 /**
  * Sets up the teacher's view, including the student selector.
  */
 async function setupTeacherView() {
   const selectorContainer = document.getElementById("teacher-student-selector-container");
+  if (!selectorContainer) return;
   const studentSelector = document.getElementById("student-selector");
+  if (!studentSelector) return;
   
   selectorContainer.hidden = false;
 
@@ -75,19 +79,22 @@ async function setupTeacherView() {
 }
 
 /**
- * Fetches all students from the 'users' collection.
+ * Fetches all students from the 'students' collection.
  * @returns {Promise<Array<Object>>} A list of student objects.
  */
 async function getStudents() {
-  const usersRef = collection(db, "users");
-  const q = query(usersRef, where("role", "==", "student"));
-  const querySnapshot = await getDocs(q);
+  const studentsRef = collection(db, "students");
+  const querySnapshot = await getDocs(studentsRef);
   const students = [];
   querySnapshot.forEach((doc) => {
-    students.push({ uid: doc.id, ...doc.data() });
+    const data = doc.data();
+    if (data.authUid && data.name) {
+      students.push({ uid: data.authUid, name: data.name });
+    }
   });
-  return students;
+  return students.sort((a, b) => a.name.localeCompare(b.name));
 }
+
 
 /**
  * Displays the activities for a given student.
@@ -99,50 +106,70 @@ async function displayStudentActivities(studentId) {
   const listEl = document.getElementById("activity-list");
   const template = document.querySelector(".activity-item-template");
 
+  if (!loadingEl || !emptyEl || !listEl || !template) return;
+
   loadingEl.hidden = false;
   listEl.innerHTML = ''; // Clear previous list
   emptyEl.hidden = true;
 
-  const activities = await getAssignedActivities();
-  const submissions = await getStudentSubmissions(studentId);
+  try {
+    const activities = await getAssignedActivities();
+    const submissions = await getStudentSubmissions(studentId);
 
-  loadingEl.hidden = true;
-
-  if (activities.length === 0) {
-    emptyEl.hidden = false;
-    return;
-  }
-
-  activities.forEach(activity => {
-    const submission = submissions.find(s => s.activityId === activity.id);
-    const clone = template.cloneNode(true);
-    
-    clone.classList.remove("activity-item-template");
-    clone.style.display = 'block';
-
-    clone.querySelector('.font-semibold').textContent = activity.title;
-    clone.querySelector('.text-sm.text-gray-500').textContent = activity.description;
-
-    const gradeBadge = clone.querySelector('.grade-badge');
-    const statusBadge = clone.querySelector('.status-badge');
-    const submissionLink = clone.querySelector('.submission-link');
-    const noSubmissionText = clone.querySelector('.no-submission-text');
-    
-    if (submission) {
-      gradeBadge.textContent = submission.grade || 'N/A';
-      statusBadge.textContent = 'Entregado';
-      statusBadge.classList.add('bg-green-100', 'text-green-800');
-      submissionLink.href = submission.fileUrl;
-      noSubmissionText.style.display = 'none';
-    } else {
-      gradeBadge.textContent = 'N/A';
-      statusBadge.textContent = 'Pendiente';
-      statusBadge.classList.add('bg-yellow-100', 'text-yellow-800');
-      submissionLink.style.display = 'none';
+    if (activities.length === 0) {
+      emptyEl.hidden = false;
+      return;
     }
 
-    listEl.appendChild(clone);
-  });
+    activities.forEach(activity => {
+      const submission = submissions.find(s => s.activityId === activity.id);
+      const clone = template.cloneNode(true);
+      
+      clone.classList.remove("activity-item-template");
+      clone.style.display = 'block';
+
+      const titleEl = clone.querySelector('.font-semibold');
+      if(titleEl) titleEl.textContent = activity.title;
+
+      const descriptionEl = clone.querySelector('.text-sm.text-gray-500');
+      if(descriptionEl) descriptionEl.textContent = activity.description;
+
+      const gradeBadge = clone.querySelector('.grade-badge');
+      const statusBadge = clone.querySelector('.status-badge');
+      const submissionLink = clone.querySelector('.submission-link');
+      const noSubmissionText = clone.querySelector('.no-submission-text');
+      
+      if (submission) {
+        if(gradeBadge) gradeBadge.textContent = submission.grade || 'N/A';
+        if(statusBadge) {
+            statusBadge.textContent = 'Entregado';
+            statusBadge.classList.add('bg-green-100', 'text-green-800');
+            statusBadge.classList.remove('bg-yellow-100', 'text-yellow-800');
+        }
+        if(submissionLink) submissionLink.href = submission.fileUrl;
+        if(noSubmissionText) noSubmissionText.style.display = 'none';
+        if(submissionLink && !submission.fileUrl) submissionLink.style.display = 'none';
+
+      } else {
+        if(gradeBadge) gradeBadge.textContent = 'N/A';
+        if(statusBadge) {
+            statusBadge.textContent = 'Pendiente';
+            statusBadge.classList.add('bg-yellow-100', 'text-yellow-800');
+            statusBadge.classList.remove('bg-green-100', 'text-green-800');
+        }
+        if(submissionLink) submissionLink.style.display = 'none';
+        if(noSubmissionText) noSubmissionText.style.display = 'block';
+      }
+
+      listEl.appendChild(clone);
+    });
+  } catch (error) {
+      console.error("Error displaying student activities:", error);
+      emptyEl.textContent = "Error al cargar las actividades.";
+      emptyEl.hidden = false;
+  } finally {
+      loadingEl.hidden = true;
+  }
 }
 
 /**
@@ -158,12 +185,13 @@ async function getAssignedActivities() {
 
 /**
  * Fetches all submissions for a specific student from the 'submissions' collection.
- * @param {string} studentId - The ID of the student.
+ * @param {string} studentId - The authUid of the student.
  * @returns {Promise<Array<Object>>} A list of submission objects.
  */
 async function getStudentSubmissions(studentId) {
   const submissionsRef = collection(db, "submissions");
-  const q = query(submissionsRef, where("studentId", "==", studentId));
+  // Assuming the student's auth UID is stored in a field called 'studentUid'
+  const q = query(submissionsRef, where("studentUid", "==", studentId));
   const querySnapshot = await getDocs(q);
   const submissions = [];
   querySnapshot.forEach((doc) => {
