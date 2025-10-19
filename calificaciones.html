@@ -117,31 +117,64 @@
       </div>
     </div>
 
-   <div class="container mx-auto px-6 py-8">
-  <div id="grades-table-container" style="display: none">
-      </div>
+    <!-- START: New Activity Breakdown Section -->
+    <div class="container mx-auto px-4 py-8" id="activity-breakdown-container">
+      <div class="bg-white rounded-lg card-shadow p-6 mt-8">
+        <div class="border-b pb-4 mb-4">
+          <h2 class="text-xl font-semibold text-gray-800">Desglose de Actividades y Calificaciones</h2>
+          <p class="text-gray-600">Aquí encontrarás el detalle de todas las actividades asignadas, tus entregas y las calificaciones correspondientes.</p>
+        </div>
+        
+        <!-- Teacher view selector - a feature for teachers to select a student -->
+        <div id="teacher-student-selector-container" class="mb-6 teacher-only" hidden>
+            <label for="student-selector" class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Estudiante:</label>
+            <select id="student-selector" class="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <option>Cargando estudiantes...</option>
+            </select>
+        </div>
 
-  <div class="container mx-auto px-4 py-8" id="student-uploads-container">
-    <div class="student-uploads bg-white rounded-lg card-shadow p-6 mt-8">
-      <div class="student-uploads__header">
-        <h2 class="text-xl font-semibold text-gray-800 mb-2">Desglose de Actividades Entregadas</h2>
-        <p class="text-gray-600">Este es el listado de todas las actividades y evidencias que has subido a la plataforma.</p>
-      </div>
-      <div class="mt-4">
-        <div class="student-uploads__records-header" style="padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
-          <h3 class="student-uploads__records-title" style="font-weight: 600;">Tus Entregas</h3>
-          <span class="student-uploads__count" data-upload-count="0" style="font-size: 0.9rem; background-color: #f1f5f9; padding: 4px 8px; border-radius: 999px;">0</span>
-        </div>
-        <ul id="studentUploadList" class="student-uploads__list" style="margin-top: 1rem;">
+        <!-- Container for the list of activities -->
+        <div id="activity-list-container">
+          <!-- Loading State -->
+          <div id="activity-list-loading" class="text-center py-4">
+            <p>Cargando actividades...</p>
+          </div>
+
+          <!-- Empty State -->
+          <div id="activity-list-empty" class="text-center py-8 border-2 border-dashed rounded-lg" hidden>
+            <p class="text-gray-500">No hay actividades asignadas por el momento.</p>
+              <p class="text-sm text-gray-400 mt-2 student-only">Cuando el docente asigne nuevas actividades, aparecerán aquí.</p>
+          </div>
+
+          <!-- Activities List -->
+          <ul id="activity-list" class="space-y-4">
+            <!-- Activity items will be dynamically inserted here -->
+            <!-- Example of a single activity item (template) -->
+            <li class="activity-item-template" style="display: none;">
+              <div class="p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
+                  <!-- Activity Info -->
+                  <div class="flex-grow mb-4 md:mb-0">
+                    <h3 class="font-semibold text-lg text-gray-800">[Nombre de la Actividad]</h3>
+                    <p class="text-sm text-gray-500">[Descripción de la Actividad]</p>
+                  </div>
+                  <!-- Grade and Status -->
+                  <div class="flex items-center space-x-4">
+                    <span class="grade-badge text-lg font-bold text-indigo-600">[Calificación]</span>
+                    <span class="status-badge bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">[Estado]</span>
+                  </div>
+                </div>
+                <div class="mt-4 pt-4 border-t">
+                    <p class="text-sm text-gray-600"><strong>Entrega:</strong> <a href="#" target="_blank" class="text-blue-600 hover:underline submission-link">[Ver Archivo Entregado]</a><span class="no-submission-text">No entregado</span></p>
+                </div>
+              </div>
+            </li>
           </ul>
-        <div id="studentUploadEmpty" class="student-uploads__empty" hidden style="text-align: center; padding: 2rem 1rem; border: 2px dashed #e2e8f0; border-radius: 8px; margin-top: 1rem;">
-          <p>Aún no has realizado ninguna entrega. <br><a href="index.html" style="color: #4f46e5; text-decoration: underline;">Vuelve al inicio para subir tu primera actividad.</a></p>
         </div>
       </div>
     </div>
+    <!-- END: New Activity Breakdown Section -->
   </div>
-  </div>
-    </div>
 
   <script>
     // Configuración de Firebase (sin cambios)
@@ -160,16 +193,9 @@
   <script type="module" src="./js/role-gate.js"></script>
   <script type="module" src="js/calificaciones-backend.js"></script>
   <script type="module" src="js/calificaciones-uploads-ui.js"></script>
+  <script type="module" src="js/calificaciones-logic.js"></script>
   <script defer src="js/nav-inject.js"></script>
   <script defer src="js/back-home.js"></script>
 
 </body>
 </html>
-
-
-
-
-
-
-
-
