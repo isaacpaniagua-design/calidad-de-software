@@ -75,7 +75,7 @@ async function setupTeacherView() {
 }
 
 /**
- * Fetches all students from the local data/students.json file.
+ * Fetches students from the local data/students.json file.
  * @returns {Promise<Array<Object>>} A list of student objects.
  */
 async function getStudents() {
@@ -86,19 +86,24 @@ async function getStudents() {
     }
     const studentsData = await response.json();
 
-    if (!Array.isArray(studentsData.students)) {
-      console.error("Invalid format: students.json should have a 'students' array.");
+    if (!studentsData || !Array.isArray(studentsData.students)) {
+      console.error("Invalid format: students.json is missing or doesn't have a 'students' array.");
       return [];
     }
-
-    // Map and filter the data to ensure all records are valid before sorting.
-    return studentsData.students
+    
+    const students = studentsData.students
+      // 1. Only include records that are explicitly marked as students.
+      .filter(student => student.type === 'student')
+      // 2. Map the properties from the JSON ('id', 'name') to what the app uses ('uid', 'name').
       .map(student => ({
-        uid: student.authUid,
+        uid: student.id, 
         name: student.name
       }))
-      .filter(student => student.uid && student.name) // Ensure both uid and name exist.
-      .sort((a, b) => a.name.localeCompare(b.name)); // Now, this is safe to run.
+      // 3. Ensure that we have a valid record before adding it to the list.
+      .filter(student => student.uid && student.name); 
+
+    // 4. Sort the final list alphabetically.
+    return students.sort((a, b) => a.name.localeCompare(b.name));
 
   } catch (error) {
     console.error("Could not fetch or parse students.json:", error);
