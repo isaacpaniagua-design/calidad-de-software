@@ -11,7 +11,6 @@ import {
   getActivityById,
   findActivityByTitle,
 } from "./course-activities.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import {
   collection,
   doc,
@@ -312,6 +311,13 @@ function buildDisplayForItem(item) {
   buttonsWrapper.appendChild(viewLink);
   viewWrapper.appendChild(buttonsWrapper);
 
+  const status = document.createElement("span");
+  status.className = "upload-status";
+  status.setAttribute("aria-live", "polite");
+  status.textContent = activity ? "Sin entrega registrada" : "Actividad no vinculada";
+  const statusId = `upload-status-${displays.size + 1}`;
+  status.id = statusId;
+  viewWrapper.appendChild(status);
 
   if (gradeInput) {
     gradeInput.setAttribute("aria-describedby", statusId);
@@ -423,79 +429,6 @@ function updateDisplays(uploadMap) {
   });
   updateUploadButtonsState(currentStudentProfile);
 }
-
-function setupStudentUploadsView(user) {
-    const listContainer = document.getElementById('studentUploadList');
-    const countElement = document.querySelector('[data-upload-count]');
-    const emptyElement = document.getElementById('studentUploadEmpty');
-    const historyButton = document.getElementById('btn-ver-historial');
-    const historyModal = document.getElementById('historialModal');
-    const mainTitle = document.querySelector('.student-uploads__heading');
-
-    // Ocultar elementos que ya no se usan en la vista de estudiante
-    if (historyButton) historyButton.style.display = 'none';
-    if (historyModal) historyModal.style.display = 'none';
-    if (mainTitle) mainTitle.textContent = 'Historial Completo de Entregas';
-
-    let unsubscribe = null;
-
-    if (user) {
-        if (unsubscribe) unsubscribe();
-        unsubscribe = observeStudentUploads(
-            user.uid,
-            (uploads) => renderStudentHistory(uploads, listContainer, countElement, emptyElement),
-            (error) => console.error("Error cargando historial de estudiante:", error)
-        );
-    } else {
-        if (unsubscribe) unsubscribe();
-        if (listContainer) listContainer.innerHTML = '';
-        if (countElement) countElement.textContent = '0';
-        if (emptyElement) emptyElement.hidden = false;
-    }
-}
-
-function renderStudentHistory(uploads, listContainer, countElement, emptyElement) {
-    if (!listContainer || !countElement || !emptyElement) return;
-
-    const hasUploads = uploads.length > 0;
-    emptyElement.hidden = hasUploads;
-    countElement.textContent = uploads.length;
-
-    if (!hasUploads) {
-        listContainer.innerHTML = '';
-        return;
-    }
-
-    const sortedUploads = [...uploads].sort((a, b) => (b.submittedAt?.toDate() || 0) - (a.submittedAt?.toDate() || 0));
-    listContainer.innerHTML = sortedUploads.map(item => createStudentUploadItemHTML(item)).join('');
-}
-
-function createStudentUploadItemHTML(upload) {
-    const submittedDate = upload.submittedAt?.toDate() ? new Date(upload.submittedAt.toDate()).toLocaleString('es-MX') : 'Fecha no disponible';
-    const descriptionHTML = upload.description ? `<p class="student-uploads__item-description">${upload.description}</p>` : '';
-    const status = upload.status || 'enviado';
-    const activityTitle = upload.extra?.activityTitle || upload.title || 'Entrega sin título';
-    const fileUrl = upload.fileUrl || '#';
-
-    return `
-        <li class="student-uploads__item">
-            <div class="student-uploads__item-header">
-                <div class="student-uploads__item-heading">
-                    <span class="student-uploads__item-title">${activityTitle}</span>
-                    <span class="student-uploads__item-chip">${upload.kind || 'Actividad'}</span>
-                </div>
-                <span class="student-uploads__item-status student-uploads__item-status--${status}">${status}</span>
-            </div>
-            <p class="student-uploads__item-meta">Enviado: ${submittedDate}</p>
-            ${descriptionHTML}
-            <div class="student-uploads__item-actions">
-                <a href="${fileUrl}" target="_blank" rel="noopener noreferrer" class="student-uploads__item-link">Ver Archivo</a>
-            </div>
-        </li>
-    `;
-}
-
-
 
 function setLoadingState() {
   displays.forEach((entry) => {
@@ -1038,17 +971,11 @@ export function initUploadsUI(user, claims) {
     }
     authUser = user;
     teacherRoleDetected = claims.role === 'docente';
-
-    if (teacherRoleDetected) {
-        // Lógica existente para el DOCENTE
-        main().catch((error) => {
-            console.error("[calificaciones-uploads-ui] Error en la inicialización (docente):", error);
-            if (typeof setErrorState === 'function') {
-                setErrorState();
-            }
-        });
-    } else {
-        // Nueva lógica para el ESTUDIANTE
-        setupStudentUploadsView(user);
-    }
+    
+    main().catch((error) => {
+        console.error("[calificaciones-uploads-ui] Error en la inicialización:", error);
+        if (typeof setErrorState === 'function') {
+            setErrorState();
+        }
+    });
 }

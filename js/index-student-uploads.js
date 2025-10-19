@@ -1,158 +1,485 @@
-// En: js/index-student-uploads.js
+import { onAuth } from "./firebase.js";
+import { initializeFileViewer, openFileViewer } from "./file-viewer.js";
+import {
+  observeStudentUploads,
+  createStudentUpload,
+} from "./student-uploads.js";
+import {
+  courseActivities,
+  getActivityById,
+  findActivityByTitle,
+} from "./course-activities.js";
 
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
-import { createStudentUpload, observeStudentUploads } from "./student-uploads.js";
-import { courseActivities } from './course-activities.js';
-import { initDriveUploader, uploadFile } from "./student-file-uploader.js";
+initializeFileViewer();
 
-document.addEventListener("DOMContentLoaded", () => {
-    // --- Referencias al DOM (con validación) ---
-    const form = document.getElementById("studentUploadForm");
-    if (!form) {
-        console.log("El formulario de entrega de actividades no se encuentra en esta página. Script detenido.");
-        return;
-    }
+const activitySelect = document.getElementById("studentUploadTitle");
+const typeSelect = document.getElementById("studentUploadType");
+const descriptionInput = document.getElementById("studentUploadDescription");
+const statusEl = document.getElementById("studentUploadStatus");
+const listEl = document.getElementById("studentUploadList");
+const emptyEl = document.getElementById("studentUploadEmpty");
+const countEl = document.querySelector("[data-upload-count]");
+const resetBtn = document.getElementById("studentUploadReset");
+const form = document.getElementById("studentUploadForm");
 
-    const titleSelect = document.getElementById("studentUploadTitle");
-    const typeSelect = document.getElementById("studentUploadType");
-    const descriptionTextarea = document.getElementById("studentUploadDescription");
-    const fileInput = document.getElementById("studentUploadFile");
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const resetBtn = document.getElementById("studentUploadReset");
-    
-    const countEl = document.querySelector("[data-upload-count]");
-    const uploadStatusDiv = document.getElementById('studentUploadStatus');
+const typeLabels = {
+  activity: "Actividad",
+  homework: "Tarea",
+  evidence: "Evidencia",
+};
 
-    // --- Variables de Estado ---
-    let currentUser = null;
-    let defaultStatusMessage = '';
-    
-    // --- Autenticación y Carga Inicial ---
-    populateActivitiesSelect();
-    const auth = getAuth();
-    onAuthStateChanged(auth, (user) => {
-        currentUser = user;
-        if (user) {
-            defaultStatusMessage = `Sesión iniciada como ${user.displayName}. Ya puedes registrar entregas.`;
-            updateUploadStatus(defaultStatusMessage, 'success', false);
-            submitBtn.disabled = false; 
-            initDriveUploader();
-            startObserver(user.uid);
-        } else {
-            defaultStatusMessage = 'Debes iniciar sesión para poder registrar entregas.';
-            updateUploadStatus(defaultStatusMessage, 'error', false);
-            submitBtn.disabled = true;
-            if (countEl) countEl.textContent = 0; // Resetea el contador al cerrar sesión
-        }
-    });
+const statusLabels = {
+  enviado: "Enviado",
+  aceptado: "Aceptado",
+  calificado: "Calificado",
+  rechazado: "Rechazado",
+};
 
-    // --- Manejadores de Eventos ---
-    form.addEventListener("submit", handleFormSubmit);
+const knownStatuses = new Map();
+let statusesInitialized = false;
 
-    resetBtn.addEventListener('click', () => {
-        form.reset();
-        updateUploadStatus("Formulario limpiado.", "info", false);
-         setTimeout(() => {
-            updateUploadStatus(defaultStatusMessage, 'success', false);
-        }, 3000);
-    });
-
-    /**
-     * Actualiza el texto y la apariencia del div de estado, y opcionalmente hace scroll.
-     */
-    function updateUploadStatus(message, type, doScroll = true) {
-        if (!uploadStatusDiv) return;
-        uploadStatusDiv.textContent = message;
-        uploadStatusDiv.classList.remove('is-loading', 'is-success', 'is-error', 'is-info');
-        const typeClass = `is-${type}`;
-        uploadStatusDiv.classList.add(typeClass);
-        if (doScroll) {
-            uploadStatusDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-    }
-
-    // --- Lógica Principal ---
-
-    async function handleFormSubmit(e) {
-        e.preventDefault();
-        if (!currentUser) return updateUploadStatus("Error: No has iniciado sesión.", "error");
-        if (!fileInput.files || fileInput.files.length === 0) return updateUploadStatus("Error: Debes seleccionar un archivo.", "error");
-        
-        const selectedOption = titleSelect.options[titleSelect.selectedIndex];
-        if (!selectedOption || selectedOption.disabled) return updateUploadStatus("Error: Debes seleccionar una actividad.", "error");
-        
-        const file = fileInput.files[0];
-        const unitLabel = selectedOption.dataset.unitLabel || "General";
-        const activityTitle = selectedOption.text;
-
-        submitBtn.disabled = true;
-
-        try {
-            updateUploadStatus("Subiendo archivo a Drive...", "loading");
-            const driveResponse = await uploadFile(file, {
-                unit: unitLabel,
-                activity: activityTitle,
-                studentName: currentUser.displayName || currentUser.email,
-            });
-
-            updateUploadStatus("Registrando entrega en la plataforma...", "loading");
-            const payload = {
-                title: titleSelect.value,
-                description: descriptionTextarea.value,
-                kind: typeSelect.value,
-                fileUrl: driveResponse.webViewLink,
-                fileName: file.name,
-                fileSize: file.size,
-                mimeType: file.type,
-                student: { uid: currentUser.uid, displayName: currentUser.displayName, email: currentUser.email },
-                extra: { uploadBackend: "googledrive", driveFileId: driveResponse.id, unitId: selectedOption.dataset.unitId, unitLabel, activityTitle },
-            };
-            
-            await createStudentUpload(payload);
-            updateUploadStatus("¡Entrega exitosa! Tu archivo fue registrado.", "success");
-            
-            form.reset();
-            populateActivitiesSelect();
-
-            setTimeout(() => {
-                updateUploadStatus(defaultStatusMessage, 'success', false);
-            }, 5000);
-
-        } catch (error) {
-            console.error("Error en el proceso de entrega:", error);
-            updateUploadStatus(`Error en la entrega: ${error.message}`, "error");
-        } finally {
-            submitBtn.disabled = false;
-        }
-    }
-
-    function startObserver(uid) {
-        // El observador ahora solo actualiza el contador total de entregas.
-        observeStudentUploads(uid, (items) => {
-            if (countEl) countEl.textContent = items.length;
-        }, (error) => {
-            console.error("Error observando entregas:", error);
-            updateUploadStatus("Error al cargar tus entregas anteriores.", "error");
-        });
-    }
-
-    function populateActivitiesSelect() {
-        if (!titleSelect) return;
-        titleSelect.innerHTML = '';
-        const defaultOption = new Option('Selecciona la actividad o asignación', '', true, true);
-        defaultOption.disabled = true;
-        titleSelect.add(defaultOption);
-
-        courseActivities.forEach(unit => {
-            const optgroup = document.createElement('optgroup');
-            optgroup.label = unit.unitLabel;
-            unit.activities.forEach(activity => {
-                const option = new Option(activity.title, activity.id);
-                option.dataset.unitId = unit.unitId;
-                option.dataset.unitLabel = unit.unitLabel;
-                optgroup.appendChild(option);
-            });
-            titleSelect.appendChild(optgroup);
-        });
-    }
+const dateFormatter = new Intl.DateTimeFormat("es-MX", {
+  dateStyle: "medium",
+  timeStyle: "short",
 });
+
+let widget = null;
+let currentUser = null;
+let unsubscribe = null;
+let submitting = false;
+let justSubmitted = false;
+let submissionTimer = null;
+
+function populateActivitySelect() {
+  if (!activitySelect) return;
+  const selectedValue = activitySelect.value;
+  activitySelect.innerHTML = "";
+
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.disabled = true;
+  placeholder.selected = true;
+  placeholder.textContent = "Selecciona la actividad o asignación";
+  activitySelect.appendChild(placeholder);
+
+  courseActivities.forEach((unit) => {
+    if (!unit || !Array.isArray(unit.items) || !unit.items.length) return;
+    const group = document.createElement("optgroup");
+    group.label = unit.unitLabel || unit.shortLabel || "Unidad";
+    unit.items.forEach((item) => {
+      if (!item || !item.id) return;
+      const option = document.createElement("option");
+      option.value = item.id;
+      option.textContent = item.title || "Actividad";
+      option.dataset.unitId = unit.unitId || "";
+      option.dataset.unitLabel = unit.unitLabel || "";
+      if (item.id === selectedValue) {
+        option.selected = true;
+        placeholder.selected = false;
+      }
+      group.appendChild(option);
+    });
+    activitySelect.appendChild(group);
+  });
+}
+
+populateActivitySelect();
+
+function ensureWidget() {
+  if (widget || typeof uploadcare === "undefined") return;
+  try {
+    widget = uploadcare.Widget("#studentUploadFile");
+  } catch (error) {
+    console.error("No se pudo inicializar el widget de Uploadcare", error);
+    setStatus(
+      "No se pudo inicializar el selector de archivos. Recarga la página e inténtalo de nuevo.",
+      "error"
+    );
+  }
+}
+
+function setStatus(message, variant = "info") {
+  if (!statusEl) return;
+  statusEl.textContent = message || "";
+  statusEl.classList.remove("is-info", "is-success", "is-error", "is-warning");
+  if (message) {
+    statusEl.hidden = false;
+    const className = variant ? `is-${variant}` : "is-info";
+    statusEl.classList.add(className);
+  } else {
+    statusEl.hidden = true;
+  }
+}
+
+function setSubmittingState(isSubmitting) {
+  submitting = isSubmitting;
+  if (form) {
+    form.classList.toggle("is-submitting", isSubmitting);
+    const submitBtn = form.querySelector("[type='submit']");
+    if (submitBtn) submitBtn.disabled = isSubmitting;
+  }
+  if (resetBtn) resetBtn.disabled = isSubmitting;
+}
+
+function resetForm() {
+  if (form) form.reset();
+  if (activitySelect) {
+    activitySelect.selectedIndex = 0;
+  }
+  if (widget) {
+    try {
+      widget.value(null);
+    } catch (error) {
+      console.warn("No se pudo limpiar el widget", error);
+    }
+  }
+}
+
+function formatSize(bytes) {
+  const numeric = Number(bytes);
+  if (!numeric || Number.isNaN(numeric)) return "";
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let value = numeric;
+  let unitIndex = 0;
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+  const precision = value >= 10 || unitIndex === 0 ? 0 : 1;
+  return `${value.toFixed(precision)} ${units[unitIndex]}`;
+}
+
+function normalizeStatus(status) {
+  return (status || "enviado").toString().toLowerCase();
+}
+
+function notifyStatusChanges(items) {
+  if (!Array.isArray(items)) {
+    knownStatuses.clear();
+    statusesInitialized = false;
+    return false;
+  }
+
+  const ids = new Set();
+  const notifications = [];
+
+  items.forEach((item) => {
+    if (!item || !item.id) return;
+    const status = normalizeStatus(item.status);
+    const previous = knownStatuses.get(item.id);
+    if (
+      statusesInitialized &&
+      previous &&
+      previous !== status &&
+      (status === "aceptado" || status === "calificado")
+    ) {
+      notifications.push({ item, status });
+    }
+    knownStatuses.set(item.id, status);
+    ids.add(item.id);
+  });
+
+  knownStatuses.forEach((_, key) => {
+    if (!ids.has(key)) knownStatuses.delete(key);
+  });
+
+  statusesInitialized = true;
+
+  if (!notifications.length) return false;
+
+  const latest = notifications[notifications.length - 1];
+  const title = latest.item?.title || "Entrega";
+  let message = "";
+  if (latest.status === "calificado") {
+    const gradeText =
+      typeof latest.item?.grade === "number" && !Number.isNaN(latest.item.grade)
+        ? ` con calificación ${latest.item.grade}`
+        : "";
+    message = `🎉 Tu entrega "${title}" fue calificada${gradeText}`;
+  } else {
+    message = `✅ Tu entrega "${title}" fue aceptada`;
+  }
+  const reviewer = latest.item?.gradedBy || latest.item?.reviewedBy;
+  const reviewerName = reviewer?.displayName || reviewer?.email || "";
+  if (reviewerName) {
+    message += ` por ${reviewerName}`;
+  } else {
+    message += " por tu docente";
+  }
+  message += ".";
+  if (latest.status === "calificado" && latest.item?.teacherFeedback) {
+    message += ` Comentarios del docente: "${latest.item.teacherFeedback}".`;
+  }
+  setStatus(message, "success");
+  return true;
+}
+
+function renderList(items) {
+  if (!listEl || !emptyEl) return false;
+  const safeItems = Array.isArray(items) ? items : [];
+  listEl.innerHTML = "";
+
+  const notified = notifyStatusChanges(safeItems);
+
+  if (safeItems.length === 0) {
+    emptyEl.hidden = false;
+    if (countEl) countEl.textContent = "0";
+    return notified;
+  }
+
+  emptyEl.hidden = true;
+  if (countEl) countEl.textContent = String(safeItems.length);
+
+  safeItems.forEach((item) => {
+    const li = document.createElement("li");
+    li.className = "student-uploads__item";
+
+    const activityInfo =
+      getActivityById(item?.extra?.activityId) ||
+      (item?.extra?.unitId
+        ? findActivityByTitle(item?.title, item.extra.unitId)
+        : null) ||
+      findActivityByTitle(item?.title);
+
+    const header = document.createElement("div");
+    header.className = "student-uploads__item-header";
+
+    const titleWrap = document.createElement("div");
+    titleWrap.className = "student-uploads__item-heading";
+
+    const titleEl = document.createElement("div");
+    titleEl.className = "student-uploads__item-title";
+    titleEl.textContent = activityInfo?.title || item.title || "Entrega sin título";
+
+    const chip = document.createElement("span");
+    chip.className = "student-uploads__item-chip";
+    chip.textContent = typeLabels[item.kind] || "Entrega";
+
+    titleWrap.appendChild(titleEl);
+    titleWrap.appendChild(chip);
+    header.appendChild(titleWrap);
+
+    const status = normalizeStatus(item.status);
+    const statusBadge = document.createElement("span");
+    statusBadge.className = `student-uploads__item-status student-uploads__item-status--${status}`;
+    statusBadge.textContent = statusLabels[status] || statusLabels.enviado;
+    header.appendChild(statusBadge);
+    li.appendChild(header);
+
+    const submittedDate =
+      item?.submittedAt && typeof item.submittedAt.toDate === "function"
+        ? item.submittedAt.toDate()
+        : item?.submittedAt
+        ? new Date(item.submittedAt)
+        : null;
+    const dateValid = submittedDate && !Number.isNaN(submittedDate.getTime());
+    const sizeText = formatSize(item.fileSize);
+
+    const meta = document.createElement("div");
+    meta.className = "student-uploads__item-meta";
+    const metaParts = [];
+    if (activityInfo?.unitLabel) metaParts.push(activityInfo.unitLabel);
+    if (dateValid) metaParts.push(`Enviado el ${dateFormatter.format(submittedDate)}`);
+    if (sizeText) metaParts.push(sizeText);
+    if (item.fileName) metaParts.push(item.fileName);
+    meta.textContent = metaParts.join(" · ") || "Entrega sincronizada";
+    li.appendChild(meta);
+
+    if (item.description) {
+      const desc = document.createElement("p");
+      desc.className = "student-uploads__item-description";
+      desc.textContent = item.description;
+      li.appendChild(desc);
+    }
+
+    if (typeof item.grade === "number" && !Number.isNaN(item.grade)) {
+      const gradeEl = document.createElement("div");
+      gradeEl.className = "student-uploads__item-grade";
+      gradeEl.textContent = `Calificación: ${item.grade} / 100`;
+      li.appendChild(gradeEl);
+    }
+
+    if (item.teacherFeedback) {
+      const feedbackEl = document.createElement("p");
+      feedbackEl.className = "student-uploads__item-feedback";
+      feedbackEl.textContent = `Comentarios del docente: ${item.teacherFeedback}`;
+      li.appendChild(feedbackEl);
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "student-uploads__item-actions";
+    if (item.fileUrl) {
+      const previewBtn = document.createElement("button");
+      previewBtn.type = "button";
+      previewBtn.className = "student-uploads__item-button";
+      previewBtn.textContent = "Visualizar archivo";
+      previewBtn.addEventListener("click", () => {
+        openFileViewer(item.fileUrl, {
+          title: activityInfo?.title || item.title || "Entrega sin título",
+          downloadUrl: item.fileUrl,
+          fileName: item.fileName || "",
+        });
+      });
+      actions.appendChild(previewBtn);
+    }
+
+    const link = document.createElement("a");
+    link.className = "student-uploads__item-link";
+    if (item.fileUrl) {
+      link.href = item.fileUrl;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = "Abrir en pestaña nueva";
+    } else {
+      link.setAttribute("aria-disabled", "true");
+      link.textContent = "Archivo no disponible";
+    }
+    actions.appendChild(link);
+    li.appendChild(actions);
+
+    listEl.appendChild(li);
+  });
+
+  return notified;
+}
+
+if (form) {
+  onAuth((user) => {
+    currentUser = user;
+    if (unsubscribe) {
+      unsubscribe();
+      unsubscribe = null;
+    }
+
+    if (!user) {
+      renderList([]);
+      setStatus("Inicia sesión para subir tus actividades y tareas.", "info");
+      setSubmittingState(false);
+      return;
+    }
+
+    ensureWidget();
+    setStatus(
+      "Selecciona un archivo y completa los campos para registrar tu entrega.",
+      "info"
+    );
+
+    unsubscribe = observeStudentUploads(
+      user.uid,
+      (items) => {
+        const notified = renderList(items);
+        if (!submitting && !justSubmitted && !notified) {
+          setStatus(
+            items.length
+              ? "Tus entregas se sincronizan en tiempo real."
+              : "Aún no registras entregas. Usa el formulario para subir la primera.",
+            items.length ? "success" : "info"
+          );
+        }
+      },
+      () => {
+        setStatus("No pudimos cargar tus entregas. Intenta actualizar la página.", "error");
+      }
+    );
+  });
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    if (submitting) return;
+
+    if (!currentUser) {
+      setStatus("Debes iniciar sesión para subir tus actividades.", "error");
+      return;
+    }
+
+    ensureWidget();
+    if (!widget) {
+      setStatus(
+        "El componente de carga no está disponible. Recarga la página e inténtalo nuevamente.",
+        "error"
+      );
+      return;
+    }
+
+    const activityId = activitySelect ? activitySelect.value : "";
+    const activityInfo = getActivityById(activityId);
+    const kind = typeSelect.value;
+    const description = descriptionInput.value.trim();
+
+    if (!activityInfo) {
+      setStatus("Selecciona una actividad para identificar tu entrega.", "warning");
+      if (activitySelect) activitySelect.focus();
+      return;
+    }
+
+    const title = activityInfo.title;
+
+    const fileInfo = widget.value();
+    if (!fileInfo) {
+      setStatus("Selecciona un archivo para subir.", "warning");
+      return;
+    }
+
+    setSubmittingState(true);
+    setStatus("Subiendo tu entrega, espera un momento...", "info");
+
+    try {
+      fileInfo.done(async (file) => {
+        try {
+          await createStudentUpload({
+            title,
+            description,
+            kind,
+            fileUrl: file.cdnUrl || file.originalUrl || "",
+            fileName: file.name || file.originalFilename || "Archivo sin nombre",
+            fileSize: file.size || file.originalFileSize || null,
+            mimeType:
+              file.mimeType ||
+              (file.contentInfo && file.contentInfo.mime) ||
+              "",
+            extra: {
+              activityId: activityInfo.id,
+              unitId: activityInfo.unitId,
+              unitLabel: activityInfo.unitLabel,
+            },
+            student: {
+              uid: currentUser.uid,
+              email: currentUser.email || "",
+              displayName: currentUser.displayName || "",
+            },
+          });
+
+          if (submissionTimer) window.clearTimeout(submissionTimer);
+          justSubmitted = true;
+          setStatus("Entrega registrada correctamente.", "success");
+          submissionTimer = window.setTimeout(() => {
+            justSubmitted = false;
+            submissionTimer = null;
+          }, 4000);
+          resetForm();
+        } catch (error) {
+          console.error("createStudentUpload:error", error);
+          setStatus(
+            error?.message || "No se pudo registrar la entrega. Intenta nuevamente.",
+            "error"
+          );
+        } finally {
+          setSubmittingState(false);
+        }
+      });
+    } catch (error) {
+      console.error("Uploadcare value error", error);
+      setStatus("No se pudo procesar el archivo seleccionado.", "error");
+      setSubmittingState(false);
+    }
+  });
+
+  if (resetBtn) {
+    resetBtn.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (submitting) return;
+      resetForm();
+      setStatus("Formulario listo para una nueva entrega.", "info");
+    });
+  }
+}

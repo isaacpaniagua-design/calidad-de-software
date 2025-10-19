@@ -9,10 +9,10 @@ import {
   subscribeLatestForumReplies,
   fetchForumTopicSummary,
   fetchForumReply,
-} from "./firebase-config.js";
+} from "./firebase.js";
 import { observeAllStudentUploads, observeStudentUploads } from "./student-uploads.js";
 
-import { allowedEmailDomain } from "./index-student-uploads.js";
+import { allowedEmailDomain } from "./firebase-config.js";
 
 initFirebase();
 

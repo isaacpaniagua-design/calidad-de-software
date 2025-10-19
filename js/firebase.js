@@ -1,11 +1,46 @@
-// Importaciones del SDK de Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, connectAuthEmulator, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, addDoc, getDoc, getDocs, deleteDoc, updateDoc, onSnapshot, query, where, orderBy, limit, serverTimestamp, increment, getCountFromServer, collectionGroup, connectFirestoreEmulator } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
-import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
-import { getFunctions, connectFunctionsEmulator } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-functions.js";
 
-// ¡IMPORTANTE! Importamos la configuración pura desde el archivo correcto.
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged,
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+import { connectAuthEmulator } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  addDoc,
+  getDoc,
+  getDocs,
+  deleteDoc,
+  updateDoc,
+  onSnapshot,
+  query,
+  where,
+  orderBy,
+  limit,
+  serverTimestamp,
+  increment,
+  getCountFromServer,
+  collectionGroup,
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+import { connectFirestoreEmulator } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js";
+import {
+  getFunctions,
+  connectFunctionsEmulator,
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-functions.js";
+import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import {
   firebaseConfig,
   allowedEmailDomain,
@@ -14,31 +49,6 @@ import {
   allowedTeacherEmails,
   teacherAllowlistDocPath,
 } from "./firebase-config.js";
-
-
-/* * =================================================================
- * ============= INICIO: EXPORTACIONES ADICIONALES =================
- * =================================================================
- *
- * Se añaden estas exportaciones para que otros módulos puedan construir
- * sus propias consultas a Firestore.
- */
-export {
-  db,
-  doc,
-  getDoc,
-  setDoc,
-  collection,
-  query,
-  where,
-  getDocs,
-  orderBy,
-  Timestamp
-};
-/* * ===============================================================
- * ============= FIN: EXPORTACIONES ADICIONALES ==================
- * ===============================================================
- */
 
 function isPermissionDenied(error) {
   if (!error) return false;
@@ -1570,6 +1580,5 @@ export async function saveTestPlan(planId, planData) {
 }
 
 export { app };
-
 
 
