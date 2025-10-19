@@ -46,11 +46,14 @@ async function setupTeacherView() {
   selectorContainer.hidden = false;
 
   try {
-    // Fetch students from the local JSON file for reliability and speed.
     const students = await getStudents();
-    studentSelector.innerHTML = '<option value="">Seleccione un estudiante</option>' + students
-      .map(student => `<option value="${student.uid}">${student.name}</option>`)
-      .join('');
+    if (students.length > 0) {
+      studentSelector.innerHTML = '<option value="">Seleccione un estudiante</option>' + students
+        .map(student => `<option value="${student.uid}">${student.name}</option>`)
+        .join('');
+    } else {
+      studentSelector.innerHTML = '<option value="">No se encontraron estudiantes</option>';
+    }
 
     studentSelector.addEventListener("change", (e) => {
       const studentUid = e.target.value;
@@ -66,7 +69,7 @@ async function setupTeacherView() {
       }
     });
   } catch (error) {
-    console.error("Failed to load students from JSON file:", error);
+    console.error("Failed to set up teacher view:", error);
     studentSelector.innerHTML = '<option value="">Error al cargar estudiantes</option>';
   }
 }
@@ -82,16 +85,24 @@ async function getStudents() {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const studentsData = await response.json();
-    // Map the data to the required format { uid, name }
+
+    if (!Array.isArray(studentsData.students)) {
+      console.error("Invalid format: students.json should have a 'students' array.");
+      return [];
+    }
+
+    // Map and filter the data to ensure all records are valid before sorting.
     return studentsData.students
       .map(student => ({
         uid: student.authUid,
         name: student.name
       }))
-      .sort((a, b) => a.name.localeCompare(b.name));
+      .filter(student => student.uid && student.name) // Ensure both uid and name exist.
+      .sort((a, b) => a.name.localeCompare(b.name)); // Now, this is safe to run.
+
   } catch (error) {
     console.error("Could not fetch or parse students.json:", error);
-    return []; // Return an empty array on failure
+    return []; // Return an empty array on failure.
   }
 }
 
