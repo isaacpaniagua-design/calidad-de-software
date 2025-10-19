@@ -4,15 +4,18 @@ import {
   getDb,
   getAuthInstance,
   onAuth,
+  isTeacherByDoc,
+  findStudentByUid,
+} from "./firebase.js";
+import {
   collection,
   query,
   where,
   getDocs,
   doc,
   getDoc,
-  isTeacherByDoc,
-  findStudentByUid,
-} from "./firebase.js";
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+
 
 const db = getDb();
 const auth = getAuthInstance();
