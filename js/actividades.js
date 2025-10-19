@@ -5,7 +5,6 @@ import {
     collection,
     onSnapshot,
     doc,
-    addDoc,
     query,
     where,
  updateDoc,
@@ -13,6 +12,7 @@ import {
 } from './firebase.js';
 import { courseActivities } from './course-activities.js';
 
+import { addDoc } from 'https://www.gstatic.com/firebase/9.6.10/firebase-firestore.js';
 const db = getDb();
 const app = getApp();
 
