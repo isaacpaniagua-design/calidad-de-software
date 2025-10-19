@@ -1,47 +1,64 @@
 // js/role-gate.js
+import { onAuth, isTeacherByDoc, ensureTeacherAllowlistLoaded } from "./firebase.js";
 
 /**
- * Esta función se encarga de adaptar la interfaz de usuario según el rol del usuario.
- * Ahora es exportable para que otros módulos (como auth-guard) puedan llamarla.
+ * Manages UI visibility based on user role (student vs. teacher).
+ * Hides/shows elements with `teacher-only` and `student-only` classes.
  */
-export function showRoleSpecificUI() {
-    try {
-        // 1. Obtener el rol del usuario desde el almacenamiento local. Si no existe, se asume 'estudiante'.
-        const rol = (localStorage.getItem("qs_role") || "estudiante").toLowerCase();
-        const isTeacher = rol === 'docente';
+function handleRoleBasedUI(isTeacher) {
+  const teacherOnlyElements = document.querySelectorAll(".teacher-only");
+  const studentOnlyElements = document.querySelectorAll(".student-only");
 
-        console.log(`Renderizando página para el rol: ${rol.toUpperCase()}`);
-
-        // 2. Limpiar clases de rol anteriores y añadir la actual al <html>.
-        document.documentElement.classList.remove('role-docente', 'role-estudiante', 'role-invitado');
-        document.documentElement.classList.add(`role-${rol}`);
-
-        // 3. Si el usuario NO es un docente, aplicar restricciones en la UI.
-        if (!isTeacher) {
-            
-            // Ocultar todos los elementos que son exclusivos para docentes.
-            document.querySelectorAll(".teacher-only, .docente-only").forEach(function (el) {
-                el.style.display = "none";
-            });
-
-            // Recorrer todos los elementos de formulario para deshabilitarlos o ponerlos en modo de solo lectura.
-            document.querySelectorAll("input, select, textarea, button").forEach(function (el) {
-                
-                const isExemptButton = el.classList.contains('tab-button') || 
-                                       el.classList.contains('upload-trigger') || 
-                                       el.classList.contains('upload-reset') ||
-                                       el.classList.contains('action-button');
-
-                if (el.tagName === "BUTTON" && !isExemptButton) {
-                    el.disabled = true;
-                
-                } else if (el.tagName !== "BUTTON") {
-                    el.readOnly = true; 
-                }
-            });
-        }
-        
-    } catch (e) {
-        console.error("Error al aplicar las reglas de rol en la interfaz:", e);
-    }
+  if (isTeacher) {
+    teacherOnlyElements.forEach((el) => {
+      el.hidden = false;
+      el.style.display = ''; 
+      el.removeAttribute('aria-hidden');
+    });
+    studentOnlyElements.forEach((el) => {
+      el.hidden = true;
+      el.style.display = 'none';
+      el.setAttribute('aria-hidden', 'true');
+    });
+  } else {
+    teacherOnlyElements.forEach((el) => {
+      el.hidden = true;
+      el.style.display = 'none';
+      el.setAttribute('aria-hidden', 'true');
+    });
+    studentOnlyElements.forEach((el) => {
+      el.hidden = false;
+      el.style.display = '';
+      el.removeAttribute('aria-hidden');
+    });
+  }
 }
+
+/**
+ * Initializes the role-gate logic.
+ */
+async function initRoleGate() {
+  await ensureTeacherAllowlistLoaded();
+
+  onAuth(async (user) => {
+    let isTeacher = false;
+    if (user) {
+      isTeacher = await isTeacherByDoc(user.uid);
+    }
+    
+    // Update the UI based on the role.
+    handleRoleBasedUI(isTeacher);
+    
+    // Announce that the role has been determined and the UI is ready.
+    const event = new CustomEvent('role-determined', { 
+        detail: { 
+            user: user, 
+            isTeacher: isTeacher 
+        } 
+    });
+    document.dispatchEvent(event);
+  });
+}
+
+// Execute the role gate initialization when the DOM is ready.
+document.addEventListener("DOMContentLoaded", initRoleGate);

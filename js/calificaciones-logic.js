@@ -2,9 +2,6 @@
 
 import {
   getDb,
-  getAuthInstance,
-  onAuth,
-  isTeacherByDoc,
   findStudentByUid,
 } from "./firebase.js";
 import {
@@ -14,42 +11,42 @@ import {
   getDocs,
 } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-
 const db = getDb();
-getAuthInstance();
 
-async function initActivityBreakdown() {
-  onAuth(async (user) => {
+/**
+ * Main initialization function that waits for the role to be determined.
+ */
+function init() {
+  document.addEventListener('role-determined', (e) => {
+    const { user, isTeacher } = e.detail;
+    
     if (user) {
-      const isTeacher = await isTeacherByDoc(user.uid);
       if (isTeacher) {
         setupTeacherView();
       } else {
-        const student = await findStudentByUid(user.uid);
-        if (student) {
-          displayStudentActivities(user.uid);
-        }
+        displayStudentActivities(user.uid);
       }
+    } else {
+      // Handle case where no user is logged in, if necessary.
+      console.log("No user is signed in.");
     }
   });
 }
 
-async function getUserRole(uid) {
-  if (await isTeacherByDoc(uid)) {
-    return "teacher";
-  }
-  if (await findStudentByUid(uid)) {
-    return "student";
-  }
-  return null;
-}
-
+/**
+ * Sets up the teacher's view by populating the student selector.
+ */
 async function setupTeacherView() {
   const selectorContainer = document.getElementById("teacher-student-selector-container");
-  if (!selectorContainer) return;
   const studentSelector = document.getElementById("student-selector");
-  if (!studentSelector) return;
   
+  // Elements should be visible at this point, but we still check.
+  if (!selectorContainer || !studentSelector) {
+    console.error("Teacher view elements not found. Cannot set up student selector.");
+    return;
+  }
+  
+  // The role-gate has already made this visible.
   selectorContainer.hidden = false;
 
   const students = await getStudents();
@@ -63,12 +60,20 @@ async function setupTeacherView() {
       displayStudentActivities(studentUid);
     } else {
       document.getElementById("activity-list").innerHTML = '';
-      document.getElementById("activity-list-empty").hidden = false;
-      document.getElementById("activity-list-empty").textContent = 'Seleccione un estudiante para ver sus actividades.';
+      const emptyEl = document.getElementById("activity-list-empty");
+      if (emptyEl) {
+        emptyEl.hidden = false;
+        emptyEl.textContent = 'Seleccione un estudiante para ver sus actividades.';
+      }
     }
   });
 }
 
+
+/**
+ * Fetches all students from the 'students' collection.
+ * @returns {Promise<Array<Object>>} A list of student objects.
+ */
 async function getStudents() {
   const studentsRef = collection(db, "students");
   const querySnapshot = await getDocs(studentsRef);
@@ -82,6 +87,10 @@ async function getStudents() {
   return students.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/**
+ * Displays the activities for a given student.
+ * @param {string} studentUid - The authUid of the student.
+ */
 async function displayStudentActivities(studentUid) {
   const loadingEl = document.getElementById("activity-list-loading");
   const emptyEl = document.getElementById("activity-list-empty");
@@ -111,6 +120,7 @@ async function displayStudentActivities(studentUid) {
       clone.classList.remove("activity-item-template");
       clone.style.display = 'block';
 
+      // ... (rest of the rendering logic remains the same)
       const titleEl = clone.querySelector('.font-semibold');
       if(titleEl) titleEl.textContent = activity.title;
 
@@ -156,6 +166,7 @@ async function displayStudentActivities(studentUid) {
         if(noSubmissionText) noSubmissionText.style.display = 'block';
       }
 
+
       listEl.appendChild(clone);
     });
   } catch (error) {
@@ -167,6 +178,10 @@ async function displayStudentActivities(studentUid) {
   }
 }
 
+/**
+ * Fetches all assigned activities from the 'activities' collection.
+ * @returns {Promise<Array<Object>>} A list of activity objects.
+ */
 async function getAssignedActivities() {
   const activitiesCol = collection(db, "activities");
   const q = query(activitiesCol);
@@ -174,6 +189,11 @@ async function getAssignedActivities() {
   return activitySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
 
+/**
+ * Fetches all submissions for a specific student.
+ * @param {string} studentUid - The authUid of the student.
+ * @returns {Promise<Array<Object>>} A list of submission objects.
+ */
 async function getStudentSubmissions(studentUid) {
   if (!studentUid) return [];
   const submissionsRef = collection(db, "submissions");
@@ -182,4 +202,5 @@ async function getStudentSubmissions(studentUid) {
   return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
 
-document.addEventListener("DOMContentLoaded", initActivityBreakdown);
+// Start the initialization process when the DOM is ready.
+document.addEventListener("DOMContentLoaded", init);
