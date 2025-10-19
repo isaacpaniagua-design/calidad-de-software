@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Populate individual activity dropdown
     let activityOptions = '<option value="">Seleccione una actividad</option>';
     courseActivities.forEach(activity => {
-        activityOptions += `<option value="${activity.id}">${activity.title}</option>`;
+        activityOptions += `<option value="${activity.id}">${activity.title || '(Sin Título)'}</option>`;
     });
     individualActivitySelect.innerHTML = activityOptions;
 
@@ -50,7 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let options = '<option value="">Seleccione un estudiante</option>';
         snapshot.forEach(doc => {
             const student = doc.data();
-            options += `<option value="${doc.id}" data-uid="${student.authUid || ''}">${student.name}</option>`;
+            const studentName = student.name || '(Sin Nombre)';
+            options += `<option value="${doc.id}" data-uid="${student.authUid || ''}">${studentName}</option>`;
         });
         studentSelectForGrading.innerHTML = options;
         studentSelectForIndividual.innerHTML = options; // Populate both dropdowns
@@ -117,7 +118,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const submissionsCollection = collection(db, "submissions");
-            // Find the activity details from courseActivities array
             const activityRef = courseActivities.find(a => a.id === selectedActivityId);
 
             if (!activityRef) {
@@ -137,7 +137,6 @@ document.addEventListener('DOMContentLoaded', () => {
             individualStatus.className = "text-green-600";
             assignIndividualActivityForm.reset();
             
-            // Refresh the grading list if that student is currently selected
             if(studentSelectForGrading.value === studentDocId) {
                 await loadStudentActivities(studentDocId, studentUid);
             }
@@ -183,10 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
         activitiesContainer.innerHTML = '';
         
         const relevantActivities = allActivities.filter(activity => {
-            // An activity is relevant if it's a group activity (no individual flag)
-            // OR if there's a specific submission for this student for this activity.
             const isAssigned = studentSubmissions.some(s => s.activityId === activity.id);
-            // This logic is simplified: we show all group activities PLUS any activity this student has a submission for.
             return !activity.description.includes("(Individual)") || isAssigned;
         });
 
@@ -205,8 +201,8 @@ document.addEventListener('DOMContentLoaded', () => {
             activityEl.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-md';
             activityEl.innerHTML = `
                 <div>
-                    <p class="font-semibold">${activity.title}</p>
-                    <p class="text-sm text-gray-500">${activity.description}</p>
+                    <p class="font-semibold">${activity.title || '(Sin Título)'}</p>
+                    <p class="text-sm text-gray-500">${activity.description || '(Sin descripción)'}</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <input type="number" min="0" max="100" placeholder="N/A" 
