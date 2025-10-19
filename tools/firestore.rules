@@ -2,102 +2,68 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
+  
+    // --- Helper Functions ---
+    // Checks if the requesting user's UID is listed in the 'teachers' collection.
+    // This is the primary way we identify a teacher.
     function isTeacher() {
-      return isAuthenticated() && exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
+      return exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
     }
 
-    match /students/{studentId} {
-      allow read, write: if isTeacher();
-    }
+    // --- Core Collections ---
 
-    match /grades/{studentId} {
-  // ✅ Cambio: Se separa 'read' en 'get' y 'list' para ser más explícitos.
-  // Permite a los docentes listar todos los documentos, y a los estudiantes obtener solo el suyo.
-allow read: if isTeacher() || 
-                 (isAuthenticated() && resource.data.authUid == request.auth.uid);
-
-  // PERMISO DE ESCRITURA (WRITE):
-  // Sólo los docentes pueden crear, editar o eliminar documentos de calificaciones.
-  allow write: if isTeacher();
-
-  // La regla de escritura se mantiene igual, es correcta.
-  allow write: if isTeacher();
-      match /activities/{activityId} {
-        allow read: if isTeacher() || (isAuthenticated() && request.auth.uid == studentId);
-        allow write: if isTeacher();
-      }
-    }
-
+    // Activities: The master list of all assignments.
     match /activities/{activityId} {
-  // Permite a CUALQUIER usuario que haya iniciado sesión leer la lista.
-  allow read: if isAuthenticated();
-  // Solo los docentes pueden crear o modificar actividades.
-  allow write: if isTeacher();
-}
+      // Allow any authenticated user (student or teacher) to read the activity list.
+      allow read: if request.auth != null;
+      // Only allow teachers to create, change, or delete activities.
+      allow write: if isTeacher();
+    }
+    
+    // Submissions: Contains each student's work and grades for each activity.
+    match /submissions/{submissionId} {
+      // A user can read a submission if:
+      // 1. They are a teacher (can read all submissions).
+      // OR
+      // 2. The 'studentUid' field in the submission matches their own UID.
+      allow read: if isTeacher() || request.auth.uid == resource.data.studentUid;
 
+      // A user can write to a submission if:
+      // 1. They are a teacher (for grading).
+      // OR
+      // 2. They are the student who owns the submission (for submitting files).
+      allow write: if isTeacher() || request.auth.uid == resource.data.studentUid;
+    }
 
+    // --- Administrative & User Data Collections ---
+
+    // Students: The list of all students in the course.
+    match /students/{studentId} {
+      // Allow teachers to read the full student list.
+      // A student can read their own document.
+      allow read: if isTeacher() || request.auth.uid == resource.data.authUid;
+      // Writing is restricted to teachers.
+      allow write: if isTeacher();
+    }
+    
+    // Teachers: The authoritative list of users with teacher privileges.
     match /teachers/{teacherId} {
+      // Only other teachers can see who is a teacher.
       allow read: if isTeacher();
+      // Writing to this collection should be done manually in the Firebase Console
+      // or by a super-admin role (not implemented here for security).
       allow write: if false;
     }
     
-match /studentUploads/{uploadId} {
-      // PERMISOS DE LECTURA (CORREGIDOS):
-      // 'get': Permite a un usuario leer un documento si conoce su ID y es el propietario.
-      allow get: if isTeacher() || (isAuthenticated() && request.auth.uid == resource.data.student.uid);
-
-      // 'list': Esta es la corrección clave. Permite a un estudiante realizar una CONSULTA
-      // a la colección SÓLO si está filtrando por su propio ID de usuario.
-      allow list: if isTeacher() || (isAuthenticated() && request.query.where[0][0] == 'student.uid' && request.query.where[0][2] == request.auth.uid);
-
-      // PERMISOS DE ESCRITURA (sin cambios):
-      allow create: if isTeacher() || (isAuthenticated() && request.auth.uid == request.resource.data.student.uid);
-      allow update, delete: if isTeacher();
-    }
-    
-    match /materials/{materialId} {
-      allow read: if isAuthenticated();
+    // Grades: This appears to be part of a separate data model.
+    // The rules below are preserved for that model's functionality.
+    match /grades/{gradeId} {
+      allow read: if isTeacher() || request.auth.uid == resource.data.authUid;
       allow write: if isTeacher();
-    }
-    match /forum_topics/{topicId} {
-      allow read, write: if isAuthenticated();
-      match /replies/{replyId} {
-        allow read, write: if isAuthenticated();
-      }
-    }
-   // Asistencias
-match /attendances/{attendanceId} {
-  allow read: if isAuthenticated();
-
-  // REGLA CORREGIDA:
-  // Un usuario autenticado solo puede crear un registro de asistencia
-  // si el UID del nuevo documento coincide con su propio UID de autenticación.
-  // Esto garantiza que un estudiante no pueda registrar asistencia por otro.
-  allow create: if isAuthenticated() &&
-                   request.auth.uid == request.resource.data.uid &&
-                   request.auth.uid == request.resource.data.createdByUid;
-
-  // Se eliminan las reglas de update y delete para que un registro
-  // de asistencia no pueda ser modificado ni borrado desde el cliente.
-  allow update, delete: if isTeacher(); // Opcional: solo si los docentes necesitan este poder
-}
-    match /planesDePrueba/{planId} {
-      allow read, write: if isTeacher();
-    }
-    match /courses/{courseId} {
-      allow read: if isAuthenticated();
-      allow write: if isTeacher();
-    }
-    match /grupos/{grupoId} {
-      allow read: if isAuthenticated();
-      allow write: if isTeacher();
-      match /members/{memberId} {
-        allow read, write: if isTeacher();
+      
+      match /activities/{activityId} {
+         allow read: if isTeacher() || request.auth.uid == resource.data.authUid;
+         allow write: if isTeacher();
       }
     }
   }
