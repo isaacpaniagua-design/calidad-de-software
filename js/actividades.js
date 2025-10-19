@@ -1,6 +1,6 @@
 
 import {
-    getApp,
+    initFirebase,
     getDb
 } from './firebase.js';
 import {
@@ -15,8 +15,8 @@ import {
 } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 import { courseActivities } from './course-activities.js';
 
+initFirebase();
 const db = getDb();
-const app = getApp();
 
 document.addEventListener('DOMContentLoaded', () => {
     // Shared student dropdowns
