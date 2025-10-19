@@ -2,7 +2,6 @@
 
 import {
   getDb,
-  findStudentByUid,
 } from "./firebase.js";
 import {
   collection,
@@ -27,8 +26,7 @@ function init() {
         displayStudentActivities(user.uid);
       }
     } else {
-      // Handle case where no user is logged in, if necessary.
-      console.log("No user is signed in.");
+      console.log("No user is signed in. Public view, if any.");
     }
   });
 }
@@ -40,35 +38,37 @@ async function setupTeacherView() {
   const selectorContainer = document.getElementById("teacher-student-selector-container");
   const studentSelector = document.getElementById("student-selector");
   
-  // Elements should be visible at this point, but we still check.
   if (!selectorContainer || !studentSelector) {
     console.error("Teacher view elements not found. Cannot set up student selector.");
     return;
   }
   
-  // The role-gate has already made this visible.
   selectorContainer.hidden = false;
 
-  const students = await getStudents();
-  studentSelector.innerHTML = '<option value="">Seleccione un estudiante</option>' + students
-    .map(student => `<option value="${student.uid}">${student.name}</option>`)
-    .join('');
+  try {
+    const students = await getStudents();
+    studentSelector.innerHTML = '<option value="">Seleccione un estudiante</option>' + students
+      .map(student => `<option value="${student.uid}">${student.name}</option>`)
+      .join('');
 
-  studentSelector.addEventListener("change", (e) => {
-    const studentUid = e.target.value;
-    if (studentUid) {
-      displayStudentActivities(studentUid);
-    } else {
-      document.getElementById("activity-list").innerHTML = '';
-      const emptyEl = document.getElementById("activity-list-empty");
-      if (emptyEl) {
-        emptyEl.hidden = false;
-        emptyEl.textContent = 'Seleccione un estudiante para ver sus actividades.';
+    studentSelector.addEventListener("change", (e) => {
+      const studentUid = e.target.value;
+      if (studentUid) {
+        displayStudentActivities(studentUid);
+      } else {
+        document.getElementById("activity-list").innerHTML = '';
+        const emptyEl = document.getElementById("activity-list-empty");
+        if (emptyEl) {
+          emptyEl.hidden = false;
+          emptyEl.textContent = 'Seleccione un estudiante para ver sus actividades.';
+        }
       }
-    }
-  });
+    });
+  } catch (error) {
+    console.error("Failed to get students for teacher view:", error);
+    studentSelector.innerHTML = '<option value="">Error al cargar estudiantes</option>';
+  }
 }
-
 
 /**
  * Fetches all students from the 'students' collection.
@@ -104,8 +104,11 @@ async function displayStudentActivities(studentUid) {
   emptyEl.hidden = true;
 
   try {
-    const activities = await getAssignedActivities();
-    const submissions = await getStudentSubmissions(studentUid);
+    // Fetch activities and submissions in parallel for efficiency and robustness.
+    const [activities, submissions] = await Promise.all([
+      getAssignedActivities(),
+      getStudentSubmissions(studentUid)
+    ]);
 
     if (activities.length === 0) {
       emptyEl.textContent = 'No hay actividades asignadas por el momento.';
@@ -120,7 +123,6 @@ async function displayStudentActivities(studentUid) {
       clone.classList.remove("activity-item-template");
       clone.style.display = 'block';
 
-      // ... (rest of the rendering logic remains the same)
       const titleEl = clone.querySelector('.font-semibold');
       if(titleEl) titleEl.textContent = activity.title;
 
@@ -142,6 +144,9 @@ async function displayStudentActivities(studentUid) {
             } else if (typeof submission.grade === 'number') {
                 statusBadge.textContent = 'Calificado';
                 statusBadge.className = 'status-badge bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full';
+            } else {
+                statusBadge.textContent = 'Visto';
+                statusBadge.className = 'status-badge bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full';
             }
         }
         
@@ -166,12 +171,11 @@ async function displayStudentActivities(studentUid) {
         if(noSubmissionText) noSubmissionText.style.display = 'block';
       }
 
-
       listEl.appendChild(clone);
     });
   } catch (error) {
       console.error("Error displaying student activities:", error);
-      emptyEl.textContent = "Error al cargar las actividades.";
+      emptyEl.textContent = "Error al cargar las actividades. Revise la consola para más detalles.";
       emptyEl.hidden = false;
   } finally {
       loadingEl.hidden = true;
@@ -180,12 +184,12 @@ async function displayStudentActivities(studentUid) {
 
 /**
  * Fetches all assigned activities from the 'activities' collection.
+ * This is a simplified and more direct query.
  * @returns {Promise<Array<Object>>} A list of activity objects.
  */
 async function getAssignedActivities() {
   const activitiesCol = collection(db, "activities");
-  const q = query(activitiesCol);
-  const activitySnapshot = await getDocs(q);
+  const activitySnapshot = await getDocs(activitiesCol);
   return activitySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 }
 
