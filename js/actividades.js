@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Populate individual activity dropdown
     let activityOptions = '<option value="">Seleccione una actividad</option>';
     courseActivities.forEach(activity => {
-        activityOptions += `<option value="${activity.id}">${activity.title || '(Sin Título)'}</option>`;
+        activityOptions += `<option value="${activity.activityId}">${activity.activityTitle || '(Sin Título)'}</option>`;
     });
     individualActivitySelect.innerHTML = activityOptions;
 
@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let options = '<option value="">Seleccione un estudiante</option>';
         snapshot.forEach(doc => {
             const student = doc.data();
-            const studentName = student.name || '(Sin Nombre)';
+            const studentName = student.fullName || '(Sin Nombre)';
             options += `<option value="${doc.id}" data-uid="${student.authUid || ''}">${studentName}</option>`;
         });
         studentSelectForGrading.innerHTML = options;
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const submissionsCollection = collection(db, "submissions");
-            const activityRef = courseActivities.find(a => a.id === selectedActivityId);
+            const activityRef = courseActivities.find(a => a.activityId === selectedActivityId);
 
             if (!activityRef) {
                 throw new Error("Actividad seleccionada no encontrada.");
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             await addDoc(submissionsCollection, {
                 studentUid: studentUid,
-                activityId: activityRef.id,
+                activityId: activityRef.activityId,
                 grade: null,
                 fileUrl: null,
                 submittedAt: null,
