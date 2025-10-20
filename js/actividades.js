@@ -1,5 +1,6 @@
 import { onFirebaseReady, getDb, onAuth } from './firebase.js';
-import { collection, doc, updateDoc, onSnapshot, query, where, getDocs, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+// --- ¡CORRECCIÓN DE VERSIÓN! ---
+import { collection, doc, updateDoc, onSnapshot, query, where, getDocs, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 let db;
 let studentsList = [];
@@ -12,12 +13,8 @@ const studentNameDisplay = document.getElementById("student-name-display");
 const activitiesContainer = document.getElementById("activities-container");
 const mainContent = document.querySelector(".container.mx-auto");
 
-// --- LA SOLUCIÓN CORRECTA: ESPERAR A FIREBASE ---
 onFirebaseReady(() => {
-    // Ahora es seguro llamar a getDb()
     db = getDb();
-
-    // El auth-guard ya protege la página, pero onAuth nos da el `user`
     onAuth(user => {
         if (user) {
             initActividadesPage(user);
@@ -41,10 +38,9 @@ function initActividadesPage(user) {
 async function loadStudentsFromFirestore() {
     if (!studentSelect) return;
     studentSelect.disabled = true;
-    studentSelect.innerHTML = "<option>Cargando estudiantes...</option>";
+    studentSelect.innerHTML = "<option>Cargando estudiantes...</option>';
 
     try {
-        // `db` ahora está garantizado que no es undefined
         const studentsSnapshot = await getDocs(collection(db, 'students'));
         studentsList = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         studentsList.sort((a, b) => a.name.localeCompare(b.name));
@@ -60,7 +56,6 @@ async function loadStudentsFromFirestore() {
     } catch (error) {
         console.error("Error definitivo cargando estudiantes desde Firestore:", error);
         studentSelect.innerHTML = `<option value="">Error al cargar</option>`;
-        // Aquí podríamos intentar cargar desde JSON como un fallback si quisiéramos
     }
 }
 

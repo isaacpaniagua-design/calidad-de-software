@@ -1,15 +1,12 @@
 import { onFirebaseReady, getDb, onAuth } from './firebase.js';
-import { getDocs, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+// --- ¡CORRECCIÓN DE VERSIÓN! ---
+import { getDocs, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 import { courseActivities } from './course-activities.js';
 
 let db;
 
-// --- LA SOLUCIÓN CORRECTA: ESPERAR A FIREBASE ---
 onFirebaseReady(() => {
-    // Ahora es seguro llamar a getDb()
     db = getDb();
-
-    // El auth-guard ya protege la página, pero onAuth nos da el `user`
     onAuth(user => {
         if (user) {
             setupAssignActivities(user);
@@ -25,7 +22,6 @@ async function loadStudentsIntoAssignForm() {
     studentSelect.innerHTML = '<option>Cargando...</option>';
 
     try {
-        // `db` ahora está garantizado que no es undefined
         const studentsSnapshot = await getDocs(collection(db, 'students'));
         const students = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         students.sort((a, b) => a.name.localeCompare(b.name));
