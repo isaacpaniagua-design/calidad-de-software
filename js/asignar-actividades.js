@@ -1,15 +1,35 @@
-import { getDb, onAuth } from './firebase.js';
-import { collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+import { getDb } from './firebase.js';
+import { getDocs, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 import { courseActivities } from './course-activities.js';
 
 let db;
 
-function getBasePath() {
-    const layoutScript = document.querySelector("script[src*='layout.js']");
-    if (layoutScript) {
-        return layoutScript.src.replace('js/layout.js', '');
+async function loadStudentsIntoAssignForm() {
+    const studentSelect = document.getElementById('student-select-individual');
+    if (!studentSelect) return;
+
+    studentSelect.disabled = true;
+    studentSelect.innerHTML = '<option>Cargando...</option>';
+
+    try {
+        if (!db) throw new Error("La BD no está lista.");
+
+        const studentsSnapshot = await getDocs(collection(db, 'students'));
+        const students = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        students.sort((a, b) => a.name.localeCompare(b.name));
+
+        studentSelect.innerHTML = '<option value="">Seleccione estudiante</option>';
+        students.forEach(student => {
+            const option = document.createElement('option');
+            option.value = student.id;
+            option.textContent = student.name;
+            studentSelect.appendChild(option);
+        });
+        studentSelect.disabled = false;
+    } catch (error) {
+        console.error("Error cargando estudiantes para asignar: ", error);
+        studentSelect.innerHTML = '<option value="">Error al cargar</option>';
     }
-    return './';
 }
 
 function setupAssignActivities(user) {
@@ -20,36 +40,14 @@ function setupAssignActivities(user) {
         return;
     }
     
-    const studentSelect = document.getElementById('student-select-individual');
     const activitySelect = document.getElementById('activity-select-individual');
     const assignForm = document.getElementById('assign-individual-activity-form');
 
-    if (!studentSelect || !activitySelect || !assignForm) {
+    if (!activitySelect || !assignForm) {
         return;
     }
 
-    // --- ¡CORRECCIÓN DE RUTA! ---
-    const basePath = getBasePath();
-    const studentJsonUrl = `${basePath}students.json`;
-
-    fetch(studentJsonUrl)
-        .then(response => {
-            if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
-            return response.json();
-        })
-        .then(students => {
-            studentSelect.innerHTML = '<option value="">Seleccione un estudiante</option>';
-            students.sort((a,b) => a.name.localeCompare(b.name)).forEach(student => {
-                const option = document.createElement('option');
-                option.value = student.id;
-                option.textContent = student.name;
-                studentSelect.appendChild(option);
-            });
-        })
-        .catch(error => {
-            console.error("Error al cargar students.json: ", error);
-            studentSelect.innerHTML = '<option value="">Error al cargar lista</option>';
-        });
+    loadStudentsIntoAssignForm(); // ¡CORRECCIÓN! Usar Firestore
 
     // Cargar actividades (local)
     activitySelect.innerHTML = '<option value="">Seleccione una actividad</option>';
@@ -65,21 +63,22 @@ function setupAssignActivities(user) {
         activitySelect.appendChild(group);
     });
 
-    // Listener del formulario
     assignForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const assignStatus = document.getElementById('assign-status');
+        const gradeInput = document.getElementById('grade-input');
+        const studentSelect = document.getElementById('student-select-individual');
 
         if (!db) {
-            assignStatus.textContent = 'Error: la base de datos no está lista.';
+            assignStatus.textContent = 'Error: BD no lista.';
             return;
         }
 
         const studentId = studentSelect.value;
         const activityId = activitySelect.value;
-        const grade = document.getElementById('grade-input').value;
+        const grade = gradeInput.value;
         if (!studentId || !activityId || grade === '') {
-            assignStatus.textContent = 'Por favor, complete todos los campos.';
+            assignStatus.textContent = 'Complete todos los campos.';
             return;
         }
         
@@ -93,19 +92,22 @@ function setupAssignActivities(user) {
                 grade: Number(grade),
                 assignedAt: serverTimestamp()
             });
-            assignStatus.textContent = 'Calificación asignada correctamente.';
+            assignStatus.textContent = 'Asignada correctamente.';
             assignForm.reset();
             
-            // Forzar recarga en la otra vista si el estudiante es el mismo
             const displaySelect = document.getElementById('student-select-display');
             if (displaySelect && displaySelect.value === studentId) {
                  displaySelect.dispatchEvent(new Event('change'));
             }
         } catch (error) {
             console.error("Error al asignar calificación: ", error);
-            assignStatus.textContent = 'Error al asignar calificación.';
+            assignStatus.textContent = 'Error al asignar.';
         }
     });
 }
 
-onAuth(setupAssignActivities);
+if (typeof window.QS_PAGE_INIT === 'undefined') {
+    window.QS_PAGE_INIT = {};
+}
+window.QS_PAGE_INIT.assignActivities = setupAssignActivities;
+

@@ -12,7 +12,7 @@ import {
   onSnapshot,
   query,
   where,
-  getDocs,
+  getDocs, // Asegurarnos de tener getDocs
   writeBatch,
   deleteDoc,
   serverTimestamp
@@ -23,27 +23,20 @@ let studentsList = [];
 let selectedStudentId = null;
 let unsubscribeFromGrades = null;
 
+// Referencias al DOM
 const studentSelect = document.getElementById("student-select-display");
 const activitiesListSection = document.getElementById("activities-list-section");
 const studentNameDisplay = document.getElementById("student-name-display");
 const activitiesContainer = document.getElementById("activities-container");
 const mainContent = document.querySelector(".container.mx-auto");
 
-function getBasePath() {
-    const layoutScript = document.querySelector("script[src*='layout.js']");
-    if (layoutScript) {
-        return layoutScript.src.replace('js/layout.js', '');
-    }
-    return './';
-}
-
 export function initActividadesPage(user) {
-  db = getDb();
+  db = getDb(); // Obtenemos la BD. El auth-guard ya asegura que está lista.
   const isTeacher = user && (localStorage.getItem("qs_role") || "").toLowerCase() === "docente";
   
   if (isTeacher) {
     if (mainContent) mainContent.style.display = "block";
-    loadStudentsIntoDisplay();
+    loadStudentsFromFirestore(); // ¡CORRECCIÓN! Usar Firestore.
     setupDisplayEventListeners();
   } else {
     if (mainContent)
@@ -51,23 +44,21 @@ export function initActividadesPage(user) {
   }
 }
 
-async function loadStudentsIntoDisplay() {
+// ¡¡SOLUCIÓN DEFINITIVA!! Cargar estudiantes desde Firestore de forma segura
+async function loadStudentsFromFirestore() {
     if (!studentSelect) return;
     studentSelect.disabled = true;
     studentSelect.innerHTML = "<option>Cargando estudiantes...</option>";
     
-    // --- ¡CORRECCIÓN DE RUTA! ---
-    const basePath = getBasePath();
-    const studentJsonUrl = `${basePath}students.json`;
-
     try {
-        const response = await fetch(studentJsonUrl);
-        if (!response.ok) {
-            throw new Error(`Error HTTP ${response.status} al cargar ${studentJsonUrl}`);
+        // onAuth (usado en auth-guard) nos garantiza que para este punto, db ya está inicializado.
+        if (!db) {
+            throw new Error("La conexión con la base de datos no está disponible.");
         }
-        const students = await response.json();
-        
-        studentsList = students.sort((a, b) => a.name.localeCompare(b.name));
+
+        const studentsSnapshot = await getDocs(collection(db, 'students'));
+        studentsList = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        studentsList.sort((a, b) => a.name.localeCompare(b.name));
 
         studentSelect.innerHTML = '<option value="">-- Seleccione para ver --</option>';
         studentsList.forEach((student) => {
@@ -78,15 +69,15 @@ async function loadStudentsIntoDisplay() {
         });
         studentSelect.disabled = false;
     } catch (error) {
-        console.error("Error definitivo cargando students.json:", error);
-        studentSelect.innerHTML = `<option value="">Error al cargar lista</option>`;
+        console.error("Error definitivo cargando estudiantes desde Firestore:", error);
+        studentSelect.innerHTML = `<option value="">Error al cargar</option>`;
     }
 }
 
 function renderStudentGrades(grades) {
     activitiesContainer.innerHTML = "";
     if (grades.length === 0) {
-        activitiesContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Este estudiante no tiene calificaciones.</p>';
+        activitiesContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Este estudiante no tiene calificaciones asignadas.</p>';
         return;
     }
     grades.sort((a,b) => (a.assignedAt?.toDate() || 0) - (b.assignedAt?.toDate() || 0));
@@ -110,7 +101,7 @@ function renderStudentGrades(grades) {
 }
 
 function loadGradesForStudent(studentId) {
-    if (unsubscribeFromGrades) unsubscribeFromGrades(); 
+    if (unsubscribeFromGrades) unsubscribeFromGrades();
     if (!db) return;
     const gradesQuery = query(collection(db, "grades"), where("studentId", "==", studentId));
     
@@ -119,7 +110,7 @@ function loadGradesForStudent(studentId) {
         renderStudentGrades(grades);
     }, (error) => {
         console.error("Error al cargar calificaciones:", error);
-        activitiesContainer.innerHTML = '<p class="text-center text-red-500 py-4">Error al cargar.</p>';
+        activitiesContainer.innerHTML = '<p class="text-center text-red-500 py-4">Error al cargar calificaciones.</p>';
     });
 }
 
@@ -141,7 +132,7 @@ function setupDisplayEventListeners() {
 
     activitiesContainer.addEventListener("change", async (e) => {
         if (e.target.classList.contains("grade-input-display")) {
-            if (!db) { alert("La base de datos no está lista. Recargue."); return; }
+            if (!db) return alert("La base de datos no está lista. Recargue la página.");
             const input = e.target;
             input.disabled = true;
             try {
@@ -157,7 +148,7 @@ function setupDisplayEventListeners() {
     activitiesContainer.addEventListener("click", async (e) => {
         const targetButton = e.target.closest('button[data-action="delete-grade"]');
         if (targetButton) {
-             if (!db) { alert("La base de datos no está lista. Recargue."); return; }
+            if (!db) return alert("La base de datos no está lista. Recargue la página.");
             if (confirm("¿Eliminar esta calificación?")) {
                 try {
                     await deleteDoc(doc(db, "grades", targetButton.dataset.gradeId));
@@ -169,4 +160,9 @@ function setupDisplayEventListeners() {
     });
 }
 
-onAuth(initActividadesPage);
+// El script sigue siendo iniciado por onAuth, que es llamado desde auth-guard.js
+// auth-guard.js ya espera a que Firebase esté listo, por lo que aquí es seguro asumir que db existe.
+if (typeof window.QS_PAGE_INIT === 'undefined') {
+    window.QS_PAGE_INIT = {};
+}
+window.QS_PAGE_INIT.actividades = initActividadesPage;
