@@ -5,6 +5,21 @@
 // Asegúrate de que el archivo 'updates.js' que te proporcioné antes exista en la misma carpeta 'js/'.
 import { latestVersion, lastSeenVersionKey } from "./updates.js";
 
+const SCRIPT_PATH = document.currentScript.src;
+
+function getBasePath() {
+    try {
+        const url = new URL('./', SCRIPT_PATH);
+        const path = url.pathname;
+        const basePath = path.substring(0, path.lastIndexOf('js/'));
+        return basePath;
+    } catch (e) {
+        console.error("Could not determine base path", e);
+        return "/";
+    }
+}
+
+
 (function initializeLoadingOverlay() {
   ensureLoadingOverlay();
   try {
@@ -50,11 +65,7 @@ document.addEventListener("DOMContentLoaded", function () {
   root.classList.remove("qs-loading");
   root.classList.add("qs-loaded");
 
-  const isIndexPage =
-    window.location.pathname.endsWith("/") ||
-    window.location.pathname.endsWith("/index.html");
-
-  const navPath = isIndexPage ? "" : "../";
+  const navPath = getBasePath();
 
   const navLinks = `
     <a href="${navPath}index.html">Inicio</a>

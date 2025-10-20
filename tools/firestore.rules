@@ -27,6 +27,13 @@ service cloud.firestore {
       allow write: if isTeacher() || request.auth.uid == resource.data.studentUid;
     }
 
+    // This rule was missing. It allows students to read all uploads and
+    // write their own. This is needed for the student uploads page.
+    match /studentUploads/{uploadId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == request.resource.data.student.uid;
+    }
+
     // --- Administrative & User Data Collections ---
 
     match /students/{studentId} {
