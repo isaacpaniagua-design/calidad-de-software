@@ -1,5 +1,4 @@
 import { onFirebaseReady, getDb, onAuth } from './firebase.js';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-storage.js';
 import { collection, addDoc, serverTimestamp, query, where, getDocs, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 import { courseActivities } from './course-activities.js';
 
@@ -7,19 +6,18 @@ import { courseActivities } from './course-activities.js';
 const studentUploadsSection = document.getElementById('studentUploadsSection');
 const studentUploadForm = document.getElementById('studentUploadForm');
 const activitySelect = document.getElementById('studentUploadTitle');
-const fileInput = document.getElementById('studentUploadFile');
+const uploadcareWidget = uploadcare.Widget('[role=uploadcare-uploader]');
 const descriptionInput = document.getElementById('studentUploadDescription');
 const statusDiv = document.getElementById('studentUploadStatus');
 const uploadList = document.getElementById('studentUploadList');
 const uploadEmpty = document.getElementById('studentUploadEmpty');
 const uploadCount = document.querySelector('[data-upload-count]');
 
-let db, storage, currentUser;
+let db, currentUser;
 
 // --- INICIALIZACIÓN ---
 onFirebaseReady(() => {
     db = getDb();
-    storage = getStorage();
     onAuth(user => {
         currentUser = user;
         if (user) {
@@ -32,18 +30,22 @@ onFirebaseReady(() => {
 });
 
 function initStudentUploads() {
-    if (studentUploadsSection) {
-        studentUploadsSection.style.display = 'block';
+    if (!studentUploadsSection || !currentUser || localStorage.getItem('qs_role') === 'docente') {
+        if(studentUploadsSection) studentUploadsSection.style.display = 'none';
+        return;
     }
-    if (statusDiv) {
-        statusDiv.textContent = 'Listo para recibir tu entrega.';
-    }
+
+    studentUploadsSection.style.display = 'block';
+    if (statusDiv) statusDiv.textContent = 'Listo para recibir tu entrega.';
     
     populateActivitiesDropdown();
     
     if (studentUploadForm) {
         studentUploadForm.addEventListener('submit', handleUpload);
-        document.getElementById('studentUploadReset').addEventListener('click', () => studentUploadForm.reset());
+        document.getElementById('studentUploadReset').addEventListener('click', () => {
+            studentUploadForm.reset();
+            uploadcareWidget.value(null); // Limpiar el widget de Uploadcare
+        });
     }
 
     // Si estamos en la página de calificaciones, cargamos el historial
@@ -52,13 +54,9 @@ function initStudentUploads() {
     }
 }
 
-// --- LÓGICA PRINCIPAL ---
-
 function populateActivitiesDropdown() {
     if (!activitySelect) return;
-
     activitySelect.innerHTML = '<option value="" selected disabled>Selecciona la actividad o asignación</option>';
-
     courseActivities.forEach(unit => {
         const group = document.createElement('optgroup');
         group.label = unit.unitLabel;
@@ -80,26 +78,20 @@ async function handleUpload(e) {
     }
 
     const activityId = activitySelect.value;
-    const file = fileInput.files[0];
+    const fileInfo = uploadcareWidget.value();
 
-    if (!activityId || !file) {
+    if (!activityId || !fileInfo) {
         statusDiv.textContent = 'Por favor, selecciona una actividad y un archivo.';
         return;
     }
 
-    statusDiv.textContent = `Subiendo archivo: ${file.name}...`;
+    statusDiv.textContent = `Registrando entrega...`;
     studentUploadForm.querySelector('button[type="submit"]').disabled = true;
 
     try {
+        const file = await fileInfo; // El widget devuelve una promesa
         const activityDetails = courseActivities.flatMap(u => u.activities).find(a => a.id === activityId);
-        
-        // 1. Subir archivo a Storage
-        const filePath = `student_uploads/${currentUser.uid}/${activityId}/${Date.now()}_${file.name}`;
-        const storageRef = ref(storage, filePath);
-        const uploadResult = await uploadBytes(storageRef, file);
-        const downloadURL = await getDownloadURL(uploadResult.ref);
 
-        // 2. Guardar registro en Firestore
         await addDoc(collection(db, 'studentUploads'), {
             studentId: currentUser.uid,
             studentName: currentUser.displayName,
@@ -107,19 +99,19 @@ async function handleUpload(e) {
             activityId: activityId,
             activityName: activityDetails ? activityDetails.title : 'Actividad Desconocida',
             description: descriptionInput.value || '',
-            fileURL: downloadURL,
+            fileURL: file.cdnUrl, // URL del archivo desde Uploadcare
             fileName: file.name,
-            filePath: filePath,
             uploadedAt: serverTimestamp(),
-            status: 'entregado' // Estado inicial
+            status: 'entregado'
         });
 
         statusDiv.textContent = '¡Entrega exitosa!';
         studentUploadForm.reset();
+        uploadcareWidget.value(null); // Limpiar el widget
 
     } catch (error) {
         console.error("Error en la entrega: ", error);
-        statusDiv.textContent = 'Error al subir el archivo. Inténtalo de nuevo.';
+        statusDiv.textContent = 'Error al registrar la entrega. Inténtalo de nuevo.';
     } finally {
         studentUploadForm.querySelector('button[type="submit"]').disabled = false;
     }
@@ -141,7 +133,7 @@ function loadUploadHistory() {
         if(uploadEmpty) uploadEmpty.hidden = true;
         
         const uploads = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        uploads.sort((a, b) => b.uploadedAt - a.uploadedAt); // Más recientes primero
+        uploads.sort((a, b) => b.uploadedAt - a.uploadedAt);
 
         if(uploadCount) uploadCount.textContent = uploads.length;
         
@@ -149,7 +141,6 @@ function loadUploadHistory() {
         uploads.forEach(upload => {
             const li = document.createElement('li');
             li.className = 'student-uploads__item';
-            
             const uploadedDate = upload.uploadedAt ? upload.uploadedAt.toDate().toLocaleString() : 'Fecha desconocida';
 
             li.innerHTML = `
@@ -158,8 +149,8 @@ function loadUploadHistory() {
                     <a href="${upload.fileURL}" target="_blank" class="item-filename">${upload.fileName}</a>
                     <span class="item-date">${uploadedDate}</span>
                 </div>
-                <div class="item-status item-status--${upload.status.toLowerCase()}">
-                    <span>${upload.status}</span>
+                <div class="item-status item-status--${upload.status ? upload.status.toLowerCase() : 'entregado'}">
+                    <span>${upload.status || 'entregado'}</span>
                 </div>
             `;
             uploadList.appendChild(li);
