@@ -1,20 +1,14 @@
-import { getDb, onFirebaseReady } from './firebase.js'; // CAMBIO: Usamos onFirebaseReady
-import { getDocs, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+import { getDb, onAuth } from './firebase.js';
+import { collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 import { courseActivities } from './course-activities.js';
 
 let db;
 
 function setupAssignActivities(user) {
-    // Verificar si el usuario es docente
+    db = getDb(); // Obtenemos la BD para operaciones de escritura
     if (!user || localStorage.getItem('qs_role') !== 'docente') {
         const form = document.getElementById('assign-individual-activity-form');
-        if(form) form.style.display = 'none'; // Ocultar el formulario si no es docente
-        return;
-    }
-
-    db = getDb(); // Ahora es seguro obtener la instancia de la BD
-    if (!db) {
-        console.error("La asignación de actividades no puede iniciar porque la BD no está lista.");
+        if(form) form.style.display = 'none';
         return;
     }
     
@@ -25,24 +19,27 @@ function setupAssignActivities(user) {
     const gradeInput = document.getElementById('grade-input');
 
     if (!studentSelect || !activitySelect || !assignForm) {
-        return; // No hacer nada si los elementos no están en la página
+        return;
     }
 
-    // Cargar estudiantes
-    getDocs(collection(db, 'students'))
-        .then(studentsSnapshot => {
-            studentSelect.innerHTML = '<option value="">Seleccione un estudiante</option>'; 
-            studentsSnapshot.forEach(doc => {
-                const student = doc.data();
+    // ¡¡CORRECCIÓN!! Cargar lista de estudiantes desde JSON
+    fetch('./students.json')
+        .then(response => response.json())
+        .then(students => {
+            studentSelect.innerHTML = '<option value="">Seleccione un estudiante</option>';
+            students.sort((a,b) => a.name.localeCompare(b.name)).forEach(student => {
                 const option = document.createElement('option');
-                option.value = doc.id;
+                option.value = student.id;
                 option.textContent = student.name;
                 studentSelect.appendChild(option);
             });
         })
-        .catch(error => console.error("Error al cargar estudiantes para asignar: ", error));
+        .catch(error => {
+            console.error("Error al cargar estudiantes desde students.json: ", error);
+            studentSelect.innerHTML = '<option value="">Error al cargar</option>';
+        });
 
-    // Cargar actividades
+    // Cargar lista de actividades (esto es local, no hay problema)
     activitySelect.innerHTML = '<option value="">Seleccione una actividad</option>';
     courseActivities.forEach(unit => {
         const group = document.createElement('optgroup');
@@ -56,9 +53,15 @@ function setupAssignActivities(user) {
         activitySelect.appendChild(group);
     });
 
-    // Manejar el envío del formulario
+    // Manejar el envío del formulario (aquí sí se usa la BD)
     assignForm.addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (!db) { 
+            assignStatus.textContent = 'La base de datos no está lista. Inténtelo de nuevo.';
+            assignStatus.classList.add('text-red-500');
+            return;
+        }
+
         assignStatus.textContent = 'Asignando...';
         assignStatus.classList.remove('text-red-500', 'text-green-500');
 
@@ -85,8 +88,6 @@ function setupAssignActivities(user) {
             assignStatus.classList.add('text-green-500');
             assignForm.reset();
 
-            // Si el estudiante cuyas calificaciones se están mostrando es el mismo al que se le asignó,
-            // dispara un evento para forzar la recarga de su lista de calificaciones.
             if (document.getElementById('student-select-display').value === studentId) {
                  document.getElementById('student-select-display').dispatchEvent(new Event('change'));
             }
@@ -98,5 +99,5 @@ function setupAssignActivities(user) {
     });
 }
 
-// CAMBIO: Usar onFirebaseReady para asegurar que Firebase esté inicializado
-onFirebaseReady(setupAssignActivities);
+// El script se inicia con onAuth para tener el contexto del usuario
+onAuth(setupAssignActivities);

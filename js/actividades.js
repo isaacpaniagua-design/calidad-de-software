@@ -1,7 +1,7 @@
 // js/actividades.js
 
 import {
-  onFirebaseReady, // CAMBIO: Usamos el nuevo inicializador
+  onAuth,
   getDb,
 } from "./firebase.js";
 
@@ -18,7 +18,7 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-let db; // Se inicializará de forma segura
+let db;
 let studentsList = [];
 let selectedStudentId = null;
 let unsubscribeFromGrades = null;
@@ -33,18 +33,13 @@ const createGroupActivityForm = document.getElementById("create-group-activity-f
 const submitGroupActivityBtn = document.getElementById("submit-group-activity");
 const batchStatusDiv = document.getElementById("batch-status");
 
-function initActividadesPage(user) {
+export function initActividadesPage(user) {
+  db = getDb(); // Obtenemos la BD para operaciones futuras
   const isTeacher = user && (localStorage.getItem("qs_role") || "").toLowerCase() === "docente";
   
   if (isTeacher) {
-    db = getDb(); // Ahora es seguro obtener la instancia de la BD
-    if (!db) {
-        console.error("Error crítico: La base de datos no está disponible.");
-        if(mainContent) mainContent.innerHTML = '<p class="text-red-500 text-center">Error de conexión con la base de datos.</p>';
-        return;
-    }
     if (mainContent) mainContent.style.display = "block";
-    loadStudentsIntoDisplay();
+    loadStudentsIntoDisplay(); // Cargar estudiantes desde JSON
     setupDisplayEventListeners();
   } else {
     if (mainContent)
@@ -52,11 +47,45 @@ function initActividadesPage(user) {
   }
 }
 
+// ¡¡CORRECCIÓN PRINCIPAL!! Cargar estudiantes desde students.json
 async function loadStudentsIntoDisplay() {
     if (!studentSelect) return;
     studentSelect.disabled = true;
     studentSelect.innerHTML = "<option>Cargando estudiantes...</option>";
     try {
+        const response = await fetch('./students.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const students = await response.json();
+        
+        // Asumimos que el JSON es un array de objetos {id, name, ...}
+        studentsList = students.sort((a, b) => a.name.localeCompare(b.name));
+
+        studentSelect.innerHTML = '<option value="">-- Seleccione para ver --</option>';
+        studentsList.forEach((student) => {
+            const option = document.createElement("option");
+            option.value = student.id;
+            option.textContent = student.name;
+            studentSelect.appendChild(option);
+        });
+        studentSelect.disabled = false;
+    } catch (error) {
+        console.error("Error cargando la lista de estudiantes desde students.json:", error);
+        studentSelect.innerHTML = `<option value="">Error al cargar</option>`;
+        // Fallback a Firestore si el JSON falla
+        console.log("Intentando cargar desde Firestore como fallback...");
+        loadStudentsFromFirestore(); 
+    }
+}
+
+// Fallback: Cargar desde Firestore si students.json no funciona
+async function loadStudentsFromFirestore() {
+    try {
+        if (!db) {
+          console.error("La base de datos no está lista para el fallback de Firestore.");
+          return;
+        }
         const studentsSnapshot = await getDocs(collection(db, 'students'));
         studentsList = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         studentsList.sort((a, b) => a.name.localeCompare(b.name));
@@ -70,8 +99,8 @@ async function loadStudentsIntoDisplay() {
         });
         studentSelect.disabled = false;
     } catch (error) {
-        console.error("Error cargando la lista de estudiantes para visualización:", error);
-        studentSelect.innerHTML = `<option value="">Error al cargar</option>`;
+        console.error("Error definitivo cargando estudiantes desde Firestore:", error);
+        studentSelect.innerHTML = `<option value="">Error irrecuperable</option>`;
     }
 }
 
@@ -103,6 +132,7 @@ function renderStudentGrades(grades) {
 
 function loadGradesForStudent(studentId) {
     if (unsubscribeFromGrades) unsubscribeFromGrades(); 
+    if (!db) return; // No intentar si la BD no está lista
     const gradesQuery = query(collection(db, "grades"), where("studentId", "==", studentId));
     
     unsubscribeFromGrades = onSnapshot(gradesQuery, (snapshot) => {
@@ -132,6 +162,7 @@ function setupDisplayEventListeners() {
 
     activitiesContainer.addEventListener("change", async (e) => {
         if (e.target.classList.contains("grade-input-display")) {
+            if (!db) { alert("La base de datos no está lista. Recargue la página."); return; }
             const input = e.target;
             input.disabled = true;
             const gradeId = input.dataset.gradeId;
@@ -150,6 +181,7 @@ function setupDisplayEventListeners() {
     activitiesContainer.addEventListener("click", async (e) => {
         const targetButton = e.target.closest('button[data-action="delete-grade"]');
         if (targetButton) {
+             if (!db) { alert("La base de datos no está lista. Recargue la página."); return; }
             const gradeId = targetButton.dataset.gradeId;
             if (confirm("¿Eliminar esta calificación?")) {
                 try {
@@ -164,15 +196,10 @@ function setupDisplayEventListeners() {
     if (createGroupActivityForm) {
         createGroupActivityForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            if (studentsList.length === 0) {
-                batchStatusDiv.textContent = "No hay estudiantes cargados para asignar la actividad.";
-                return;
-            }
+            if (!db) { alert("La base de datos no está lista. Recargue la página."); return; }
+            if (studentsList.length === 0) return alert("No hay estudiantes cargados.");
             const activityName = document.getElementById("group-activity-name").value.trim();
-            if (!activityName) {
-                batchStatusDiv.textContent = "El nombre de la actividad es requerido.";
-                return;
-            }
+            if (!activityName) return alert("El nombre de la actividad es requerido.");
             
             submitGroupActivityBtn.disabled = true;
             submitGroupActivityBtn.textContent = "Procesando...";
@@ -180,29 +207,22 @@ function setupDisplayEventListeners() {
             
             try {
                 const batch = writeBatch(db);
-                const activityId = `group-${Date.now()}`;
-                const newActivityData = {
-                    activityName,
-                    activityId,
-                    unit: document.getElementById("group-activity-unit").value,
-                    type: document.getElementById("group-activity-type").value,
-                    grade: 0,
-                    assignedAt: serverTimestamp()
-                };
-
                 studentsList.forEach((student) => {
                     const gradeRef = doc(collection(db, "grades")); 
                     batch.set(gradeRef, {
-                        ...newActivityData,
                         studentId: student.id,
+                        activityName: activityName,
+                        activityId: `group-${Date.now()}`,
+                        grade: 0,
+                        assignedAt: serverTimestamp()
                     });
                 });
                 await batch.commit();
-                batchStatusDiv.textContent = "¡Éxito! Actividad asignada a todos los estudiantes.";
+                batchStatusDiv.textContent = `¡Éxito! Actividad asignada.`;
                 createGroupActivityForm.reset();
             } catch (error) {
                 console.error("Error en lote:", error);
-                batchStatusDiv.textContent = "Error al asignar la actividad en grupo.";
+                batchStatusDiv.textContent = "Error al asignar.";
             } finally {
                 submitGroupActivityBtn.disabled = false;
                 submitGroupActivityBtn.textContent = "Añadir Actividad a Todos";
@@ -212,5 +232,5 @@ function setupDisplayEventListeners() {
     }
 }
 
-// CAMBIO: Usar onFirebaseReady para asegurar que Firebase esté inicializado
-onFirebaseReady(initActividadesPage);
+// Este script se sigue iniciando con onAuth para tener el contexto del usuario
+onAuth(initActividadesPage);
