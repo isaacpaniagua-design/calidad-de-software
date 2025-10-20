@@ -1,69 +1,91 @@
 <!DOCTYPE html>
 <html lang="es" data-layout="global">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Mis Calificaciones · Plataforma QS</title>
-    
-    <script>
-      // Injects a <base> tag to correctly resolve relative paths for assets (CSS, JS).
-      // This is essential for deployments in subdirectories, like GitHub Pages.
-      (function() {
-        const getBasePath = () => {
-          const path = window.location.pathname;
-          // Assumes the project name is the first segment after the user/org name.
-          // e.g., /user/repo-name/index.html -> /repo-name/
-          const repoNameMatch = path.match(/^\/([a-zA-Z0-9_-]+)/);
-          if (repoNameMatch) {
-            // Check for localhost to handle local development gracefully.
-            if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
-              return '/';
-            }
-            return `/${repoNameMatch[1]}/`;
-          }
-          return '/';
-        };
-        document.write('<base href="' + getBasePath() + '">');
-      })();
-    </script>
-
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/calificaciones.css">
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/calificaciones.css" />
+    <style>
+        :root {
+            --page-max-width: min(1180px, 94vw);
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --text-primary: #111827;
+            --surface: rgba(255, 255, 255, 0.92);
+            --border: rgba(148, 163, 184, 0.35);
+        }
+    </style>
 </head>
+
 <body>
+    <!-- Navbar y Footer inyectados por nav-inject.js -->
+    <div class="qs-nav" data-role="main-nav"></div>
+
     <main class="page-shell">
-        <div class="calificaciones-header">
-            <h1>Panel de Calificaciones</h1>
-            <p>Consulta el estado y feedback de tus entregas.</p>
-        </div>
-        
-        <div id="calificaciones-summary" class="calificaciones-summary">
-            <div class="summary-item" data-summary="promedio">
-                <span class="summary-label">Promedio General</span>
-                <span class="summary-value">--</span>
+        <div class="content-container">
+            <div class="header-section">
+                <h1>Mis Calificaciones</h1>
+                <div id="user-info" class="user-info-display">
+                    <p><strong>Estudiante:</strong> <span id="student-name">Cargando...</span></p>
+                    <p><strong>Matrícula:</strong> <span id="student-id">Cargando...</span></p>
+                </div>
             </div>
-            <div class="summary-item" data-summary="completadas">
-                <span class="summary-label">Entregas Completadas</span>
-                <span class="summary-value">--</span>
-            </div>
-            <div class="summary-item" data-summary="pendientes">
-                <span class="summary-label">Entregas Pendientes</span>
-                <span class="summary-value">--</span>
-            </div>
-        </div>
 
-        <div id="calificaciones-container" class="calificaciones-container">
-            <!-- El contenido se generará dinámicamente -->
-        </div>
+            <!-- Final Grade Summary -->
+            <div id="final-grade-summary" class="final-grade-summary-card">
+                <h2>Calificación Final del Curso</h2>
+                <p id="final-grade-display">0.00</p>
+                <small>Calculada en tiempo real desde las entregas calificadas.</small>
+            </div>
 
-        <div class="calificaciones-status" id="calificaciones-status" role="status" aria-live="polite">
-            Inicia sesión para ver tus calificaciones.
+            <!-- Detailed Grade Breakdown -->
+            <div id="grade-details-container" class="grade-details-grid">
+                <!-- Las tarjetas de unidad se insertarán aquí -->
+            </div>
+
+            <!-- Fallback message -->
+            <div id="no-grades-message" class="fallback-message" style="display: none;">
+                <p>Aún no hay calificaciones para mostrar.</p>
+                <p>Una vez que tus actividades sean calificadas, tus resultados aparecerán aquí.</p>
+            </div>
         </div>
     </main>
-    
+
+    <footer class="footer"></footer>
+
+    <!-- Plantillas para JS -->
+    <template id="unit-grade-template">
+        <div class="unit-grade-card">
+            <div class="unit-card-header">
+                <h3 class="unit-title"></h3>
+                <p class="unit-weight"></p>
+            </div>
+            <div class="unit-card-body">
+                <div class="unit-summary">
+                    <p class="unit-score">0.00</p>
+                    <small>Calificación de la Unidad</small>
+                </div>
+                <div class="category-breakdown"></div>
+            </div>
+        </div>
+    </template>
+
+    <template id="category-grade-template">
+        <div class="category-item">
+            <span class="category-label"></span>
+            <span class="category-score-display">
+                <span class="category-score"></span>
+                <span class="category-weight"></span>
+            </span>
+        </div>
+    </template>
+
+    <!-- Scripts -->
     <script type="module" src="js/calificaciones-logic.js"></script>
     <script defer src="js/back-home.js"></script>
-    <script type="module" src="js/layout.js"></script>
-
+    <script defer src="js/nav-inject.js"></script>
 </body>
+
 </html>
