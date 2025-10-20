@@ -17,7 +17,9 @@ import {
     calculateGrades,
     gradeSchema
 } from './grade-calculator.js';
-import { getActivityById } from './course-activities.js';
+import {
+    getActivityById
+} from './course-activities.js';
 
 const db = getDb();
 const auth = getAuth();
@@ -30,6 +32,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const noGradesMessage = document.getElementById('no-grades-message');
     const unitTemplate = document.getElementById('unit-grade-template');
     const categoryTemplate = document.getElementById('category-grade-template');
+    const activityBreakdownContainer = document.getElementById('activity-breakdown-container');
+    const activityList = document.getElementById('activity-list');
+    const activityItemTemplate = document.getElementById('activity-item-template');
 
     onAuthStateChanged(auth, user => {
         if (user) {
@@ -38,40 +43,43 @@ document.addEventListener('DOMContentLoaded', () => {
             subscribeToStudentSubmissions(user.uid);
         } else {
             console.log("No user is signed in.");
-            gradeDetailsContainer.innerHTML = '<p class="text-center text-red-500">No has iniciado sesión. Por favor, inicia sesión para ver tus calificaciones.</p>';
+            gradeDetailsContainer.innerHTML = '<p>Por favor, inicia sesión para ver tus calificaciones.</p>';
+            activityBreakdownContainer.style.display = 'none';
         }
     });
 
     function subscribeToStudentSubmissions(uid) {
         const submissionsQuery = query(collection(db, 'submissions'), where('studentUid', '==', uid));
 
-        onSnapshot(submissionsQuery, (snapshot) => {
-            const submissions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            displayCalculatedGrades(submissions);
+        onSnapshot(submissionsQuery, async (snapshot) => {
+            const submissions = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            await processAndDisplaySubmissions(submissions);
         }, (error) => {
             console.error("Error al obtener las calificaciones:", error);
             noGradesMessage.textContent = 'Error al cargar las calificaciones.';
-            noGradesMessage.classList.remove('hidden');
+            noGradesMessage.style.display = 'block';
+            activityBreakdownContainer.style.display = 'none';
         });
     }
 
-    function displayCalculatedGrades(submissions) {
+    async function processAndDisplaySubmissions(submissions) {
         if (submissions.length === 0) {
-            noGradesMessage.classList.remove('hidden');
+            noGradesMessage.style.display = 'block';
             finalGradeDisplay.textContent = "N/A";
             gradeDetailsContainer.innerHTML = '';
+            activityBreakdownContainer.style.display = 'none';
             return;
         }
 
-        noGradesMessage.classList.add('hidden');
-        gradeDetailsContainer.innerHTML = ''; // Clear previous content
+        noGradesMessage.style.display = 'none';
+        gradeDetailsContainer.innerHTML = '';
 
         const gradeResults = calculateGrades(submissions);
-
-        // Update final grade display
         finalGradeDisplay.textContent = gradeResults.finalGrade.toFixed(2);
 
-        // Populate the detailed breakdown
         for (const unitId in gradeResults.units) {
             const unitData = gradeResults.units[unitId];
             const unitSchema = gradeSchema[unitId];
@@ -83,10 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const unitWeight = unitCard.querySelector('.unit-weight');
             const categoryBreakdown = unitCard.querySelector('.category-breakdown');
 
-            // Find the unit label from courseActivities
-            const unitInfo = courseActivities.find(u => u.unitId === unitId);
-            unitTitle.textContent = unitInfo ? unitInfo.unitLabel : `Unidad ${unitId}`;
-            
+            unitTitle.textContent = unitSchema.label || `Unidad ${unitId}`;
             unitScore.textContent = unitData.unitScore.toFixed(2);
             unitWeight.textContent = `(Ponderación: ${unitSchema.weight * 100}%)`;
 
@@ -103,10 +108,68 @@ document.addEventListener('DOMContentLoaded', () => {
                 categoryLabel.textContent = categorySchema.label;
                 categoryScore.textContent = `${categoryData.score.toFixed(2)} / 100`;
                 categoryWeight.textContent = `(${categoryData.weightedScore.toFixed(2)} pts)`;
-
                 categoryBreakdown.appendChild(categoryItem);
             }
             gradeDetailsContainer.appendChild(unitCard);
         }
+
+        await displayActivityBreakdown(submissions);
+    }
+
+    async function displayActivityBreakdown(submissions) {
+        activityList.innerHTML = '';
+
+        const activityPromises = submissions.map(async (submission) => {
+            const activity = await getActivityById(submission.activityId);
+            return {
+                submission,
+                activity
+            };
+        });
+
+        const results = await Promise.all(activityPromises);
+
+        if (results.length > 0) {
+            activityBreakdownContainer.style.display = 'block';
+        } else {
+            activityBreakdownContainer.style.display = 'none';
+            return;
+        }
+
+        results.forEach(({
+            submission,
+            activity
+        }) => {
+            if (!activity) {
+                console.warn(`Activity details not found for ID: ${submission.activityId}`);
+                return;
+            }
+
+            const item = activityItemTemplate.content.cloneNode(true);
+            const nameEl = item.querySelector('.activity-name');
+            const statusEl = item.querySelector('.activity-status');
+            const gradeEl = item.querySelector('.activity-grade');
+            const linkEl = item.querySelector('.activity-submission-link');
+
+            nameEl.textContent = activity.title || 'Actividad sin título';
+
+            if (submission.grade !== undefined && submission.grade !== null) {
+                statusEl.textContent = 'Calificada';
+                gradeEl.textContent = `Calificación: ${submission.grade}`;
+                statusEl.classList.add('status-graded');
+            } else {
+                statusEl.textContent = 'Entregada';
+                gradeEl.textContent = 'Pendiente';
+                statusEl.classList.add('status-submitted');
+            }
+
+            if (submission.fileUrl) {
+                linkEl.href = submission.fileUrl;
+            } else {
+                linkEl.style.display = 'none';
+            }
+
+            activityList.appendChild(item);
+        });
     }
 });
