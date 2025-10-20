@@ -38,5 +38,15 @@ service cloud.firestore {
       allow read: if isTeacher();
       allow write: if false; 
     }
+
+    // Grades: Restoring this collection for 'calificaciones-logic.js' with secure rules.
+    match /grades/{gradeId} {
+      // Allow a user to get a specific document if they are a teacher or own the document.
+      allow get: if isTeacher() || request.auth.uid == resource.data.authUid;
+      // Allow a user to list documents only if they are a teacher or are querying by their own user ID.
+      allow list: if isTeacher() || (request.query.filters.authUid == request.auth.uid);
+      // Only teachers can create or update grades.
+      allow write: if isTeacher();
+    }
   }
 }
