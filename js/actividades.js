@@ -43,16 +43,15 @@ async function loadStudentsFromFirestore() {
         const studentsSnapshot = await getDocs(collection(db, 'students'));
         studentsList = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
-        // --- ¡CORRECCIÓN! ---
-        // Maneja el caso en que un estudiante no tenga `name`.
-        studentsList.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        // --- ¡CORRECCIÓN FINAL! Usando `displayName` ---
+        studentsList = studentsList.filter(student => student.displayName && student.displayName.trim() !== '');
+        studentsList.sort((a, b) => a.displayName.localeCompare(b.displayName));
 
         studentSelect.innerHTML = '<option value="">-- Seleccione para ver --</option>';
         studentsList.forEach((student) => {
             const option = document.createElement("option");
             option.value = student.id;
-            // Si no hay nombre, mostrar el ID para no tener una opción vacía.
-            option.textContent = student.name || student.id;
+            option.textContent = student.displayName;
             studentSelect.appendChild(option);
         });
         studentSelect.disabled = false;
@@ -108,7 +107,7 @@ function setupDisplayEventListeners() {
         selectedStudentId = studentSelect.value;
         if (selectedStudentId) {
             const student = studentsList.find((s) => s.id === selectedStudentId);
-            studentNameDisplay.textContent = student ? (student.name || 'ID: ' + student.id) : "N/A";
+            studentNameDisplay.textContent = student ? student.displayName : "N/A";
             activitiesListSection.style.display = "block";
             loadGradesForStudent(selectedStudentId);
         } else {
