@@ -2,7 +2,7 @@
 
 import {
   onAuth,
-  getDb,
+  // No necesitamos getDb aquí, porque lo recibiremos como parámetro
 } from "./firebase.js";
 
 import {
@@ -12,13 +12,13 @@ import {
   onSnapshot,
   query,
   where,
-  getDocs, // Asegurarnos de tener getDocs
+  getDocs,
   writeBatch,
   deleteDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-let db;
+let db; // Variable a nivel de módulo que almacenará la instancia de la BD
 let studentsList = [];
 let selectedStudentId = null;
 let unsubscribeFromGrades = null;
@@ -30,13 +30,16 @@ const studentNameDisplay = document.getElementById("student-name-display");
 const activitiesContainer = document.getElementById("activities-container");
 const mainContent = document.querySelector(".container.mx-auto");
 
-export function initActividadesPage(user) {
-  db = getDb(); // Obtenemos la BD. El auth-guard ya asegura que está lista.
+// --- ¡CORRECCIÓN CLAVE! ---
+// Aceptamos la instancia de la base de datos como segundo parámetro.
+export function initActividadesPage(user, database) {
+  db = database; // Asignamos la instancia recibida a nuestra variable local.
+  
   const isTeacher = user && (localStorage.getItem("qs_role") || "").toLowerCase() === "docente";
   
   if (isTeacher) {
     if (mainContent) mainContent.style.display = "block";
-    loadStudentsFromFirestore(); // ¡CORRECCIÓN! Usar Firestore.
+    loadStudentsFromFirestore();
     setupDisplayEventListeners();
   } else {
     if (mainContent)
@@ -44,14 +47,13 @@ export function initActividadesPage(user) {
   }
 }
 
-// ¡¡SOLUCIÓN DEFINITIVA!! Cargar estudiantes desde Firestore de forma segura
 async function loadStudentsFromFirestore() {
     if (!studentSelect) return;
     studentSelect.disabled = true;
     studentSelect.innerHTML = "<option>Cargando estudiantes...</option>";
     
     try {
-        // onAuth (usado en auth-guard) nos garantiza que para este punto, db ya está inicializado.
+        // Ahora `db` está garantizado que existe, porque se recibe desde auth-guard.
         if (!db) {
             throw new Error("La conexión con la base de datos no está disponible.");
         }
@@ -73,6 +75,8 @@ async function loadStudentsFromFirestore() {
         studentSelect.innerHTML = `<option value="">Error al cargar</option>`;
     }
 }
+
+// El resto del archivo no necesita cambios, ya que depende de la variable `db` del módulo.
 
 function renderStudentGrades(grades) {
     activitiesContainer.innerHTML = "";
@@ -160,8 +164,6 @@ function setupDisplayEventListeners() {
     });
 }
 
-// El script sigue siendo iniciado por onAuth, que es llamado desde auth-guard.js
-// auth-guard.js ya espera a que Firebase esté listo, por lo que aquí es seguro asumir que db existe.
 if (typeof window.QS_PAGE_INIT === 'undefined') {
     window.QS_PAGE_INIT = {};
 }

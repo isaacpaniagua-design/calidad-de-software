@@ -1,7 +1,7 @@
-import { getDb } from './firebase.js';
 import { getDocs, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 import { courseActivities } from './course-activities.js';
 
+// No necesitamos getDb de firebase.js, lo recibimos como parámetro
 let db;
 
 async function loadStudentsIntoAssignForm() {
@@ -12,6 +12,7 @@ async function loadStudentsIntoAssignForm() {
     studentSelect.innerHTML = '<option>Cargando...</option>';
 
     try {
+        // Ahora `db` está garantizado que existe
         if (!db) throw new Error("La BD no está lista.");
 
         const studentsSnapshot = await getDocs(collection(db, 'students'));
@@ -32,8 +33,11 @@ async function loadStudentsIntoAssignForm() {
     }
 }
 
-function setupAssignActivities(user) {
-    db = getDb();
+// --- ¡CORRECCIÓN CLAVE! ---
+// Aceptamos la instancia de la base de datos como segundo parámetro.
+function setupAssignActivities(user, database) {
+    db = database; // Asignamos la instancia recibida a nuestra variable local.
+
     if (!user || localStorage.getItem('qs_role') !== 'docente') {
         const form = document.getElementById('assign-individual-activity-form');
         if(form) form.style.display = 'none';
@@ -47,7 +51,7 @@ function setupAssignActivities(user) {
         return;
     }
 
-    loadStudentsIntoAssignForm(); // ¡CORRECCIÓN! Usar Firestore
+    loadStudentsIntoAssignForm();
 
     // Cargar actividades (local)
     activitySelect.innerHTML = '<option value="">Seleccione una actividad</option>';
@@ -110,4 +114,3 @@ if (typeof window.QS_PAGE_INIT === 'undefined') {
     window.QS_PAGE_INIT = {};
 }
 window.QS_PAGE_INIT.assignActivities = setupAssignActivities;
-
