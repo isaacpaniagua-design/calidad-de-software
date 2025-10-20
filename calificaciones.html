@@ -1,91 +1,175 @@
 <!DOCTYPE html>
 <html lang="es" data-layout="global">
-
-<head>
-    <meta charset="utf-8" />
+  <head>
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mis Calificaciones · Plataforma QS</title>
+    <title>Sistema de Gestión de Calificaciones - Calidad de Software</title>
+
     <link rel="stylesheet" href="css/layout.css" />
     <link rel="stylesheet" href="css/calificaciones.css" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      UPLOADCARE_PUBLIC_KEY = "85eb5471d305dcd08e71";
+      UPLOADCARE_LOCALE = "es";
+    </script>
+    <script
+      src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"
+      charset="utf-8"
+      defer
+    ></script>
+
     <style>
-        :root {
-            --page-max-width: min(1180px, 94vw);
-            --accent: #6366f1;
-            --accent-hover: #4f46e5;
-            --text-primary: #111827;
-            --surface: rgba(255, 255, 255, 0.92);
-            --border: rgba(148, 163, 184, 0.35);
-        }
+      /* Se mantiene este estilo base para la fuente, ya que es global */
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+      body {
+        font-family: "Inter", sans-serif;
+      }
     </style>
-</head>
-
-<body>
-    <!-- Navbar y Footer inyectados por nav-inject.js -->
-    <div class="qs-nav" data-role="main-nav"></div>
-
-    <main class="page-shell">
-        <div class="content-container">
-            <div class="header-section">
-                <h1>Mis Calificaciones</h1>
-                <div id="user-info" class="user-info-display">
-                    <p><strong>Estudiante:</strong> <span id="student-name">Cargando...</span></p>
-                    <p><strong>Matrícula:</strong> <span id="student-id">Cargando...</span></p>
-                </div>
-            </div>
-
-            <!-- Final Grade Summary -->
-            <div id="final-grade-summary" class="final-grade-summary-card">
-                <h2>Calificación Final del Curso</h2>
-                <p id="final-grade-display">0.00</p>
-                <small>Calculada en tiempo real desde las entregas calificadas.</small>
-            </div>
-
-            <!-- Detailed Grade Breakdown -->
-            <div id="grade-details-container" class="grade-details-grid">
-                <!-- Las tarjetas de unidad se insertarán aquí -->
-            </div>
-
-            <!-- Fallback message -->
-            <div id="no-grades-message" class="fallback-message" style="display: none;">
-                <p>Aún no hay calificaciones para mostrar.</p>
-                <p>Una vez que tus actividades sean calificadas, tus resultados aparecerán aquí.</p>
-            </div>
-        </div>
-    </main>
-
-    <footer class="footer"></footer>
-
-    <!-- Plantillas para JS -->
-    <template id="unit-grade-template">
-        <div class="unit-grade-card">
-            <div class="unit-card-header">
-                <h3 class="unit-title"></h3>
-                <p class="unit-weight"></p>
-            </div>
-            <div class="unit-card-body">
-                <div class="unit-summary">
-                    <p class="unit-score">0.00</p>
-                    <small>Calificación de la Unidad</small>
-                </div>
-                <div class="category-breakdown"></div>
-            </div>
-        </div>
-    </template>
-
-    <template id="category-grade-template">
-        <div class="category-item">
-            <span class="category-label"></span>
-            <span class="category-score-display">
-                <span class="category-score"></span>
-                <span class="category-weight"></span>
+  </head>
+  <body id="calificaciones-root">
+  <div class="qs-nav" data-role="main-nav">
+    <div class="wrap">
+      <div class="qs-brand-shell">
+        <div class="qs-brand-region">
+          <a class="qs-brand" href="index.html">
+            <span class="qs-logo" aria-hidden="true">QS</span>
+            <span class="qs-brand-text">
+              <span class="qs-title">Calidad de Software</span>
+              <span class="qs-subtitle">ITSON</span>
             </span>
+          </a>
         </div>
-    </template>
+        <button class="qs-menu-toggle" type="button" aria-expanded="false" aria-controls="qs-nav-links">
+          <span class="qs-menu-icon" aria-hidden="true"></span>
+          <span class="sr-only">Abrir menú</span>
+        </button>
+      </div>
+      <div class="qs-links-region">
+        <nav class="qs-tabs" id="qs-nav-links" aria-label="Navegación principal">
+          <a class="qs-btn" href="materiales.html">Materiales</a>
+          <a class="qs-btn" href="asistencia.html">Asistencia</a>
+          <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
+          <a class="qs-btn teacher-only" href="actividades.html">Actividades</a>
+          <a class="qs-btn" href="Foro.html">Foro</a>
+          <a class="qs-btn teacher-only" href="paneldocente.html" hidden aria-hidden="true">Panel</a>
+        </nav>
+      </div>
+    </div>
+  </div>
 
-    <!-- Scripts -->
-    <script type="module" src="js/calificaciones-logic.js"></script>
-    <script defer src="js/back-home.js"></script>
-    <script defer src="js/nav-inject.js"></script>
+  <header class="grades-hero">
+    <div class="grades-hero__grid">
+      <div class="grades-hero__intro">
+        <span class="grades-hero__badge" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v9a2 2 0 002 2h12m0 0l-3.5-4m3.5 4l3.5-4M9 3v4m0 0h6M9 7a3 3 0 01-3 3H4" />
+          </svg>
+        </span>
+        <div>
+          <span class="grades-hero__eyebrow">Calidad de Software · Gestión por unidades</span>
+          <h1>📊 Sistema de Gestión de Calificaciones</h1>
+          <p>Visualiza el desempeño por unidad, registra evidencias y genera reportes en tiempo real.</p>
+        </div>
+      </div>
+      <div class="grades-hero__meta">
+        <div class="grades-hero__stat">
+          <span>Modo docente</span>
+          <span>Activa controles para editar calificaciones y observaciones.</span>
+        </div>
+        <div class="grades-hero__stat">
+          <span>Sincronización</span>
+          <span>Compatible con Google Drive para adjuntar evidencias.</span>
+        </div>
+      </div>
+    </div>
+    <div class="grades-hero__footer">
+      <span class="grades-hero__tag">Unidades 1 a 6</span>
+      <span class="grades-hero__tag">Reportes exportables</span>
+      <span class="grades-hero__tag">Seguimiento individual</span>
+    </div>
+  </header>
+
+  <div class="container mx-auto px-6 py-8">
+    <div id="grades-table-container" style="display: none">
+      <div class="bg-white rounded-lg card-shadow p-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-4" id="grades-title">
+          Mis Calificaciones
+        </h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="border-b bg-gray-50">
+                <th class="py-3 px-4 font-semibold text-left">Nombre del Estudiante</th>
+                <th class="py-3 px-4 font-semibold text-center">Unidad 1</th>
+                <th class="py-3 px-4 font-semibold text-center">Unidad 2</th>
+                <th class="py-3 px-4 font-semibold text-center">Proyecto Final</th>
+                <th class="py-3 px-4 font-semibold text-center">Calificación Final</th>
+              </tr>
+            </thead>
+            <tbody id="grades-table-body">
+              <tr>
+                <td colspan="5" class="text-center py-4">Cargando calificaciones...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+   <div class="container mx-auto px-6 py-8">
+  <div id="grades-table-container" style="display: none">
+      </div>
+
+  <div class="container mx-auto px-4 py-8" id="student-uploads-container">
+    <div class="student-uploads bg-white rounded-lg card-shadow p-6 mt-8">
+      <div class="student-uploads__header">
+        <h2 class="text-xl font-semibold text-gray-800 mb-2">Desglose de Actividades Entregadas</h2>
+        <p class="text-gray-600">Este es el listado de todas las actividades y evidencias que has subido a la plataforma.</p>
+      </div>
+      <div class="mt-4">
+        <div class="student-uploads__records-header" style="padding-bottom: 10px; border-bottom: 1px solid #e2e8f0;">
+          <h3 class="student-uploads__records-title" style="font-weight: 600;">Tus Entregas</h3>
+          <span class="student-uploads__count" data-upload-count="0" style="font-size: 0.9rem; background-color: #f1f5f9; padding: 4px 8px; border-radius: 999px;">0</span>
+        </div>
+        <ul id="studentUploadList" class="student-uploads__list" style="margin-top: 1rem;">
+          </ul>
+        <div id="studentUploadEmpty" class="student-uploads__empty" hidden style="text-align: center; padding: 2rem 1rem; border: 2px dashed #e2e8f0; border-radius: 8px; margin-top: 1rem;">
+          <p>Aún no has realizado ninguna entrega. <br><a href="index.html" style="color: #4f46e5; text-decoration: underline;">Vuelve al inicio para subir tu primera actividad.</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  </div>
+    </div>
+
+  <script>
+    // Configuración de Firebase (sin cambios)
+    window.firebaseConfig = {
+      apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
+      authDomain: "calidad-de-software-v2.firebaseapp.com",
+      projectId: "calidad-de-software-v2",
+      storageBucket: "calidad-de-software-v2.appspot.com",
+      messagingSenderId: "220818066383",
+      appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
+    };
+  </script>
+  
+  <script type="module" src="js/auth-guard.js"></script>
+  <script type="module" src="js/layout.js"></script>
+  <script type="module" src="./js/role-gate.js"></script>
+  <script type="module" src="js/calificaciones-backend.js"></script>
+  <script type="module" src="js/calificaciones-uploads-ui.js"></script>
+  <script defer src="js/nav-inject.js"></script>
+  <script defer src="js/back-home.js"></script>
+
 </body>
-
 </html>
+
+
+
+
+
+
+
+
