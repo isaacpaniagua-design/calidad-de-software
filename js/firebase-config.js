@@ -15,7 +15,7 @@ export const firebaseConfig = {
  * El dominio de correo permitido para el registro de estudiantes.
  * @type {string}
  */
-export const allowedEmailDomain = "itson.edu.mx";
+export const allowedEmailDomain = "potros.itson.edu.mx";
 
 /**
  * Lista de correos de profesores con permisos administrativos en la interfaz.
