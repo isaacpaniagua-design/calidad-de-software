@@ -1,61 +1,40 @@
-// js/auth-guard.js
+import { initFirebase } from './firebase.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js';
 
-// Paso 1: Importar solo las funciones necesarias desde tu módulo local de firebase.
-import { onAuth, isTeacherEmail, ensureTeacherAllowlistLoaded } from './firebase.js';
+// --- CONFIGURATION ---
+const TEACHER_EMAIL = 'isaac.paniagua@potros.itson.edu.mx';
+const STUDENT_GRADE_PAGE = '/calificaciones.html';
+const TEACHER_DASHBOARD_PAGE = '/actividades.html';
 
-// Esta función se ejecutará tan pronto como el documento HTML esté listo.
-function initializeAuthProtection() {
-    // Verifica si la página es pública (no requiere inicio de sesión).
-    // Puedes añadir el atributo data-public-page al <body> de páginas como login.html.
-    const isPublicPage = document.body.hasAttribute('data-public-page');
-    if (isPublicPage) {
-        return; // No se necesita protección en páginas públicas.
-    }
+// --- INITIALIZATION ---
+initFirebase();
+const auth = getAuth();
 
-    // Escucha los cambios en el estado de autenticación (inicio/cierre de sesión).
-    onAuth(async (user) => {
-        const rootElement = document.documentElement;
-        if (user) {
-            // --- Usuario AUTENTICADO ---
-            rootElement.classList.remove('user-signed-out');
-            rootElement.classList.add('user-signed-in');
+// --- AUTH GUARD LOGIC ---
+onAuthStateChanged(auth, (user) => {
+    const currentPage = window.location.pathname;
 
-            // Determinar y almacenar el rol del usuario (docente o estudiante).
-            await ensureTeacherAllowlistLoaded();
-            if (isTeacherEmail(user.email)) {
-                localStorage.setItem('qs_role', 'docente');
-                rootElement.classList.add('role-teacher');
-            } else {
-                localStorage.setItem('qs_role', 'student');
-                rootElement.classList.add('role-student');
-            }
+    if (user) {
+        // User is signed in
+        const isTeacher = user.email === TEACHER_EMAIL;
 
-            // Si la página actual tiene una función de inicialización, la ejecutamos.
-            // Esto es útil para que páginas como 'actividades.html' carguen sus datos.
-            if (typeof window.QS_PAGE_INIT === 'function') {
-                window.QS_PAGE_INIT(user);
-            }
-
-        } else {
-            // --- Usuario NO AUTENTICADO ---
-            rootElement.classList.remove('user-signed-in', 'role-teacher', 'role-student');
-            rootElement.classList.add('user-signed-out');
-            localStorage.removeItem('qs_role');
-            
-            // Redirigir al usuario a la página de inicio de sesión.
-            const currentPage = window.location.pathname.split('/').pop();
-            if (currentPage !== 'login.html' && currentPage !== '404.html') {
-                // Redirección inteligente para que funcione desde cualquier subdirectorio.
-                const basePath = document.querySelector("script[src*='layout.js']")?.src.replace('js/layout.js', '') || './';
-                window.location.href = `${basePath}login.html`;
-            }
+        if (isTeacher && currentPage.endsWith(STUDENT_GRADE_PAGE)) {
+            // Teacher on student page, redirect to dashboard
+            console.log('Auth Guard: Teacher detected on student page. Redirecting to dashboard.');
+            window.location.href = TEACHER_DASHBOARD_PAGE;
+        } else if (!isTeacher && currentPage.endsWith(TEACHER_DASHBOARD_PAGE)) {
+            // Student on teacher page, redirect to their grades
+            console.log('Auth Guard: Student detected on teacher dashboard. Redirecting to grades.');
+            window.location.href = STUDENT_GRADE_PAGE;
         }
-    });
-}
+        // Otherwise, the user is on the correct page, do nothing.
 
-// Asegurarse de que el script se ejecute cuando el DOM esté listo.
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeAuthProtection);
-} else {
-    initializeAuthProtection();
-}
+    } else {
+        // No user is signed in.
+        // If they are trying to access a protected page, redirect them to the login page (index.html).
+        if (currentPage.endsWith(STUDENT_GRADE_PAGE) || currentPage.endsWith(TEACHER_DASHBOARD_PAGE)) {
+            console.log('Auth Guard: No user signed in. Redirecting to login.');
+            window.location.href = '/index.html'; 
+        }
+    }
+});
