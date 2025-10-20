@@ -1,15 +1,17 @@
-import { onFirebaseReady, getDb, onAuth } from './firebase.js';
+import { onFirebaseReady, getDb, getAuthInstance } from './firebase.js';
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import { getDocs, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 import { courseActivities } from './course-activities.js';
 
 let db;
 
+// ✅ CORRECCIÓN: Se usa onAuthStateChanged para una gestión de sesión moderna.
 onFirebaseReady(() => {
     db = getDb();
-    onAuth(user => {
-        if (user) {
-            setupAssignActivities(user);
-        }
+    const auth = getAuthInstance();
+    onAuthStateChanged(auth, user => {
+        // La función setup ya maneja la lógica de si el usuario es docente o no.
+        setupAssignActivities(user);
     });
 });
 
@@ -24,7 +26,6 @@ async function loadStudentsIntoAssignForm() {
         const studentsSnapshot = await getDocs(collection(db, 'students'));
         let students = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
-        // --- ¡CORRECCIÓN FINAL! Usando `displayName` ---
         students = students.filter(student => student.displayName && student.displayName.trim() !== '');
         students.sort((a, b) => a.displayName.localeCompare(b.displayName));
 
@@ -43,11 +44,15 @@ async function loadStudentsIntoAssignForm() {
 }
 
 function setupAssignActivities(user) {
-    if (!user || localStorage.getItem('qs_role') !== 'docente') {
-        const form = document.getElementById('assign-individual-activity-form');
+    const form = document.getElementById('assign-individual-activity-form');
+    const isTeacher = user && localStorage.getItem('qs_role') === 'docente';
+
+    if (!isTeacher) {
         if(form) form.style.display = 'none';
         return;
     }
+
+    if(form) form.style.display = 'block'; // Asegurarse de que el formulario sea visible para el docente
     
     const activitySelect = document.getElementById('activity-select-individual');
     const assignForm = document.getElementById('assign-individual-activity-form');

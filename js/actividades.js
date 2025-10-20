@@ -1,4 +1,5 @@
-import { onFirebaseReady, getDb, onAuth } from './firebase.js';
+import { onFirebaseReady, getDb, getAuthInstance } from './firebase.js';
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import { collection, doc, updateDoc, onSnapshot, query, where, getDocs, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 let db;
@@ -12,12 +13,13 @@ const studentNameDisplay = document.getElementById("student-name-display");
 const activitiesContainer = document.getElementById("activities-container");
 const mainContent = document.querySelector(".container.mx-auto");
 
+// ✅ CORRECCIÓN: Se usa onAuthStateChanged para reaccionar a los cambios de sesión.
 onFirebaseReady(() => {
     db = getDb();
-    onAuth(user => {
-        if (user) {
-            initActividadesPage(user);
-        }
+    const auth = getAuthInstance();
+    onAuthStateChanged(auth, user => {
+        // initActividadesPage ya contiene la lógica para manejar usuarios autenticados y no autenticados.
+        initActividadesPage(user);
     });
 });
 
@@ -29,8 +31,10 @@ function initActividadesPage(user) {
         loadStudentsFromFirestore();
         setupDisplayEventListeners();
     } else {
-        if (mainContent)
+        if (mainContent) {
+            mainContent.style.display = "block"; // Asegurarse de que el contenedor sea visible
             mainContent.innerHTML = '<div class="bg-white p-6 rounded-lg shadow-md text-center"><h1 class="text-2xl font-bold text-red-600">Acceso Denegado</h1><p class="text-gray-600 mt-2">Esta página es solo para docentes.</p></div>';
+        }
     }
 }
 
@@ -43,7 +47,6 @@ async function loadStudentsFromFirestore() {
         const studentsSnapshot = await getDocs(collection(db, 'students'));
         studentsList = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
-        // --- ¡CORRECCIÓN FINAL! Usando `displayName` ---
         studentsList = studentsList.filter(student => student.displayName && student.displayName.trim() !== '');
         studentsList.sort((a, b) => a.displayName.localeCompare(b.displayName));
 
@@ -58,6 +61,7 @@ async function loadStudentsFromFirestore() {
     } catch (error) {
         console.error("Error definitivo cargando estudiantes desde Firestore:", error);
         studentSelect.innerHTML = `<option value="">Error al cargar</option>`;
+        // Aquí podría ir un reintento o un mensaje más amigable
     }
 }
 
@@ -121,7 +125,12 @@ function setupDisplayEventListeners() {
             const input = e.target;
             input.disabled = true;
             try {
-                await updateDoc(doc(db, "grades", input.dataset.gradeId), { grade: Number(input.value) });
+                // Asegurarse de que el ID del estudiante esté disponible para la actualización
+                if (!selectedStudentId) return;
+                await updateDoc(doc(db, "grades", input.dataset.gradeId), { 
+                    grade: Number(input.value),
+                    lastUpdated: serverTimestamp()
+                });
             } catch (error) {
                 console.error("Error actualizando calificación:", error);
             } finally {
@@ -133,7 +142,7 @@ function setupDisplayEventListeners() {
     activitiesContainer.addEventListener("click", async (e) => {
         const targetButton = e.target.closest('button[data-action="delete-grade"]');
         if (targetButton) {
-            if (confirm("¿Eliminar esta calificación?")) {
+            if (confirm("¿Está seguro de que desea eliminar esta calificación?")) {
                 try {
                     await deleteDoc(doc(db, "grades", targetButton.dataset.gradeId));
                 } catch (error) {
