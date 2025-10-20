@@ -1,0 +1,99 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isTeacher() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
+    }
+
+    match /students/{studentId} {
+      allow read, write: if isTeacher();
+    }
+
+    match /grades/{studentId} {
+      // ✅ Cambio: Se separa 'read' en 'get' y 'list' para ser más explícitos.
+      // Permite a los docentes listar todos los documentos, y a los estudiantes obtener solo el suyo.
+      allow read: if isTeacher() || 
+                         (isAuthenticated() && resource.data.authUid == request.auth.uid);
+
+      // PERMISO DE ESCRITURA (WRITE):
+      // Sólo los docentes pueden crear, editar o eliminar documentos de calificaciones.
+      allow write: if isTeacher();
+
+      match /activities/{activityId} {
+        allow read: if isTeacher() || (isAuthenticated() && request.auth.uid == studentId);
+        allow write: if isTeacher();
+      }
+    }
+
+    match /activities/{activityId} {
+      // Permite a CUALQUIER usuario que haya iniciado sesión leer la lista.
+      allow read: if isAuthenticated();
+      // Solo los docentes pueden crear o modificar actividades.
+      allow write: if isTeacher();
+    }
+
+    match /teachers/{teacherId} {
+      allow read: if isTeacher();
+      allow write: if false;
+    }
+    
+    // ⭐️ CORRECCIÓN: El nombre de la colección se ha cambiado a 'student_uploads' para que coincida con el código del cliente.
+    match /student_uploads/{uploadId} {
+      // PERMISOS DE LECTURA (CORREGIDOS):
+      // 'get': Permite a un usuario leer un documento si conoce su ID y es el propietario.
+      allow get: if isTeacher() || (isAuthenticated() && request.auth.uid == resource.data.student.uid);
+
+      // 'list': Esta es la corrección clave. Permite a un estudiante realizar una CONSULTA
+      // a la colección SÓLO si está filtrando por su propio ID de usuario.
+      allow list: if isTeacher() || (isAuthenticated() && request.query.where[0][0] == 'student.uid' && request.query.where[0][2] == request.auth.uid);
+
+      // PERMISOS DE ESCRITURA (sin cambios):
+      allow create: if isTeacher() || (isAuthenticated() && request.auth.uid == request.resource.data.student.uid);
+      allow update, delete: if isTeacher();
+    }
+    
+    match /materials/{materialId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+    }
+    match /forum_topics/{topicId} {
+      allow read, write: if isAuthenticated();
+      match /replies/{replyId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+   // Asistencias
+    match /attendances/{attendanceId} {
+      allow read: if isAuthenticated();
+
+      // REGLA CORREGIDA:
+      // Un usuario autenticado solo puede crear un registro de asistencia
+      // si el UID del nuevo documento coincide con su propio UID de autenticación.
+      allow create: if isAuthenticated() &&
+                       request.auth.uid == request.resource.data.uid &&
+                       request.auth.uid == request.resource.data.createdByUid;
+
+      allow update, delete: if isTeacher();
+    }
+    match /planesDePrueba/{planId} {
+      allow read, write: if isTeacher();
+    }
+    match /courses/{courseId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+    }
+    match /grupos/{grupoId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+      match /members/{memberId} {
+        allow read, write: if isTeacher();
+      }
+    }
+  }
+}

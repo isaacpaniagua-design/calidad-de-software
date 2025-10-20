@@ -1,50 +1,60 @@
 // js/auth-guard.js
 
-// Importa las funciones necesarias de tu archivo firebase.js
-import { onAuth, isTeacherEmail, initFirebase } from './firebase.js';
+import { onFirebaseReady, getAuthInstance } from './firebase.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js';
+import { allowedTeacherEmails } from './firebase-config.js';
 
-// Esta función es el núcleo de la protección de rutas
+/**
+ * Comprueba si un correo electrónico pertenece a un profesor.
+ * @param {string} email El correo electrónico a verificar.
+ * @returns {boolean} True si el correo es de un profesor.
+ */
+function isTeacherEmail(email) {
+    return email && allowedTeacherEmails.includes(email);
+}
+
+/**
+ * Protege las páginas que requieren autenticación y establece clases globales de CSS.
+ */
 function initializeAuthProtection() {
-    // Si la página es pública (tiene data-public-page), no hacemos nada.
     const isPublicPage = document.body.hasAttribute('data-public-page');
-    if (isPublicPage) {
-        // Aún queremos inicializar Firebase para cosas como el login/logout en páginas públicas
-        initFirebase();
-        return;
-    }
 
-    // onAuth es el listener que reacciona a los cambios de estado de autenticación
-    onAuth((user) => {
-        const rootElement = document.documentElement; // <html> tag
+    onFirebaseReady(() => {
+        const auth = getAuthInstance();
 
-        if (user) {
-            // --- USUARIO AUTENTICADO ---
-            rootElement.classList.remove('user-signed-out');
-            rootElement.classList.add('user-signed-in');
+        onAuthStateChanged(auth, (user) => {
+            const rootElement = document.documentElement; // <html> tag
 
-            // Verificamos si es docente y lo guardamos para uso de CSS y otros scripts
-            const isTeacher = isTeacherEmail(user.email);
-            localStorage.setItem('qs_role', isTeacher ? 'docente' : 'student');
-            rootElement.classList.add(isTeacher ? 'role-teacher' : 'role-student');
+            if (user) {
+                // --- USUARIO AUTENTICADO ---
+                rootElement.classList.remove('user-signed-out');
+                rootElement.classList.add('user-signed-in');
 
-        } else {
-            // --- USUARIO NO AUTENTICADO ---
-            rootElement.classList.remove('user-signed-in', 'role-teacher', 'role-student');
-            rootElement.classList.add('user-signed-out');
-            localStorage.removeItem('qs_role');
-            
-            // Obtenemos la página actual para evitar bucles de redirección
-            const currentPage = window.location.pathname.split('/').pop();
-            if (currentPage !== 'login.html' && currentPage !== '404.html') {
-                // Si no está en login o 404, lo mandamos al login.
-                const basePath = document.querySelector("script[src*='layout.js']")?.src.replace('js/layout.js', '') || './';
-                window.location.href = `${basePath}login.html`;
+                const isTeacher = isTeacherEmail(user.email);
+                localStorage.setItem('qs_role', isTeacher ? 'docente' : 'student');
+                rootElement.classList.remove('role-student', 'role-teacher'); // Limpia roles antiguos
+                rootElement.classList.add(isTeacher ? 'role-teacher' : 'role-student');
+
+            } else {
+                // --- USUARIO NO AUTENTICADO ---
+                rootElement.classList.remove('user-signed-in', 'role-teacher', 'role-student');
+                rootElement.classList.add('user-signed-out');
+                localStorage.removeItem('qs_role');
+                
+                // Si la página NO es pública y no estamos ya en login, redirigir.
+                if (!isPublicPage) {
+                    const currentPage = window.location.pathname.split('/').pop();
+                    if (currentPage !== 'login.html' && currentPage !== '404.html') {
+                        const basePath = document.querySelector("script[src*='layout.js']")?.src.replace('js/layout.js', '') || './';
+                        window.location.href = `${basePath}login.html`;
+                    }
+                }
             }
-        }
+        });
     });
 }
 
-// Aseguramos que el DOM esté cargado antes de ejecutar el guardián
+// Asegurar que el DOM esté cargado antes de ejecutar
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeAuthProtection);
 } else {
