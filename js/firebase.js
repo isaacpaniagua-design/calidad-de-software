@@ -26,6 +26,11 @@ export function onFirebaseReady(callback) {
   }
 }
 
+export function ensureTeacherAllowlistLoaded() {
+  // TODO: Implementar la lógica para cargar la lista de profesores permitidos.
+  console.log("ensureTeacherAllowlistLoaded");
+}
+
 /**
  * Inicializa la aplicación Firebase y los servicios principales.
  * Esta función es segura para ser llamada múltiples veces.
