@@ -1,133 +1,99 @@
-
 // js/grade-calculator.js
 
-import { courseActivities } from './course-activities.js';
+/**
+ * @file Contiene la lógica centralizada y los pesos para el cálculo de calificaciones.
+ * Este archivo es la única fuente de verdad para evitar discrepancias en la aplicación.
+ */
 
 /**
- * Defines the weighting structure for the course.
+ * Pesos para las unidades que componen la calificación final.
+ * Estos pesos deben sumar 1.0 si se usan como porcentajes directos.
  */
-export const gradeSchema = {
-    unit1: {
-        weight: 0.30,
-        categories: {
-            participacion: { weight: 0.10, label: 'Participación' },
-            examen: { weight: 0.40, label: 'Examen' },
-            asignaciones: { weight: 0.25, label: 'Asignaciones' },
-            actividades: { weight: 0.25, label: 'Actividades' }
-        }
-    },
-    unit2: {
-        weight: 0.30,
-        categories: {
-            participacion: { weight: 0.10, label: 'Participación' },
-            examen: { weight: 0.40, label: 'Examen' },
-            asignaciones: { weight: 0.25, label: 'Asignaciones' },
-            actividades: { weight: 0.25, label: 'Actividades' }
-        }
-    },
-    unit3: {
-        weight: 0.40,
-        categories: {
-            proyecto: { weight: 1.0, label: 'Proyecto Final' }
-        }
-    }
+export const FINAL_GRADE_WEIGHTS = {
+  unit1: 0.3,
+  unit2: 0.3,
+  unit3: 0.4,
 };
 
-// A map to quickly find activity details by ID
-const activityMap = new Map();
-courseActivities.forEach(unit => {
-    unit.activities.forEach(activity => {
-        activityMap.set(activity.id, {
-            ...activity,
-            unitId: unit.unitId,
-            unitLabel: unit.unitLabel
-        });
-    });
-});
+/**
+ * Pesos para los tipos de actividades dentro de las unidades 1 y 2.
+ * La suma de estos pesos debe ser 1.0 para que el cálculo sea una media ponderada.
+ * `actividades`: Corresponde a trabajos en clase.
+ * `asignaciones`: Corresponde a tareas o entregables.
+ * `examen`: Examen de la unidad.
+ * `participaciones`: Participación en foros u otras actividades.
+ */
+export const UNIT_ACTIVITY_WEIGHTS_U1_U2 = {
+  actividades: 0.25,
+  asignaciones: 0.25,
+  examen: 0.4,
+  participaciones: 0.1,
+};
 
 /**
- * Calculates the final grade based on a student's submissions.
- * @param {Array<Object>} submissions - An array of submission objects from Firestore.
- * @returns {Object} An object containing the detailed grade breakdown.
+ * @deprecated Utilizar UNIT_ACTIVITY_WEIGHTS_U1_U2. Se mantiene por retrocompatibilidad.
  */
-export function calculateGrades(submissions) {
-    const results = {
-        finalGrade: 0,
-        units: {}
-    };
+export const UNIT_ACTIVITY_WEIGHTS = UNIT_ACTIVITY_WEIGHTS_U1_U2;
 
-    // Initialize results structure based on schema
-    for (const unitId in gradeSchema) {
-        results.units[unitId] = {
-            unitScore: 0,
-            weightedUnitScore: 0,
-            categories: {}
-        };
-        for (const categoryId in gradeSchema[unitId].categories) {
-            results.units[unitId].categories[categoryId] = {
-                label: gradeSchema[unitId].categories[categoryId].label,
-                score: 0,
-                weightedScore: 0,
-                submissionCount: 0,
-                totalActivities: 0
-            };
-        }
+/**
+ * Calcula la calificación ponderada de una unidad.
+ * @param {object|undefined} unit - Objeto con las calificaciones de las actividades de la unidad.
+ *   Ej: { actividades: 8, asignaciones: 9, examen: 7, participaciones: 10 }
+ * @param {number} unitNumber - El número de la unidad (1, 2, 3) para seleccionar los pesos correctos.
+ * @returns {number} La calificación de la unidad (0-10).
+ */
+export function calculateUnitGrade(unit, unitNumber = 1) {
+  if (!unit || typeof unit !== "object") {
+    return 0;
+  }
+
+  // La unidad 3 es solo el proyecto final, su calificación se toma directamente.
+  if (unitNumber === 3) {
+    return typeof unit.proyecto === "number" ? unit.proyecto : 0;
+  }
+
+  const weights = UNIT_ACTIVITY_WEIGHTS_U1_U2;
+  let total = 0;
+  let totalWeight = 0;
+
+  for (const activityType in weights) {
+    const gradeValue = unit[activityType];
+    if (typeof gradeValue === "number") {
+      total += gradeValue * weights[activityType];
+      totalWeight += weights[activityType];
     }
+  }
 
-    // Categorize submissions and sum up grades
-    const categorizedGrades = {};
+  if (totalWeight === 0) {
+    return 0;
+  }
 
-    submissions.forEach(sub => {
-        const activity = activityMap.get(sub.activityId);
-        if (activity && activity.unitId && activity.category && sub.grade != null) {
-            const { unitId, category } = activity;
-            if (!categorizedGrades[unitId]) {
-                categorizedGrades[unitId] = {};
-            }
-            if (!categorizedGrades[unitId][category]) {
-                categorizedGrades[unitId][category] = { total: 0, count: 0 };
-            }
-            categorizedGrades[unitId][category].total += sub.grade;
-            categorizedGrades[unitId][category].count++;
-        }
-    });
+  return total / totalWeight;
+}
 
-    // Count total activities per category
-    activityMap.forEach(activity => {
-        if (activity.unitId && activity.category) {
-            const { unitId, category } = activity;
-            if (results.units[unitId] && results.units[unitId].categories[category]) {
-                results.units[unitId].categories[category].totalActivities++;
-            }
-        }
-    });
-    
-    // Calculate weighted scores
-    for (const unitId in gradeSchema) {
-        let unitScoreTotal = 0;
-        for (const categoryId in gradeSchema[unitId].categories) {
-            const categoryData = categorizedGrades[unitId]?.[categoryId];
-            const categorySchema = gradeSchema[unitId].categories[categoryId];
-            let categoryAverage = 0;
-            let submissionCount = 0;
+/**
+ * Calcula la calificación final del curso.
+ * @param {object|undefined} grades - Objeto con las calificaciones de todas las unidades.
+ *   Ej: { unit1: {...}, unit2: {...}, unit3: { project: 9 } }
+ * @returns {number} La calificación final redondeada (0-100).
+ */
+export function calculateFinalGrade(grades) {
+  if (!grades) {
+    return 0;
+  }
 
-            if (categoryData && categoryData.count > 0) {
-                categoryAverage = categoryData.total / categoryData.count;
-                submissionCount = categoryData.count;
-            }
-            
-            const weightedCategoryScore = categoryAverage * categorySchema.weight;
-            unitScoreTotal += weightedCategoryScore;
+  const u1 = calculateUnitGrade(grades.unit1, 1);
+  const u2 = calculateUnitGrade(grades.unit2, 2);
 
-            results.units[unitId].categories[categoryId].score = categoryAverage;
-            results.units[unitId].categories[categoryId].weightedScore = weightedCategoryScore;
-            results.units[unitId].categories[categoryId].submissionCount = submissionCount;
-        }
+  // La calificación del proyecto final se toma directamente del campo `projectFinal`.
+  const projectScore =
+    typeof grades.projectFinal === "number" ? grades.projectFinal : 0;
 
-        results.units[unitId].unitScore = unitScoreTotal;
-        results.units[unitId].weightedUnitScore = unitScoreTotal * gradeSchema[unitId].weight;
-        results.finalGrade += results.units[unitId].weightedUnitScore;
-    }
+  const finalGrade =
+    u1 * FINAL_GRADE_WEIGHTS.unit1 +
+    u2 * FINAL_GRADE_WEIGHTS.unit2 +
+    projectScore * FINAL_GRADE_WEIGHTS.unit3;
 
-    return results;
+  // La calificación final debe estar en una escala de 0 a 10 y se redondea a 2 decimales.
+  return parseFloat(finalGrade.toFixed(2));
 }
