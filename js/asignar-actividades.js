@@ -4,8 +4,16 @@ import { courseActivities } from './course-activities.js';
 
 let db;
 
+function getBasePath() {
+    const layoutScript = document.querySelector("script[src*='layout.js']");
+    if (layoutScript) {
+        return layoutScript.src.replace('js/layout.js', '');
+    }
+    return './';
+}
+
 function setupAssignActivities(user) {
-    db = getDb(); // Obtenemos la BD para operaciones de escritura
+    db = getDb();
     if (!user || localStorage.getItem('qs_role') !== 'docente') {
         const form = document.getElementById('assign-individual-activity-form');
         if(form) form.style.display = 'none';
@@ -15,16 +23,20 @@ function setupAssignActivities(user) {
     const studentSelect = document.getElementById('student-select-individual');
     const activitySelect = document.getElementById('activity-select-individual');
     const assignForm = document.getElementById('assign-individual-activity-form');
-    const assignStatus = document.getElementById('assign-status');
-    const gradeInput = document.getElementById('grade-input');
 
     if (!studentSelect || !activitySelect || !assignForm) {
         return;
     }
 
-    // ¡¡CORRECCIÓN!! Cargar lista de estudiantes desde JSON
-    fetch('./students.json')
-        .then(response => response.json())
+    // --- ¡CORRECCIÓN DE RUTA! ---
+    const basePath = getBasePath();
+    const studentJsonUrl = `${basePath}students.json`;
+
+    fetch(studentJsonUrl)
+        .then(response => {
+            if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
+            return response.json();
+        })
         .then(students => {
             studentSelect.innerHTML = '<option value="">Seleccione un estudiante</option>';
             students.sort((a,b) => a.name.localeCompare(b.name)).forEach(student => {
@@ -35,11 +47,11 @@ function setupAssignActivities(user) {
             });
         })
         .catch(error => {
-            console.error("Error al cargar estudiantes desde students.json: ", error);
-            studentSelect.innerHTML = '<option value="">Error al cargar</option>';
+            console.error("Error al cargar students.json: ", error);
+            studentSelect.innerHTML = '<option value="">Error al cargar lista</option>';
         });
 
-    // Cargar lista de actividades (esto es local, no hay problema)
+    // Cargar actividades (local)
     activitySelect.innerHTML = '<option value="">Seleccione una actividad</option>';
     courseActivities.forEach(unit => {
         const group = document.createElement('optgroup');
@@ -53,51 +65,47 @@ function setupAssignActivities(user) {
         activitySelect.appendChild(group);
     });
 
-    // Manejar el envío del formulario (aquí sí se usa la BD)
+    // Listener del formulario
     assignForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (!db) { 
-            assignStatus.textContent = 'La base de datos no está lista. Inténtelo de nuevo.';
-            assignStatus.classList.add('text-red-500');
+        const assignStatus = document.getElementById('assign-status');
+
+        if (!db) {
+            assignStatus.textContent = 'Error: la base de datos no está lista.';
             return;
         }
-
-        assignStatus.textContent = 'Asignando...';
-        assignStatus.classList.remove('text-red-500', 'text-green-500');
 
         const studentId = studentSelect.value;
         const activityId = activitySelect.value;
-        const grade = gradeInput.value;
-        const activityDetails = courseActivities.flatMap(u => u.activities).find(a => a.id === activityId);
-
+        const grade = document.getElementById('grade-input').value;
         if (!studentId || !activityId || grade === '') {
             assignStatus.textContent = 'Por favor, complete todos los campos.';
-            assignStatus.classList.add('text-red-500');
             return;
         }
-
+        
+        assignStatus.textContent = 'Asignando...';
         try {
+            const activityDetails = courseActivities.flatMap(u => u.activities).find(a => a.id === activityId);
             await addDoc(collection(db, 'grades'), {
-                studentId: studentId,
-                activityId: activityId,
+                studentId,
+                activityId,
                 activityName: activityDetails ? activityDetails.title : 'Actividad Desconocida',
                 grade: Number(grade),
                 assignedAt: serverTimestamp()
             });
             assignStatus.textContent = 'Calificación asignada correctamente.';
-            assignStatus.classList.add('text-green-500');
             assignForm.reset();
-
-            if (document.getElementById('student-select-display').value === studentId) {
-                 document.getElementById('student-select-display').dispatchEvent(new Event('change'));
+            
+            // Forzar recarga en la otra vista si el estudiante es el mismo
+            const displaySelect = document.getElementById('student-select-display');
+            if (displaySelect && displaySelect.value === studentId) {
+                 displaySelect.dispatchEvent(new Event('change'));
             }
         } catch (error) {
             console.error("Error al asignar calificación: ", error);
-            assignStatus.textContent = 'Error al asignar la calificación.';
-            assignStatus.classList.add('text-red-500');
+            assignStatus.textContent = 'Error al asignar calificación.';
         }
     });
 }
 
-// El script se inicia con onAuth para tener el contexto del usuario
 onAuth(setupAssignActivities);

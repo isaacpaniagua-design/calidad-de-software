@@ -23,23 +23,27 @@ let studentsList = [];
 let selectedStudentId = null;
 let unsubscribeFromGrades = null;
 
-// Referencias al DOM
 const studentSelect = document.getElementById("student-select-display");
 const activitiesListSection = document.getElementById("activities-list-section");
 const studentNameDisplay = document.getElementById("student-name-display");
 const activitiesContainer = document.getElementById("activities-container");
 const mainContent = document.querySelector(".container.mx-auto");
-const createGroupActivityForm = document.getElementById("create-group-activity-form");
-const submitGroupActivityBtn = document.getElementById("submit-group-activity");
-const batchStatusDiv = document.getElementById("batch-status");
+
+function getBasePath() {
+    const layoutScript = document.querySelector("script[src*='layout.js']");
+    if (layoutScript) {
+        return layoutScript.src.replace('js/layout.js', '');
+    }
+    return './';
+}
 
 export function initActividadesPage(user) {
-  db = getDb(); // Obtenemos la BD para operaciones futuras
+  db = getDb();
   const isTeacher = user && (localStorage.getItem("qs_role") || "").toLowerCase() === "docente";
   
   if (isTeacher) {
     if (mainContent) mainContent.style.display = "block";
-    loadStudentsIntoDisplay(); // Cargar estudiantes desde JSON
+    loadStudentsIntoDisplay();
     setupDisplayEventListeners();
   } else {
     if (mainContent)
@@ -47,19 +51,22 @@ export function initActividadesPage(user) {
   }
 }
 
-// ¡¡CORRECCIÓN PRINCIPAL!! Cargar estudiantes desde students.json
 async function loadStudentsIntoDisplay() {
     if (!studentSelect) return;
     studentSelect.disabled = true;
     studentSelect.innerHTML = "<option>Cargando estudiantes...</option>";
+    
+    // --- ¡CORRECCIÓN DE RUTA! ---
+    const basePath = getBasePath();
+    const studentJsonUrl = `${basePath}students.json`;
+
     try {
-        const response = await fetch('./students.json');
+        const response = await fetch(studentJsonUrl);
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            throw new Error(`Error HTTP ${response.status} al cargar ${studentJsonUrl}`);
         }
         const students = await response.json();
         
-        // Asumimos que el JSON es un array de objetos {id, name, ...}
         studentsList = students.sort((a, b) => a.name.localeCompare(b.name));
 
         studentSelect.innerHTML = '<option value="">-- Seleccione para ver --</option>';
@@ -71,43 +78,15 @@ async function loadStudentsIntoDisplay() {
         });
         studentSelect.disabled = false;
     } catch (error) {
-        console.error("Error cargando la lista de estudiantes desde students.json:", error);
-        studentSelect.innerHTML = `<option value="">Error al cargar</option>`;
-        // Fallback a Firestore si el JSON falla
-        console.log("Intentando cargar desde Firestore como fallback...");
-        loadStudentsFromFirestore(); 
-    }
-}
-
-// Fallback: Cargar desde Firestore si students.json no funciona
-async function loadStudentsFromFirestore() {
-    try {
-        if (!db) {
-          console.error("La base de datos no está lista para el fallback de Firestore.");
-          return;
-        }
-        const studentsSnapshot = await getDocs(collection(db, 'students'));
-        studentsList = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        studentsList.sort((a, b) => a.name.localeCompare(b.name));
-
-        studentSelect.innerHTML = '<option value="">-- Seleccione para ver --</option>';
-        studentsList.forEach((student) => {
-            const option = document.createElement("option");
-            option.value = student.id;
-            option.textContent = student.name;
-            studentSelect.appendChild(option);
-        });
-        studentSelect.disabled = false;
-    } catch (error) {
-        console.error("Error definitivo cargando estudiantes desde Firestore:", error);
-        studentSelect.innerHTML = `<option value="">Error irrecuperable</option>`;
+        console.error("Error definitivo cargando students.json:", error);
+        studentSelect.innerHTML = `<option value="">Error al cargar lista</option>`;
     }
 }
 
 function renderStudentGrades(grades) {
     activitiesContainer.innerHTML = "";
     if (grades.length === 0) {
-        activitiesContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Este estudiante no tiene calificaciones asignadas.</p>';
+        activitiesContainer.innerHTML = '<p class="text-center text-gray-500 py-4">Este estudiante no tiene calificaciones.</p>';
         return;
     }
     grades.sort((a,b) => (a.assignedAt?.toDate() || 0) - (b.assignedAt?.toDate() || 0));
@@ -132,7 +111,7 @@ function renderStudentGrades(grades) {
 
 function loadGradesForStudent(studentId) {
     if (unsubscribeFromGrades) unsubscribeFromGrades(); 
-    if (!db) return; // No intentar si la BD no está lista
+    if (!db) return;
     const gradesQuery = query(collection(db, "grades"), where("studentId", "==", studentId));
     
     unsubscribeFromGrades = onSnapshot(gradesQuery, (snapshot) => {
@@ -140,7 +119,7 @@ function loadGradesForStudent(studentId) {
         renderStudentGrades(grades);
     }, (error) => {
         console.error("Error al cargar calificaciones:", error);
-        activitiesContainer.innerHTML = '<p class="text-center text-red-500 py-4">Error al cargar calificaciones.</p>';
+        activitiesContainer.innerHTML = '<p class="text-center text-red-500 py-4">Error al cargar.</p>';
     });
 }
 
@@ -162,14 +141,11 @@ function setupDisplayEventListeners() {
 
     activitiesContainer.addEventListener("change", async (e) => {
         if (e.target.classList.contains("grade-input-display")) {
-            if (!db) { alert("La base de datos no está lista. Recargue la página."); return; }
+            if (!db) { alert("La base de datos no está lista. Recargue."); return; }
             const input = e.target;
             input.disabled = true;
-            const gradeId = input.dataset.gradeId;
-            const newScore = Number(input.value);
             try {
-                const gradeRef = doc(db, "grades", gradeId);
-                await updateDoc(gradeRef, { grade: newScore });
+                await updateDoc(doc(db, "grades", input.dataset.gradeId), { grade: Number(input.value) });
             } catch (error) {
                 console.error("Error actualizando calificación:", error);
             } finally {
@@ -181,56 +157,16 @@ function setupDisplayEventListeners() {
     activitiesContainer.addEventListener("click", async (e) => {
         const targetButton = e.target.closest('button[data-action="delete-grade"]');
         if (targetButton) {
-             if (!db) { alert("La base de datos no está lista. Recargue la página."); return; }
-            const gradeId = targetButton.dataset.gradeId;
+             if (!db) { alert("La base de datos no está lista. Recargue."); return; }
             if (confirm("¿Eliminar esta calificación?")) {
                 try {
-                    await deleteDoc(doc(db, "grades", gradeId));
+                    await deleteDoc(doc(db, "grades", targetButton.dataset.gradeId));
                 } catch (error) {
                     console.error("Error eliminando calificación:", error);
                 }
             }
         }
     });
-    
-    if (createGroupActivityForm) {
-        createGroupActivityForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            if (!db) { alert("La base de datos no está lista. Recargue la página."); return; }
-            if (studentsList.length === 0) return alert("No hay estudiantes cargados.");
-            const activityName = document.getElementById("group-activity-name").value.trim();
-            if (!activityName) return alert("El nombre de la actividad es requerido.");
-            
-            submitGroupActivityBtn.disabled = true;
-            submitGroupActivityBtn.textContent = "Procesando...";
-            batchStatusDiv.textContent = `Asignando a ${studentsList.length} estudiantes...`;
-            
-            try {
-                const batch = writeBatch(db);
-                studentsList.forEach((student) => {
-                    const gradeRef = doc(collection(db, "grades")); 
-                    batch.set(gradeRef, {
-                        studentId: student.id,
-                        activityName: activityName,
-                        activityId: `group-${Date.now()}`,
-                        grade: 0,
-                        assignedAt: serverTimestamp()
-                    });
-                });
-                await batch.commit();
-                batchStatusDiv.textContent = `¡Éxito! Actividad asignada.`;
-                createGroupActivityForm.reset();
-            } catch (error) {
-                console.error("Error en lote:", error);
-                batchStatusDiv.textContent = "Error al asignar.";
-            } finally {
-                submitGroupActivityBtn.disabled = false;
-                submitGroupActivityBtn.textContent = "Añadir Actividad a Todos";
-                setTimeout(() => { batchStatusDiv.textContent = ""; }, 5000);
-            }
-        });
-    }
 }
 
-// Este script se sigue iniciando con onAuth para tener el contexto del usuario
 onAuth(initActividadesPage);
