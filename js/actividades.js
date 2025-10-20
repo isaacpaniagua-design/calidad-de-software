@@ -13,12 +13,17 @@ import {
     getDocs,
     addDoc
 } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
-import { courseActivities } from './course-activities.js';
+import {
+    calculateGrades,
+    gradeSchema
+} from './grade-calculator.js';
+import { courseActivities, getActivityById } from './course-activities.js';
 
 initFirebase();
 const db = getDb();
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // --- Element selectors ---
     const studentSelectForGrading = document.getElementById('student-select');
     const studentSelectForIndividual = document.getElementById('individual-student-select');
     const activitiesListSection = document.getElementById('activities-list-section');
@@ -30,18 +35,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     const individualStatus = document.getElementById('individual-status');
     const individualActivitySelect = document.getElementById('individual-activity-select');
 
-    // Populate individual activity dropdown
-    let activityOptions = '<option value="">Seleccione una actividad</option>';
-    courseActivities.forEach(unit => {
-        activityOptions += `<optgroup label="${unit.unitLabel}">`;
-        unit.activities.forEach(activity => {
-            activityOptions += `<option value="${activity.id}">${activity.title || '(Sin Título)'}</option>`;
-        });
-        activityOptions += `</optgroup>`;
-    });
-    individualActivitySelect.innerHTML = activityOptions;
+    // --- For Grade Calculation Display ---
+    const finalGradeDisplay = document.getElementById('final-grade-display');
+    const gradeDetailsContainer = document.getElementById('grade-details-container');
+    const unitTemplate = document.getElementById('unit-grade-template');
+    const categoryTemplate = document.getElementById('category-grade-template');
 
-    // --- Load students by combining Firestore data and JSON names ---
+    // --- Populate activity dropdowns ---
+    function populateActivityDropdowns() {
+        let activityOptions = '<option value="">Seleccione una actividad</option>';
+        courseActivities.forEach(unit => {
+            activityOptions += `<optgroup label="${unit.unitLabel}">`;
+            unit.activities.forEach(activity => {
+                activityOptions += `<option value="${activity.id}">${activity.title || '(Sin Título)'}</option>`;
+            });
+            activityOptions += `</optgroup>`;
+        });
+        individualActivitySelect.innerHTML = activityOptions;
+    }
+    populateActivityDropdowns();
+
+    // --- Load students into dropdowns ---
     async function loadStudentDropdowns() {
         const studentNameMap = new Map();
         try {
@@ -55,40 +69,35 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
             }
         } catch (error) {
-            console.error("Could not load or parse students.json for names", error);
+            console.error("Could not load students.json for names", error);
         }
 
         const studentsCollection = collection(db, "students");
         onSnapshot(studentsCollection, (snapshot) => {
             let options = '<option value="">Seleccione un estudiante</option>';
             const studentDocs = snapshot.docs.sort((a, b) => {
-                const studentA = a.data();
-                const studentB = b.data();
-                const nameA = studentNameMap.get(studentA.email?.toLowerCase()) || studentA.displayName || studentA.name || '';
-                const nameB = studentNameMap.get(studentB.email?.toLowerCase()) || studentB.displayName || studentB.name || '';
+                const nameA = studentNameMap.get(a.data().email?.toLowerCase()) || a.data().displayName || '';
+                const nameB = studentNameMap.get(b.data().email?.toLowerCase()) || b.data().displayName || '';
                 return nameA.localeCompare(nameB);
             });
 
             studentDocs.forEach(doc => {
                 const student = doc.data();
-                const email = student.email ? student.email.toLowerCase() : null;
-                const studentName = studentNameMap.get(email) || student.displayName || student.name || '(Sin Nombre)';
+                const studentName = studentNameMap.get(student.email?.toLowerCase()) || student.displayName || '(Sin Nombre)';
                 options += `<option value="${doc.id}" data-uid="${student.authUid || ''}">${studentName}</option>`;
             });
             studentSelectForGrading.innerHTML = options;
             studentSelectForIndividual.innerHTML = options;
         });
     }
-
     await loadStudentDropdowns();
 
-    // --- 1. Group Activity Creation ---
+    // --- Teacher Actions: Create Group/Individual Activities ---
     createGroupActivityForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const name = document.getElementById('group-activity-name').value;
+        const name = document.getElementById('group-activity-name').value.trim();
         const unit = document.getElementById('group-activity-unit').value;
         const type = document.getElementById('group-activity-type').value;
-
         if (!name) {
             batchStatus.textContent = "El nombre de la actividad es obligatorio.";
             return;
@@ -97,21 +106,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const submitButton = document.getElementById('submit-group-activity');
         submitButton.disabled = true;
         submitButton.textContent = "Procesando...";
-
         try {
-            const activitiesCollection = collection(db, "activities");
-            await addDoc(activitiesCollection, {
-                title: name,
-                description: `Actividad de tipo ${type} para la ${unit}`,
-                unit: unit,
-                type: type,
-                createdAt: new Date()
+            await addDoc(collection(db, "activities"), {
+                title: name, description: `Actividad de tipo ${type} para la ${unit}`, unit, type, createdAt: new Date()
             });
-
-            batchStatus.textContent = `Actividad "${name}" creada exitosamente para todos.`;
-            batchStatus.className = "text-green-600";
+            batchStatus.textContent = `Actividad "${name}" creada exitosamente.`;
             createGroupActivityForm.reset();
-
         } catch (error) {
             console.error("Error al crear actividad grupal:", error);
             batchStatus.textContent = "Error al crear la actividad.";
@@ -121,48 +121,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    // --- 2. Individual Activity Assignment ---
     assignIndividualActivityForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
         const studentDocId = studentSelectForIndividual.value;
-        const selectedOption = studentSelectForIndividual.options[studentSelectForIndividual.selectedIndex];
-        const studentUid = selectedOption.dataset.uid;
-        const studentName = selectedOption.text;
-        const selectedActivityId = individualActivitySelect.value;
-        const selectedActivityText = individualActivitySelect.options[individualActivitySelect.selectedIndex].text;
-
-        if (!studentDocId || !selectedActivityId) {
+        const studentUid = studentSelectForIndividual.options[studentSelectForIndividual.selectedIndex].dataset.uid;
+        const activityId = individualActivitySelect.value;
+        if (!studentDocId || !activityId) {
             individualStatus.textContent = "Debe seleccionar un estudiante y una actividad.";
             return;
         }
 
         const submitButton = document.getElementById('submit-individual-activity');
         submitButton.disabled = true;
-        submitButton.textContent = "Creando entrega...";
-
+        submitButton.textContent = "Asignando...";
         try {
-            const submissionsCollection = collection(db, "submissions");
-            
-            await addDoc(submissionsCollection, {
-                studentUid: studentUid,
-                activityId: selectedActivityId,
-                grade: null,
-                fileUrl: null,
-                submittedAt: null,
-                assignedAt: new Date()
-            });
-
-            individualStatus.textContent = `Entrega para "${selectedActivityText}" asignada a ${studentName} exitosamente.`;
-            individualStatus.className = "text-green-600";
-            assignIndividualActivityForm.reset();
-            
-            if(studentSelectForGrading.value === studentDocId) {
-                await loadStudentActivities(studentDocId, studentUid);
+            // Check if a submission already exists
+            const q = query(collection(db, "submissions"), where("studentUid", "==", studentUid), where("activityId", "==", activityId));
+            const existing = await getDocs(q);
+            if (!existing.empty) {
+                individualStatus.textContent = "Este estudiante ya tiene una entrega para esta actividad.";
+                return;
             }
-
+            await addDoc(collection(db, "submissions"), {
+                studentUid, activityId, grade: null, fileUrl: null, submittedAt: null, assignedAt: new Date()
+            });
+            individualStatus.textContent = `Entrega asignada exitosamente.`;
         } catch (error) {
-            console.error("Error al asignar actividad individual:", error);
+            console.error("Error al asignar actividad:", error);
             individualStatus.textContent = "Error al asignar la actividad.";
         } finally {
             submitButton.disabled = false;
@@ -170,138 +155,134 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-
-    // --- 3. Grading Section ---
-    studentSelectForGrading.addEventListener('change', async (e) => {
+    // --- Main Grading Logic ---
+    let currentSubmissionsUnsubscribe = null;
+    studentSelectForGrading.addEventListener('change', (e) => {
+        if (currentSubmissionsUnsubscribe) {
+            currentSubmissionsUnsubscribe(); // Stop listening to the previous student's grades
+        }
         const studentId = e.target.value;
         if (studentId) {
             const selectedOption = e.target.options[e.target.selectedIndex];
             const studentName = selectedOption.text;
             const studentUid = selectedOption.dataset.uid;
-            
             studentNameDisplay.textContent = studentName;
             activitiesListSection.style.display = 'block';
-            await loadStudentActivities(studentId, studentUid);
+
+            if (studentUid) {
+                subscribeToStudentSubmissions(studentUid);
+            } else {
+                console.error("Selected student has no UID.");
+                activitiesContainer.innerHTML = '<p class="text-red-500">Error: Este estudiante no tiene un UID de autenticación asignado.</p>';
+            }
         } else {
             activitiesListSection.style.display = 'none';
         }
     });
 
-    async function loadStudentActivities(studentDocId, studentAuthUid) {
-        if (!studentAuthUid) {
-            activitiesContainer.innerHTML = '<p class="text-red-500">Error: Este estudiante no tiene un UID de autenticación asignado.</p>';
-            return;
-        }
+    function subscribeToStudentSubmissions(studentUid) {
+        const submissionsQuery = query(collection(db, "submissions"), where("studentUid", "==", studentUid));
+        currentSubmissionsUnsubscribe = onSnapshot(submissionsQuery, (snapshot) => {
+            const submissions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            displayCalculatedGrades(submissions);
+            displayGradingInputs(submissions, studentUid);
+        }, (error) => {
+            console.error("Error fetching student submissions:", error);
+            activitiesContainer.innerHTML = `<p>Error al cargar las entregas del estudiante.</p>`;
+        });
+    }
 
-        activitiesContainer.innerHTML = '<p>Cargando actividades...</p>';
-    
-        const activitiesCollection = collection(db, "activities");
-        const activitiesSnapshot = await getDocs(activitiesCollection);
-        const allActivities = activitiesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    
-        const submissionsCollection = collection(db, "submissions");
-        const submissionsQuery = query(submissionsCollection, where("studentUid", "==", studentAuthUid));
-        const submissionsSnapshot = await getDocs(submissionsQuery);
-        const studentSubmissions = submissionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    
+    function displayCalculatedGrades(submissions) {
+        const gradeResults = calculateGrades(submissions);
+        finalGradeDisplay.textContent = gradeResults.finalGrade.toFixed(2);
+        gradeDetailsContainer.innerHTML = ''; // Clear previous details
+
+        for (const unitId in gradeResults.units) {
+            const unitData = gradeResults.units[unitId];
+            const unitSchema = gradeSchema[unitId];
+            if (!unitSchema) continue;
+
+            const unitCard = unitTemplate.content.cloneNode(true);
+            unitCard.querySelector('.unit-title').textContent = courseActivities.find(u => u.unitId === unitId)?.unitLabel || `Unidad ${unitId}`;
+            unitCard.querySelector('.unit-score').textContent = unitData.unitScore.toFixed(2);
+            unitCard.querySelector('.unit-weight').textContent = `(Ponderación: ${unitSchema.weight * 100}%)`;
+            const categoryBreakdown = unitCard.querySelector('.category-breakdown');
+
+            for (const categoryId in unitData.categories) {
+                const categoryData = unitData.categories[categoryId];
+                const categorySchema = unitSchema.categories[categoryId];
+                if (!categorySchema) continue;
+
+                const categoryItem = categoryTemplate.content.cloneNode(true);
+                categoryItem.querySelector('.category-label').textContent = categorySchema.label;
+                categoryItem.querySelector('.category-score').textContent = `${categoryData.score.toFixed(2)} / 100`;
+                categoryItem.querySelector('.category-weight').textContent = `(${categoryData.weightedScore.toFixed(2)} pts)`;
+                categoryBreakdown.appendChild(categoryItem);
+            }
+            gradeDetailsContainer.appendChild(unitCard);
+        }
+    }
+
+    function displayGradingInputs(submissions, studentUid) {
+        const allCourseActivities = courseActivities.flatMap(unit => unit.activities.map(act => ({ ...act, unitId: unit.unitId })));
         activitiesContainer.innerHTML = '';
         
-        const relevantActivityIds = new Set(allActivities.map(a => a.id));
-        studentSubmissions.forEach(s => relevantActivityIds.add(s.activityId));
-
-        const combinedActivities = courseActivities
-            .flatMap(unit => unit.activities)
-            .concat(allActivities)
-            .filter(a => relevantActivityIds.has(a.id));
-
-        const uniqueActivities = Array.from(new Set(combinedActivities.map(a => a.id)))
-            .map(id => {
-                return combinedActivities.find(a => a.id === id) || allActivities.find(a => a.id === id);
-            });
-
-
-        if (uniqueActivities.length === 0) {
-            activitiesContainer.innerHTML = '<p>No hay actividades grupales creadas o individuales asignadas.</p>';
+        if(allCourseActivities.length === 0) {
+            activitiesContainer.innerHTML = '<p>No hay actividades definidas en el curso.</p>';
             return;
         }
-    
-        uniqueActivities.forEach(activity => {
-            const submission = studentSubmissions.find(s => s.activityId === activity.id);
-            const submissionId = submission ? submission.id : null;
-            const currentGrade = submission ? submission.grade : '';
-            const title = activity.title || '(Sin Título)';
-            const description = activity.description || '(Sin descripción)';
-    
+
+        allCourseActivities.forEach(activity => {
+            const submission = submissions.find(s => s.activityId === activity.id);
             const activityEl = document.createElement('div');
             activityEl.className = 'flex items-center justify-between p-3 bg-gray-50 rounded-md';
             activityEl.innerHTML = `
                 <div>
-                    <p class="font-semibold">${title}</p>
-                    <p class="text-sm text-gray-500">${description}</p>
+                    <p class="font-semibold">${activity.title}</p>
+                    <p class="text-sm text-gray-500">${getActivityById(activity.id)?.unitLabel || 'N/A'}</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <input type="number" min="0" max="100" placeholder="N/A" 
-                           class="w-20 p-1 border border-gray-300 rounded-md text-center" 
-                           value="${currentGrade !== null ? currentGrade : ''}" 
-                           data-activity-id="${activity.id}" 
-                           data-submission-id="${submissionId || ''}">
+                    <input type="number" min="0" max="100" placeholder="N/A"
+                           class="grade-input w-20 p-1 border border-gray-300 rounded-md text-center"
+                           value="${submission?.grade ?? ''}"
+                           data-activity-id="${activity.id}"
+                           data-submission-id="${submission?.id || ''}"
+                           data-student-uid="${studentUid}">
                     <button class="save-grade-btn bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600">Guardar</button>
                 </div>
             `;
             activitiesContainer.appendChild(activityEl);
         });
     }
-    
+
     activitiesContainer.addEventListener('click', async (e) => {
         if (e.target.classList.contains('save-grade-btn')) {
             const button = e.target;
-            const input = button.previousElementSibling;
+            const input = button.closest('.flex').querySelector('.grade-input');
             const grade = input.value;
             const activityId = input.dataset.activityId;
             let submissionId = input.dataset.submissionId;
-    
-            const selectedOption = studentSelectForGrading.options[studentSelectForGrading.selectedIndex];
-            const studentUid = selectedOption.dataset.uid;
-    
-            if (!studentUid) {
-                alert("Error: No se pudo identificar al estudiante (UID no encontrado).");
-                return;
-            }
-    
+            const studentUid = input.dataset.studentUid;
+
             button.disabled = true;
             button.textContent = '...';
-    
+
             try {
-                const submissionsCollection = collection(db, "submissions");
-                
-                if (submissionId && submissionId !== 'null') {
+                if (submissionId) {
                     const submissionRef = doc(db, "submissions", submissionId);
                     await updateDoc(submissionRef, { grade: Number(grade), gradedAt: new Date() });
                 } else {
-                    const newSubmissionRef = await addDoc(submissionsCollection, {
-                        studentUid: studentUid,
-                        activityId: activityId,
-                        grade: Number(grade),
-                        gradedAt: new Date(),
-                        submittedAt: null,
-                        fileUrl: null
+                    const newSubmissionRef = await addDoc(collection(db, "submissions"), {
+                        studentUid, activityId, grade: Number(grade), gradedAt: new Date(), assignedAt: new Date()
                     });
-                    input.dataset.submissionId = newSubmissionRef.id;
+                    input.dataset.submissionId = newSubmissionRef.id; // Update for subsequent saves
                 }
-    
                 button.textContent = 'Hecho';
-                setTimeout(() => {
-                    button.textContent = 'Guardar';
-                    button.disabled = false;
-                }, 2000);
-    
+                setTimeout(() => { button.textContent = 'Guardar'; button.disabled = false; }, 2000);
             } catch (error) {
                 console.error("Error al guardar la calificación:", error);
                 button.textContent = 'Error';
-                setTimeout(() => {
-                     button.textContent = 'Guardar';
-                     button.disabled = false;
-                }, 3000);
+                setTimeout(() => { button.textContent = 'Guardar'; button.disabled = false; }, 3000);
             }
         }
     });
