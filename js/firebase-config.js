@@ -12,16 +12,34 @@ export const firebaseConfig = {
 };
 
 /**
- * El dominio de correo electrónico permitido para el registro y el inicio de sesión de estudiantes.
+ * El dominio de correo permitido para el registro de estudiantes.
  * @type {string}
  */
 export const allowedEmailDomain = "itson.edu.mx";
 
 /**
- * Lista de correos electrónicos de profesores con permisos administrativos.
+ * Lista de correos de profesores con permisos administrativos.
  * @type {string[]}
  */
 export const allowedTeacherEmails = ["profesor.ejemplo@itson.edu.mx"];
+
+/**
+ * ID de la carpeta raíz de Google Drive para las entregas.
+ * @type {string}
+ */
+export const driveFolderId = "1WPZ9AvDxVF8GasTuDPYeaU8unw7e3fM3";
+
+/**
+ * Define si se debe usar Firebase Storage (lo hemos desactivado en favor de Google Drive).
+ * @type {boolean}
+ */
+export const useStorage = false;
+
+/**
+ * Ruta en Firestore al documento con la lista de correos de profesores autorizados.
+ * @type {string}
+ */
+export const teacherAllowlistDocPath = "config/teacher_allowlist";
 
 
 /**
