@@ -1,6 +1,6 @@
 // En: js/firebase-config.js
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+// La inicialización de Firebase ahora se gestiona de forma centralizada en `js/firebase.js`.
 
 export const firebaseConfig = {
   apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
@@ -18,10 +18,13 @@ export const firebaseConfig = {
 export const allowedEmailDomain = "itson.edu.mx";
 
 /**
- * Lista de correos de profesores con permisos administrativos.
+ * Lista de correos de profesores con permisos administrativos en la interfaz.
  * @type {string[]}
  */
-export const allowedTeacherEmails = ["profesor.ejemplo@itson.edu.mx"];
+export const allowedTeacherEmails = [
+    "profesor.ejemplo@itson.edu.mx",
+    "isaac.paniagua@potros.itson.edu.mx" // <-- ✅ CORRECCIÓN: Tu correo ha sido añadido.
+];
 
 /**
  * ID de la carpeta raíz de Google Drive para las entregas.
@@ -41,12 +44,5 @@ export const useStorage = false;
  */
 export const teacherAllowlistDocPath = "config/teacher_allowlist";
 
-
-/**
- * Inicializa la aplicación Firebase si aún no se ha inicializado.
- * @returns El objeto de la aplicación Firebase.
- */
-export function initFirebase() {
-  const app = initializeApp(firebaseConfig);
-  return app;
-}
+// La función initFirebase() se ha eliminado de este archivo porque la inicialización
+// ahora está correctamente centralizada en el nuevo `js/firebase.js`.
