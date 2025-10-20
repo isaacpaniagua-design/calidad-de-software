@@ -117,7 +117,44 @@
     <footer class="footer"></footer>
     
     <script>
-      // Script de sesiones se mantiene igual
+      document.addEventListener("DOMContentLoaded", () => {
+        const grid = document.getElementById("sessionsGrid");
+        if (!grid) return;
+        
+        const totalSessions = Number(grid.dataset.totalSessions) || 45;
+        grid.innerHTML = "";
+        const sessionsPerGroup = 5;
+
+        const formatLabel = (val) => String(val).padStart(2, "0");
+        const buildRangeTitle = (start, end) => start === end ? `Sesión ${formatLabel(start)}` : `Sesiones ${formatLabel(start)}–${formatLabel(end)}`;
+
+        for (let start = 1, block = 1; start <= totalSessions; start += sessionsPerGroup, block++) {
+          const end = Math.min(start + sessionsPerGroup - 1, totalSessions);
+          const group = document.createElement("div");
+          group.className = "session-group";
+          const header = document.createElement("div");
+          header.className = "session-group__header";
+          const badge = document.createElement("span");
+          badge.className = "session-group__badge";
+          badge.textContent = `Bloque ${formatLabel(block)}`;
+          const title = document.createElement("h3");
+          title.className = "session-group__title";
+          title.textContent = buildRangeTitle(start, end);
+          header.append(badge, title);
+
+          const list = document.createElement("div");
+          list.className = "session-group__list";
+          for (let session = start; session <= end; session++) {
+            const link = document.createElement("a");
+            link.href = `sesion${session}.html`;
+            link.className = "session-btn";
+            link.textContent = `Sesión ${formatLabel(session)}`;
+            list.appendChild(link);
+          }
+          group.append(header, list);
+          grid.appendChild(group);
+        }
+      });
     </script>
     
     <script type="module" src="js/student-uploads.js"></script>
