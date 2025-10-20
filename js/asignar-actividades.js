@@ -22,18 +22,21 @@ async function loadStudentsIntoAssignForm() {
 
     try {
         const studentsSnapshot = await getDocs(collection(db, 'students'));
-        const students = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        let students = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
-        // --- ¡CORRECCIÓN! ---
-        // Maneja el caso en que un estudiante no tenga `name`.
-        students.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        // --- ¡CORRECCIÓN CLAVE! ---
+        // 1. Filtrar estudiantes que no tienen un nombre válido.
+        students = students.filter(student => student.name && student.name.trim() !== '');
+
+        // 2. Ahora es seguro ordenar directamente por nombre.
+        students.sort((a, b) => a.name.localeCompare(b.name));
 
         studentSelect.innerHTML = '<option value="">Seleccione estudiante</option>';
         students.forEach(student => {
             const option = document.createElement('option');
             option.value = student.id;
-            // Si no hay nombre, mostrar el ID para no tener una opción vacía.
-            option.textContent = student.name || student.id;
+            // 3. Mostrar únicamente el nombre, que ahora está garantizado.
+            option.textContent = student.name;
             studentSelect.appendChild(option);
         });
         studentSelect.disabled = false;
