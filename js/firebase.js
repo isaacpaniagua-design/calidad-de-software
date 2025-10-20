@@ -66,21 +66,14 @@ export function getStorageInstance() {
 
 // --- Auth Helpers ---
 
-/**
- * Registra un callback que se ejecuta cuando el estado de autenticación cambia.
- * @param {function} callback El callback a ejecutar con el objeto de usuario.
- */
 export function onAuth(callback) {
   return onAuthStateChanged(getAuthInstance(), callback);
 }
 
-/**
- * Inicia el flujo de inicio de sesión con Google, restringido a cuentas @potros.itson.edu.mx.
- */
 export async function signInWithGooglePotros() {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({
-    hd: "potros.itson.edu.mx", // Forza el dominio de @potros
+    hd: "potros.itson.edu.mx",
   });
   try {
     await signInWithPopup(getAuthInstance(), provider);
@@ -92,9 +85,18 @@ export async function signInWithGooglePotros() {
   }
 }
 
-/**
- * Cierra la sesión del usuario actual.
- */
+export async function signInWithGoogleOpen() {
+    const provider = new GoogleAuthProvider();
+    try {
+        await signInWithPopup(getAuthInstance(), provider);
+    } catch (error) {
+        console.error("Error en signInWithGoogleOpen:", error);
+        if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+            alert(`Error al iniciar sesión: ${error.message}`);
+        }
+    }
+}
+
 export async function signOutCurrent() {
   try {
     await signOut(getAuthInstance());
@@ -103,25 +105,13 @@ export async function signOutCurrent() {
   }
 }
 
-/**
- * Verifica si un correo electrónico pertenece a la lista de docentes permitidos.
- * @param {string} email El correo a verificar.
- * @returns {boolean}
- */
 export function isTeacherEmail(email) {
   if (!email) return false;
   return allowedTeacherEmails.map(e => e.toLowerCase()).includes(email.toLowerCase());
 }
 
-/**
- * Esta función es un placeholder. En el futuro, podría cargar la lista de
- * profesores desde Firestore para mayor flexibilidad.
- */
 export function ensureTeacherAllowlistLoaded() {
-  // Por ahora, no hace nada porque la lista es estática desde firebase-config.js
   return Promise.resolve();
 }
 
-
-// Inicializar Firebase tan pronto como este módulo se cargue.
 initFirebase();
