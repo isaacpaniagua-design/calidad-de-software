@@ -1,7 +1,7 @@
 // js/actividades.js
 
 import {
-  onAuth,
+  onFirebaseReady, // CAMBIO: Usamos el nuevo inicializador
   getDb,
 } from "./firebase.js";
 
@@ -15,14 +15,15 @@ import {
   getDocs,
   writeBatch,
   deleteDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
 
-const db = getDb();
+let db; // Se inicializará de forma segura
 let studentsList = [];
 let selectedStudentId = null;
 let unsubscribeFromGrades = null;
 
-// Referencias al DOM actualizadas
+// Referencias al DOM
 const studentSelect = document.getElementById("student-select-display");
 const activitiesListSection = document.getElementById("activities-list-section");
 const studentNameDisplay = document.getElementById("student-name-display");
@@ -32,9 +33,16 @@ const createGroupActivityForm = document.getElementById("create-group-activity-f
 const submitGroupActivityBtn = document.getElementById("submit-group-activity");
 const batchStatusDiv = document.getElementById("batch-status");
 
-export function initActividadesPage(user) {
+function initActividadesPage(user) {
   const isTeacher = user && (localStorage.getItem("qs_role") || "").toLowerCase() === "docente";
+  
   if (isTeacher) {
+    db = getDb(); // Ahora es seguro obtener la instancia de la BD
+    if (!db) {
+        console.error("Error crítico: La base de datos no está disponible.");
+        if(mainContent) mainContent.innerHTML = '<p class="text-red-500 text-center">Error de conexión con la base de datos.</p>';
+        return;
+    }
     if (mainContent) mainContent.style.display = "block";
     loadStudentsIntoDisplay();
     setupDisplayEventListeners();
@@ -47,7 +55,7 @@ export function initActividadesPage(user) {
 async function loadStudentsIntoDisplay() {
     if (!studentSelect) return;
     studentSelect.disabled = true;
-    studentSelect.innerHTML = "<option>Cargando...</option>";
+    studentSelect.innerHTML = "<option>Cargando estudiantes...</option>";
     try {
         const studentsSnapshot = await getDocs(collection(db, 'students'));
         studentsList = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -156,9 +164,15 @@ function setupDisplayEventListeners() {
     if (createGroupActivityForm) {
         createGroupActivityForm.addEventListener("submit", async (e) => {
             e.preventDefault();
-            if (studentsList.length === 0) return alert("No hay estudiantes cargados.");
+            if (studentsList.length === 0) {
+                batchStatusDiv.textContent = "No hay estudiantes cargados para asignar la actividad.";
+                return;
+            }
             const activityName = document.getElementById("group-activity-name").value.trim();
-            if (!activityName) return alert("El nombre de la actividad es requerido.");
+            if (!activityName) {
+                batchStatusDiv.textContent = "El nombre de la actividad es requerido.";
+                return;
+            }
             
             submitGroupActivityBtn.disabled = true;
             submitGroupActivityBtn.textContent = "Procesando...";
@@ -166,22 +180,29 @@ function setupDisplayEventListeners() {
             
             try {
                 const batch = writeBatch(db);
+                const activityId = `group-${Date.now()}`;
+                const newActivityData = {
+                    activityName,
+                    activityId,
+                    unit: document.getElementById("group-activity-unit").value,
+                    type: document.getElementById("group-activity-type").value,
+                    grade: 0,
+                    assignedAt: serverTimestamp()
+                };
+
                 studentsList.forEach((student) => {
                     const gradeRef = doc(collection(db, "grades")); 
                     batch.set(gradeRef, {
+                        ...newActivityData,
                         studentId: student.id,
-                        activityName: activityName,
-                        activityId: `group-${Date.now()}`,
-                        grade: 0, // Calificación inicial
-                        assignedAt: new Date()
                     });
                 });
                 await batch.commit();
-                batchStatusDiv.textContent = `¡Éxito! Actividad asignada.`;
+                batchStatusDiv.textContent = "¡Éxito! Actividad asignada a todos los estudiantes.";
                 createGroupActivityForm.reset();
             } catch (error) {
                 console.error("Error en lote:", error);
-                batchStatusDiv.textContent = "Error al asignar.";
+                batchStatusDiv.textContent = "Error al asignar la actividad en grupo.";
             } finally {
                 submitGroupActivityBtn.disabled = false;
                 submitGroupActivityBtn.textContent = "Añadir Actividad a Todos";
@@ -191,4 +212,5 @@ function setupDisplayEventListeners() {
     }
 }
 
-onAuth(initActividadesPage);
+// CAMBIO: Usar onFirebaseReady para asegurar que Firebase esté inicializado
+onFirebaseReady(initActividadesPage);

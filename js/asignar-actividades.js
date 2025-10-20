@@ -1,9 +1,22 @@
-import { initFirebase, getDb, getAuthInstance } from './firebase.js';
+import { getDb, onFirebaseReady } from './firebase.js'; // CAMBIO: Usamos onFirebaseReady
 import { getDocs, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 import { courseActivities } from './course-activities.js';
 
-function setupAssignActivities() {
-    const db = getDb();
+let db;
+
+function setupAssignActivities(user) {
+    // Verificar si el usuario es docente
+    if (!user || localStorage.getItem('qs_role') !== 'docente') {
+        const form = document.getElementById('assign-individual-activity-form');
+        if(form) form.style.display = 'none'; // Ocultar el formulario si no es docente
+        return;
+    }
+
+    db = getDb(); // Ahora es seguro obtener la instancia de la BD
+    if (!db) {
+        console.error("La asignación de actividades no puede iniciar porque la BD no está lista.");
+        return;
+    }
     
     const studentSelect = document.getElementById('student-select-individual');
     const activitySelect = document.getElementById('activity-select-individual');
@@ -12,14 +25,13 @@ function setupAssignActivities() {
     const gradeInput = document.getElementById('grade-input');
 
     if (!studentSelect || !activitySelect || !assignForm) {
-        console.log('No se encontraron los elementos para asignar actividades, saltando inicialización.');
-        return;
+        return; // No hacer nada si los elementos no están en la página
     }
 
-    // 1. Cargar lista de estudiantes
+    // Cargar estudiantes
     getDocs(collection(db, 'students'))
         .then(studentsSnapshot => {
-            studentSelect.innerHTML = '<option value="">Seleccione un estudiante</option>'; // Limpiar y añadir opción por defecto
+            studentSelect.innerHTML = '<option value="">Seleccione un estudiante</option>'; 
             studentsSnapshot.forEach(doc => {
                 const student = doc.data();
                 const option = document.createElement('option');
@@ -28,10 +40,10 @@ function setupAssignActivities() {
                 studentSelect.appendChild(option);
             });
         })
-        .catch(error => console.error("Error al cargar estudiantes: ", error));
+        .catch(error => console.error("Error al cargar estudiantes para asignar: ", error));
 
-    // 2. Cargar lista de actividades
-    activitySelect.innerHTML = '<option value="">Seleccione una actividad</option>'; // Limpiar y añadir opción por defecto
+    // Cargar actividades
+    activitySelect.innerHTML = '<option value="">Seleccione una actividad</option>';
     courseActivities.forEach(unit => {
         const group = document.createElement('optgroup');
         group.label = unit.unitLabel;
@@ -44,7 +56,7 @@ function setupAssignActivities() {
         activitySelect.appendChild(group);
     });
 
-    // 3. Manejar el envío del formulario
+    // Manejar el envío del formulario
     assignForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         assignStatus.textContent = 'Asignando...';
@@ -72,7 +84,9 @@ function setupAssignActivities() {
             assignStatus.textContent = 'Calificación asignada correctamente.';
             assignStatus.classList.add('text-green-500');
             assignForm.reset();
-            // Recargar las calificaciones del estudiante afectado en la otra sección
+
+            // Si el estudiante cuyas calificaciones se están mostrando es el mismo al que se le asignó,
+            // dispara un evento para forzar la recarga de su lista de calificaciones.
             if (document.getElementById('student-select-display').value === studentId) {
                  document.getElementById('student-select-display').dispatchEvent(new Event('change'));
             }
@@ -84,17 +98,5 @@ function setupAssignActivities() {
     });
 }
 
-// Inicialización principal
-document.addEventListener('DOMContentLoaded', () => {
-    initFirebase();
-    const auth = getAuthInstance();
-
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            // Esperamos un momento para asegurar que otros scripts hayan cargado y el DOM esté listo.
-            setTimeout(setupAssignActivities, 100); 
-        } else {
-            console.log("Usuario no autenticado. La asignación de actividades está deshabilitada.");
-        }
-    });
-});
+// CAMBIO: Usar onFirebaseReady para asegurar que Firebase esté inicializado
+onFirebaseReady(setupAssignActivities);
