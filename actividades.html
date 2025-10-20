@@ -4,58 +4,94 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dashboard de Calificaciones · Plataforma QS</title>
+    <title>Gestión de Calificaciones · Plataforma QS</title>
     <link rel="stylesheet" href="css/layout.css" />
     <link rel="stylesheet" href="css/actividades.css" />
 </head>
 
 <body>
+    <!-- Navbar y Footer inyectados por nav-inject.js -->
     <div class="qs-nav" data-role="main-nav"></div>
 
     <main class="page-shell">
         <div class="content-container">
             <div class="header-section">
-                <h1>Dashboard de Calificaciones</h1>
-                <p>Vista general del progreso de todos los estudiantes y herramientas de gestión.</p>
+                <h1>Gestión de Calificaciones y Actividades</h1>
+                <p>Selecciona un estudiante para ver su progreso, registrar calificaciones o asignar nuevas actividades.</p>
             </div>
 
-            <!-- Roster de Estudiantes con Calificaciones -->
-            <div class="student-roster-card">
-                <h2>Progreso General del Curso</h2>
-                <div id="student-roster-container" class="roster-grid">
-                    <!-- Las tarjetas de estudiante se cargarán aquí -->
-                    <p class="loading-message">Cargando estudiantes...</p>
-                </div>
-            </div>
-
-            <!-- Herramientas de Gestión -->
             <div class="management-grid">
-                <!-- Columna de Calificación (Ahora para vista detallada) -->
-                <div class="grading-column">
-                    <div id="detailed-view-card" class="action-card" style="display: none;">
-                        <button id="close-detailed-view" class="close-button">&times;</button>
-                        <h2 id="detailed-student-name">Vista Detallada</h2>
-                        <div id="grade-summary-section"></div>
-                        <div id="grading-input-section">
-                            <h4>Registrar/Modificar Calificaciones</h4>
-                            <div id="activities-container"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Columna de Acciones (Crear/Asignar) -->
+                <!-- Columna de Gestión de Actividades -->
                 <div class="actions-column">
                     <div class="action-card">
                         <h2>Crear Actividad Grupal</h2>
                         <form id="create-group-activity-form">
-                            <!-- ... (campos de formulario como antes) ... -->
+                            <div class="field">
+                                <label for="group-activity-name">Nombre</label>
+                                <input type="text" id="group-activity-name">
+                            </div>
+                            <div class="field">
+                                <label for="group-activity-unit">Unidad</label>
+                                <select id="group-activity-unit">
+                                    <option value="unit1">Unidad 1</option>
+                                    <option value="unit2">Unidad 2</option>
+                                    <option value="unit3">Unidad 3</option>
+                                </select>
+                            </div>
+                             <div class="field">
+                                <label for="group-activity-type">Tipo</label>
+                                <select id="group-activity-type">
+                                    <option value="assignment">Asignación</option>
+                                    <option value="practice">Práctica</option>
+                                    <option value="forum">Foro</option>
+                                </select>
+                            </div>
+                            <button type="submit" id="submit-group-activity" class="button-primary">Añadir Actividad a Todos</button>
+                            <p id="batch-status" class="status-message"></p>
                         </form>
                     </div>
+
                     <div class="action-card">
                         <h2>Asignar Entrega Individual</h2>
                         <form id="assign-individual-activity-form">
-                            <!-- ... (campos de formulario como antes) ... -->
+                            <div class="field">
+                                <label for="individual-student-select">Estudiante</label>
+                                <select id="individual-student-select">
+                                    <option>Cargando...</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label for="individual-activity-select">Actividad del Curso</label>
+                                <select id="individual-activity-select">
+                                    <option>Cargando...</option>
+                                </select>
+                            </div>
+                            <button type="submit" id="submit-individual-activity" class="button-secondary">Asignar a Estudiante</button>
+                            <p id="individual-status" class="status-message"></p>
                         </form>
+                    </div>
+                </div>
+
+                <!-- Columna de Calificación -->
+                <div class="grading-column">
+                    <div class="student-selector-card">
+                        <h2>Calificar a un Estudiante</h2>
+                        <select id="student-select">
+                            <option value="">Seleccione un estudiante</option>
+                        </select>
+                    </div>
+
+                    <div id="activities-list-section" style="display: none;">
+                        <h3 class="student-name-header">Calificaciones para: <span id="student-name-display"></span></h3>
+
+                        <!-- Vista de Calificaciones Calculadas -->
+                        <div id="grade-summary-section"></div>
+
+                        <!-- Lista de Actividades para Calificar -->
+                        <div id="grading-input-section" class="grading-input-container">
+                            <h4>Registrar Calificaciones</h4>
+                            <div id="activities-container"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -64,16 +100,7 @@
 
     <footer class="footer"></footer>
 
-    <!-- Plantillas para JS -->
-    <template id="student-roster-item-template">
-        <div class="roster-item" tabindex="0">
-            <strong class="roster-student-name"></strong>
-            <span class="roster-final-grade">0.00</span>
-        </div>
-    </template>
-
-    <!-- (Las plantillas para el desglose de calificaciones siguen aquí) -->
-
+    <!-- Plantillas y Scripts -->
     <script type="module" src="js/actividades.js"></script>
     <script defer src="js/back-home.js"></script>
     <script defer src="js/nav-inject.js"></script>
