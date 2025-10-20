@@ -1,5 +1,4 @@
 import { onFirebaseReady, getDb, onAuth } from './firebase.js';
-// --- ¡CORRECCIÓN DE VERSIÓN! ---
 import { getDocs, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
 import { courseActivities } from './course-activities.js';
 
@@ -24,13 +23,17 @@ async function loadStudentsIntoAssignForm() {
     try {
         const studentsSnapshot = await getDocs(collection(db, 'students'));
         const students = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        students.sort((a, b) => a.name.localeCompare(b.name));
+        
+        // --- ¡CORRECCIÓN! ---
+        // Maneja el caso en que un estudiante no tenga `name`.
+        students.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         studentSelect.innerHTML = '<option value="">Seleccione estudiante</option>';
         students.forEach(student => {
             const option = document.createElement('option');
             option.value = student.id;
-            option.textContent = student.name;
+            // Si no hay nombre, mostrar el ID para no tener una opción vacía.
+            option.textContent = student.name || student.id;
             studentSelect.appendChild(option);
         });
         studentSelect.disabled = false;

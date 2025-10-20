@@ -1,5 +1,4 @@
 import { onFirebaseReady, getDb, onAuth } from './firebase.js';
-// --- ¡CORRECCIÓN DE VERSIÓN! ---
 import { collection, doc, updateDoc, onSnapshot, query, where, getDocs, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 let db;
@@ -38,18 +37,22 @@ function initActividadesPage(user) {
 async function loadStudentsFromFirestore() {
     if (!studentSelect) return;
     studentSelect.disabled = true;
-    studentSelect.innerHTML = "<option>Cargando estudiantes...</option>';
+    studentSelect.innerHTML = "<option>Cargando estudiantes...</option>";
 
     try {
         const studentsSnapshot = await getDocs(collection(db, 'students'));
         studentsList = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        studentsList.sort((a, b) => a.name.localeCompare(b.name));
+        
+        // --- ¡CORRECCIÓN! ---
+        // Maneja el caso en que un estudiante no tenga `name`.
+        studentsList.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
         studentSelect.innerHTML = '<option value="">-- Seleccione para ver --</option>';
         studentsList.forEach((student) => {
             const option = document.createElement("option");
             option.value = student.id;
-            option.textContent = student.name;
+            // Si no hay nombre, mostrar el ID para no tener una opción vacía.
+            option.textContent = student.name || student.id;
             studentSelect.appendChild(option);
         });
         studentSelect.disabled = false;
@@ -105,7 +108,7 @@ function setupDisplayEventListeners() {
         selectedStudentId = studentSelect.value;
         if (selectedStudentId) {
             const student = studentsList.find((s) => s.id === selectedStudentId);
-            studentNameDisplay.textContent = student ? student.name : "N/A";
+            studentNameDisplay.textContent = student ? (student.name || 'ID: ' + student.id) : "N/A";
             activitiesListSection.style.display = "block";
             loadGradesForStudent(selectedStudentId);
         } else {
