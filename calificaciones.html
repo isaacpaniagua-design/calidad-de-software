@@ -1,201 +1,75 @@
 <!DOCTYPE html>
-<html lang="es" data-layout="global">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sistema de Gestión de Calificaciones - Calidad de Software</title>
-
-    <link rel="stylesheet" href="css/layout.css" />
-    <link rel="stylesheet" href="css/calificaciones.css" />
-
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Calificaciones</title>
+    <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      UPLOADCARE_PUBLIC_KEY = "85eb5471d305dcd08e71";
-      UPLOADCARE_LOCALE = "es";
-    </script>
-    <script
-      src="https://ucarecdn.com/libs/widget/3.x/uploadcare.full.min.js"
-      charset="utf-8"
-      defer
-    ></script>
+</head>
+<body class="bg-gray-100 font-sans">
 
-    <style>
-      /* Se mantiene este estilo base para la fuente, ya que es global */
-      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
-      body {
-        font-family: "Inter", sans-serif;
-      }
-    </style>
-  </head>
-  <body id="calificaciones-root">
-  <div class="qs-nav" data-role="main-nav">
-    <div class="wrap">
-      <div class="qs-brand-shell">
-        <div class="qs-brand-region">
-          <a class="qs-brand" href="index.html">
-            <span class="qs-logo" aria-hidden="true">QS</span>
-            <span class="qs-brand-text">
-              <span class="qs-title">Calidad de Software</span>
-              <span class="qs-subtitle">ITSON</span>
-            </span>
-          </a>
-        </div>
-        <button class="qs-menu-toggle" type="button" aria-expanded="false" aria-controls="qs-nav-links">
-          <span class="qs-menu-icon" aria-hidden="true"></span>
-          <span class="sr-only">Abrir menú</span>
-        </button>
-      </div>
-      <div class="qs-links-region">
-        <nav class="qs-tabs" id="qs-nav-links" aria-label="Navegación principal">
-          <a class="qs-btn" href="materiales.html">Materiales</a>
-          <a class="qs-btn" href="asistencia.html">Asistencia</a>
-          <a class="qs-btn" href="calificaciones.html">Calificaciones</a>
-          <a class="qs-btn teacher-only" href="actividades.html">Actividades</a>
-          <a class="qs-btn" href="Foro.html">Foro</a>
-          <a class="qs-btn teacher-only" href="paneldocente.html" hidden aria-hidden="true">Panel</a>
-        </nav>
-      </div>
-    </div>
-  </div>
+    <!-- Header -->
+    <header id="main-header" class="bg-blue-600 text-white p-4 shadow-md"></header>
 
-  <header class="grades-hero">
-    <div class="grades-hero__grid">
-      <div class="grades-hero__intro">
-        <span class="grades-hero__badge" aria-hidden="true">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v9a2 2 0 002 2h12m0 0l-3.5-4m3.5 4l3.5-4M9 3v4m0 0h6M9 7a3 3 0 01-3 3H4" />
-          </svg>
-        </span>
-        <div>
-          <span class="grades-hero__eyebrow">Calidad de Software · Gestión por unidades</span>
-          <h1>📊 Sistema de Gestión de Calificaciones</h1>
-          <p>Visualiza el desempeño por unidad, registra evidencias y genera reportes en tiempo real.</p>
-        </div>
-      </div>
-      <div class="grades-hero__meta">
-        <div class="grades-hero__stat">
-          <span>Modo docente</span>
-          <span>Activa controles para editar calificaciones y observaciones.</span>
-        </div>
-        <div class="grades-hero__stat">
-          <span>Sincronización</span>
-          <span>Compatible con Google Drive para adjuntar evidencias.</span>
-        </div>
-      </div>
-    </div>
-    <div class="grades-hero__footer">
-      <span class="grades-hero__tag">Unidades 1 a 6</span>
-      <span class="grades-hero__tag">Reportes exportables</span>
-      <span class="grades-hero__tag">Seguimiento individual</span>
-    </div>
-  </header>
-
-  <div class="container mx-auto px-6 py-8">
-    <div id="grades-table-container" style="display: none">
-      <div class="bg-white rounded-lg card-shadow p-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-4" id="grades-title">
-          Mis Calificaciones
-        </h2>
-        <div class="overflow-x-auto">
-          <table class="w-full text-left">
-            <thead>
-              <tr class="border-b bg-gray-50">
-                <th class="py-3 px-4 font-semibold text-left">Nombre del Estudiante</th>
-                <th class="py-3 px-4 font-semibold text-center">Unidad 1</th>
-                <th class="py-3 px-4 font-semibold text-center">Unidad 2</th>
-                <th class="py-3 px-4 font-semibold text-center">Proyecto Final</th>
-                <th class="py-3 px-4 font-semibold text-center">Calificación Final</th>
-              </tr>
-            </thead>
-            <tbody id="grades-table-body">
-              <tr>
-                <td colspan="5" class="text-center py-4">Cargando calificaciones...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- START: New Activity Breakdown Section -->
-    <div class="container mx-auto px-4 py-8" id="activity-breakdown-container">
-      <div class="bg-white rounded-lg card-shadow p-6 mt-8">
-        <div class="border-b pb-4 mb-4">
-          <h2 class="text-xl font-semibold text-gray-800">Desglose de Actividades y Calificaciones</h2>
-          <p class="text-gray-600">Aquí encontrarás el detalle de todas las actividades asignadas, tus entregas y las calificaciones correspondientes.</p>
-        </div>
-        
-        <!-- Teacher view selector - a feature for teachers to select a student -->
-        <div id="teacher-student-selector-container" class="mb-6 teacher-only" hidden>
-            <label for="student-selector" class="block text-sm font-medium text-gray-700 mb-2">Seleccionar Estudiante:</label>
-            <select id="student-selector" class="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                <option>Cargando estudiantes...</option>
-            </select>
-        </div>
-
-        <!-- Container for the list of activities -->
-        <div id="activity-list-container">
-          <!-- Loading State -->
-          <div id="activity-list-loading" class="text-center py-4">
-            <p>Cargando actividades...</p>
-          </div>
-
-          <!-- Empty State -->
-          <div id="activity-list-empty" class="text-center py-8 border-2 border-dashed rounded-lg" hidden>
-            <p class="text-gray-500">No hay actividades asignadas por el momento.</p>
-              <p class="text-sm text-gray-400 mt-2 student-only">Cuando el docente asigne nuevas actividades, aparecerán aquí.</p>
-          </div>
-
-          <!-- Activities List -->
-          <ul id="activity-list" class="space-y-4">
-            <!-- Activity items will be dynamically inserted here -->
-            <!-- Example of a single activity item (template) -->
-            <li class="activity-item-template" style="display: none;">
-              <div class="p-4 border rounded-lg bg-gray-50 hover:bg-gray-100 transition">
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center">
-                  <!-- Activity Info -->
-                  <div class="flex-grow mb-4 md:mb-0">
-                    <h3 class="font-semibold text-lg text-gray-800">[Nombre de la Actividad]</h3>
-                    <p class="text-sm text-gray-500">[Descripción de la Actividad]</p>
-                  </div>
-                  <!-- Grade and Status -->
-                  <div class="flex items-center space-x-4">
-                    <span class="grade-badge text-lg font-bold text-indigo-600">[Calificación]</span>
-                    <span class="status-badge bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">[Estado]</span>
-                  </div>
+    <main class="p-4 md:p-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white p-6 rounded-lg shadow-lg mb-8">
+                <h1 class="text-3xl font-bold text-gray-800 border-b pb-4">Mis Calificaciones</h1>
+                <div id="user-info" class="mt-4 text-lg">
+                    <p><strong>Estudiante:</strong> <span id="student-name">Cargando...</span></p>
+                    <p><strong>Matrícula:</strong> <span id="student-id">Cargando...</span></p>
                 </div>
-                <div class="mt-4 pt-4 border-t">
-                    <p class="text-sm text-gray-600"><strong>Entrega:</strong> <a href="#" target="_blank" class="text-blue-600 hover:underline submission-link">[Ver Archivo Entregado]</a><span class="no-submission-text">No entregado</span></p>
-                </div>
-              </div>
-            </li>
-          </ul>
+            </div>
+
+            <!-- Final Grade Summary -->
+            <div id="final-grade-summary" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-6 rounded-lg shadow-md mb-8 text-center">
+                <h2 class="text-2xl font-bold">Calificación Final del Curso</h2>
+                <p id="final-grade-display" class="text-5xl font-extrabold mt-2">0.00</p>
+                <p class="text-sm mt-2">Esta calificación se calcula en tiempo real basándose en las entregas calificadas.</p>
+            </div>
+
+            <!-- Detailed Grade Breakdown -->
+            <div id="grade-details-container" class="space-y-6">
+                <!-- Unit sections will be dynamically inserted here -->
+            </div>
+
+            <!-- Fallback message -->
+            <div id="no-grades-message" class="hidden text-center text-gray-500 mt-12">
+                <p class="text-xl">Aún no hay calificaciones para mostrar.</p>
+                <p>Una vez que tus actividades sean calificadas, aparecerán aquí.</p>
+            </div>
+
         </div>
-      </div>
-    </div>
-    <!-- END: New Activity Breakdown Section -->
-  </div>
+    </main>
 
-  <script>
-    // Configuración de Firebase (sin cambios)
-    window.firebaseConfig = {
-      apiKey: "AIzaSyBDip2OjSOUZrr3iiIle2Klodify9LaLe8",
-      authDomain: "calidad-de-software-v2.firebaseapp.com",
-      projectId: "calidad-de-software-v2",
-      storageBucket: "calidad-de-software-v2.appspot.com",
-      messagingSenderId: "220818066383",
-      appId: "1:220818066383:web:0c2119f470a5f9711b60ba",
-    };
-  </script>
-  
-  <script type="module" src="js/auth-guard.js"></script>
-  <script type="module" src="js/layout.js"></script>
-  <script type="module" src="./js/role-gate.js"></script>
-  <script type="module" src="js/calificaciones-backend.js"></script>
-  <script type="module" src="js/calificaciones-uploads-ui.js"></script>
-  <script type="module" src="js/calificaciones-logic.js"></script>
-  <script defer src="js/nav-inject.js"></script>
-  <script defer src="js/back-home.js"></script>
+    <!-- Plantilla para la sección de una unidad -->
+    <template id="unit-grade-template">
+        <div class="unit-grade-card bg-white p-6 rounded-lg shadow-md">
+            <h3 class="unit-title text-2xl font-bold text-gray-700 border-b pb-3 mb-4"></h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                <div class="unit-summary text-center">
+                    <p class="text-gray-600">Calificación de la Unidad</p>
+                    <p class="unit-score text-4xl font-bold text-blue-600">0.00</p>
+                    <p class="unit-weight text-sm text-gray-500">(Ponderación: 30%)</p>
+                </div>
+                <div class="category-breakdown space-y-3"></div>
+            </div>
+        </div>
+    </template>
 
+    <!-- Plantilla para una categoría dentro de una unidad -->
+    <template id="category-grade-template">
+        <div class="category-item flex justify-between items-center">
+            <div class="category-label text-gray-700"></div>
+            <div class="flex items-center gap-3">
+                <span class="category-score font-semibold text-lg text-gray-800"></span>
+                <span class="category-weight text-sm text-gray-500"></span>
+            </div>
+        </div>
+    </template>
+
+    <script type="module" src="js/main.js"></script>
+    <script type="module" src="js/calificaciones-logic.js"></script>
 </body>
 </html>

@@ -1,232 +1,112 @@
-// js/calificaciones-logic.js
+// En: js/calificaciones-logic.js
 
 import {
-  getDb,
-} from "./firebase.js";
+    getDb,
+    getAuth
+} from './firebase.js';
 import {
-  collection,
-  query,
-  where,
-  getDocs,
-} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+    collection,
+    query,
+    where,
+    onSnapshot
+} from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js';
+import {
+    onAuthStateChanged
+} from 'https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js';
+import {
+    calculateGrades,
+    gradeSchema
+} from './grade-calculator.js';
+import { getActivityById } from './course-activities.js';
 
 const db = getDb();
+const auth = getAuth();
 
-/**
- * Main initialization function that waits for the role to be determined.
- */
-function init() {
-  document.addEventListener('role-determined', (e) => {
-    const { user, isTeacher } = e.detail;
-    
-    if (user) {
-      if (isTeacher) {
-        setupTeacherView();
-      } else {
-        displayStudentActivities(user.uid);
-      }
-    } else {
-      console.log("No user is signed in.");
-    }
-  });
-}
+document.addEventListener('DOMContentLoaded', () => {
+    const studentNameEl = document.getElementById('student-name');
+    const studentIdEl = document.getElementById('student-id');
+    const finalGradeDisplay = document.getElementById('final-grade-display');
+    const gradeDetailsContainer = document.getElementById('grade-details-container');
+    const noGradesMessage = document.getElementById('no-grades-message');
+    const unitTemplate = document.getElementById('unit-grade-template');
+    const categoryTemplate = document.getElementById('category-grade-template');
 
-/**
- * Sets up the teacher's view by populating the student selector.
- */
-async function setupTeacherView() {
-  const selectorContainer = document.getElementById("teacher-student-selector-container");
-  const studentSelector = document.getElementById("student-selector");
-  
-  if (!selectorContainer || !studentSelector) {
-    console.error("Teacher view elements not found.");
-    return;
-  }
-  
-  selectorContainer.hidden = false;
-
-  try {
-    const students = await getStudents();
-    if (students.length > 0) {
-      studentSelector.innerHTML = '<option value="">Seleccione un estudiante</option>' + students
-        .map(student => `<option value="${student.uid}">${student.name}</option>`)
-        .join('');
-    } else {
-      studentSelector.innerHTML = '<option value="">No se encontraron estudiantes</option>';
-    }
-
-    studentSelector.addEventListener("change", (e) => {
-      const studentUid = e.target.value;
-      if (studentUid) {
-        displayStudentActivities(studentUid);
-      } else {
-        document.getElementById("activity-list").innerHTML = '';
-        const emptyEl = document.getElementById("activity-list-empty");
-        if (emptyEl) {
-          emptyEl.hidden = false;
-          emptyEl.textContent = 'Seleccione un estudiante para ver sus actividades.';
+    onAuthStateChanged(auth, user => {
+        if (user) {
+            studentNameEl.textContent = user.displayName || 'Usuario sin nombre';
+            studentIdEl.textContent = user.email || 'No disponible';
+            subscribeToStudentSubmissions(user.uid);
+        } else {
+            console.log("No user is signed in.");
+            gradeDetailsContainer.innerHTML = '<p class="text-center text-red-500">No has iniciado sesión. Por favor, inicia sesión para ver tus calificaciones.</p>';
         }
-      }
     });
-  } catch (error) {
-    console.error("Failed to set up teacher view:", error);
-    studentSelector.innerHTML = '<option value="">Error al cargar estudiantes</option>';
-  }
-}
 
-/**
- * Fetches students from the local data/students.json file.
- * @returns {Promise<Array<Object>>} A list of student objects.
- */
-async function getStudents() {
-  try {
-    const response = await fetch('data/students.json');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const studentsData = await response.json();
+    function subscribeToStudentSubmissions(uid) {
+        const submissionsQuery = query(collection(db, 'submissions'), where('studentUid', '==', uid));
 
-    if (!studentsData || !Array.isArray(studentsData.students)) {
-      console.error("Invalid format: students.json is missing or doesn't have a 'students' array.");
-      return [];
-    }
-    
-    const students = studentsData.students
-      // 1. Only include records that are explicitly marked as students.
-      .filter(student => student.type === 'student')
-      // 2. Map the properties from the JSON ('id', 'name') to what the app uses ('uid', 'name').
-      .map(student => ({
-        uid: student.id, 
-        name: student.name
-      }))
-      // 3. Ensure that we have a valid record before adding it to the list.
-      .filter(student => student.uid && student.name); 
-
-    // 4. Sort the final list alphabetically.
-    return students.sort((a, b) => a.name.localeCompare(b.name));
-
-  } catch (error) {
-    console.error("Could not fetch or parse students.json:", error);
-    return []; // Return an empty array on failure.
-  }
-}
-
-/**
- * Displays the activities for a given student.
- * @param {string} studentUid - The authUid of the student.
- */
-async function displayStudentActivities(studentUid) {
-  const loadingEl = document.getElementById("activity-list-loading");
-  const emptyEl = document.getElementById("activity-list-empty");
-  const listEl = document.getElementById("activity-list");
-  const template = document.querySelector(".activity-item-template");
-
-  if (!loadingEl || !emptyEl || !listEl || !template) return;
-
-  loadingEl.hidden = false;
-  listEl.innerHTML = '';
-  emptyEl.hidden = true;
-
-  try {
-    const [activities, submissions] = await Promise.all([
-      getAssignedActivities(),
-      getStudentSubmissions(studentUid)
-    ]);
-
-    if (activities.length === 0) {
-      emptyEl.textContent = 'No hay actividades asignadas por el momento.';
-      emptyEl.hidden = false;
-      return;
+        onSnapshot(submissionsQuery, (snapshot) => {
+            const submissions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            displayCalculatedGrades(submissions);
+        }, (error) => {
+            console.error("Error al obtener las calificaciones:", error);
+            noGradesMessage.textContent = 'Error al cargar las calificaciones.';
+            noGradesMessage.classList.remove('hidden');
+        });
     }
 
-    activities.forEach(activity => {
-      const submission = submissions.find(s => s.activityId === activity.id);
-      const clone = template.cloneNode(true);
-      
-      clone.classList.remove("activity-item-template");
-      clone.style.display = 'block';
+    function displayCalculatedGrades(submissions) {
+        if (submissions.length === 0) {
+            noGradesMessage.classList.remove('hidden');
+            finalGradeDisplay.textContent = "N/A";
+            gradeDetailsContainer.innerHTML = '';
+            return;
+        }
 
-      const titleEl = clone.querySelector('.font-semibold');
-      if(titleEl) titleEl.textContent = activity.title;
+        noGradesMessage.classList.add('hidden');
+        gradeDetailsContainer.innerHTML = ''; // Clear previous content
 
-      const descriptionEl = clone.querySelector('.text-sm.text-gray-500');
-      if(descriptionEl) descriptionEl.textContent = activity.description;
+        const gradeResults = calculateGrades(submissions);
 
-      const gradeBadge = clone.querySelector('.grade-badge');
-      const statusBadge = clone.querySelector('.status-badge');
-      const submissionLink = clone.querySelector('.submission-link');
-      const noSubmissionText = clone.querySelector('.no-submission-text');
-      
-      if (submission) {
-        if(gradeBadge) gradeBadge.textContent = typeof submission.grade === 'number' ? submission.grade : 'N/A';
-        
-        if(statusBadge) {
-            if (submission.fileUrl) {
-                statusBadge.textContent = 'Entregado';
-                statusBadge.className = 'status-badge bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full';
-            } else if (typeof submission.grade === 'number') {
-                statusBadge.textContent = 'Calificado';
-                statusBadge.className = 'status-badge bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full';
-            } else {
-                statusBadge.textContent = 'Visto';
-                statusBadge.className = 'status-badge bg-gray-100 text-gray-800 text-xs font-medium px-2.5 py-0.5 rounded-full';
+        // Update final grade display
+        finalGradeDisplay.textContent = gradeResults.finalGrade.toFixed(2);
+
+        // Populate the detailed breakdown
+        for (const unitId in gradeResults.units) {
+            const unitData = gradeResults.units[unitId];
+            const unitSchema = gradeSchema[unitId];
+            if (!unitSchema) continue;
+
+            const unitCard = unitTemplate.content.cloneNode(true);
+            const unitTitle = unitCard.querySelector('.unit-title');
+            const unitScore = unitCard.querySelector('.unit-score');
+            const unitWeight = unitCard.querySelector('.unit-weight');
+            const categoryBreakdown = unitCard.querySelector('.category-breakdown');
+
+            // Find the unit label from courseActivities
+            const unitInfo = courseActivities.find(u => u.unitId === unitId);
+            unitTitle.textContent = unitInfo ? unitInfo.unitLabel : `Unidad ${unitId}`;
+            
+            unitScore.textContent = unitData.unitScore.toFixed(2);
+            unitWeight.textContent = `(Ponderación: ${unitSchema.weight * 100}%)`;
+
+            for (const categoryId in unitData.categories) {
+                const categoryData = unitData.categories[categoryId];
+                const categorySchema = unitSchema.categories[categoryId];
+                if (!categorySchema) continue;
+
+                const categoryItem = categoryTemplate.content.cloneNode(true);
+                const categoryLabel = categoryItem.querySelector('.category-label');
+                const categoryScore = categoryItem.querySelector('.category-score');
+                const categoryWeight = categoryItem.querySelector('.category-weight');
+
+                categoryLabel.textContent = categorySchema.label;
+                categoryScore.textContent = `${categoryData.score.toFixed(2)} / 100`;
+                categoryWeight.textContent = `(${categoryData.weightedScore.toFixed(2)} pts)`;
+
+                categoryBreakdown.appendChild(categoryItem);
             }
+            gradeDetailsContainer.appendChild(unitCard);
         }
-        
-        if(noSubmissionText) noSubmissionText.style.display = 'none';
-
-        if(submissionLink) {
-            if (submission.fileUrl) {
-                submissionLink.href = submission.fileUrl;
-                submissionLink.style.display = 'inline';
-            } else {
-                submissionLink.style.display = 'none';
-            }
-        }
-
-      } else {
-        if(gradeBadge) gradeBadge.textContent = 'N/A';
-        if(statusBadge) {
-            statusBadge.textContent = 'Pendiente';
-            statusBadge.className = 'status-badge bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full';
-        }
-        if(submissionLink) submissionLink.style.display = 'none';
-        if(noSubmissionText) noSubmissionText.style.display = 'block';
-      }
-
-      listEl.appendChild(clone);
-    });
-  } catch (error) {
-      console.error("Error displaying student activities:", error);
-      emptyEl.textContent = "Error al cargar las actividades.";
-      emptyEl.hidden = false;
-  } finally {
-      loadingEl.hidden = true;
-  }
-}
-
-/**
- * Fetches all assigned activities from the 'activities' collection.
- * @returns {Promise<Array<Object>>} A list of activity objects.
- */
-async function getAssignedActivities() {
-  const activitiesCol = collection(db, "activities");
-  const activitySnapshot = await getDocs(activitiesCol);
-  return activitySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-}
-
-/**
- * Fetches all submissions for a specific student.
- * @param {string} studentUid - The authUid of the student.
- * @returns {Promise<Array<Object>>} A list of submission objects.
- */
-async function getStudentSubmissions(studentUid) {
-  if (!studentUid) return [];
-  const submissionsRef = collection(db, "submissions");
-  const q = query(submissionsRef, where("studentUid", "==", studentUid));
-  const querySnapshot = await getDocs(q);
-  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-}
-
-// Start the initialization process when the DOM is ready.
-document.addEventListener("DOMContentLoaded", init);
+    }
+});
