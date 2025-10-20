@@ -1,9 +1,10 @@
 import { getFirestore, collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 import { getAuth } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
-import { app } from './firebase-config.js';
+import { initFirebase, getDb } from './firebase.js';
 
-const db = getFirestore(app);
-const auth = getAuth(app);
+initFirebase();
+const db = getDb();
+const auth = getAuth();
 
 async function loadTeacherGrades() {
     const user = auth.currentUser;
