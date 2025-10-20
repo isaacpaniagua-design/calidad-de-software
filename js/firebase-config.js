@@ -12,10 +12,16 @@ export const firebaseConfig = {
 };
 
 /**
- * El dominio de correo electrónico permitido para el registro y el inicio de sesión.
+ * El dominio de correo electrónico permitido para el registro y el inicio de sesión de estudiantes.
  * @type {string}
  */
 export const allowedEmailDomain = "itson.edu.mx";
+
+/**
+ * Lista de correos electrónicos de profesores con permisos administrativos.
+ * @type {string[]}
+ */
+export const allowedTeacherEmails = ["profesor.ejemplo@itson.edu.mx"];
 
 
 /**
