@@ -35,7 +35,7 @@ export function ensureTeacherAllowlistLoaded() {
  * Inicializa la aplicación Firebase y los servicios principales.
  * Esta función es segura para ser llamada múltiples veces.
  */
-function initialize() {
+export function initFirebase() {
   if (app) return; // Si ya está inicializado, no hacer nada.
 
   try {
@@ -76,4 +76,4 @@ export function getStorageInstance() {
 }
 
 // Inicializar Firebase tan pronto como este módulo se cargue.
-initialize();
+initFirebase();
