@@ -1,9 +1,11 @@
 // En: js/index-student-uploads.js
-
+import { initFirebase } from "./firebase-config.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import { createStudentUpload, observeStudentUploads } from "./student-uploads.js";
 import { courseActivities } from './course-activities.js';
 import { initDriveUploader, uploadFile } from "./student-file-uploader.js";
+
+initFirebase(); // <-- CORRECCIÓN: Inicializar Firebase primero.
 
 document.addEventListener("DOMContentLoaded", () => {
     // --- Referencias al DOM (con validación) ---
