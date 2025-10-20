@@ -1,8 +1,21 @@
+import { onFirebaseReady, getDb, onAuth } from './firebase.js';
 import { getDocs, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
 import { courseActivities } from './course-activities.js';
 
-// No necesitamos getDb de firebase.js, lo recibimos como parámetro
 let db;
+
+// --- LA SOLUCIÓN CORRECTA: ESPERAR A FIREBASE ---
+onFirebaseReady(() => {
+    // Ahora es seguro llamar a getDb()
+    db = getDb();
+
+    // El auth-guard ya protege la página, pero onAuth nos da el `user`
+    onAuth(user => {
+        if (user) {
+            setupAssignActivities(user);
+        }
+    });
+});
 
 async function loadStudentsIntoAssignForm() {
     const studentSelect = document.getElementById('student-select-individual');
@@ -12,9 +25,7 @@ async function loadStudentsIntoAssignForm() {
     studentSelect.innerHTML = '<option>Cargando...</option>';
 
     try {
-        // Ahora `db` está garantizado que existe
-        if (!db) throw new Error("La BD no está lista.");
-
+        // `db` ahora está garantizado que no es undefined
         const studentsSnapshot = await getDocs(collection(db, 'students'));
         const students = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         students.sort((a, b) => a.name.localeCompare(b.name));
@@ -33,11 +44,7 @@ async function loadStudentsIntoAssignForm() {
     }
 }
 
-// --- ¡CORRECCIÓN CLAVE! ---
-// Aceptamos la instancia de la base de datos como segundo parámetro.
-function setupAssignActivities(user, database) {
-    db = database; // Asignamos la instancia recibida a nuestra variable local.
-
+function setupAssignActivities(user) {
     if (!user || localStorage.getItem('qs_role') !== 'docente') {
         const form = document.getElementById('assign-individual-activity-form');
         if(form) form.style.display = 'none';
@@ -73,11 +80,6 @@ function setupAssignActivities(user, database) {
         const gradeInput = document.getElementById('grade-input');
         const studentSelect = document.getElementById('student-select-individual');
 
-        if (!db) {
-            assignStatus.textContent = 'Error: BD no lista.';
-            return;
-        }
-
         const studentId = studentSelect.value;
         const activityId = activitySelect.value;
         const grade = gradeInput.value;
@@ -109,8 +111,3 @@ function setupAssignActivities(user, database) {
         }
     });
 }
-
-if (typeof window.QS_PAGE_INIT === 'undefined') {
-    window.QS_PAGE_INIT = {};
-}
-window.QS_PAGE_INIT.assignActivities = setupAssignActivities;

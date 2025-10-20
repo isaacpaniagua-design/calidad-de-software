@@ -1,51 +1,42 @@
 // js/auth-guard.js
 
-import { onAuth, isTeacherEmail, initFirebase, getDb } from './firebase.js';
+// Importa las funciones necesarias de tu archivo firebase.js
+import { onAuth, isTeacherEmail, initFirebase } from './firebase.js';
 
+// Esta función es el núcleo de la protección de rutas
 function initializeAuthProtection() {
+    // Si la página es pública (tiene data-public-page), no hacemos nada.
     const isPublicPage = document.body.hasAttribute('data-public-page');
     if (isPublicPage) {
-        // Inicializa Firebase pero no hace nada más.
+        // Aún queremos inicializar Firebase para cosas como el login/logout en páginas públicas
         initFirebase();
         return;
     }
 
-    onAuth(async (user) => {
-        const rootElement = document.documentElement;
-        initFirebase(); // Aseguramos que Firebase se inicialice
-        const db = getDb(); // Y que tenemos la instancia de la BD
+    // onAuth es el listener que reacciona a los cambios de estado de autenticación
+    onAuth((user) => {
+        const rootElement = document.documentElement; // <html> tag
 
         if (user) {
+            // --- USUARIO AUTENTICADO ---
             rootElement.classList.remove('user-signed-out');
             rootElement.classList.add('user-signed-in');
 
+            // Verificamos si es docente y lo guardamos para uso de CSS y otros scripts
             const isTeacher = isTeacherEmail(user.email);
             localStorage.setItem('qs_role', isTeacher ? 'docente' : 'student');
             rootElement.classList.add(isTeacher ? 'role-teacher' : 'role-student');
 
-            // --- ¡LA CLAVE ESTÁ AQUÍ! ---
-            // Una vez sabemos que el usuario está autenticado y la BD lista,
-            // ejecutamos las inicializaciones de las páginas que lo necesiten.
-            if (window.QS_PAGE_INIT) {
-                if (isTeacher) {
-                    // Solo para docentes
-                    if (typeof window.QS_PAGE_INIT.actividades === 'function') {
-                        window.QS_PAGE_INIT.actividades(user, db);
-                    }
-                    if (typeof window.QS_PAGE_INIT.assignActivities === 'function') {
-                        window.QS_PAGE_INIT.assignActivities(user, db);
-                    }
-                }
-                // Aquí irían otras inicializaciones que no dependen del rol
-            }
-
         } else {
+            // --- USUARIO NO AUTENTICADO ---
             rootElement.classList.remove('user-signed-in', 'role-teacher', 'role-student');
             rootElement.classList.add('user-signed-out');
             localStorage.removeItem('qs_role');
             
+            // Obtenemos la página actual para evitar bucles de redirección
             const currentPage = window.location.pathname.split('/').pop();
             if (currentPage !== 'login.html' && currentPage !== '404.html') {
+                // Si no está en login o 404, lo mandamos al login.
                 const basePath = document.querySelector("script[src*='layout.js']")?.src.replace('js/layout.js', '') || './';
                 window.location.href = `${basePath}login.html`;
             }
@@ -53,6 +44,7 @@ function initializeAuthProtection() {
     });
 }
 
+// Aseguramos que el DOM esté cargado antes de ejecutar el guardián
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initializeAuthProtection);
 } else {
