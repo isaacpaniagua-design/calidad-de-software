@@ -1,13 +1,10 @@
 // En: js/student-file-uploader.js
 
-import { firebaseConfig } from './firebase-config.js';
+import { firebaseConfig, driveFolderId } from './firebase-config.js'; // <-- CORRECCIÓN: Importar driveFolderId
 
 // --- CONFIGURACIÓN DE GOOGLE DRIVE API ---
 const GOOGLE_API_KEY = firebaseConfig.apiKey;
 const GOOGLE_CLIENT_ID = "220818066383-opt4vno9it90l5md8u80884p35rn4q5c.apps.googleusercontent.com";
-
-// ⭐️ ID de la carpeta compartida del docente ya integrado.
-const TEACHER_SHARED_FOLDER_ID = "1WPZ9AvDxVF8GasTuDPYeaU8unw7e3fM3";
 
 const SCOPES = "https://www.googleapis.com/auth/drive.file";
 const DISCOVERY_DOC = "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest";
@@ -104,8 +101,8 @@ export async function uploadFile(file, details = {}) {
         tokenClient.requestAccessToken({ prompt: 'consent' });
     });
 
-    // La creación de carpetas comienza dentro de la carpeta del docente.
-    const unitFolderId = await getOrCreateFolder(details.unit, TEACHER_SHARED_FOLDER_ID);
+    // CORRECCIÓN: Usar el ID de la carpeta importado.
+    const unitFolderId = await getOrCreateFolder(details.unit, driveFolderId);
     const activityFolderId = await getOrCreateFolder(details.activity, unitFolderId);
     const studentFolderId = await getOrCreateFolder(details.studentName, activityFolderId);
     
