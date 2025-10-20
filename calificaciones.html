@@ -6,37 +6,29 @@
     <title>Mis Calificaciones · Plataforma QS</title>
     
     <script>
-        (function() {
-            // Helper script to resolve the base path for CSS includes.
-            // This is necessary for deployments in subdirectories (like GitHub Pages).
-            var basePath = (function() {
-                var scripts = document.getElementsByTagName('script');
-                var scriptPath = scripts[scripts.length - 1].src;
-                var path = new URL('.', scriptPath).pathname;
-                // Adjust this if your 'js' folder is not at the root.
-                // It assumes the script is in 'js/' and we need to go up one level.
-                return path.substring(0, path.lastIndexOf('js/') || path.length);
-            })();
-
-            // Don't run if we are inside a script that is NOT this one
-            if(basePath.includes("js/")) return
-
-            [
-                'css/layout.css',
-                'css/calificaciones.css'
-            ].forEach(function(href) {
-                var link = document.createElement('link');
-                link.rel = 'stylesheet';
-                link.href = basePath + href;
-                document.head.appendChild(link);
-            });
-        })();
+      // Injects a <base> tag to correctly resolve relative paths for assets (CSS, JS).
+      // This is essential for deployments in subdirectories, like GitHub Pages.
+      (function() {
+        const getBasePath = () => {
+          const path = window.location.pathname;
+          // Assumes the project name is the first segment after the user/org name.
+          // e.g., /user/repo-name/index.html -> /repo-name/
+          const repoNameMatch = path.match(/^\/([a-zA-Z0-9_-]+)/);
+          if (repoNameMatch) {
+            // Check for localhost to handle local development gracefully.
+            if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
+              return '/';
+            }
+            return `/${repoNameMatch[1]}/`;
+          }
+          return '/';
+        };
+        document.write('<base href="' + getBasePath() + '">');
+      })();
     </script>
-    
-    <noscript>
-        <link rel="stylesheet" href="css/layout.css">
-        <link rel="stylesheet" href="css/calificaciones.css">
-    </noscript>
+
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/calificaciones.css">
 </head>
 <body>
     <main class="page-shell">

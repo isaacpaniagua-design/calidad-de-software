@@ -1,24 +1,10 @@
 // Unified layout bootstrap for the QS platform.
 // Creates the navigation bar, footer, and login integrations used across pages.
 
-// CAMBIO: 1. Importar las variables desde el módulo de actualizaciones.
-// Asegúrate de que el archivo 'updates.js' que te proporcioné antes exista en la misma carpeta 'js/'.
 import { latestVersion, lastSeenVersionKey } from "./updates.js";
 
-const SCRIPT_PATH = document.currentScript.src;
-
-function getBasePath() {
-    try {
-        const url = new URL('./', SCRIPT_PATH);
-        const path = url.pathname;
-        const basePath = path.substring(0, path.lastIndexOf('js/'));
-        return basePath;
-    } catch (e) {
-        console.error("Could not determine base path", e);
-        return "/";
-    }
-}
-
+// The <base> tag injected in each HTML file now handles path resolution.
+// The complex getBasePath() function is no longer needed.
 
 (function initializeLoadingOverlay() {
   ensureLoadingOverlay();
@@ -65,7 +51,8 @@ document.addEventListener("DOMContentLoaded", function () {
   root.classList.remove("qs-loading");
   root.classList.add("qs-loaded");
 
-  const navPath = getBasePath();
+  // With the <base> tag, navPath can be a simple empty string.
+  const navPath = ""; 
 
   const navLinks = `
     <a href="${navPath}index.html">Inicio</a>
@@ -99,16 +86,22 @@ document.addEventListener("DOMContentLoaded", function () {
     </div>
   `;
 
+  // Use a placeholder for the nav to avoid disrupting the layout while scripts load.
+  const navPlaceholder = document.querySelector('[data-role="main-nav"]');
   const navElement = document.createElement("nav");
   navElement.innerHTML = navHtml;
-  document.body.insertBefore(navElement, document.body.firstChild);
+  
+  if (navPlaceholder) {
+      navPlaceholder.replaceWith(navElement);
+  } else {
+      document.body.insertBefore(navElement, document.body.firstChild);
+  }
 
   const footerElement = document.createElement("footer");
   footerElement.innerHTML = footerHtml;
   document.body.appendChild(footerElement);
 
-  // CAMBIO: 2. Lógica para mostrar el indicador de novedades.
-  // Esta parte debe estar DESPUÉS de que se ha creado el menú de navegación.
+  // Logic to show the notification dot for updates.
   const lastSeenVersion = localStorage.getItem(lastSeenVersionKey);
   if (String(lastSeenVersion) !== String(latestVersion)) {
     const updatesLink = document.querySelector('a[href*="updates.html"]');
