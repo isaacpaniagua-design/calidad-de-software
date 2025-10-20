@@ -1,51 +1,82 @@
 <!DOCTYPE html>
 <html lang="es" data-layout="global">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Actividades del Curso · Plataforma QS</title>
-    
-    <script>
-      // Injects a <base> tag to correctly resolve relative paths for assets (CSS, JS).
-      // This is essential for deployments in subdirectories, like GitHub Pages.
-      (function() {
-        const getBasePath = () => {
-          const path = window.location.pathname;
-          // Assumes the project name is the first segment after the user/org name.
-          // e.g., /user/repo-name/index.html -> /repo-name/
-          const repoNameMatch = path.match(/^\/([a-zA-Z0-9_-]+)/);
-          if (repoNameMatch) {
-            // Check for localhost to handle local development gracefully.
-            if (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost') {
-              return '/';
-            }
-            return `/${repoNameMatch[1]}/`;
-          }
-          return '/';
-        };
-        document.write('<base href="' + getBasePath() + '">');
-      })();
-    </script>
 
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/actividades.css">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard de Calificaciones · Plataforma QS</title>
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/actividades.css" />
 </head>
+
 <body>
-    <!-- The navbar and footer will be injected by layout.js -->
+    <div class="qs-nav" data-role="main-nav"></div>
 
     <main class="page-shell">
-        <div class="actividades-header">
-            <h1>Actividades del Curso</h1>
-            <p>Aquí encontrarás las actividades, tareas y proyectos del curso.</p>
-        </div>
+        <div class="content-container">
+            <div class="header-section">
+                <h1>Dashboard de Calificaciones</h1>
+                <p>Vista general del progreso de todos los estudiantes y herramientas de gestión.</p>
+            </div>
 
-        <div id="activities-container" class="activities-container">
-            <!-- El contenido se generará dinámicamente por course-activities.js -->
+            <!-- Roster de Estudiantes con Calificaciones -->
+            <div class="student-roster-card">
+                <h2>Progreso General del Curso</h2>
+                <div id="student-roster-container" class="roster-grid">
+                    <!-- Las tarjetas de estudiante se cargarán aquí -->
+                    <p class="loading-message">Cargando estudiantes...</p>
+                </div>
+            </div>
+
+            <!-- Herramientas de Gestión -->
+            <div class="management-grid">
+                <!-- Columna de Calificación (Ahora para vista detallada) -->
+                <div class="grading-column">
+                    <div id="detailed-view-card" class="action-card" style="display: none;">
+                        <button id="close-detailed-view" class="close-button">&times;</button>
+                        <h2 id="detailed-student-name">Vista Detallada</h2>
+                        <div id="grade-summary-section"></div>
+                        <div id="grading-input-section">
+                            <h4>Registrar/Modificar Calificaciones</h4>
+                            <div id="activities-container"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna de Acciones (Crear/Asignar) -->
+                <div class="actions-column">
+                    <div class="action-card">
+                        <h2>Crear Actividad Grupal</h2>
+                        <form id="create-group-activity-form">
+                            <!-- ... (campos de formulario como antes) ... -->
+                        </form>
+                    </div>
+                    <div class="action-card">
+                        <h2>Asignar Entrega Individual</h2>
+                        <form id="assign-individual-activity-form">
+                            <!-- ... (campos de formulario como antes) ... -->
+                        </form>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
-    <script type="module" src="js/course-activities.js"></script>
+    <footer class="footer"></footer>
+
+    <!-- Plantillas para JS -->
+    <template id="student-roster-item-template">
+        <div class="roster-item" tabindex="0">
+            <strong class="roster-student-name"></strong>
+            <span class="roster-final-grade">0.00</span>
+        </div>
+    </template>
+
+    <!-- (Las plantillas para el desglose de calificaciones siguen aquí) -->
+
+    <script type="module" src="js/actividades.js"></script>
     <script defer src="js/back-home.js"></script>
-    <script type="module" src="js/layout.js"></script>
+    <script defer src="js/nav-inject.js"></script>
 </body>
+
 </html>
