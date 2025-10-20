@@ -1,108 +1,96 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-layout="global">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Actividades</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestión de Calificaciones · Plataforma QS</title>
+    <link rel="stylesheet" href="css/layout.css" />
+    <link rel="stylesheet" href="css/actividades.css" />
 </head>
 
-<body class="bg-gray-100 font-sans">
+<body>
+    <!-- Navbar y Footer inyectados por nav-inject.js -->
+    <div class="qs-nav" data-role="main-nav"></div>
 
-    <!-- Header -->
-    <header id="main-header" class="bg-blue-600 text-white p-4 shadow-md"></header>
+    <main class="page-shell">
+        <div class="content-container">
+            <div class="header-section">
+                <h1>Gestión de Calificaciones y Actividades</h1>
+                <p>Selecciona un estudiante para ver su progreso, registrar calificaciones o asignar nuevas actividades.</p>
+            </div>
 
-    <main class="p-4 md:p-8">
-        <div class="max-w-6xl mx-auto">
-            <h1 class="text-3xl font-bold text-gray-800 border-b pb-4 mb-8">Gestión de Calificaciones y Actividades</h1>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
+            <div class="management-grid">
                 <!-- Columna de Gestión de Actividades -->
-                <div class="lg:col-span-1 space-y-8">
-                    <!-- Creación de Actividad Grupal -->
-                    <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h2 class="text-xl font-bold text-gray-700 mb-4">Crear Actividad Grupal</h2>
-                        <form id="create-group-activity-form" class="space-y-4">
-                            <div>
-                                <label for="group-activity-name" class="block text-sm font-medium text-gray-600">Nombre de la Actividad</label>
-                                <input type="text" id="group-activity-name" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                <div class="actions-column">
+                    <div class="action-card">
+                        <h2>Crear Actividad Grupal</h2>
+                        <form id="create-group-activity-form">
+                            <div class="field">
+                                <label for="group-activity-name">Nombre</label>
+                                <input type="text" id="group-activity-name">
                             </div>
-                            <div>
-                                <label for="group-activity-unit" class="block text-sm font-medium text-gray-600">Unidad</label>
-                                <select id="group-activity-unit" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                            <div class="field">
+                                <label for="group-activity-unit">Unidad</label>
+                                <select id="group-activity-unit">
                                     <option value="unit1">Unidad 1</option>
                                     <option value="unit2">Unidad 2</option>
                                     <option value="unit3">Unidad 3</option>
                                 </select>
                             </div>
-                            <div>
-                                <label for="group-activity-type" class="block text-sm font-medium text-gray-600">Tipo</label>
-                                <select id="group-activity-type" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                             <div class="field">
+                                <label for="group-activity-type">Tipo</label>
+                                <select id="group-activity-type">
                                     <option value="assignment">Asignación</option>
                                     <option value="practice">Práctica</option>
                                     <option value="forum">Foro</option>
                                 </select>
                             </div>
-                            <button type="submit" id="submit-group-activity" class="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">Añadir Actividad a Todos</button>
-                            <p id="batch-status" class="text-sm text-gray-600 mt-2"></p>
+                            <button type="submit" id="submit-group-activity" class="button-primary">Añadir Actividad a Todos</button>
+                            <p id="batch-status" class="status-message"></p>
                         </form>
                     </div>
 
-                    <!-- Asignación de Actividad Individual -->
-                    <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h2 class="text-xl font-bold text-gray-700 mb-4">Asignar Entrega Individual</h2>
-                        <form id="assign-individual-activity-form" class="space-y-4">
-                            <div>
-                                <label for="individual-student-select" class="block text-sm font-medium text-gray-600">Estudiante</label>
-                                <select id="individual-student-select" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                    <div class="action-card">
+                        <h2>Asignar Entrega Individual</h2>
+                        <form id="assign-individual-activity-form">
+                            <div class="field">
+                                <label for="individual-student-select">Estudiante</label>
+                                <select id="individual-student-select">
                                     <option>Cargando...</option>
                                 </select>
                             </div>
-                            <div>
-                                <label for="individual-activity-select" class="block text-sm font-medium text-gray-600">Actividad del Curso</label>
-                                <select id="individual-activity-select" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                            <div class="field">
+                                <label for="individual-activity-select">Actividad del Curso</label>
+                                <select id="individual-activity-select">
                                     <option>Cargando...</option>
                                 </select>
                             </div>
-                            <button type="submit" id="submit-individual-activity" class="w-full bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600">Asignar a Estudiante</pre>
-                            <p id="individual-status" class="text-sm text-gray-600 mt-2"></p>
+                            <button type="submit" id="submit-individual-activity" class="button-secondary">Asignar a Estudiante</button>
+                            <p id="individual-status" class="status-message"></p>
                         </form>
                     </div>
                 </div>
 
                 <!-- Columna de Calificación -->
-                <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-xl font-bold text-gray-700 mb-4">Calificar a un Estudiante</h2>
-                    <div>
-                        <label for="student-select" class="block text-sm font-medium text-gray-600">Seleccione un Estudiante para Calificar</label>
-                        <select id="student-select" class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                <div class="grading-column">
+                    <div class="student-selector-card">
+                        <h2>Calificar a un Estudiante</h2>
+                        <select id="student-select">
                             <option value="">Seleccione un estudiante</option>
-                            <!-- Options will be populated by JS -->
                         </select>
                     </div>
 
-                    <!-- Sección de Calificación (aparece al seleccionar un estudiante) -->
-                    <div id="activities-list-section" class="mt-8" style="display: none;">
-                        <h3 class="text-2xl font-bold text-gray-800 border-b pb-4">Calificaciones para: <span id="student-name-display"></span></h3>
-                        
+                    <div id="activities-list-section" style="display: none;">
+                        <h3 class="student-name-header">Calificaciones para: <span id="student-name-display"></span></h3>
+
                         <!-- Vista de Calificaciones Calculadas -->
-                        <div id="grade-summary-section" class="mt-6">
-                             <!-- Final Grade Summary -->
-                            <div id="final-grade-summary" class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg shadow-md mb-6 text-center">
-                                <h4 class="text-xl font-bold">Calificación Final Calculada</h4>
-                                <p id="final-grade-display" class="text-4xl font-extrabold mt-1">0.00</p>
-                            </div>
-                             <!-- Detailed Grade Breakdown -->
-                            <div id="grade-details-container" class="space-y-4"></div>
-                        </div>
+                        <div id="grade-summary-section"></div>
 
                         <!-- Lista de Actividades para Calificar -->
-                        <div id="grading-input-section" class="mt-8">
-                            <h4 class="text-xl font-bold text-gray-700 mb-4">Registrar Calificaciones</h4>
-                            <div id="activities-container" class="space-y-4"></div>
+                        <div id="grading-input-section" class="grading-input-container">
+                            <h4>Registrar Calificaciones</h4>
+                            <div id="activities-container"></div>
                         </div>
                     </div>
                 </div>
@@ -110,33 +98,12 @@
         </div>
     </main>
 
-    <!-- Plantillas para la vista de calificaciones -->
-    <template id="unit-grade-template">
-        <div class="unit-grade-card bg-gray-50 p-4 rounded-lg shadow-sm">
-            <h5 class="unit-title text-lg font-bold text-gray-700 border-b pb-2 mb-3"></h5>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                <div class="unit-summary text-center">
-                    <p class="text-gray-600 text-sm">Calificación de la Unidad</p>
-                    <p class="unit-score text-3xl font-bold text-blue-600">0.00</p>
-                    <p class="unit-weight text-xs text-gray-500"></p>
-                </div>
-                <div class="category-breakdown space-y-2"></div>
-            </div>
-        </div>
-    </template>
+    <footer class="footer"></footer>
 
-    <template id="category-grade-template">
-        <div class="category-item flex justify-between items-center text-sm">
-            <div class="category-label text-gray-700"></div>
-            <div class="flex items-center gap-2">
-                <span class="category-score font-semibold text-gray-800"></span>
-                <span class="category-weight text-xs text-gray-500"></span>
-            </div>
-        </div>
-    </template>
-
-    <script type="module" src="js/main.js"></script>
+    <!-- Plantillas y Scripts -->
     <script type="module" src="js/actividades.js"></script>
+    <script defer src="js/back-home.js"></script>
+    <script defer src="js/nav-inject.js"></script>
 </body>
 
 </html>

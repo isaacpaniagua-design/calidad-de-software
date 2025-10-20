@@ -1,647 +1,168 @@
-/* ==========================================================================
-   CSS para la Página de Calificaciones (/calificaciones.html)
-   ========================================================================== */
+/* CSS for Calificaciones Page (calificaciones.css) */
 
-/* --- Estilos generales del Hero Section --- */
-.grades-hero {
-  position: relative;
-  overflow: hidden;
-  border-radius: clamp(28px, 5vw, 40px);
-  padding: clamp(36px, 7vw, 68px);
-  margin: clamp(28px, 6vw, 56px) auto 0;
-  max-width: 1200px;
-  background: linear-gradient(135deg, #4338ca 0%, #7c3aed 45%, #0ea5e9 100%);
-  color: #f8fafc;
-  box-shadow: 0 30px 80px rgba(67, 56, 202, 0.3);
+.content-container {
+    max-width: var(--page-max-width);
+    margin: 0 auto;
+    padding: 2rem 0;
 }
 
-.grades-hero::before,
-.grades-hero::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
+.header-section {
+    padding: 1rem 1.5rem;
+    background-color: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 2rem;
+    border: 1px solid var(--border);
 }
 
-.grades-hero::before {
-  background: radial-gradient(
-      circle at 18% 22%,
-      rgba(255, 255, 255, 0.22),
-      transparent 60%
-    ),
-    radial-gradient(
-      circle at 82% 18%,
-      rgba(14, 165, 233, 0.25),
-      transparent 62%
-    );
-  opacity: 0.9;
+.header-section h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 0.5rem 0;
 }
 
-.grades-hero::after {
-  background: linear-gradient(
-    140deg,
-    rgba(59, 130, 246, 0.15) 0%,
-    rgba(129, 140, 248, 0.32) 48%,
-    transparent 78%
-  );
-  mix-blend-mode: screen;
+.user-info-display p {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin: 0;
 }
 
-.grades-hero > * {
-  position: relative;
-  z-index: 1;
-}
-
-.grades-hero__grid {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(28px, 5vw, 48px);
-}
-
-@media (min-width: 1024px) {
-  .grades-hero__grid {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-end;
-  }
-}
-
-.grades-hero__intro {
-  display: flex;
-  gap: clamp(18px, 4vw, 28px);
-  align-items: center;
-}
-
-.grades-hero__badge {
-  width: clamp(60px, 10vw, 92px);
-  height: clamp(60px, 10vw, 92px);
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(
-    135deg,
-    rgba(248, 250, 252, 0.2),
-    rgba(255, 255, 255, 0.05)
-  );
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25),
-    0 18px 38px rgba(15, 23, 42, 0.25);
-  backdrop-filter: blur(8px);
-}
-
-.grades-hero__badge svg {
-  width: clamp(32px, 6vw, 44px);
-  height: clamp(32px, 6vw, 44px);
-}
-
-.grades-hero__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.2);
-  font-size: 0.85rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.grades-hero h1 {
-  font-size: clamp(2rem, 4vw, 2.8rem);
-  font-weight: 700;
-  margin: 16px 0 12px;
-}
-
-.grades-hero p {
-  color: rgba(241, 245, 249, 0.92);
-  font-size: clamp(1rem, 2.2vw, 1.125rem);
-  max-width: 42ch;
-}
-
-.grades-hero__meta {
-  display: grid;
-  gap: 16px;
-  width: 100%;
-  max-width: 320px;
-}
-
-.grades-hero__stat {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 16px 18px;
-  border-radius: 18px;
-  background: rgba(15, 23, 42, 0.16);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(6px);
-}
-
-.grades-hero__stat span:first-child {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgba(226, 232, 240, 0.75);
-}
-
-.grades-hero__stat span:last-child {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #f8fafc;
-}
-
-.grades-hero__footer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: clamp(24px, 5vw, 32px);
-}
-
-.grades-hero__tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  border-radius: 999px;
-  background: rgba(15, 23, 42, 0.18);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  font-weight: 500;
-}
-
-/* --- Estilos de la interfaz de Calificaciones --- */
-.card-shadow {
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-.progress-bar {
-  transition: width 0.3s ease-in-out;
-}
-
-html:not(.role-teacher) #calificaciones-root .qsc-wrap.teacher-only {
-  display: none !important;
-}
-
-#calificaciones-root .qsc-wrap {
-  max-width: 1100px;
-  margin: 24px auto;
-  padding: 0 16px;
-}
-
-#calificaciones-root .qsc-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin: 0 0 12px;
-}
-
-#calificaciones-root .qsc-kpis {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-
-#calificaciones-root .qsc-kpi {
-  min-width: 140px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.05);
-  text-align: center;
-}
-
-#calificaciones-root .qsc-kpi span {
-  display: block;
-  font-weight: 700;
-  font-size: 1.1rem;
-}
-
-#calificaciones-root .qsc-kpi small {
-  display: block;
-  opacity: 0.75;
-}
-
-#calificaciones-root .qsc-bar {
-  height: 10px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-}
-
-#calificaciones-root .qsc-bar-fill {
-  height: 100%;
-  background: var(--primary, #667eea);
-  width: 0%;
-  transition: width 0.4s ease;
-}
-
-#calificaciones-root .qsc-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 14px;
-  background: rgba(255, 255, 255, 0.85);
-}
-
-#calificaciones-root .qsc-table th {
-  padding: 10px;
-  text-align: left;
-  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-  white-space: nowrap;
-  font-weight: 700;
-}
-
-#calificaciones-root .qsc-table td {
-  padding: 10px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-#calificaciones-root .qsc-cell-main {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 500;
-}
-#calificaciones-root .qsc-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1.2;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: #1f2933;
-  background: rgba(15, 118, 110, 0.15);
-}
-#calificaciones-root .qsc-status::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-}
-#calificaciones-root .qsc-status--done {
-  color: #047857;
-  background: rgba(16, 185, 129, 0.16);
-}
-#calificaciones-root .qsc-status--pending {
-  color: #b45309;
-  background: rgba(251, 191, 36, 0.22);
-}
-
-#calificaciones-root .grade-item {
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-#calificaciones-root .grade-actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.75rem;
-  min-width: 220px;
-}
-
-#calificaciones-root .grade-actions .grade-input,
-#calificaciones-root .grade-actions .project-grade-input {
-  margin-bottom: 0.25rem;
-}
-
-#calificaciones-root .upload-control {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.35rem;
-  width: 100%;
-}
-
-#calificaciones-root .upload-control-buttons {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-#calificaciones-root .upload-trigger,
-#calificaciones-root .upload-reset {
-  font-size: 0.8rem;
-  font-weight: 600;
-  padding: 0.45rem 0.8rem;
-  border-radius: 999px;
-  border: 1px solid rgba(79, 70, 229, 0.35);
-  background: rgba(99, 102, 241, 0.08);
-  color: #4338ca;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-#calificaciones-root .upload-trigger:hover,
-#calificaciones-root .upload-reset:hover {
-  background: rgba(79, 70, 229, 0.18);
-}
-
-#calificaciones-root .upload-reset {
-  border-color: rgba(148, 163, 184, 0.45);
-  background: rgba(148, 163, 184, 0.12);
-  color: #334155;
-}
-
-#calificaciones-root .upload-reset:hover {
-  background: rgba(148, 163, 184, 0.2);
-}
-
-#calificaciones-root .upload-reset.upload-reset--hidden {
-  display: none;
-}
-
-#calificaciones-root .upload-status {
-  font-size: 0.75rem;
-  color: #4b5563;
-}
-
-#calificaciones-root .upload-status.upload-status--uploaded {
-  color: #047857;
-  font-weight: 600;
-}
-
-#calificaciones-root .upload-status.upload-status--uploaded::before {
-  content: "✔";
-  display: inline-block;
-  margin-right: 0.4rem;
-}
-
-@media (max-width: 640px) {
-  #calificaciones-root .grade-actions {
-    width: 100%;
-    align-items: stretch;
-  }
-
-  #calificaciones-root .upload-control,
-  #calificaciones-root .upload-control-buttons {
-    align-items: stretch;
-    justify-content: flex-start;
-  }
-
-  #calificaciones-root .upload-trigger,
-  #calificaciones-root .upload-reset {
-    width: 100%;
+.final-grade-summary-card {
+    background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+    color: white;
     text-align: center;
-  }
-
-  #calificaciones-root .upload-status {
-    text-align: left;
-  }
+    padding: 2.5rem 2rem;
+    border-radius: var(--radius-xl);
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow-card);
 }
 
-html:not(.role-teacher) #student-preview {
-  display: none;
+.final-grade-summary-card h2 {
+    font-size: 1.5rem;
+    margin: 0;
+    font-weight: 600;
+    opacity: 0.9;
 }
 
-html:not(.role-teacher) #viewStudentPreviewBtn {
-  display: none !important;
+.final-grade-summary-card #final-grade-display {
+    font-size: 5rem;
+    font-weight: 900;
+    line-height: 1.1;
+    margin: 0.5rem 0;
 }
 
-#calificaciones-root .qsc-msg {
-  margin-top: 8px;
-  opacity: 0.85;
-  font-size: 0.9rem;
-}
-#calificaciones-root .qsc-muted {
-  opacity: 0.7;
+.final-grade-summary-card small {
+    opacity: 0.8;
 }
 
-/* ==========================================================================
-   Estilos para el Módulo de Carga de Evidencias del Estudiante
-   ========================================================================== */
-
-/* --- Contenedor para controlar el ancho en la página --- */
-.student-uploads-container {
-  max-width: var(--page-max-width, 1120px);
-  margin-left: auto;
-  margin-right: auto;
-  padding: 0 24px;
+.grade-details-grid {
+    display: grid;
+    gap: 1.5rem;
 }
 
-/* --- Reglas específicas para .student-uploads en esta página --- */
-.student-uploads {
-  /* La base de la tarjeta (fondo, borde, etc.) se hereda de dashboard.css */
-  width: 100%;
-  max-width: none;
-  box-shadow: 0 25px 55px rgba(15, 23, 42, 0.18);
+.unit-grade-card {
+    background-color: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    overflow: hidden;
 }
 
-/* --- Contenido del formulario y la lista (Layout y Estilos) --- */
-.student-uploads__body {
-  padding: 0 clamp(1.5rem, 4vw, 2rem) clamp(1.5rem, 4vw, 2rem);
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: clamp(2rem, 5vw, 3.5rem);
+.unit-card-header {
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
 }
 
-@media (min-width: 960px) {
-  .student-uploads__body {
-    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
-  }
+.unit-card-header .unit-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
 }
 
-.student-uploads__form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
+.unit-card-header .unit-weight {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 0;
 }
 
-.student-uploads__form .field {
-  display: grid;
-  gap: 0.5rem;
+.unit-card-body {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    align-items: center;
 }
 
-.student-uploads__form label {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-primary);
+.unit-summary {
+    text-align: center;
+    border-right: 1px solid var(--border);
+    padding-right: 1.5rem;
 }
 
-.student-uploads__form input,
-.student-uploads__form select,
-.student-uploads__form textarea {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-md, 16px);
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  background-color: #fff;
-  font-family: inherit;
-  font-size: 1rem;
-  color: var(--text-primary);
-  transition: all var(--motion-duration) var(--motion-easing);
+.unit-summary .unit-score {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--accent);
+    line-height: 1;
 }
 
-.student-uploads__form input:focus,
-.student-uploads__form select:focus,
-.student-uploads__form textarea:focus {
-  outline: none;
-  border-color: var(--accent, #6366f1);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+.unit-summary small {
+    color: var(--text-secondary);
 }
 
-.student-uploads__form input[type="file"] {
-  padding: 0;
-  border: none;
-  background-color: transparent;
-  box-shadow: none;
+.category-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
 }
 
-.student-uploads__actions {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-top: 0.5rem;
-}
-
-.student-uploads__submit,
-.student-uploads__reset {
-  padding: 0.8rem 1.5rem;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: all var(--motion-duration) var(--motion-easing);
-}
-
-.student-uploads__submit {
-  background-color: var(--accent, #6366f1);
-  color: #fff;
-}
-.student-uploads__submit:hover {
-  background-color: var(--accent-hover, #4f46e5);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(79, 70, 229, 0.25);
-}
-
-.student-uploads__reset {
-  background-color: transparent;
-  color: var(--text-secondary, #475569);
-  border-color: rgba(148, 163, 184, 0.45);
-}
-
-.student-uploads__reset:hover {
-  background-color: rgba(148, 163, 184, 0.1);
-  border-color: rgba(148, 163, 184, 0.6);
-}
-
-.student-uploads__records {
-    background: var(--accent-soft-stronger, rgba(99, 102, 241, 0.08));
-    border-radius: var(--radius-lg, 22px);
-    padding: clamp(1.25rem, 3vw, 1.75rem);
-}
-
-.student-uploads__records-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1rem;
-}
-
-.student-uploads__records-title {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.student-uploads__count {
-  background-color: var(--accent, #6366f1);
-  color: #fff;
-  font-size: 0.8rem;
-  font-weight: 700;
-  min-width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.student-uploads__empty {
-  text-align: center;
-  padding: 2rem 1rem;
-  border: 2px dashed rgba(148, 163, 184, 0.3);
-  border-radius: var(--radius-md, 16px);
-  color: var(--text-secondary);
-  font-style: italic;
-}
-
-.student-uploads__status {
-  grid-column: 1 / -1;
-  text-align: center;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius-md, 16px);
-  font-weight: 500;
-  font-size: 0.9rem;
-}
-
-.student-uploads__status.is-success {
-  background-color: rgba(34, 197, 94, 0.12);
-  color: #047857;
-}
-
-.student-uploads__status.is-error {
-  background-color: rgba(239, 68, 68, 0.12);
-  color: #b91c1c;
-}
-
-.student-uploads__list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  gap: 0.75rem;
-}
-
-.student-uploads__item {
-  background: #fff;
-  padding: 1rem;
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-  border-left: 4px solid var(--accent);
-}
-/* En tu archivo de estilos, ej: calificaciones.css */
-
-/* Contenedor de entregas */
-.entregas-recientes-container {
-    background-color: #f9f9f9;
-    padding: 20px;
-    border-radius: 8px;
-    margin-top: 25px;
-    border: 1px solid #eee;
-}
-
-.lista-entregas .entrega-item {
+.category-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
+    padding: 0.5rem 0;
 }
 
-.lista-entregas .entrega-item:last-child {
-    border-bottom: none;
+.category-label {
+    font-weight: 500;
 }
 
-/* Estilos para los iconos en los modales */
-/* --- Estilos para Modales de Estado --- */
-
-.modal-icon {
-    font-size: 48px;
-    text-align: center;
-    margin-bottom: 20px;
+.category-score-display {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
 }
 
-/* Colores para cada estado */
-.icon-success { color: #28a745; }
-.icon-loading { color: #0d6efd; }
-.icon-error   { color: #dc3545; }
-.icon-info    { color: #0dcaf0; }
-
-.modal-body p {
+.category-score {
+    font-weight: 600;
     font-size: 1.1rem;
+}
+
+.category-weight {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    background-color: #f0f0f0;
+    padding: 0.1rem 0.4rem;
+    border-radius: 6px;
+}
+
+.fallback-message {
+    background-color: var(--surface);
+    padding: 2rem;
+    border-radius: var(--radius-lg);
+    text-align: center;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 768px) {
+    .unit-card-body {
+        grid-template-columns: 1fr;
+    }
+    .unit-summary {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 0 0 1.5rem 0;
+    }
 }
