@@ -16,15 +16,25 @@ export function showRoleSpecificUI() {
         document.documentElement.classList.remove('role-docente', 'role-estudiante', 'role-invitado');
         document.documentElement.classList.add(`role-${rol}`);
 
-        // 3. Si el usuario NO es un docente, aplicar restricciones en la UI.
-        if (!isTeacher) {
-            
-            // Ocultar todos los elementos que son exclusivos para docentes.
+        // 3. Gestionar la visibilidad de los elementos según el rol.
+        if (isTeacher) {
+            // Para docentes: mostrar elementos exclusivos para ellos.
+            document.querySelectorAll(".teacher-only, .docente-only").forEach(function (el) {
+                // Si el elemento estaba oculto por estilo en línea, lo revierte.
+                if (el.style.display === 'none') {
+                    el.style.display = '';
+                }
+                // Quita los atributos que ocultan el elemento.
+                el.removeAttribute('hidden');
+                el.removeAttribute('aria-hidden');
+            });
+        } else {
+            // Para otros roles: ocultar elementos de docentes.
             document.querySelectorAll(".teacher-only, .docente-only").forEach(function (el) {
                 el.style.display = "none";
             });
 
-            // Recorrer todos los elementos de formulario para deshabilitarlos o ponerlos en modo de solo lectura.
+            // Deshabilitar campos de formulario para no docentes (lógica existente).
             document.querySelectorAll("input, select, textarea, button").forEach(function (el) {
                 
                 const isExemptButton = el.classList.contains('tab-button') || 
