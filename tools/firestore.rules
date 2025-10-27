@@ -30,13 +30,16 @@ service cloud.firestore {
     }
 
     match /grades/{studentId} {
-      allow read: if isTeacher() || 
-                         (isAuthenticated() && resource.data.authUid == request.auth.uid);
-      allow write: if isTeacher();
+      // Docente puede leer y escribir todas las calificaciones
+      allow read, write: if isTeacher();
+      // Estudiante solo puede leer su propio documento
+      allow read: if isAuthenticated() && resource.data.authUid == request.auth.uid;
 
       match /activities/{activityId} {
-        allow read: if isTeacher() || (isAuthenticated() && request.auth.uid == studentId);
-        allow write: if isTeacher();
+        // Docente puede leer y escribir todas las actividades
+        allow read, write: if isTeacher();
+        // Estudiante solo puede leer sus propias actividades
+        allow read: if isAuthenticated() && request.auth.uid == studentId;
       }
     }
 
