@@ -34,10 +34,18 @@ export async function createStudentUpload(payload) {
 
   try {
     const docRef = await addDoc(collection(db, "studentUploads"), finalPayload);
-    console.log("Entrega registrada con ID: ", docRef.id);
+    console.log(
+      "[DEBUG] Entrega registrada en Firestore con ID:",
+      docRef.id,
+      finalPayload
+    );
     return docRef;
   } catch (error) {
-    console.error("Error al registrar la entrega en Firestore: ", error);
+    console.error(
+      "[DEBUG] Error al registrar la entrega en Firestore:",
+      error,
+      finalPayload
+    );
     throw error;
   }
 }
@@ -70,10 +78,15 @@ export function observeStudentUploads(studentUid, onDataChange, onError) {
       querySnapshot.forEach((doc) => {
         items.push({ id: doc.id, ...doc.data() });
       });
+      console.log("[DEBUG] Entregas leídas desde Firestore:", items);
       onDataChange(items);
     },
     (error) => {
-      console.error("Error en la suscripción a las entregas: ", error);
+      console.error(
+        "[DEBUG] Error en la suscripción a las entregas:",
+        error,
+        studentUid
+      );
       if (onError) {
         onError(error);
       }
