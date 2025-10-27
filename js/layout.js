@@ -497,10 +497,36 @@ function updateAuthAppearance(nav, state) {
       link.textContent = "Cerrar sesión";
       link.setAttribute("aria-label", "Cerrar sesión");
       link.setAttribute("data-awaiting-auth", "signed-in");
+      // Visual: resalta si el texto o aria-label no son correctos
+      if (
+        link.textContent !== "Cerrar sesión" ||
+        link.getAttribute("aria-label") !== "Cerrar sesión"
+      ) {
+        link.style.background = "#dc2626";
+        link.style.color = "#fff";
+        link.style.border = "2px solid #b91c1c";
+      } else {
+        link.style.background = "";
+        link.style.color = "";
+        link.style.border = "";
+      }
     } else {
       link.textContent = "Iniciar sesión";
       link.setAttribute("aria-label", "Iniciar sesión");
       link.setAttribute("data-awaiting-auth", "signed-out");
+      // Visual: resalta si el texto o aria-label no son correctos
+      if (
+        link.textContent !== "Iniciar sesión" ||
+        link.getAttribute("aria-label") !== "Iniciar sesión"
+      ) {
+        link.style.background = "#dc2626";
+        link.style.color = "#fff";
+        link.style.border = "2px solid #b91c1c";
+      } else {
+        link.style.background = "";
+        link.style.color = "";
+        link.style.border = "";
+      }
     }
     // Log para depuración
     console.log("[QSLayout] updateAuthAppearance:", {
