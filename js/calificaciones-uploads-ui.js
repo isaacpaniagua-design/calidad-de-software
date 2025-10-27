@@ -3,13 +3,13 @@ import { useStorage } from "./firebase-config.js";
 import { initializeFileViewer, openFileViewer } from "./file-viewer.js";
 import {
   createStudentUpload,
-  observeStudentUploads
+  observeStudentUploads,
 } from "./student-uploads.js";
+import { getActivityById, findActivityByTitle } from "./course-activities.js";
 import {
-  getActivityById,
-  findActivityByTitle,
-} from "./course-activities.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+  getAuth,
+  onAuthStateChanged,
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import {
   collection,
   doc,
@@ -60,14 +60,19 @@ function elementSignalsTeacherRole(el) {
   if (!el) return false;
   if (el.dataset && el.dataset.role === "teacher") return true;
   if (el.dataset && el.dataset.roleFlag === "teacher") return true;
-  if (el.classList && (el.classList.contains("teacher-yes") || el.classList.contains("role-teacher"))) {
+  if (
+    el.classList &&
+    (el.classList.contains("teacher-yes") ||
+      el.classList.contains("role-teacher"))
+  ) {
     return true;
   }
   return false;
 }
 
 function hasVisibleTeacherMarkers() {
-  const teacherSelectors = ".teacher-only,.docente-only,[data-role='teacher'],[data-role-flag='teacher']";
+  const teacherSelectors =
+    ".teacher-only,.docente-only,[data-role='teacher'],[data-role-flag='teacher']";
   const elements = document.querySelectorAll(teacherSelectors);
   for (const el of elements) {
     if (!el) continue;
@@ -117,7 +122,13 @@ if (teacherRoleObserver) {
     if (!body) return;
     teacherRoleObserver.observe(body, {
       attributes: true,
-      attributeFilter: ["class", "data-role", "data-role-flag", "hidden", "aria-hidden"],
+      attributeFilter: [
+        "class",
+        "data-role",
+        "data-role-flag",
+        "hidden",
+        "aria-hidden",
+      ],
       subtree: true,
     });
   };
@@ -176,7 +187,10 @@ if (typeof window !== "undefined") {
 }
 
 function ready() {
-  if (document.readyState === "complete" || document.readyState === "interactive") {
+  if (
+    document.readyState === "complete" ||
+    document.readyState === "interactive"
+  ) {
     return Promise.resolve();
   }
   return new Promise((resolve) => {
@@ -196,13 +210,17 @@ function toTimestamp(value) {
   if (typeof value.toDate === "function") {
     try {
       const date = value.toDate();
-      return date instanceof Date && !Number.isNaN(date.getTime()) ? date.getTime() : 0;
+      return date instanceof Date && !Number.isNaN(date.getTime())
+        ? date.getTime()
+        : 0;
     } catch (_) {
       return 0;
     }
   }
   const date = value instanceof Date ? value : new Date(value);
-  return date instanceof Date && !Number.isNaN(date.getTime()) ? date.getTime() : 0;
+  return date instanceof Date && !Number.isNaN(date.getTime())
+    ? date.getTime()
+    : 0;
 }
 
 function setStatus(entry, text, { uploaded = false, title = "" } = {}) {
@@ -217,7 +235,7 @@ function updateEntryActions(entry) {
   const hasUpload = Boolean(entry.currentUpload && entry.currentUpload.fileUrl);
   const showDelete = teacherRoleDetected && hasUpload;
   entry.deleteButton.classList.toggle("upload-reset--hidden", !showDelete);
-  entry.deleteButton.disabled = 
+  entry.deleteButton.disabled =
     !showDelete || entry.deletePending || entry.uploading;
   if (showDelete) {
     entry.deleteButton.title = entry.deletePending
@@ -272,7 +290,8 @@ function buildDisplayForItem(item) {
   const unitEl = item.closest(".unit-content");
   const title = heading ? heading.textContent.trim() : "";
   const unitId = unitEl?.id || "";
-  const activity = findActivityByTitle(title, unitId) || findActivityByTitle(title);
+  const activity =
+    findActivityByTitle(title, unitId) || findActivityByTitle(title);
 
   const actions = document.createElement("div");
   actions.className = "grade-actions";
@@ -309,7 +328,6 @@ function buildDisplayForItem(item) {
 
   buttonsWrapper.appendChild(viewLink);
   viewWrapper.appendChild(buttonsWrapper);
-
 
   if (gradeInput) {
     gradeInput.setAttribute("aria-describedby", statusId);
@@ -378,11 +396,16 @@ function mapUploadsByActivity(items) {
     if (!item) return;
     const baseActivity =
       getActivityById(item?.extra?.activityId) ||
-      (item?.extra?.unitId ? findActivityByTitle(item.title, item.extra.unitId) : null) ||
+      (item?.extra?.unitId
+        ? findActivityByTitle(item.title, item.extra.unitId)
+        : null) ||
       findActivityByTitle(item.title);
     if (!baseActivity || !baseActivity.id) return;
     const previous = map.get(baseActivity.id);
-    if (!previous || toTimestamp(item.submittedAt) >= toTimestamp(previous.submittedAt)) {
+    if (
+      !previous ||
+      toTimestamp(item.submittedAt) >= toTimestamp(previous.submittedAt)
+    ) {
       map.set(baseActivity.id, item);
     }
   });
@@ -404,7 +427,12 @@ function updateDisplays(uploadMap) {
       updateEntryActions(entry);
       return;
     }
-    enableView(entry, upload.fileUrl, upload.fileName || "", entry.activity?.title || entry.title);
+    enableView(
+      entry,
+      upload.fileUrl,
+      upload.fileName || "",
+      entry.activity?.title || entry.title
+    );
     const submitted = toTimestamp(upload.submittedAt);
     const submittedDate = submitted ? new Date(submitted) : null;
     const parts = [];
@@ -423,64 +451,86 @@ function updateDisplays(uploadMap) {
 }
 
 function setupStudentUploadsView(user) {
-    const listContainer = document.getElementById('studentUploadList');
-    const countElement = document.querySelector('[data-upload-count]');
-    const emptyElement = document.getElementById('studentUploadEmpty');
-    const historyButton = document.getElementById('btn-ver-historial');
-    const historyModal = document.getElementById('historialModal');
-    const mainTitle = document.querySelector('.student-uploads__heading');
+  const listContainer = document.getElementById("studentUploadList");
+  const countElement = document.querySelector("[data-upload-count]");
+  const emptyElement = document.getElementById("studentUploadEmpty");
+  const historyButton = document.getElementById("btn-ver-historial");
+  const historyModal = document.getElementById("historialModal");
+  const mainTitle = document.querySelector(".student-uploads__heading");
 
-    // Ocultar elementos que ya no se usan en la vista de estudiante
-    if (historyButton) historyButton.style.display = 'none';
-    if (historyModal) historyModal.style.display = 'none';
-    if (mainTitle) mainTitle.textContent = 'Historial Completo de Entregas';
+  // Ocultar elementos que ya no se usan en la vista de estudiante
+  if (historyButton) historyButton.style.display = "none";
+  if (historyModal) historyModal.style.display = "none";
+  if (mainTitle) mainTitle.textContent = "Historial Completo de Entregas";
 
-    let unsubscribe = null;
+  let unsubscribe = null;
 
-    if (user) {
-        if (unsubscribe) unsubscribe();
-        unsubscribe = observeStudentUploads(
-            user.uid,
-            (uploads) => renderStudentHistory(uploads, listContainer, countElement, emptyElement),
-            (error) => console.error("Error cargando historial de estudiante:", error)
-        );
-    } else {
-        if (unsubscribe) unsubscribe();
-        if (listContainer) listContainer.innerHTML = '';
-        if (countElement) countElement.textContent = '0';
-        if (emptyElement) emptyElement.hidden = false;
-    }
+  if (user) {
+    if (unsubscribe) unsubscribe();
+    unsubscribe = observeStudentUploads(
+      user.uid,
+      (uploads) =>
+        renderStudentHistory(
+          uploads,
+          listContainer,
+          countElement,
+          emptyElement
+        ),
+      (error) => console.error("Error cargando historial de estudiante:", error)
+    );
+  } else {
+    if (unsubscribe) unsubscribe();
+    if (listContainer) listContainer.innerHTML = "";
+    if (countElement) countElement.textContent = "0";
+    if (emptyElement) emptyElement.hidden = false;
+  }
 }
 
-function renderStudentHistory(uploads, listContainer, countElement, emptyElement) {
-    if (!listContainer || !countElement || !emptyElement) return;
+function renderStudentHistory(
+  uploads,
+  listContainer,
+  countElement,
+  emptyElement
+) {
+  if (!listContainer || !countElement || !emptyElement) return;
 
-    const hasUploads = uploads.length > 0;
-    emptyElement.hidden = hasUploads;
-    countElement.textContent = uploads.length;
+  const hasUploads = uploads.length > 0;
+  emptyElement.hidden = hasUploads;
+  countElement.textContent = uploads.length;
 
-    if (!hasUploads) {
-        listContainer.innerHTML = '';
-        return;
-    }
+  if (!hasUploads) {
+    listContainer.innerHTML = "";
+    return;
+  }
 
-    const sortedUploads = [...uploads].sort((a, b) => (b.submittedAt?.toDate() || 0) - (a.submittedAt?.toDate() || 0));
-    listContainer.innerHTML = sortedUploads.map(item => createStudentUploadItemHTML(item)).join('');
+  const sortedUploads = [...uploads].sort(
+    (a, b) => (b.submittedAt?.toDate() || 0) - (a.submittedAt?.toDate() || 0)
+  );
+  listContainer.innerHTML = sortedUploads
+    .map((item) => createStudentUploadItemHTML(item))
+    .join("");
 }
 
 function createStudentUploadItemHTML(upload) {
-    const submittedDate = upload.submittedAt?.toDate() ? new Date(upload.submittedAt.toDate()).toLocaleString('es-MX') : 'Fecha no disponible';
-    const descriptionHTML = upload.description ? `<p class="student-uploads__item-description">${upload.description}</p>` : '';
-    const status = upload.status || 'enviado';
-    const activityTitle = upload.extra?.activityTitle || upload.title || 'Entrega sin título';
-    const fileUrl = upload.fileUrl || '#';
+  const submittedDate = upload.submittedAt?.toDate()
+    ? new Date(upload.submittedAt.toDate()).toLocaleString("es-MX")
+    : "Fecha no disponible";
+  const descriptionHTML = upload.description
+    ? `<p class="student-uploads__item-description">${upload.description}</p>`
+    : "";
+  const status = upload.status || "enviado";
+  const activityTitle =
+    upload.extra?.activityTitle || upload.title || "Entrega sin título";
+  const fileUrl = upload.fileUrl || "#";
 
-    return `
+  return `
         <li class="student-uploads__item">
             <div class="student-uploads__item-header">
                 <div class="student-uploads__item-heading">
                     <span class="student-uploads__item-title">${activityTitle}</span>
-                    <span class="student-uploads__item-chip">${upload.kind || 'Actividad'}</span>
+                    <span class="student-uploads__item-chip">${
+                      upload.kind || "Actividad"
+                    }</span>
                 </div>
                 <span class="student-uploads__item-status student-uploads__item-status--${status}">${status}</span>
             </div>
@@ -493,8 +543,6 @@ function createStudentUploadItemHTML(upload) {
     `;
 }
 
-
-
 function setLoadingState() {
   displays.forEach((entry) => {
     if (!entry.activity || !entry.statusEl) return;
@@ -506,19 +554,24 @@ function setLoadingState() {
 function setErrorState() {
   displays.forEach((entry) => {
     if (!entry.activity) return;
-    setStatus(entry, "No fue posible cargar la entrega", { uploaded: false, title: "" });
+    setStatus(entry, "No fue posible cargar la entrega", {
+      uploaded: false,
+      title: "",
+    });
     disableView(entry);
   });
 }
 
 function sanitizeFileName(name) {
-  return String(name || "evidencia")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9._-]+/g, "_")
-    .replace(/_{2,}/g, "_")
-    .replace(/^_+|_+$/g, "")
-    .slice(0, 140) || "evidencia";
+  return (
+    String(name || "evidencia")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9._-]+/g, "_")
+      .replace(/_{2,}/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 140) || "evidencia"
+  );
 }
 
 function getUploadEligibility(profile) {
@@ -647,7 +700,13 @@ async function uploadEvidenceFile(file, studentUid) {
   const ref = storageRef(storage, path);
   await uploadBytes(ref, file);
   const url = await getDownloadURL(ref);
-  return { url, path, fileName: safeName, fileSize: file?.size || null, mimeType: file?.type || "" };
+  return {
+    url,
+    path,
+    fileName: safeName,
+    fileSize: file?.size || null,
+    mimeType: file?.type || "",
+  };
 }
 
 async function tryUploadEvidenceWithUploadcare(file) {
@@ -709,9 +768,9 @@ async function fetchUidFromFirestore(profile) {
   if (!profile) return "";
   const db = getDb();
   if (!db) return "";
-  const cacheKey = `${profile.matricula || ""}|${
-    (profile.email || "").toLowerCase()
-  }`;
+  const cacheKey = `${profile.matricula || ""}|${(
+    profile.email || ""
+  ).toLowerCase()}`;
   if (cacheKey && studentUidCache.has(cacheKey)) {
     return studentUidCache.get(cacheKey) || "";
   }
@@ -750,7 +809,10 @@ async function fetchUidFromFirestore(profile) {
         uid = snap.docs[0]?.id || "";
       }
     } catch (error) {
-      console.warn("[calificaciones-uploads-ui] resolver uid emailLower", error);
+      console.warn(
+        "[calificaciones-uploads-ui] resolver uid emailLower",
+        error
+      );
     }
   }
 
@@ -779,9 +841,9 @@ async function ensureActiveProfileWithUid() {
   currentStudentProfile = Object.assign({}, currentStudentProfile, {
     uid,
   });
-  const cacheKey = `${currentStudentProfile.matricula || ""}|${
-    (currentStudentProfile.email || "").toLowerCase()
-  }`;
+  const cacheKey = `${currentStudentProfile.matricula || ""}|${(
+    currentStudentProfile.email || ""
+  ).toLowerCase()}`;
   if (cacheKey) {
     studentUidCache.set(cacheKey, uid);
   }
@@ -834,12 +896,16 @@ async function handleDeleteRequest(entry) {
   }
   const upload = entry.currentUpload;
   if (!upload || !upload.id) {
-    setStatus(entry, "No hay evidencia para eliminar.", { uploaded: false, title: "" });
+    setStatus(entry, "No hay evidencia para eliminar.", {
+      uploaded: false,
+      title: "",
+    });
     return;
   }
-  const confirmed = typeof window !== "undefined" && typeof window.confirm === "function"
-    ? window.confirm("¿Eliminar la evidencia registrada para esta actividad?")
-    : true;
+  const confirmed =
+    typeof window !== "undefined" && typeof window.confirm === "function"
+      ? window.confirm("¿Eliminar la evidencia registrada para esta actividad?")
+      : true;
   if (!confirmed) return;
 
   entry.deletePending = true;
@@ -849,13 +915,20 @@ async function handleDeleteRequest(entry) {
     await deleteStudentUpload(upload);
     entry.currentUpload = null;
     disableView(entry);
-    setStatus(entry, "Evidencia eliminada. Sincronizando...", { uploaded: false, title: "" });
+    setStatus(entry, "Evidencia eliminada. Sincronizando...", {
+      uploaded: false,
+      title: "",
+    });
   } catch (error) {
     console.error("[calificaciones-uploads-ui] eliminar evidencia", error);
-    setStatus(entry, error?.message || "No se pudo eliminar la evidencia. Intenta nuevamente.", {
-      uploaded: Boolean(upload.fileUrl),
-      title: upload.fileName || "",
-    });
+    setStatus(
+      entry,
+      error?.message || "No se pudo eliminar la evidencia. Intenta nuevamente.",
+      {
+        uploaded: Boolean(upload.fileUrl),
+        title: upload.fileName || "",
+      }
+    );
     entry.currentUpload = upload;
   } finally {
     entry.deletePending = false;
@@ -905,14 +978,15 @@ async function handleFileInputChange(event) {
     if (upload.backend) extra.uploadBackend = upload.backend;
     if (upload.path) extra.storagePath = upload.path;
     extra.uploadedBy = {
-      uid: authUser?.uid || '',
-      email: authUser?.email || '',
-      displayName: authUser?.displayName || '',
+      uid: authUser?.uid || "",
+      email: authUser?.email || "",
+      displayName: authUser?.displayName || "",
     };
 
     await createStudentUpload({
       title: entry.activity?.title || entry.title || "Evidencia",
-      description: "Archivo registrado manualmente como evidencia complementaria.",
+      description:
+        "Archivo registrado manualmente como evidencia complementaria.",
       kind: "evidence",
       fileUrl: upload.url,
       fileName: upload.fileName || file.name || "evidencia",
@@ -978,7 +1052,11 @@ function subscribeToProfile(profile) {
   if (profile.uid) {
     unsubscribeUploads = observeStudentUploads(profile.uid, onChange, onError);
   } else if (profile.email) {
-    unsubscribeUploads = observeStudentUploadsByEmail(profile.email, onChange, onError);
+    unsubscribeUploads = observeStudentUploadsByEmail(
+      profile.email,
+      onChange,
+      onError
+    );
   }
 }
 
@@ -987,16 +1065,21 @@ function getSelectedStudentProfile() {
   if (!select || !select.value) return null;
   const option = select.selectedOptions && select.selectedOptions[0];
   const value = select.value;
-  const email = option?.dataset?.email || option?.getAttribute("data-email") || "";
+  const email =
+    option?.dataset?.email || option?.getAttribute("data-email") || "";
   const uid = option?.dataset?.uid || option?.getAttribute("data-uid") || "";
-  const nameAttr = option?.dataset?.name || option?.getAttribute("data-name") || "";
+  const nameAttr =
+    option?.dataset?.name || option?.getAttribute("data-name") || "";
   const matriculaAttr =
-    option?.dataset?.matricula || option?.getAttribute("data-matricula") || value || "";
-  
+    option?.dataset?.matricula ||
+    option?.getAttribute("data-matricula") ||
+    value ||
+    "";
+
   const profile = {
     uid: uid,
     email: email,
-    displayName: nameAttr || (option ? option.textContent.split(' - ')[1] : ''),
+    displayName: nameAttr || (option ? option.textContent.split(" - ")[1] : ""),
     matricula: matriculaAttr,
     id: value,
   };
@@ -1004,7 +1087,6 @@ function getSelectedStudentProfile() {
   if (profile.uid || profile.email || profile.matricula) return profile;
   return null;
 }
-
 
 function handleStudentSelection() {
   const profile = getSelectedStudentProfile();
@@ -1031,24 +1113,25 @@ async function main() {
 }
 
 export function initUploadsUI(user, claims) {
-    if (!user || !claims) {
-        return;
-    }
-    authUser = user;
-    teacherRoleDetected = claims.role === 'docente';
+  if (!user || !claims) {
+    return;
+  }
+  authUser = user;
+  teacherRoleDetected = claims.role === "docente";
 
-    if (teacherRoleDetected) {
-        // Lógica existente para el DOCENTE
-        main().catch((error) => {
-            console.error("[calificaciones-uploads-ui] Error en la inicialización (docente):", error);
-            if (typeof setErrorState === 'function') {
-                setErrorState();
-            }
-        });
-    } else {
-        // Nueva lógica para el ESTUDIANTE
-        setupStudentUploadsView(user);
-    }
+  if (teacherRoleDetected) {
+    // Lógica existente para el DOCENTE
+    main().catch((error) => {
+      console.error(
+        "[calificaciones-uploads-ui] Error en la inicialización (docente):",
+        error
+      );
+      if (typeof setErrorState === "function") {
+        setErrorState();
+      }
+    });
+  } else {
+    // Nueva lógica para el ESTUDIANTE
+    setupStudentUploadsView(user);
+  }
 }
-
-
