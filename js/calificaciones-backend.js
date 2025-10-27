@@ -9,15 +9,16 @@ async function handleAuthStateChanged(user) {
   let studentSelect = document.getElementById("teacher-student-select");
   if (!studentSelect && userRole === "docente") {
     // Crear el select si no existe
-    const container = document.getElementById("grades-table-container");
-    if (container) {
+    const mainContainer = document.querySelector(".container.mx-auto");
+    if (mainContainer) {
       const selectDiv = document.createElement("div");
-      selectDiv.className = "mb-4";
+      selectDiv.className =
+        "mb-6 p-4 bg-white rounded-lg shadow border border-blue-100 flex flex-col gap-2";
       selectDiv.innerHTML = `
-        <label for="teacher-student-select" class="block text-sm font-medium text-gray-700 mb-1">Selecciona estudiante para ver/calificar actividades:</label>
-        <select id="teacher-student-select" class="w-full p-2 border rounded-md"></select>
+        <label for="teacher-student-select" class="block text-base font-semibold text-blue-700 mb-1">Selecciona estudiante para ver/calificar actividades:</label>
+        <select id="teacher-student-select" class="w-full p-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-400"></select>
       `;
-      container.prepend(selectDiv);
+      mainContainer.insertBefore(selectDiv, mainContainer.firstChild);
       studentSelect = selectDiv.querySelector("#teacher-student-select");
     }
   }
