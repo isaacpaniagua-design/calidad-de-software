@@ -494,12 +494,10 @@ function updateAuthAppearance(nav, state) {
     const link = actions.querySelector("[data-default-auth-link]");
     if (!link) return;
     if (state === "signed-in") {
-      // CORREGIDO: Se agregó el acento a "sesión".
       link.textContent = "Cerrar sesión";
       link.setAttribute("aria-label", "Cerrar sesión");
       link.setAttribute("data-awaiting-auth", "signed-in");
     } else {
-      // CORREGIDO: Se agregó el acento a "sesión".
       link.textContent = "Iniciar sesión";
       link.setAttribute("aria-label", "Iniciar sesión");
       link.setAttribute("data-awaiting-auth", "signed-out");
