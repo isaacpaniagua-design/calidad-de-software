@@ -124,13 +124,10 @@ function renderStudentGrades(grades) {
 
 function loadGradesForStudent(studentId) {
   if (unsubscribeFromGrades) unsubscribeFromGrades();
-  const gradesQuery = query(
-    collection(db, "grades"),
-    where("authUid", "==", studentId)
-  );
-
+  // Consultar la subcolección activities bajo el documento del estudiante en grades
+  const activitiesRef = collection(db, "grades", studentId, "activities");
   unsubscribeFromGrades = onSnapshot(
-    gradesQuery,
+    activitiesRef,
     (snapshot) => {
       const grades = snapshot.docs.map((doc) => ({
         id: doc.id,
@@ -168,10 +165,19 @@ function setupDisplayEventListeners() {
       input.disabled = true;
       try {
         if (!selectedStudentId) return;
-        await updateDoc(doc(db, "grades", input.dataset.gradeId), {
-          grade: Number(input.value),
-          lastUpdated: serverTimestamp(),
-        });
+        await updateDoc(
+          doc(
+            db,
+            "grades",
+            selectedStudentId,
+            "activities",
+            input.dataset.gradeId
+          ),
+          {
+            grade: Number(input.value),
+            lastUpdated: serverTimestamp(),
+          }
+        );
         // Mensaje visual de éxito
         input.classList.add("bg-green-100", "border-green-400");
         setTimeout(() => {
@@ -194,7 +200,16 @@ function setupDisplayEventListeners() {
     if (targetButton) {
       if (confirm("¿Está seguro de que desea eliminar esta calificación?")) {
         try {
-          await deleteDoc(doc(db, "grades", targetButton.dataset.gradeId));
+          if (!selectedStudentId) return;
+          await deleteDoc(
+            doc(
+              db,
+              "grades",
+              selectedStudentId,
+              "activities",
+              targetButton.dataset.gradeId
+            )
+          );
         } catch (error) {
           console.error("Error eliminando calificación:", error);
         }
