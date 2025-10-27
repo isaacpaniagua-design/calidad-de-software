@@ -1,10 +1,6 @@
 // js/calificaciones-backend.js
 
-import {
-  onAuth,
-  subscribeMyGradesAndActivities,
-  subscribeGrades,
-} from "./firebase.js";
+import { onAuth } from "./firebase.js";
 
 let unsubscribeFromData = null;
 
@@ -12,13 +8,11 @@ async function handleAuthStateChanged(user) {
   if (unsubscribeFromData) unsubscribeFromData();
 
   const gradesContainer = document.getElementById("grades-table-container");
-  // Se mantiene la referencia, pero se usará de forma segura.
-  const activitiesContainer = document.getElementById("student-activities-container"); 
+  const activitiesContainer = document.getElementById("student-activities-container");
   const titleEl = document.getElementById("grades-title");
 
   if (!user) {
     if (gradesContainer) gradesContainer.style.display = "none";
-    // ✅ CORRECCIÓN: Se comprueba si el contenedor de actividades existe antes de manipularlo.
     if (activitiesContainer) activitiesContainer.style.display = "none";
     return;
   }
@@ -30,44 +24,45 @@ async function handleAuthStateChanged(user) {
   const rosterData = await response.json();
   const rosterMap = new Map(rosterData.students.map(s => [s.id, s.name]));
 
+  // Importar Firestore dinámicamente para evitar dependencias rotas
+  const { getDb } = await import("./firebase.js");
+  const db = getDb();
+  const { collection, getDocs, query, where } = await import("https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js");
+
   if (userRole === "docente") {
     if (titleEl) titleEl.textContent = "Panel de Calificaciones (Promedios Generales)";
-    // ✅ CORRECCIÓN: Se comprueba si el contenedor de actividades existe.
     if (activitiesContainer) activitiesContainer.style.display = "none";
 
-    unsubscribeFromData = subscribeGrades((allStudentGrades) => {
-      const fullStudentData = allStudentGrades.map(grade => ({
+    // Obtener todas las calificaciones
+    const gradesSnap = await getDocs(collection(db, "grades"));
+    const allStudentGrades = [];
+    gradesSnap.forEach(doc => {
+      const grade = doc.data();
+      allStudentGrades.push({
         ...grade,
-        name: rosterMap.get(grade.id) || grade.name || "Estudiante sin nombre",
-      }));
-      renderGradesTable(fullStudentData);
+        name: rosterMap.get(grade.authUid) || grade.name || "Estudiante sin nombre",
+      });
     });
-
+    renderGradesTable(allStudentGrades);
+    unsubscribeFromData = () => {};
   } else {
     if (titleEl) titleEl.textContent = "Resumen de Mis Calificaciones";
-    // ✅ CORRECCIÓN: Se comprueba si el contenedor de actividades existe.
     if (activitiesContainer) activitiesContainer.style.display = "block";
 
+    // Obtener solo las calificaciones del estudiante actual
     if (user.uid) {
-      unsubscribeFromData = subscribeMyGradesAndActivities(
-        user,
-        ({ grades, activities }) => {
-          if (grades) {
-            const myFullData = {
-              ...grades,
-              name: rosterMap.get(grades.id) || grades.name || "Estudiante",
-            };
-            renderGradesTable([myFullData]);
-          } else {
-            renderGradesTable([]);
-          }
-          // La función de renderizado de actividades ya no es necesaria aquí,
-          // pero la mantenemos por si se reutiliza en el futuro.
-          if (activitiesContainer) {
-            renderActivitiesForStudent(activities);
-          }
-        }
-      );
+      const gradesQuery = query(collection(db, "grades"), where("authUid", "==", user.uid));
+      const gradesSnap = await getDocs(gradesQuery);
+      const myGrades = [];
+      gradesSnap.forEach(doc => {
+        const grade = doc.data();
+        myGrades.push({
+          ...grade,
+          name: rosterMap.get(grade.authUid) || grade.name || "Estudiante",
+        });
+      });
+      renderGradesTable(myGrades);
+      // Si tienes actividades, aquí podrías cargarlas y llamar a renderActivitiesForStudent
     }
   }
 }

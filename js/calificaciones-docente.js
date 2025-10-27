@@ -24,7 +24,7 @@ async function loadTeacherGrades() {
         // Asumiendo que el rol de "docente" ve las calificaciones de un estudiante específico,
         // y que el `user.uid` corresponde al del estudiante que se está visualizando.
         // Si la lógica es diferente (ej. un docente ve todas las de sus alumnos), esto necesitaría ajustarse.
-        const gradesQuery = query(collection(db, "grades"), where("studentId", "==", user.uid));
+    const gradesQuery = query(collection(db, "grades"), where("authUid", "==", user.uid));
         const querySnapshot = await getDocs(gradesQuery);
 
         if (querySnapshot.empty) {

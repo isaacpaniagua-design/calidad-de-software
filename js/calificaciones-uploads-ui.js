@@ -3,9 +3,7 @@ import { useStorage } from "./firebase-config.js";
 import { initializeFileViewer, openFileViewer } from "./file-viewer.js";
 import {
   createStudentUpload,
-  observeStudentUploads,
-  observeStudentUploadsByEmail,
-  deleteStudentUpload,
+  observeStudentUploads
 } from "./student-uploads.js";
 import {
   getActivityById,
