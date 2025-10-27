@@ -503,8 +503,14 @@ function updateAuthAppearance(nav, state) {
       link.setAttribute("data-awaiting-auth", "signed-out");
     }
     // Log para depuración
-    console.log("[QSLayout] updateAuthAppearance:", { state, ariaLabel: link.getAttribute("aria-label"), text: link.textContent });
-  } catch (e) { console.warn("[QSLayout] updateAuthAppearance error", e); }
+    console.log("[QSLayout] updateAuthAppearance:", {
+      state,
+      ariaLabel: link.getAttribute("aria-label"),
+      text: link.textContent,
+    });
+  } catch (e) {
+    console.warn("[QSLayout] updateAuthAppearance error", e);
+  }
 }
 
 // Expone la función de actualización para que otras páginas puedan llamarla.
