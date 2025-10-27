@@ -1,10 +1,9 @@
 import {
-  getFirestore,
   collection,
   query,
   where,
   getDocs,
-} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 import { initFirebase, getDb, getAuthInstance } from "./firebase.js";
 
 initFirebase();
