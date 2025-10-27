@@ -2,58 +2,86 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    // --- Helper Functions ---
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // ⭐️ REGLA CORREGIDA Y ROBUSTA PARA DOCENTES
+    // Un usuario es docente si tiene el custom claim `isTeacher` O si su UID
+    // existe como documento en la colección /teachers. Esto cubre ambos escenarios.
     function isTeacher() {
-      return exists(/databases/$(database)/documents/teachers/$(request.auth.uid));
+      return isAuthenticated() && 
+             (request.auth.token.isTeacher == true || exists(/databases/$(database)/documents/teachers/$(request.auth.uid)));
     }
-
-    // --- Core Collections ---
-
-    match /activities/{activityId} {
-      allow read: if request.auth != null;
-      allow write: if isTeacher();
-    }
-    
-    match /submissions/{submissionId} {
-      // Teachers can read any submission. A student can read their own.
-      allow get: if isTeacher() || request.auth.uid == resource.data.studentUid;
-      
-      // Students can query for their own submissions. Teachers can query for any.
-      allow list: if isTeacher() || (request.auth.uid == request.query.filters.studentUid);
-
-      // A user can write to a submission if they are a teacher (for grading) 
-      // or the student who owns it (for submitting).
-      allow write: if isTeacher() || request.auth.uid == resource.data.studentUid;
-    }
-
-    // This rule was missing. It allows students to read all uploads and
-    // write their own. This is needed for the student uploads page.
-    match /studentUploads/{uploadId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth.uid == request.resource.data.student.uid;
-    }
-
-    // --- Administrative & User Data Collections ---
 
     match /students/{studentId} {
-      allow read: if isTeacher() || request.auth.uid == resource.data.authUid;
-      allow write: if isTeacher();
-    }
-    
-    match /teachers/{teacherId} {
-      allow read: if isTeacher();
-      allow write: if false; 
+      allow read, write: if isTeacher();
     }
 
-    // Grades: Restoring this collection for 'calificaciones-logic.js' with secure rules.
-    match /grades/{gradeId} {
-      // Allow a user to get a specific document if they are a teacher or own the document.
-      allow get: if isTeacher() || request.auth.uid == resource.data.authUid;
-      // Allow a user to list documents only if they are a teacher or are querying by their own user ID.
-      allow list: if isTeacher() || (request.query.filters.authUid == request.auth.uid);
-      // Only teachers can create or update grades.
+    match /grades/{studentId} {
+      allow read: if isTeacher() || 
+                         (isAuthenticated() && resource.data.authUid == request.auth.uid);
       allow write: if isTeacher();
+
+      match /activities/{activityId} {
+        allow read: if isTeacher() || (isAuthenticated() && request.auth.uid == studentId);
+        allow write: if isTeacher();
+      }
+    }
+
+    match /activities/{activityId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+    }
+
+    match /teachers/{teacherId} {
+      allow read: if isTeacher();
+      allow write: if false; // Los docentes no se pueden modificar a sí mismos desde el cliente.
+    }
+    
+    match /student_uploads/{uploadId} {
+      allow get: if isTeacher() || (isAuthenticated() && request.auth.uid == resource.data.student.uid);
+
+      allow list: if isTeacher() || (isAuthenticated() && request.query.where[0][0] == 'student.uid' && request.query.where[0][2] == request.auth.uid);
+
+      allow create: if isTeacher() || (isAuthenticated() && request.auth.uid == request.resource.data.student.uid);
+      
+      allow update, delete: if isTeacher();
+    }
+    
+    match /materials/{materialId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+    }
+    match /forum_topics/{topicId} {
+      allow read, write: if isAuthenticated();
+      match /replies/{replyId} {
+        allow read, write: if isAuthenticated();
+      }
+    }
+
+    match /attendances/{attendanceId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() &&
+                       request.auth.uid == request.resource.data.uid &&
+                       request.auth.uid == request.resource.data.createdByUid;
+      allow update, delete: if isTeacher();
+    }
+
+    match /planesDePrueba/{planId} {
+      allow read, write: if isTeacher();
+    }
+    match /courses/{courseId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+    }
+    match /grupos/{grupoId} {
+      allow read: if isAuthenticated();
+      allow write: if isTeacher();
+      match /members/{memberId} {
+        allow read, write: if isTeacher();
+      }
     }
   }
 }
