@@ -36,7 +36,7 @@ export function initFirebase() {
     db = getFirestore(app);
     storage = getStorage(app);
 
-    onReadyCallbacks.forEach(cb => cb());
+    onReadyCallbacks.forEach((cb) => cb());
     onReadyCallbacks.clear();
   } catch (error) {
     console.error("Error al inicializar Firebase:", error);
@@ -79,22 +79,28 @@ export async function signInWithGooglePotros() {
     await signInWithPopup(getAuthInstance(), provider);
   } catch (error) {
     console.error("Error en signInWithGooglePotros:", error);
-    if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+    if (
+      error.code !== "auth/popup-closed-by-user" &&
+      error.code !== "auth/cancelled-popup-request"
+    ) {
       alert(`Error al iniciar sesión: ${error.message}`);
     }
   }
 }
 
 export async function signInWithGoogleOpen() {
-    const provider = new GoogleAuthProvider();
-    try {
-        await signInWithPopup(getAuthInstance(), provider);
-    } catch (error) {
-        console.error("Error en signInWithGoogleOpen:", error);
-        if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
-            alert(`Error al iniciar sesión: ${error.message}`);
-        }
+  const provider = new GoogleAuthProvider();
+  try {
+    await signInWithPopup(getAuthInstance(), provider);
+  } catch (error) {
+    console.error("Error en signInWithGoogleOpen:", error);
+    if (
+      error.code !== "auth/popup-closed-by-user" &&
+      error.code !== "auth/cancelled-popup-request"
+    ) {
+      alert(`Error al iniciar sesión: ${error.message}`);
     }
+  }
 }
 
 export async function signOutCurrent() {
@@ -107,7 +113,9 @@ export async function signOutCurrent() {
 
 export function isTeacherEmail(email) {
   if (!email) return false;
-  return allowedTeacherEmails.map(e => e.toLowerCase()).includes(email.toLowerCase());
+  return allowedTeacherEmails
+    .map((e) => e.toLowerCase())
+    .includes(email.toLowerCase());
 }
 
 export function ensureTeacherAllowlistLoaded() {
@@ -115,3 +123,20 @@ export function ensureTeacherAllowlistLoaded() {
 }
 
 initFirebase();
+
+// Sincroniza el estado visual del botón de sesión tras cualquier cambio de autenticación
+import("./layout.js").then(() => {
+  onAuth((user) => {
+    if (user) {
+      if (window.__qsLayoutPersistAuthState)
+        window.__qsLayoutPersistAuthState("signed-in");
+      if (typeof window.updateQsAuthButton === "function")
+        window.updateQsAuthButton();
+    } else {
+      if (window.__qsLayoutPersistAuthState)
+        window.__qsLayoutPersistAuthState("signed-out");
+      if (typeof window.updateQsAuthButton === "function")
+        window.updateQsAuthButton();
+    }
+  });
+});
