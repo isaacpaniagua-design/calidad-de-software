@@ -130,9 +130,14 @@ document.addEventListener("DOMContentLoaded", () => {
         function startObserver(uid) {
             observeStudentUploads(uid, (items) => {
                 if (countEl) countEl.textContent = items.length;
+                if (Array.isArray(items) && items.length === 0) {
+                    updateUploadStatus("No tienes entregas registradas todavía.", "info");
+                } else {
+                    updateUploadStatus(defaultStatusMessage, "success", false);
+                }
             }, (error) => {
                 console.error("Error observando entregas:", error);
-                updateUploadStatus("Error al cargar tus entregas anteriores.", "error");
+                updateUploadStatus("Error al cargar tus entregas anteriores. Si el problema persiste, contacta a soporte.", "error");
             });
         }
 
