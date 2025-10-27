@@ -892,9 +892,19 @@ function markLayoutReady() {
 window.addEventListener("load", markLayoutReady, { once: true });
 
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", bootstrapLayout, {
-    once: true,
-  });
+  document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+      bootstrapLayout();
+      if (typeof window.updateQsAuthButton === "function") {
+        window.updateQsAuthButton();
+      }
+    },
+    { once: true }
+  );
 } else {
   bootstrapLayout();
+  if (typeof window.updateQsAuthButton === "function") {
+    window.updateQsAuthButton();
+  }
 }
