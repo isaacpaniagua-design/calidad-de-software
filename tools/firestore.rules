@@ -1,3 +1,13 @@
+    // Permitir ambos nombres: snake_case y camelCase para compatibilidad frontend
+    match /studentUploads/{uploadId} {
+      allow get: if isTeacher() || (isAuthenticated() && request.auth.uid == resource.data.student.uid);
+
+      allow list: if isTeacher() || (isAuthenticated() && request.query.where[0][0] == 'student.uid' && request.query.where[0][2] == request.auth.uid);
+
+      allow create: if isTeacher() || (isAuthenticated() && request.auth.uid == request.resource.data.student.uid);
+      
+      allow update, delete: if isTeacher();
+    }
 rules_version = '2';
 
 service cloud.firestore {
