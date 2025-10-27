@@ -159,6 +159,9 @@ async function handleAuthStateChanged(user) {
             }</option>`
         )
         .join("");
+      // Obtener el rol antes de cualquier uso
+      const userRole = (localStorage.getItem("qs_role") || "").toLowerCase();
+
       // Evento para cambiar el desglose mostrado
       studentSelect.onchange = async (e) => {
         await renderTeacherActivities(e.target.value);
