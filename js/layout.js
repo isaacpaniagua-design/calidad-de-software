@@ -158,7 +158,7 @@ function buildNavTemplate(basePath, notificationBadge) {
         </button>
       </div>
      <nav class="qs-tabs" id="qs-nav-links" aria-label="Navegación principal">
-  <a class="qs-btn" href="${basePath}materiales.html">Materiales</a>
+  <!-- <a class="qs-btn" href="${basePath}materiales.html">Materiales</a> -->
   <a class="qs-btn" href="${basePath}asistencia.html">Asistencia</a>
   <a class="qs-btn" href="${basePath}calificaciones.html">Calificaciones</a>
   <a class="qs-btn teacher-only" href="${basePath}actividades.html">Actividades</a>
