@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor Interactivo de Proyectos y SQA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Chosen Palette: Warm Stone and Teal -->
+    <!-- Application Structure Plan: La aplicación está diseñada como una SPA con una barra de navegación superior principal que controla qué "página" de contenido está visible. Cada página (sección) corresponde a uno de los 6 temas del informe. Dentro de cada página, el contenido se organiza en sub-secciones interactivas (como "¿Qué es?", "¿Cómo se hace?", "Puntos de Revisión") que el usuario puede expandir y contraer. Esta estructura de "navegación por pestañas" con "acordeones" internos fue elegida para gestionar la densidad de la información. Permite a los usuarios saltar directamente al tema que les interesa (alta navegación) y luego explorar ese tema en partes digeribles (interacción profunda), evitando la sobrecarga de un documento largo y estático. -->
+    <!-- Visualization & Content Choices: 
+        1. Navegación Principal: (Botones HTML + JS) - Objetivo: Organizar. Método: 6 botones que alternan la visibilidad de 6 contenedores `<section>`. Justificación: Crea una sensación de "aplicación" de una sola página.
+        2. Contenido Temático: (HTML + JS Toggles) - Objetivo: Informar/Organizar. Método: El contenido de cada tema se divide en paneles colapsables (acordeones) activados por botones. Justificación: Reduce la carga cognitiva, permite al usuario enfocarse.
+        3. Roadmap Timeline: (HTML/CSS) - Objetivo: Organizar/Informar. Método: Una representación visual de una línea de tiempo usando `divs` y Tailwind. Justificación: Ilustra el concepto de "Roadmap" de forma más visual que solo texto.
+        4. Métrica de Calidad (Chart.js): (Canvas) - Objetivo: Informar/Ilustrar. Método: Un gráfico de líneas de Chart.js que muestra datos de *ejemplo* para "Densidad de Defectos" (mencionado en el informe). Justificación: Cumple con el requisito técnico de usar Chart.js e ilustra un artefacto SQA clave (Métricas).
+        5. Comparación "Mal" vs "Bien": (HTML/CSS/Unicode) - Objetivo: Comparar. Método: Tarjetas una al lado de la otra con iconos Unicode (✓, ✗) para contrastar un buen y un mal reporte de bug. Justificación: Refuerza visualmente las mejores prácticas.
+        6. CONFIRMACIÓN: NO SVG graphics used. NO Mermaid JS used. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .content-panel {
+            transition: all 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-stone-50 text-stone-800 font-sans leading-relaxed">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-7xl">
+
+        <header class="mb-8">
+            <h1 class="text-3xl md:text-5xl font-bold text-teal-700 mb-2">Gestión de Proyectos y SQA</h1>
+            <p class="text-lg md:text-xl text-stone-600">Una guía interactiva de conceptos fundamentales para el desarrollo de software.</p>
+        </header>
+
+        <nav class="flex flex-wrap gap-2 mb-8">
+            <button data-target="page-gap-analysis" class="nav-button active-nav-button text-sm md:text-base">1. Análisis de Brechas</button>
+            <button data-target="page-roadmap" class="nav-button inactive-nav-button text-sm md:text-base">2. Roadmap</button>
+            <button data-target="page-sqa" class="nav-button inactive-nav-button text-sm md:text-base">3. Artefactos SQA</button>
+            <button data-target="page-test-plan" class="nav-button inactive-nav-button text-sm md:text-base">4. Plan de Pruebas</button>
+            <button data-target="page-test-case" class="nav-button inactive-nav-button text-sm md:text-base">5. Casos de Prueba</button>
+            <button data-target="page-bugs" class="nav-button inactive-nav-button text-sm md:text-base">6. Registrar Bugs</button>
+        </nav>
+
+        <main id="content-container">
+
+            <!-- ============================================= -->
+            <!-- Página 1: Análisis de Brechas                  -->
+            <!-- ============================================= -->
+            <section id="page-gap-analysis" class="page-content space-y-6">
+                <h2 class="text-3xl font-bold text-teal-700 border-b border-teal-200 pb-2">🚀 Análisis de Brechas (Gap Analysis)</h2>
+                <p class="text-lg text-stone-700">
+                    Esta sección profundiza en el Análisis de Brechas, una herramienta de diagnóstico crucial. Aquí podrás explorar qué es, aprender un proceso paso a paso para realizarlo y revisar puntos clave para asegurar que tu análisis sea efectivo y esté basado en evidencia.
+                </p>
+
+                <div class="space-y-4">
+                    <button data-toggle="panel-gap-what" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> ¿Qué es el Análisis de Brechas?
+                    </button>
+                    <div id="panel-gap-what" class="content-panel hidden p-4 bg-white border border-stone-200 rounded-lg shadow-sm ml-6">
+                        <ul class="list-disc list-outside space-y-2 pl-5 text-stone-700">
+                            <li>Es una herramienta de diagnóstico fundamental.</li>
+                            <li>Compara el estado actual ("as-is") con un estado futuro deseado ("to-be").</li>
+                            <li><strong>Objetivo:</strong> Identificar las "brechas" (diferencias) y definir las acciones necesarias para cerrarlas.</li>
+                            <li><strong>Analogía del GPS:</strong>
+                                <ol class="list-decimal list-outside pl-5 mt-2 space-y-1">
+                                    <li>Te dice dónde estás (As-Is).</li>
+                                    <li>Le indicas a dónde quieres ir (To-Be).</li>
+                                    <li>Te traza la ruta (Plan de Acción).</li>
+                                </ol>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <button data-toggle="panel-gap-how" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> ¿Cómo realizarlo?
+                    </button>
+                    <div id="panel-gap-how" class="content-panel hidden p-4 bg-white border border-stone-200 rounded-lg shadow-sm ml-6">
+                        <h4 class="text-lg font-semibold text-teal-700 mb-2">1. Identificar el Estado Actual ("As-Is"):</h4>
+                        <ul class="list-disc list-outside space-y-2 pl-5 mb-4">
+                            <li>Requiere honestidad y precisión.</li>
+                            <li>Documentar cómo funcionan las cosas <em>ahora</em>.</li>
+                            <li>Métodos: Analizar código, entrevistar usuarios, revisar documentación, mapear procesos.</li>
+                        </ul>
+                        <h4 class="text-lg font-semibold text-teal-700 mb-2">2. Definir el Estado Futuro ("To-Be"):</h4>
+                        <ul class="list-disc list-outside space-y-2 pl-5 mb-4">
+                            <li>Este es el objetivo. ¿Qué se quiere lograr?</li>
+                            <li>Debe ser <strong>SMART</strong> (Específico, Medible, Alcanzable, Relevante, con Plazo).</li>
+                            <li><strong>Mal:</strong> "Mejorar el sistema".</li>
+                            <li><strong>Bien:</strong> "Implementar autenticación de dos factores para incrementar la seguridad en un 25% antes del Q3".</li>
+                        </ul>
+                        <h4 class="text-lg font-semibold text-teal-700 mb-2">3. Identificar las Brechas:</h4>
+                        <ul class="list-disc list-outside space-y-2 pl-5 mb-4">
+                            <li>Listar las diferencias concretas entre "As-Is" y "To-Be".</li>
+                            <li><em>Ejemplo de Brecha:</em> El sistema actual no tiene autenticación de dos factores.</li>
+                            <li><em>Ejemplo de Brecha:</em> El equipo no tiene experiencia en la implementación de APIs de autenticación.</li>
+                        </ul>
+                        <h4 class="text-lg font-semibold text-teal-700 mb-2">4. Desarrollar un Plan de Acción:</h4>
+                        <ul class="list-disc list-outside space-y-2 pl-5">
+                            <li>Para cada brecha, proponer una o más acciones concretas.</li>
+                            <li>Se convierte en la base para la planificación del proyecto.</li>
+                        </ul>
+                    </div>
+                    
+                    <button data-toggle="panel-gap-review" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> Puntos de Revisión
+                    </button>
+                    <div id="panel-gap-review" class="content-panel hidden p-4 bg-white border border-stone-200 rounded-lg shadow-sm ml-6">
+                        <ul class="list-disc list-outside space-y-3 pl-5 text-stone-700">
+                            <li><strong>¿La descripción del estado actual está basada en evidencia?</strong>
+                                <br><span class="text-sm text-stone-600">Pide datos, no suposiciones.</span></li>
+                            <li><strong>¿El estado futuro es realista?</strong>
+                                <br><span class="text-sm text-stone-600">Cuestiona sobre recursos, tiempo y habilidades.</span></li>
+                            <li><strong>¿Las brechas son específicas?</strong>
+                                <br><span class="text-sm text-stone-600"><em>Mal:</em> "Falta de usabilidad". <em>Bien:</em> "Los usuarios tardan 5 min en encontrar la función de reporte (objetivo: < 1 min)".</span></li>
+                            <li><strong>¿El plan de acción es ejecutable?</strong>
+                                <br><span class="text-sm text-stone-600">Cada acción debe ser clara y asignable.</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================= -->
+            <!-- Página 2: Roadmap                            -->
+            <!-- ============================================= -->
+            <section id="page-roadmap" class="page-content space-y-6 hidden">
+                <h2 class="text-3xl font-bold text-teal-700 border-b border-teal-200 pb-2">🗺️ Roadmap del Proyecto</h2>
+                <p class="text-lg text-stone-700">
+                    Un Roadmap es una herramienta de comunicación estratégica vital. En esta sección, descubrirás qué es, cuáles son sus componentes clave y cómo asegurar que sea una herramienta visual, flexible y enfocada en el valor.
+                </p>
+
+                <div class="space-y-4">
+                    <button data-toggle="panel-road-what" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> ¿Qué es un Roadmap?
+                    </button>
+                    <div id="panel-road-what" class="content-panel hidden p-4 bg-white border border-stone-200 rounded-lg shadow-sm ml-6">
+                        <ul class="list-disc list-outside space-y-2 pl-5 text-stone-700">
+                            <li>Una representación <strong>visual y estratégica</strong> de alto nivel.</li>
+                            <li>Comunica la dirección y los principales hitos del proyecto a lo largo del tiempo.</li>
+                            <li>Se enfoca en el <strong>"qué"</strong> y el <strong>"porqué"</strong>.</li>
+                            <li>No es un plan detallado (como un Gantt), que se enfoca en el "cómo".</li>
+                        </ul>
+                    </div>
+
+                    <button data-toggle="panel-road-components" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> Componentes Clave
+                    </button>
+                    <div id="panel-road-components" class="content-panel hidden p-4 bg-white border border-stone-200 rounded-lg shadow-sm ml-6">
+                        <h4 class="text-lg font-semibold text-teal-700 mb-3">Ejemplo Visual de Línea de Tiempo</h4>
+                        <div class="w-full bg-stone-100 rounded-lg p-4 overflow-x-auto mb-6">
+                            <div class="relative w-full min-w-[500px] h-24">
+                                <div class="absolute top-1/2 -translate-y-1/2 w-full h-1 bg-teal-300 rounded-full"></div>
+                                
+                                <div class="absolute top-1/2 -translate-y-1/2 left-[10%] w-3 h-3 bg-teal-600 rounded-full"></div>
+                                <div class="absolute top-1/2 translate-y-3 left-[10%] -translate-x-1/2 text-center">
+                                    <span class="font-semibold text-sm">Q1</span><br><span class="text-xs text-stone-600">Investigación</span>
+                                </div>
+                                
+                                <div class="absolute top-1/2 -translate-y-1/2 left-[40%] w-3 h-3 bg-teal-600 rounded-full"></div>
+                                <div class="absolute top-1/2 -translate-y-14 left-[40%] -translate-x-1/2 text-center">
+                                    <span class_name="font-semibold text-sm">Q2</span><br><span class_name="text-xs text-stone-600">Desarrollo MVP</span>
+                                </div>
+                                
+                                <div class="absolute top-1/2 -translate-y-1/2 left-[70%] w-3 h-3 bg-teal-600 rounded-full"></div>
+                                <div class="absolute top-1/2 translate-y-3 left-[70%] -translate-x-1/2 text-center">
+                                    <span class="font-semibold text-sm">Q3</span><br><span class="text-xs text-stone-600">Lanzamiento Beta</span>
+                                </div>
+
+                                <div class="absolute top-1/2 -translate-y-1/2 left-[95%] w-3 h-3 bg-teal-300 rounded-full"></div>
+                                <div class="absolute top-1/2 -translate-y-14 left-[95%] -translate-x-1/2 text-center">
+                                    <span class="font-semibold text-sm text-stone-500">Q4</span><br><span class="text-xs text-stone-500">Integraciones</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <ul class="list-disc list-outside space-y-2 pl-5 text-stone-700">
+                            <li><strong>Línea de Tiempo (Timeline):</strong> Generalmente dividida en trimestres (Q1, Q2), meses o sprints.</li>
+                            <li><strong>Hitos o Iniciativas (Milestones/Initiatives):</strong> Las grandes metas o funcionalidades (Ej: "Lanzamiento de la Beta", "Integración con Pasarela de Pago").</li>
+                            <li><strong>Objetivos Estratégicos (Strategic Goals):</strong> ¿Por qué se está haciendo esto? (Ej: "Aumentar la retención de usuarios un 15%").</li>
+                            <li><strong>Estado (Status):</strong> Un indicador visual (ej. colores) para saber si algo está en progreso, completado o en riesgo.</li>
+                        </ul>
+                    </div>
+                    
+                    <button data-toggle="panel-road-review" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> Puntos de Revisión
+                    </button>
+                    <div id="panel-road-review" class="content-panel hidden p-4 bg-white border border-stone-200 rounded-lg shadow-sm ml-6">
+                        <ul class="list-disc list-outside space-y-3 pl-5 text-stone-700">
+                            <li><strong>¿Es visual y fácil de entender?</strong>
+                                <br><span class="text-sm text-stone-600">Un roadmap sobrecargado pierde su propósito. Debe poder explicarse en < 5 minutos.</span></li>
+                            <li><strong>¿Se enfoca en el valor y no solo en las características?</strong>
+                                <br><span class="text-sm text-stone-600"><em>Mal:</em> "Crear botón de exportar". <em>Bien:</em> "Permitir a los usuarios exportar sus datos para análisis externo".</span></li>
+                            <li><strong>¿Es flexible?</strong>
+                                <br><span class="text-sm text-stone-600">Debe ser un documento vivo, que se pueda ajustar si las prioridades cambian.</span></li>
+                            <li><strong>¿Comunica el "porqué"?</strong>
+                                <br><span class="text-sm text-stone-600">¿Por qué estamos construyendo esto y qué valor aporta?</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================= -->
+            <!-- Página 3: Artefactos SQA                      -->
+            <!-- ============================================= -->
+            <section id="page-sqa" class="page-content space-y-6 hidden">
+                <h2 class="text-3xl font-bold text-teal-700 border-b border-teal-200 pb-2">📄 Artefactos SQA (Software Quality Assurance)</h2>
+                <p class="text-lg text-stone-700">
+                    Los artefactos SQA son la evidencia tangible de tu proceso de calidad. En esta sección, definiremos qué son, exploraremos una lista interactiva de los 7 artefactos esenciales (incluyendo un ejemplo visual de métrica) y cubriremos los puntos clave para mantenerlos útiles y consistentes.
+                </p>
+
+                <div class="space-y-4">
+                    <button data-toggle="panel-sqa-what" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> ¿Qué son los Artefactos SQA?
+                    </button>
+                    <div id="panel-sqa-what" class="content-panel hidden p-4 bg-white border border-stone-200 rounded-lg shadow-sm ml-6">
+                        <ul class="list-disc list-outside space-y-2 pl-5 text-stone-700">
+                            <li><strong>Software Quality Assurance (Aseguramiento de Calidad de Software).</strong></li>
+                            <li>Son todos los documentos y productos generados durante el proceso de SQA.</li>
+                            <li>Son la <strong>evidencia tangible</strong> de que se está siguiendo un proceso para garantizar la calidad.</li>
+                            <li>¡No son burocracia inútil, son la prueba de un buen trabajo!</li>
+                        </ul>
+                    </div>
+
+                    <button data-toggle="panel-sqa-artifacts" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> Artefactos Esenciales
+                    </button>
+                    <div id="panel-sqa-artifacts" class="content-panel hidden p-6 bg-white border border-stone-200 rounded-lg shadow-sm ml-6 space-y-3">
+                        
+                        <div class="border-b pb-2">
+                            <button data-toggle="subpanel-sqa-1" class="font-semibold text-teal-700 hover:text-teal-600"><span class="toggle-icon-sub">▸</span> 1. Plan de Calidad (Quality Plan)</button>
+                            <div id="subpanel-sqa-1" class="hidden text-sm text-stone-600 pl-6 pt-2">El documento maestro. Define objetivos, estándares (ej. ISO 25010), roles, actividades y métricas.</div>
+                        </div>
+                        <div class="border-b pb-2">
+                            <button data-toggle="subpanel-sqa-2" class="font-semibold text-teal-700 hover:text-teal-600"><span class="toggle-icon-sub">▸</span> 2. Plan de Pruebas (Test Plan)</button>
+                            <div id="subpanel-sqa-2" class="hidden text-sm text-stone-600 pl-6 pt-2">(Lo detallamos en la siguiente sección).</div>
+                        </div>
+                        <div class="border-b pb-2">
+                            <button data-toggle="subpanel-sqa-3" class="font-semibold text-teal-700 hover:text-teal-600"><span class="toggle-icon-sub">▸</span> 3. Casos de Prueba (Test Cases)</button>
+                            <div id="subpanel-sqa-3" class="hidden text-sm text-stone-600 pl-6 pt-2">(También lo detallamos más adelante).</div>
+                        </div>
+                        <div class="border-b pb-2">
+                            <button data-toggle="subpanel-sqa-4" class="font-semibold text-teal-700 hover:text-teal-600"><span class="toggle-icon-sub">▸</span> 4. Scripts de Prueba (Test Scripts)</button>
+                            <div id="subpanel-sqa-4" class="hidden text-sm text-stone-600 pl-6 pt-2">Si las pruebas son automatizadas, estos son los códigos que las ejecutan.</div>
+                        </div>
+                        <div class="border-b pb-2">
+                            <button data-toggle="subpanel-sqa-5" class="font-semibold text-teal-700 hover:text-teal-600"><span class="toggle-icon-sub">▸</span> 5. Reportes de Bugs (Bug Reports)</button>
+                            <div id="subpanel-sqa-5" class="hidden text-sm text-stone-600 pl-6 pt-2">(Lo veremos al final).</div>
+                        </div>
+                        <div class="border-b pb-2">
+                            <button data-toggle="subpanel-sqa-6" class="font-semibold text-teal-700 hover:text-teal-600"><span class="toggle-icon-sub">▸</span> 6. Reporte de Resumen de Pruebas</button>
+                            <div id="subpanel-sqa-6" class="hidden text-sm text-stone-600 pl-6 pt-2">Al finalizar un ciclo, resume qué se probó, qué se encontró (n° de bugs, severidad), qué no se pudo probar y una conclusión sobre si el software está listo.</div>
+                        </div>
+                        <div>
+                            <button data-toggle="subpanel-sqa-7" class="font-semibold text-teal-700 hover:text-teal-600"><span class="toggle-icon-sub">▸</span> 7. Métricas de Calidad (Quality Metrics)</button>
+                            <div id="subpanel-sqa-7" class="hidden text-sm text-stone-600 pl-6 pt-2 space-y-4">
+                                <p>Gráficos y datos que muestran tendencias, como la densidad de defectos, el tiempo de resolución de bugs, la cobertura de pruebas, etc. A continuación se muestra un ejemplo de gráfico de densidad de defectos.</p>
+                                <div class="chart-container">
+                                    <canvas id="bugDensityChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <button data-toggle="panel-sqa-review" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> Puntos de Revisión
+                    </button>
+                    <div id="panel-sqa-review" class="content-panel hidden p-4 bg-white border border-stone-200 rounded-lg shadow-sm ml-6">
+                        <ul class="list-disc list-outside space-y-3 pl-5 text-stone-700">
+                            <li><strong>¿Existe trazabilidad?</strong>
+                                <br><span class="text-sm text-stone-600">¿Se puede rastrear un requisito ➔ un caso de prueba ➔ un bug reportado?</span></li>
+                            <li><strong>¿Son consistentes?</strong>
+                                <br><span class="text-sm text-stone-600">La terminología y el formato deben ser uniformes.</span></li>
+                            <li><strong>¿Están actualizados?</strong>
+                                <br><span class="text-sm text-stone-600">Un artefacto desactualizado es peor que no tenerlo.</span></li>
+                            <li><strong>¿Son útiles?</strong>
+                                <br><span class="text-sm text-stone-600">¿Este documento realmente ayuda a tomar una decisión?</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================= -->
+            <!-- Página 4: Plan de Pruebas                     -->
+            <!-- ============================================= -->
+            <section id="page-test-plan" class="page-content space-y-6 hidden">
+                <h2 class="text-3xl font-bold text-teal-700 border-b border-teal-200 pb-2">🧪 Plan de Pruebas (Test Plan)</h2>
+                <p class="text-lg text-stone-700">
+                    El Plan de Pruebas es el documento estratégico que guía todo el esfuerzo de testing. Aprende qué es, explora una lista interactiva de su estructura típica (desde el alcance hasta los riesgos) y revisa los puntos clave para asegurar que tu plan sea realista y esté bien definido.
+                </p>
+
+                <div class="space-y-4">
+                    <button data-toggle="panel-plan-what" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> ¿Qué es un Plan de Pruebas?
+                    </button>
+                    <div id="panel-plan-what" class="content-panel hidden p-4 bg-white border border-stone-200 rounded-lg shadow-sm ml-6">
+                        <p class="mb-4 text-stone-700">El documento <strong>estratégico</strong> que define el alcance, el enfoque, los recursos y el cronograma de las actividades de prueba. Responde a las preguntas:</p>
+                        <ul class="list-disc list-outside space-y-2 pl-5 text-stone-700">
+                            <li>¿Qué vamos a probar?</li>
+                            <li>¿Cómo lo vamos a probar?</li>
+                            <li>¿Cuándo lo vamos a probar?</li>
+                            <li>¿Quién lo va a probar?</li>
+                        </ul>
+                    </div>
+
+                    <button data-toggle="panel-plan-structure" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> Estructura Típica
+                    </button>
+                    <div id="panel-plan-structure" class="content-panel hidden p-6 bg-white border border-stone-200 rounded-lg shadow-sm ml-6 space-y-3">
+                        <div class="border-b pb-2">
+                            <h4 class="font-semibold text-teal-700">Identificador y Alcance</h4>
+                            <p class="text-sm text-stone-600 pl-4 pt-1">¿Qué funcionalidades se van a probar (in-scope) y cuáles no (out-of-scope)?</p>
+                        </div>
+                        <div class="border-b pb-2">
+                            <h4 class="font-semibold text-teal-700">Estrategia de Prueba</h4>
+                            <p class="text-sm text-stone-600 pl-4 pt-1">El enfoque general. ¿Pruebas manuales, automatizadas, de rendimiento, de seguridad? ¿Niveles (unitarias, integración, sistema, aceptación)?</p>
+                        </div>
+                        <div class="border-b pb-2">
+                            <h4 class="font-semibold text-teal-700">Criterios de Entrada y Salida</h4>
+                            <p class="text-sm text-stone-600 pl-4 pt-1"><em>Entrada:</em> ¿Qué debe cumplirse para *empezar* a probar? (Ej. "build desplegado").<br><em>Salida:</em> ¿Qué debe cumplirse para *finalizar*? (Ej. "95% de casos pasados", "no hay bugs críticos abiertos").</p>
+                        </div>
+                        <div class="border-b pb-2">
+                            <h4 class="font-semibold text-teal-700">Recursos</h4>
+                            <p class="text-sm text-stone-600 pl-4 pt-1">¿Quiénes son los testers? ¿Qué hardware y software se necesita (entornos)?</p>
+                        </div>
+                        <div class="border-b pb-2">
+                            <h4 class="font-semibold text-teal-700">Cronograma</h4>
+                            <p class="text-sm text-stone-600 pl-4 pt-1">Hitos y fechas clave para las actividades de prueba.</p>
+                        </div>
+                        <div class="border-b pb-2">
+                            <h4 class="font-semibold text-teal-700">Entregables</h4>
+                            <p class="text-sm text-stone-600 pl-4 pt-1">Lista de los artefactos que se generarán (casos de prueba, reportes de bugs, etc.).</p>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-teal-700">Riesgos y Contingencias</h4>
+                            <p class="text-sm text-stone-600 pl-4 pt-1">¿Qué podría salir mal (ej. "el entorno no está disponible") y cuál es el plan B?</p>
+                        </div>
+                    </div>
+                    
+                    <button data-toggle="panel-plan-review" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> Puntos de Revisión
+                    </button>
+                    <div id="panel-plan-review" class="content-panel hidden p-4 bg-white border border-stone-200 rounded-lg shadow-sm ml-6">
+                        <ul class="list-disc list-outside space-y-3 pl-5 text-stone-700">
+                            <li><strong>¿El alcance (y lo que está *fuera de alcance*) está claramente definido?</strong>
+                                <br><span class="text-sm text-stone-600">Es fundamental para gestionar expectativas.</span></li>
+                            <li><strong>¿Los criterios de salida son realistas y medibles?</strong>
+                                <br><span class="text-sm text-stone-600">Evitar criterios ambiguos como "el sistema debe ser estable".</span></li>
+                            <li><strong>¿Se han considerado los riesgos?</strong>
+                                <br><span class="text-sm text-stone-600">Un buen plan anticipa problemas.</span></li>
+                            <li><strong>¿Está alineado con el Roadmap del Proyecto?</strong>
+                                <br><span class="text-sm text-stone-600">No puede ser un documento aislado; debe soportar el plan general.</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================= -->
+            <!-- Página 5: Casos de Prueba                      -->
+            <!-- ============================================= -->
+            <section id="page-test-case" class="page-content space-y-6 hidden">
+                <h2 class="text-3xl font-bold text-teal-700 border-b border-teal-200 pb-2">🧪 Diseñar Casos de Prueba (Test Cases)</h2>
+                <p class="text-lg text-stone-700">
+                    Los Casos de Prueba son la receta detallada para verificar una funcionalidad. Aquí verás qué son, diseccionarás la anatomía de un buen caso, podrás estudiar un ejemplo concreto y revisarás los puntos clave para que tus casos sean atómicos, claros y efectivos.
+                </p>
+
+                <div class="space-y-4">
+                    <button data-toggle="panel-case-what" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> ¿Qué es un Caso de Prueba?
+                    </button>
+                    <div id="panel-case-what" class="content-panel hidden p-4 bg-white border border-stone-200 rounded-lg shadow-sm ml-6">
+                        <ul class="list-disc list-outside space-y-2 pl-5 text-stone-700">
+                            <li>Un conjunto de pasos, condiciones y entradas que se utilizan para verificar si una funcionalidad específica del software funciona como se espera.</li>
+                            <li>Es la <strong>receta paso a paso</strong> para realizar una prueba.</li>
+                        </ul>
+                    </div>
+
+                    <button data-toggle="panel-case-anatomy" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> Anatomía de un Buen Caso de Prueba
+                    </button>
+                    <div id="panel-case-anatomy" class="content-panel hidden p-4 bg-white border border-stone-200 rounded-lg shadow-sm ml-6">
+                        <ul class="list-disc list-outside space-y-2 pl-5 text-stone-700">
+                            <li><strong>ID del Caso de Prueba:</strong> Un identificador único (ej. TC-LOGIN-001).</li>
+                            <li><strong>Título/Descripción:</strong> Un resumen claro y conciso. Ejemplo: "Verificar inicio de sesión con credenciales válidas".</li>
+                            <li><strong>Precondiciones:</strong> ¿Qué debe ser cierto antes de empezar? Ejemplo: "El usuario debe estar registrado...".</li>
+                            <li><strong>Pasos de Ejecución (Steps):</strong> Una secuencia numerada de acciones simples.</li>
+                            <li><strong>Resultados Esperados (Expected Result):</strong> ¿Qué debería ocurrir si la prueba es exitosa?</li>
+                            <li><strong>Resultado Real (Actual Result):</strong> Se llena durante la ejecución (Pasa/Falla).</li>
+                            <li><strong>Estado (Status):</strong> Pasa, Falla, Bloqueado, No Ejecutado.</li>
+                        </ul>
+                    </div>
+
+                    <button data-toggle="panel-case-example" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> Ejemplo de Caso de Prueba
+                    </button>
+                    <div id="panel-case-example" class="content-panel hidden p-4 bg-stone-800 border border-stone-600 rounded-lg shadow-sm ml-6 text-stone-100 font-mono">
+<pre class="whitespace-pre-wrap text-sm">
+**ID:** TC-LOGIN-001
+**Título:** Verificar inicio de sesión con credenciales válidas.
+**Precondiciones:** El usuario debe estar registrado y no tener sesión activa.
+
+**Pasos de Ejecución:**
+  1. Abrir el navegador y navegar a la página de login.
+  2. Ingresar un nombre de usuario válido en 'Usuario'.
+  3. Ingresar una contraseña válida en 'Contraseña'.
+  4. Hacer clic en el botón 'Ingresar'.
+
+**Resultado Esperado:** El sistema redirige al usuario al Dashboard y muestra 
+                   un mensaje de bienvenida.
+</pre>
+                    </div>
+                    
+                    <button data-toggle="panel-case-review" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> Puntos de Revisión
+                    </button>
+                    <div id="panel-case-review" class="content-panel hidden p-4 bg-white border border-stone-200 rounded-lg shadow-sm ml-6">
+                        <ul class="list-disc list-outside space-y-3 pl-5 text-stone-700">
+                            <li><strong>¿Son atómicos?</strong>
+                                <br><span class="text-sm text-stone-600">Cada caso debe verificar una sola cosa (evitar "tours" por la app).</span></li>
+                            <li><strong>¿Son claros y no ambiguos?</strong>
+                                <br><span class="text-sm text-stone-600">Alguien que no lo diseñó debe poder ejecutarlo.</span></li>
+                            <li><strong>¿Son reutilizables?</strong></li>
+                            <li><strong>¿Se basan en los requisitos? (Trazabilidad)</strong></li>
+                            <li><strong>¿Consideran casos negativos y de borde?</strong>
+                                <br><span class="text-sm text-stone-600"><em>Feliz:</em> Login correcto. <em>Negativo:</em> Login incorrecto. <em>Borde:</em> Usuario con max. caracteres.</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================= -->
+            <!-- Página 6: Registrar Bugs                      -->
+            <!-- ============================================= -->
+            <section id="page-bugs" class="page-content space-y-6 hidden">
+                <h2 class="text-3xl font-bold text-teal-700 border-b border-teal-200 pb-2">🐞 Registrar Bugs (Bug Reporting)</h2>
+                <p class="text-lg text-stone-700">
+                    Un buen reporte de bug es la clave para una rápida solución. Esta sección te enseña qué es un reporte, cuáles son sus elementos indispensables (con un ejemplo visual de "bueno" vs "malo") y los puntos de revisión para asegurar que tus reportes sean reproducibles y profesionales.
+                </p>
+
+                <div class="space-y-4">
+                    <button data-toggle="panel-bug-what" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> ¿Qué es un Reporte de Bug?
+                    </button>
+                    <div id="panel-bug-what" class="content-panel hidden p-4 bg-white border border-stone-200 rounded-lg shadow-sm ml-6">
+                        <ul class="list-disc list-outside space-y-2 pl-5 text-stone-700">
+                            <li>Un documento formal que describe un problema (defecto) encontrado en el software.</li>
+                            <li><strong>Objetivo principal:</strong> Proporcionar al desarrollador toda la información necesaria para <strong>entender, reproducir y solucionar</strong> el problema.</li>
+                        </ul>
+                    </div>
+
+                    <button data-toggle="panel-bug-elements" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> Elementos Indispensables
+                    </button>
+                    <div id="panel-bug-elements" class="content-panel hidden p-4 bg-white border border-stone-200 rounded-lg shadow-sm ml-6 space-y-4">
+                        
+                        <div>
+                            <h4 class="text-lg font-semibold text-teal-700 mb-2">Título (Ejemplo Mal vs Bien)</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="border-2 border-red-300 bg-red-50 p-4 rounded-lg">
+                                    <h5 class="text-xl font-bold text-red-700 mb-2">✗ Mal</h5>
+                                    <p class="font-mono text-red-900">"Error en el login"</p>
+                                    <p class="text-sm text-red-600 mt-2">Este título es vago y no da información útil.</p>
+                                </div>
+                                <div class="border-2 border-green-300 bg-green-50 p-4 rounded-lg">
+                                    <h5 class="text-xl font-bold text-green-700 mb-2">✓ Bien</h5>
+                                    <p class="font-mono text-green-900">"Error de autenticación: El sistema permite el acceso con contraseña incorrecta si el nombre de usuario es 'admin'"</p>
+                                    <p class="text-sm text-green-600 mt-2">Este título es específico e indica el problema exacto.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <ul class="list-disc list-outside space-y-2 pl-5 text-stone-700 pt-4">
+                            <li><strong>ID del Bug:</strong> Identificador único (de Jira, Bugzilla, etc.).</li>
+                            <li><strong>Descripción/Resumen:</strong> Breve explicación.</li>
+                            <li><strong>Pasos para Reproducir (Steps to Reproduce):</strong> <strong>¡LA SECCIÓN MÁS IMPORTANTE!</strong> Lista numerada y detallada.</li>
+                            <li><strong>Resultado Esperado:</strong> ¿Qué debería haber pasado?</li>
+                            <li><strong>Resultado Real:</strong> ¿Qué pasó en realidad?</li>
+                            <li><strong>Severidad (Severity):</strong> Impacto en el sistema (Crítico, Mayor, Menor, Trivial).</li>
+                            <li><strong>Prioridad (Priority):</strong> Urgencia de solución (Alta, Media, Baja).</li>
+                            <li><strong>Entorno (Environment):</strong> OS, navegador y versión, versión del software, etc.</li>
+                            <li><strong>Archivos Adjuntos:</strong> ¡Crucial! Capturas de pantalla, videos o logs.</li>
+                        </ul>
+                    </div>
+                    
+                    <button data-toggle="panel-bug-review" class="content-toggle w-full">
+                        <span class="toggle-icon">▸</span> Puntos de Revisión
+                    </button>
+                    <div id="panel-bug-review" class="content-panel hidden p-4 bg-white border border-stone-200 rounded-lg shadow-sm ml-6">
+                        <ul class="list-disc list-outside space-y-3 pl-5 text-stone-700">
+                            <li><strong>¿Es reproducible?</strong>
+                                <br><span class="text-sm text-stone-600">Asegurarse de poder reproducirlo consistentemente antes de reportar.</span></li>
+                            <li><strong>¿Es un solo bug por reporte?</strong>
+                                <br><span class="text-sm text-stone-600">Nunca mezclar múltiples problemas en un solo reporte.</span></li>
+                            <li><strong>¿El tono es objetivo y profesional?</strong>
+                                <br><span class="text-sm text-stone-600">Describir hechos, no frustraciones. Fomentar la colaboración.</span></li>
+                            <li><strong>¿La información del entorno está completa?</strong></li>
+                            <li><strong>¿Se ha revisado si el bug ya fue reportado?</strong>
+                                <br><span class="text-sm text-stone-600">Buscar en la base de datos de bugs antes de crear uno nuevo.</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const navButtons = document.querySelectorAll('.nav-button');
+            const pages = document.querySelectorAll('.page-content');
+            
+            const activeNavClasses = ['active-nav-button'];
+            const inactiveNavClasses = ['inactive-nav-button'];
+            const activeBaseClasses = 'font-semibold bg-teal-600 text-white shadow-md ring-2 ring-teal-700 ring-opacity-50'.split(' ');
+            const inactiveBaseClasses = 'font-medium bg-white text-teal-700 shadow-sm hover:bg-teal-50 border border-stone-200'.split(' ');
+            const baseNavClasses = 'px-4 py-2 rounded-md transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-75'.split(' ');
+
+            function applyNavStyles() {
+                navButtons.forEach(btn => {
+                    baseNavClasses.forEach(c => btn.classList.add(c));
+                    if (btn.classList.contains('active-nav-button')) {
+                        inactiveBaseClasses.forEach(c => btn.classList.remove(c));
+                        activeBaseClasses.forEach(c => btn.classList.add(c));
+                    } else {
+                        activeBaseClasses.forEach(c => btn.classList.remove(c));
+                        inactiveBaseClasses.forEach(c => btn.classList.add(c));
+                    }
+                });
+            }
+
+            function setupNavigation() {
+                navButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const targetId = button.getAttribute('data-target');
+                        
+                        pages.forEach(page => {
+                            if (page.id === targetId) {
+                                page.classList.remove('hidden');
+                            } else {
+                                page.classList.add('hidden');
+                            }
+                        });
+                        
+                        navButtons.forEach(btn => {
+                            btn.classList.remove('active-nav-button');
+                            btn.classList.add('inactive-nav-button');
+                        });
+                        
+                        button.classList.add('active-nav-button');
+                        button.classList.remove('inactive-nav-button');
+                        
+                        applyNavStyles();
+                    });
+                });
+                applyNavStyles(); 
+            }
+
+            function setupToggles() {
+                const toggles = document.querySelectorAll('[data-toggle]');
+                
+                toggles.forEach(toggle => {
+                    const icon = toggle.querySelector('.toggle-icon, .toggle-icon-sub');
+                    toggle.classList.add('flex', 'items-center', 'text-left', 'text-lg', 'font-semibold', 'text-teal-700', 'hover:text-teal-600', 'transition-colors', 'duration-150');
+                    
+                    toggle.addEventListener('click', () => {
+                        const targetId = toggle.getAttribute('data-toggle');
+                        const panel = document.getElementById(targetId);
+                        
+                        if (panel) {
+                            const isHidden = panel.classList.toggle('hidden');
+                            if (icon) {
+                                icon.textContent = isHidden ? '▸' : '▾';
+                            }
+                            panel.classList.toggle('opacity-0');
+                            panel.classList.toggle('opacity-100');
+                        }
+                    });
+                });
+            }
+            
+            function renderCharts() {
+                const ctx = document.getElementById('bugDensityChart');
+                if (ctx) {
+                    new Chart(ctx.getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: ['Sprint 1', 'Sprint 2', 'Sprint 3', 'Sprint 4', 'Sprint 5'],
+                            datasets: [{
+                                label: 'Densidad de Defectos (Defectos por KLOC)',
+                                data: [5.2, 4.5, 3.1, 2.0, 1.8],
+                                fill: true,
+                                borderColor: 'rgb(13, 148, 136)', // teal-600
+                                backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                                tension: 0.1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Defectos / KLOC'
+                                    }
+                                }
+                            },
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                },
+                                tooltip: {
+                                    enabled: true,
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+
+            setupNavigation();
+            setupToggles();
+            renderCharts();
+        });
+    </script>
+</body>
+</html>
