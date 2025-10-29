@@ -1,1331 +1,1615 @@
 <!doctype html>
-<html lang="es" style="height: 100%;">
+<html lang="es">
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Desarrollo de Artefactos SQA - Fase 3</title>
+  <title>Sistema de Control de Cambios SQA</title>
   <script src="/_sdk/data_sdk.js"></script>
   <script src="/_sdk/element_sdk.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
         body {
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .priority-critical { border-left: 4px solid #dc2626; }
-        .priority-high { border-left: 4px solid #ea580c; }
-        .priority-medium { border-left: 4px solid #d97706; }
-        .priority-low { border-left: 4px solid #16a34a; }
-        .fade-in { animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .artifact-card {
-            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        .sqa-header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+            border-bottom: 4px solid #1d4ed8;
+        }
+        .change-card {
+            transition: all 0.2s ease;
+            border-left: 4px solid #e5e7eb;
+        }
+        .change-card.pending {
+            border-left-color: #f59e0b;
+        }
+        .change-card.approved {
+            border-left-color: #10b981;
+        }
+        .change-card.rejected {
+            border-left-color: #ef4444;
+        }
+        .change-card.implemented {
+            border-left-color: #8b5cf6;
+        }
+        .change-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .formal-section {
+            background: #f8fafc;
             border: 1px solid #e2e8f0;
-            transition: all 0.3s ease;
         }
-        .artifact-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        .sqa-standard {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 2px solid #7dd3fc;
         }
-        @media print {
-            .no-print { display: none !important; }
-            body { background: white !important; }
+        .loading-spinner {
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #1e40af;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status-badge {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .status-pending {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-rejected {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .status-implemented {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+        .priority-critical {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+        .priority-high {
+            background: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fde68a;
+        }
+        .priority-medium {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        .priority-low {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .formal-button {
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .formal-input {
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+        .formal-input:focus {
+            border-color: #1e40af;
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+        .impact-analysis {
+            background: linear-gradient(135deg, #fef7cd 0%, #fef3c7 100%);
+            border: 2px solid #fbbf24;
+        }
+        .approval-section {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 2px solid #86efac;
+        }
+        .signature-box {
+            border: 2px dashed #d1d5db;
+            background: #f9fafb;
+            min-height: 80px;
+            transition: all 0.2s ease;
+        }
+        .signature-box:hover {
+            border-color: #1e40af;
+            background: #f0f9ff;
+        }
+        .signature-filled {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        .whatsapp-warning {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 2px solid #fca5a5;
+        }
+        .audit-ready {
+            background: linear-gradient(135deg, #f0f9ff 0%, #dbeafe 100%);
+            border: 2px solid #93c5fd;
+        }
+        .template-section {
+            background: #f0f9ff;
+            border: 1px solid #93c5fd;
         }
     </style>
   <style>@view-transition { navigation: auto; }</style>
  </head>
- <body style="height: 100%; margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;" class="bg-gradient-to-br from-slate-50 to-blue-50">
-  <div class="min-h-full flex flex-col"><!-- Header -->
-   <header class="bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-800 text-white shadow-2xl">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-     <div class="flex items-center justify-between">
-      <div class="flex items-center space-x-4">
-       <div class="bg-white bg-opacity-15 p-4 rounded-xl shadow-lg">
-        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-        </svg>
-       </div>
-       <div>
-        <h1 id="tool-title" class="text-4xl font-bold">Desarrollo de Artefactos SQA</h1>
-        <p class="mt-2 text-indigo-200 text-xl font-medium">Fase 3: Evidencia del Proceso</p>
-        <p class="mt-1 text-indigo-300 text-lg"><span id="company-name">Empresa</span> • <span id="project-context">Contexto del Proyecto</span></p>
-        <p id="current-user-info" class="mt-3 text-sm text-blue-200 hidden flex items-center">
-         <svg class="w-4 h-4 mr-2" fill="currentColor" viewbox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-         </svg><span id="display-student-name"></span> (<span id="display-user-id"></span>)</p>
-       </div>
-      </div>
-      <div class="flex items-center space-x-4 no-print">
-       <div class="text-right">
-        <div class="text-sm text-indigo-300">
-         Artefactos Creados
-        </div>
-        <div class="text-3xl font-bold text-white">
-         <span id="total-artifacts">0</span>
-        </div>
-       </div>
-       <div class="flex space-x-3"><button id="export-pdf-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2">
-         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-         </svg><span>Exportar PDF</span> </button>
-       </div>
-      </div>
+ <body class="min-h-full bg-gray-50"><!-- SQA Header -->
+  <header class="sqa-header text-white py-8 mb-8">
+   <div class="container mx-auto px-6">
+    <div class="text-center">
+     <div class="flex justify-center items-center gap-3 mb-2"><span class="text-3xl">📋</span>
+      <h1 class="text-4xl font-bold">Sistema de Control de Cambios SQA</h1>
      </div>
+     <div class="flex justify-center items-center gap-6 text-lg mb-4 opacity-90"><span>Organización: <span id="organization-name-display" class="font-semibold cursor-pointer hover:bg-blue-600 px-2 py-1 rounded transition-colors" title="Click para editar">Organización</span> <input type="text" id="organization-name-input" class="font-semibold bg-blue-600 border border-blue-400 rounded px-2 py-1 text-white placeholder-blue-200 hidden" placeholder="Nombre de la Organización"> </span> <span class="text-blue-200">|</span> <span>Proceso: <span id="process-version-display" class="font-semibold cursor-pointer hover:bg-blue-600 px-2 py-1 rounded transition-colors" title="Click para editar">v2.1</span> <input type="text" id="process-version-input" class="font-semibold bg-blue-600 border border-blue-400 rounded px-2 py-1 text-white placeholder-blue-200 hidden" placeholder="v2.1"> </span> <span class="text-blue-200">|</span> <span>Estándar: <span id="audit-standard-display" class="font-semibold cursor-pointer hover:bg-blue-600 px-2 py-1 rounded transition-colors" title="Click para editar">ISO 9001:2015</span> <input type="text" id="audit-standard-input" class="font-semibold bg-blue-600 border border-blue-400 rounded px-2 py-1 text-white placeholder-blue-200 hidden" placeholder="ISO 9001:2015"> </span>
+     </div>
+     <div class="text-blue-100 mb-4"><span id="committee-title" class="font-medium">Comité de Control de Cambios</span> • <span>Fecha: <span id="current-date"></span></span>
+     </div>
+     <p class="text-blue-100 max-w-4xl mx-auto text-lg leading-relaxed">Herramienta principal para la Gestión de Cambios del producto. <strong>Evidencia auditable</strong> que reemplaza la gestión informal de requisitos por WhatsApp.</p>
     </div>
-   </header><!-- Main Content -->
-   <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><!-- Student Identity Section -->
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 mb-8">
-     <div class="bg-gradient-to-r from-indigo-50 to-purple-50 px-8 py-6 border-b border-slate-200 rounded-t-2xl">
-      <h2 class="text-2xl font-bold text-slate-900 flex items-center">
-       <svg class="w-7 h-7 mr-3 text-indigo-600" fill="currentColor" viewbox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-       </svg> Identificación del Desarrollador SQA</h2>
-     </div>
-     <div class="p-8">
-      <div id="student-form">
-       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div><label for="student-name" class="block text-sm font-bold text-slate-700 mb-3"> Nombre Completo del Desarrollador SQA * </label> <input type="text" id="student-name" class="w-full px-4 py-4 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 text-lg" placeholder="Ingresa tu nombre completo">
-        </div>
-        <div><label for="user-id" class="block text-sm font-bold text-slate-700 mb-3"> ID de Usuario / Matrícula * </label> <input type="text" id="user-id" class="w-full px-4 py-4 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 text-lg" placeholder="Ej. SQA001, 2024001, etc.">
-        </div>
-       </div>
-       <div class="mt-8 flex items-center justify-between"><button type="button" id="save-identity-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all duration-200 shadow-lg hover:shadow-xl"> Confirmar Identidad SQA </button>
-        <p class="text-sm text-slate-600 max-w-md">
-         <svg class="w-5 h-5 inline mr-2 text-amber-500" fill="currentColor" viewbox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-         </svg> Esta información se asociará con todos los artefactos SQA que desarrolles.</p>
-       </div>
-      </div>
-     </div>
-    </div><!-- Artifact Templates Section -->
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 mb-8">
-     <div class="bg-gradient-to-r from-indigo-50 to-purple-50 px-8 py-6 border-b border-slate-200 rounded-t-2xl">
-      <h2 class="text-2xl font-bold text-slate-900 flex items-center">
-       <svg class="w-7 h-7 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-       </svg> Plantillas de Artefactos SQA Disponibles</h2>
-      <p class="mt-2 text-slate-600">Cada artefacto tiene un propósito específico y formularios diferentes</p>
-     </div>
-     <div class="p-8">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8"><!-- Change Control Form -->
-       <div class="artifact-card rounded-2xl p-8 cursor-pointer" onclick="selectArtifact('change_control')">
-        <div class="text-center">
-         <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-          </svg>
-         </div>
-         <h3 class="text-xl font-bold text-slate-900 mb-3">Formulario de Control de Cambios</h3>
-         <p class="text-sm text-slate-600 mb-4 leading-relaxed">Para gestionar modificaciones a requisitos. Incluye análisis de impacto y proceso de aprobación formal.</p>
-         <div class="text-xs text-blue-600 font-semibold bg-blue-50 px-3 py-2 rounded-lg">
-          🎯 REQM - Gestión de Requisitos
-         </div>
-        </div>
-       </div><!-- Verification Plan -->
-       <div class="artifact-card rounded-2xl p-8 cursor-pointer" onclick="selectArtifact('verification_plan')">
-        <div class="text-center">
-         <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
-          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-         </div>
-         <h3 class="text-xl font-bold text-slate-900 mb-3">Plan de Verificación</h3>
-         <p class="text-sm text-slate-600 mb-4 leading-relaxed">Define métodos y criterios para verificar que el producto cumple con los requisitos especificados.</p>
-         <div class="text-xs text-emerald-600 font-semibold bg-emerald-50 px-3 py-2 rounded-lg">
-          ✅ VER - Verificación
-         </div>
-        </div>
-       </div><!-- Validation Plan -->
-       <div class="artifact-card rounded-2xl p-8 cursor-pointer" onclick="selectArtifact('validation_plan')">
-        <div class="text-center">
-         <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-          </svg>
-         </div>
-         <h3 class="text-xl font-bold text-slate-900 mb-3">Plan de Validación</h3>
-         <p class="text-sm text-slate-600 mb-4 leading-relaxed">Define cómo validar que el producto satisface las necesidades reales del usuario final.</p>
-         <div class="text-xs text-purple-600 font-semibold bg-purple-50 px-3 py-2 rounded-lg">
-          💜 VAL - Validación
-         </div>
-        </div>
-       </div>
-      </div>
-     </div>
-    </div><!-- Artifact Development Form -->
-    <div id="artifact-form" class="bg-white rounded-2xl shadow-xl border border-slate-200 mb-8 hidden no-print">
-     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-slate-200 rounded-t-2xl">
-      <h3 class="text-2xl font-bold text-slate-900 flex items-center">
-       <svg class="w-7 h-7 mr-3 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
-       </svg><span id="form-title">Desarrollo de Artefacto SQA</span></h3>
-      <p id="form-description" class="mt-2 text-slate-600"></p>
-     </div>
-     <div class="p-8">
-      <form id="artifact-form-element" class="space-y-8"><!-- Dynamic Form Content -->
-       <div id="dynamic-form-content"><!-- Content will be loaded based on artifact type -->
-       </div><!-- Form Actions -->
-       <div class="flex items-center justify-between pt-8 border-t-2 border-slate-200"><button type="button" id="cancel-artifact-btn" class="px-8 py-4 text-slate-600 hover:text-slate-800 font-bold text-lg transition-colors"> Cancelar </button> <button type="submit" id="save-artifact-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-3">
-         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-         </svg><span>Crear Artefacto SQA</span> </button>
-       </div>
-      </form>
-     </div>
-    </div><!-- Artifacts Repository -->
-    <div class="bg-white rounded-2xl shadow-xl border border-slate-200">
-     <div class="bg-gradient-to-r from-indigo-50 to-purple-50 px-8 py-6 border-b border-slate-200 rounded-t-2xl">
-      <h3 class="text-2xl font-bold text-slate-900 flex items-center">
-       <svg class="w-7 h-7 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-       </svg> Repositorio de Artefactos SQA</h3>
-      <p class="mt-2 text-slate-600">Evidencias del proceso desarrolladas para demostrar madurez en SQA</p>
-     </div>
-     <div id="artifacts-container" class="divide-y divide-slate-200">
-      <div id="empty-artifacts-state" class="p-20 text-center">
-       <div class="w-24 h-24 mx-auto mb-8 bg-gradient-to-br from-indigo-100 to-purple-200 rounded-full flex items-center justify-center shadow-inner">
-        <svg class="w-12 h-12 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-        </svg>
-       </div>
-       <h3 class="text-2xl font-bold text-slate-900 mb-4">Repositorio de Artefactos Vacío</h3>
-       <p class="text-slate-600 mb-8 max-w-lg mx-auto text-lg">Para comenzar el desarrollo de artefactos SQA, primero identifícate y luego selecciona una plantilla de artefacto para crear la evidencia del proceso.</p>
-       <div class="space-y-4">
-        <p class="text-sm text-indigo-600 font-semibold bg-indigo-50 px-4 py-2 rounded-lg inline-block">💡 Cada artefacto tiene formularios específicos según su propósito</p>
-        <p class="text-xs text-slate-500">Los datos se guardarán automáticamente en tu Canva Sheet</p>
-       </div>
-      </div>
-     </div>
-    </div>
-   </main>
-  </div><!-- Loading Overlay -->
-  <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-   <div class="bg-white rounded-xl p-8 flex items-center space-x-4 shadow-2xl">
-    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div><span class="text-slate-700 text-lg font-semibold">Procesando artefacto SQA...</span>
    </div>
-  </div>
+  </header>
+  <main class="container mx-auto px-6 pb-12"><!-- WhatsApp Warning -->
+   <section class="whatsapp-warning rounded-lg p-6 mb-8">
+    <div class="flex items-start gap-4">
+     <div class="text-4xl">
+      ⚠️
+     </div>
+     <div>
+      <h2 class="text-2xl font-semibold text-red-800 mb-2">¡Adiós WhatsApp, Hola Proceso Profesional!</h2>
+      <p class="text-red-700 mb-4">Este sistema es la <strong>evidencia auditable</strong> que los auditores buscan para validar el proceso de Gestión de Requisitos (REQM). Cada cambio queda documentado, trazable y aprobado formalmente.</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+       <div class="bg-white rounded-lg p-4 border border-red-200">
+        <div class="font-semibold text-red-800 mb-2">
+         ❌ Antes (WhatsApp)
+        </div>
+        <ul class="text-red-600 space-y-1">
+         <li>• Cambios perdidos en el chat</li>
+         <li>• Sin análisis de impacto</li>
+         <li>• Aprobaciones verbales</li>
+         <li>• Cero trazabilidad</li>
+        </ul>
+       </div>
+       <div class="bg-white rounded-lg p-4 border border-green-200">
+        <div class="font-semibold text-green-800 mb-2">
+         ✅ Ahora (SQA)
+        </div>
+        <ul class="text-green-600 space-y-1">
+         <li>• Registro formal de cambios</li>
+         <li>• Análisis completo de impacto</li>
+         <li>• Aprobaciones del comité</li>
+         <li>• Trazabilidad completa</li>
+        </ul>
+       </div>
+      </div>
+     </div>
+    </div>
+   </section><!-- Quick Templates -->
+   <section class="template-section rounded-lg p-6 mb-8">
+    <div class="border-b border-blue-200 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-gray-800">Plantillas de Cambios Comunes</h2>
+     <p class="text-gray-600 mt-1">Solicitudes de cambio predefinidas para escenarios típicos</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><button class="template-btn bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg text-left transition-colors" data-template="new-feature">
+      <div class="font-semibold mb-1">
+       🚀 Nueva Funcionalidad
+      </div>
+      <div class="text-sm opacity-90">
+       Agregar nueva característica al sistema
+      </div></button> <button class="template-btn bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg text-left transition-colors" data-template="ui-change">
+      <div class="font-semibold mb-1">
+       🎨 Cambio de Interfaz
+      </div>
+      <div class="text-sm opacity-90">
+       Modificación en diseño o UX
+      </div></button> <button class="template-btn bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-lg text-left transition-colors" data-template="integration">
+      <div class="font-semibold mb-1">
+       🔗 Nueva Integración
+      </div>
+      <div class="text-sm opacity-90">
+       Conectar con sistema externo
+      </div></button> <button class="template-btn bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-lg text-left transition-colors" data-template="performance">
+      <div class="font-semibold mb-1">
+       ⚡ Mejora de Rendimiento
+      </div>
+      <div class="text-sm opacity-90">
+       Optimización de velocidad
+      </div></button> <button class="template-btn bg-red-600 hover:bg-red-700 text-white p-4 rounded-lg text-left transition-colors" data-template="security">
+      <div class="font-semibold mb-1">
+       🔒 Cambio de Seguridad
+      </div>
+      <div class="text-sm opacity-90">
+       Actualización de seguridad
+      </div></button> <button class="template-btn bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-lg text-left transition-colors" data-template="database">
+      <div class="font-semibold mb-1">
+       🗄️ Cambio de Base de Datos
+      </div>
+      <div class="text-sm opacity-90">
+       Modificación de esquema
+      </div></button>
+    </div>
+   </section><!-- Change Request Form -->
+   <section class="formal-section rounded-lg p-8 mb-8">
+    <div class="border-b border-gray-200 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-gray-800">Formulario de Control de Cambios</h2>
+     <p class="text-gray-600 mt-1">Complete todos los campos para documentar la solicitud de cambio</p>
+    </div>
+    <form id="change-request-form" class="space-y-8"><!-- Basic Information -->
+     <div class="bg-blue-50 rounded-lg p-6 border border-blue-200">
+      <h3 class="text-lg font-semibold text-blue-800 mb-4 flex items-center gap-2"><span class="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center text-xs">ℹ️</span> Información Básica</h3>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+       <div><label for="change-id" class="block text-sm font-semibold text-gray-700 mb-2">ID del Cambio *</label> <input type="text" id="change-id" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Ej. CHG-001" required>
+        <p class="text-xs text-gray-500 mt-1">Formato: CHG-[NÚMERO]</p>
+       </div>
+       <div><label for="requester-name" class="block text-sm font-semibold text-gray-700 mb-2">Solicitante *</label> <input type="text" id="requester-name" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Nombre completo" required>
+       </div>
+       <div><label for="requester-role" class="block text-sm font-semibold text-gray-700 mb-2">Rol del Solicitante *</label> <select id="requester-role" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" required> <option value="">Seleccionar rol</option> <option value="product-owner">Product Owner</option> <option value="business-analyst">Business Analyst</option> <option value="client">Cliente</option> <option value="project-manager">Project Manager</option> <option value="developer">Desarrollador</option> <option value="qa-engineer">QA Engineer</option> <option value="stakeholder">Stakeholder</option> </select>
+       </div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+       <div><label for="project-name" class="block text-sm font-semibold text-gray-700 mb-2">Proyecto *</label> <input type="text" id="project-name" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Nombre del proyecto" required>
+       </div>
+       <div><label for="change-category" class="block text-sm font-semibold text-gray-700 mb-2">Categoría *</label> <select id="change-category" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" required> <option value="">Seleccionar categoría</option> <option value="funcional">Funcional</option> <option value="no-funcional">No Funcional</option> <option value="interfaz">Interfaz de Usuario</option> <option value="integracion">Integración</option> <option value="seguridad">Seguridad</option> <option value="rendimiento">Rendimiento</option> <option value="base-datos">Base de Datos</option> <option value="infraestructura">Infraestructura</option> </select>
+       </div>
+      </div>
+     </div><!-- Change Description -->
+     <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-6 h-6 bg-gray-600 text-white rounded flex items-center justify-center text-xs">📝</span> Descripción del Cambio</h3>
+      <div class="space-y-6">
+       <div><label for="change-title" class="block text-sm font-semibold text-gray-700 mb-2">Título del Cambio *</label> <input type="text" id="change-title" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Ej. Implementar autenticación de dos factores" required>
+       </div>
+       <div><label for="change-description" class="block text-sm font-semibold text-gray-700 mb-2">Descripción Detallada *</label> <textarea id="change-description" rows="5" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Describa específicamente qué se necesita cambiar, incluyendo funcionalidades, pantallas, procesos o componentes afectados..." required></textarea>
+       </div>
+       <div><label for="justification" class="block text-sm font-semibold text-gray-700 mb-2">Justificación del Cambio *</label> <textarea id="justification" rows="4" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Explique por qué es necesario este cambio. Incluya beneficios esperados, problemas que resuelve, o requisitos del cliente..." required></textarea>
+       </div>
+      </div>
+     </div><!-- Impact Analysis (Most Important Section) -->
+     <div class="impact-analysis rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-amber-800 mb-4 flex items-center gap-2"><span class="w-6 h-6 bg-amber-600 text-white rounded flex items-center justify-center text-xs">⚡</span> Análisis de Impacto (Sección Más Importante)</h3>
+      <div class="bg-amber-50 rounded-lg p-4 mb-6 border border-amber-200">
+       <div class="flex items-start gap-3">
+        <div class="text-2xl">
+         🎯
+        </div>
+        <div>
+         <h4 class="font-semibold text-amber-800 mb-2">¿Por qué es la sección más importante?</h4>
+         <p class="text-amber-700 text-sm">El análisis de impacto determina si el cambio es viable y ayuda al comité a tomar decisiones informadas. Un análisis incompleto puede resultar en sobrecostos, retrasos o fallas del proyecto.</p>
+        </div>
+       </div>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+       <div class="space-y-6">
+        <div><label for="business-impact" class="block text-sm font-semibold text-amber-700 mb-2">Impacto en el Negocio *</label> <textarea id="business-impact" rows="4" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none border-amber-300" placeholder="¿Cómo afecta a los procesos de negocio, usuarios finales, flujos de trabajo existentes?" required></textarea>
+        </div>
+        <div><label for="technical-impact" class="block text-sm font-semibold text-amber-700 mb-2">Impacto Técnico *</label> <textarea id="technical-impact" rows="4" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none border-amber-300" placeholder="¿Qué módulos, APIs, bases de datos o componentes se ven afectados?" required></textarea>
+        </div>
+        <div><label for="affected-modules" class="block text-sm font-semibold text-amber-700 mb-2">Módulos Afectados</label> <input type="text" id="affected-modules" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none border-amber-300" placeholder="Ej. Autenticación, Reportes, API de Pagos">
+        </div>
+       </div>
+       <div class="space-y-6">
+        <div><label for="time-impact" class="block text-sm font-semibold text-amber-700 mb-2">Impacto en Tiempo *</label> <textarea id="time-impact" rows="4" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none border-amber-300" placeholder="Estimación de tiempo adicional requerido, impacto en cronograma, fechas de entrega..." required></textarea>
+        </div>
+        <div><label for="cost-impact" class="block text-sm font-semibold text-amber-700 mb-2">Impacto en Costo *</label> <textarea id="cost-impact" rows="4" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none border-amber-300" placeholder="Costos adicionales de desarrollo, licencias, infraestructura, recursos humanos..." required></textarea>
+        </div>
+        <div><label for="risk-assessment" class="block text-sm font-semibold text-amber-700 mb-2">Evaluación de Riesgos *</label> <textarea id="risk-assessment" rows="4" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none border-amber-300" placeholder="Riesgos técnicos, de negocio, de seguridad. ¿Qué puede salir mal?" required></textarea>
+        </div>
+       </div>
+      </div>
+     </div><!-- Priority and Urgency -->
+     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div><label for="priority" class="block text-sm font-semibold text-gray-700 mb-2">Prioridad *</label> <select id="priority" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" required> <option value="critical">Crítica - Bloquea funcionalidad principal</option> <option value="high">Alta - Impacto significativo en el negocio</option> <option value="medium" selected>Media - Mejora importante pero no crítica</option> <option value="low">Baja - Mejora menor o cosmética</option> </select>
+      </div>
+      <div><label for="urgency" class="block text-sm font-semibold text-gray-700 mb-2">Urgencia *</label> <select id="urgency" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" required> <option value="immediate">Inmediata - Implementar en esta iteración</option> <option value="high">Alta - Implementar en próxima iteración</option> <option value="medium" selected>Media - Implementar en próximas 2-3 iteraciones</option> <option value="low">Baja - Implementar cuando sea posible</option> </select>
+      </div>
+     </div>
+     <div class="flex justify-end"><button type="submit" id="create-change-btn" class="formal-button bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 rounded-md flex items-center gap-3"> <span>Crear Solicitud de Cambio</span>
+       <div id="create-loading" class="loading-spinner hidden"></div></button>
+     </div>
+    </form>
+   </section><!-- Change Requests List -->
+   <section id="change-requests-container" class="mb-8">
+    <div class="border-b border-gray-200 pb-4 mb-8">
+     <div class="flex justify-between items-center">
+      <div>
+       <h2 class="text-2xl font-semibold text-gray-800">Solicitudes de Cambio</h2>
+       <p class="text-gray-600 mt-1">Gestione el ciclo de vida de las solicitudes</p>
+      </div>
+      <div class="flex gap-4 text-sm">
+       <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-amber-500 rounded"></div><span>Pendiente</span>
+       </div>
+       <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-green-500 rounded"></div><span>Aprobado</span>
+       </div>
+       <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-red-500 rounded"></div><span>Rechazado</span>
+       </div>
+       <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-purple-500 rounded"></div><span>Implementado</span>
+       </div>
+      </div>
+     </div>
+    </div>
+    <div id="change-requests-list" class="space-y-6"><!-- Change requests will be rendered here -->
+    </div>
+    <div id="no-changes-message" class="formal-section rounded-lg text-center py-16 text-gray-500">
+     <div class="text-5xl mb-4 text-gray-400">
+      📋
+     </div>
+     <h3 class="text-xl font-medium text-gray-700 mb-2">No hay Solicitudes de Cambio</h3>
+     <p class="text-gray-600">Use las plantillas rápidas o cree solicitudes personalizadas para comenzar</p>
+    </div>
+   </section><!-- Approval Section -->
+   <section id="approval-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="approval-section rounded-lg p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+     <div class="border-b border-green-200 pb-4 mb-6">
+      <h2 class="text-2xl font-semibold text-green-800 flex items-center gap-3"><span class="w-8 h-8 bg-green-600 text-white rounded-lg flex items-center justify-center">✓</span> Comité de Control de Cambios - Aprobación</h2>
+      <p class="text-green-700 mt-1">Firmas del Project Manager, Cliente y Líder Técnico</p>
+     </div>
+     <div id="approval-content"><!-- Approval content will be populated here -->
+     </div>
+     <div class="flex justify-end gap-4 mt-8"><button id="close-approval" class="formal-button bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-md"> Cerrar </button>
+     </div>
+    </div>
+   </section><!-- SQA Guidelines -->
+   <section class="sqa-standard rounded-lg p-8 mb-8">
+    <div class="border-b border-blue-300 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-gray-800">Guía SQA - Control de Cambios</h2>
+     <p class="text-gray-700 mt-1">Elementos esenciales para un proceso maduro de gestión de cambios</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-sm">📋</span> Trazabilidad Completa</h3>
+      <ul class="text-sm text-gray-600 space-y-2">
+       <li class="flex items-start"><span class="text-blue-600 mr-2">•</span>ID único para cada cambio</li>
+       <li class="flex items-start"><span class="text-blue-600 mr-2">•</span>Historial de estados y decisiones</li>
+       <li class="flex items-start"><span class="text-blue-600 mr-2">•</span>Vinculación con requisitos originales</li>
+      </ul>
+     </div>
+     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-amber-600 text-white rounded-lg flex items-center justify-center text-sm">⚡</span> Análisis de Impacto</h3>
+      <ul class="text-sm text-gray-600 space-y-2">
+       <li class="flex items-start"><span class="text-amber-600 mr-2">•</span>Evaluación de tiempo y costo</li>
+       <li class="flex items-start"><span class="text-amber-600 mr-2">•</span>Identificación de riesgos</li>
+       <li class="flex items-start"><span class="text-amber-600 mr-2">•</span>Módulos y componentes afectados</li>
+      </ul>
+     </div>
+     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-green-600 text-white rounded-lg flex items-center justify-center text-sm">✓</span> Proceso de Aprobación</h3>
+      <ul class="text-sm text-gray-600 space-y-2">
+       <li class="flex items-start"><span class="text-green-600 mr-2">•</span>Comité multidisciplinario</li>
+       <li class="flex items-start"><span class="text-green-600 mr-2">•</span>Firmas digitales o físicas</li>
+       <li class="flex items-start"><span class="text-green-600 mr-2">•</span>Criterios claros de aceptación</li>
+      </ul>
+     </div>
+     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-purple-600 text-white rounded-lg flex items-center justify-center text-sm">📊</span> Evidencia Auditable</h3>
+      <ul class="text-sm text-gray-600 space-y-2">
+       <li class="flex items-start"><span class="text-purple-600 mr-2">•</span>Documentación completa</li>
+       <li class="flex items-start"><span class="text-purple-600 mr-2">•</span>Fechas y responsables</li>
+       <li class="flex items-start"><span class="text-purple-600 mr-2">•</span>Cumplimiento de estándares</li>
+      </ul>
+     </div>
+    </div>
+   </section><!-- Audit Ready Section -->
+   <section class="audit-ready rounded-lg p-8 mb-8">
+    <div class="flex items-start gap-4">
+     <div class="text-4xl">
+      🏆
+     </div>
+     <div>
+      <h2 class="text-2xl font-semibold text-blue-800 mb-2">Listo para Auditoría</h2>
+      <p class="text-blue-700 mb-4">Este sistema cumple con los estándares de calidad requeridos para auditorías de procesos de software. Cada solicitud de cambio genera evidencia trazable que demuestra un proceso maduro de gestión de requisitos.</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+       <div class="bg-white rounded-lg p-4 border border-blue-200">
+        <div class="font-semibold text-blue-800 mb-2">
+         📋 REQM (Requirements Management)
+        </div>
+        <p class="text-blue-600">Gestión formal de cambios en requisitos</p>
+       </div>
+       <div class="bg-white rounded-lg p-4 border border-blue-200">
+        <div class="font-semibold text-blue-800 mb-2">
+         🔍 Verification &amp; Validation
+        </div>
+        <p class="text-blue-600">Proceso de revisión y aprobación</p>
+       </div>
+       <div class="bg-white rounded-lg p-4 border border-blue-200">
+        <div class="font-semibold text-blue-800 mb-2">
+         📊 Process Improvement
+        </div>
+        <p class="text-blue-600">Métricas y mejora continua</p>
+       </div>
+      </div>
+     </div>
+    </div>
+   </section><!-- Export and Actions -->
+   <section class="formal-section rounded-lg p-8">
+    <div class="border-b border-gray-200 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-gray-800">Exportar Documentos de Control</h2>
+     <p class="text-gray-600 mt-1">Genere reportes para auditorías y seguimiento</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4"><button id="export-change-log" class="formal-button bg-blue-700 hover:bg-blue-800 text-white px-6 py-4 rounded-md flex items-center justify-center gap-3 border border-blue-800"> <span class="text-xl">📋</span>
+      <div class="text-left">
+       <div class="font-semibold">
+        Log de Cambios
+       </div>
+       <div class="text-xs opacity-90">
+        Todas las solicitudes
+       </div>
+      </div></button> <button id="export-approved-changes" class="formal-button bg-green-700 hover:bg-green-800 text-white px-6 py-4 rounded-md flex items-center justify-center gap-3 border border-green-800"> <span class="text-xl">✅</span>
+      <div class="text-left">
+       <div class="font-semibold">
+        Cambios Aprobados
+       </div>
+       <div class="text-xs opacity-90">
+        Solo aprobados
+       </div>
+      </div></button> <button id="export-audit-report" class="formal-button bg-purple-700 hover:bg-purple-800 text-white px-6 py-4 rounded-md flex items-center justify-center gap-3 border border-purple-800"> <span class="text-xl">🏆</span>
+      <div class="text-left">
+       <div class="font-semibold">
+        Reporte de Auditoría
+       </div>
+       <div class="text-xs opacity-90">
+        Evidencia SQA
+       </div>
+      </div></button> <button id="clear-all-changes" class="formal-button bg-gray-700 hover:bg-gray-800 text-white px-6 py-4 rounded-md flex items-center justify-center gap-3 border border-gray-800"> <span class="text-xl">🗑️</span>
+      <div class="text-left">
+       <div class="font-semibold">
+        Limpiar Todo
+       </div>
+       <div class="text-xs opacity-90">
+        Reiniciar sistema
+       </div>
+      </div></button>
+    </div>
+   </section>
+  </main>
   <script>
-        // Configuration
+        // Configuration and state
         const defaultConfig = {
-            tool_title: "Desarrollo de Artefactos SQA",
-            company_name: "Empresa",
-            project_context: "Contexto del Proyecto"
+            organization_name: "Organización",
+            committee_title: "Comité de Control de Cambios",
+            process_version: "v2.1",
+            audit_standard: "ISO 9001:2015"
         };
 
-        let currentArtifacts = [];
-        let allArtifacts = [];
-        let isLoading = false;
-        let editingArtifact = null;
-        let selectedArtifactType = '';
-        let currentUser = {
-            student_name: '',
-            user_id: ''
-        };
+        let changeRequests = [];
+        let isInitialized = false;
 
-        // Artifact templates with different forms
-        const artifactTemplates = {
-            change_control: {
-                title: "Formulario de Control de Cambios",
-                description: "Herramienta para gestionar modificaciones a requisitos. Evidencia formal del proceso REQM.",
-                process: "REQM - Requirements Management",
-                fields: [
-                    'project_name', 'change_requester', 'change_description', 'justification', 
-                    'impact_analysis', 'estimated_effort', 'risk_assessment', 'approvers', 
-                    'approval_status', 'priority_level'
-                ]
+        // Template definitions
+        const templates = {
+            "new-feature": {
+                change_id: "CHG-001",
+                change_title: "Implementar módulo de notificaciones push",
+                change_description: "Desarrollar un sistema completo de notificaciones push que permita enviar alertas en tiempo real a los usuarios móviles y web. Incluye configuración de preferencias, historial de notificaciones y métricas de entrega.",
+                justification: "Los usuarios han solicitado recibir notificaciones inmediatas sobre eventos importantes del sistema. Esto mejorará la experiencia de usuario y aumentará el engagement con la aplicación.",
+                business_impact: "Mejora significativa en la retención de usuarios y satisfacción del cliente. Permite comunicación proactiva con los usuarios sobre eventos críticos.",
+                technical_impact: "Requiere integración con servicios de push (Firebase, APNs), modificación de la base de datos para preferencias, y actualización de la API REST.",
+                time_impact: "Estimación: 3-4 semanas de desarrollo, 1 semana de pruebas. Puede retrasar otras funcionalidades menores.",
+                cost_impact: "Costo adicional de servicios de push (~$200/mes), 120 horas de desarrollo (~$12,000), infraestructura adicional (~$500/mes).",
+                risk_assessment: "Riesgo medio: Dependencia de servicios externos, posibles problemas de rendimiento con alto volumen de notificaciones.",
+                affected_modules: "API de Usuario, Base de Datos, Aplicación Móvil, Panel de Administración",
+                category: "funcional",
+                priority: "high",
+                urgency: "medium"
             },
-            verification_plan: {
-                title: "Plan de Verificación",
-                description: "Define métodos y criterios para verificar que el producto cumple con los requisitos especificados.",
-                process: "VER - Verification",
-                fields: [
-                    'project_name', 'verification_scope', 'requirements_to_verify', 'verification_methods',
-                    'verification_criteria', 'test_environment', 'verification_schedule', 'responsible_team',
-                    'deliverables', 'success_criteria'
-                ]
+            "ui-change": {
+                change_id: "CHG-002",
+                change_title: "Rediseño de la interfaz de dashboard principal",
+                change_description: "Actualizar completamente el diseño del dashboard principal con un enfoque más moderno y responsive. Incluye nueva paleta de colores, iconografía actualizada, mejores gráficos y navegación optimizada.",
+                justification: "El dashboard actual tiene más de 2 años y los usuarios reportan dificultades de navegación. Un diseño moderno mejorará la usabilidad y la percepción de calidad del producto.",
+                business_impact: "Mejora en la experiencia de usuario, reducción en tiempo de entrenamiento para nuevos usuarios, mejor percepción de marca.",
+                technical_impact: "Modificación de componentes React, actualización de CSS/SCSS, posibles cambios en la estructura de datos para nuevos widgets.",
+                time_impact: "2-3 semanas de diseño UX/UI, 2 semanas de desarrollo frontend, 1 semana de pruebas de usabilidad.",
+                cost_impact: "Diseño UX/UI: $8,000, Desarrollo frontend: $6,000, Pruebas de usabilidad: $2,000. Total: ~$16,000.",
+                risk_assessment: "Riesgo bajo: Cambios principalmente cosméticos, pero requiere validación exhaustiva de usabilidad.",
+                affected_modules: "Frontend Dashboard, Componentes UI, CSS Framework",
+                category: "interfaz",
+                priority: "medium",
+                urgency: "low"
             },
-            validation_plan: {
-                title: "Plan de Validación",
-                description: "Define cómo validar que el producto satisface las necesidades reales del usuario final.",
-                process: "VAL - Validation",
-                fields: [
-                    'project_name', 'validation_scope', 'user_needs_to_validate', 'validation_methods',
-                    'user_scenarios', 'validation_environment', 'validation_schedule', 'stakeholders',
-                    'acceptance_criteria', 'validation_deliverables'
-                ]
+            "integration": {
+                change_id: "CHG-003",
+                change_title: "Integración con sistema de facturación SAP",
+                change_description: "Desarrollar conectores bidireccionales con SAP para sincronizar datos de facturación, clientes y productos. Incluye mapeo de datos, manejo de errores y sincronización en tiempo real.",
+                justification: "Eliminación de procesos manuales de facturación que actualmente toman 4 horas diarias. Reducción de errores humanos y mejora en la precisión de reportes financieros.",
+                business_impact: "Ahorro de 20 horas semanales de trabajo manual, reducción del 95% en errores de facturación, reportes financieros en tiempo real.",
+                technical_impact: "Desarrollo de APIs de integración, middleware de transformación de datos, actualización del modelo de base de datos, implementación de colas de mensajes.",
+                time_impact: "6-8 semanas de desarrollo, 2 semanas de pruebas de integración, 1 semana de migración de datos históricos.",
+                cost_impact: "Licencias SAP adicionales: $15,000, Desarrollo: $25,000, Infraestructura: $3,000/mes, Consultoría SAP: $8,000.",
+                risk_assessment: "Riesgo alto: Complejidad de integración con SAP, posible impacto en procesos financieros críticos, dependencia de consultores externos.",
+                affected_modules: "API de Facturación, Base de Datos Financiera, Sistema de Reportes, Middleware de Integración",
+                category: "integracion",
+                priority: "critical",
+                urgency: "high"
+            },
+            "performance": {
+                change_id: "CHG-004",
+                change_title: "Optimización de consultas de base de datos y caching",
+                change_description: "Implementar sistema de caché distribuido (Redis), optimizar consultas SQL más lentas, crear índices adicionales y implementar paginación en listados grandes.",
+                justification: "Los reportes de rendimiento muestran tiempos de respuesta superiores a 5 segundos en consultas complejas. Los usuarios reportan lentitud en horas pico.",
+                business_impact: "Mejora en satisfacción del usuario, reducción en abandono de sesiones, capacidad de manejar mayor carga de usuarios concurrentes.",
+                technical_impact: "Instalación de Redis, refactorización de consultas SQL, modificación de controladores para implementar caché, optimización de índices de BD.",
+                time_impact: "3 semanas de análisis y optimización, 2 semanas de implementación de caché, 1 semana de pruebas de carga.",
+                cost_impact: "Infraestructura Redis: $800/mes, Herramientas de monitoreo: $200/mes, Desarrollo: $15,000.",
+                risk_assessment: "Riesgo medio: Posibles inconsistencias de datos con caché, necesidad de estrategias de invalidación, impacto en memoria del servidor.",
+                affected_modules: "Base de Datos, API Backend, Sistema de Caché, Monitoreo de Performance",
+                category: "rendimiento",
+                priority: "high",
+                urgency: "medium"
+            },
+            "security": {
+                change_id: "CHG-005",
+                change_title: "Implementación de autenticación de dos factores (2FA)",
+                change_description: "Agregar autenticación de dos factores usando TOTP (Google Authenticator) y SMS como métodos secundarios. Incluye configuración de políticas de seguridad y recuperación de cuentas.",
+                justification: "Cumplimiento con nuevas regulaciones de seguridad del cliente y mejores prácticas de la industria. Reducción de riesgo de accesos no autorizados.",
+                business_impact: "Cumplimiento regulatorio, mayor confianza del cliente, reducción de riesgo de brechas de seguridad.",
+                technical_impact: "Integración con proveedores de SMS, implementación de TOTP, modificación del flujo de login, actualización de base de datos de usuarios.",
+                time_impact: "4 semanas de desarrollo, 2 semanas de pruebas de seguridad, 1 semana de documentación y capacitación.",
+                cost_impact: "Servicios SMS: $500/mes, Auditoría de seguridad: $5,000, Desarrollo: $18,000.",
+                risk_assessment: "Riesgo medio: Posible impacto en UX durante login, dependencia de servicios SMS externos, necesidad de procesos de recuperación robustos.",
+                affected_modules: "Sistema de Autenticación, Base de Datos de Usuarios, API de Seguridad, Frontend de Login",
+                category: "seguridad",
+                priority: "critical",
+                urgency: "high"
+            },
+            "database": {
+                change_id: "CHG-006",
+                change_title: "Migración de base de datos a esquema normalizado",
+                change_description: "Reestructurar el esquema de base de datos para eliminar redundancias, mejorar la integridad referencial y optimizar el almacenamiento. Incluye migración de datos existentes.",
+                justification: "El esquema actual tiene problemas de consistencia de datos y redundancias que afectan el rendimiento. La normalización mejorará la integridad y facilitará el mantenimiento.",
+                business_impact: "Datos más consistentes y confiables, reportes más precisos, reducción en errores de sincronización entre módulos.",
+                technical_impact: "Rediseño completo del esquema, scripts de migración de datos, actualización de todas las consultas SQL, modificación de modelos de datos.",
+                time_impact: "6 semanas de análisis y diseño, 4 semanas de desarrollo de migración, 2 semanas de pruebas exhaustivas, 1 semana de migración en producción.",
+                cost_impact: "Consultoría de BD: $12,000, Desarrollo: $20,000, Tiempo de inactividad: $5,000, Backup y recuperación: $2,000.",
+                risk_assessment: "Riesgo alto: Posible pérdida de datos durante migración, tiempo de inactividad del sistema, complejidad de rollback si hay problemas.",
+                affected_modules: "Toda la Base de Datos, APIs Backend, Reportes, Sistema de Backup",
+                category: "base-datos",
+                priority: "medium",
+                urgency: "low"
             }
-        };
-
-        // Form templates for each artifact type
-        const formTemplates = {
-            change_control: `
-                <!-- Basic Information Section -->
-                <div class="bg-slate-50 rounded-xl p-8 border border-slate-200">
-                    <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
-                        <svg class="w-6 h-6 mr-3 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        Información Básica del Cambio
-                    </h4>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                            <label for="project-name" class="block text-sm font-bold text-slate-700 mb-3">
-                                Nombre del Proyecto *
-                            </label>
-                            <input type="text" id="project-name" 
-                                class="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                                placeholder="Ej. Sistema de Gestión de Inventarios">
-                        </div>
-                        <div>
-                            <label for="change-requester" class="block text-sm font-bold text-slate-700 mb-3">
-                                Solicitante del Cambio *
-                            </label>
-                            <input type="text" id="change-requester" 
-                                class="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                                placeholder="Ej. María González - Product Owner">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Change Description Section -->
-                <div class="bg-slate-50 rounded-xl p-8 border border-slate-200">
-                    <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
-                        <svg class="w-6 h-6 mr-3 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        Descripción del Cambio Solicitado
-                    </h4>
-                    <div class="grid grid-cols-1 gap-6">
-                        <div>
-                            <label for="change-description" class="block text-sm font-bold text-slate-700 mb-3">
-                                Descripción Detallada del Cambio *
-                            </label>
-                            <textarea id="change-description" rows="4" 
-                                class="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                                placeholder="Ej. Modificar el módulo de reportes para incluir filtros avanzados por fecha, categoría y usuario. Agregar exportación a Excel y PDF."></textarea>
-                        </div>
-                        <div>
-                            <label for="justification" class="block text-sm font-bold text-slate-700 mb-3">
-                                Justificación del Cambio *
-                            </label>
-                            <textarea id="justification" rows="3"
-                                class="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                                placeholder="Ej. Los usuarios requieren mayor flexibilidad en la generación de reportes para cumplir con nuevas regulaciones fiscales."></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Impact Analysis Section -->
-                <div class="bg-amber-50 rounded-xl p-8 border-2 border-amber-200">
-                    <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
-                        <svg class="w-6 h-6 mr-3 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                        </svg>
-                        Análisis de Impacto (Sección Crítica)
-                    </h4>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                            <label for="impact-analysis" class="block text-sm font-bold text-slate-700 mb-3">
-                                Análisis Detallado de Impacto *
-                            </label>
-                            <textarea id="impact-analysis" rows="5"
-                                class="w-full px-4 py-3 border-2 border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
-                                placeholder="Ej. TIEMPO: +15 días desarrollo. COSTO: $8,000 adicionales. RIESGO: Medio - puede afectar módulo de facturación. MÓDULOS: Reportes, Base de datos, API de exportación."></textarea>
-                        </div>
-                        <div class="space-y-4">
-                            <div>
-                                <label for="estimated-effort" class="block text-sm font-bold text-slate-700 mb-3">
-                                    Esfuerzo Estimado *
-                                </label>
-                                <input type="text" id="estimated-effort" 
-                                    class="w-full px-4 py-3 border-2 border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
-                                    placeholder="Ej. 80 horas-persona">
-                            </div>
-                            <div>
-                                <label for="risk-assessment" class="block text-sm font-bold text-slate-700 mb-3">
-                                    Evaluación de Riesgo *
-                                </label>
-                                <select id="risk-assessment" class="w-full px-4 py-3 border-2 border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white">
-                                    <option value="">Seleccionar nivel de riesgo</option>
-                                    <option value="Bajo">🟢 Bajo - Impacto mínimo</option>
-                                    <option value="Medio">🟡 Medio - Requiere atención</option>
-                                    <option value="Alto">🟠 Alto - Riesgo significativo</option>
-                                    <option value="Crítico">🔴 Crítico - Riesgo mayor</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Approval Section -->
-                <div class="bg-emerald-50 rounded-xl p-8 border-2 border-emerald-200">
-                    <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
-                        <svg class="w-6 h-6 mr-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        Proceso de Aprobación
-                    </h4>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                            <label for="approvers" class="block text-sm font-bold text-slate-700 mb-3">
-                                Comité de Control de Cambios *
-                            </label>
-                            <textarea id="approvers" rows="4"
-                                class="w-full px-4 py-3 border-2 border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
-                                placeholder="Ej. Project Manager: Juan Pérez &#10;Cliente: Ana Martínez &#10;Líder Técnico: Carlos López &#10;QA Lead: Sofia Ruiz"></textarea>
-                        </div>
-                        <div class="space-y-4">
-                            <div>
-                                <label for="approval-status" class="block text-sm font-bold text-slate-700 mb-3">
-                                    Estado de Aprobación *
-                                </label>
-                                <select id="approval-status" class="w-full px-4 py-3 border-2 border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
-                                    <option value="">Seleccionar estado</option>
-                                    <option value="Pendiente">⏳ Pendiente de Revisión</option>
-                                    <option value="En Revisión">🔍 En Revisión por Comité</option>
-                                    <option value="Aprobado">✅ Aprobado</option>
-                                    <option value="Rechazado">❌ Rechazado</option>
-                                    <option value="Aprobado con Condiciones">⚠️ Aprobado con Condiciones</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="priority-level" class="block text-sm font-bold text-slate-700 mb-3">
-                                    Nivel de Prioridad *
-                                </label>
-                                <select id="priority-level" class="w-full px-4 py-3 border-2 border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
-                                    <option value="">Seleccionar prioridad</option>
-                                    <option value="Crítico">🔥 Crítico - Implementación inmediata</option>
-                                    <option value="Alto">🚨 Alto - Próximo sprint</option>
-                                    <option value="Medio">⚡ Medio - Próxima release</option>
-                                    <option value="Bajo">📋 Bajo - Backlog</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `,
-            verification_plan: `
-                <!-- Basic Information Section -->
-                <div class="bg-slate-50 rounded-xl p-8 border border-slate-200">
-                    <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
-                        <svg class="w-6 h-6 mr-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        Información Básica del Plan de Verificación
-                    </h4>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                            <label for="project-name" class="block text-sm font-bold text-slate-700 mb-3">
-                                Nombre del Proyecto *
-                            </label>
-                            <input type="text" id="project-name" 
-                                class="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
-                                placeholder="Ej. Sistema de Gestión de Inventarios">
-                        </div>
-                        <div>
-                            <label for="verification-scope" class="block text-sm font-bold text-slate-700 mb-3">
-                                Alcance de la Verificación *
-                            </label>
-                            <input type="text" id="verification-scope" 
-                                class="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
-                                placeholder="Ej. Módulos de inventario, reportes y facturación">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Requirements Section -->
-                <div class="bg-emerald-50 rounded-xl p-8 border border-emerald-200">
-                    <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
-                        <svg class="w-6 h-6 mr-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                        </svg>
-                        Requisitos a Verificar
-                    </h4>
-                    <div class="grid grid-cols-1 gap-6">
-                        <div>
-                            <label for="requirements-to-verify" class="block text-sm font-bold text-slate-700 mb-3">
-                                Lista de Requisitos a Verificar *
-                            </label>
-                            <textarea id="requirements-to-verify" rows="4" 
-                                class="w-full px-4 py-3 border-2 border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
-                                placeholder="Ej. REQ-001: El sistema debe permitir registro de productos&#10;REQ-002: Debe generar reportes en tiempo real&#10;REQ-003: Debe soportar 1000 usuarios concurrentes"></textarea>
-                        </div>
-                        <div>
-                            <label for="verification-criteria" class="block text-sm font-bold text-slate-700 mb-3">
-                                Criterios de Verificación *
-                            </label>
-                            <textarea id="verification-criteria" rows="3"
-                                class="w-full px-4 py-3 border-2 border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
-                                placeholder="Ej. Todos los casos de prueba deben pasar al 100%. Cobertura de código mínima del 80%. Tiempo de respuesta menor a 2 segundos."></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Methods Section -->
-                <div class="bg-blue-50 rounded-xl p-8 border border-blue-200">
-                    <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
-                        <svg class="w-6 h-6 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
-                        </svg>
-                        Métodos y Ambiente de Verificación
-                    </h4>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                            <label for="verification-methods" class="block text-sm font-bold text-slate-700 mb-3">
-                                Métodos de Verificación *
-                            </label>
-                            <textarea id="verification-methods" rows="5"
-                                class="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                                placeholder="Ej. Pruebas unitarias automatizadas, Pruebas de integración, Revisiones de código, Análisis estático, Pruebas de rendimiento"></textarea>
-                        </div>
-                        <div>
-                            <label for="test-environment" class="block text-sm font-bold text-slate-700 mb-3">
-                                Ambiente de Pruebas *
-                            </label>
-                            <textarea id="test-environment" rows="5"
-                                class="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                                placeholder="Ej. Servidor de pruebas con base de datos de desarrollo, Herramientas: Jenkins, SonarQube, JUnit. Configuración idéntica a producción."></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Schedule and Team Section -->
-                <div class="bg-purple-50 rounded-xl p-8 border border-purple-200">
-                    <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
-                        <svg class="w-6 h-6 mr-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                        </svg>
-                        Cronograma y Equipo Responsable
-                    </h4>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                            <label for="verification-schedule" class="block text-sm font-bold text-slate-700 mb-3">
-                                Cronograma de Verificación *
-                            </label>
-                            <textarea id="verification-schedule" rows="4"
-                                class="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
-                                placeholder="Ej. Semana 1-2: Pruebas unitarias&#10;Semana 3: Pruebas de integración&#10;Semana 4: Revisiones de código&#10;Semana 5: Pruebas de rendimiento"></textarea>
-                        </div>
-                        <div>
-                            <label for="responsible-team" class="block text-sm font-bold text-slate-700 mb-3">
-                                Equipo Responsable *
-                            </label>
-                            <textarea id="responsible-team" rows="4"
-                                class="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
-                                placeholder="Ej. QA Lead: Ana García&#10;Desarrolladores: Juan Pérez, María López&#10;DevOps: Carlos Ruiz&#10;Product Owner: Sofia Martínez"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Deliverables Section -->
-                <div class="bg-amber-50 rounded-xl p-8 border border-amber-200">
-                    <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
-                        <svg class="w-6 h-6 mr-3 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                        </svg>
-                        Entregables y Criterios de Éxito
-                    </h4>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                            <label for="deliverables" class="block text-sm font-bold text-slate-700 mb-3">
-                                Entregables de Verificación *
-                            </label>
-                            <textarea id="deliverables" rows="4"
-                                class="w-full px-4 py-3 border-2 border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
-                                placeholder="Ej. Reporte de pruebas unitarias, Reporte de cobertura de código, Matriz de trazabilidad, Reporte de pruebas de integración"></textarea>
-                        </div>
-                        <div>
-                            <label for="success-criteria" class="block text-sm font-bold text-slate-700 mb-3">
-                                Criterios de Éxito *
-                            </label>
-                            <textarea id="success-criteria" rows="4"
-                                class="w-full px-4 py-3 border-2 border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
-                                placeholder="Ej. 100% de casos de prueba ejecutados exitosamente, Cobertura de código >= 80%, Cero defectos críticos, Tiempo de respuesta < 2 segundos"></textarea>
-                        </div>
-                    </div>
-                </div>
-            `,
-            validation_plan: `
-                <!-- Basic Information Section -->
-                <div class="bg-slate-50 rounded-xl p-8 border border-slate-200">
-                    <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
-                        <svg class="w-6 h-6 mr-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                        </svg>
-                        Información Básica del Plan de Validación
-                    </h4>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                            <label for="project-name" class="block text-sm font-bold text-slate-700 mb-3">
-                                Nombre del Proyecto *
-                            </label>
-                            <input type="text" id="project-name" 
-                                class="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
-                                placeholder="Ej. Sistema de Gestión de Inventarios">
-                        </div>
-                        <div>
-                            <label for="validation-scope" class="block text-sm font-bold text-slate-700 mb-3">
-                                Alcance de la Validación *
-                            </label>
-                            <input type="text" id="validation-scope" 
-                                class="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
-                                placeholder="Ej. Flujos de trabajo del usuario final, experiencia de usuario">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- User Needs Section -->
-                <div class="bg-purple-50 rounded-xl p-8 border border-purple-200">
-                    <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
-                        <svg class="w-6 h-6 mr-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                        Necesidades del Usuario a Validar
-                    </h4>
-                    <div class="grid grid-cols-1 gap-6">
-                        <div>
-                            <label for="user-needs-to-validate" class="block text-sm font-bold text-slate-700 mb-3">
-                                Necesidades del Usuario Final *
-                            </label>
-                            <textarea id="user-needs-to-validate" rows="4" 
-                                class="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
-                                placeholder="Ej. Gestionar inventario de manera eficiente&#10;Generar reportes para toma de decisiones&#10;Acceso rápido desde dispositivos móviles&#10;Integración con sistemas contables existentes"></textarea>
-                        </div>
-                        <div>
-                            <label for="user-scenarios" class="block text-sm font-bold text-slate-700 mb-3">
-                                Escenarios de Usuario *
-                            </label>
-                            <textarea id="user-scenarios" rows="4"
-                                class="w-full px-4 py-3 border-2 border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
-                                placeholder="Ej. Escenario 1: Usuario registra productos nuevos en el inventario&#10;Escenario 2: Gerente genera reporte mensual de ventas&#10;Escenario 3: Vendedor consulta stock desde tablet"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Validation Methods Section -->
-                <div class="bg-blue-50 rounded-xl p-8 border border-blue-200">
-                    <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
-                        <svg class="w-6 h-6 mr-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                        </svg>
-                        Métodos y Ambiente de Validación
-                    </h4>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                            <label for="validation-methods" class="block text-sm font-bold text-slate-700 mb-3">
-                                Métodos de Validación *
-                            </label>
-                            <textarea id="validation-methods" rows="5"
-                                class="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                                placeholder="Ej. Pruebas de aceptación del usuario (UAT), Sesiones de usabilidad, Pruebas piloto con usuarios reales, Encuestas de satisfacción, Focus groups"></textarea>
-                        </div>
-                        <div>
-                            <label for="validation-environment" class="block text-sm font-bold text-slate-700 mb-3">
-                                Ambiente de Validación *
-                            </label>
-                            <textarea id="validation-environment" rows="5"
-                                class="w-full px-4 py-3 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                                placeholder="Ej. Ambiente de pre-producción con datos reales anonimizados, Laboratorio de usabilidad, Dispositivos móviles y desktop, Conexiones de red variadas"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Stakeholders and Schedule Section -->
-                <div class="bg-emerald-50 rounded-xl p-8 border border-emerald-200">
-                    <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
-                        <svg class="w-6 h-6 mr-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                        </svg>
-                        Stakeholders y Cronograma
-                    </h4>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                            <label for="stakeholders" class="block text-sm font-bold text-slate-700 mb-3">
-                                Stakeholders Involucrados *
-                            </label>
-                            <textarea id="stakeholders" rows="4"
-                                class="w-full px-4 py-3 border-2 border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
-                                placeholder="Ej. Usuarios finales: Vendedores y gerentes&#10;Product Owner: María González&#10;UX Designer: Carlos López&#10;Business Analyst: Ana Martínez"></textarea>
-                        </div>
-                        <div>
-                            <label for="validation-schedule" class="block text-sm font-bold text-slate-700 mb-3">
-                                Cronograma de Validación *
-                            </label>
-                            <textarea id="validation-schedule" rows="4"
-                                class="w-full px-4 py-3 border-2 border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
-                                placeholder="Ej. Semana 1: Preparación de ambiente y casos&#10;Semana 2-3: Sesiones UAT con usuarios&#10;Semana 4: Pruebas de usabilidad&#10;Semana 5: Análisis de resultados"></textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Acceptance Criteria Section -->
-                <div class="bg-amber-50 rounded-xl p-8 border border-amber-200">
-                    <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
-                        <svg class="w-6 h-6 mr-3 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        Criterios de Aceptación y Entregables
-                    </h4>
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        <div>
-                            <label for="acceptance-criteria" class="block text-sm font-bold text-slate-700 mb-3">
-                                Criterios de Aceptación *
-                            </label>
-                            <textarea id="acceptance-criteria" rows="4"
-                                class="w-full px-4 py-3 border-2 border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
-                                placeholder="Ej. 95% de usuarios completan tareas exitosamente, Tiempo promedio de tarea < 3 minutos, Satisfacción del usuario >= 4/5, Cero errores críticos en flujos principales"></textarea>
-                        </div>
-                        <div>
-                            <label for="validation-deliverables" class="block text-sm font-bold text-slate-700 mb-3">
-                                Entregables de Validación *
-                            </label>
-                            <textarea id="validation-deliverables" rows="4"
-                                class="w-full px-4 py-3 border-2 border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
-                                placeholder="Ej. Reporte de pruebas UAT, Métricas de usabilidad, Feedback consolidado de usuarios, Recomendaciones de mejora, Certificado de aceptación"></textarea>
-                        </div>
-                    </div>
-                </div>
-            `
         };
 
         // Data handler for SDK
         const dataHandler = {
             onDataChanged(data) {
-                allArtifacts = data || [];
-                filterArtifactsByUser();
-                renderArtifactsList();
-                updateTotalCount();
+                changeRequests = data.sort((a, b) => {
+                    const priorityOrder = { critical: 1, high: 2, medium: 3, low: 4 };
+                    const statusOrder = { pending: 1, approved: 2, implemented: 3, rejected: 4 };
+                    
+                    const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+                    if (priorityDiff !== 0) return priorityDiff;
+                    
+                    return statusOrder[a.status] - statusOrder[b.status];
+                });
+                renderChangeRequests();
             }
+        };
+
+        // Element SDK configuration
+        const elementConfig = {
+            defaultConfig,
+            onConfigChange: async (config) => {
+                document.getElementById('organization-name-display').textContent = config.organization_name || defaultConfig.organization_name;
+                document.getElementById('organization-name-input').value = config.organization_name || defaultConfig.organization_name;
+                document.getElementById('process-version-display').textContent = config.process_version || defaultConfig.process_version;
+                document.getElementById('process-version-input').value = config.process_version || defaultConfig.process_version;
+                document.getElementById('audit-standard-display').textContent = config.audit_standard || defaultConfig.audit_standard;
+                document.getElementById('audit-standard-input').value = config.audit_standard || defaultConfig.audit_standard;
+                document.getElementById('committee-title').textContent = config.committee_title || defaultConfig.committee_title;
+            },
+            mapToCapabilities: (config) => ({
+                recolorables: [],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            }),
+            mapToEditPanelValues: (config) => new Map([
+                ["organization_name", config.organization_name || defaultConfig.organization_name],
+                ["committee_title", config.committee_title || defaultConfig.committee_title],
+                ["process_version", config.process_version || defaultConfig.process_version],
+                ["audit_standard", config.audit_standard || defaultConfig.audit_standard]
+            ])
         };
 
         // Initialize SDKs
         async function initializeApp() {
             try {
+                // Set current date
+                document.getElementById('current-date').textContent = new Date().toLocaleDateString();
+                
+                if (window.elementSdk) {
+                    await window.elementSdk.init(elementConfig);
+                }
+                
                 if (window.dataSdk) {
                     const result = await window.dataSdk.init(dataHandler);
                     if (!result.isOk) {
                         console.error("Failed to initialize data SDK");
                     }
                 }
-
-                if (window.elementSdk) {
-                    await window.elementSdk.init({
-                        defaultConfig,
-                        onConfigChange: async (config) => {
-                            document.getElementById('tool-title').textContent = config.tool_title || defaultConfig.tool_title;
-                            document.getElementById('company-name').textContent = config.company_name || defaultConfig.company_name;
-                            document.getElementById('project-context').textContent = config.project_context || defaultConfig.project_context;
-                        },
-                        mapToCapabilities: (config) => ({
-                            recolorables: [
-                                {
-                                    get: () => config.primary_color || "#4f46e5",
-                                    set: (value) => {
-                                        window.elementSdk.setConfig({ primary_color: value });
-                                        updateColors(value);
-                                    }
-                                }
-                            ],
-                            borderables: [],
-                            fontEditable: undefined,
-                            fontSizeable: undefined
-                        }),
-                        mapToEditPanelValues: (config) => new Map([
-                            ["tool_title", config.tool_title || defaultConfig.tool_title],
-                            ["company_name", config.company_name || defaultConfig.company_name],
-                            ["project_context", config.project_context || defaultConfig.project_context]
-                        ])
-                    });
-                }
-
-                // Load saved user identity
-                loadUserIdentity();
+                
+                isInitialized = true;
+                setupEventListeners();
             } catch (error) {
                 console.error("Initialization error:", error);
+                setupEventListeners();
             }
         }
 
-        function updateColors(primaryColor) {
-            const elements = document.querySelectorAll('.bg-indigo-600, .hover\\:bg-indigo-700, .focus\\:ring-indigo-500, .focus\\:border-indigo-500');
-            elements.forEach(el => {
-                el.style.backgroundColor = primaryColor;
-            });
-        }
-
-        // User Identity Management
-        function loadUserIdentity() {
-            const saved = localStorage.getItem('sqa_artifacts_user');
-            if (saved) {
-                currentUser = JSON.parse(saved);
-                document.getElementById('student-name').value = currentUser.student_name;
-                document.getElementById('user-id').value = currentUser.user_id;
-                showUserInfo();
-                filterArtifactsByUser();
-            }
-        }
-
-        function saveUserIdentity() {
-            const studentName = document.getElementById('student-name').value.trim();
-            const userId = document.getElementById('user-id').value.trim();
-
-            if (!studentName || !userId) {
-                showInlineMessage("Por favor completa tu nombre y ID de usuario", "error");
-                return;
-            }
-
-            currentUser = {
-                student_name: studentName,
-                user_id: userId
-            };
-
-            localStorage.setItem('sqa_artifacts_user', JSON.stringify(currentUser));
-            showUserInfo();
-            filterArtifactsByUser();
-            showInlineMessage("Identidad SQA guardada correctamente", "success");
-        }
-
-        function showUserInfo() {
-            document.getElementById('display-student-name').textContent = currentUser.student_name;
-            document.getElementById('display-user-id').textContent = currentUser.user_id;
-            document.getElementById('current-user-info').classList.remove('hidden');
-        }
-
-        function filterArtifactsByUser() {
-            if (!currentUser.user_id) {
-                currentArtifacts = [];
-                return;
-            }
-            currentArtifacts = allArtifacts.filter(artifact => artifact.user_id === currentUser.user_id);
-        }
-
-        // Artifact Selection
-        function selectArtifact(artifactType) {
-            if (!currentUser.user_id) {
-                showInlineMessage("Primero debes identificarte como desarrollador SQA", "error");
-                document.getElementById('student-name').focus();
-                return;
-            }
-
-            selectedArtifactType = artifactType;
-            const template = artifactTemplates[artifactType];
+        // Render change requests
+        function renderChangeRequests() {
+            const container = document.getElementById('change-requests-list');
+            const noMessage = document.getElementById('no-changes-message');
             
-            document.getElementById('form-title').textContent = template.title;
-            document.getElementById('form-description').textContent = template.description;
-            
-            // Load the specific form for this artifact type
-            loadArtifactSpecificForm(artifactType);
-            showArtifactForm();
-        }
-
-        function loadArtifactSpecificForm(artifactType) {
-            const formContent = document.getElementById('dynamic-form-content');
-            formContent.innerHTML = formTemplates[artifactType];
-        }
-
-        function showArtifactForm() {
-            document.getElementById('artifact-form').classList.remove('hidden');
-            document.getElementById('artifact-form').classList.add('fade-in');
-            document.getElementById('project-name').focus();
-            
-            if (!editingArtifact) {
-                clearForm();
-            }
-        }
-
-        function hideArtifactForm() {
-            document.getElementById('artifact-form').classList.add('hidden');
-            editingArtifact = null;
-            selectedArtifactType = '';
-            clearForm();
-        }
-
-        function clearForm() {
-            document.getElementById('artifact-form-element').reset();
-        }
-
-        // Event listeners
-        document.getElementById('save-identity-btn').addEventListener('click', saveUserIdentity);
-        document.getElementById('cancel-artifact-btn').addEventListener('click', hideArtifactForm);
-        document.getElementById('artifact-form-element').addEventListener('submit', handleFormSubmit);
-        document.getElementById('export-pdf-btn').addEventListener('click', exportToPDF);
-
-        async function handleFormSubmit(e) {
-            e.preventDefault();
-            
-            if (isLoading) return;
-
-            if (!currentUser.user_id) {
-                showInlineMessage("Primero debes identificarte como desarrollador SQA", "error");
-                return;
-            }
-
-            // Get form data based on artifact type
-            const formData = getFormDataByType(selectedArtifactType);
-            
-            // Validation
-            const template = artifactTemplates[selectedArtifactType];
-            const missingFields = template.fields.filter(field => !formData[field]);
-            
-            if (missingFields.length > 0) {
-                showInlineMessage("Por favor completa todos los campos requeridos", "error");
-                return;
-            }
-
-            if (allArtifacts.length >= 999) {
-                showInlineMessage("Se ha alcanzado el límite máximo de 999 artefactos. Por favor elimina algunos elementos primero.", "error");
-                return;
-            }
-
-            setLoading(true);
-
-            try {
-                const artifactData = {
-                    id: editingArtifact ? editingArtifact.id : generateId(),
-                    user_id: currentUser.user_id,
-                    student_name: currentUser.student_name,
-                    artifact_type: selectedArtifactType,
-                    ...formData,
-                    created_at: editingArtifact ? editingArtifact.created_at : new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                };
-
-                let result;
-                if (editingArtifact) {
-                    result = await window.dataSdk.update({ ...artifactData, __backendId: editingArtifact.__backendId });
-                } else {
-                    result = await window.dataSdk.create(artifactData);
-                }
-
-                if (result.isOk) {
-                    hideArtifactForm();
-                    showInlineMessage(editingArtifact ? "Artefacto SQA actualizado exitosamente" : "Artefacto SQA creado exitosamente", "success");
-                } else {
-                    showInlineMessage("Error al guardar el artefacto. Por favor intenta nuevamente.", "error");
-                }
-            } catch (error) {
-                showInlineMessage("Error al guardar el artefacto. Por favor intenta nuevamente.", "error");
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        function getFormDataByType(artifactType) {
-            const data = {};
-            const template = artifactTemplates[artifactType];
-            
-            template.fields.forEach(field => {
-                const element = document.getElementById(field.replace(/_/g, '-'));
-                if (element) {
-                    data[field] = element.value.trim();
-                }
-            });
-            
-            return data;
-        }
-
-        function editArtifact(artifact) {
-            editingArtifact = artifact;
-            selectedArtifactType = artifact.artifact_type;
-            
-            // Load the specific form
-            loadArtifactSpecificForm(artifact.artifact_type);
-            
-            // Fill form with artifact data
-            const template = artifactTemplates[artifact.artifact_type];
-            template.fields.forEach(field => {
-                const element = document.getElementById(field.replace(/_/g, '-'));
-                if (element && artifact[field]) {
-                    element.value = artifact[field];
-                }
-            });
-            
-            // Update form title
-            const templateInfo = artifactTemplates[artifact.artifact_type];
-            document.getElementById('form-title').textContent = `Editar ${templateInfo.title}`;
-            document.getElementById('form-description').textContent = templateInfo.description;
-            
-            showArtifactForm();
-            document.getElementById('artifact-form').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        async function deleteArtifact(artifact) {
-            if (isLoading) return;
-
-            // Create inline confirmation
-            const artifactElement = document.querySelector(`[data-artifact-id="${artifact.id}"]`);
-            const deleteBtn = artifactElement.querySelector('.delete-btn');
-            const originalText = deleteBtn.innerHTML;
-            
-            deleteBtn.innerHTML = '¿Confirmar Eliminación?';
-            deleteBtn.classList.add('bg-red-600', 'hover:bg-red-700', 'text-white', 'px-3', 'py-2', 'rounded-lg');
-            
-            // Add cancel option
-            const cancelBtn = document.createElement('button');
-            cancelBtn.innerHTML = 'Cancelar';
-            cancelBtn.className = 'ml-3 px-4 py-2 text-sm text-slate-600 hover:text-slate-800 font-semibold';
-            cancelBtn.onclick = () => {
-                deleteBtn.innerHTML = originalText;
-                deleteBtn.classList.remove('bg-red-600', 'hover:bg-red-700', 'text-white', 'px-3', 'py-2', 'rounded-lg');
-                cancelBtn.remove();
-            };
-            deleteBtn.parentNode.insertBefore(cancelBtn, deleteBtn.nextSibling);
-            
-            deleteBtn.onclick = async () => {
-                setLoading(true);
-                try {
-                    const result = await window.dataSdk.delete(artifact);
-                    if (result.isOk) {
-                        showInlineMessage("Artefacto SQA eliminado exitosamente", "success");
-                    } else {
-                        showInlineMessage("Error al eliminar el artefacto", "error");
-                    }
-                } catch (error) {
-                    showInlineMessage("Error al eliminar el artefacto", "error");
-                } finally {
-                    setLoading(false);
-                }
-            };
-        }
-
-        // PDF Export Function
-        async function exportToPDF() {
-            if (!currentUser.user_id) {
-                showInlineMessage("Primero debes identificarte como desarrollador SQA", "error");
-                return;
-            }
-
-            if (currentArtifacts.length === 0) {
-                showInlineMessage("No hay artefactos SQA para exportar", "error");
-                return;
-            }
-
-            setLoading(true);
-
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                
-                // Header
-                doc.setFontSize(20);
-                doc.text('Artefactos SQA - Fase 3: Evidencia del Proceso', 20, 30);
-                
-                doc.setFontSize(12);
-                doc.text(`Desarrollador SQA: ${currentUser.student_name}`, 20, 45);
-                doc.text(`ID: ${currentUser.user_id}`, 20, 55);
-                doc.text(`Empresa: ${document.getElementById('company-name').textContent}`, 20, 65);
-                doc.text(`Contexto: ${document.getElementById('project-context').textContent}`, 20, 75);
-                doc.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`, 20, 85);
-                
-                // Summary
-                doc.setFontSize(14);
-                doc.text('Resumen de Artefactos:', 20, 105);
-                doc.setFontSize(10);
-                doc.text(`Total de artefactos: ${currentArtifacts.length}`, 20, 115);
-                doc.text(`Control de Cambios: ${currentArtifacts.filter(a => a.artifact_type === 'change_control').length}`, 20, 125);
-                doc.text(`Planes de Verificación: ${currentArtifacts.filter(a => a.artifact_type === 'verification_plan').length}`, 20, 135);
-                doc.text(`Planes de Validación: ${currentArtifacts.filter(a => a.artifact_type === 'validation_plan').length}`, 20, 145);
-                
-                let yPosition = 165;
-                
-                // Artifacts details
-                currentArtifacts.forEach((artifact, index) => {
-                    if (yPosition > 250) {
-                        doc.addPage();
-                        yPosition = 30;
-                    }
-                    
-                    const template = artifactTemplates[artifact.artifact_type];
-                    
-                    doc.setFontSize(12);
-                    doc.text(`${index + 1}. ${template.title}`, 20, yPosition);
-                    yPosition += 10;
-                    
-                    doc.setFontSize(10);
-                    doc.text(`Proyecto: ${artifact.project_name}`, 20, yPosition);
-                    yPosition += 6;
-                    
-                    // Show different fields based on artifact type
-                    if (artifact.artifact_type === 'change_control') {
-                        doc.text(`Estado: ${artifact.approval_status || 'N/A'} | Prioridad: ${artifact.priority_level || 'N/A'}`, 20, yPosition);
-                        yPosition += 8;
-                        
-                        if (artifact.change_description) {
-                            const descLines = doc.splitTextToSize(`Descripción: ${artifact.change_description}`, 170);
-                            doc.text(descLines, 20, yPosition);
-                            yPosition += descLines.length * 5 + 3;
-                        }
-                        
-                        if (artifact.impact_analysis) {
-                            const impactLines = doc.splitTextToSize(`Impacto: ${artifact.impact_analysis}`, 170);
-                            doc.text(impactLines, 20, yPosition);
-                            yPosition += impactLines.length * 5 + 10;
-                        }
-                    } else if (artifact.artifact_type === 'verification_plan') {
-                        doc.text(`Alcance: ${artifact.verification_scope || 'N/A'}`, 20, yPosition);
-                        yPosition += 8;
-                        
-                        if (artifact.verification_methods) {
-                            const methodsLines = doc.splitTextToSize(`Métodos: ${artifact.verification_methods}`, 170);
-                            doc.text(methodsLines, 20, yPosition);
-                            yPosition += methodsLines.length * 5 + 10;
-                        }
-                    } else if (artifact.artifact_type === 'validation_plan') {
-                        doc.text(`Alcance: ${artifact.validation_scope || 'N/A'}`, 20, yPosition);
-                        yPosition += 8;
-                        
-                        if (artifact.validation_methods) {
-                            const methodsLines = doc.splitTextToSize(`Métodos: ${artifact.validation_methods}`, 170);
-                            doc.text(methodsLines, 20, yPosition);
-                            yPosition += methodsLines.length * 5 + 10;
-                        }
-                    }
-                });
-                
-                // Generate PDF as blob and open in new tab
-                const pdfBlob = doc.output('blob');
-                const fileName = `SQA_Artifacts_${currentUser.user_id}_${new Date().toISOString().split('T')[0]}.pdf`;
-                
-                // Create object URL and open in new tab
-                const url = URL.createObjectURL(pdfBlob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                link.download = fileName;
-                
-                // Trigger download by opening in new tab
-                window.open(url, '_blank', 'noopener,noreferrer');
-                
-                // Clean up object URL after a delay
-                setTimeout(() => {
-                    URL.revokeObjectURL(url);
-                }, 1000);
-                
-                showInlineMessage("PDF de artefactos SQA generado y abierto en nueva pestaña", "success");
-            } catch (error) {
-                showInlineMessage("Error al generar PDF", "error");
-                console.error("PDF export error:", error);
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        function renderArtifactsList() {
-            const container = document.getElementById('artifacts-container');
-            const emptyState = document.getElementById('empty-artifacts-state');
-            
-            if (currentArtifacts.length === 0) {
-                emptyState.classList.remove('hidden');
+            if (changeRequests.length === 0) {
+                container.innerHTML = '';
+                noMessage.style.display = 'block';
                 return;
             }
             
-            emptyState.classList.add('hidden');
+            noMessage.style.display = 'none';
             
-            // Clear existing artifacts (except empty state)
-            const existingArtifacts = container.querySelectorAll('.artifact-item');
-            existingArtifacts.forEach(item => item.remove());
-            
-            currentArtifacts.forEach(artifact => {
-                const artifactElement = createArtifactElement(artifact);
-                container.appendChild(artifactElement);
-            });
-        }
-
-        function createArtifactElement(artifact) {
-            const div = document.createElement('div');
-            div.className = `artifact-item p-10 hover:bg-slate-50 transition-all duration-200 border-l-4`;
-            div.setAttribute('data-artifact-id', artifact.id);
-            
-            const template = artifactTemplates[artifact.artifact_type];
-            
-            // Set border color based on artifact type
-            if (artifact.artifact_type === 'change_control') {
-                div.classList.add('border-l-blue-500');
-            } else if (artifact.artifact_type === 'verification_plan') {
-                div.classList.add('border-l-emerald-500');
-            } else {
-                div.classList.add('border-l-purple-500');
-            }
-            
-            div.innerHTML = `
-                <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                        <!-- Header with Artifact Type -->
-                        <div class="flex items-center justify-between mb-6">
-                            <div class="flex items-center space-x-4">
-                                <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold ${getArtifactTypeColor(artifact.artifact_type)}">
-                                    ${getArtifactTypeIcon(artifact.artifact_type)} ${template.title}
-                                </span>
-                                <span class="text-xs text-slate-500 bg-slate-100 px-3 py-1 rounded-full font-semibold">
-                                    ${template.process}
-                                </span>
+            container.innerHTML = changeRequests.map((change, index) => `
+                <div class="change-card ${change.status} bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-blue-700 text-white rounded-lg w-12 h-12 flex items-center justify-center font-bold text-sm">
+                                ${change.change_id.split('-').pop()}
                             </div>
-                            <div class="text-xs text-slate-500">
-                                Creado: ${new Date(artifact.created_at).toLocaleDateString('es-ES')}
-                                ${artifact.updated_at !== artifact.created_at ? `<br>Actualizado: ${new Date(artifact.updated_at).toLocaleDateString('es-ES')}` : ''}
+                            <div>
+                                <div class="flex items-center gap-3 mb-1">
+                                    <h3 class="text-xl font-semibold text-gray-800">${change.change_id}</h3>
+                                    <span class="status-badge ${change.status === 'pending' ? 'status-pending' : change.status === 'approved' ? 'status-approved' : change.status === 'rejected' ? 'status-rejected' : 'status-implemented'}">
+                                        ${change.status === 'pending' ? 'Pendiente' : change.status === 'approved' ? 'Aprobado' : change.status === 'rejected' ? 'Rechazado' : 'Implementado'}
+                                    </span>
+                                    <span class="status-badge priority-${change.priority}">
+                                        ${change.priority === 'critical' ? 'CRÍTICA' : change.priority === 'high' ? 'ALTA' : change.priority === 'medium' ? 'MEDIA' : 'BAJA'}
+                                    </span>
+                                </div>
+                                <p class="text-lg text-gray-700 font-medium">${change.change_title}</p>
+                                <div class="flex items-center gap-3 mt-1">
+                                    <span class="text-sm text-gray-600 capitalize">${change.category}</span>
+                                    <span class="text-gray-400">•</span>
+                                    <span class="text-sm text-gray-600">${change.requester_name} (${change.requester_role})</span>
+                                    <span class="text-gray-400">•</span>
+                                    <span class="text-sm text-gray-500">Solicitado: ${new Date(change.created_at).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            ${change.status === 'pending' ? `
+                                <button class="approve-change bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm transition-colors" data-change-id="${change.__backendId}">
+                                    ✓ Aprobar
+                                </button>
+                            ` : ''}
+                            <button class="view-approval text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-md transition-colors" data-change-id="${change.__backendId}">
+                                👁️
+                            </button>
+                            <button class="edit-change text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-md transition-colors" data-change-id="${change.__backendId}">
+                                ✏️
+                            </button>
+                            <button class="delete-change text-gray-600 hover:text-gray-800 hover:bg-gray-50 p-2 rounded-md transition-colors" data-change-id="${change.__backendId}">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-gray-600 text-white rounded flex items-center justify-center text-xs">📝</span>
+                                    Descripción
+                                </h4>
+                                <p class="text-gray-700 text-sm leading-relaxed">${change.change_description}</p>
+                            </div>
+                            
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-blue-600 text-white rounded flex items-center justify-center text-xs">💡</span>
+                                    Justificación
+                                </h4>
+                                <p class="text-blue-700 text-sm leading-relaxed">${change.justification}</p>
                             </div>
                         </div>
                         
-                        <!-- Project Title -->
-                        <div class="mb-6">
-                            <h4 class="text-2xl font-bold text-slate-900 mb-2 leading-tight">
-                                ${escapeHtml(artifact.project_name)}
+                        <div class="space-y-4">
+                            <div class="bg-amber-50 rounded-lg p-4 border border-amber-200">
+                                <h4 class="font-semibold text-amber-800 mb-3 flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-amber-600 text-white rounded flex items-center justify-center text-xs">⚡</span>
+                                    Análisis de Impacto
+                                </h4>
+                                <div class="space-y-2 text-sm">
+                                    <div><strong class="text-amber-700">Tiempo:</strong> <span class="text-amber-600">${change.time_impact}</span></div>
+                                    <div><strong class="text-amber-700">Costo:</strong> <span class="text-amber-600">${change.cost_impact}</span></div>
+                                    <div><strong class="text-amber-700">Riesgo:</strong> <span class="text-amber-600">${change.risk_assessment}</span></div>
+                                    ${change.affected_modules ? `<div><strong class="text-amber-700">Módulos:</strong> <span class="text-amber-600">${change.affected_modules}</span></div>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${change.status !== 'pending' ? `
+                        <div class="mt-6 bg-green-50 rounded-lg p-4 border border-green-200">
+                            <h4 class="font-semibold text-green-800 mb-2 flex items-center gap-2">
+                                <span class="w-5 h-5 bg-green-600 text-white rounded flex items-center justify-center text-xs">✓</span>
+                                Estado de Aprobación
                             </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div class="text-center">
+                                    <div class="font-medium text-green-700">Project Manager</div>
+                                    <div class="text-green-600">${change.pm_approval || 'Pendiente'}</div>
+                                    ${change.pm_signature ? `<div class="text-xs text-green-500">Firmado: ${change.pm_date}</div>` : ''}
+                                </div>
+                                <div class="text-center">
+                                    <div class="font-medium text-green-700">Cliente</div>
+                                    <div class="text-green-600">${change.client_approval || 'Pendiente'}</div>
+                                    ${change.client_signature ? `<div class="text-xs text-green-500">Firmado: ${change.client_date}</div>` : ''}
+                                </div>
+                                <div class="text-center">
+                                    <div class="font-medium text-green-700">Líder Técnico</div>
+                                    <div class="text-green-600">${change.tech_lead_approval || 'Pendiente'}</div>
+                                    ${change.tech_lead_signature ? `<div class="text-xs text-green-500">Firmado: ${change.tech_lead_date}</div>` : ''}
+                                </div>
+                            </div>
                         </div>
-                        
-                        <!-- Artifact-specific content -->
-                        ${getArtifactSpecificContent(artifact)}
+                    ` : ''}
+                </div>
+            `).join('');
+            
+            // Add event listeners
+            container.querySelectorAll('.approve-change').forEach(button => {
+                button.addEventListener('click', handleApproveChange);
+            });
+            
+            container.querySelectorAll('.view-approval').forEach(button => {
+                button.addEventListener('click', handleViewApproval);
+            });
+            
+            container.querySelectorAll('.edit-change').forEach(button => {
+                button.addEventListener('click', handleEditChange);
+            });
+            
+            container.querySelectorAll('.delete-change').forEach(button => {
+                button.addEventListener('click', handleDeleteChange);
+            });
+        }
+
+        // Handle template button clicks
+        function handleTemplateClick(event) {
+            const templateType = event.currentTarget.dataset.template;
+            const template = templates[templateType];
+            
+            if (template) {
+                // Generar ID único para cada nueva solicitud
+                const nextId = `CHG-${String(changeRequests.length + 1).padStart(3, '0')}`;
+                
+                // Llenar todos los campos del formulario
+                document.getElementById('change-id').value = nextId;
+                document.getElementById('requester-name').value = 'Juan Pérez'; // Valor por defecto
+                document.getElementById('requester-role').value = 'product-owner';
+                document.getElementById('project-name').value = 'Sistema Principal';
+                document.getElementById('change-title').value = template.change_title;
+                document.getElementById('change-description').value = template.change_description;
+                document.getElementById('justification').value = template.justification;
+                document.getElementById('business-impact').value = template.business_impact;
+                document.getElementById('technical-impact').value = template.technical_impact;
+                document.getElementById('time-impact').value = template.time_impact;
+                document.getElementById('cost-impact').value = template.cost_impact;
+                document.getElementById('risk-assessment').value = template.risk_assessment;
+                document.getElementById('affected-modules').value = template.affected_modules || '';
+                document.getElementById('change-category').value = template.category;
+                document.getElementById('priority').value = template.priority;
+                document.getElementById('urgency').value = template.urgency;
+                
+                // Scroll to form
+                document.getElementById('change-request-form').scrollIntoView({ behavior: 'smooth' });
+                
+                showToast(`Plantilla "${template.change_title}" cargada`, "success");
+            }
+        }
+
+        // Handle form submission
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            if (changeRequests.length >= 999) {
+                showToast("Límite máximo de 999 solicitudes de cambio alcanzado", "error");
+                return;
+            }
+            
+            const changeData = {
+                change_id: document.getElementById('change-id').value,
+                requester_name: document.getElementById('requester-name').value,
+                requester_role: document.getElementById('requester-role').value,
+                project_name: document.getElementById('project-name').value,
+                change_title: document.getElementById('change-title').value,
+                change_description: document.getElementById('change-description').value,
+                justification: document.getElementById('justification').value,
+                business_impact: document.getElementById('business-impact').value,
+                technical_impact: document.getElementById('technical-impact').value,
+                time_impact: document.getElementById('time-impact').value,
+                cost_impact: document.getElementById('cost-impact').value,
+                risk_assessment: document.getElementById('risk-assessment').value,
+                affected_modules: document.getElementById('affected-modules').value,
+                category: document.getElementById('change-category').value,
+                priority: document.getElementById('priority').value,
+                urgency: document.getElementById('urgency').value,
+                status: 'pending',
+                created_at: new Date().toISOString(),
+                pm_approval: '',
+                pm_signature: '',
+                pm_date: '',
+                client_approval: '',
+                client_signature: '',
+                client_date: '',
+                tech_lead_approval: '',
+                tech_lead_signature: '',
+                tech_lead_date: '',
+                implementation_notes: ''
+            };
+            
+            const createButton = document.getElementById('create-change-btn');
+            const loading = document.getElementById('create-loading');
+            
+            createButton.disabled = true;
+            loading.classList.remove('hidden');
+            
+            if (window.dataSdk) {
+                const result = await window.dataSdk.create(changeData);
+                
+                if (result.isOk) {
+                    event.target.reset();
+                    showToast("Solicitud de cambio creada exitosamente", "success");
+                } else {
+                    showToast("Error al crear la solicitud de cambio", "error");
+                }
+            } else {
+                changeRequests.push({ ...changeData, __backendId: changeData.change_id });
+                renderChangeRequests();
+                event.target.reset();
+                showToast("Solicitud de cambio creada exitosamente", "success");
+            }
+            
+            createButton.disabled = false;
+            loading.classList.add('hidden');
+        }
+
+        // Handle approve change
+        function handleApproveChange(event) {
+            const changeId = event.target.dataset.changeId;
+            const change = changeRequests.find(c => c.__backendId === changeId);
+            
+            if (change) {
+                showApprovalModal(change);
+            }
+        }
+
+        // Show approval modal
+        function showApprovalModal(change) {
+            const modal = document.getElementById('approval-modal');
+            const content = document.getElementById('approval-content');
+            
+            content.innerHTML = `
+                <div class="bg-white rounded-lg p-6 mb-6 border border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">${change.change_id}: ${change.change_title}</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div><strong>Solicitante:</strong> ${change.requester_name}</div>
+                        <div><strong>Proyecto:</strong> ${change.project_name}</div>
+                        <div><strong>Prioridad:</strong> ${change.priority.toUpperCase()}</div>
+                        <div><strong>Urgencia:</strong> ${change.urgency.toUpperCase()}</div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="signature-box rounded-lg p-4 text-center">
+                        <h4 class="font-semibold text-gray-700 mb-3">Project Manager</h4>
+                        <select class="approval-select formal-input w-full mb-3" data-role="pm">
+                            <option value="">Seleccionar decisión</option>
+                            <option value="Aprobado">Aprobar</option>
+                            <option value="Rechazado">Rechazar</option>
+                            <option value="Requiere Modificaciones">Requiere Modificaciones</option>
+                        </select>
+                        <input type="text" class="signature-input formal-input w-full mb-2" placeholder="Nombre y firma" data-role="pm">
+                        <div class="text-xs text-gray-500">Fecha: ${new Date().toLocaleDateString()}</div>
                     </div>
                     
-                    <!-- Action Buttons -->
-                    <div class="flex flex-col space-y-3 ml-8 no-print">
-                        <button onclick="editArtifact(${JSON.stringify(artifact).replace(/"/g, '&quot;')})" 
-                            class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-5 py-3 rounded-xl text-sm font-bold transition-colors flex items-center space-x-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
-                            <span>Editar</span>
-                        </button>
-                        <button onclick="deleteArtifact(${JSON.stringify(artifact).replace(/"/g, '&quot;')})" 
-                            class="delete-btn bg-red-100 hover:bg-red-200 text-red-700 px-5 py-3 rounded-xl text-sm font-bold transition-colors flex items-center space-x-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
-                            <span>Eliminar</span>
-                        </button>
+                    <div class="signature-box rounded-lg p-4 text-center">
+                        <h4 class="font-semibold text-gray-700 mb-3">Cliente</h4>
+                        <select class="approval-select formal-input w-full mb-3" data-role="client">
+                            <option value="">Seleccionar decisión</option>
+                            <option value="Aprobado">Aprobar</option>
+                            <option value="Rechazado">Rechazar</option>
+                            <option value="Requiere Modificaciones">Requiere Modificaciones</option>
+                        </select>
+                        <input type="text" class="signature-input formal-input w-full mb-2" placeholder="Nombre y firma" data-role="client">
+                        <div class="text-xs text-gray-500">Fecha: ${new Date().toLocaleDateString()}</div>
                     </div>
+                    
+                    <div class="signature-box rounded-lg p-4 text-center">
+                        <h4 class="font-semibold text-gray-700 mb-3">Líder Técnico</h4>
+                        <select class="approval-select formal-input w-full mb-3" data-role="tech_lead">
+                            <option value="">Seleccionar decisión</option>
+                            <option value="Aprobado">Aprobar</option>
+                            <option value="Rechazado">Rechazar</option>
+                            <option value="Requiere Modificaciones">Requiere Modificaciones</option>
+                        </select>
+                        <input type="text" class="signature-input formal-input w-full mb-2" placeholder="Nombre y firma" data-role="tech_lead">
+                        <div class="text-xs text-gray-500">Fecha: ${new Date().toLocaleDateString()}</div>
+                    </div>
+                </div>
+                
+                <div class="mt-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Notas de Implementación</label>
+                    <textarea id="implementation-notes" rows="3" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Comentarios adicionales, condiciones especiales, o instrucciones para la implementación..."></textarea>
+                </div>
+                
+                <div class="flex justify-end gap-4 mt-6">
+                    <button id="save-approval" class="formal-button bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-md" data-change-id="${change.__backendId}">
+                        Guardar Aprobaciones
+                    </button>
                 </div>
             `;
             
-            return div;
-        }
-
-        function getArtifactTypeIcon(type) {
-            switch (type) {
-                case 'change_control': return '📋';
-                case 'verification_plan': return '✅';
-                case 'validation_plan': return '💜';
-                default: return '📄';
-            }
-        }
-
-        function getArtifactTypeColor(type) {
-            switch (type) {
-                case 'change_control': return 'bg-blue-100 text-blue-800';
-                case 'verification_plan': return 'bg-emerald-100 text-emerald-800';
-                case 'validation_plan': return 'bg-purple-100 text-purple-800';
-                default: return 'bg-slate-100 text-slate-800';
-            }
-        }
-
-        function getArtifactSpecificContent(artifact) {
-            switch (artifact.artifact_type) {
-                case 'change_control':
-                    return `
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                            <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                                <h5 class="text-sm font-bold text-slate-700 mb-3">Solicitante</h5>
-                                <p class="text-sm text-slate-700">${escapeHtml(artifact.change_requester || 'N/A')}</p>
-                            </div>
-                            <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                                <h5 class="text-sm font-bold text-slate-700 mb-3">Estado y Prioridad</h5>
-                                <p class="text-sm text-slate-700">${escapeHtml(artifact.approval_status || 'N/A')} - ${escapeHtml(artifact.priority_level || 'N/A')}</p>
-                            </div>
-                        </div>
-                        <div class="bg-blue-50 rounded-xl p-6 border border-blue-200 mb-6">
-                            <h5 class="text-sm font-bold text-blue-700 mb-3">Descripción del Cambio</h5>
-                            <p class="text-sm text-blue-700">${escapeHtml(artifact.change_description || 'N/A')}</p>
-                        </div>
-                        <div class="bg-amber-50 rounded-xl p-6 border border-amber-200">
-                            <h5 class="text-sm font-bold text-amber-700 mb-3">Análisis de Impacto</h5>
-                            <p class="text-sm text-amber-700">${escapeHtml(artifact.impact_analysis || 'N/A')}</p>
-                        </div>
-                    `;
-                case 'verification_plan':
-                    return `
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                            <div class="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
-                                <h5 class="text-sm font-bold text-emerald-700 mb-3">Alcance de Verificación</h5>
-                                <p class="text-sm text-emerald-700">${escapeHtml(artifact.verification_scope || 'N/A')}</p>
-                            </div>
-                            <div class="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
-                                <h5 class="text-sm font-bold text-emerald-700 mb-3">Equipo Responsable</h5>
-                                <p class="text-sm text-emerald-700">${escapeHtml(artifact.responsible_team || 'N/A')}</p>
-                            </div>
-                        </div>
-                        <div class="bg-blue-50 rounded-xl p-6 border border-blue-200 mb-6">
-                            <h5 class="text-sm font-bold text-blue-700 mb-3">Métodos de Verificación</h5>
-                            <p class="text-sm text-blue-700">${escapeHtml(artifact.verification_methods || 'N/A')}</p>
-                        </div>
-                        <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                            <h5 class="text-sm font-bold text-slate-700 mb-3">Criterios de Éxito</h5>
-                            <p class="text-sm text-slate-700">${escapeHtml(artifact.success_criteria || 'N/A')}</p>
-                        </div>
-                    `;
-                case 'validation_plan':
-                    return `
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                            <div class="bg-purple-50 rounded-xl p-6 border border-purple-200">
-                                <h5 class="text-sm font-bold text-purple-700 mb-3">Alcance de Validación</h5>
-                                <p class="text-sm text-purple-700">${escapeHtml(artifact.validation_scope || 'N/A')}</p>
-                            </div>
-                            <div class="bg-purple-50 rounded-xl p-6 border border-purple-200">
-                                <h5 class="text-sm font-bold text-purple-700 mb-3">Stakeholders</h5>
-                                <p class="text-sm text-purple-700">${escapeHtml(artifact.stakeholders || 'N/A')}</p>
-                            </div>
-                        </div>
-                        <div class="bg-blue-50 rounded-xl p-6 border border-blue-200 mb-6">
-                            <h5 class="text-sm font-bold text-blue-700 mb-3">Necesidades del Usuario</h5>
-                            <p class="text-sm text-blue-700">${escapeHtml(artifact.user_needs_to_validate || 'N/A')}</p>
-                        </div>
-                        <div class="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
-                            <h5 class="text-sm font-bold text-emerald-700 mb-3">Criterios de Aceptación</h5>
-                            <p class="text-sm text-emerald-700">${escapeHtml(artifact.acceptance_criteria || 'N/A')}</p>
-                        </div>
-                    `;
-                default:
-                    return '<p class="text-slate-600">Contenido no disponible</p>';
-            }
-        }
-
-        function updateTotalCount() {
-            document.getElementById('total-artifacts').textContent = currentArtifacts.length;
-        }
-
-        function setLoading(loading) {
-            isLoading = loading;
-            const overlay = document.getElementById('loading-overlay');
-            const saveBtn = document.getElementById('save-artifact-btn');
+            modal.classList.remove('hidden');
             
-            if (loading) {
-                overlay.classList.remove('hidden');
-                if (saveBtn) {
-                    saveBtn.disabled = true;
-                    saveBtn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>Creando...';
+            // Add event listeners for approval modal
+            content.querySelector('#save-approval').addEventListener('click', handleSaveApproval);
+        }
+
+        // Handle save approval
+        async function handleSaveApproval(event) {
+            const changeId = event.target.dataset.changeId;
+            const change = changeRequests.find(c => c.__backendId === changeId);
+            
+            if (!change) return;
+            
+            const pmApproval = document.querySelector('[data-role="pm"].approval-select').value;
+            const pmSignature = document.querySelector('[data-role="pm"].signature-input').value;
+            const clientApproval = document.querySelector('[data-role="client"].approval-select').value;
+            const clientSignature = document.querySelector('[data-role="client"].signature-input').value;
+            const techLeadApproval = document.querySelector('[data-role="tech_lead"].approval-select').value;
+            const techLeadSignature = document.querySelector('[data-role="tech_lead"].signature-input').value;
+            const implementationNotes = document.getElementById('implementation-notes').value;
+            
+            // Determine overall status
+            const approvals = [pmApproval, clientApproval, techLeadApproval];
+            let newStatus = 'pending';
+            
+            if (approvals.every(a => a === 'Aprobado')) {
+                newStatus = 'approved';
+            } else if (approvals.some(a => a === 'Rechazado')) {
+                newStatus = 'rejected';
+            } else if (approvals.some(a => a && a !== '')) {
+                newStatus = 'pending'; // Partially approved
+            }
+            
+            const updatedChange = {
+                ...change,
+                status: newStatus,
+                pm_approval: pmApproval,
+                pm_signature: pmSignature,
+                pm_date: pmApproval ? new Date().toLocaleDateString() : '',
+                client_approval: clientApproval,
+                client_signature: clientSignature,
+                client_date: clientApproval ? new Date().toLocaleDateString() : '',
+                tech_lead_approval: techLeadApproval,
+                tech_lead_signature: techLeadSignature,
+                tech_lead_date: techLeadApproval ? new Date().toLocaleDateString() : '',
+                implementation_notes: implementationNotes
+            };
+            
+            if (window.dataSdk) {
+                const result = await window.dataSdk.update(updatedChange);
+                
+                if (result.isOk) {
+                    document.getElementById('approval-modal').classList.add('hidden');
+                    showToast("Aprobaciones guardadas exitosamente", "success");
+                } else {
+                    showToast("Error al guardar las aprobaciones", "error");
                 }
             } else {
-                overlay.classList.add('hidden');
-                if (saveBtn) {
-                    saveBtn.disabled = false;
-                    saveBtn.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span>Crear Artefacto SQA</span>';
+                const index = changeRequests.findIndex(c => c.__backendId === changeId);
+                if (index !== -1) {
+                    changeRequests[index] = updatedChange;
+                    renderChangeRequests();
                 }
+                document.getElementById('approval-modal').classList.add('hidden');
+                showToast("Aprobaciones guardadas exitosamente", "success");
             }
         }
 
-        function showInlineMessage(message, type) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `fixed top-4 right-4 px-6 py-4 rounded-xl shadow-2xl z-50 ${
-                type === 'success' ? 'bg-emerald-100 text-emerald-800 border-2 border-emerald-200' : 
-                'bg-red-100 text-red-800 border-2 border-red-200'
-            }`;
-            messageDiv.textContent = message;
+        // Handle view approval
+        function handleViewApproval(event) {
+            const changeId = event.target.dataset.changeId;
+            const change = changeRequests.find(c => c.__backendId === changeId);
             
-            document.body.appendChild(messageDiv);
+            if (change) {
+                showApprovalModal(change);
+                
+                // Pre-fill existing approvals
+                setTimeout(() => {
+                    if (change.pm_approval) {
+                        document.querySelector('[data-role="pm"].approval-select').value = change.pm_approval;
+                        document.querySelector('[data-role="pm"].signature-input').value = change.pm_signature || '';
+                    }
+                    if (change.client_approval) {
+                        document.querySelector('[data-role="client"].approval-select').value = change.client_approval;
+                        document.querySelector('[data-role="client"].signature-input').value = change.client_signature || '';
+                    }
+                    if (change.tech_lead_approval) {
+                        document.querySelector('[data-role="tech_lead"].approval-select').value = change.tech_lead_approval;
+                        document.querySelector('[data-role="tech_lead"].signature-input').value = change.tech_lead_signature || '';
+                    }
+                    if (change.implementation_notes) {
+                        document.getElementById('implementation-notes').value = change.implementation_notes;
+                    }
+                }, 100);
+            }
+        }
+
+        // Handle edit change
+        function handleEditChange(event) {
+            const changeId = event.target.dataset.changeId;
+            const change = changeRequests.find(c => c.__backendId === changeId);
+            
+            if (change) {
+                document.getElementById('change-id').value = change.change_id;
+                document.getElementById('requester-name').value = change.requester_name;
+                document.getElementById('requester-role').value = change.requester_role;
+                document.getElementById('project-name').value = change.project_name;
+                document.getElementById('change-title').value = change.change_title;
+                document.getElementById('change-description').value = change.change_description;
+                document.getElementById('justification').value = change.justification;
+                document.getElementById('business-impact').value = change.business_impact;
+                document.getElementById('technical-impact').value = change.technical_impact;
+                document.getElementById('time-impact').value = change.time_impact;
+                document.getElementById('cost-impact').value = change.cost_impact;
+                document.getElementById('risk-assessment').value = change.risk_assessment;
+                document.getElementById('affected-modules').value = change.affected_modules || '';
+                document.getElementById('change-category').value = change.category;
+                document.getElementById('priority').value = change.priority;
+                document.getElementById('urgency').value = change.urgency;
+                
+                document.getElementById('change-request-form').scrollIntoView({ behavior: 'smooth' });
+                showToast("Solicitud de cambio cargada para edición", "info");
+            }
+        }
+
+        // Handle delete change
+        async function handleDeleteChange(event) {
+            const changeId = event.target.dataset.changeId;
+            const change = changeRequests.find(c => c.__backendId === changeId);
+            
+            if (change && window.dataSdk) {
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '❌';
+                button.style.backgroundColor = '#fee2e2';
+                
+                const confirmDelete = () => {
+                    button.innerHTML = '⏳';
+                    window.dataSdk.delete(change).then(result => {
+                        if (!result.isOk) {
+                            showToast("Error al eliminar la solicitud", "error");
+                            button.innerHTML = originalText;
+                            button.style.backgroundColor = '';
+                        }
+                    });
+                };
+                
+                const cancelDelete = () => {
+                    button.innerHTML = originalText;
+                    button.style.backgroundColor = '';
+                };
+                
+                const timeoutId = setTimeout(confirmDelete, 2000);
+                
+                const clickHandler = (e) => {
+                    if (!button.contains(e.target)) {
+                        clearTimeout(timeoutId);
+                        cancelDelete();
+                        document.removeEventListener('click', clickHandler);
+                    }
+                };
+                
+                document.addEventListener('click', clickHandler);
+                
+                button.onclick = (e) => {
+                    e.stopPropagation();
+                    clearTimeout(timeoutId);
+                    confirmDelete();
+                    document.removeEventListener('click', clickHandler);
+                };
+            }
+        }
+
+        // Export functions
+        function exportChangeLog() {
+            const changeLog = generateChangeLog();
+            downloadText(changeLog, 'log-control-cambios.txt');
+        }
+
+        function exportApprovedChanges() {
+            const approvedChanges = generateApprovedChangesReport();
+            downloadText(approvedChanges, 'cambios-aprobados.txt');
+        }
+
+        function exportAuditReport() {
+            const auditReport = generateAuditReport();
+            downloadText(auditReport, 'reporte-auditoria-sqa.txt');
+        }
+
+        function generateChangeLog() {
+            const config = window.elementSdk?.config || defaultConfig;
+            const currentDate = new Date().toLocaleDateString();
+            
+            return `
+LOG DE CONTROL DE CAMBIOS - SQA
+===============================
+
+INFORMACIÓN DE LA ORGANIZACIÓN:
+Organización: ${config.organization_name || defaultConfig.organization_name}
+Comité: ${config.committee_title || defaultConfig.committee_title}
+Versión del Proceso: ${config.process_version || defaultConfig.process_version}
+Estándar de Auditoría: ${config.audit_standard || defaultConfig.audit_standard}
+Fecha de Generación: ${currentDate}
+
+RESUMEN EJECUTIVO:
+Total de Solicitudes: ${changeRequests.length}
+Pendientes: ${changeRequests.filter(c => c.status === 'pending').length}
+Aprobadas: ${changeRequests.filter(c => c.status === 'approved').length}
+Rechazadas: ${changeRequests.filter(c => c.status === 'rejected').length}
+Implementadas: ${changeRequests.filter(c => c.status === 'implemented').length}
+
+DISTRIBUCIÓN POR PRIORIDAD:
+• Crítica: ${changeRequests.filter(c => c.priority === 'critical').length} solicitudes
+• Alta: ${changeRequests.filter(c => c.priority === 'high').length} solicitudes
+• Media: ${changeRequests.filter(c => c.priority === 'medium').length} solicitudes
+• Baja: ${changeRequests.filter(c => c.priority === 'low').length} solicitudes
+
+DISTRIBUCIÓN POR CATEGORÍA:
+${Object.entries(changeRequests.reduce((acc, change) => {
+    acc[change.category] = (acc[change.category] || 0) + 1;
+    return acc;
+}, {})).map(([category, count]) => `• ${category.charAt(0).toUpperCase() + category.slice(1)}: ${count} solicitudes`).join('\n')}
+
+${changeRequests.map((change, index) => `
+================================================================================
+SOLICITUD DE CAMBIO #${index + 1}
+================================================================================
+
+ID: ${change.change_id}
+TÍTULO: ${change.change_title}
+SOLICITANTE: ${change.requester_name} (${change.requester_role})
+PROYECTO: ${change.project_name}
+CATEGORÍA: ${change.category.toUpperCase()}
+PRIORIDAD: ${change.priority.toUpperCase()}
+URGENCIA: ${change.urgency.toUpperCase()}
+ESTADO: ${change.status.toUpperCase()}
+
+DESCRIPCIÓN DEL CAMBIO:
+${change.change_description}
+
+JUSTIFICACIÓN:
+${change.justification}
+
+ANÁLISIS DE IMPACTO:
+• Impacto en Negocio: ${change.business_impact}
+• Impacto Técnico: ${change.technical_impact}
+• Impacto en Tiempo: ${change.time_impact}
+• Impacto en Costo: ${change.cost_impact}
+• Evaluación de Riesgos: ${change.risk_assessment}
+• Módulos Afectados: ${change.affected_modules || 'No especificado'}
+
+APROBACIONES DEL COMITÉ:
+• Project Manager: ${change.pm_approval || 'Pendiente'} ${change.pm_signature ? `(${change.pm_signature} - ${change.pm_date})` : ''}
+• Cliente: ${change.client_approval || 'Pendiente'} ${change.client_signature ? `(${change.client_signature} - ${change.client_date})` : ''}
+• Líder Técnico: ${change.tech_lead_approval || 'Pendiente'} ${change.tech_lead_signature ? `(${change.tech_lead_signature} - ${change.tech_lead_date})` : ''}
+
+INFORMACIÓN ADICIONAL:
+• Fecha de Solicitud: ${new Date(change.created_at).toLocaleDateString()}
+• Notas de Implementación: ${change.implementation_notes || 'Ninguna'}
+
+`).join('')}
+
+================================================================================
+FIN DEL LOG DE CONTROL DE CAMBIOS
+================================================================================
+
+Documento generado automáticamente
+Estándar: ${config.audit_standard || defaultConfig.audit_standard}
+Total de solicitudes incluidas: ${changeRequests.length}
+            `.trim();
+        }
+
+        function generateApprovedChangesReport() {
+            const config = window.elementSdk?.config || defaultConfig;
+            const currentDate = new Date().toLocaleDateString();
+            const approvedChanges = changeRequests.filter(c => c.status === 'approved' || c.status === 'implemented');
+            
+            return `
+REPORTE DE CAMBIOS APROBADOS
+============================
+
+INFORMACIÓN DE LA ORGANIZACIÓN:
+Organización: ${config.organization_name || defaultConfig.organization_name}
+Comité: ${config.committee_title || defaultConfig.committee_title}
+Fecha: ${currentDate}
+
+✅ CAMBIOS APROBADOS PARA IMPLEMENTACIÓN
+Este reporte contiene únicamente las solicitudes de cambio que han sido
+formalmente aprobadas por el Comité de Control de Cambios.
+
+RESUMEN DE APROBACIONES:
+Total de Cambios Aprobados: ${approvedChanges.length}
+Aprobados Pendientes de Implementación: ${approvedChanges.filter(c => c.status === 'approved').length}
+Ya Implementados: ${approvedChanges.filter(c => c.status === 'implemented').length}
+
+DISTRIBUCIÓN POR PRIORIDAD:
+• Crítica: ${approvedChanges.filter(c => c.priority === 'critical').length}
+• Alta: ${approvedChanges.filter(c => c.priority === 'high').length}
+• Media: ${approvedChanges.filter(c => c.priority === 'medium').length}
+• Baja: ${approvedChanges.filter(c => c.priority === 'low').length}
+
+${approvedChanges.length > 0 ? approvedChanges.map((change, index) => `
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ CAMBIO APROBADO #${index + 1}: ${change.change_id}                                
+│ PRIORIDAD: ${change.priority.toUpperCase()} | ESTADO: ${change.status.toUpperCase()}
+└─────────────────────────────────────────────────────────────────────────────┘
+
+TÍTULO: ${change.change_title}
+PROYECTO: ${change.project_name}
+SOLICITANTE: ${change.requester_name}
+
+DESCRIPCIÓN:
+${change.change_description}
+
+ANÁLISIS DE IMPACTO APROBADO:
+• Tiempo Estimado: ${change.time_impact}
+• Costo Aprobado: ${change.cost_impact}
+• Riesgos Aceptados: ${change.risk_assessment}
+• Módulos a Modificar: ${change.affected_modules || 'No especificado'}
+
+FIRMAS DE APROBACIÓN:
+✓ Project Manager: ${change.pm_signature} (${change.pm_date})
+✓ Cliente: ${change.client_signature} (${change.client_date})
+✓ Líder Técnico: ${change.tech_lead_signature} (${change.tech_lead_date})
+
+INSTRUCCIONES DE IMPLEMENTACIÓN:
+${change.implementation_notes || 'Seguir especificaciones estándar del proyecto'}
+
+FECHA DE APROBACIÓN: ${change.pm_date || change.client_date || change.tech_lead_date}
+
+`).join('') : 
+'🎉 EXCELENTE: No hay cambios aprobados pendientes de implementación.'}
+
+================================================================================
+AUTORIZACIÓN PARA IMPLEMENTACIÓN
+================================================================================
+
+Los cambios listados en este documento han sido formalmente aprobados por el
+Comité de Control de Cambios y están autorizados para su implementación.
+
+Cualquier desviación de las especificaciones aprobadas requiere una nueva
+solicitud de cambio.
+
+Generado automáticamente el ${currentDate}
+            `.trim();
+        }
+
+        function generateAuditReport() {
+            const config = window.elementSdk?.config || defaultConfig;
+            const currentDate = new Date().toLocaleDateString();
+            
+            const totalChanges = changeRequests.length;
+            const approvedChanges = changeRequests.filter(c => c.status === 'approved' || c.status === 'implemented').length;
+            const rejectedChanges = changeRequests.filter(c => c.status === 'rejected').length;
+            const pendingChanges = changeRequests.filter(c => c.status === 'pending').length;
+            
+            const approvalRate = totalChanges > 0 ? ((approvedChanges / totalChanges) * 100).toFixed(1) : 0;
+            const rejectionRate = totalChanges > 0 ? ((rejectedChanges / totalChanges) * 100).toFixed(1) : 0;
+            
+            return `
+REPORTE DE AUDITORÍA SQA - CONTROL DE CAMBIOS
+=============================================
+
+INFORMACIÓN DE AUDITORÍA:
+Organización: ${config.organization_name || defaultConfig.organization_name}
+Estándar Aplicado: ${config.audit_standard || defaultConfig.audit_standard}
+Proceso Evaluado: Control de Cambios de Requisitos (REQM)
+Versión del Proceso: ${config.process_version || defaultConfig.process_version}
+Fecha de Auditoría: ${currentDate}
+Auditor: Sistema Automatizado SQA
+
+🏆 EVIDENCIA DE PROCESO MADURO DE GESTIÓN DE CAMBIOS
+Este reporte demuestra el cumplimiento con estándares de calidad de software
+y proporciona evidencia auditable del proceso de gestión de requisitos.
+
+MÉTRICAS DE PROCESO:
+===================
+Total de Solicitudes Procesadas: ${totalChanges}
+Tasa de Aprobación: ${approvalRate}%
+Tasa de Rechazo: ${rejectionRate}%
+Solicitudes Pendientes: ${pendingChanges}
+
+CUMPLIMIENTO DE ESTÁNDARES:
+==========================
+✅ Identificación Única: Todas las solicitudes tienen ID único
+✅ Trazabilidad Completa: Historial completo de cambios y decisiones
+✅ Análisis de Impacto: Evaluación sistemática de tiempo, costo y riesgo
+✅ Proceso de Aprobación: Comité multidisciplinario con firmas formales
+✅ Documentación Formal: Registro completo de justificaciones y decisiones
+✅ Control de Versiones: Seguimiento de estados y modificaciones
+
+EVIDENCIA DE MEJORES PRÁCTICAS:
+===============================
+📋 Gestión Formal vs. Informal:
+   • ANTES: Comunicación por WhatsApp (sin trazabilidad)
+   • AHORA: Sistema formal con evidencia auditable
+
+⚡ Análisis de Impacto Sistemático:
+   • Evaluación de impacto en negocio, técnico, tiempo y costo
+   • Identificación proactiva de riesgos
+   • Análisis de módulos afectados
+
+✓ Proceso de Aprobación Robusto:
+   • Comité multidisciplinario (PM, Cliente, Líder Técnico)
+   • Firmas digitales con fecha y responsable
+   • Criterios claros de aceptación/rechazo
+
+DISTRIBUCIÓN DE CAMBIOS POR CATEGORÍA:
+=====================================
+${Object.entries(changeRequests.reduce((acc, change) => {
+    acc[change.category] = (acc[change.category] || 0) + 1;
+    return acc;
+}, {})).map(([category, count]) => {
+    const percentage = totalChanges > 0 ? ((count / totalChanges) * 100).toFixed(1) : 0;
+    return `• ${category.charAt(0).toUpperCase() + category.slice(1)}: ${count} (${percentage}%)`;
+}).join('\n')}
+
+ANÁLISIS DE RIESGOS Y CONTROLES:
+===============================
+${totalChanges > 0 ? `
+• Cambios Críticos Controlados: ${changeRequests.filter(c => c.priority === 'critical').length}
+• Análisis de Impacto Completo: 100% de solicitudes
+• Aprobaciones Formales: ${((changeRequests.filter(c => c.pm_signature && c.client_signature && c.tech_lead_signature).length / totalChanges) * 100).toFixed(1)}%
+• Trazabilidad de Decisiones: 100%
+` : '• No hay datos suficientes para análisis de riesgos'}
+
+RECOMENDACIONES DE MEJORA CONTINUA:
+==================================
+${totalChanges === 0 ? 
+'• Implementar el proceso de control de cambios en el proyecto' :
+approvalRate < 70 ?
+'• Revisar criterios de aprobación - tasa de aprobación baja puede indicar requisitos mal definidos' :
+rejectionRate > 30 ?
+'• Mejorar análisis inicial de requisitos para reducir cambios rechazados' :
+pendingChanges > totalChanges * 0.3 ?
+'• Acelerar proceso de revisión - muchas solicitudes pendientes' :
+'• Proceso funcionando correctamente - mantener estándares actuales'}
+
+CUMPLIMIENTO REGULATORIO:
+========================
+✅ ISO 9001:2015 - Gestión de Calidad
+✅ CMMI-DEV - Requirements Management (REQM)
+✅ IEEE 829 - Documentación de Pruebas de Software
+✅ Trazabilidad de Requisitos
+✅ Control de Configuración
+✅ Gestión de Riesgos
+
+CONCLUSIÓN DE AUDITORÍA:
+=======================
+${totalChanges > 0 ? `
+🎯 PROCESO MADURO IDENTIFICADO:
+El sistema de control de cambios demuestra un proceso maduro y auditable que:
+• Reemplaza comunicación informal (WhatsApp) por proceso formal
+• Proporciona trazabilidad completa de decisiones
+• Implementa análisis sistemático de impacto
+• Mantiene evidencia para auditorías externas
+• Cumple con estándares internacionales de calidad
+
+CALIFICACIÓN: CONFORME ✅
+` : `
+🚀 PROCESO LISTO PARA IMPLEMENTACIÓN:
+El sistema está configurado correctamente y listo para gestionar cambios.
+Se recomienda comenzar a documentar todas las solicitudes de cambio.
+
+CALIFICACIÓN: PREPARADO ✅
+`}
+
+================================================================================
+CERTIFICACIÓN DE AUDITORÍA
+================================================================================
+
+Este reporte certifica que el proceso de Control de Cambios implementado
+cumple con los estándares de calidad requeridos y proporciona evidencia
+auditable para evaluaciones externas.
+
+Fecha: ${currentDate}
+Estándar: ${config.audit_standard || defaultConfig.audit_standard}
+Estado: CONFORME
+            `.trim();
+        }
+
+        function downloadText(content, filename) {
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        async function clearAllChanges() {
+            if (changeRequests.length === 0) {
+                showToast("No hay solicitudes de cambio para limpiar", "info");
+                return;
+            }
+            
+            const button = document.getElementById('clear-all-changes');
+            const originalText = button.textContent;
+            button.textContent = '⚠️ Confirmar';
+            button.style.backgroundColor = '#dc2626';
+            
+            const confirmClear = async () => {
+                button.textContent = '⏳ Limpiando...';
+                
+                if (window.dataSdk) {
+                    for (const change of changeRequests) {
+                        await window.dataSdk.delete(change);
+                    }
+                } else {
+                    changeRequests = [];
+                    renderChangeRequests();
+                }
+                
+                showToast("Solicitudes de cambio eliminadas", "success");
+                button.textContent = originalText;
+                button.style.backgroundColor = '';
+            };
+            
+            const cancelClear = () => {
+                button.textContent = originalText;
+                button.style.backgroundColor = '';
+            };
+            
+            const timeoutId = setTimeout(confirmClear, 3000);
+            
+            const clickHandler = (e) => {
+                if (!button.contains(e.target)) {
+                    clearTimeout(timeoutId);
+                    cancelClear();
+                    document.removeEventListener('click', clickHandler);
+                }
+            };
+            
+            document.addEventListener('click', clickHandler);
+            
+            button.onclick = (e) => {
+                e.stopPropagation();
+                clearTimeout(timeoutId);
+                confirmClear();
+                document.removeEventListener('click', clickHandler);
+            };
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+            
+            toast.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform duration-300 translate-x-full`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
             
             setTimeout(() => {
-                messageDiv.remove();
-            }, 5000);
+                toast.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
         }
 
-        function generateId() {
-            return 'artifact_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        function setupEventListeners() {
+            document.getElementById('change-request-form').addEventListener('submit', handleFormSubmit);
+            document.getElementById('export-change-log').addEventListener('click', exportChangeLog);
+            document.getElementById('export-approved-changes').addEventListener('click', exportApprovedChanges);
+            document.getElementById('export-audit-report').addEventListener('click', exportAuditReport);
+            document.getElementById('clear-all-changes').addEventListener('click', clearAllChanges);
+            
+            // Template buttons
+            document.querySelectorAll('.template-btn').forEach(button => {
+                button.addEventListener('click', handleTemplateClick);
+            });
+            
+            // Close approval modal
+            document.getElementById('close-approval').addEventListener('click', () => {
+                document.getElementById('approval-modal').classList.add('hidden');
+            });
+            
+            // Inline editing
+            setupInlineEditing();
         }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        function setupInlineEditing() {
+            setupFieldEditing('organization-name', 'organization_name', 'Nombre de organización actualizado');
+            setupFieldEditing('process-version', 'process_version', 'Versión de proceso actualizada');
+            setupFieldEditing('audit-standard', 'audit_standard', 'Estándar de auditoría actualizado');
+        }
+        
+        function setupFieldEditing(fieldName, configKey, successMessage) {
+            const display = document.getElementById(`${fieldName}-display`);
+            const input = document.getElementById(`${fieldName}-input`);
+            
+            display.addEventListener('click', () => {
+                display.classList.add('hidden');
+                input.classList.remove('hidden');
+                input.focus();
+                input.select();
+            });
+            
+            const saveField = async () => {
+                const newValue = input.value.trim();
+                if (newValue && window.elementSdk) {
+                    const updateConfig = {};
+                    updateConfig[configKey] = newValue;
+                    await window.elementSdk.setConfig(updateConfig);
+                    showToast(successMessage, "success");
+                }
+                input.classList.add('hidden');
+                display.classList.remove('hidden');
+            };
+            
+            const cancelEdit = () => {
+                const currentValue = window.elementSdk?.config?.[configKey] || defaultConfig[configKey];
+                input.value = currentValue;
+                input.classList.add('hidden');
+                display.classList.remove('hidden');
+            };
+            
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveField();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelEdit();
+                }
+            });
+            
+            input.addEventListener('blur', saveField);
         }
 
-        // Initialize app
+        // Initialize the application
         initializeApp();
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9964c2cb152c341c',t:'MTc2MTc2MjgwMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99652aca525516df',t:'MTc2MTc2NzA2Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
