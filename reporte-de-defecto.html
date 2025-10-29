@@ -1,0 +1,1357 @@
+<!doctype html>
+<html lang="es">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporte de Defectos IEEE 829</title>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .ieee-header {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 50%, #f87171 100%);
+            border-bottom: 4px solid #b91c1c;
+        }
+        .bug-card {
+            transition: all 0.2s ease;
+            border-left: 4px solid #e5e7eb;
+        }
+        .bug-card.new {
+            border-left-color: #3b82f6;
+        }
+        .bug-card.assigned {
+            border-left-color: #f59e0b;
+        }
+        .bug-card.in-progress {
+            border-left-color: #8b5cf6;
+        }
+        .bug-card.resolved {
+            border-left-color: #10b981;
+        }
+        .bug-card.closed {
+            border-left-color: #6b7280;
+        }
+        .bug-card.reopened {
+            border-left-color: #ef4444;
+        }
+        .bug-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .formal-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        .ieee-standard {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 2px solid #fca5a5;
+        }
+        .loading-spinner {
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #dc2626;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status-badge {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .status-new {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .status-assigned {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .status-in-progress {
+            background: #ede9fe;
+            color: #7c3aed;
+        }
+        .status-resolved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-closed {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .status-reopened {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .severity-critical {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+        .severity-high {
+            background: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fde68a;
+        }
+        .severity-medium {
+            background: #dbeafe;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        .severity-low {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .priority-urgent {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .priority-high {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .priority-medium {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .priority-low {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .formal-button {
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .formal-input {
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+        .formal-input:focus {
+            border-color: #dc2626;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+        .template-section {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+        }
+        .attachment-zone {
+            border: 2px dashed #d1d5db;
+            background: #f9fafb;
+            transition: all 0.2s ease;
+        }
+        .attachment-zone:hover {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+        .comparison-section {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1px solid #bae6fd;
+        }
+        .actual-result {
+            background: #fef2f2;
+            border: 1px solid #fca5a5;
+        }
+        .expected-result {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="min-h-full bg-gray-50"><!-- IEEE 829 Header -->
+  <header class="ieee-header text-white py-8 mb-8">
+   <div class="container mx-auto px-6">
+    <div class="text-center">
+     <div class="flex justify-center items-center gap-3 mb-2"><span class="text-3xl">🐛</span>
+      <h1 class="text-4xl font-bold">Reporte de Defectos IEEE 829</h1>
+     </div>
+     <div class="flex justify-center items-center gap-6 text-lg mb-4 opacity-90"><span>Proyecto: <span id="project-name-display" class="font-semibold cursor-pointer hover:bg-red-600 px-2 py-1 rounded transition-colors" title="Click para editar">Sistema de Gestión</span> <input type="text" id="project-name-input" class="font-semibold bg-red-600 border border-red-400 rounded px-2 py-1 text-white placeholder-red-200 hidden" placeholder="Nombre del Proyecto"> </span> <span class="text-red-200">|</span> <span>Versión: <span id="version-display" class="font-semibold cursor-pointer hover:bg-red-600 px-2 py-1 rounded transition-colors" title="Click para editar">v1.0.0</span> <input type="text" id="version-input" class="font-semibold bg-red-600 border border-red-400 rounded px-2 py-1 text-white placeholder-red-200 hidden" placeholder="v1.0.0"> </span> <span class="text-red-200">|</span> <span>QA Manager: <span id="qa-manager-display" class="font-semibold cursor-pointer hover:bg-red-600 px-2 py-1 rounded transition-colors" title="Click para editar">Responsable de QA</span> <input type="text" id="qa-manager-input" class="font-semibold bg-red-600 border border-red-400 rounded px-2 py-1 text-white placeholder-red-200 hidden" placeholder="Nombre del QA Manager"> </span>
+     </div>
+     <div class="text-red-100 mb-4"><span id="organization" class="font-medium">Organización</span> • <span>Fecha: <span id="current-date"></span></span>
+     </div>
+     <p class="text-red-100 max-w-4xl mx-auto text-lg leading-relaxed">Sistema de gestión de defectos siguiendo el estándar IEEE 829. Documenta fallos cuando los resultados esperados no coinciden con los resultados actuales.</p>
+    </div>
+   </div>
+  </header>
+  <main class="container mx-auto px-6 pb-12"><!-- Quick Templates Section -->
+   <section class="template-section rounded-lg p-6 mb-8">
+    <div class="border-b border-red-200 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-gray-800">Plantillas de Defectos Comunes</h2>
+     <p class="text-gray-600 mt-1">Reportes predefinidos para tipos de errores frecuentes</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><button class="template-btn bg-red-600 hover:bg-red-700 text-white p-4 rounded-lg text-left transition-colors" data-template="auth-error">
+      <div class="font-semibold mb-1">
+       🔐 Error de Autenticación
+      </div>
+      <div class="text-sm opacity-90">
+       Fallo en login con credenciales válidas
+      </div></button> <button class="template-btn bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-lg text-left transition-colors" data-template="form-validation">
+      <div class="font-semibold mb-1">
+       📝 Validación de Formulario
+      </div>
+      <div class="text-sm opacity-90">
+       Error en validación de campos
+      </div></button> <button class="template-btn bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-lg text-left transition-colors" data-template="ui-display">
+      <div class="font-semibold mb-1">
+       🎨 Error de Interfaz
+      </div>
+      <div class="text-sm opacity-90">
+       Problema de visualización o layout
+      </div></button> <button class="template-btn bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg text-left transition-colors" data-template="data-loss">
+      <div class="font-semibold mb-1">
+       💾 Pérdida de Datos
+      </div>
+      <div class="text-sm opacity-90">
+       Datos no se guardan correctamente
+      </div></button> <button class="template-btn bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg text-left transition-colors" data-template="performance">
+      <div class="font-semibold mb-1">
+       ⚡ Problema de Rendimiento
+      </div>
+      <div class="text-sm opacity-90">
+       Lentitud o timeout en operaciones
+      </div></button> <button class="template-btn bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-lg text-left transition-colors" data-template="navigation">
+      <div class="font-semibold mb-1">
+       🧭 Error de Navegación
+      </div>
+      <div class="text-sm opacity-90">
+       Enlaces rotos o redirecciones incorrectas
+      </div></button>
+    </div>
+   </section><!-- Bug Report Form -->
+   <section class="formal-section rounded-lg p-8 mb-8">
+    <div class="border-b border-gray-200 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-gray-800">Crear Reporte de Defecto</h2>
+     <p class="text-gray-600 mt-1">Complete todos los campos para documentar el defecto encontrado</p>
+    </div>
+    <form id="bug-report-form" class="space-y-6">
+     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div><label for="bug-id" class="block text-sm font-semibold text-gray-700 mb-2">ID del Defecto *</label> <input type="text" id="bug-id" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Ej. BUG-001" required>
+       <p class="text-xs text-gray-500 mt-1">Formato: BUG-[NÚMERO]</p>
+      </div>
+      <div><label for="test-case-id" class="block text-sm font-semibold text-gray-700 mb-2">Caso de Prueba Asociado</label> <input type="text" id="test-case-id" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Ej. CP-LOGIN-001">
+       <p class="text-xs text-gray-500 mt-1">ID del caso que falló</p>
+      </div>
+      <div><label for="bug-category" class="block text-sm font-semibold text-gray-700 mb-2">Categoría *</label> <select id="bug-category" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" required> <option value="">Seleccionar categoría</option> <option value="funcional">Funcional</option> <option value="interfaz">Interfaz de Usuario</option> <option value="rendimiento">Rendimiento</option> <option value="seguridad">Seguridad</option> <option value="compatibilidad">Compatibilidad</option> <option value="usabilidad">Usabilidad</option> <option value="datos">Integridad de Datos</option> <option value="configuracion">Configuración</option> </select>
+      </div>
+     </div>
+     <div><label for="bug-title" class="block text-sm font-semibold text-gray-700 mb-2">Título del Defecto *</label> <input type="text" id="bug-title" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Ej. Error de autenticación al usar credenciales válidas" required>
+      <p class="text-xs text-gray-500 mt-1">Descripción clara y concisa del problema</p>
+     </div>
+     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div><label for="bug-severity" class="block text-sm font-semibold text-gray-700 mb-2">Severidad *</label> <select id="bug-severity" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" required> <option value="critical">Crítica - Sistema no funciona</option> <option value="high">Alta - Funcionalidad principal afectada</option> <option value="medium" selected>Media - Funcionalidad secundaria afectada</option> <option value="low">Baja - Problema menor o cosmético</option> </select>
+      </div>
+      <div><label for="bug-priority" class="block text-sm font-semibold text-gray-700 mb-2">Prioridad *</label> <select id="bug-priority" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" required> <option value="urgent">Urgente - Arreglar inmediatamente</option> <option value="high">Alta - Arreglar en esta iteración</option> <option value="medium" selected>Media - Arreglar en próxima iteración</option> <option value="low">Baja - Arreglar cuando sea posible</option> </select>
+      </div>
+     </div>
+     <div><label for="steps-to-reproduce" class="block text-sm font-semibold text-gray-700 mb-2">Pasos para Reproducir *</label> <textarea id="steps-to-reproduce" rows="5" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="1. Abrir navegador en app.com/login
+2. Ingresar 'test@itson.edu.mx' en el campo 'usuario'
+3. Ingresar 'Pass123' en 'contraseña'
+4. Hacer clic en 'Ingresar'" required></textarea>
+      <p class="text-xs text-gray-500 mt-1">Pasos detallados para reproducir el error</p>
+     </div>
+     <div class="comparison-section rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="text-xl">⚖️</span> Comparación de Resultados</h3>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+       <div class="actual-result rounded-lg p-4"><label for="actual-result" class="block text-sm font-semibold text-red-700 mb-2"> ❌ Resultado Actual * </label> <textarea id="actual-result" rows="4" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none border-red-300" placeholder="Ej. El sistema muestra el mensaje 'Usuario o contraseña inválido' y no permite el acceso." required></textarea>
+        <p class="text-xs text-red-600 mt-1">Lo que realmente sucede</p>
+       </div>
+       <div class="expected-result rounded-lg p-4"><label for="expected-result" class="block text-sm font-semibold text-green-700 mb-2"> ✅ Resultado Esperado * </label> <textarea id="expected-result" rows="4" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none border-green-300" placeholder="Ej. El sistema debía permitir el acceso al Dashboard." required></textarea>
+        <p class="text-xs text-green-600 mt-1">Lo que debería suceder</p>
+       </div>
+      </div>
+     </div>
+     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div><label for="environment" class="block text-sm font-semibold text-gray-700 mb-2">Entorno de Prueba</label> <input type="text" id="environment" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Ej. Windows 10, Chrome 120, Staging">
+       <p class="text-xs text-gray-500 mt-1">SO, navegador, ambiente</p>
+      </div>
+      <div><label for="reporter" class="block text-sm font-semibold text-gray-700 mb-2">Reportado por</label> <input type="text" id="reporter" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Nombre del tester">
+      </div>
+     </div>
+     <div><label for="assigned-to" class="block text-sm font-semibold text-gray-700 mb-2">Asignado a</label> <input type="text" id="assigned-to" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Desarrollador responsable">
+     </div>
+     <div class="attachment-zone rounded-lg p-6 text-center">
+      <div class="text-4xl text-gray-400 mb-3">
+       📎
+      </div>
+      <h3 class="text-lg font-semibold text-gray-700 mb-2">Adjuntos (¡Indispensable!)</h3>
+      <p class="text-gray-600 mb-4">Los adjuntos son críticos para la resolución efectiva del defecto</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+       <div class="bg-white rounded-lg p-4 border border-gray-200">
+        <div class="text-2xl mb-2">
+         📸
+        </div>
+        <div class="font-semibold text-gray-700">
+         Capturas de Pantalla
+        </div>
+        <div class="text-gray-500">
+         Evidencia visual del error
+        </div>
+       </div>
+       <div class="bg-white rounded-lg p-4 border border-gray-200">
+        <div class="text-2xl mb-2">
+         🎥
+        </div>
+        <div class="font-semibold text-gray-700">
+         Videos
+        </div>
+        <div class="text-gray-500">
+         Reproducción del problema
+        </div>
+       </div>
+       <div class="bg-white rounded-lg p-4 border border-gray-200">
+        <div class="text-2xl mb-2">
+         📋
+        </div>
+        <div class="font-semibold text-gray-700">
+         Logs del Sistema
+        </div>
+        <div class="text-gray-500">
+         Errores de consola/servidor
+        </div>
+       </div>
+      </div><textarea id="attachments-note" rows="2" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none mt-4" placeholder="Describir los adjuntos incluidos (ej. screenshot_login_error.png, console_logs.txt)"></textarea>
+     </div>
+     <div class="flex justify-end"><button type="submit" id="create-bug-btn" class="formal-button bg-red-700 hover:bg-red-800 text-white px-8 py-3 rounded-md flex items-center gap-3"> <span>Crear Reporte de Defecto</span>
+       <div id="create-loading" class="loading-spinner hidden"></div></button>
+     </div>
+    </form>
+   </section><!-- Bug Reports List -->
+   <section id="bug-reports-container" class="mb-8">
+    <div class="border-b border-gray-200 pb-4 mb-8">
+     <div class="flex justify-between items-center">
+      <div>
+       <h2 class="text-2xl font-semibold text-gray-800">Defectos Reportados</h2>
+       <p class="text-gray-600 mt-1">Gestione el ciclo de vida de los defectos</p>
+      </div>
+      <div class="flex gap-4 text-sm">
+       <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-blue-500 rounded"></div><span>Nuevo</span>
+       </div>
+       <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-amber-500 rounded"></div><span>Asignado</span>
+       </div>
+       <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-purple-500 rounded"></div><span>En Progreso</span>
+       </div>
+       <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-green-500 rounded"></div><span>Resuelto</span>
+       </div>
+       <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-gray-500 rounded"></div><span>Cerrado</span>
+       </div>
+      </div>
+     </div>
+    </div>
+    <div id="bug-reports-list" class="space-y-6"><!-- Bug reports will be rendered here -->
+    </div>
+    <div id="no-bugs-message" class="formal-section rounded-lg text-center py-16 text-gray-500">
+     <div class="text-5xl mb-4 text-gray-400">
+      🐛
+     </div>
+     <h3 class="text-xl font-medium text-gray-700 mb-2">No hay Defectos Reportados</h3>
+     <p class="text-gray-600">Use las plantillas rápidas o cree reportes personalizados para comenzar</p>
+    </div>
+   </section><!-- IEEE 829 Guidelines -->
+   <section class="ieee-standard rounded-lg p-8 mb-8">
+    <div class="border-b border-red-300 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-gray-800">Guía IEEE 829 - Reportes de Defectos</h2>
+     <p class="text-gray-700 mt-1">Elementos esenciales para reportes de defectos profesionales</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-red-600 text-white rounded-lg flex items-center justify-center text-sm">🎯</span> Identificación Clara</h3>
+      <ul class="text-sm text-gray-600 space-y-2">
+       <li class="flex items-start"><span class="text-red-600 mr-2">•</span>ID único y secuencial</li>
+       <li class="flex items-start"><span class="text-red-600 mr-2">•</span>Título descriptivo y conciso</li>
+       <li class="flex items-start"><span class="text-red-600 mr-2">•</span>Referencia al caso de prueba</li>
+      </ul>
+     </div>
+     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-orange-600 text-white rounded-lg flex items-center justify-center text-sm">🔄</span> Reproducibilidad</h3>
+      <ul class="text-sm text-gray-600 space-y-2">
+       <li class="flex items-start"><span class="text-orange-600 mr-2">•</span>Pasos detallados y numerados</li>
+       <li class="flex items-start"><span class="text-orange-600 mr-2">•</span>Datos específicos utilizados</li>
+       <li class="flex items-start"><span class="text-orange-600 mr-2">•</span>Condiciones del entorno</li>
+      </ul>
+     </div>
+     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-purple-600 text-white rounded-lg flex items-center justify-center text-sm">⚖️</span> Comparación de Resultados</h3>
+      <ul class="text-sm text-gray-600 space-y-2">
+       <li class="flex items-start"><span class="text-purple-600 mr-2">•</span>Resultado actual observado</li>
+       <li class="flex items-start"><span class="text-purple-600 mr-2">•</span>Resultado esperado según especificación</li>
+       <li class="flex items-start"><span class="text-purple-600 mr-2">•</span>Diferencias claramente marcadas</li>
+      </ul>
+     </div>
+     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-green-600 text-white rounded-lg flex items-center justify-center text-sm">📎</span> Evidencia Adjunta</h3>
+      <ul class="text-sm text-gray-600 space-y-2">
+       <li class="flex items-start"><span class="text-green-600 mr-2">•</span>Capturas de pantalla del error</li>
+       <li class="flex items-start"><span class="text-green-600 mr-2">•</span>Videos de reproducción</li>
+       <li class="flex items-start"><span class="text-green-600 mr-2">•</span>Logs y mensajes de error</li>
+      </ul>
+     </div>
+    </div>
+   </section><!-- Export and Actions -->
+   <section class="formal-section rounded-lg p-8">
+    <div class="border-b border-gray-200 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-gray-800">Exportar Reportes de Defectos</h2>
+     <p class="text-gray-600 mt-1">Genere documentos para seguimiento y gestión</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4"><button id="export-bug-list" class="formal-button bg-red-700 hover:bg-red-800 text-white px-6 py-4 rounded-md flex items-center justify-center gap-3 border border-red-800"> <span class="text-xl">📋</span>
+      <div class="text-left">
+       <div class="font-semibold">
+        Lista de Defectos
+       </div>
+       <div class="text-xs opacity-90">
+        Todos los reportes
+       </div>
+      </div></button> <button id="export-critical-bugs" class="formal-button bg-orange-700 hover:bg-orange-800 text-white px-6 py-4 rounded-md flex items-center justify-center gap-3 border border-orange-800"> <span class="text-xl">🚨</span>
+      <div class="text-left">
+       <div class="font-semibold">
+        Defectos Críticos
+       </div>
+       <div class="text-xs opacity-90">
+        Alta/Crítica severidad
+       </div>
+      </div></button> <button id="export-status-report" class="formal-button bg-blue-700 hover:bg-blue-800 text-white px-6 py-4 rounded-md flex items-center justify-center gap-3 border border-blue-800"> <span class="text-xl">📊</span>
+      <div class="text-left">
+       <div class="font-semibold">
+        Reporte de Estado
+       </div>
+       <div class="text-xs opacity-90">
+        Métricas y estadísticas
+       </div>
+      </div></button> <button id="clear-all-bugs" class="formal-button bg-gray-700 hover:bg-gray-800 text-white px-6 py-4 rounded-md flex items-center justify-center gap-3 border border-gray-800"> <span class="text-xl">🗑️</span>
+      <div class="text-left">
+       <div class="font-semibold">
+        Limpiar Todo
+       </div>
+       <div class="text-xs opacity-90">
+        Reiniciar reportes
+       </div>
+      </div></button>
+    </div>
+   </section>
+  </main>
+  <script>
+        // Configuration and state
+        const defaultConfig = {
+            project_name: "Sistema de Gestión",
+            version: "v1.0.0",
+            qa_manager: "Responsable de QA",
+            organization: "Organización"
+        };
+
+        let bugReports = [];
+        let isInitialized = false;
+
+        // Template definitions
+        const templates = {
+            "auth-error": {
+                bug_id: "BUG-001",
+                title: "Error de autenticación al usar credenciales válidas",
+                test_case_id: "CP-LOGIN-001",
+                steps_to_reproduce: "1. Abrir navegador web en app.com/login\n2. Ingresar 'test@itson.edu.mx' en el campo 'Usuario'\n3. Ingresar 'Pass123!' en el campo 'Contraseña'\n4. Hacer clic en el botón 'Iniciar Sesión'\n5. Observar el comportamiento del sistema",
+                actual_result: "El sistema muestra el mensaje 'Usuario o contraseña inválido' y no permite el acceso. La página permanece en el formulario de login sin redirección.",
+                expected_result: "El sistema debía validar las credenciales exitosamente, redirigir al Dashboard principal y mostrar el mensaje 'Bienvenido, test'.",
+                severity: "critical",
+                priority: "urgent",
+                category: "funcional",
+                environment: "Windows 10, Chrome 120.0, Ambiente de Staging",
+                attachments_note: "screenshot_login_error.png, console_errors.txt, network_logs.har"
+            },
+            "form-validation": {
+                bug_id: "BUG-002",
+                title: "Validación de formulario permite envío con campos obligatorios vacíos",
+                test_case_id: "CP-FORM-001",
+                steps_to_reproduce: "1. Navegar a la página de registro de usuario\n2. Dejar el campo 'Email' completamente vacío\n3. Completar solo el campo 'Nombre' con 'Juan Pérez'\n4. Hacer clic en el botón 'Registrar Usuario'\n5. Observar el comportamiento del sistema",
+                actual_result: "El formulario se envía exitosamente a pesar de tener el campo 'Email' vacío. Se crea un registro en la base de datos con email NULL.",
+                expected_result: "El sistema debía mostrar un mensaje de error 'El campo Email es obligatorio' y prevenir el envío del formulario.",
+                severity: "high",
+                priority: "high",
+                category: "funcional",
+                environment: "Firefox 119.0, Ubuntu 22.04, Ambiente de Testing",
+                attachments_note: "form_validation_error.mp4, database_record_screenshot.png"
+            },
+            "ui-display": {
+                bug_id: "BUG-003",
+                title: "Elementos de la interfaz se superponen en resoluciones móviles",
+                test_case_id: "CP-UI-001",
+                steps_to_reproduce: "1. Abrir la aplicación en un dispositivo móvil o emulador\n2. Configurar la resolución a 375x667 (iPhone SE)\n3. Navegar a la página principal del Dashboard\n4. Desplazarse hacia abajo para ver todos los elementos\n5. Observar la disposición de los elementos",
+                actual_result: "Los botones de acción se superponen con el texto del contenido principal. El menú lateral cubre parcialmente el área de contenido.",
+                expected_result: "Todos los elementos de la interfaz debían ajustarse correctamente al tamaño de pantalla sin superposiciones.",
+                severity: "medium",
+                priority: "medium",
+                category: "interfaz",
+                environment: "Safari Mobile, iOS 16.5, iPhone SE (375x667)",
+                attachments_note: "mobile_layout_issue.png, responsive_comparison.png"
+            },
+            "data-loss": {
+                bug_id: "BUG-004",
+                title: "Datos del formulario se pierden al cambiar de pestaña",
+                test_case_id: "CP-DATA-001",
+                steps_to_reproduce: "1. Abrir el formulario de creación de producto\n2. Completar todos los campos con información válida\n3. Cambiar a otra pestaña del navegador por 30 segundos\n4. Regresar a la pestaña del formulario\n5. Verificar el estado de los datos ingresados",
+                actual_result: "Todos los datos ingresados en el formulario se han perdido. Los campos aparecen vacíos como si nunca se hubieran completado.",
+                expected_result: "Los datos del formulario debían mantenerse intactos al regresar a la pestaña, permitiendo continuar con el proceso.",
+                severity: "high",
+                priority: "high",
+                category: "datos",
+                environment: "Chrome 120.0, Windows 11, Ambiente de Producción",
+                attachments_note: "data_loss_video.mp4, browser_console_logs.txt"
+            },
+            "performance": {
+                bug_id: "BUG-005",
+                title: "Tiempo de carga excesivo en la página de reportes",
+                test_case_id: "CP-PERF-001",
+                steps_to_reproduce: "1. Iniciar sesión en el sistema con usuario administrador\n2. Navegar al módulo 'Reportes'\n3. Seleccionar 'Reporte de Ventas Mensual'\n4. Hacer clic en 'Generar Reporte'\n5. Medir el tiempo de respuesta hasta que aparezcan los datos",
+                actual_result: "El reporte tarda 45 segundos en cargar completamente. Durante este tiempo, la página muestra solo un indicador de carga sin información adicional.",
+                expected_result: "El reporte debía cargar en menos de 10 segundos según los requerimientos de rendimiento especificados.",
+                severity: "medium",
+                priority: "medium",
+                category: "rendimiento",
+                environment: "Edge 119.0, Windows 10, Red corporativa (100 Mbps)",
+                attachments_note: "performance_timeline.png, network_analysis.har, server_response_times.log"
+            },
+            "navigation": {
+                bug_id: "BUG-006",
+                title: "Enlace de 'Configuración' redirige a página 404",
+                test_case_id: "CP-NAV-001",
+                steps_to_reproduce: "1. Iniciar sesión como usuario administrador\n2. Localizar el menú principal de navegación\n3. Hacer clic en el enlace 'Configuración'\n4. Observar la página de destino",
+                actual_result: "El navegador redirige a una página de error 404 'Página no encontrada'. La URL muestra '/config' en lugar de '/configuracion'.",
+                expected_result: "El enlace debía redirigir correctamente a la página de configuración del sistema (/configuracion).",
+                severity: "medium",
+                priority: "high",
+                category: "funcional",
+                environment: "Chrome 120.0, macOS Ventura, Ambiente de Staging",
+                attachments_note: "404_error_screenshot.png, browser_network_tab.png"
+            }
+        };
+
+        // Data handler for SDK
+        const dataHandler = {
+            onDataChanged(data) {
+                bugReports = data.sort((a, b) => {
+                    const severityOrder = { critical: 1, high: 2, medium: 3, low: 4 };
+                    const priorityOrder = { urgent: 1, high: 2, medium: 3, low: 4 };
+                    
+                    const severityDiff = severityOrder[a.severity] - severityOrder[b.severity];
+                    if (severityDiff !== 0) return severityDiff;
+                    
+                    return priorityOrder[a.priority] - priorityOrder[b.priority];
+                });
+                renderBugReports();
+            }
+        };
+
+        // Element SDK configuration
+        const elementConfig = {
+            defaultConfig,
+            onConfigChange: async (config) => {
+                document.getElementById('project-name-display').textContent = config.project_name || defaultConfig.project_name;
+                document.getElementById('project-name-input').value = config.project_name || defaultConfig.project_name;
+                document.getElementById('version-display').textContent = config.version || defaultConfig.version;
+                document.getElementById('version-input').value = config.version || defaultConfig.version;
+                document.getElementById('qa-manager-display').textContent = config.qa_manager || defaultConfig.qa_manager;
+                document.getElementById('qa-manager-input').value = config.qa_manager || defaultConfig.qa_manager;
+                document.getElementById('organization').textContent = config.organization || defaultConfig.organization;
+            },
+            mapToCapabilities: (config) => ({
+                recolorables: [],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            }),
+            mapToEditPanelValues: (config) => new Map([
+                ["project_name", config.project_name || defaultConfig.project_name],
+                ["version", config.version || defaultConfig.version],
+                ["qa_manager", config.qa_manager || defaultConfig.qa_manager],
+                ["organization", config.organization || defaultConfig.organization]
+            ])
+        };
+
+        // Initialize SDKs
+        async function initializeApp() {
+            try {
+                // Set current date
+                document.getElementById('current-date').textContent = new Date().toLocaleDateString();
+                
+                if (window.elementSdk) {
+                    await window.elementSdk.init(elementConfig);
+                }
+                
+                if (window.dataSdk) {
+                    const result = await window.dataSdk.init(dataHandler);
+                    if (!result.isOk) {
+                        console.error("Failed to initialize data SDK");
+                    }
+                }
+                
+                isInitialized = true;
+                setupEventListeners();
+            } catch (error) {
+                console.error("Initialization error:", error);
+                setupEventListeners();
+            }
+        }
+
+        // Render bug reports
+        function renderBugReports() {
+            const container = document.getElementById('bug-reports-list');
+            const noMessage = document.getElementById('no-bugs-message');
+            
+            if (bugReports.length === 0) {
+                container.innerHTML = '';
+                noMessage.style.display = 'block';
+                return;
+            }
+            
+            noMessage.style.display = 'none';
+            
+            container.innerHTML = bugReports.map((bug, index) => `
+                <div class="bug-card ${bug.status} bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-red-700 text-white rounded-lg w-12 h-12 flex items-center justify-center font-bold text-sm">
+                                ${bug.bug_id.split('-').pop()}
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-3 mb-1">
+                                    <h3 class="text-xl font-semibold text-gray-800">${bug.bug_id}</h3>
+                                    <span class="status-badge ${bug.status === 'new' ? 'status-new' : bug.status === 'assigned' ? 'status-assigned' : bug.status === 'in-progress' ? 'status-in-progress' : bug.status === 'resolved' ? 'status-resolved' : bug.status === 'closed' ? 'status-closed' : 'status-reopened'}">
+                                        ${bug.status === 'new' ? 'Nuevo' : bug.status === 'assigned' ? 'Asignado' : bug.status === 'in-progress' ? 'En Progreso' : bug.status === 'resolved' ? 'Resuelto' : bug.status === 'closed' ? 'Cerrado' : 'Reabierto'}
+                                    </span>
+                                    <span class="status-badge severity-${bug.severity}">
+                                        ${bug.severity === 'critical' ? 'CRÍTICA' : bug.severity === 'high' ? 'ALTA' : bug.severity === 'medium' ? 'MEDIA' : 'BAJA'}
+                                    </span>
+                                    <span class="status-badge priority-${bug.priority}">
+                                        ${bug.priority === 'urgent' ? 'URGENTE' : bug.priority === 'high' ? 'ALTA' : bug.priority === 'medium' ? 'MEDIA' : 'BAJA'}
+                                    </span>
+                                </div>
+                                <p class="text-lg text-gray-700 font-medium">${bug.title}</p>
+                                <div class="flex items-center gap-3 mt-1">
+                                    <span class="text-sm text-gray-600 capitalize">${bug.category}</span>
+                                    ${bug.test_case_id ? `<span class="text-gray-400">•</span><span class="text-sm text-blue-600">${bug.test_case_id}</span>` : ''}
+                                    <span class="text-gray-400">•</span>
+                                    <span class="text-sm text-gray-500">Reportado: ${new Date(bug.created_at).toLocaleDateString()}</span>
+                                </div>
+                                ${bug.reporter || bug.assigned_to ? `
+                                    <div class="flex items-center gap-3 mt-1 text-sm text-gray-600">
+                                        ${bug.reporter ? `<span>👤 ${bug.reporter}</span>` : ''}
+                                        ${bug.reporter && bug.assigned_to ? '<span class="text-gray-400">→</span>' : ''}
+                                        ${bug.assigned_to ? `<span>👨‍💻 ${bug.assigned_to}</span>` : ''}
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <select class="status-select formal-input px-3 py-2 text-sm rounded-md" data-bug-id="${bug.__backendId}">
+                                <option value="new" ${bug.status === 'new' ? 'selected' : ''}>Nuevo</option>
+                                <option value="assigned" ${bug.status === 'assigned' ? 'selected' : ''}>Asignado</option>
+                                <option value="in-progress" ${bug.status === 'in-progress' ? 'selected' : ''}>En Progreso</option>
+                                <option value="resolved" ${bug.status === 'resolved' ? 'selected' : ''}>Resuelto</option>
+                                <option value="closed" ${bug.status === 'closed' ? 'selected' : ''}>Cerrado</option>
+                                <option value="reopened" ${bug.status === 'reopened' ? 'selected' : ''}>Reabierto</option>
+                            </select>
+                            <button class="edit-bug text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-md transition-colors" data-bug-id="${bug.__backendId}">
+                                ✏️
+                            </button>
+                            <button class="delete-bug text-gray-600 hover:text-gray-800 hover:bg-gray-50 p-2 rounded-md transition-colors" data-bug-id="${bug.__backendId}">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-blue-600 text-white rounded flex items-center justify-center text-xs">🔄</span>
+                                    Pasos para Reproducir
+                                </h4>
+                                <pre class="text-blue-700 text-sm leading-relaxed whitespace-pre-wrap font-sans">${bug.steps_to_reproduce}</pre>
+                            </div>
+                            
+                            ${bug.environment ? `
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <h4 class="font-semibold text-gray-800 mb-2 flex items-center gap-2">
+                                        <span class="w-5 h-5 bg-gray-600 text-white rounded flex items-center justify-center text-xs">💻</span>
+                                        Entorno
+                                    </h4>
+                                    <p class="text-gray-700 text-sm">${bug.environment}</p>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="actual-result rounded-lg p-4">
+                                <h4 class="font-semibold text-red-800 mb-2 flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-red-600 text-white rounded flex items-center justify-center text-xs">❌</span>
+                                    Resultado Actual
+                                </h4>
+                                <pre class="text-red-700 text-sm leading-relaxed whitespace-pre-wrap font-sans">${bug.actual_result}</pre>
+                            </div>
+                            
+                            <div class="expected-result rounded-lg p-4">
+                                <h4 class="font-semibold text-green-800 mb-2 flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-green-600 text-white rounded flex items-center justify-center text-xs">✅</span>
+                                    Resultado Esperado
+                                </h4>
+                                <pre class="text-green-700 text-sm leading-relaxed whitespace-pre-wrap font-sans">${bug.expected_result}</pre>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    ${bug.attachments_note ? `
+                        <div class="mt-6 bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                            <h4 class="font-semibold text-yellow-800 mb-2 flex items-center gap-2">
+                                <span class="w-5 h-5 bg-yellow-600 text-white rounded flex items-center justify-center text-xs">📎</span>
+                                Adjuntos
+                            </h4>
+                            <p class="text-yellow-700 text-sm">${bug.attachments_note}</p>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+            
+            // Add event listeners
+            container.querySelectorAll('.status-select').forEach(select => {
+                select.addEventListener('change', handleStatusChange);
+            });
+            
+            container.querySelectorAll('.edit-bug').forEach(button => {
+                button.addEventListener('click', handleEditBug);
+            });
+            
+            container.querySelectorAll('.delete-bug').forEach(button => {
+                button.addEventListener('click', handleDeleteBug);
+            });
+        }
+
+        // Handle template button clicks
+        function handleTemplateClick(event) {
+            const templateType = event.currentTarget.dataset.template;
+            const template = templates[templateType];
+            
+            if (template) {
+                document.getElementById('bug-id').value = template.bug_id;
+                document.getElementById('bug-title').value = template.title;
+                document.getElementById('test-case-id').value = template.test_case_id || '';
+                document.getElementById('steps-to-reproduce').value = template.steps_to_reproduce;
+                document.getElementById('actual-result').value = template.actual_result;
+                document.getElementById('expected-result').value = template.expected_result;
+                document.getElementById('bug-severity').value = template.severity;
+                document.getElementById('bug-priority').value = template.priority;
+                document.getElementById('bug-category').value = template.category;
+                document.getElementById('environment').value = template.environment || '';
+                document.getElementById('attachments-note').value = template.attachments_note || '';
+                
+                // Scroll to form
+                document.getElementById('bug-report-form').scrollIntoView({ behavior: 'smooth' });
+                
+                showToast(`Plantilla "${template.title}" cargada`, "success");
+            }
+        }
+
+        // Handle form submission
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            if (bugReports.length >= 999) {
+                showToast("Límite máximo de 999 reportes de defectos alcanzado", "error");
+                return;
+            }
+            
+            const bugData = {
+                bug_id: document.getElementById('bug-id').value,
+                title: document.getElementById('bug-title').value,
+                test_case_id: document.getElementById('test-case-id').value,
+                steps_to_reproduce: document.getElementById('steps-to-reproduce').value,
+                actual_result: document.getElementById('actual-result').value,
+                expected_result: document.getElementById('expected-result').value,
+                severity: document.getElementById('bug-severity').value,
+                priority: document.getElementById('bug-priority').value,
+                category: document.getElementById('bug-category').value,
+                environment: document.getElementById('environment').value,
+                reporter: document.getElementById('reporter').value,
+                assigned_to: document.getElementById('assigned-to').value,
+                attachments_note: document.getElementById('attachments-note').value,
+                status: 'new',
+                created_at: new Date().toISOString()
+            };
+            
+            const createButton = document.getElementById('create-bug-btn');
+            const loading = document.getElementById('create-loading');
+            
+            createButton.disabled = true;
+            loading.classList.remove('hidden');
+            
+            if (window.dataSdk) {
+                const result = await window.dataSdk.create(bugData);
+                
+                if (result.isOk) {
+                    event.target.reset();
+                    showToast("Reporte de defecto creado exitosamente", "success");
+                } else {
+                    showToast("Error al crear el reporte de defecto", "error");
+                }
+            } else {
+                bugReports.push({ ...bugData, __backendId: bugData.bug_id });
+                renderBugReports();
+                event.target.reset();
+                showToast("Reporte de defecto creado exitosamente", "success");
+            }
+            
+            createButton.disabled = false;
+            loading.classList.add('hidden');
+        }
+
+        // Handle status change
+        async function handleStatusChange(event) {
+            const bugId = event.target.dataset.bugId;
+            const newStatus = event.target.value;
+            const bug = bugReports.find(b => b.__backendId === bugId);
+            
+            if (bug && window.dataSdk) {
+                const updatedBug = { ...bug, status: newStatus };
+                const result = await window.dataSdk.update(updatedBug);
+                
+                if (!result.isOk) {
+                    event.target.value = bug.status;
+                    showToast("Error al actualizar el estado", "error");
+                }
+            }
+        }
+
+        // Handle edit bug
+        function handleEditBug(event) {
+            const bugId = event.target.dataset.bugId;
+            const bug = bugReports.find(b => b.__backendId === bugId);
+            
+            if (bug) {
+                document.getElementById('bug-id').value = bug.bug_id;
+                document.getElementById('bug-title').value = bug.title;
+                document.getElementById('test-case-id').value = bug.test_case_id || '';
+                document.getElementById('steps-to-reproduce').value = bug.steps_to_reproduce;
+                document.getElementById('actual-result').value = bug.actual_result;
+                document.getElementById('expected-result').value = bug.expected_result;
+                document.getElementById('bug-severity').value = bug.severity;
+                document.getElementById('bug-priority').value = bug.priority;
+                document.getElementById('bug-category').value = bug.category;
+                document.getElementById('environment').value = bug.environment || '';
+                document.getElementById('reporter').value = bug.reporter || '';
+                document.getElementById('assigned-to').value = bug.assigned_to || '';
+                document.getElementById('attachments-note').value = bug.attachments_note || '';
+                
+                document.getElementById('bug-report-form').scrollIntoView({ behavior: 'smooth' });
+                showToast("Reporte de defecto cargado para edición", "info");
+            }
+        }
+
+        // Handle delete bug
+        async function handleDeleteBug(event) {
+            const bugId = event.target.dataset.bugId;
+            const bug = bugReports.find(b => b.__backendId === bugId);
+            
+            if (bug && window.dataSdk) {
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '❌';
+                button.style.backgroundColor = '#fee2e2';
+                
+                const confirmDelete = () => {
+                    button.innerHTML = '⏳';
+                    window.dataSdk.delete(bug).then(result => {
+                        if (!result.isOk) {
+                            showToast("Error al eliminar el reporte", "error");
+                            button.innerHTML = originalText;
+                            button.style.backgroundColor = '';
+                        }
+                    });
+                };
+                
+                const cancelDelete = () => {
+                    button.innerHTML = originalText;
+                    button.style.backgroundColor = '';
+                };
+                
+                const timeoutId = setTimeout(confirmDelete, 2000);
+                
+                const clickHandler = (e) => {
+                    if (!button.contains(e.target)) {
+                        clearTimeout(timeoutId);
+                        cancelDelete();
+                        document.removeEventListener('click', clickHandler);
+                    }
+                };
+                
+                document.addEventListener('click', clickHandler);
+                
+                button.onclick = (e) => {
+                    e.stopPropagation();
+                    clearTimeout(timeoutId);
+                    confirmDelete();
+                    document.removeEventListener('click', clickHandler);
+                };
+            }
+        }
+
+        // Export functions
+        function exportBugList() {
+            const bugList = generateBugList();
+            downloadText(bugList, 'lista-defectos.txt');
+        }
+
+        function exportCriticalBugs() {
+            const criticalBugs = generateCriticalBugsReport();
+            downloadText(criticalBugs, 'defectos-criticos.txt');
+        }
+
+        function exportStatusReport() {
+            const statusReport = generateStatusReport();
+            downloadText(statusReport, 'reporte-estado-defectos.txt');
+        }
+
+        function generateBugList() {
+            const config = window.elementSdk?.config || defaultConfig;
+            const currentDate = new Date().toLocaleDateString();
+            
+            return `
+LISTA DE DEFECTOS IEEE 829
+==========================
+
+INFORMACIÓN DEL PROYECTO:
+Proyecto: ${config.project_name || defaultConfig.project_name}
+Versión: ${config.version || defaultConfig.version}
+Organización: ${config.organization || defaultConfig.organization}
+QA Manager: ${config.qa_manager || defaultConfig.qa_manager}
+Fecha de Generación: ${currentDate}
+
+RESUMEN DE DEFECTOS:
+Total de Defectos: ${bugReports.length}
+Nuevos: ${bugReports.filter(b => b.status === 'new').length}
+Asignados: ${bugReports.filter(b => b.status === 'assigned').length}
+En Progreso: ${bugReports.filter(b => b.status === 'in-progress').length}
+Resueltos: ${bugReports.filter(b => b.status === 'resolved').length}
+Cerrados: ${bugReports.filter(b => b.status === 'closed').length}
+Reabiertos: ${bugReports.filter(b => b.status === 'reopened').length}
+
+DISTRIBUCIÓN POR SEVERIDAD:
+• Crítica: ${bugReports.filter(b => b.severity === 'critical').length} defectos
+• Alta: ${bugReports.filter(b => b.severity === 'high').length} defectos
+• Media: ${bugReports.filter(b => b.severity === 'medium').length} defectos
+• Baja: ${bugReports.filter(b => b.severity === 'low').length} defectos
+
+DISTRIBUCIÓN POR CATEGORÍA:
+${Object.entries(bugReports.reduce((acc, bug) => {
+    acc[bug.category] = (acc[bug.category] || 0) + 1;
+    return acc;
+}, {})).map(([category, count]) => `• ${category.charAt(0).toUpperCase() + category.slice(1)}: ${count} defectos`).join('\n')}
+
+${bugReports.map((bug, index) => `
+================================================================================
+DEFECTO #${index + 1}
+================================================================================
+
+ID: ${bug.bug_id}
+TÍTULO: ${bug.title}
+CASO DE PRUEBA ASOCIADO: ${bug.test_case_id || 'N/A'}
+CATEGORÍA: ${bug.category.toUpperCase()}
+SEVERIDAD: ${bug.severity.toUpperCase()}
+PRIORIDAD: ${bug.priority.toUpperCase()}
+ESTADO: ${bug.status.toUpperCase()}
+
+PASOS PARA REPRODUCIR:
+${bug.steps_to_reproduce}
+
+RESULTADO ACTUAL:
+${bug.actual_result}
+
+RESULTADO ESPERADO:
+${bug.expected_result}
+
+INFORMACIÓN ADICIONAL:
+• Entorno: ${bug.environment || 'No especificado'}
+• Reportado por: ${bug.reporter || 'No especificado'}
+• Asignado a: ${bug.assigned_to || 'No asignado'}
+• Fecha de Reporte: ${new Date(bug.created_at).toLocaleDateString()}
+• Adjuntos: ${bug.attachments_note || 'Ninguno'}
+
+`).join('')}
+
+================================================================================
+FIN DE LA LISTA DE DEFECTOS
+================================================================================
+
+Documento generado automáticamente
+Estándar: IEEE 829-2008
+Total de defectos incluidos: ${bugReports.length}
+            `.trim();
+        }
+
+        function generateCriticalBugsReport() {
+            const config = window.elementSdk?.config || defaultConfig;
+            const currentDate = new Date().toLocaleDateString();
+            const criticalBugs = bugReports.filter(b => b.severity === 'critical' || b.severity === 'high');
+            
+            return `
+REPORTE DE DEFECTOS CRÍTICOS
+============================
+
+INFORMACIÓN DEL PROYECTO:
+Proyecto: ${config.project_name || defaultConfig.project_name}
+Versión: ${config.version || defaultConfig.version}
+QA Manager: ${config.qa_manager || defaultConfig.qa_manager}
+Fecha: ${currentDate}
+
+⚠️  ALERTA: Este reporte contiene defectos de severidad CRÍTICA y ALTA
+    Requieren atención inmediata del equipo de desarrollo.
+
+RESUMEN EJECUTIVO:
+Total de Defectos Críticos/Altos: ${criticalBugs.length}
+Defectos Críticos: ${criticalBugs.filter(b => b.severity === 'critical').length}
+Defectos de Alta Severidad: ${criticalBugs.filter(b => b.severity === 'high').length}
+
+ESTADO ACTUAL:
+• Nuevos: ${criticalBugs.filter(b => b.status === 'new').length}
+• Asignados: ${criticalBugs.filter(b => b.status === 'assigned').length}
+• En Progreso: ${criticalBugs.filter(b => b.status === 'in-progress').length}
+• Resueltos: ${criticalBugs.filter(b => b.status === 'resolved').length}
+
+${criticalBugs.length > 0 ? criticalBugs.map((bug, index) => `
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ DEFECTO CRÍTICO #${index + 1}: ${bug.bug_id}                                
+│ SEVERIDAD: ${bug.severity.toUpperCase()} | PRIORIDAD: ${bug.priority.toUpperCase()}
+│ ESTADO: ${bug.status.toUpperCase()}
+└─────────────────────────────────────────────────────────────────────────────┘
+
+TÍTULO: ${bug.title}
+CASO DE PRUEBA: ${bug.test_case_id || 'N/A'}
+
+IMPACTO:
+${bug.actual_result}
+
+PASOS PARA REPRODUCIR:
+${bug.steps_to_reproduce}
+
+RESULTADO ESPERADO:
+${bug.expected_result}
+
+INFORMACIÓN DE SEGUIMIENTO:
+• Reportado: ${new Date(bug.created_at).toLocaleDateString()}
+• Reportado por: ${bug.reporter || 'No especificado'}
+• Asignado a: ${bug.assigned_to || '⚠️  SIN ASIGNAR'}
+• Entorno: ${bug.environment || 'No especificado'}
+• Adjuntos: ${bug.attachments_note || 'Ninguno'}
+
+`).join('') : 
+'🎉 EXCELENTE: No hay defectos críticos o de alta severidad reportados.'}
+
+================================================================================
+RECOMENDACIONES
+================================================================================
+
+${criticalBugs.length > 0 ? `
+⚠️  ACCIONES REQUERIDAS:
+1. Asignar inmediatamente todos los defectos sin asignar
+2. Priorizar la resolución de defectos críticos
+3. Establecer reuniones diarias de seguimiento
+4. Considerar hotfix para defectos críticos en producción
+5. Revisar procesos de QA para prevenir defectos similares
+
+📊 MÉTRICAS DE CALIDAD:
+• Tasa de defectos críticos: ${((criticalBugs.length / bugReports.length) * 100).toFixed(1)}%
+• Defectos sin asignar: ${criticalBugs.filter(b => !b.assigned_to).length}
+• Tiempo promedio de resolución: Pendiente de cálculo
+` : `
+✅ ESTADO SALUDABLE:
+• No hay defectos críticos pendientes
+• El sistema mantiene buena calidad
+• Continuar con las pruebas regulares
+`}
+
+Generado automáticamente el ${currentDate}
+            `.trim();
+        }
+
+        function generateStatusReport() {
+            const config = window.elementSdk?.config || defaultConfig;
+            const currentDate = new Date().toLocaleDateString();
+            
+            const statusCounts = bugReports.reduce((acc, bug) => {
+                acc[bug.status] = (acc[bug.status] || 0) + 1;
+                return acc;
+            }, {});
+            
+            const severityCounts = bugReports.reduce((acc, bug) => {
+                acc[bug.severity] = (acc[bug.severity] || 0) + 1;
+                return acc;
+            }, {});
+            
+            const categoryCounts = bugReports.reduce((acc, bug) => {
+                acc[bug.category] = (acc[bug.category] || 0) + 1;
+                return acc;
+            }, {});
+            
+            return `
+REPORTE DE ESTADO DE DEFECTOS
+=============================
+
+INFORMACIÓN DEL PROYECTO:
+Proyecto: ${config.project_name || defaultConfig.project_name}
+Versión: ${config.version || defaultConfig.version}
+QA Manager: ${config.qa_manager || defaultConfig.qa_manager}
+Fecha de Reporte: ${currentDate}
+
+MÉTRICAS GENERALES:
+==================
+Total de Defectos Reportados: ${bugReports.length}
+Defectos Activos (No Cerrados): ${bugReports.filter(b => b.status !== 'closed').length}
+Defectos Resueltos: ${bugReports.filter(b => b.status === 'resolved' || b.status === 'closed').length}
+Tasa de Resolución: ${bugReports.length > 0 ? ((bugReports.filter(b => b.status === 'resolved' || b.status === 'closed').length / bugReports.length) * 100).toFixed(1) : 0}%
+
+DISTRIBUCIÓN POR ESTADO:
+=======================
+${Object.entries(statusCounts).map(([status, count]) => {
+    const percentage = ((count / bugReports.length) * 100).toFixed(1);
+    const statusName = status === 'new' ? 'Nuevos' : 
+                      status === 'assigned' ? 'Asignados' : 
+                      status === 'in-progress' ? 'En Progreso' : 
+                      status === 'resolved' ? 'Resueltos' : 
+                      status === 'closed' ? 'Cerrados' : 'Reabiertos';
+    return `• ${statusName}: ${count} (${percentage}%)`;
+}).join('\n')}
+
+DISTRIBUCIÓN POR SEVERIDAD:
+===========================
+${Object.entries(severityCounts).map(([severity, count]) => {
+    const percentage = ((count / bugReports.length) * 100).toFixed(1);
+    const severityName = severity === 'critical' ? 'Crítica' : 
+                        severity === 'high' ? 'Alta' : 
+                        severity === 'medium' ? 'Media' : 'Baja';
+    return `• ${severityName}: ${count} (${percentage}%)`;
+}).join('\n')}
+
+DISTRIBUCIÓN POR CATEGORÍA:
+===========================
+${Object.entries(categoryCounts).map(([category, count]) => {
+    const percentage = ((count / bugReports.length) * 100).toFixed(1);
+    return `• ${category.charAt(0).toUpperCase() + category.slice(1)}: ${count} (${percentage}%)`;
+}).join('\n')}
+
+ANÁLISIS DE TENDENCIAS:
+======================
+${bugReports.length > 0 ? `
+• Defectos críticos/altos: ${bugReports.filter(b => b.severity === 'critical' || b.severity === 'high').length} (${((bugReports.filter(b => b.severity === 'critical' || b.severity === 'high').length / bugReports.length) * 100).toFixed(1)}%)
+• Defectos sin asignar: ${bugReports.filter(b => !b.assigned_to || b.assigned_to.trim() === '').length}
+• Defectos reabiertos: ${bugReports.filter(b => b.status === 'reopened').length}
+• Categoría más problemática: ${Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A'}
+` : '• No hay datos suficientes para análisis de tendencias'}
+
+RECOMENDACIONES:
+===============
+${bugReports.length === 0 ? 
+'✅ Excelente: No hay defectos reportados. Continuar con las pruebas regulares.' :
+bugReports.filter(b => b.severity === 'critical').length > 0 ?
+'⚠️  CRÍTICO: Hay defectos críticos pendientes. Requieren atención inmediata.' :
+bugReports.filter(b => b.status === 'new').length > bugReports.length * 0.3 ?
+'📋 Hay muchos defectos nuevos sin asignar. Revisar asignaciones del equipo.' :
+'✅ Estado general saludable. Continuar con el proceso normal de resolución.'}
+
+${bugReports.filter(b => !b.assigned_to || b.assigned_to.trim() === '').length > 0 ?
+`\n🔄 ACCIÓN REQUERIDA: ${bugReports.filter(b => !b.assigned_to || b.assigned_to.trim() === '').length} defectos necesitan asignación.` : ''}
+
+PRÓXIMOS PASOS:
+==============
+1. Revisar defectos críticos y de alta prioridad
+2. Asignar defectos pendientes al equipo de desarrollo
+3. Seguimiento semanal del progreso de resolución
+4. Análisis de causa raíz para defectos recurrentes
+5. Actualización de casos de prueba basada en defectos encontrados
+
+================================================================================
+Reporte generado automáticamente
+Estándar: IEEE 829-2008
+Fecha: ${currentDate}
+            `.trim();
+        }
+
+        function downloadText(content, filename) {
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        async function clearAllBugs() {
+            if (bugReports.length === 0) {
+                showToast("No hay reportes de defectos para limpiar", "info");
+                return;
+            }
+            
+            const button = document.getElementById('clear-all-bugs');
+            const originalText = button.textContent;
+            button.textContent = '⚠️ Confirmar';
+            button.style.backgroundColor = '#dc2626';
+            
+            const confirmClear = async () => {
+                button.textContent = '⏳ Limpiando...';
+                
+                if (window.dataSdk) {
+                    for (const bug of bugReports) {
+                        await window.dataSdk.delete(bug);
+                    }
+                } else {
+                    bugReports = [];
+                    renderBugReports();
+                }
+                
+                showToast("Reportes de defectos eliminados", "success");
+                button.textContent = originalText;
+                button.style.backgroundColor = '';
+            };
+            
+            const cancelClear = () => {
+                button.textContent = originalText;
+                button.style.backgroundColor = '';
+            };
+            
+            const timeoutId = setTimeout(confirmClear, 3000);
+            
+            const clickHandler = (e) => {
+                if (!button.contains(e.target)) {
+                    clearTimeout(timeoutId);
+                    cancelClear();
+                    document.removeEventListener('click', clickHandler);
+                }
+            };
+            
+            document.addEventListener('click', clickHandler);
+            
+            button.onclick = (e) => {
+                e.stopPropagation();
+                clearTimeout(timeoutId);
+                confirmClear();
+                document.removeEventListener('click', clickHandler);
+            };
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+            
+            toast.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform duration-300 translate-x-full`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+
+        function setupEventListeners() {
+            document.getElementById('bug-report-form').addEventListener('submit', handleFormSubmit);
+            document.getElementById('export-bug-list').addEventListener('click', exportBugList);
+            document.getElementById('export-critical-bugs').addEventListener('click', exportCriticalBugs);
+            document.getElementById('export-status-report').addEventListener('click', exportStatusReport);
+            document.getElementById('clear-all-bugs').addEventListener('click', clearAllBugs);
+            
+            // Template buttons
+            document.querySelectorAll('.template-btn').forEach(button => {
+                button.addEventListener('click', handleTemplateClick);
+            });
+            
+            // Inline editing for all fields
+            setupInlineEditing();
+        }
+
+        function setupInlineEditing() {
+            // Setup editing for project name
+            setupFieldEditing('project-name', 'project_name', 'Nombre del proyecto actualizado');
+            
+            // Setup editing for version
+            setupFieldEditing('version', 'version', 'Versión actualizada');
+            
+            // Setup editing for QA manager
+            setupFieldEditing('qa-manager', 'qa_manager', 'QA Manager actualizado');
+        }
+        
+        function setupFieldEditing(fieldName, configKey, successMessage) {
+            const display = document.getElementById(`${fieldName}-display`);
+            const input = document.getElementById(`${fieldName}-input`);
+            
+            // Click to edit
+            display.addEventListener('click', () => {
+                display.classList.add('hidden');
+                input.classList.remove('hidden');
+                input.focus();
+                input.select();
+            });
+            
+            // Save on Enter or blur
+            const saveField = async () => {
+                const newValue = input.value.trim();
+                if (newValue && window.elementSdk) {
+                    const updateConfig = {};
+                    updateConfig[configKey] = newValue;
+                    await window.elementSdk.setConfig(updateConfig);
+                    showToast(successMessage, "success");
+                }
+                input.classList.add('hidden');
+                display.classList.remove('hidden');
+            };
+            
+            // Cancel on Escape
+            const cancelEdit = () => {
+                const currentValue = window.elementSdk?.config?.[configKey] || defaultConfig[configKey];
+                input.value = currentValue;
+                input.classList.add('hidden');
+                display.classList.remove('hidden');
+            };
+            
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveField();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelEdit();
+                }
+            });
+            
+            input.addEventListener('blur', saveField);
+        }
+
+        // Initialize the application
+        initializeApp();
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'996510a631024711',t:'MTc2MTc2NTk5MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
