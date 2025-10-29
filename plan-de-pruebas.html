@@ -1,113 +1,951 @@
-<!DOCTYPE html>
-<html lang="es" data-layout="global">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Plan de Pruebas · Plataforma QS</title>
+<!doctype html>
+<html lang="es">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plan de Pruebas IEEE 829</title>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .ieee-header {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%);
+            border-bottom: 4px solid #1d4ed8;
+        }
+        .section-card {
+            transition: all 0.2s ease;
+            border-left: 4px solid #e5e7eb;
+        }
+        .section-card.draft {
+            border-left-color: #f59e0b;
+        }
+        .section-card.review {
+            border-left-color: #3b82f6;
+        }
+        .section-card.approved {
+            border-left-color: #10b981;
+        }
+        .section-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .formal-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        .ieee-standard {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border: 2px solid #cbd5e1;
+        }
+        .loading-spinner {
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #1e40af;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status-badge {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .status-draft {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .status-review {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .formal-button {
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .formal-input {
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+        .formal-input:focus {
+            border-color: #1e40af;
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+        .section-template {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="min-h-full bg-gray-50"><!-- IEEE 829 Header -->
+  <header class="ieee-header text-white py-8 mb-8">
+   <div class="container mx-auto px-6">
+    <div class="text-center">
+     <div class="flex justify-center items-center gap-3 mb-2"><span class="text-3xl">📋</span>
+      <h1 class="text-4xl font-bold">Plan de Pruebas IEEE 829</h1>
+     </div>
+     <div class="flex justify-center items-center gap-6 text-lg mb-4 opacity-90"><span>Proyecto: <span id="project-name-display" class="font-semibold cursor-pointer hover:bg-blue-600 px-2 py-1 rounded transition-colors" title="Click para editar">Sistema de Gestión</span> <input type="text" id="project-name-input" class="font-semibold bg-blue-600 border border-blue-400 rounded px-2 py-1 text-white placeholder-blue-200 hidden" placeholder="Nombre del Proyecto"> </span> <span class="text-blue-200">|</span> <span>Versión: <span id="version-display" class="font-semibold cursor-pointer hover:bg-blue-600 px-2 py-1 rounded transition-colors" title="Click para editar">v1.0.0</span> <input type="text" id="version-input" class="font-semibold bg-blue-600 border border-blue-400 rounded px-2 py-1 text-white placeholder-blue-200 hidden" placeholder="v1.0.0"> </span> <span class="text-blue-200">|</span> <span>QA Manager: <span id="test-manager-display" class="font-semibold cursor-pointer hover:bg-blue-600 px-2 py-1 rounded transition-colors" title="Click para editar">Responsable de Pruebas</span> <input type="text" id="test-manager-input" class="font-semibold bg-blue-600 border border-blue-400 rounded px-2 py-1 text-white placeholder-blue-200 hidden" placeholder="Nombre del QA Manager"> </span>
+     </div>
+     <div class="text-blue-100 mb-4"><span id="organization" class="font-medium">Organización</span> • <span>Fecha: <span id="current-date"></span></span>
+     </div>
+     <p class="text-blue-100 max-w-4xl mx-auto text-lg leading-relaxed">Documento maestro que define la estrategia integral de pruebas siguiendo el estándar IEEE 829. Define alcance, tipos de pruebas, entornos, criterios de entrada/salida y recursos necesarios.</p>
+    </div>
+   </div>
+  </header>
+  <main class="container mx-auto px-6 pb-12"><!-- Quick Templates Section -->
+   <section class="section-template rounded-lg p-6 mb-8">
+    <div class="border-b border-blue-200 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-gray-800">Plantillas Rápidas IEEE 829</h2>
+     <p class="text-gray-600 mt-1">Agregue secciones estándar con contenido predefinido</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><button class="template-btn bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg text-left transition-colors" data-template="scope">
+      <div class="font-semibold mb-1">
+       1. Alcance de Pruebas
+      </div>
+      <div class="text-sm opacity-90">
+       Qué se probará y qué no
+      </div></button> <button class="template-btn bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg text-left transition-colors" data-template="approach">
+      <div class="font-semibold mb-1">
+       2. Enfoque de Pruebas
+      </div>
+      <div class="text-sm opacity-90">
+       Tipos y técnicas de pruebas
+      </div></button> <button class="template-btn bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-lg text-left transition-colors" data-template="criteria">
+      <div class="font-semibold mb-1">
+       3. Criterios Entrada/Salida
+      </div>
+      <div class="text-sm opacity-90">
+       Cuándo empezar y terminar
+      </div></button> <button class="template-btn bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-lg text-left transition-colors" data-template="environment">
+      <div class="font-semibold mb-1">
+       4. Entorno de Pruebas
+      </div>
+      <div class="text-sm opacity-90">
+       Hardware, software, datos
+      </div></button> <button class="template-btn bg-red-600 hover:bg-red-700 text-white p-4 rounded-lg text-left transition-colors" data-template="resources">
+      <div class="font-semibold mb-1">
+       5. Recursos y Cronograma
+      </div>
+      <div class="text-sm opacity-90">
+       Personal, herramientas, tiempo
+      </div></button> <button class="template-btn bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-lg text-left transition-colors" data-template="risks">
+      <div class="font-semibold mb-1">
+       6. Riesgos y Contingencias
+      </div>
+      <div class="text-sm opacity-90">
+       Identificación y mitigación
+      </div></button>
+    </div>
+   </section><!-- Custom Section Form -->
+   <section class="formal-section rounded-lg p-8 mb-8">
+    <div class="border-b border-gray-200 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-gray-800">Agregar Sección Personalizada</h2>
+     <p class="text-gray-600 mt-1">Defina secciones adicionales específicas para su proyecto</p>
+    </div>
+    <form id="section-form" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+     <div><label for="section-title" class="block text-sm font-semibold text-gray-700 mb-2">Título de la Sección *</label> <input type="text" id="section-title" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Ej. Estrategia de Automatización" required>
+     </div>
+     <div><label for="section-type" class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Sección *</label> <select id="section-type" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" required> <option value="">Seleccionar tipo</option> <option value="scope">Alcance</option> <option value="approach">Enfoque</option> <option value="criteria">Criterios</option> <option value="environment">Entorno</option> <option value="resources">Recursos</option> <option value="risks">Riesgos</option> <option value="custom">Personalizada</option> </select>
+     </div>
+     <div class="lg:col-span-2"><label for="section-content" class="block text-sm font-semibold text-gray-700 mb-2">Contenido *</label> <textarea id="section-content" rows="6" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Describa el contenido de esta sección del plan de pruebas..." required></textarea>
+     </div>
+     <div><label for="section-priority" class="block text-sm font-semibold text-gray-700 mb-2">Prioridad</label> <select id="section-priority" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none"> <option value="1">Alta</option> <option value="2" selected>Media</option> <option value="3">Baja</option> </select>
+     </div>
+     <div class="flex items-end"><button type="submit" id="add-section-btn" class="formal-button bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 rounded-md flex items-center gap-3"> <span>Agregar Sección</span>
+       <div id="add-loading" class="loading-spinner hidden"></div></button>
+     </div>
+    </form>
+   </section><!-- Test Plan Sections -->
+   <section id="sections-container" class="mb-8">
+    <div class="border-b border-gray-200 pb-4 mb-8">
+     <h2 class="text-2xl font-semibold text-gray-800">Secciones del Plan de Pruebas</h2>
+     <p class="text-gray-600 mt-1">Contenido estructurado según IEEE 829</p>
+    </div>
+    <div id="sections-list" class="space-y-6"><!-- Sections will be rendered here -->
+    </div>
+    <div id="no-sections-message" class="formal-section rounded-lg text-center py-16 text-gray-500">
+     <div class="text-5xl mb-4 text-gray-400">
+      📋
+     </div>
+     <h3 class="text-xl font-medium text-gray-700 mb-2">Plan de Pruebas Vacío</h3>
+     <p class="text-gray-600">Use las plantillas rápidas o agregue secciones personalizadas para comenzar</p>
+    </div>
+   </section><!-- IEEE 829 Guidelines -->
+   <section class="ieee-standard rounded-lg p-8 mb-8">
+    <div class="border-b border-slate-300 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-gray-800">Guía IEEE 829 - Estructura Estándar</h2>
+     <p class="text-gray-700 mt-1">Elementos clave que debe contener un plan de pruebas profesional</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-sm">1</span> Identificación del Plan</h3>
+      <ul class="text-sm text-gray-600 space-y-2">
+       <li class="flex items-start"><span class="text-blue-600 mr-2">•</span>Nombre único del plan</li>
+       <li class="flex items-start"><span class="text-blue-600 mr-2">•</span>Versión y fecha</li>
+       <li class="flex items-start"><span class="text-blue-600 mr-2">•</span>Responsables y aprobadores</li>
+      </ul>
+     </div>
+     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-green-600 text-white rounded-lg flex items-center justify-center text-sm">2</span> Elementos de Prueba</h3>
+      <ul class="text-sm text-gray-600 space-y-2">
+       <li class="flex items-start"><span class="text-green-600 mr-2">•</span>Módulos a probar</li>
+       <li class="flex items-start"><span class="text-green-600 mr-2">•</span>Funcionalidades incluidas</li>
+       <li class="flex items-start"><span class="text-green-600 mr-2">•</span>Exclusiones explícitas</li>
+      </ul>
+     </div>
+     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-purple-600 text-white rounded-lg flex items-center justify-center text-sm">3</span> Características a Probar</h3>
+      <ul class="text-sm text-gray-600 space-y-2">
+       <li class="flex items-start"><span class="text-purple-600 mr-2">•</span>Funcionalidad</li>
+       <li class="flex items-start"><span class="text-purple-600 mr-2">•</span>Rendimiento</li>
+       <li class="flex items-start"><span class="text-purple-600 mr-2">•</span>Usabilidad y seguridad</li>
+      </ul>
+     </div>
+     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-orange-600 text-white rounded-lg flex items-center justify-center text-sm">4</span> Enfoque de Pruebas</h3>
+      <ul class="text-sm text-gray-600 space-y-2">
+       <li class="flex items-start"><span class="text-orange-600 mr-2">•</span>Estrategia general</li>
+       <li class="flex items-start"><span class="text-orange-600 mr-2">•</span>Técnicas específicas</li>
+       <li class="flex items-start"><span class="text-orange-600 mr-2">•</span>Herramientas a utilizar</li>
+      </ul>
+     </div>
+    </div>
+   </section><!-- Export and Actions -->
+   <section class="formal-section rounded-lg p-8">
+    <div class="border-b border-gray-200 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-gray-800">Generación de Documentos</h2>
+     <p class="text-gray-600 mt-1">Exporte el plan de pruebas en formatos estándar</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4"><button id="export-ieee" class="formal-button bg-blue-700 hover:bg-blue-800 text-white px-6 py-4 rounded-md flex items-center justify-center gap-3 border border-blue-800"> <span class="text-xl">📄</span>
+      <div class="text-left">
+       <div class="font-semibold">
+        Plan IEEE 829
+       </div>
+       <div class="text-xs opacity-90">
+        Formato estándar
+       </div>
+      </div></button> <button id="export-summary" class="formal-button bg-green-700 hover:bg-green-800 text-white px-6 py-4 rounded-md flex items-center justify-center gap-3 border border-green-800"> <span class="text-xl">📋</span>
+      <div class="text-left">
+       <div class="font-semibold">
+        Resumen Ejecutivo
+       </div>
+       <div class="text-xs opacity-90">
+        Para stakeholders
+       </div>
+      </div></button> <button id="clear-all" class="formal-button bg-red-700 hover:bg-red-800 text-white px-6 py-4 rounded-md flex items-center justify-center gap-3 border border-red-800"> <span class="text-xl">🗑️</span>
+      <div class="text-left">
+       <div class="font-semibold">
+        Limpiar Plan
+       </div>
+       <div class="text-xs opacity-90">
+        Reiniciar documento
+       </div>
+      </div></button>
+    </div>
+   </section>
+  </main>
+  <script>
+        // Configuration and state
+        const defaultConfig = {
+            project_name: "Sistema de Gestión",
+            version: "v1.0.0",
+            test_manager: "Responsable de Pruebas",
+            organization: "Organización"
+        };
 
-    <link rel="stylesheet" href="css/layout.css" />
-    <link rel="stylesheet" href="css/plan-de-pruebas.css" />
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-</head>
-<body>
-    <header data-qs="navbar"></header>
+        let sections = [];
+        let isInitialized = false;
 
-    <main class="page-content">
-        <div class="content-wrapper">
-            <div class="plan-container">
+        // Template definitions
+        const templates = {
+            scope: {
+                title: "Alcance de Pruebas",
+                content: `ELEMENTOS A PROBAR:
+• Módulo de Login y Autenticación
+• Módulo de Gestión de Usuarios
+• Módulo de Reportes y Dashboard
+• APIs de integración con sistemas externos
+
+ELEMENTOS EXCLUIDOS:
+• Módulo de Administración (fuera del sprint actual)
+• Funcionalidades de terceros (PayPal, Google Maps)
+• Pruebas de migración de datos (fase posterior)
+
+CARACTERÍSTICAS A PROBAR:
+• Funcionalidad: Todas las funciones críticas del negocio
+• Usabilidad: Navegación intuitiva y experiencia de usuario
+• Rendimiento: Tiempos de respuesta bajo carga normal
+• Seguridad: Autenticación, autorización y protección de datos
+• Compatibilidad: Navegadores Chrome, Firefox, Safari, Edge`
+            },
+            approach: {
+                title: "Enfoque de Pruebas",
+                content: `ESTRATEGIA GENERAL:
+• Enfoque basado en riesgos priorizando funcionalidades críticas
+• Combinación de pruebas manuales y automatizadas
+• Pruebas iterativas siguiendo metodología ágil
+
+TIPOS DE PRUEBAS:
+• Pruebas Funcionales: Validación de requisitos funcionales
+• Pruebas de Integración: Verificación de interfaces entre módulos
+• Pruebas de Sistema: Validación del sistema completo
+• Pruebas de Aceptación: Validación con usuarios finales
+• Pruebas de Regresión: Verificación de funcionalidades existentes
+
+TÉCNICAS ESPECÍFICAS:
+• Partición de equivalencia y análisis de valores límite
+• Pruebas de casos de uso y escenarios de negocio
+• Pruebas exploratorias para descubrimiento de defectos
+• Pruebas de carga para validar rendimiento`
+            },
+            criteria: {
+                title: "Criterios de Entrada y Salida",
+                content: `CRITERIOS DE ENTRADA:
+• Build estable desplegado en ambiente de QA
+• Casos de prueba revisados y aprobados
+• Datos de prueba preparados y disponibles
+• Ambiente de pruebas configurado y operativo
+• Equipo de pruebas capacitado en funcionalidades
+
+CRITERIOS DE SALIDA:
+• 95% de casos de prueba ejecutados exitosamente
+• 0 defectos críticos pendientes
+• Máximo 2 defectos altos pendientes (con plan de resolución)
+• Pruebas de regresión completadas sin fallos
+• Documentación de defectos actualizada
+• Sign-off del Test Manager y Product Owner
+
+CRITERIOS DE SUSPENSIÓN:
+• Más de 5 defectos críticos identificados
+• Ambiente de pruebas inestable por más de 4 horas
+• Cambios mayores en requisitos (>30% de funcionalidad)`
+            },
+            environment: {
+                title: "Entorno de Pruebas",
+                content: `HARDWARE REQUERIDO:
+• Servidor de aplicaciones: 8GB RAM, 4 CPU cores
+• Base de datos: 16GB RAM, SSD 500GB
+• Estaciones de trabajo: 8GB RAM, Windows 10/11
+
+SOFTWARE Y HERRAMIENTAS:
+• Sistema Operativo: Windows Server 2019, Ubuntu 20.04
+• Base de Datos: PostgreSQL 13.x, Redis 6.x
+• Navegadores: Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
+• Herramientas de Pruebas: Selenium WebDriver, Postman, JMeter
+• Gestión de Defectos: Jira, TestRail
+
+DATOS DE PRUEBA:
+• Base de datos de prueba con 1000 usuarios ficticios
+• Catálogo de productos con 500 items
+• Transacciones históricas de 6 meses
+• Datos anonimizados de producción (cuando aplique)
+
+CONFIGURACIÓN DE RED:
+• Acceso a APIs externas en ambiente de sandbox
+• VPN configurada para acceso remoto del equipo
+• Firewall configurado para permitir tráfico de pruebas`
+            },
+            resources: {
+                title: "Recursos y Cronograma",
+                content: `EQUIPO DE PRUEBAS:
+• Test Manager: 1 persona (100% dedicación)
+• QA Senior: 2 personas (100% dedicación)
+• QA Junior: 2 personas (80% dedicación)
+• Automation Engineer: 1 persona (60% dedicación)
+
+CRONOGRAMA DE ACTIVIDADES:
+• Semana 1-2: Preparación de ambiente y casos de prueba
+• Semana 3-4: Ejecución de pruebas funcionales
+• Semana 5: Pruebas de integración y sistema
+• Semana 6: Pruebas de aceptación y regresión
+• Semana 7: Cierre y documentación
+
+HERRAMIENTAS Y LICENCIAS:
+• TestRail: 5 licencias de usuario
+• Jira: Acceso al proyecto de QA
+• Selenium Grid: Configuración en servidor dedicado
+• JMeter: Instalación en estaciones de trabajo
+
+PRESUPUESTO ESTIMADO:
+• Personal: $45,000 (7 semanas)
+• Herramientas y licencias: $2,500
+• Infraestructura: $1,500
+• Total: $49,000`
+            },
+            risks: {
+                title: "Riesgos y Contingencias",
+                content: `RIESGOS IDENTIFICADOS:
+
+ALTO RIESGO:
+• Retrasos en entrega de builds por desarrollo
+  Mitigación: Buffer de 2 días en cronograma, comunicación diaria
+• Cambios de requisitos durante fase de pruebas
+  Mitigación: Change control process, re-estimación de impacto
+
+MEDIO RIESGO:
+• Indisponibilidad de ambiente de pruebas
+  Mitigación: Ambiente de backup, SLA con infraestructura
+• Recursos clave no disponibles por enfermedad
+  Mitigación: Cross-training, documentación detallada
+
+BAJO RIESGO:
+• Problemas de rendimiento en herramientas de automatización
+  Mitigación: Pruebas piloto, herramientas alternativas
+
+PLAN DE CONTINGENCIA:
+• Escalación a Project Manager si riesgos altos se materializan
+• Re-priorización de casos de prueba críticos
+• Extensión de cronograma con aprobación de stakeholders
+• Recursos adicionales de otros proyectos si es necesario`
+            }
+        };
+
+        // Data handler for SDK
+        const dataHandler = {
+            onDataChanged(data) {
+                sections = data.sort((a, b) => a.priority - b.priority);
+                renderSections();
+            }
+        };
+
+        // Element SDK configuration
+        const elementConfig = {
+            defaultConfig,
+            onConfigChange: async (config) => {
+                document.getElementById('project-name-display').textContent = config.project_name || defaultConfig.project_name;
+                document.getElementById('project-name-input').value = config.project_name || defaultConfig.project_name;
+                document.getElementById('version-display').textContent = config.version || defaultConfig.version;
+                document.getElementById('version-input').value = config.version || defaultConfig.version;
+                document.getElementById('test-manager-display').textContent = config.test_manager || defaultConfig.test_manager;
+                document.getElementById('test-manager-input').value = config.test_manager || defaultConfig.test_manager;
+                document.getElementById('organization').textContent = config.organization || defaultConfig.organization;
+            },
+            mapToCapabilities: (config) => ({
+                recolorables: [],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            }),
+            mapToEditPanelValues: (config) => new Map([
+                ["project_name", config.project_name || defaultConfig.project_name],
+                ["version", config.version || defaultConfig.version],
+                ["test_manager", config.test_manager || defaultConfig.test_manager],
+                ["organization", config.organization || defaultConfig.organization]
+            ])
+        };
+
+        // Initialize SDKs
+        async function initializeApp() {
+            try {
+                // Set current date
+                document.getElementById('current-date').textContent = new Date().toLocaleDateString();
                 
-                <aside class="plan-sidebar">
-                    <h2><i class="bi bi-tools me-2"></i>Acciones</h2>
-                    <div class="d-grid gap-2">
-                        <button id="saveButton" class="btn btn-primary"><i class="bi bi-device-hdd-fill me-2"></i>Guardar Localmente</button>
-                        <button id="clearButton" class="btn btn-outline-secondary"><i class="bi bi-trash2 me-2"></i>Limpiar</button>
-                        <button id="printButton" class="btn btn-outline-secondary"><i class="bi bi-printer me-2"></i>Imprimir / PDF</button>
-                    </div>
-                    <h3 class="mt-4 fs-5">Navegación</h3>
-                    <div class="d-grid gap-2" id="navigation-links">
+                if (window.elementSdk) {
+                    await window.elementSdk.init(elementConfig);
+                }
+                
+                if (window.dataSdk) {
+                    const result = await window.dataSdk.init(dataHandler);
+                    if (!result.isOk) {
+                        console.error("Failed to initialize data SDK");
+                    }
+                }
+                
+                isInitialized = true;
+                setupEventListeners();
+            } catch (error) {
+                console.error("Initialization error:", error);
+                setupEventListeners();
+            }
+        }
+
+        // Render sections
+        function renderSections() {
+            const container = document.getElementById('sections-list');
+            const noMessage = document.getElementById('no-sections-message');
+            
+            if (sections.length === 0) {
+                container.innerHTML = '';
+                noMessage.style.display = 'block';
+                return;
+            }
+            
+            noMessage.style.display = 'none';
+            
+            container.innerHTML = sections.map((section, index) => `
+                <div class="section-card ${section.status} bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-blue-700 text-white rounded-lg w-10 h-10 flex items-center justify-center font-bold text-sm">
+                                ${index + 1}
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-gray-800 mb-1">${section.title}</h3>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-sm text-gray-600 capitalize">${section.section_type}</span>
+                                    <span class="status-badge ${section.status === 'draft' ? 'status-draft' : section.status === 'review' ? 'status-review' : 'status-approved'}">
+                                        ${section.status === 'draft' ? 'Borrador' : section.status === 'review' ? 'En Revisión' : 'Aprobado'}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
+                        <div class="flex gap-3">
+                            <select class="status-select formal-input px-3 py-2 text-sm rounded-md" data-section-id="${section.__backendId}">
+                                <option value="draft" ${section.status === 'draft' ? 'selected' : ''}>Borrador</option>
+                                <option value="review" ${section.status === 'review' ? 'selected' : ''}>En Revisión</option>
+                                <option value="approved" ${section.status === 'approved' ? 'selected' : ''}>Aprobado</option>
+                            </select>
+                            <button class="edit-section text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-md transition-colors" data-section-id="${section.__backendId}">
+                                ✏️
+                            </button>
+                            <button class="delete-section text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-md transition-colors" data-section-id="${section.__backendId}">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
                     
-                </aside>
-                
-                <div class="plan-document">
-    <div class="header">
-        <h1>Formato de Plan de Pruebas</h1>
-        <div class="subtitle">(Basado en IEEE 829)</div>
-    </div>
-
-    <div class="section" id="section1">
-        <h2>1. Identificador del Plan de Pruebas</h2>
-        <textarea class="form-control input-area" id="identificador" placeholder="Ej: PP-MODULO_PAGOS-V1.0"></textarea>
-    </div>
-    
-    <div class="section" id="section2">
-        <h2>2. Introducción y Referencias</h2>
-        <textarea class="form-control input-area" id="introduccion" placeholder="Ej: Este documento cubre las pruebas para el módulo de pagos con tarjeta de crédito del proyecto E-commerce.&#10;Referencias:&#10;- Documento de Requisitos v2.1&#10;- Especificación de Diseño Técnico v1.8"></textarea>
-    </div>
-    
-    <div class="section" id="section3">
-        <h2>3. Características a Probar</h2>
-        <textarea class="form-control input-area" id="caracteristicas_probar" placeholder="Ej:&#10;- Procesamiento de pagos con Visa/Mastercard.&#10;- Validación de datos de la tarjeta.&#10;- Manejo de transacciones rechazadas.&#10;- Envío de correo de confirmación de pago."></textarea>
-    </div>
-
-    <div class="section" id="section4">
-        <h2>4. Características a NO Probar</h2>
-        <textarea class="form-control input-area" id="caracteristicas_no_probar" placeholder="Ej:&#10;- Pruebas de rendimiento o estrés del procesador de pagos.&#10;- Integración con PayPal (será cubierto en otro plan).&#10;- El proceso de facturación posterior al pago."></textarea>
-    </div>
-
-    <div class="section" id="section5">
-        <h2>5. Enfoque de la Prueba</h2>
-        <textarea class="form-control input-area" id="enfoque" placeholder="Ej: Se realizará un enfoque de pruebas funcionales de caja negra. Se ejecutarán casos de prueba manuales para cubrir los flujos de usuario principales. Adicionalmente, se realizarán pruebas de usabilidad en la interfaz de pago y pruebas de compatibilidad en Chrome y Safari."></textarea>
-    </div>
-
-    <div class="section" id="section6">
-        <h2>6. Criterios de Pasa/Falla</h2>
-        <textarea class="form-control input-area" id="criterios_pasa_falla" placeholder="Ej: Un caso de prueba se considera 'PASA' si el resultado actual coincide con el resultado esperado en todos los pasos. Se considera 'FALLA' si existe alguna desviación. El ciclo de pruebas se considerará exitoso si el 95% de los casos de prueba pasan y no hay defectos críticos o bloqueantes abiertos."></textarea>
-    </div>
-
-    <div class="section" id="section7">
-        <h2>7. Criterios de Suspensión y Reanudación</h2>
-        <textarea class="form-control input-area" id="suspension_reanudacion" placeholder="Ej: SUSPENSIÓN: Las pruebas se detendrán si se encuentra un defecto bloqueante que impida la ejecución del 40% de los casos de prueba restantes.&#10;REANUDACIÓN: Las pruebas se reanudarán cuando el defecto bloqueante sea resuelto, verificado y una nueva versión sea desplegada en el entorno de QA."></textarea>
-    </div>
-
-    <div class="section" id="section8">
-        <h2>8. Entregables de la Prueba</h2>
-        <textarea class="form-control input-area" id="entregables" placeholder="Ej:&#10;- Este plan de pruebas.&#10;- Casos de prueba en TestRail.&#10;- Reportes de defectos en Jira.&#10;- Informe final de resultados de pruebas."></textarea>
-    </div>
-
-    <div class="section" id="section9">
-        <h2>9. Entorno de Pruebas</h2>
-        <textarea class="form-control input-area" id="entorno" placeholder="Ej:&#10;- URL: qa.mi-ecommerce.com&#10;- Navegadores: Chrome v125+, Safari v17+&#10;- Base de datos: QA_DB_02 (réplica de producción)&#10;- Cuentas de prueba: usuario01@test.com, usuario02@test.com"></textarea>
-    </div>
-
-    <div class="section" id="section10">
-        <h2>10. Cronograma y Recursos</h2>
-        <textarea class="form-control input-area" id="cronograma" placeholder="Ej:&#10;- Diseño de casos de prueba: 01/10/25 - 03/10/25&#10;- Ejecución de pruebas: 06/10/25 - 10/10/25&#10;- Pruebas de regresión: 13/10/25&#10;- Recursos: 2 Ingenieros QA.&#10;- Responsable: Ana López"></textarea>
-    </div>
-</div>
-                 
-            </div>
-        </div>
-    </main>
-
-    <footer data-qs="footer"></footer>
-
-    <div class="modal-overlay" id="loadPlanModal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>Cargar Plan de Pruebas</h2>
-                <button class="modal-close-btn" id="closeModalButton">&times;</button>
-            </div>
-            <div class="modal-body" id="plan-list-container">
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <pre class="whitespace-pre-wrap text-gray-700 leading-relaxed font-sans">${section.content}</pre>
+                    </div>
                 </div>
-        </div>
-    </div>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+            `).join('');
+            
+            // Add event listeners
+            container.querySelectorAll('.status-select').forEach(select => {
+                select.addEventListener('change', handleStatusChange);
+            });
+            
+            container.querySelectorAll('.edit-section').forEach(button => {
+                button.addEventListener('click', handleEditSection);
+            });
+            
+            container.querySelectorAll('.delete-section').forEach(button => {
+                button.addEventListener('click', handleDeleteSection);
+            });
+        }
 
-    <script type="module" src="js/layout.js"></script>
-    <script type="module" src="js/plan-de-pruebas.js"></script>
-</body>
+        // Handle template button clicks
+        function handleTemplateClick(event) {
+            const templateType = event.currentTarget.dataset.template;
+            const template = templates[templateType];
+            
+            if (template) {
+                document.getElementById('section-title').value = template.title;
+                document.getElementById('section-type').value = templateType;
+                document.getElementById('section-content').value = template.content;
+                
+                // Scroll to form
+                document.getElementById('section-form').scrollIntoView({ behavior: 'smooth' });
+                
+                showToast(`Plantilla "${template.title}" cargada`, "success");
+            }
+        }
+
+        // Handle form submission
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            if (sections.length >= 999) {
+                showToast("Límite máximo de 999 secciones alcanzado", "error");
+                return;
+            }
+            
+            const sectionData = {
+                id: Date.now().toString(),
+                section_type: document.getElementById('section-type').value,
+                title: document.getElementById('section-title').value,
+                content: document.getElementById('section-content').value,
+                priority: parseInt(document.getElementById('section-priority').value),
+                status: 'draft',
+                created_at: new Date().toISOString()
+            };
+            
+            const addButton = document.getElementById('add-section-btn');
+            const loading = document.getElementById('add-loading');
+            
+            addButton.disabled = true;
+            loading.classList.remove('hidden');
+            
+            if (window.dataSdk) {
+                const result = await window.dataSdk.create(sectionData);
+                
+                if (result.isOk) {
+                    event.target.reset();
+                    showToast("Sección agregada exitosamente", "success");
+                } else {
+                    showToast("Error al agregar la sección", "error");
+                }
+            } else {
+                sections.push({ ...sectionData, __backendId: sectionData.id });
+                renderSections();
+                event.target.reset();
+                showToast("Sección agregada exitosamente", "success");
+            }
+            
+            addButton.disabled = false;
+            loading.classList.add('hidden');
+        }
+
+        // Handle status change
+        async function handleStatusChange(event) {
+            const sectionId = event.target.dataset.sectionId;
+            const newStatus = event.target.value;
+            const section = sections.find(s => s.__backendId === sectionId);
+            
+            if (section && window.dataSdk) {
+                const updatedSection = { ...section, status: newStatus };
+                const result = await window.dataSdk.update(updatedSection);
+                
+                if (!result.isOk) {
+                    event.target.value = section.status;
+                    showToast("Error al actualizar el estado", "error");
+                }
+            }
+        }
+
+        // Handle edit section
+        function handleEditSection(event) {
+            const sectionId = event.target.dataset.sectionId;
+            const section = sections.find(s => s.__backendId === sectionId);
+            
+            if (section) {
+                document.getElementById('section-title').value = section.title;
+                document.getElementById('section-type').value = section.section_type;
+                document.getElementById('section-content').value = section.content;
+                document.getElementById('section-priority').value = section.priority;
+                
+                document.getElementById('section-form').scrollIntoView({ behavior: 'smooth' });
+                showToast("Sección cargada para edición", "info");
+            }
+        }
+
+        // Handle delete section
+        async function handleDeleteSection(event) {
+            const sectionId = event.target.dataset.sectionId;
+            const section = sections.find(s => s.__backendId === sectionId);
+            
+            if (section && window.dataSdk) {
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '❌';
+                button.style.backgroundColor = '#fee2e2';
+                
+                const confirmDelete = () => {
+                    button.innerHTML = '⏳';
+                    window.dataSdk.delete(section).then(result => {
+                        if (!result.isOk) {
+                            showToast("Error al eliminar la sección", "error");
+                            button.innerHTML = originalText;
+                            button.style.backgroundColor = '';
+                        }
+                    });
+                };
+                
+                const cancelDelete = () => {
+                    button.innerHTML = originalText;
+                    button.style.backgroundColor = '';
+                };
+                
+                const timeoutId = setTimeout(confirmDelete, 2000);
+                
+                const clickHandler = (e) => {
+                    if (!button.contains(e.target)) {
+                        clearTimeout(timeoutId);
+                        cancelDelete();
+                        document.removeEventListener('click', clickHandler);
+                    }
+                };
+                
+                document.addEventListener('click', clickHandler);
+                
+                button.onclick = (e) => {
+                    e.stopPropagation();
+                    clearTimeout(timeoutId);
+                    confirmDelete();
+                    document.removeEventListener('click', clickHandler);
+                };
+            }
+        }
+
+        // Export functions
+        function exportIEEE() {
+            const ieeeDocument = generateIEEEDocument();
+            downloadText(ieeeDocument, 'plan-pruebas-ieee829.txt');
+        }
+
+        function exportSummary() {
+            const summary = generateExecutiveSummary();
+            downloadText(summary, 'resumen-plan-pruebas.txt');
+        }
+
+        function generateIEEEDocument() {
+            const config = window.elementSdk?.config || defaultConfig;
+            const currentDate = new Date().toLocaleDateString();
+            
+            return `
+PLAN DE PRUEBAS IEEE 829
+========================
+
+1. IDENTIFICACIÓN DEL PLAN
+--------------------------
+Proyecto: ${config.project_name || defaultConfig.project_name}
+Versión: ${config.version || defaultConfig.version}
+Organización: ${config.organization || defaultConfig.organization}
+Test Manager: ${config.test_manager || defaultConfig.test_manager}
+Fecha: ${currentDate}
+
+2. INTRODUCCIÓN
+---------------
+Este documento define la estrategia de pruebas para el proyecto ${config.project_name || defaultConfig.project_name} 
+siguiendo el estándar IEEE 829. Establece el alcance, enfoque, recursos y cronograma 
+para las actividades de verificación y validación.
+
+${sections.map((section, index) => `
+${index + 3}. ${section.title.toUpperCase()}
+${'-'.repeat(section.title.length + 4)}
+${section.content}
+`).join('')}
+
+APROBACIONES
+============
+Test Manager: ${config.test_manager || defaultConfig.test_manager}
+Fecha: ${currentDate}
+Firma: _________________________
+
+Project Manager: ________________________
+Fecha: _____________
+Firma: _________________________
+
+Product Owner: ________________________
+Fecha: _____________
+Firma: _________________________
+
+---
+Documento generado automáticamente
+Estándar: IEEE 829-2008
+Total de secciones: ${sections.length}
+            `.trim();
+        }
+
+        function generateExecutiveSummary() {
+            const config = window.elementSdk?.config || defaultConfig;
+            const currentDate = new Date().toLocaleDateString();
+            
+            return `
+RESUMEN EJECUTIVO - PLAN DE PRUEBAS
+===================================
+
+Proyecto: ${config.project_name || defaultConfig.project_name}
+Versión: ${config.version || defaultConfig.version}
+Organización: ${config.organization || defaultConfig.organization}
+Responsable: ${config.test_manager || defaultConfig.test_manager}
+Fecha: ${currentDate}
+
+RESUMEN DEL PLAN:
+${sections.length > 0 ? sections.map(section => `
+• ${section.title}
+  Estado: ${section.status === 'draft' ? 'Borrador' : section.status === 'review' ? 'En Revisión' : 'Aprobado'}
+  Tipo: ${section.section_type}
+`).join('') : '• No hay secciones definidas aún'}
+
+ESTADÍSTICAS:
+• Total de secciones: ${sections.length}
+• Secciones aprobadas: ${sections.filter(s => s.status === 'approved').length}
+• Secciones en revisión: ${sections.filter(s => s.status === 'review').length}
+• Secciones en borrador: ${sections.filter(s => s.status === 'draft').length}
+
+ESTADO GENERAL:
+${sections.length === 0 ? 'Plan en fase inicial - requiere definición de secciones' :
+  sections.filter(s => s.status === 'approved').length === sections.length ? 'Plan completamente aprobado - listo para ejecución' :
+  sections.filter(s => s.status === 'approved').length > sections.length / 2 ? 'Plan en fase avanzada - mayoría de secciones aprobadas' :
+  'Plan en desarrollo - requiere revisión y aprobación'}
+
+PRÓXIMOS PASOS:
+${sections.filter(s => s.status === 'draft').length > 0 ? '• Completar secciones en borrador' : ''}
+${sections.filter(s => s.status === 'review').length > 0 ? '• Aprobar secciones en revisión' : ''}
+${sections.filter(s => s.status === 'approved').length === sections.length && sections.length > 0 ? '• Iniciar ejecución de pruebas según cronograma' : ''}
+            `.trim();
+        }
+
+        function downloadText(content, filename) {
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        async function clearAllData() {
+            if (sections.length === 0) {
+                showToast("No hay datos para limpiar", "info");
+                return;
+            }
+            
+            const button = document.getElementById('clear-all');
+            const originalText = button.textContent;
+            button.textContent = '⚠️ Confirmar';
+            button.style.backgroundColor = '#dc2626';
+            
+            const confirmClear = async () => {
+                button.textContent = '⏳ Limpiando...';
+                
+                if (window.dataSdk) {
+                    for (const section of sections) {
+                        await window.dataSdk.delete(section);
+                    }
+                } else {
+                    sections = [];
+                    renderSections();
+                }
+                
+                showToast("Plan de pruebas reiniciado", "success");
+                button.textContent = originalText;
+                button.style.backgroundColor = '';
+            };
+            
+            const cancelClear = () => {
+                button.textContent = originalText;
+                button.style.backgroundColor = '';
+            };
+            
+            const timeoutId = setTimeout(confirmClear, 3000);
+            
+            const clickHandler = (e) => {
+                if (!button.contains(e.target)) {
+                    clearTimeout(timeoutId);
+                    cancelClear();
+                    document.removeEventListener('click', clickHandler);
+                }
+            };
+            
+            document.addEventListener('click', clickHandler);
+            
+            button.onclick = (e) => {
+                e.stopPropagation();
+                clearTimeout(timeoutId);
+                confirmClear();
+                document.removeEventListener('click', clickHandler);
+            };
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+            
+            toast.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform duration-300 translate-x-full`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+
+        function setupEventListeners() {
+            document.getElementById('section-form').addEventListener('submit', handleFormSubmit);
+            document.getElementById('export-ieee').addEventListener('click', exportIEEE);
+            document.getElementById('export-summary').addEventListener('click', exportSummary);
+            document.getElementById('clear-all').addEventListener('click', clearAllData);
+            
+            // Template buttons
+            document.querySelectorAll('.template-btn').forEach(button => {
+                button.addEventListener('click', handleTemplateClick);
+            });
+            
+            // Inline editing for all fields
+            setupInlineEditing();
+        }
+
+        function setupInlineEditing() {
+            // Setup editing for project name
+            setupFieldEditing('project-name', 'project_name', 'Nombre del proyecto actualizado');
+            
+            // Setup editing for version
+            setupFieldEditing('version', 'version', 'Versión actualizada');
+            
+            // Setup editing for test manager
+            setupFieldEditing('test-manager', 'test_manager', 'QA Manager actualizado');
+        }
+        
+        function setupFieldEditing(fieldName, configKey, successMessage) {
+            const display = document.getElementById(`${fieldName}-display`);
+            const input = document.getElementById(`${fieldName}-input`);
+            
+            // Click to edit
+            display.addEventListener('click', () => {
+                display.classList.add('hidden');
+                input.classList.remove('hidden');
+                input.focus();
+                input.select();
+            });
+            
+            // Save on Enter or blur
+            const saveField = async () => {
+                const newValue = input.value.trim();
+                if (newValue && window.elementSdk) {
+                    const updateConfig = {};
+                    updateConfig[configKey] = newValue;
+                    await window.elementSdk.setConfig(updateConfig);
+                    showToast(successMessage, "success");
+                }
+                input.classList.add('hidden');
+                display.classList.remove('hidden');
+            };
+            
+            // Cancel on Escape
+            const cancelEdit = () => {
+                const currentValue = window.elementSdk?.config?.[configKey] || defaultConfig[configKey];
+                input.value = currentValue;
+                input.classList.add('hidden');
+                display.classList.remove('hidden');
+            };
+            
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveField();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelEdit();
+                }
+            });
+            
+            input.addEventListener('blur', saveField);
+        }
+
+        // Initialize the application
+        initializeApp();
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9965002525354711',t:'MTc2MTc2NTMxNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
