@@ -1,1108 +1,416 @@
-﻿<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Roadmap de Implementación</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: "Times New Roman", serif;
-        line-height: 1.6;
-        color: #333;
-        background-color: #f5f5f5;
-      }
-
-      .sidebar {
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 250px;
-        height: 100vh;
-        background: linear-gradient(135deg, #8e44ad 0%, #9b59b6 100%);
-        color: white;
-        padding: 20px;
-        z-index: 1000;
-        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-        overflow-y: auto;
-      }
-
-      .sidebar h2 {
-        margin-bottom: 30px;
-        font-size: 1.2em;
-        text-align: center;
-        border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-        padding-bottom: 15px;
-      }
-
-      .sidebar button {
-        width: 100%;
-        padding: 12px;
-        margin: 8px 0;
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: all 0.3s ease;
-      }
-
-      .sidebar button:hover {
-        background: rgba(255, 255, 255, 0.3);
-        transform: translateY(-2px);
-      }
-
-      .sidebar button.add-btn {
-        background: #27ae60;
-        font-weight: bold;
-      }
-
-      .sidebar button.add-btn:hover {
-        background: #2ecc71;
-      }
-
-      .main-content {
-        margin-left: 250px;
-        padding: 20px;
-        min-height: 100vh;
-      }
-
-      .document {
-        background: white;
-        max-width: 297mm;
-        margin: 0 auto;
-        padding: 20mm;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-        border-radius: 8px;
-      }
-
-      .header {
-        text-align: center;
-        margin-bottom: 30px;
-        border-bottom: 3px solid #8e44ad;
-        padding-bottom: 20px;
-      }
-
-      .header h1 {
-        color: #8e44ad;
-        font-size: 24px;
-        margin-bottom: 10px;
-      }
-
-      .header .subtitle {
-        color: #666;
-        font-size: 14px;
-        font-style: italic;
-      }
-
-      .intro-section {
-        margin-bottom: 25px;
-        padding: 15px;
-        background: #f4f1f8;
-        border-left: 4px solid #8e44ad;
-        border-radius: 4px;
-      }
-
-      .project-info {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-        margin-bottom: 25px;
-      }
-
-      .info-field {
-        display: flex;
-        flex-direction: column;
-      }
-
-      .info-field label {
-        font-weight: bold;
-        color: #8e44ad;
-        margin-bottom: 5px;
-      }
-
-      .info-field input,
-      .info-field select,
-      .info-field textarea {
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-        font-family: inherit;
-        font-size: 12px;
-      }
-
-      .phase-container {
-        margin-bottom: 30px;
-        border: 2px solid #ddd;
-        border-radius: 8px;
-        overflow: hidden;
-      }
-
-      .phase-header {
-        background: linear-gradient(135deg, #8e44ad, #9b59b6);
-        color: white;
-        padding: 15px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .phase-title {
-        font-size: 16px;
-        font-weight: bold;
-      }
-
-      .phase-controls {
-        display: flex;
-        gap: 10px;
-      }
-
-      .phase-btn {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 12px;
-      }
-
-      .phase-btn:hover {
-        background: rgba(255, 255, 255, 0.3);
-      }
-
-      .activities-table {
-        width: 100%;
-        border-collapse: collapse;
-      }
-
-      .activities-table th {
-        background: #f8f9fa;
-        padding: 12px 8px;
-        text-align: left;
-        font-weight: bold;
-        border-bottom: 2px solid #dee2e6;
-        font-size: 12px;
-      }
-
-      .activities-table td {
-        padding: 10px 8px;
-        border-bottom: 1px solid #dee2e6;
-        vertical-align: top;
-      }
-
-      .activities-table tr:hover {
-        background: #f8f9fa;
-      }
-
-      .activity-input {
-        width: 100%;
-        border: none;
-        background: transparent;
-        font-family: inherit;
-        font-size: 11px;
-        line-height: 1.4;
-        resize: vertical;
-        min-height: 35px;
-        padding: 4px;
-      }
-
-      .activity-input:focus {
-        outline: 2px solid #8e44ad;
-        background: white;
-        border-radius: 2px;
-      }
-
-      .date-input {
-        width: 100%;
-        border: none;
-        background: transparent;
-        font-family: inherit;
-        font-size: 11px;
-        padding: 4px;
-      }
-
-      .delete-activity-btn {
-        background: #e74c3c;
-        color: white;
-        border: none;
-        padding: 4px 8px;
-        border-radius: 3px;
-        cursor: pointer;
-        font-size: 10px;
-      }
-
-      .delete-activity-btn:hover {
-        background: #c0392b;
-      }
-
-      .timeline-section {
-        margin-top: 30px;
-        padding: 20px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        border: 1px solid #dee2e6;
-      }
-
-      .timeline-header {
-        text-align: center;
-        margin-bottom: 20px;
-        color: #8e44ad;
-        font-size: 18px;
-        font-weight: bold;
-      }
-
-      .timeline {
-        position: relative;
-        padding: 20px 0;
-      }
-
-      .timeline-item {
-        display: flex;
-        margin-bottom: 20px;
-        position: relative;
-      }
-
-      .timeline-marker {
-        width: 20px;
-        height: 20px;
-        border-radius: 50%;
-        background: #8e44ad;
-        margin-right: 20px;
-        flex-shrink: 0;
-        position: relative;
-        z-index: 2;
-      }
-
-      .timeline-content {
-        flex: 1;
-        background: white;
-        padding: 15px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-
-      .timeline-phase {
-        font-weight: bold;
-        color: #8e44ad;
-        margin-bottom: 5px;
-      }
-
-      .timeline-dates {
-        font-size: 12px;
-        color: #666;
-        margin-bottom: 8px;
-      }
-
-      .timeline-activities {
-        font-size: 11px;
-        color: #555;
-      }
-
-      .summary-section {
-        margin-top: 30px;
-        padding: 20px;
-        background: #f4f1f8;
-        border-radius: 8px;
-        border: 1px solid #d1c4e9;
-      }
-
-      .summary-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 15px;
-        margin-top: 15px;
-      }
-
-      .summary-card {
-        background: white;
-        padding: 15px;
-        border-radius: 6px;
-        text-align: center;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
-
-      .summary-number {
-        font-size: 24px;
-        font-weight: bold;
-        color: #8e44ad;
-      }
-
-      .summary-label {
-        font-size: 12px;
-        color: #666;
-        margin-top: 5px;
-      }
-
-      /* Estilos para impresión */
-      @media print {
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plan de Implementación CMMI</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
         body {
-          background: white;
-          font-size: 10pt;
-          line-height: 1.3;
+            box-sizing: border-box;
         }
-
-        .sidebar {
-          display: none !important;
+        @media print {
+            .no-print { display: none; }
+            body { font-size: 12px; }
         }
-
-        .main-content {
-          margin-left: 0 !important;
-          padding: 0 !important;
-        }
-
-        .document {
-          box-shadow: none;
-          border-radius: 0;
-          max-width: none;
-          padding: 10mm;
-          margin: 0;
-        }
-
-        .phase-container {
-          page-break-inside: avoid;
-          margin-bottom: 20px;
-        }
-
-        .activities-table {
-          font-size: 9pt;
-        }
-
-        .activity-input,
-        .date-input {
-          border: none;
-          background: transparent;
-          font-size: 9pt;
-        }
-
-        .delete-activity-btn,
-        .phase-btn {
-          display: none;
-        }
-
-        .header h1 {
-          font-size: 16pt;
-        }
-
-        .timeline-section {
-          page-break-before: always;
-        }
-      }
-
-      @page {
-        size: A4 landscape;
-        margin: 10mm;
-      }
     </style>
-  </head>
-  <body>
-    <div class="sidebar">
-      <h2>🗺️ Acciones</h2>
-      <button onclick="saveForm()">💾 Guardar Progreso</button>
-      <button onclick="loadForm()">📂 Cargar Progreso</button>
-      <button onclick="clearForm()">🗑️ Limpiar Todo</button>
-      <button onclick="exportToPDF()">📄 Exportar a PDF</button>
-      <button onclick="printDocument()">🖨️ Imprimir</button>
-
-      <div
-        style="
-          margin: 20px 0;
-          border-top: 1px solid rgba(255, 255, 255, 0.3);
-          padding-top: 20px;
-        "
-      >
-        <button class="add-btn" onclick="addPhase()">➕ Agregar Fase</button>
-        <button onclick="generateTimeline()" style="background: #3498db">
-          📊 Actualizar Timeline
-        </button>
-      </div>
-
-      <div
-        style="
-          margin-top: 30px;
-          padding-top: 20px;
-          border-top: 1px solid rgba(255, 255, 255, 0.3);
-        "
-      >
-        <h3 style="font-size: 14px; margin-bottom: 15px">📋 Resumen</h3>
-        <div id="sidebar-summary" style="font-size: 12px; color: #ecf0f1">
-          <div>Total de fases: <span id="total-phases">1</span></div>
-          <div>Total actividades: <span id="total-activities">1</span></div>
-          <div>Duración estimada: <span id="estimated-duration">-</span></div>
-        </div>
-      </div>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="min-h-full bg-slate-50 font-sans">
+  <div class="max-w-7xl mx-auto p-6"><!-- Header Section -->
+   <header class="bg-white rounded-lg shadow-sm border border-slate-200 p-8 mb-6">
+    <div class="text-center">
+     <h1 id="plan-title" class="text-3xl font-bold text-slate-800 mb-2">Plan de Implementación CMMI</h1>
+     <div class="text-lg text-slate-600 mb-4"><span id="company-name">Nombre de la Empresa</span> | <span id="certification-level">CMMI-DEV Nivel 3</span>
+     </div>
+     <div class="text-sm text-slate-500">
+      Responsable: <span id="project-manager" class="font-medium">Líder del Proyecto</span>
+     </div>
     </div>
-
-    <div class="main-content">
-      <div class="document">
-        <div class="header">
-          <h1>Anexo 4: Formato de Roadmap de Implementación</h1>
-          <div class="subtitle">Cronograma de Implementación de Mejoras</div>
-          <div style="margin-top: 15px; font-size: 12px; color: #888">
-            <strong>Cuándo presentarlo:</strong> Semana 14, Sesión 40 (Roadmap
-            de Implementación)<br />
-            <strong>Nota:</strong> Este formato es un entregable clave para
-            planificar las fases de implementación de las mejoras propuestas.
-          </div>
-        </div>
-
-        <div class="intro-section">
-          <p>
-            <strong>Instrucciones:</strong> Complete la siguiente información
-            con el cronograma de implementación de su empresa caso. Incluya
-            actividades, responsables, fechas y entregables por fase.
-          </p>
-        </div>
-
-        <div class="project-info">
-          <div class="info-field">
-            <label>Proyecto / Iniciativa:</label>
-            <input
-              type="text"
-              id="proyecto"
-              placeholder="Nombre del proyecto de mejora..."
-            />
-          </div>
-          <div class="info-field">
-            <label>Responsable General:</label>
-            <input
-              type="text"
-              id="responsable_general"
-              placeholder="Nombre del líder del proyecto..."
-            />
-          </div>
-          <div class="info-field">
-            <label>Fecha de Inicio del Proyecto:</label>
-            <input type="date" id="fecha_inicio_proyecto" />
-          </div>
-          <div class="info-field">
-            <label>Fecha Estimada de Finalización:</label>
-            <input type="date" id="fecha_fin_proyecto" />
-          </div>
-        </div>
-
-        <div class="info-field" style="margin-bottom: 25px">
-          <label>Objetivo del Roadmap:</label>
-          <textarea
-            id="objetivo"
-            rows="3"
-            placeholder="Describa el objetivo principal de este roadmap de implementación..."
-          ></textarea>
-        </div>
-
-        <div id="phases-container">
-          <div class="phase-container" data-phase="1">
-            <div class="phase-header">
-              <div class="phase-title">Fase 1: Diagnóstico y Planificación</div>
-              <div class="phase-controls">
-                <button class="phase-btn" onclick="addActivity(this)">
-                  + Actividad
-                </button>
-                <button
-                  class="phase-btn"
-                  onclick="deletePhase(this)"
-                  style="background: #e74c3c"
-                >
-                  🗑️
-                </button>
-              </div>
-            </div>
-            <table class="activities-table">
-              <thead>
-                <tr>
-                  <th style="width: 25%">Actividad</th>
-                  <th style="width: 20%">Responsable(s)</th>
-                  <th style="width: 25%">Entregable</th>
-                  <th style="width: 15%">Fecha Inicio</th>
-                  <th style="width: 15%">Fecha Fin</th>
-                  <th style="width: 5%">Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>
-                    <textarea
-                      class="activity-input"
-                      placeholder="Descripción de la actividad..."
-                    >
-Capacitación en modelo CMMI Nivel 2</textarea
-                    >
-                  </td>
-                  <td>
-                    <textarea
-                      class="activity-input"
-                      placeholder="Nombre(s) del responsable..."
-                    >
-Consultor QA / Líder de proyecto</textarea
-                    >
-                  </td>
-                  <td>
-                    <textarea
-                      class="activity-input"
-                      placeholder="Entregable esperado..."
-                    >
-Lista de asistencia y material de capacitación</textarea
-                    >
-                  </td>
-                  <td>
-                    <input type="date" class="date-input" value="2025-03-01" />
-                  </td>
-                  <td>
-                    <input type="date" class="date-input" value="2025-03-15" />
-                  </td>
-                  <td>
-                    <button
-                      class="delete-activity-btn"
-                      onclick="deleteActivity(this)"
-                    >
-                      🗑️
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="timeline-section">
-          <div class="timeline-header">📅 Línea de Tiempo del Proyecto</div>
-          <div id="timeline-container">
-            <div class="timeline" id="timeline">
-              <!-- Timeline items will be generated here -->
-            </div>
-          </div>
-        </div>
-
-        <div class="summary-section">
-          <h3 style="color: #8e44ad; margin-bottom: 15px">
-            📈 Resumen del Roadmap
-          </h3>
-          <div class="summary-grid">
-            <div class="summary-card">
-              <div class="summary-number" id="phases-summary">1</div>
-              <div class="summary-label">Fases Totales</div>
-            </div>
-            <div class="summary-card">
-              <div class="summary-number" id="activities-summary">1</div>
-              <div class="summary-label">Actividades Totales</div>
-            </div>
-            <div class="summary-card">
-              <div class="summary-number" id="duration-summary">-</div>
-              <div class="summary-label">Duración (días)</div>
-            </div>
-            <div class="summary-card">
-              <div class="summary-number" id="resources-summary">-</div>
-              <div class="summary-label">Recursos Únicos</div>
-            </div>
-          </div>
-        </div>
+   </header><!-- Introduction -->
+   <section class="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
+    <h2 class="text-xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2">Fase 2: Planificación (El "Cómo Llegamos")</h2>
+    <p class="text-slate-600 leading-relaxed">Una vez que sabemos dónde estamos y dónde queremos llegar (la certificación), debemos trazar el mapa. Este cronograma estratégico de alto nivel es el mapa que se entrega a la dirección para explicar: "Así es como lo vamos a lograr, esto costará y esto tomará tanto tiempo".</p>
+   </section><!-- Phase Management -->
+   <section class="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
+    <div class="flex justify-between items-center mb-6">
+     <h2 class="text-xl font-semibold text-slate-800">Gestión de Fases y Hitos</h2><button id="add-milestone-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"> + Agregar Hito </button>
+    </div><!-- Add Milestone Form -->
+    <div id="milestone-form" class="hidden bg-slate-50 rounded-lg p-6 mb-6 border border-slate-200">
+     <h3 class="text-lg font-medium text-slate-800 mb-4">Nuevo Hito del Plan</h3>
+     <form id="milestone-form-element" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div><label for="fase-select" class="block text-sm font-medium text-slate-700 mb-2">Fase</label> <select id="fase-select" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"> <option value="Fase 1">Fase 1: Diagnóstico y Capacitación</option> <option value="Fase 2">Fase 2: Diseño de Procesos (REQM, PMC)</option> <option value="Fase 3">Fase 3: Implementación y Piloto</option> <option value="Fase 4">Fase 4: Evaluación/Auditoría</option> </select>
       </div>
+      <div><label for="hito-input" class="block text-sm font-medium text-slate-700 mb-2">Hito Clave</label> <input type="text" id="hito-input" placeholder="Ej. Capacitación CMMI completada" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+      <div class="md:col-span-2"><label for="descripcion-input" class="block text-sm font-medium text-slate-700 mb-2">Descripción del Entregable</label> <textarea id="descripcion-input" rows="3" placeholder="Descripción detallada del hito y entregables esperados" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></textarea>
+      </div>
+      <div><label for="tiempo-inicio" class="block text-sm font-medium text-slate-700 mb-2">Tiempo Inicio</label> <input type="text" id="tiempo-inicio" placeholder="Ej. Mes 1" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+      <div><label for="tiempo-fin" class="block text-sm font-medium text-slate-700 mb-2">Tiempo Fin</label> <input type="text" id="tiempo-fin" placeholder="Ej. Mes 2" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+      <div><label for="responsable-input" class="block text-sm font-medium text-slate-700 mb-2">Responsable</label> <input type="text" id="responsable-input" placeholder="Ej. Equipo SEPG, Líderes de Proyecto" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+      <div><label for="prioridad-select" class="block text-sm font-medium text-slate-700 mb-2">Prioridad</label> <select id="prioridad-select" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"> <option value="Alta">Alta</option> <option value="Media">Media</option> <option value="Baja">Baja</option> </select>
+      </div>
+      <div class="md:col-span-2 flex gap-3"><button type="submit" id="save-milestone-btn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"> Guardar Hito </button> <button type="button" id="cancel-milestone-btn" class="bg-slate-500 hover:bg-slate-600 text-white px-6 py-2 rounded-lg font-medium transition-colors"> Cancelar </button>
+      </div>
+     </form>
+    </div><!-- Milestones List -->
+    <div id="milestones-container">
+     <div id="empty-state" class="text-center py-12 text-slate-500">
+      <div class="text-4xl mb-4">
+       📋
+      </div>
+      <p class="text-lg mb-2">No hay hitos definidos</p>
+      <p class="text-sm">Comience agregando los hitos clave de su plan de implementación</p>
+     </div>
     </div>
-
-    <script>
-      let phaseCounter = 1;
-
-      function addPhase() {
-        phaseCounter++;
-        const phasesContainer = document.getElementById("phases-container");
-        const newPhase = document.createElement("div");
-        newPhase.className = "phase-container";
-        newPhase.setAttribute("data-phase", phaseCounter);
-
-        newPhase.innerHTML = `
-                <div class="phase-header">
-                    <div class="phase-title">Fase ${phaseCounter}: <input type="text" placeholder="Nombre de la fase..." style="background: transparent; border: none; color: white; font-size: 16px; font-weight: bold; width: 300px;"></div>
-                    <div class="phase-controls">
-                        <button class="phase-btn" onclick="addActivity(this)">+ Actividad</button>
-                        <button class="phase-btn" onclick="deletePhase(this)" style="background: #e74c3c;">🗑️</button>
-                    </div>
-                </div>
-                <table class="activities-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 25%;">Actividad</th>
-                            <th style="width: 20%;">Responsable(s)</th>
-                            <th style="width: 25%;">Entregable</th>
-                            <th style="width: 15%;">Fecha Inicio</th>
-                            <th style="width: 15%;">Fecha Fin</th>
-                            <th style="width: 5%;">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><textarea class="activity-input" placeholder="Descripción de la actividad..."></textarea></td>
-                            <td><textarea class="activity-input" placeholder="Nombre(s) del responsable..."></textarea></td>
-                            <td><textarea class="activity-input" placeholder="Entregable esperado..."></textarea></td>
-                            <td><input type="date" class="date-input"></td>
-                            <td><input type="date" class="date-input"></td>
-                            <td><button class="delete-activity-btn" onclick="deleteActivity(this)">🗑️</button></td>
-                        </tr>
-                    </tbody>
-                </table>
-            `;
-
-        phasesContainer.appendChild(newPhase);
-        updateSummary();
-      }
-
-      function deletePhase(button) {
-        const phase = button.closest(".phase-container");
-        const phases = document.querySelectorAll(".phase-container");
-
-        if (phases.length > 1) {
-          phase.remove();
-          updateSummary();
-          generateTimeline();
-        } else {
-          alert("Debe mantener al menos una fase en el roadmap.");
-        }
-      }
-
-      function addActivity(button) {
-        const phase = button.closest(".phase-container");
-        const tbody = phase.querySelector("tbody");
-
-        const newRow = document.createElement("tr");
-        newRow.innerHTML = `
-                <td><textarea class="activity-input" placeholder="Descripción de la actividad..."></textarea></td>
-                <td><textarea class="activity-input" placeholder="Nombre(s) del responsable..."></textarea></td>
-                <td><textarea class="activity-input" placeholder="Entregable esperado..."></textarea></td>
-                <td><input type="date" class="date-input"></td>
-                <td><input type="date" class="date-input"></td>
-                <td><button class="delete-activity-btn" onclick="deleteActivity(this)">🗑️</button></td>
-            `;
-
-        tbody.appendChild(newRow);
-        updateSummary();
-      }
-
-      function deleteActivity(button) {
-        const row = button.closest("tr");
-        const tbody = row.closest("tbody");
-
-        if (tbody.querySelectorAll("tr").length > 1) {
-          row.remove();
-          updateSummary();
-          generateTimeline();
-        } else {
-          alert("Cada fase debe tener al menos una actividad.");
-        }
-      }
-
-      function updateSummary() {
-        const phases = document.querySelectorAll(".phase-container");
-        const activities = document.querySelectorAll(
-          ".phase-container tbody tr"
-        );
-
-        let totalPhases = phases.length;
-        let totalActivities = activities.length;
-        let uniqueResources = new Set();
-        let earliestStart = null;
-        let latestEnd = null;
-
-        activities.forEach((activity) => {
-          const responsible = activity
-            .querySelector(".activity-input:nth-child(1)")
-            .nextElementSibling.value.trim();
-          if (responsible) {
-            responsible
-              .split("/")
-              .forEach((r) => uniqueResources.add(r.trim()));
-          }
-
-          const startDate = activity.querySelector(
-            ".date-input:nth-child(1)"
-          ).value;
-          const endDate = activity.querySelector(
-            ".date-input:nth-child(2)"
-          ).value;
-
-          if (startDate && (!earliestStart || startDate < earliestStart)) {
-            earliestStart = startDate;
-          }
-          if (endDate && (!latestEnd || endDate > latestEnd)) {
-            latestEnd = endDate;
-          }
-        });
-
-        let duration = "-";
-        if (earliestStart && latestEnd) {
-          const start = new Date(earliestStart);
-          const end = new Date(latestEnd);
-          const diffTime = Math.abs(end - start);
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          duration = diffDays;
-        }
-
-        // Actualizar resumen principal
-        document.getElementById("phases-summary").textContent = totalPhases;
-        document.getElementById("activities-summary").textContent =
-          totalActivities;
-        document.getElementById("duration-summary").textContent = duration;
-        document.getElementById("resources-summary").textContent =
-          uniqueResources.size || "-";
-
-        // Actualizar sidebar
-        document.getElementById("total-phases").textContent = totalPhases;
-        document.getElementById("total-activities").textContent =
-          totalActivities;
-        document.getElementById("estimated-duration").textContent =
-          duration === "-" ? "-" : duration + " días";
-      }
-
-      function generateTimeline() {
-        const timeline = document.getElementById("timeline");
-        timeline.innerHTML = "";
-
-        const phases = document.querySelectorAll(".phase-container");
-
-        phases.forEach((phase, index) => {
-          const phaseTitle = phase.querySelector(".phase-title").textContent;
-          const activities = phase.querySelectorAll("tbody tr");
-
-          let phaseStart = null;
-          let phaseEnd = null;
-          let activitiesList = [];
-
-          activities.forEach((activity) => {
-            const activityName =
-              activity.querySelector(".activity-input").value;
-            const startDate = activity.querySelector(
-              ".date-input:nth-child(1)"
-            ).value;
-            const endDate = activity.querySelector(
-              ".date-input:nth-child(2)"
-            ).value;
-
-            if (activityName.trim()) {
-              activitiesList.push(activityName.trim());
-            }
-
-            if (startDate && (!phaseStart || startDate < phaseStart)) {
-              phaseStart = startDate;
-            }
-            if (endDate && (!phaseEnd || endDate > phaseEnd)) {
-              phaseEnd = endDate;
-            }
-          });
-
-          const timelineItem = document.createElement("div");
-          timelineItem.className = "timeline-item";
-
-          const formatDate = (dateStr) => {
-            if (!dateStr) return "No definida";
-            const date = new Date(dateStr);
-            return date.toLocaleDateString("es-ES");
-          };
-
-          timelineItem.innerHTML = `
-                    <div class="timeline-marker"></div>
-                    <div class="timeline-content">
-                        <div class="timeline-phase">${phaseTitle}</div>
-                        <div class="timeline-dates">
-                            📅 ${formatDate(phaseStart)} - ${formatDate(
-            phaseEnd
-          )}
-                        </div>
-                        <div class="timeline-activities">
-                            <strong>Actividades:</strong><br>
-                            ${
-                              activitiesList.length > 0
-                                ? activitiesList
-                                    .map((a) => `• ${a}`)
-                                    .join("<br>")
-                                : "• Sin actividades definidas"
-                            }
-                        </div>
-                    </div>
-                `;
-
-          timeline.appendChild(timelineItem);
-        });
-      }
-
-      function saveForm() {
-        const formData = {
-          proyecto: document.getElementById("proyecto").value,
-          responsable_general: document.getElementById("responsable_general")
-            .value,
-          fecha_inicio_proyecto: document.getElementById(
-            "fecha_inicio_proyecto"
-          ).value,
-          fecha_fin_proyecto:
-            document.getElementById("fecha_fin_proyecto").value,
-          objetivo: document.getElementById("objetivo").value,
-          phases: [],
+   </section><!-- Change Management Strategy -->
+   <section class="bg-white rounded-lg shadow-sm border border-slate-200 p-6 mb-6">
+    <h2 class="text-xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2">Estrategia de Gestión del Cambio Organizacional</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+     <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
+      <h3 class="font-semibold text-blue-800 mb-3 flex items-center"><span class="mr-2">👥</span> Capacitación del Personal</h3>
+      <ul class="text-sm text-blue-700 space-y-1">
+       <li>• Talleres de sensibilización CMMI</li>
+       <li>• Capacitación técnica por roles</li>
+       <li>• Mentoring y coaching continuo</li>
+       <li>• Evaluaciones de competencias</li>
+      </ul>
+     </div>
+     <div class="bg-green-50 rounded-lg p-4 border border-green-200">
+      <h3 class="font-semibold text-green-800 mb-3 flex items-center"><span class="mr-2">📢</span> Comunicación de Beneficios</h3>
+      <ul class="text-sm text-green-700 space-y-1">
+       <li>• Sesiones informativas ejecutivas</li>
+       <li>• Casos de éxito y testimonios</li>
+       <li>• Comunicación regular de avances</li>
+       <li>• Reconocimiento de logros</li>
+      </ul>
+     </div>
+     <div class="bg-orange-50 rounded-lg p-4 border border-orange-200">
+      <h3 class="font-semibold text-orange-800 mb-3 flex items-center"><span class="mr-2">🛡️</span> Gestión de Resistencia</h3>
+      <ul class="text-sm text-orange-700 space-y-1">
+       <li>• Identificación de stakeholders clave</li>
+       <li>• Análisis de impacto por área</li>
+       <li>• Plan de mitigación de riesgos</li>
+       <li>• Feedback loops y ajustes</li>
+      </ul>
+     </div>
+     <div class="bg-purple-50 rounded-lg p-4 border border-purple-200">
+      <h3 class="font-semibold text-purple-800 mb-3 flex items-center"><span class="mr-2">📊</span> Monitoreo y Control</h3>
+      <ul class="text-sm text-purple-700 space-y-1">
+       <li>• KPIs de adopción de procesos</li>
+       <li>• Encuestas de satisfacción</li>
+       <li>• Auditorías internas regulares</li>
+       <li>• Planes de acción correctiva</li>
+      </ul>
+     </div>
+    </div>
+   </section><!-- Summary Dashboard -->
+   <section class="bg-white rounded-lg shadow-sm border border-slate-200 p-6">
+    <h2 class="text-xl font-semibold text-slate-800 mb-4 border-b border-slate-200 pb-2">Resumen Ejecutivo del Plan</h2>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+     <div class="bg-slate-50 rounded-lg p-4 text-center">
+      <div class="text-2xl font-bold text-slate-800" id="total-milestones">
+       0
+      </div>
+      <div class="text-sm text-slate-600">
+       Hitos Totales
+      </div>
+     </div>
+     <div class="bg-slate-50 rounded-lg p-4 text-center">
+      <div class="text-2xl font-bold text-blue-600" id="phases-count">
+       4
+      </div>
+      <div class="text-sm text-slate-600">
+       Fases Definidas
+      </div>
+     </div>
+     <div class="bg-slate-50 rounded-lg p-4 text-center">
+      <div class="text-2xl font-bold text-green-600" id="high-priority">
+       0
+      </div>
+      <div class="text-sm text-slate-600">
+       Alta Prioridad
+      </div>
+     </div>
+     <div class="bg-slate-50 rounded-lg p-4 text-center">
+      <div class="text-2xl font-bold text-orange-600" id="estimated-duration">
+       TBD
+      </div>
+      <div class="text-sm text-slate-600">
+       Duración Estimada
+      </div>
+     </div>
+    </div>
+   </section>
+  </div>
+  <script>
+        // Configuration object
+        const defaultConfig = {
+            plan_title: "Plan de Implementación CMMI",
+            company_name: "Nombre de la Empresa",
+            certification_level: "CMMI-DEV Nivel 3",
+            project_manager: "Líder del Proyecto"
         };
 
-        const phases = document.querySelectorAll(".phase-container");
-        phases.forEach((phase) => {
-          const phaseTitle = phase.querySelector(".phase-title").textContent;
-          const activities = [];
+        let currentMilestones = [];
+        let isLoading = false;
 
-          const activityRows = phase.querySelectorAll("tbody tr");
-          activityRows.forEach((row) => {
-            const inputs = row.querySelectorAll(".activity-input");
-            const dates = row.querySelectorAll(".date-input");
+        // Data handler for SDK
+        const dataHandler = {
+            onDataChanged(data) {
+                currentMilestones = data;
+                renderMilestones();
+                updateSummaryStats();
+            }
+        };
 
-            activities.push({
-              actividad: inputs[0].value,
-              responsable: inputs[1].value,
-              entregable: inputs[2].value,
-              fecha_inicio: dates[0].value,
-              fecha_fin: dates[1].value,
-            });
-          });
+        // Initialize SDKs
+        async function initializeApp() {
+            // Initialize Data SDK
+            const initResult = await window.dataSdk.init(dataHandler);
+            if (!initResult.isOk) {
+                console.error("Failed to initialize data SDK");
+                return;
+            }
 
-          formData.phases.push({
-            title: phaseTitle,
-            activities: activities,
-          });
-        });
-
-        const dataStr = JSON.stringify(formData);
-        const dataBlob = new Blob([dataStr], { type: "application/json" });
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = "roadmap_implementacion_progreso.json";
-        link.click();
-        URL.revokeObjectURL(url);
-
-        alert("✅ Progreso guardado exitosamente");
-      }
-
-      function loadForm() {
-        const input = document.createElement("input");
-        input.type = "file";
-        input.accept = ".json";
-        input.onchange = function (e) {
-          const file = e.target.files[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onload = function (e) {
-              try {
-                const formData = JSON.parse(e.target.result);
-
-                // Cargar información general
-                document.getElementById("proyecto").value =
-                  formData.proyecto || "";
-                document.getElementById("responsable_general").value =
-                  formData.responsable_general || "";
-                document.getElementById("fecha_inicio_proyecto").value =
-                  formData.fecha_inicio_proyecto || "";
-                document.getElementById("fecha_fin_proyecto").value =
-                  formData.fecha_fin_proyecto || "";
-                document.getElementById("objetivo").value =
-                  formData.objetivo || "";
-
-                // Limpiar fases actuales
-                const phasesContainer =
-                  document.getElementById("phases-container");
-                phasesContainer.innerHTML = "";
-                phaseCounter = 0;
-
-                // Cargar fases
-                formData.phases.forEach((phaseData, index) => {
-                  phaseCounter++;
-                  const newPhase = document.createElement("div");
-                  newPhase.className = "phase-container";
-                  newPhase.setAttribute("data-phase", phaseCounter);
-
-                  newPhase.innerHTML = `
-                                    <div class="phase-header">
-                                        <div class="phase-title">${phaseData.title}</div>
-                                        <div class="phase-controls">
-                                            <button class="phase-btn" onclick="addActivity(this)">+ Actividad</button>
-                                            <button class="phase-btn" onclick="deletePhase(this)" style="background: #e74c3c;">🗑️</button>
-                                        </div>
-                                    </div>
-                                    <table class="activities-table">
-                                        <thead>
-                                            <tr>
-                                                <th style="width: 25%;">Actividad</th>
-                                                <th style="width: 20%;">Responsable(s)</th>
-                                                <th style="width: 25%;">Entregable</th>
-                                                <th style="width: 15%;">Fecha Inicio</th>
-                                                <th style="width: 15%;">Fecha Fin</th>
-                                                <th style="width: 5%;">Acción</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody></tbody>
-                                    </table>
-                                `;
-
-                  const tbody = newPhase.querySelector("tbody");
-                  phaseData.activities.forEach((activity) => {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                                        <td><textarea class="activity-input">${activity.actividad}</textarea></td>
-                                        <td><textarea class="activity-input">${activity.responsable}</textarea></td>
-                                        <td><textarea class="activity-input">${activity.entregable}</textarea></td>
-                                        <td><input type="date" class="date-input" value="${activity.fecha_inicio}"></td>
-                                        <td><input type="date" class="date-input" value="${activity.fecha_fin}"></td>
-                                        <td><button class="delete-activity-btn" onclick="deleteActivity(this)">🗑️</button></td>
-                                    `;
-                    tbody.appendChild(row);
-                  });
-
-                  phasesContainer.appendChild(newPhase);
+            // Initialize Element SDK
+            if (window.elementSdk) {
+                window.elementSdk.init({
+                    defaultConfig,
+                    onConfigChange: async (config) => {
+                        document.getElementById('plan-title').textContent = config.plan_title || defaultConfig.plan_title;
+                        document.getElementById('company-name').textContent = config.company_name || defaultConfig.company_name;
+                        document.getElementById('certification-level').textContent = config.certification_level || defaultConfig.certification_level;
+                        document.getElementById('project-manager').textContent = config.project_manager || defaultConfig.project_manager;
+                    },
+                    mapToCapabilities: (config) => ({
+                        recolorables: [],
+                        borderables: [],
+                        fontEditable: undefined,
+                        fontSizeable: undefined
+                    }),
+                    mapToEditPanelValues: (config) => new Map([
+                        ["plan_title", config.plan_title || defaultConfig.plan_title],
+                        ["company_name", config.company_name || defaultConfig.company_name],
+                        ["certification_level", config.certification_level || defaultConfig.certification_level],
+                        ["project_manager", config.project_manager || defaultConfig.project_manager]
+                    ])
                 });
+            }
+        }
 
-                updateSummary();
-                generateTimeline();
-                alert("✅ Progreso cargado exitosamente");
-              } catch (error) {
-                alert("❌ Error al cargar el archivo");
-              }
-            };
-            reader.readAsText(file);
-          }
-        };
-        input.click();
-      }
-
-      function clearForm() {
-        if (
-          confirm("¿Estás seguro de que quieres limpiar todo el formulario?")
-        ) {
-          document.getElementById("proyecto").value = "";
-          document.getElementById("responsable_general").value = "";
-          document.getElementById("fecha_inicio_proyecto").value = "";
-          document.getElementById("fecha_fin_proyecto").value = "";
-          document.getElementById("objetivo").value = "";
-
-          const phasesContainer = document.getElementById("phases-container");
-          phasesContainer.innerHTML = `
-                    <div class="phase-container" data-phase="1">
-                        <div class="phase-header">
-                            <div class="phase-title">Fase 1: Diagnóstico y Planificación</div>
-                            <div class="phase-controls">
-                                <button class="phase-btn" onclick="addActivity(this)">+ Actividad</button>
-                                <button class="phase-btn" onclick="deletePhase(this)" style="background: #e74c3c;">🗑️</button>
+        // Render milestones
+        function renderMilestones() {
+            const container = document.getElementById('milestones-container');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (currentMilestones.length === 0) {
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            
+            // Group milestones by phase
+            const phases = {};
+            currentMilestones.forEach(milestone => {
+                if (!phases[milestone.fase]) {
+                    phases[milestone.fase] = [];
+                }
+                phases[milestone.fase].push(milestone);
+            });
+            
+            let html = '';
+            Object.keys(phases).forEach(fase => {
+                const phaseColor = getPhaseColor(fase);
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold ${phaseColor.text} mb-4 flex items-center">
+                            <span class="w-3 h-3 ${phaseColor.bg} rounded-full mr-3"></span>
+                            ${fase}
+                        </h3>
+                        <div class="space-y-3">
+                `;
+                
+                phases[fase].forEach(milestone => {
+                    const priorityColor = getPriorityColor(milestone.prioridad);
+                    html += `
+                        <div class="bg-slate-50 rounded-lg p-4 border border-slate-200 hover:shadow-sm transition-shadow">
+                            <div class="flex justify-between items-start mb-2">
+                                <h4 class="font-medium text-slate-800">${milestone.hito}</h4>
+                                <div class="flex gap-2">
+                                    <span class="px-2 py-1 text-xs font-medium ${priorityColor} rounded-full">
+                                        ${milestone.prioridad}
+                                    </span>
+                                    <button onclick="deleteMilestone('${milestone.__backendId}')" class="text-red-500 hover:text-red-700 text-sm">
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-sm text-slate-600 mb-3">${milestone.descripcion}</p>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs text-slate-500">
+                                <div><strong>Período:</strong> ${milestone.tiempo_inicio} - ${milestone.tiempo_fin}</div>
+                                <div><strong>Responsable:</strong> ${milestone.responsable}</div>
+                                <div><strong>Estado:</strong> ${milestone.estado}</div>
                             </div>
                         </div>
-                        <table class="activities-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 25%;">Actividad</th>
-                                    <th style="width: 20%;">Responsable(s)</th>
-                                    <th style="width: 25%;">Entregable</th>
-                                    <th style="width: 15%;">Fecha Inicio</th>
-                                    <th style="width: 15%;">Fecha Fin</th>
-                                    <th style="width: 5%;">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td><textarea class="activity-input" placeholder="Descripción de la actividad..."></textarea></td>
-                                    <td><textarea class="activity-input" placeholder="Nombre(s) del responsable..."></textarea></td>
-                                    <td><textarea class="activity-input" placeholder="Entregable esperado..."></textarea></td>
-                                    <td><input type="date" class="date-input"></td>
-                                    <td><input type="date" class="date-input"></td>
-                                    <td><button class="delete-activity-btn" onclick="deleteActivity(this)">🗑️</button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-
-          phaseCounter = 1;
-          updateSummary();
-          generateTimeline();
-          alert("✅ Formulario limpiado");
+                    `;
+                });
+                
+                html += '</div></div>';
+            });
+            
+            container.innerHTML = html;
         }
-      }
 
-      function exportToPDF() {
-        alert(
-          '📄 Usa Ctrl+P o Cmd+P para exportar a PDF. Asegúrate de seleccionar "Guardar como PDF" y orientación "Horizontal" en las opciones de impresión.'
-        );
-        window.print();
-      }
-
-      function printDocument() {
-        window.print();
-      }
-
-      // Inicializar
-      window.onload = function () {
-        // Establecer fechas por defecto
-        const today = new Date();
-        const nextMonth = new Date(
-          today.getFullYear(),
-          today.getMonth() + 1,
-          today.getDate()
-        );
-
-        document.getElementById("fecha_inicio_proyecto").value = today
-          .toISOString()
-          .split("T")[0];
-        document.getElementById("fecha_fin_proyecto").value = nextMonth
-          .toISOString()
-          .split("T")[0];
-
-        updateSummary();
-        generateTimeline();
-
-        // Agregar event listeners para actualizar resumen automáticamente
-        document.addEventListener("input", function (e) {
-          if (
-            e.target.classList.contains("activity-input") ||
-            e.target.classList.contains("date-input")
-          ) {
-            setTimeout(() => {
-              updateSummary();
-              generateTimeline();
-            }, 500);
-          }
-        });
-      };
-    </script>
-    <script>
-      (function () {
-        function c() {
-          var b = a.contentDocument || a.contentWindow.document;
-          if (b) {
-            var d = b.createElement("script");
-            d.innerHTML =
-              "window.__CF$cv$params={r:'97f49a9dc5ee5e03',t:'MTc1NzkwMjM5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";
-            b.getElementsByTagName("head")[0].appendChild(d);
-          }
-        }
-        if (document.body) {
-          var a = document.createElement("iframe");
-          a.height = 1;
-          a.width = 1;
-          a.style.position = "absolute";
-          a.style.top = 0;
-          a.style.left = 0;
-          a.style.border = "none";
-          a.style.visibility = "hidden";
-          document.body.appendChild(a);
-          if ("loading" !== document.readyState) c();
-          else if (window.addEventListener)
-            document.addEventListener("DOMContentLoaded", c);
-          else {
-            var e = document.onreadystatechange || function () {};
-            document.onreadystatechange = function (b) {
-              e(b);
-              "loading" !== document.readyState &&
-                ((document.onreadystatechange = e), c());
+        // Get phase color
+        function getPhaseColor(fase) {
+            const colors = {
+                'Fase 1': { bg: 'bg-blue-500', text: 'text-blue-700' },
+                'Fase 2': { bg: 'bg-green-500', text: 'text-green-700' },
+                'Fase 3': { bg: 'bg-orange-500', text: 'text-orange-700' },
+                'Fase 4': { bg: 'bg-purple-500', text: 'text-purple-700' }
             };
-          }
+            return colors[fase] || { bg: 'bg-slate-500', text: 'text-slate-700' };
         }
-      })();
-    </script>
-    <script defer src="js/back-home.js"></script>
-    <script defer src="js/nav-inject.js"></script>
-  </body>
-</html>
 
+        // Get priority color
+        function getPriorityColor(prioridad) {
+            const colors = {
+                'Alta': 'bg-red-100 text-red-800',
+                'Media': 'bg-yellow-100 text-yellow-800',
+                'Baja': 'bg-green-100 text-green-800'
+            };
+            return colors[prioridad] || 'bg-slate-100 text-slate-800';
+        }
+
+        // Update summary statistics
+        function updateSummaryStats() {
+            document.getElementById('total-milestones').textContent = currentMilestones.length;
+            
+            const highPriority = currentMilestones.filter(m => m.prioridad === 'Alta').length;
+            document.getElementById('high-priority').textContent = highPriority;
+            
+            // Calculate estimated duration (simplified)
+            if (currentMilestones.length > 0) {
+                document.getElementById('estimated-duration').textContent = `${Math.ceil(currentMilestones.length / 2)} meses`;
+            }
+        }
+
+        // Add milestone
+        async function addMilestone(event) {
+            event.preventDefault();
+            
+            if (isLoading) return;
+            
+            if (currentMilestones.length >= 999) {
+                showMessage("Límite máximo de 999 hitos alcanzado. Por favor elimine algunos hitos primero.", "error");
+                return;
+            }
+            
+            const fase = document.getElementById('fase-select').value;
+            const hito = document.getElementById('hito-input').value.trim();
+            const descripcion = document.getElementById('descripcion-input').value.trim();
+            const tiempoInicio = document.getElementById('tiempo-inicio').value.trim();
+            const tiempoFin = document.getElementById('tiempo-fin').value.trim();
+            const responsable = document.getElementById('responsable-input').value.trim();
+            const prioridad = document.getElementById('prioridad-select').value;
+            
+            if (!hito || !descripcion || !tiempoInicio || !tiempoFin || !responsable) {
+                showMessage("Por favor complete todos los campos requeridos.", "error");
+                return;
+            }
+            
+            setLoading(true);
+            
+            const milestone = {
+                id: Date.now().toString(),
+                fase,
+                hito,
+                descripcion,
+                tiempo_inicio: tiempoInicio,
+                tiempo_fin: tiempoFin,
+                responsable,
+                estado: "Planificado",
+                prioridad,
+                createdAt: new Date().toISOString()
+            };
+            
+            const result = await window.dataSdk.create(milestone);
+            
+            if (result.isOk) {
+                document.getElementById('milestone-form-element').reset();
+                document.getElementById('milestone-form').classList.add('hidden');
+                showMessage("Hito agregado exitosamente.", "success");
+            } else {
+                showMessage("Error al agregar el hito. Por favor intente nuevamente.", "error");
+            }
+            
+            setLoading(false);
+        }
+
+        // Delete milestone
+        async function deleteMilestone(backendId) {
+            const milestone = currentMilestones.find(m => m.__backendId === backendId);
+            if (!milestone) return;
+            
+            setLoading(true);
+            
+            const result = await window.dataSdk.delete(milestone);
+            
+            if (result.isOk) {
+                showMessage("Hito eliminado exitosamente.", "success");
+            } else {
+                showMessage("Error al eliminar el hito.", "error");
+            }
+            
+            setLoading(false);
+        }
+
+        // Show message
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+                type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+            }`;
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+
+        // Set loading state
+        function setLoading(loading) {
+            isLoading = loading;
+            const saveBtn = document.getElementById('save-milestone-btn');
+            if (saveBtn) {
+                saveBtn.disabled = loading;
+                saveBtn.textContent = loading ? 'Guardando...' : 'Guardar Hito';
+            }
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+            
+            document.getElementById('add-milestone-btn').addEventListener('click', () => {
+                document.getElementById('milestone-form').classList.toggle('hidden');
+            });
+            
+            document.getElementById('cancel-milestone-btn').addEventListener('click', () => {
+                document.getElementById('milestone-form').classList.add('hidden');
+                document.getElementById('milestone-form-element').reset();
+            });
+            
+            document.getElementById('milestone-form-element').addEventListener('submit', addMilestone);
+        });
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9964425da61008a6',t:'MTc2MTc1NzU0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
