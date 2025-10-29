@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="es" style="height: 100%;">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Desarrollo de Artefactos SQA - Fase 3</title>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+        }
+        .priority-critical { border-left: 4px solid #dc2626; }
+        .priority-high { border-left: 4px solid #ea580c; }
+        .priority-medium { border-left: 4px solid #d97706; }
+        .priority-low { border-left: 4px solid #16a34a; }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .artifact-card {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        .artifact-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body style="height: 100%; margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;" class="bg-gradient-to-br from-slate-50 to-blue-50">
+  <div class="min-h-full flex flex-col"><!-- Header -->
+   <header class="bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-800 text-white shadow-2xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+     <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+       <div class="bg-white bg-opacity-15 p-4 rounded-xl shadow-lg">
+        <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+       </div>
+       <div>
+        <h1 id="tool-title" class="text-4xl font-bold">Desarrollo de Artefactos SQA</h1>
+        <p class="mt-2 text-indigo-200 text-xl font-medium">Fase 3: Evidencia del Proceso</p>
+        <p class="mt-1 text-indigo-300 text-lg"><span id="company-name">Empresa</span> • <span id="project-context">Contexto del Proyecto</span></p>
+        <p id="current-user-info" class="mt-3 text-sm text-blue-200 hidden flex items-center">
+         <svg class="w-4 h-4 mr-2" fill="currentColor" viewbox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+         </svg><span id="display-student-name"></span> (<span id="display-user-id"></span>)</p>
+       </div>
+      </div>
+      <div class="flex items-center space-x-4 no-print">
+       <div class="text-right">
+        <div class="text-sm text-indigo-300">
+         Artefactos Creados
+        </div>
+        <div class="text-3xl font-bold text-white">
+         <span id="total-artifacts">0</span>
+        </div>
+       </div>
+       <div class="flex space-x-3"><button id="export-pdf-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+         </svg><span>Exportar PDF</span> </button>
+       </div>
+      </div>
+     </div>
+    </div>
+   </header><!-- Main Content -->
+   <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><!-- Student Identity Section -->
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 mb-8">
+     <div class="bg-gradient-to-r from-indigo-50 to-purple-50 px-8 py-6 border-b border-slate-200 rounded-t-2xl">
+      <h2 class="text-2xl font-bold text-slate-900 flex items-center">
+       <svg class="w-7 h-7 mr-3 text-indigo-600" fill="currentColor" viewbox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
+       </svg> Identificación del Desarrollador SQA</h2>
+     </div>
+     <div class="p-8">
+      <div id="student-form">
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div><label for="student-name" class="block text-sm font-bold text-slate-700 mb-3"> Nombre Completo del Desarrollador SQA * </label> <input type="text" id="student-name" class="w-full px-4 py-4 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 text-lg" placeholder="Ingresa tu nombre completo">
+        </div>
+        <div><label for="user-id" class="block text-sm font-bold text-slate-700 mb-3"> ID de Usuario / Matrícula * </label> <input type="text" id="user-id" class="w-full px-4 py-4 border-2 border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 text-lg" placeholder="Ej. SQA001, 2024001, etc.">
+        </div>
+       </div>
+       <div class="mt-8 flex items-center justify-between"><button type="button" id="save-identity-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all duration-200 shadow-lg hover:shadow-xl"> Confirmar Identidad SQA </button>
+        <p class="text-sm text-slate-600 max-w-md">
+         <svg class="w-5 h-5 inline mr-2 text-amber-500" fill="currentColor" viewbox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+         </svg> Esta información se asociará con todos los artefactos SQA que desarrolles.</p>
+       </div>
+      </div>
+     </div>
+    </div><!-- Artifact Templates Section -->
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200 mb-8">
+     <div class="bg-gradient-to-r from-indigo-50 to-purple-50 px-8 py-6 border-b border-slate-200 rounded-t-2xl">
+      <h2 class="text-2xl font-bold text-slate-900 flex items-center">
+       <svg class="w-7 h-7 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+       </svg> Plantillas de Artefactos SQA Disponibles</h2>
+      <p class="mt-2 text-slate-600">Selecciona el tipo de artefacto que deseas desarrollar para demostrar la evidencia del proceso</p>
+     </div>
+     <div class="p-8">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8"><!-- Change Control Form -->
+       <div class="artifact-card rounded-2xl p-8 cursor-pointer" onclick="selectArtifact('change_control')">
+        <div class="text-center">
+         <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+         </div>
+         <h3 class="text-xl font-bold text-slate-900 mb-3">Formulario de Control de Cambios</h3>
+         <p class="text-sm text-slate-600 mb-4 leading-relaxed">Herramienta principal para la Gestión de Cambios del producto. Evidencia de proceso formal para REQM.</p>
+         <div class="text-xs text-blue-600 font-semibold bg-blue-50 px-3 py-2 rounded-lg">
+          🎯 REQM - Gestión de Requisitos
+         </div>
+        </div>
+       </div><!-- Verification Plan -->
+       <div class="artifact-card rounded-2xl p-8 cursor-pointer" onclick="selectArtifact('verification_plan')">
+        <div class="text-center">
+         <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+         </div>
+         <h3 class="text-xl font-bold text-slate-900 mb-3">Plan de Verificación</h3>
+         <p class="text-sm text-slate-600 mb-4 leading-relaxed">Documento que define cómo verificar que el producto cumple con los requisitos especificados.</p>
+         <div class="text-xs text-emerald-600 font-semibold bg-emerald-50 px-3 py-2 rounded-lg">
+          ✅ VER - Verificación
+         </div>
+        </div>
+       </div><!-- Validation Plan -->
+       <div class="artifact-card rounded-2xl p-8 cursor-pointer" onclick="selectArtifact('validation_plan')">
+        <div class="text-center">
+         <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+          <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+          </svg>
+         </div>
+         <h3 class="text-xl font-bold text-slate-900 mb-3">Plan de Validación</h3>
+         <p class="text-sm text-slate-600 mb-4 leading-relaxed">Documento que define cómo validar que el producto satisface las necesidades del usuario final.</p>
+         <div class="text-xs text-purple-600 font-semibold bg-purple-50 px-3 py-2 rounded-lg">
+          💜 VAL - Validación
+         </div>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div><!-- Artifact Development Form -->
+    <div id="artifact-form" class="bg-white rounded-2xl shadow-xl border border-slate-200 mb-8 hidden no-print">
+     <div class="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-slate-200 rounded-t-2xl">
+      <h3 class="text-2xl font-bold text-slate-900 flex items-center">
+       <svg class="w-7 h-7 mr-3 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
+       </svg><span id="form-title">Desarrollo de Artefacto SQA</span></h3>
+      <p id="form-description" class="mt-2 text-slate-600"></p>
+     </div>
+     <div class="p-8">
+      <form id="artifact-form-element" class="space-y-8"><!-- Basic Information Section -->
+       <div class="bg-slate-50 rounded-xl p-8 border border-slate-200">
+        <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
+         <svg class="w-6 h-6 mr-3 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+         </svg> Información Básica del Artefacto</h4>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+         <div><label for="project-name" class="block text-sm font-bold text-slate-700 mb-3"> Nombre del Proyecto * </label> <input type="text" id="project-name" class="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white" placeholder="Ej. Sistema de Gestión de Inventarios">
+         </div>
+         <div><label for="change-requester" class="block text-sm font-bold text-slate-700 mb-3"> Solicitante del Cambio * </label> <input type="text" id="change-requester" class="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white" placeholder="Ej. María González - Product Owner">
+         </div>
+        </div>
+       </div><!-- Change Description Section -->
+       <div class="bg-slate-50 rounded-xl p-8 border border-slate-200">
+        <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
+         <svg class="w-6 h-6 mr-3 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+         </svg> Descripción del Cambio Solicitado</h4>
+        <div class="grid grid-cols-1 gap-6">
+         <div><label for="change-description" class="block text-sm font-bold text-slate-700 mb-3"> Descripción Detallada del Cambio * </label> <textarea id="change-description" rows="4" class="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white" placeholder="Ej. Modificar el módulo de reportes para incluir filtros avanzados por fecha, categoría y usuario. Agregar exportación a Excel y PDF."></textarea>
+         </div>
+         <div><label for="justification" class="block text-sm font-bold text-slate-700 mb-3"> Justificación del Cambio * </label> <textarea id="justification" rows="3" class="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white" placeholder="Ej. Los usuarios requieren mayor flexibilidad en la generación de reportes para cumplir con nuevas regulaciones fiscales."></textarea>
+         </div>
+        </div>
+       </div><!-- Impact Analysis Section -->
+       <div class="bg-amber-50 rounded-xl p-8 border-2 border-amber-200">
+        <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
+         <svg class="w-6 h-6 mr-3 text-amber-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+         </svg> Análisis de Impacto (Sección Crítica)</h4>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+         <div><label for="impact-analysis" class="block text-sm font-bold text-slate-700 mb-3"> Análisis Detallado de Impacto * </label> <textarea id="impact-analysis" rows="5" class="w-full px-4 py-3 border-2 border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white" placeholder="Ej. TIEMPO: +15 días desarrollo. COSTO: $8,000 adicionales. RIESGO: Medio - puede afectar módulo de facturación. MÓDULOS: Reportes, Base de datos, API de exportación."></textarea>
+         </div>
+         <div class="space-y-4">
+          <div><label for="estimated-effort" class="block text-sm font-bold text-slate-700 mb-3"> Esfuerzo Estimado * </label> <input type="text" id="estimated-effort" class="w-full px-4 py-3 border-2 border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white" placeholder="Ej. 80 horas-persona">
+          </div>
+          <div><label for="risk-assessment" class="block text-sm font-bold text-slate-700 mb-3"> Evaluación de Riesgo * </label> <select id="risk-assessment" class="w-full px-4 py-3 border-2 border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"> <option value="">Seleccionar nivel de riesgo</option> <option value="Bajo">🟢 Bajo - Impacto mínimo</option> <option value="Medio">🟡 Medio - Requiere atención</option> <option value="Alto">🟠 Alto - Riesgo significativo</option> <option value="Crítico">🔴 Crítico - Riesgo mayor</option> </select>
+          </div>
+         </div>
+        </div>
+       </div><!-- Approval Section -->
+       <div class="bg-emerald-50 rounded-xl p-8 border-2 border-emerald-200">
+        <h4 class="text-xl font-bold text-slate-900 mb-6 flex items-center">
+         <svg class="w-6 h-6 mr-3 text-emerald-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+         </svg> Proceso de Aprobación</h4>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+         <div><label for="approvers" class="block text-sm font-bold text-slate-700 mb-3"> Comité de Control de Cambios * </label> <textarea id="approvers" rows="4" class="w-full px-4 py-3 border-2 border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white" placeholder="Ej. Project Manager: Juan Pérez 
+Cliente: Ana Martínez 
+Líder Técnico: Carlos López 
+QA Lead: Sofia Ruiz"></textarea>
+         </div>
+         <div class="space-y-4">
+          <div><label for="approval-status" class="block text-sm font-bold text-slate-700 mb-3"> Estado de Aprobación * </label> <select id="approval-status" class="w-full px-4 py-3 border-2 border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"> <option value="">Seleccionar estado</option> <option value="Pendiente">⏳ Pendiente de Revisión</option> <option value="En Revisión">🔍 En Revisión por Comité</option> <option value="Aprobado">✅ Aprobado</option> <option value="Rechazado">❌ Rechazado</option> <option value="Aprobado con Condiciones">⚠️ Aprobado con Condiciones</option> </select>
+          </div>
+          <div><label for="priority-level" class="block text-sm font-bold text-slate-700 mb-3"> Nivel de Prioridad * </label> <select id="priority-level" class="w-full px-4 py-3 border-2 border-emerald-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"> <option value="">Seleccionar prioridad</option> <option value="Crítico">🔥 Crítico - Implementación inmediata</option> <option value="Alto">🚨 Alto - Próximo sprint</option> <option value="Medio">⚡ Medio - Próxima release</option> <option value="Bajo">📋 Bajo - Backlog</option> </select>
+          </div>
+         </div>
+        </div>
+       </div><!-- Form Actions -->
+       <div class="flex items-center justify-between pt-8 border-t-2 border-slate-200"><button type="button" id="cancel-artifact-btn" class="px-8 py-4 text-slate-600 hover:text-slate-800 font-bold text-lg transition-colors"> Cancelar </button> <button type="submit" id="save-artifact-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-3">
+         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+         </svg><span>Crear Artefacto SQA</span> </button>
+       </div>
+      </form>
+     </div>
+    </div><!-- Artifacts Repository -->
+    <div class="bg-white rounded-2xl shadow-xl border border-slate-200">
+     <div class="bg-gradient-to-r from-indigo-50 to-purple-50 px-8 py-6 border-b border-slate-200 rounded-t-2xl">
+      <h3 class="text-2xl font-bold text-slate-900 flex items-center">
+       <svg class="w-7 h-7 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+       </svg> Repositorio de Artefactos SQA</h3>
+      <p class="mt-2 text-slate-600">Evidencias del proceso desarrolladas para demostrar madurez en SQA</p>
+     </div>
+     <div id="artifacts-container" class="divide-y divide-slate-200">
+      <div id="empty-artifacts-state" class="p-20 text-center">
+       <div class="w-24 h-24 mx-auto mb-8 bg-gradient-to-br from-indigo-100 to-purple-200 rounded-full flex items-center justify-center shadow-inner">
+        <svg class="w-12 h-12 text-indigo-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+       </div>
+       <h3 class="text-2xl font-bold text-slate-900 mb-4">Repositorio de Artefactos Vacío</h3>
+       <p class="text-slate-600 mb-8 max-w-lg mx-auto text-lg">Para comenzar el desarrollo de artefactos SQA, primero identifícate y luego selecciona una plantilla de artefacto para crear la evidencia del proceso.</p>
+       <div class="space-y-4">
+        <p class="text-sm text-indigo-600 font-semibold bg-indigo-50 px-4 py-2 rounded-lg inline-block">💡 Los artefactos SQA demuestran la madurez de tus procesos de calidad</p>
+        <p class="text-xs text-slate-500">Los datos se guardarán automáticamente en tu Canva Sheet</p>
+       </div>
+      </div>
+     </div>
+    </div>
+   </main>
+  </div><!-- Loading Overlay -->
+  <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+   <div class="bg-white rounded-xl p-8 flex items-center space-x-4 shadow-2xl">
+    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div><span class="text-slate-700 text-lg font-semibold">Procesando artefacto SQA...</span>
+   </div>
+  </div>
+  <script>
+        // Configuration
+        const defaultConfig = {
+            tool_title: "Desarrollo de Artefactos SQA",
+            company_name: "Empresa",
+            project_context: "Contexto del Proyecto"
+        };
+
+        let currentArtifacts = [];
+        let allArtifacts = [];
+        let isLoading = false;
+        let editingArtifact = null;
+        let selectedArtifactType = '';
+        let currentUser = {
+            student_name: '',
+            user_id: ''
+        };
+
+        // Artifact templates
+        const artifactTemplates = {
+            change_control: {
+                title: "Formulario de Control de Cambios",
+                description: "Herramienta principal para la Gestión de Cambios del producto. Evidencia de que se dejó de usar WhatsApp para gestionar los requisitos.",
+                process: "REQM - Requirements Management"
+            },
+            verification_plan: {
+                title: "Plan de Verificación",
+                description: "Documento que define cómo verificar que el producto cumple con los requisitos especificados.",
+                process: "VER - Verification"
+            },
+            validation_plan: {
+                title: "Plan de Validación", 
+                description: "Documento que define cómo validar que el producto satisface las necesidades del usuario final.",
+                process: "VAL - Validation"
+            }
+        };
+
+        // Data handler for SDK
+        const dataHandler = {
+            onDataChanged(data) {
+                allArtifacts = data || [];
+                filterArtifactsByUser();
+                renderArtifactsList();
+                updateTotalCount();
+            }
+        };
+
+        // Initialize SDKs
+        async function initializeApp() {
+            try {
+                if (window.dataSdk) {
+                    const result = await window.dataSdk.init(dataHandler);
+                    if (!result.isOk) {
+                        console.error("Failed to initialize data SDK");
+                    }
+                }
+
+                if (window.elementSdk) {
+                    await window.elementSdk.init({
+                        defaultConfig,
+                        onConfigChange: async (config) => {
+                            document.getElementById('tool-title').textContent = config.tool_title || defaultConfig.tool_title;
+                            document.getElementById('company-name').textContent = config.company_name || defaultConfig.company_name;
+                            document.getElementById('project-context').textContent = config.project_context || defaultConfig.project_context;
+                        },
+                        mapToCapabilities: (config) => ({
+                            recolorables: [
+                                {
+                                    get: () => config.primary_color || "#4f46e5",
+                                    set: (value) => {
+                                        window.elementSdk.setConfig({ primary_color: value });
+                                        updateColors(value);
+                                    }
+                                }
+                            ],
+                            borderables: [],
+                            fontEditable: undefined,
+                            fontSizeable: undefined
+                        }),
+                        mapToEditPanelValues: (config) => new Map([
+                            ["tool_title", config.tool_title || defaultConfig.tool_title],
+                            ["company_name", config.company_name || defaultConfig.company_name],
+                            ["project_context", config.project_context || defaultConfig.project_context]
+                        ])
+                    });
+                }
+
+                // Load saved user identity
+                loadUserIdentity();
+            } catch (error) {
+                console.error("Initialization error:", error);
+            }
+        }
+
+        function updateColors(primaryColor) {
+            const elements = document.querySelectorAll('.bg-indigo-600, .hover\\:bg-indigo-700, .focus\\:ring-indigo-500, .focus\\:border-indigo-500');
+            elements.forEach(el => {
+                el.style.backgroundColor = primaryColor;
+            });
+        }
+
+        // User Identity Management
+        function loadUserIdentity() {
+            const saved = localStorage.getItem('sqa_artifacts_user');
+            if (saved) {
+                currentUser = JSON.parse(saved);
+                document.getElementById('student-name').value = currentUser.student_name;
+                document.getElementById('user-id').value = currentUser.user_id;
+                showUserInfo();
+                filterArtifactsByUser();
+            }
+        }
+
+        function saveUserIdentity() {
+            const studentName = document.getElementById('student-name').value.trim();
+            const userId = document.getElementById('user-id').value.trim();
+
+            if (!studentName || !userId) {
+                showInlineMessage("Por favor completa tu nombre y ID de usuario", "error");
+                return;
+            }
+
+            currentUser = {
+                student_name: studentName,
+                user_id: userId
+            };
+
+            localStorage.setItem('sqa_artifacts_user', JSON.stringify(currentUser));
+            showUserInfo();
+            filterArtifactsByUser();
+            showInlineMessage("Identidad SQA guardada correctamente", "success");
+        }
+
+        function showUserInfo() {
+            document.getElementById('display-student-name').textContent = currentUser.student_name;
+            document.getElementById('display-user-id').textContent = currentUser.user_id;
+            document.getElementById('current-user-info').classList.remove('hidden');
+        }
+
+        function filterArtifactsByUser() {
+            if (!currentUser.user_id) {
+                currentArtifacts = [];
+                return;
+            }
+            currentArtifacts = allArtifacts.filter(artifact => artifact.user_id === currentUser.user_id);
+        }
+
+        // Artifact Selection
+        function selectArtifact(artifactType) {
+            if (!currentUser.user_id) {
+                showInlineMessage("Primero debes identificarte como desarrollador SQA", "error");
+                document.getElementById('student-name').focus();
+                return;
+            }
+
+            selectedArtifactType = artifactType;
+            const template = artifactTemplates[artifactType];
+            
+            document.getElementById('form-title').textContent = template.title;
+            document.getElementById('form-description').textContent = template.description;
+            
+            showArtifactForm();
+        }
+
+        function showArtifactForm() {
+            document.getElementById('artifact-form').classList.remove('hidden');
+            document.getElementById('artifact-form').classList.add('fade-in');
+            document.getElementById('project-name').focus();
+            
+            if (!editingArtifact) {
+                clearForm();
+            }
+        }
+
+        function hideArtifactForm() {
+            document.getElementById('artifact-form').classList.add('hidden');
+            editingArtifact = null;
+            selectedArtifactType = '';
+            clearForm();
+        }
+
+        function clearForm() {
+            document.getElementById('artifact-form-element').reset();
+        }
+
+        // Event listeners
+        document.getElementById('save-identity-btn').addEventListener('click', saveUserIdentity);
+        document.getElementById('cancel-artifact-btn').addEventListener('click', hideArtifactForm);
+        document.getElementById('artifact-form-element').addEventListener('submit', handleFormSubmit);
+        document.getElementById('export-pdf-btn').addEventListener('click', exportToPDF);
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            if (isLoading) return;
+
+            if (!currentUser.user_id) {
+                showInlineMessage("Primero debes identificarte como desarrollador SQA", "error");
+                return;
+            }
+
+            const formData = {
+                artifact_type: selectedArtifactType,
+                project_name: document.getElementById('project-name').value.trim(),
+                change_requester: document.getElementById('change-requester').value.trim(),
+                change_description: document.getElementById('change-description').value.trim(),
+                justification: document.getElementById('justification').value.trim(),
+                impact_analysis: document.getElementById('impact-analysis').value.trim(),
+                estimated_effort: document.getElementById('estimated-effort').value.trim(),
+                risk_assessment: document.getElementById('risk-assessment').value,
+                approvers: document.getElementById('approvers').value.trim(),
+                approval_status: document.getElementById('approval-status').value,
+                priority_level: document.getElementById('priority-level').value
+            };
+
+            // Validation
+            const requiredFields = ['project_name', 'change_requester', 'change_description', 'justification', 'impact_analysis', 'estimated_effort', 'risk_assessment', 'approvers', 'approval_status', 'priority_level'];
+            const missingFields = requiredFields.filter(field => !formData[field]);
+            
+            if (missingFields.length > 0) {
+                showInlineMessage("Por favor completa todos los campos requeridos", "error");
+                return;
+            }
+
+            if (allArtifacts.length >= 999) {
+                showInlineMessage("Se ha alcanzado el límite máximo de 999 artefactos. Por favor elimina algunos elementos primero.", "error");
+                return;
+            }
+
+            setLoading(true);
+
+            try {
+                const artifactData = {
+                    id: editingArtifact ? editingArtifact.id : generateId(),
+                    user_id: currentUser.user_id,
+                    student_name: currentUser.student_name,
+                    ...formData,
+                    created_at: editingArtifact ? editingArtifact.created_at : new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+
+                let result;
+                if (editingArtifact) {
+                    result = await window.dataSdk.update({ ...artifactData, __backendId: editingArtifact.__backendId });
+                } else {
+                    result = await window.dataSdk.create(artifactData);
+                }
+
+                if (result.isOk) {
+                    hideArtifactForm();
+                    showInlineMessage(editingArtifact ? "Artefacto SQA actualizado exitosamente" : "Artefacto SQA creado exitosamente", "success");
+                } else {
+                    showInlineMessage("Error al guardar el artefacto. Por favor intenta nuevamente.", "error");
+                }
+            } catch (error) {
+                showInlineMessage("Error al guardar el artefacto. Por favor intenta nuevamente.", "error");
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function editArtifact(artifact) {
+            editingArtifact = artifact;
+            selectedArtifactType = artifact.artifact_type;
+            
+            // Fill form with artifact data
+            document.getElementById('project-name').value = artifact.project_name;
+            document.getElementById('change-requester').value = artifact.change_requester;
+            document.getElementById('change-description').value = artifact.change_description;
+            document.getElementById('justification').value = artifact.justification;
+            document.getElementById('impact-analysis').value = artifact.impact_analysis;
+            document.getElementById('estimated-effort').value = artifact.estimated_effort;
+            document.getElementById('risk-assessment').value = artifact.risk_assessment;
+            document.getElementById('approvers').value = artifact.approvers;
+            document.getElementById('approval-status').value = artifact.approval_status;
+            document.getElementById('priority-level').value = artifact.priority_level;
+            
+            // Update form title
+            const template = artifactTemplates[artifact.artifact_type];
+            document.getElementById('form-title').textContent = `Editar ${template.title}`;
+            document.getElementById('form-description').textContent = template.description;
+            
+            showArtifactForm();
+            document.getElementById('artifact-form').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function deleteArtifact(artifact) {
+            if (isLoading) return;
+
+            // Create inline confirmation
+            const artifactElement = document.querySelector(`[data-artifact-id="${artifact.id}"]`);
+            const deleteBtn = artifactElement.querySelector('.delete-btn');
+            const originalText = deleteBtn.innerHTML;
+            
+            deleteBtn.innerHTML = '¿Confirmar Eliminación?';
+            deleteBtn.classList.add('bg-red-600', 'hover:bg-red-700', 'text-white', 'px-3', 'py-2', 'rounded-lg');
+            
+            // Add cancel option
+            const cancelBtn = document.createElement('button');
+            cancelBtn.innerHTML = 'Cancelar';
+            cancelBtn.className = 'ml-3 px-4 py-2 text-sm text-slate-600 hover:text-slate-800 font-semibold';
+            cancelBtn.onclick = () => {
+                deleteBtn.innerHTML = originalText;
+                deleteBtn.classList.remove('bg-red-600', 'hover:bg-red-700', 'text-white', 'px-3', 'py-2', 'rounded-lg');
+                cancelBtn.remove();
+            };
+            deleteBtn.parentNode.insertBefore(cancelBtn, deleteBtn.nextSibling);
+            
+            deleteBtn.onclick = async () => {
+                setLoading(true);
+                try {
+                    const result = await window.dataSdk.delete(artifact);
+                    if (result.isOk) {
+                        showInlineMessage("Artefacto SQA eliminado exitosamente", "success");
+                    } else {
+                        showInlineMessage("Error al eliminar el artefacto", "error");
+                    }
+                } catch (error) {
+                    showInlineMessage("Error al eliminar el artefacto", "error");
+                } finally {
+                    setLoading(false);
+                }
+            };
+        }
+
+        // PDF Export Function
+        async function exportToPDF() {
+            if (!currentUser.user_id) {
+                showInlineMessage("Primero debes identificarte como desarrollador SQA", "error");
+                return;
+            }
+
+            if (currentArtifacts.length === 0) {
+                showInlineMessage("No hay artefactos SQA para exportar", "error");
+                return;
+            }
+
+            setLoading(true);
+
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                
+                // Header
+                doc.setFontSize(20);
+                doc.text('Artefactos SQA - Fase 3: Evidencia del Proceso', 20, 30);
+                
+                doc.setFontSize(12);
+                doc.text(`Desarrollador SQA: ${currentUser.student_name}`, 20, 45);
+                doc.text(`ID: ${currentUser.user_id}`, 20, 55);
+                doc.text(`Empresa: ${document.getElementById('company-name').textContent}`, 20, 65);
+                doc.text(`Contexto: ${document.getElementById('project-context').textContent}`, 20, 75);
+                doc.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`, 20, 85);
+                
+                // Summary
+                doc.setFontSize(14);
+                doc.text('Resumen de Artefactos:', 20, 105);
+                doc.setFontSize(10);
+                doc.text(`Total de artefactos: ${currentArtifacts.length}`, 20, 115);
+                doc.text(`Control de Cambios: ${currentArtifacts.filter(a => a.artifact_type === 'change_control').length}`, 20, 125);
+                doc.text(`Planes de Verificación: ${currentArtifacts.filter(a => a.artifact_type === 'verification_plan').length}`, 20, 135);
+                doc.text(`Planes de Validación: ${currentArtifacts.filter(a => a.artifact_type === 'validation_plan').length}`, 20, 145);
+                
+                let yPosition = 165;
+                
+                // Artifacts details
+                currentArtifacts.forEach((artifact, index) => {
+                    if (yPosition > 250) {
+                        doc.addPage();
+                        yPosition = 30;
+                    }
+                    
+                    const template = artifactTemplates[artifact.artifact_type];
+                    
+                    doc.setFontSize(12);
+                    doc.text(`${index + 1}. ${template.title}`, 20, yPosition);
+                    yPosition += 10;
+                    
+                    doc.setFontSize(10);
+                    doc.text(`Proyecto: ${artifact.project_name}`, 20, yPosition);
+                    yPosition += 6;
+                    doc.text(`Estado: ${artifact.approval_status} | Prioridad: ${artifact.priority_level}`, 20, yPosition);
+                    yPosition += 8;
+                    
+                    const descLines = doc.splitTextToSize(`Descripción: ${artifact.change_description}`, 170);
+                    doc.text(descLines, 20, yPosition);
+                    yPosition += descLines.length * 5 + 3;
+                    
+                    const impactLines = doc.splitTextToSize(`Impacto: ${artifact.impact_analysis}`, 170);
+                    doc.text(impactLines, 20, yPosition);
+                    yPosition += impactLines.length * 5 + 10;
+                });
+                
+                // Generate PDF as blob and open in new tab
+                const pdfBlob = doc.output('blob');
+                const fileName = `SQA_Artifacts_${currentUser.user_id}_${new Date().toISOString().split('T')[0]}.pdf`;
+                
+                // Create object URL and open in new tab
+                const url = URL.createObjectURL(pdfBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.download = fileName;
+                
+                // Trigger download by opening in new tab
+                window.open(url, '_blank', 'noopener,noreferrer');
+                
+                // Clean up object URL after a delay
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                }, 1000);
+                
+                showInlineMessage("PDF de artefactos SQA generado y abierto en nueva pestaña", "success");
+            } catch (error) {
+                showInlineMessage("Error al generar PDF", "error");
+                console.error("PDF export error:", error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        function renderArtifactsList() {
+            const container = document.getElementById('artifacts-container');
+            const emptyState = document.getElementById('empty-artifacts-state');
+            
+            if (currentArtifacts.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            // Clear existing artifacts (except empty state)
+            const existingArtifacts = container.querySelectorAll('.artifact-item');
+            existingArtifacts.forEach(item => item.remove());
+            
+            currentArtifacts.forEach(artifact => {
+                const artifactElement = createArtifactElement(artifact);
+                container.appendChild(artifactElement);
+            });
+        }
+
+        function createArtifactElement(artifact) {
+            const div = document.createElement('div');
+            div.className = `artifact-item p-10 hover:bg-slate-50 transition-all duration-200 priority-${artifact.priority_level.toLowerCase()} border-l-4`;
+            div.setAttribute('data-artifact-id', artifact.id);
+            
+            const template = artifactTemplates[artifact.artifact_type];
+            const statusColor = getStatusColor(artifact.approval_status);
+            const priorityColor = getPriorityColor(artifact.priority_level);
+            const riskColor = getRiskColor(artifact.risk_assessment);
+            
+            // Set border color based on priority
+            if (artifact.priority_level === 'Crítico') {
+                div.classList.add('border-l-red-500');
+            } else if (artifact.priority_level === 'Alto') {
+                div.classList.add('border-l-orange-500');
+            } else if (artifact.priority_level === 'Medio') {
+                div.classList.add('border-l-amber-500');
+            } else {
+                div.classList.add('border-l-emerald-500');
+            }
+            
+            div.innerHTML = `
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <!-- Header with Artifact Type and Status -->
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center space-x-4">
+                                <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-indigo-100 text-indigo-800">
+                                    📋 ${template.title}
+                                </span>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${statusColor}">
+                                    ${getStatusIcon(artifact.approval_status)} ${artifact.approval_status}
+                                </span>
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${priorityColor}">
+                                    ${getPriorityIcon(artifact.priority_level)} ${artifact.priority_level}
+                                </span>
+                            </div>
+                            <div class="text-xs text-slate-500">
+                                Creado: ${new Date(artifact.created_at).toLocaleDateString('es-ES')}
+                                ${artifact.updated_at !== artifact.created_at ? `<br>Actualizado: ${new Date(artifact.updated_at).toLocaleDateString('es-ES')}` : ''}
+                            </div>
+                        </div>
+                        
+                        <!-- Project Title -->
+                        <div class="mb-6">
+                            <h4 class="text-2xl font-bold text-slate-900 mb-2 leading-tight">
+                                ${escapeHtml(artifact.project_name)}
+                            </h4>
+                            <p class="text-sm text-slate-600 font-medium">
+                                Solicitante: ${escapeHtml(artifact.change_requester)}
+                            </p>
+                        </div>
+                        
+                        <!-- Description and Justification -->
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                            <div class="bg-slate-50 rounded-xl p-6 border border-slate-200">
+                                <div class="flex items-center mb-4">
+                                    <svg class="w-5 h-5 mr-2 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
+                                    <h5 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Descripción del Cambio</h5>
+                                </div>
+                                <p class="text-sm text-slate-700 leading-relaxed">${escapeHtml(artifact.change_description)}</p>
+                            </div>
+                            
+                            <div class="bg-blue-50 rounded-xl p-6 border border-blue-200">
+                                <div class="flex items-center mb-4">
+                                    <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <h5 class="text-sm font-bold text-blue-700 uppercase tracking-wide">Justificación</h5>
+                                </div>
+                                <p class="text-sm text-blue-700 leading-relaxed">${escapeHtml(artifact.justification)}</p>
+                            </div>
+                        </div>
+
+                        <!-- Impact Analysis (Critical Section) -->
+                        <div class="bg-amber-50 rounded-xl p-6 border-2 border-amber-200 mb-8">
+                            <div class="flex items-center mb-4">
+                                <svg class="w-6 h-6 mr-2 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                                </svg>
+                                <h5 class="text-lg font-bold text-amber-800 uppercase tracking-wide">Análisis de Impacto (Sección Crítica)</h5>
+                            </div>
+                            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                <div class="lg:col-span-2">
+                                    <p class="text-sm text-amber-800 leading-relaxed font-medium">${escapeHtml(artifact.impact_analysis)}</p>
+                                </div>
+                                <div class="space-y-3">
+                                    <div class="bg-white rounded-lg p-3 border border-amber-200">
+                                        <div class="text-xs font-semibold text-amber-700 mb-1">Esfuerzo Estimado</div>
+                                        <div class="text-sm font-bold text-amber-900">${escapeHtml(artifact.estimated_effort)}</div>
+                                    </div>
+                                    <div class="bg-white rounded-lg p-3 border border-amber-200">
+                                        <div class="text-xs font-semibold text-amber-700 mb-1">Nivel de Riesgo</div>
+                                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-bold ${riskColor}">
+                                            ${getRiskIcon(artifact.risk_assessment)} ${artifact.risk_assessment}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Approval Section -->
+                        <div class="bg-emerald-50 rounded-xl p-6 border border-emerald-200">
+                            <div class="flex items-center mb-4">
+                                <svg class="w-5 h-5 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <h5 class="text-sm font-bold text-emerald-700 uppercase tracking-wide">Comité de Control de Cambios</h5>
+                            </div>
+                            <div class="text-sm text-emerald-700 leading-relaxed whitespace-pre-line">${escapeHtml(artifact.approvers)}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col space-y-3 ml-8 no-print">
+                        <button onclick="editArtifact(${JSON.stringify(artifact).replace(/"/g, '&quot;')})" 
+                            class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-5 py-3 rounded-xl text-sm font-bold transition-colors flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            <span>Editar</span>
+                        </button>
+                        <button onclick="deleteArtifact(${JSON.stringify(artifact).replace(/"/g, '&quot;')})" 
+                            class="delete-btn bg-red-100 hover:bg-red-200 text-red-700 px-5 py-3 rounded-xl text-sm font-bold transition-colors flex items-center space-x-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                            <span>Eliminar</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            return div;
+        }
+
+        function getStatusIcon(status) {
+            switch (status) {
+                case 'Aprobado': return '✅';
+                case 'Rechazado': return '❌';
+                case 'Pendiente': return '⏳';
+                case 'En Revisión': return '🔍';
+                case 'Aprobado con Condiciones': return '⚠️';
+                default: return '❓';
+            }
+        }
+
+        function getPriorityIcon(priority) {
+            switch (priority) {
+                case 'Crítico': return '🔥';
+                case 'Alto': return '🚨';
+                case 'Medio': return '⚡';
+                case 'Bajo': return '📋';
+                default: return '📌';
+            }
+        }
+
+        function getRiskIcon(risk) {
+            switch (risk) {
+                case 'Crítico': return '🔴';
+                case 'Alto': return '🟠';
+                case 'Medio': return '🟡';
+                case 'Bajo': return '🟢';
+                default: return '⚪';
+            }
+        }
+
+        function getStatusColor(status) {
+            switch (status) {
+                case 'Aprobado': return 'bg-green-100 text-green-800';
+                case 'Rechazado': return 'bg-red-100 text-red-800';
+                case 'Pendiente': return 'bg-yellow-100 text-yellow-800';
+                case 'En Revisión': return 'bg-blue-100 text-blue-800';
+                case 'Aprobado con Condiciones': return 'bg-orange-100 text-orange-800';
+                default: return 'bg-slate-100 text-slate-800';
+            }
+        }
+
+        function getPriorityColor(priority) {
+            switch (priority) {
+                case 'Crítico': return 'bg-red-100 text-red-800';
+                case 'Alto': return 'bg-orange-100 text-orange-800';
+                case 'Medio': return 'bg-yellow-100 text-yellow-800';
+                case 'Bajo': return 'bg-green-100 text-green-800';
+                default: return 'bg-slate-100 text-slate-800';
+            }
+        }
+
+        function getRiskColor(risk) {
+            switch (risk) {
+                case 'Crítico': return 'bg-red-100 text-red-800';
+                case 'Alto': return 'bg-orange-100 text-orange-800';
+                case 'Medio': return 'bg-yellow-100 text-yellow-800';
+                case 'Bajo': return 'bg-green-100 text-green-800';
+                default: return 'bg-slate-100 text-slate-800';
+            }
+        }
+
+        function updateTotalCount() {
+            document.getElementById('total-artifacts').textContent = currentArtifacts.length;
+        }
+
+        function setLoading(loading) {
+            isLoading = loading;
+            const overlay = document.getElementById('loading-overlay');
+            const saveBtn = document.getElementById('save-artifact-btn');
+            
+            if (loading) {
+                overlay.classList.remove('hidden');
+                if (saveBtn) {
+                    saveBtn.disabled = true;
+                    saveBtn.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>Creando...';
+                }
+            } else {
+                overlay.classList.add('hidden');
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><span>Crear Artefacto SQA</span>';
+                }
+            }
+        }
+
+        function showInlineMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `fixed top-4 right-4 px-6 py-4 rounded-xl shadow-2xl z-50 ${
+                type === 'success' ? 'bg-emerald-100 text-emerald-800 border-2 border-emerald-200' : 
+                'bg-red-100 text-red-800 border-2 border-red-200'
+            }`;
+            messageDiv.textContent = message;
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+
+        function generateId() {
+            return 'artifact_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initialize app
+        initializeApp();
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9964aaaf671bb589',t:'MTc2MTc2MTgxNS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
