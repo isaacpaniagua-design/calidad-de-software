@@ -1,0 +1,1080 @@
+<!doctype html>
+<html lang="es">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diseño de Casos de Prueba IEEE 829</title>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .ieee-header {
+            background: linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%);
+            border-bottom: 4px solid #047857;
+        }
+        .test-case-card {
+            transition: all 0.2s ease;
+            border-left: 4px solid #e5e7eb;
+        }
+        .test-case-card.draft {
+            border-left-color: #f59e0b;
+        }
+        .test-case-card.ready {
+            border-left-color: #3b82f6;
+        }
+        .test-case-card.approved {
+            border-left-color: #10b981;
+        }
+        .test-case-card.blocked {
+            border-left-color: #ef4444;
+        }
+        .test-case-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .formal-section {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        .ieee-standard {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 2px solid #bbf7d0;
+        }
+        .loading-spinner {
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #059669;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status-badge {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .status-draft {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .status-ready {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-blocked {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .priority-high {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .priority-medium {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .priority-low {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .formal-button {
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .formal-input {
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+        .formal-input:focus {
+            border-color: #059669;
+            box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
+        }
+        .template-section {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+        }
+        .step-number {
+            background: #059669;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="min-h-full bg-gray-50"><!-- IEEE 829 Header -->
+  <header class="ieee-header text-white py-8 mb-8">
+   <div class="container mx-auto px-6">
+    <div class="text-center">
+     <div class="flex justify-center items-center gap-3 mb-2"><span class="text-3xl">🧪</span>
+      <h1 class="text-4xl font-bold">Diseño de Casos de Prueba IEEE 829</h1>
+     </div>
+     <div class="flex justify-center items-center gap-6 text-lg mb-4 opacity-90"><span>Proyecto: <span id="project-name-display" class="font-semibold cursor-pointer hover:bg-green-600 px-2 py-1 rounded transition-colors" title="Click para editar">Sistema de Gestión</span> <input type="text" id="project-name-input" class="font-semibold bg-green-600 border border-green-400 rounded px-2 py-1 text-white placeholder-green-200 hidden" placeholder="Nombre del Proyecto"> </span> <span class="text-green-200">|</span> <span>Versión: <span id="version-display" class="font-semibold cursor-pointer hover:bg-green-600 px-2 py-1 rounded transition-colors" title="Click para editar">v1.0.0</span> <input type="text" id="version-input" class="font-semibold bg-green-600 border border-green-400 rounded px-2 py-1 text-white placeholder-green-200 hidden" placeholder="v1.0.0"> </span> <span class="text-green-200">|</span> <span>QA Manager: <span id="test-manager-display" class="font-semibold cursor-pointer hover:bg-green-600 px-2 py-1 rounded transition-colors" title="Click para editar">Responsable de Pruebas</span> <input type="text" id="test-manager-input" class="font-semibold bg-green-600 border border-green-400 rounded px-2 py-1 text-white placeholder-green-200 hidden" placeholder="Nombre del QA Manager"> </span>
+     </div>
+     <div class="text-green-100 mb-4"><span id="organization" class="font-medium">Organización</span> • <span>Fecha: <span id="current-date"></span></span>
+     </div>
+     <p class="text-green-100 max-w-4xl mx-auto text-lg leading-relaxed">Herramienta para crear casos de prueba detallados siguiendo el estándar IEEE 829. Define la ejecución táctica del Plan de Pruebas con pasos precisos y resultados esperados.</p>
+    </div>
+   </div>
+  </header>
+  <main class="container mx-auto px-6 pb-12"><!-- Quick Templates Section -->
+   <section class="template-section rounded-lg p-6 mb-8">
+    <div class="border-b border-blue-200 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-gray-800">Plantillas de Casos de Prueba</h2>
+     <p class="text-gray-600 mt-1">Casos predefinidos listos para usar y personalizar</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><button class="template-btn bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-lg text-left transition-colors" data-template="login">
+      <div class="font-semibold mb-1">
+       🔐 Login Válido
+      </div>
+      <div class="text-sm opacity-90">
+       Verificar acceso con credenciales correctas
+      </div></button> <button class="template-btn bg-red-600 hover:bg-red-700 text-white p-4 rounded-lg text-left transition-colors" data-template="login-invalid">
+      <div class="font-semibold mb-1">
+       ❌ Login Inválido
+      </div>
+      <div class="text-sm opacity-90">
+       Verificar rechazo de credenciales incorrectas
+      </div></button> <button class="template-btn bg-green-600 hover:bg-green-700 text-white p-4 rounded-lg text-left transition-colors" data-template="form-submit">
+      <div class="font-semibold mb-1">
+       📝 Envío de Formulario
+      </div>
+      <div class="text-sm opacity-90">
+       Validar envío exitoso de datos
+      </div></button> <button class="template-btn bg-purple-600 hover:bg-purple-700 text-white p-4 rounded-lg text-left transition-colors" data-template="search">
+      <div class="font-semibold mb-1">
+       🔍 Búsqueda
+      </div>
+      <div class="text-sm opacity-90">
+       Verificar funcionalidad de búsqueda
+      </div></button> <button class="template-btn bg-orange-600 hover:bg-orange-700 text-white p-4 rounded-lg text-left transition-colors" data-template="crud-create">
+      <div class="font-semibold mb-1">
+       ➕ Crear Registro
+      </div>
+      <div class="text-sm opacity-90">
+       Validar creación de nuevos elementos
+      </div></button> <button class="template-btn bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-lg text-left transition-colors" data-template="navigation">
+      <div class="font-semibold mb-1">
+       🧭 Navegación
+      </div>
+      <div class="text-sm opacity-90">
+       Verificar navegación entre páginas
+      </div></button>
+    </div>
+   </section><!-- Test Case Form -->
+   <section class="formal-section rounded-lg p-8 mb-8">
+    <div class="border-b border-gray-200 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-gray-800">Crear Caso de Prueba</h2>
+     <p class="text-gray-600 mt-1">Complete todos los campos para generar un caso de prueba detallado</p>
+    </div>
+    <form id="test-case-form" class="space-y-6">
+     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div><label for="test-id" class="block text-sm font-semibold text-gray-700 mb-2">ID del Caso de Prueba *</label> <input type="text" id="test-id" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Ej. CP-LOGIN-001" required>
+       <p class="text-xs text-gray-500 mt-1">Formato: CP-[MÓDULO]-[NÚMERO]</p>
+      </div>
+      <div><label for="test-category" class="block text-sm font-semibold text-gray-700 mb-2">Categoría *</label> <select id="test-category" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" required> <option value="">Seleccionar categoría</option> <option value="funcional">Funcional</option> <option value="integracion">Integración</option> <option value="sistema">Sistema</option> <option value="aceptacion">Aceptación</option> <option value="regresion">Regresión</option> <option value="rendimiento">Rendimiento</option> <option value="seguridad">Seguridad</option> <option value="usabilidad">Usabilidad</option> </select>
+      </div>
+     </div>
+     <div><label for="test-title" class="block text-sm font-semibold text-gray-700 mb-2">Título del Caso de Prueba *</label> <input type="text" id="test-title" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Ej. Verificar inicio de sesión con credenciales válidas" required>
+     </div>
+     <div><label for="test-objective" class="block text-sm font-semibold text-gray-700 mb-2">Objetivo *</label> <textarea id="test-objective" rows="2" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Describir qué se quiere verificar con este caso de prueba..." required></textarea>
+     </div>
+     <div><label for="test-preconditions" class="block text-sm font-semibold text-gray-700 mb-2">Precondiciones *</label> <textarea id="test-preconditions" rows="3" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Ej. El usuario 'test@itson.edu.mx' debe existir en la BD..." required></textarea>
+     </div>
+     <div><label for="test-steps" class="block text-sm font-semibold text-gray-700 mb-2">Pasos de Ejecución *</label> <textarea id="test-steps" rows="6" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="1. Abrir navegador en app.com/login
+2. Ingresar 'test@itson.edu.mx' en el campo 'usuario'
+3. Ingresar 'Pass123' en 'contraseña'
+4. Hacer clic en 'Ingresar'" required></textarea>
+      <p class="text-xs text-gray-500 mt-1">Numere cada paso y sea específico en las acciones</p>
+     </div>
+     <div><label for="test-expected" class="block text-sm font-semibold text-gray-700 mb-2">Resultado Esperado *</label> <textarea id="test-expected" rows="3" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Ej. El sistema debe redirigir al Dashboard y mostrar el mensaje 'Bienvenido, test'" required></textarea>
+     </div>
+     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div><label for="test-priority" class="block text-sm font-semibold text-gray-700 mb-2">Prioridad</label> <select id="test-priority" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none"> <option value="alta">Alta</option> <option value="media" selected>Media</option> <option value="baja">Baja</option> </select>
+      </div>
+      <div class="flex items-end"><button type="submit" id="add-test-case-btn" class="formal-button bg-green-700 hover:bg-green-800 text-white px-8 py-3 rounded-md flex items-center gap-3"> <span>Crear Caso de Prueba</span>
+        <div id="add-loading" class="loading-spinner hidden"></div></button>
+      </div>
+     </div>
+    </form>
+   </section><!-- Test Cases List -->
+   <section id="test-cases-container" class="mb-8">
+    <div class="border-b border-gray-200 pb-4 mb-8">
+     <div class="flex justify-between items-center">
+      <div>
+       <h2 class="text-2xl font-semibold text-gray-800">Casos de Prueba Creados</h2>
+       <p class="text-gray-600 mt-1">Gestione y ejecute sus casos de prueba</p>
+      </div>
+      <div class="flex gap-4 text-sm">
+       <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-amber-400 rounded"></div><span>Borrador</span>
+       </div>
+       <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-blue-500 rounded"></div><span>Listo</span>
+       </div>
+       <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-green-500 rounded"></div><span>Aprobado</span>
+       </div>
+       <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-red-500 rounded"></div><span>Bloqueado</span>
+       </div>
+      </div>
+     </div>
+    </div>
+    <div id="test-cases-list" class="space-y-6"><!-- Test cases will be rendered here -->
+    </div>
+    <div id="no-test-cases-message" class="formal-section rounded-lg text-center py-16 text-gray-500">
+     <div class="text-5xl mb-4 text-gray-400">
+      🧪
+     </div>
+     <h3 class="text-xl font-medium text-gray-700 mb-2">No hay Casos de Prueba</h3>
+     <p class="text-gray-600">Use las plantillas rápidas o cree casos personalizados para comenzar</p>
+    </div>
+   </section><!-- IEEE 829 Guidelines -->
+   <section class="ieee-standard rounded-lg p-8 mb-8">
+    <div class="border-b border-green-300 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-gray-800">Guía IEEE 829 - Casos de Prueba</h2>
+     <p class="text-gray-700 mt-1">Elementos esenciales para casos de prueba profesionales</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-green-600 text-white rounded-lg flex items-center justify-center text-sm">📋</span> Identificación Clara</h3>
+      <ul class="text-sm text-gray-600 space-y-2">
+       <li class="flex items-start"><span class="text-green-600 mr-2">•</span>ID único y descriptivo</li>
+       <li class="flex items-start"><span class="text-green-600 mr-2">•</span>Título que explique el propósito</li>
+       <li class="flex items-start"><span class="text-green-600 mr-2">•</span>Categorización por tipo de prueba</li>
+      </ul>
+     </div>
+     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-sm">⚙️</span> Precondiciones</h3>
+      <ul class="text-sm text-gray-600 space-y-2">
+       <li class="flex items-start"><span class="text-blue-600 mr-2">•</span>Estado inicial del sistema</li>
+       <li class="flex items-start"><span class="text-blue-600 mr-2">•</span>Datos necesarios</li>
+       <li class="flex items-start"><span class="text-blue-600 mr-2">•</span>Configuraciones requeridas</li>
+      </ul>
+     </div>
+     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-purple-600 text-white rounded-lg flex items-center justify-center text-sm">📝</span> Pasos Detallados</h3>
+      <ul class="text-sm text-gray-600 space-y-2">
+       <li class="flex items-start"><span class="text-purple-600 mr-2">•</span>Acciones numeradas y precisas</li>
+       <li class="flex items-start"><span class="text-purple-600 mr-2">•</span>Datos específicos a ingresar</li>
+       <li class="flex items-start"><span class="text-purple-600 mr-2">•</span>Elementos UI a interactuar</li>
+      </ul>
+     </div>
+     <div class="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-orange-600 text-white rounded-lg flex items-center justify-center text-sm">✅</span> Resultados Esperados</h3>
+      <ul class="text-sm text-gray-600 space-y-2">
+       <li class="flex items-start"><span class="text-orange-600 mr-2">•</span>Comportamiento esperado del sistema</li>
+       <li class="flex items-start"><span class="text-orange-600 mr-2">•</span>Mensajes y notificaciones</li>
+       <li class="flex items-start"><span class="text-orange-600 mr-2">•</span>Estados finales verificables</li>
+      </ul>
+     </div>
+    </div>
+   </section><!-- Export and Actions -->
+   <section class="formal-section rounded-lg p-8">
+    <div class="border-b border-gray-200 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-gray-800">Exportar Casos de Prueba</h2>
+     <p class="text-gray-600 mt-1">Genere documentos listos para ejecución</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4"><button id="export-test-suite" class="formal-button bg-green-700 hover:bg-green-800 text-white px-6 py-4 rounded-md flex items-center justify-center gap-3 border border-green-800"> <span class="text-xl">📋</span>
+      <div class="text-left">
+       <div class="font-semibold">
+        Suite de Pruebas
+       </div>
+       <div class="text-xs opacity-90">
+        Todos los casos
+       </div>
+      </div></button> <button id="export-execution-sheet" class="formal-button bg-blue-700 hover:bg-blue-800 text-white px-6 py-4 rounded-md flex items-center justify-center gap-3 border border-blue-800"> <span class="text-xl">📊</span>
+      <div class="text-left">
+       <div class="font-semibold">
+        Hoja de Ejecución
+       </div>
+       <div class="text-xs opacity-90">
+        Para testing manual
+       </div>
+      </div></button> <button id="clear-all-tests" class="formal-button bg-red-700 hover:bg-red-800 text-white px-6 py-4 rounded-md flex items-center justify-center gap-3 border border-red-800"> <span class="text-xl">🗑️</span>
+      <div class="text-left">
+       <div class="font-semibold">
+        Limpiar Todo
+       </div>
+       <div class="text-xs opacity-90">
+        Reiniciar casos
+       </div>
+      </div></button>
+    </div>
+   </section>
+  </main>
+  <script>
+        // Configuration and state
+        const defaultConfig = {
+            project_name: "Sistema de Gestión",
+            version: "v1.0.0",
+            test_manager: "Responsable de Pruebas",
+            organization: "Organización"
+        };
+
+        let testCases = [];
+        let isInitialized = false;
+
+        // Template definitions
+        const templates = {
+            login: {
+                test_id: "CP-LOGIN-001",
+                title: "Verificar inicio de sesión con credenciales válidas",
+                objective: "Validar que un usuario registrado pueda acceder al sistema usando credenciales correctas",
+                preconditions: "• El usuario 'test@itson.edu.mx' debe existir en la base de datos\n• La aplicación debe estar desplegada y accesible\n• El navegador debe estar configurado correctamente",
+                steps: "1. Abrir navegador web (Chrome, Firefox, Safari)\n2. Navegar a la URL: app.com/login\n3. Ingresar 'test@itson.edu.mx' en el campo 'Usuario/Email'\n4. Ingresar 'Pass123!' en el campo 'Contraseña'\n5. Hacer clic en el botón 'Iniciar Sesión'\n6. Verificar redirección automática",
+                expected_result: "• El sistema debe validar las credenciales exitosamente\n• Debe redirigir automáticamente al Dashboard principal\n• Debe mostrar el mensaje 'Bienvenido, test' en la esquina superior\n• El menú de navegación debe estar visible y funcional",
+                category: "funcional",
+                priority: "alta"
+            },
+            "login-invalid": {
+                test_id: "CP-LOGIN-002",
+                title: "Verificar rechazo de credenciales inválidas",
+                objective: "Validar que el sistema rechace intentos de acceso con credenciales incorrectas",
+                preconditions: "• La aplicación debe estar desplegada y accesible\n• No debe existir el usuario 'invalid@test.com' en la BD\n• El sistema debe tener validación de credenciales activa",
+                steps: "1. Abrir navegador web en app.com/login\n2. Ingresar 'invalid@test.com' en el campo 'Usuario/Email'\n3. Ingresar 'wrongpass' en el campo 'Contraseña'\n4. Hacer clic en el botón 'Iniciar Sesión'\n5. Observar la respuesta del sistema\n6. Verificar que no hay redirección",
+                expected_result: "• El sistema debe rechazar las credenciales\n• Debe mostrar mensaje de error: 'Usuario o contraseña incorrectos'\n• No debe redirigir a ninguna página interna\n• Los campos deben permanecer visibles para nuevo intento\n• No debe crear sesión de usuario",
+                category: "funcional",
+                priority: "alta"
+            },
+            "form-submit": {
+                test_id: "CP-FORM-001",
+                title: "Verificar envío exitoso de formulario de contacto",
+                objective: "Validar que los datos del formulario se envíen y procesen correctamente",
+                preconditions: "• El usuario debe estar autenticado en el sistema\n• El formulario de contacto debe estar accesible\n• La conexión a la base de datos debe estar activa",
+                steps: "1. Navegar a la sección 'Contacto' del sistema\n2. Completar el campo 'Nombre' con 'Juan Pérez'\n3. Completar el campo 'Email' con 'juan@test.com'\n4. Completar el campo 'Asunto' con 'Consulta técnica'\n5. Completar el área 'Mensaje' con texto de al menos 50 caracteres\n6. Hacer clic en el botón 'Enviar Mensaje'\n7. Esperar confirmación del sistema",
+                expected_result: "• El formulario debe validar todos los campos obligatorios\n• Debe mostrar mensaje de confirmación: 'Mensaje enviado exitosamente'\n• Los campos del formulario deben limpiarse automáticamente\n• Debe generar un ID de ticket para seguimiento\n• El mensaje debe guardarse en la base de datos",
+                category: "funcional",
+                priority: "media"
+            },
+            search: {
+                test_id: "CP-SEARCH-001",
+                title: "Verificar funcionalidad de búsqueda básica",
+                objective: "Validar que el motor de búsqueda retorne resultados relevantes",
+                preconditions: "• El sistema debe tener datos de prueba cargados\n• El índice de búsqueda debe estar actualizado\n• El usuario debe tener permisos de consulta",
+                steps: "1. Acceder a la página principal del sistema\n2. Localizar la barra de búsqueda en el header\n3. Ingresar el término 'producto' en el campo de búsqueda\n4. Presionar la tecla 'Enter' o hacer clic en el ícono de búsqueda\n5. Esperar a que carguen los resultados\n6. Revisar la relevancia de los primeros 5 resultados",
+                expected_result: "• Debe mostrar al menos 3 resultados relacionados con 'producto'\n• Los resultados deben estar ordenados por relevancia\n• Cada resultado debe mostrar: título, descripción breve, y enlace\n• El tiempo de respuesta debe ser menor a 3 segundos\n• Debe mostrar el número total de resultados encontrados",
+                category: "funcional",
+                priority: "media"
+            },
+            "crud-create": {
+                test_id: "CP-CRUD-001",
+                title: "Verificar creación de nuevo registro de usuario",
+                objective: "Validar que se puedan crear nuevos registros de usuario correctamente",
+                preconditions: "• El usuario administrador debe estar autenticado\n• El módulo de gestión de usuarios debe estar accesible\n• La base de datos debe tener espacio disponible",
+                steps: "1. Navegar al módulo 'Gestión de Usuarios'\n2. Hacer clic en el botón 'Nuevo Usuario'\n3. Completar 'Nombre' con 'Carlos Mendoza'\n4. Completar 'Email' con 'carlos.mendoza@test.com'\n5. Seleccionar 'Rol' como 'Usuario Estándar'\n6. Completar 'Teléfono' con '+52 644 123 4567'\n7. Hacer clic en 'Guardar Usuario'\n8. Verificar confirmación y redirección",
+                expected_result: "• El sistema debe validar que el email no exista previamente\n• Debe crear el registro con un ID único autogenerado\n• Debe mostrar mensaje: 'Usuario creado exitosamente'\n• Debe redirigir a la lista de usuarios\n• El nuevo usuario debe aparecer en la lista con estado 'Activo'",
+                category: "funcional",
+                priority: "alta"
+            },
+            navigation: {
+                test_id: "CP-NAV-001",
+                title: "Verificar navegación entre módulos principales",
+                objective: "Validar que la navegación entre secciones funcione correctamente",
+                preconditions: "• El usuario debe estar autenticado con permisos completos\n• Todos los módulos deben estar desplegados y operativos\n• La conexión de red debe ser estable",
+                steps: "1. Desde el Dashboard principal, hacer clic en 'Usuarios'\n2. Verificar carga completa de la página de usuarios\n3. Hacer clic en 'Reportes' en el menú principal\n4. Verificar carga completa de la página de reportes\n5. Hacer clic en 'Configuración' en el menú\n6. Verificar carga de la página de configuración\n7. Usar el botón 'Inicio' para regresar al Dashboard",
+                expected_result: "• Cada transición debe completarse en menos de 2 segundos\n• Las páginas deben cargar completamente sin errores 404\n• El menú debe mantener el estado activo en la sección actual\n• No debe haber errores de JavaScript en la consola\n• El breadcrumb debe actualizarse correctamente en cada página",
+                category: "usabilidad",
+                priority: "media"
+            }
+        };
+
+        // Data handler for SDK
+        const dataHandler = {
+            onDataChanged(data) {
+                testCases = data.sort((a, b) => {
+                    const priorityOrder = { alta: 1, media: 2, baja: 3 };
+                    return priorityOrder[a.priority] - priorityOrder[b.priority];
+                });
+                renderTestCases();
+            }
+        };
+
+        // Element SDK configuration
+        const elementConfig = {
+            defaultConfig,
+            onConfigChange: async (config) => {
+                document.getElementById('project-name-display').textContent = config.project_name || defaultConfig.project_name;
+                document.getElementById('project-name-input').value = config.project_name || defaultConfig.project_name;
+                document.getElementById('version-display').textContent = config.version || defaultConfig.version;
+                document.getElementById('version-input').value = config.version || defaultConfig.version;
+                document.getElementById('test-manager-display').textContent = config.test_manager || defaultConfig.test_manager;
+                document.getElementById('test-manager-input').value = config.test_manager || defaultConfig.test_manager;
+                document.getElementById('organization').textContent = config.organization || defaultConfig.organization;
+            },
+            mapToCapabilities: (config) => ({
+                recolorables: [],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            }),
+            mapToEditPanelValues: (config) => new Map([
+                ["project_name", config.project_name || defaultConfig.project_name],
+                ["version", config.version || defaultConfig.version],
+                ["test_manager", config.test_manager || defaultConfig.test_manager],
+                ["organization", config.organization || defaultConfig.organization]
+            ])
+        };
+
+        // Initialize SDKs
+        async function initializeApp() {
+            try {
+                // Set current date
+                document.getElementById('current-date').textContent = new Date().toLocaleDateString();
+                
+                if (window.elementSdk) {
+                    await window.elementSdk.init(elementConfig);
+                }
+                
+                if (window.dataSdk) {
+                    const result = await window.dataSdk.init(dataHandler);
+                    if (!result.isOk) {
+                        console.error("Failed to initialize data SDK");
+                    }
+                }
+                
+                isInitialized = true;
+                setupEventListeners();
+            } catch (error) {
+                console.error("Initialization error:", error);
+                setupEventListeners();
+            }
+        }
+
+        // Render test cases
+        function renderTestCases() {
+            const container = document.getElementById('test-cases-list');
+            const noMessage = document.getElementById('no-test-cases-message');
+            
+            if (testCases.length === 0) {
+                container.innerHTML = '';
+                noMessage.style.display = 'block';
+                return;
+            }
+            
+            noMessage.style.display = 'none';
+            
+            container.innerHTML = testCases.map((testCase, index) => `
+                <div class="test-case-card ${testCase.status} bg-white rounded-lg shadow-sm border border-gray-200 p-8">
+                    <div class="flex justify-between items-start mb-6">
+                        <div class="flex items-center gap-4">
+                            <div class="bg-green-700 text-white rounded-lg w-12 h-12 flex items-center justify-center font-bold text-sm">
+                                ${testCase.test_id.split('-').pop()}
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-3 mb-1">
+                                    <h3 class="text-xl font-semibold text-gray-800">${testCase.test_id}</h3>
+                                    <span class="status-badge ${testCase.status === 'draft' ? 'status-draft' : testCase.status === 'ready' ? 'status-ready' : testCase.status === 'approved' ? 'status-approved' : 'status-blocked'}">
+                                        ${testCase.status === 'draft' ? 'Borrador' : testCase.status === 'ready' ? 'Listo' : testCase.status === 'approved' ? 'Aprobado' : 'Bloqueado'}
+                                    </span>
+                                    <span class="status-badge priority-${testCase.priority}">
+                                        ${testCase.priority.toUpperCase()}
+                                    </span>
+                                </div>
+                                <p class="text-lg text-gray-700 font-medium">${testCase.title}</p>
+                                <div class="flex items-center gap-3 mt-1">
+                                    <span class="text-sm text-gray-600 capitalize">${testCase.category}</span>
+                                    <span class="text-gray-400">•</span>
+                                    <span class="text-sm text-gray-500">Creado: ${new Date(testCase.created_at).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <select class="status-select formal-input px-3 py-2 text-sm rounded-md" data-test-id="${testCase.__backendId}">
+                                <option value="draft" ${testCase.status === 'draft' ? 'selected' : ''}>Borrador</option>
+                                <option value="ready" ${testCase.status === 'ready' ? 'selected' : ''}>Listo</option>
+                                <option value="approved" ${testCase.status === 'approved' ? 'selected' : ''}>Aprobado</option>
+                                <option value="blocked" ${testCase.status === 'blocked' ? 'selected' : ''}>Bloqueado</option>
+                            </select>
+                            <button class="edit-test-case text-green-600 hover:text-green-800 hover:bg-green-50 p-2 rounded-md transition-colors" data-test-id="${testCase.__backendId}">
+                                ✏️
+                            </button>
+                            <button class="delete-test-case text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded-md transition-colors" data-test-id="${testCase.__backendId}">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div class="bg-blue-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-blue-600 text-white rounded flex items-center justify-center text-xs">🎯</span>
+                                    Objetivo
+                                </h4>
+                                <p class="text-blue-700 text-sm leading-relaxed">${testCase.objective}</p>
+                            </div>
+                            
+                            <div class="bg-purple-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-purple-800 mb-2 flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-purple-600 text-white rounded flex items-center justify-center text-xs">⚙️</span>
+                                    Precondiciones
+                                </h4>
+                                <pre class="text-purple-700 text-sm leading-relaxed whitespace-pre-wrap font-sans">${testCase.preconditions}</pre>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-orange-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-orange-800 mb-3 flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-orange-600 text-white rounded flex items-center justify-center text-xs">📝</span>
+                                    Pasos de Ejecución
+                                </h4>
+                                <div class="space-y-2">
+                                    ${testCase.steps.split('\n').map((step, stepIndex) => {
+                                        if (step.trim()) {
+                                            return `
+                                                <div class="flex gap-3 items-start">
+                                                    <div class="step-number">${stepIndex + 1}</div>
+                                                    <span class="text-orange-700 text-sm leading-relaxed flex-1">${step.replace(/^\d+\.\s*/, '')}</span>
+                                                </div>
+                                            `;
+                                        }
+                                        return '';
+                                    }).join('')}
+                                </div>
+                            </div>
+                            
+                            <div class="bg-green-50 rounded-lg p-4">
+                                <h4 class="font-semibold text-green-800 mb-2 flex items-center gap-2">
+                                    <span class="w-5 h-5 bg-green-600 text-white rounded flex items-center justify-center text-xs">✅</span>
+                                    Resultado Esperado
+                                </h4>
+                                <pre class="text-green-700 text-sm leading-relaxed whitespace-pre-wrap font-sans">${testCase.expected_result}</pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Add event listeners
+            container.querySelectorAll('.status-select').forEach(select => {
+                select.addEventListener('change', handleStatusChange);
+            });
+            
+            container.querySelectorAll('.edit-test-case').forEach(button => {
+                button.addEventListener('click', handleEditTestCase);
+            });
+            
+            container.querySelectorAll('.delete-test-case').forEach(button => {
+                button.addEventListener('click', handleDeleteTestCase);
+            });
+        }
+
+        // Handle template button clicks
+        function handleTemplateClick(event) {
+            const templateType = event.currentTarget.dataset.template;
+            const template = templates[templateType];
+            
+            if (template) {
+                document.getElementById('test-id').value = template.test_id;
+                document.getElementById('test-title').value = template.title;
+                document.getElementById('test-objective').value = template.objective;
+                document.getElementById('test-preconditions').value = template.preconditions;
+                document.getElementById('test-steps').value = template.steps;
+                document.getElementById('test-expected').value = template.expected_result;
+                document.getElementById('test-category').value = template.category;
+                document.getElementById('test-priority').value = template.priority;
+                
+                // Scroll to form
+                document.getElementById('test-case-form').scrollIntoView({ behavior: 'smooth' });
+                
+                showToast(`Plantilla "${template.title}" cargada`, "success");
+            }
+        }
+
+        // Handle form submission
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            
+            if (testCases.length >= 999) {
+                showToast("Límite máximo de 999 casos de prueba alcanzado", "error");
+                return;
+            }
+            
+            const testCaseData = {
+                test_id: document.getElementById('test-id').value,
+                title: document.getElementById('test-title').value,
+                objective: document.getElementById('test-objective').value,
+                preconditions: document.getElementById('test-preconditions').value,
+                steps: document.getElementById('test-steps').value,
+                expected_result: document.getElementById('test-expected').value,
+                category: document.getElementById('test-category').value,
+                priority: document.getElementById('test-priority').value,
+                status: 'draft',
+                created_at: new Date().toISOString()
+            };
+            
+            const addButton = document.getElementById('add-test-case-btn');
+            const loading = document.getElementById('add-loading');
+            
+            addButton.disabled = true;
+            loading.classList.remove('hidden');
+            
+            if (window.dataSdk) {
+                const result = await window.dataSdk.create(testCaseData);
+                
+                if (result.isOk) {
+                    event.target.reset();
+                    showToast("Caso de prueba creado exitosamente", "success");
+                } else {
+                    showToast("Error al crear el caso de prueba", "error");
+                }
+            } else {
+                testCases.push({ ...testCaseData, __backendId: testCaseData.test_id });
+                renderTestCases();
+                event.target.reset();
+                showToast("Caso de prueba creado exitosamente", "success");
+            }
+            
+            addButton.disabled = false;
+            loading.classList.add('hidden');
+        }
+
+        // Handle status change
+        async function handleStatusChange(event) {
+            const testId = event.target.dataset.testId;
+            const newStatus = event.target.value;
+            const testCase = testCases.find(tc => tc.__backendId === testId);
+            
+            if (testCase && window.dataSdk) {
+                const updatedTestCase = { ...testCase, status: newStatus };
+                const result = await window.dataSdk.update(updatedTestCase);
+                
+                if (!result.isOk) {
+                    event.target.value = testCase.status;
+                    showToast("Error al actualizar el estado", "error");
+                }
+            }
+        }
+
+        // Handle edit test case
+        function handleEditTestCase(event) {
+            const testId = event.target.dataset.testId;
+            const testCase = testCases.find(tc => tc.__backendId === testId);
+            
+            if (testCase) {
+                document.getElementById('test-id').value = testCase.test_id;
+                document.getElementById('test-title').value = testCase.title;
+                document.getElementById('test-objective').value = testCase.objective;
+                document.getElementById('test-preconditions').value = testCase.preconditions;
+                document.getElementById('test-steps').value = testCase.steps;
+                document.getElementById('test-expected').value = testCase.expected_result;
+                document.getElementById('test-category').value = testCase.category;
+                document.getElementById('test-priority').value = testCase.priority;
+                
+                document.getElementById('test-case-form').scrollIntoView({ behavior: 'smooth' });
+                showToast("Caso de prueba cargado para edición", "info");
+            }
+        }
+
+        // Handle delete test case
+        async function handleDeleteTestCase(event) {
+            const testId = event.target.dataset.testId;
+            const testCase = testCases.find(tc => tc.__backendId === testId);
+            
+            if (testCase && window.dataSdk) {
+                const button = event.target;
+                const originalText = button.innerHTML;
+                button.innerHTML = '❌';
+                button.style.backgroundColor = '#fee2e2';
+                
+                const confirmDelete = () => {
+                    button.innerHTML = '⏳';
+                    window.dataSdk.delete(testCase).then(result => {
+                        if (!result.isOk) {
+                            showToast("Error al eliminar el caso de prueba", "error");
+                            button.innerHTML = originalText;
+                            button.style.backgroundColor = '';
+                        }
+                    });
+                };
+                
+                const cancelDelete = () => {
+                    button.innerHTML = originalText;
+                    button.style.backgroundColor = '';
+                };
+                
+                const timeoutId = setTimeout(confirmDelete, 2000);
+                
+                const clickHandler = (e) => {
+                    if (!button.contains(e.target)) {
+                        clearTimeout(timeoutId);
+                        cancelDelete();
+                        document.removeEventListener('click', clickHandler);
+                    }
+                };
+                
+                document.addEventListener('click', clickHandler);
+                
+                button.onclick = (e) => {
+                    e.stopPropagation();
+                    clearTimeout(timeoutId);
+                    confirmDelete();
+                    document.removeEventListener('click', clickHandler);
+                };
+            }
+        }
+
+        // Export functions
+        function exportTestSuite() {
+            const testSuite = generateTestSuite();
+            downloadText(testSuite, 'suite-casos-prueba.txt');
+        }
+
+        function exportExecutionSheet() {
+            const executionSheet = generateExecutionSheet();
+            downloadText(executionSheet, 'hoja-ejecucion-pruebas.txt');
+        }
+
+        function generateTestSuite() {
+            const config = window.elementSdk?.config || defaultConfig;
+            const currentDate = new Date().toLocaleDateString();
+            
+            return `
+SUITE DE CASOS DE PRUEBA IEEE 829
+=================================
+
+INFORMACIÓN DEL PROYECTO:
+Proyecto: ${config.project_name || defaultConfig.project_name}
+Versión: ${config.version || defaultConfig.version}
+Organización: ${config.organization || defaultConfig.organization}
+Test Manager: ${config.test_manager || defaultConfig.test_manager}
+Fecha de Generación: ${currentDate}
+
+RESUMEN DE LA SUITE:
+Total de Casos: ${testCases.length}
+Casos Aprobados: ${testCases.filter(tc => tc.status === 'approved').length}
+Casos Listos: ${testCases.filter(tc => tc.status === 'ready').length}
+Casos en Borrador: ${testCases.filter(tc => tc.status === 'draft').length}
+Casos Bloqueados: ${testCases.filter(tc => tc.status === 'blocked').length}
+
+DISTRIBUCIÓN POR CATEGORÍA:
+${Object.entries(testCases.reduce((acc, tc) => {
+    acc[tc.category] = (acc[tc.category] || 0) + 1;
+    return acc;
+}, {})).map(([category, count]) => `• ${category.charAt(0).toUpperCase() + category.slice(1)}: ${count} casos`).join('\n')}
+
+DISTRIBUCIÓN POR PRIORIDAD:
+• Alta: ${testCases.filter(tc => tc.priority === 'alta').length} casos
+• Media: ${testCases.filter(tc => tc.priority === 'media').length} casos
+• Baja: ${testCases.filter(tc => tc.priority === 'baja').length} casos
+
+${testCases.map((testCase, index) => `
+================================================================================
+CASO DE PRUEBA #${index + 1}
+================================================================================
+
+ID: ${testCase.test_id}
+TÍTULO: ${testCase.title}
+CATEGORÍA: ${testCase.category.toUpperCase()}
+PRIORIDAD: ${testCase.priority.toUpperCase()}
+ESTADO: ${testCase.status.toUpperCase()}
+
+OBJETIVO:
+${testCase.objective}
+
+PRECONDICIONES:
+${testCase.preconditions}
+
+PASOS DE EJECUCIÓN:
+${testCase.steps}
+
+RESULTADO ESPERADO:
+${testCase.expected_result}
+
+INFORMACIÓN ADICIONAL:
+• Fecha de Creación: ${new Date(testCase.created_at).toLocaleDateString()}
+• Última Modificación: ${new Date(testCase.created_at).toLocaleDateString()}
+
+`).join('')}
+
+================================================================================
+FIN DE LA SUITE DE CASOS DE PRUEBA
+================================================================================
+
+Documento generado automáticamente
+Estándar: IEEE 829-2008
+Total de casos incluidos: ${testCases.length}
+            `.trim();
+        }
+
+        function generateExecutionSheet() {
+            const config = window.elementSdk?.config || defaultConfig;
+            const currentDate = new Date().toLocaleDateString();
+            
+            return `
+HOJA DE EJECUCIÓN DE PRUEBAS
+============================
+
+INFORMACIÓN DEL PROYECTO:
+Proyecto: ${config.project_name || defaultConfig.project_name}
+Versión: ${config.version || defaultConfig.version}
+Test Manager: ${config.test_manager || defaultConfig.test_manager}
+Fecha: ${currentDate}
+
+INSTRUCCIONES PARA EL TESTER:
+1. Ejecute cada caso en el orden indicado
+2. Marque el resultado en la columna correspondiente
+3. Anote observaciones detalladas en caso de fallo
+4. Reporte inmediatamente los defectos críticos
+
+CASOS LISTOS PARA EJECUCIÓN:
+${testCases.filter(tc => tc.status === 'approved' || tc.status === 'ready').length > 0 ? 
+testCases.filter(tc => tc.status === 'approved' || tc.status === 'ready').map((testCase, index) => `
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ CASO ${index + 1}: ${testCase.test_id}                                      
+│ TÍTULO: ${testCase.title}
+│ PRIORIDAD: ${testCase.priority.toUpperCase()} | CATEGORÍA: ${testCase.category.toUpperCase()}
+└─────────────────────────────────────────────────────────────────────────────┘
+
+PRECONDICIONES:
+${testCase.preconditions}
+
+PASOS A EJECUTAR:
+${testCase.steps.split('\n').map((step, stepIndex) => 
+    step.trim() ? `${stepIndex + 1}. ${step.replace(/^\d+\.\s*/, '')}` : ''
+).filter(step => step).join('\n')}
+
+RESULTADO ESPERADO:
+${testCase.expected_result}
+
+RESULTADO DE EJECUCIÓN:
+[ ] PASS - Caso ejecutado exitosamente
+[ ] FAIL - Caso falló (completar sección de defectos)
+[ ] BLOCKED - No se pudo ejecutar (indicar razón)
+
+OBSERVACIONES:
+_____________________________________________________________________________
+_____________________________________________________________________________
+_____________________________________________________________________________
+
+DEFECTOS ENCONTRADOS (si aplica):
+Severidad: [ ] Crítica [ ] Alta [ ] Media [ ] Baja
+Descripción: ________________________________________________________________
+___________________________________________________________________________
+___________________________________________________________________________
+
+Tester: _________________________ Fecha: _____________ Hora: ______________
+
+`).join('') : 
+'No hay casos de prueba listos para ejecución.\nTodos los casos deben estar en estado "Listo" o "Aprobado".'}
+
+================================================================================
+RESUMEN DE EJECUCIÓN
+================================================================================
+
+Total de casos ejecutados: _____ / ${testCases.filter(tc => tc.status === 'approved' || tc.status === 'ready').length}
+Casos PASS: _____
+Casos FAIL: _____
+Casos BLOCKED: _____
+
+Porcentaje de éxito: _____%
+
+DEFECTOS CRÍTICOS ENCONTRADOS:
+□ Ninguno
+□ Se encontraron defectos críticos (adjuntar reporte detallado)
+
+OBSERVACIONES GENERALES:
+_____________________________________________________________________________
+_____________________________________________________________________________
+_____________________________________________________________________________
+
+APROBACIÓN:
+Tester: _________________________ Firma: _____________ Fecha: ______________
+Test Lead: ______________________ Firma: _____________ Fecha: ______________
+
+            `.trim();
+        }
+
+        function downloadText(content, filename) {
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
+        async function clearAllTestCases() {
+            if (testCases.length === 0) {
+                showToast("No hay casos de prueba para limpiar", "info");
+                return;
+            }
+            
+            const button = document.getElementById('clear-all-tests');
+            const originalText = button.textContent;
+            button.textContent = '⚠️ Confirmar';
+            button.style.backgroundColor = '#dc2626';
+            
+            const confirmClear = async () => {
+                button.textContent = '⏳ Limpiando...';
+                
+                if (window.dataSdk) {
+                    for (const testCase of testCases) {
+                        await window.dataSdk.delete(testCase);
+                    }
+                } else {
+                    testCases = [];
+                    renderTestCases();
+                }
+                
+                showToast("Casos de prueba eliminados", "success");
+                button.textContent = originalText;
+                button.style.backgroundColor = '';
+            };
+            
+            const cancelClear = () => {
+                button.textContent = originalText;
+                button.style.backgroundColor = '';
+            };
+            
+            const timeoutId = setTimeout(confirmClear, 3000);
+            
+            const clickHandler = (e) => {
+                if (!button.contains(e.target)) {
+                    clearTimeout(timeoutId);
+                    cancelClear();
+                    document.removeEventListener('click', clickHandler);
+                }
+            };
+            
+            document.addEventListener('click', clickHandler);
+            
+            button.onclick = (e) => {
+                e.stopPropagation();
+                clearTimeout(timeoutId);
+                confirmClear();
+                document.removeEventListener('click', clickHandler);
+            };
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+            
+            toast.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform transition-transform duration-300 translate-x-full`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 100);
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+
+        function setupEventListeners() {
+            document.getElementById('test-case-form').addEventListener('submit', handleFormSubmit);
+            document.getElementById('export-test-suite').addEventListener('click', exportTestSuite);
+            document.getElementById('export-execution-sheet').addEventListener('click', exportExecutionSheet);
+            document.getElementById('clear-all-tests').addEventListener('click', clearAllTestCases);
+            
+            // Template buttons
+            document.querySelectorAll('.template-btn').forEach(button => {
+                button.addEventListener('click', handleTemplateClick);
+            });
+            
+            // Inline editing for all fields
+            setupInlineEditing();
+        }
+
+        function setupInlineEditing() {
+            // Setup editing for project name
+            setupFieldEditing('project-name', 'project_name', 'Nombre del proyecto actualizado');
+            
+            // Setup editing for version
+            setupFieldEditing('version', 'version', 'Versión actualizada');
+            
+            // Setup editing for test manager
+            setupFieldEditing('test-manager', 'test_manager', 'QA Manager actualizado');
+        }
+        
+        function setupFieldEditing(fieldName, configKey, successMessage) {
+            const display = document.getElementById(`${fieldName}-display`);
+            const input = document.getElementById(`${fieldName}-input`);
+            
+            // Click to edit
+            display.addEventListener('click', () => {
+                display.classList.add('hidden');
+                input.classList.remove('hidden');
+                input.focus();
+                input.select();
+            });
+            
+            // Save on Enter or blur
+            const saveField = async () => {
+                const newValue = input.value.trim();
+                if (newValue && window.elementSdk) {
+                    const updateConfig = {};
+                    updateConfig[configKey] = newValue;
+                    await window.elementSdk.setConfig(updateConfig);
+                    showToast(successMessage, "success");
+                }
+                input.classList.add('hidden');
+                display.classList.remove('hidden');
+            };
+            
+            // Cancel on Escape
+            const cancelEdit = () => {
+                const currentValue = window.elementSdk?.config?.[configKey] || defaultConfig[configKey];
+                input.value = currentValue;
+                input.classList.add('hidden');
+                display.classList.remove('hidden');
+            };
+            
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveField();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelEdit();
+                }
+            });
+            
+            input.addEventListener('blur', saveField);
+        }
+
+        // Initialize the application
+        initializeApp();
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9965089364554711',t:'MTc2MTc2NTY2MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
