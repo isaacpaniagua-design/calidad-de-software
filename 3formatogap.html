@@ -1,931 +1,1849 @@
 <!doctype html>
-<html lang="es" style="height: 100%;">
+<html lang="es">
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Herramienta de Análisis de Brechas</title>
+  <title>Gap Analysis SQA - Herramienta de Diagnóstico</title>
   <script src="/_sdk/data_sdk.js"></script>
   <script src="/_sdk/element_sdk.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <style>
         body {
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .priority-high { border-left: 4px solid #ef4444; }
-        .priority-medium { border-left: 4px solid #f59e0b; }
-        .priority-low { border-left: 4px solid #10b981; }
-        .fade-in { animation: fadeIn 0.3s ease-in; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @media print {
-            .no-print { display: none !important; }
-            body { background: white !important; }
+        .gap-analysis-header {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+            border-bottom: 4px solid #92400e;
+        }
+        .template-card {
+            transition: all 0.3s ease;
+            border: 2px solid #e5e7eb;
+        }
+        .template-card:hover {
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+            border-color: #f59e0b;
+        }
+        .gap-status-cumplido {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .gap-status-parcial {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .gap-status-no-cumplido {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .priority-alta {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .priority-media {
+            background: #fef3c7;
+            color: #d97706;
+        }
+        .priority-baja {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .loading-spinner {
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #f59e0b;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status-badge {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        .formal-input {
+            border: 1px solid #d1d5db;
+            font-size: 14px;
+            transition: border-color 0.2s ease;
+        }
+        .formal-input:focus {
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+        .executive-button {
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
     </style>
   <style>@view-transition { navigation: auto; }</style>
  </head>
- <body style="height: 100%; margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;" class="bg-slate-50">
-  <div class="min-h-full flex flex-col"><!-- Header -->
-   <header class="bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-lg">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-     <div class="flex items-center justify-between">
-      <div class="flex items-center space-x-4">
-       <div class="bg-white bg-opacity-10 p-3 rounded-lg">
-        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-        </svg>
+ <body class="min-h-full bg-gray-50"><!-- Header -->
+  <header class="gap-analysis-header text-white py-8 mb-8">
+   <div class="container mx-auto px-6">
+    <div class="text-center">
+     <div class="flex justify-center items-center gap-3 mb-2"><span class="text-4xl">🔍</span>
+      <h1 class="text-4xl font-bold">Gap Analysis SQA</h1>
+     </div>
+     <div class="flex justify-center items-center gap-6 text-lg mb-4 opacity-90">
+      <div class="flex items-center gap-2"><span>Organización:</span> <span id="organization-display" class="font-semibold cursor-pointer hover:bg-amber-600 hover:bg-opacity-30 px-2 py-1 rounded transition-colors" title="Click para editar">Mi Organización</span> <input type="text" id="organization-edit" class="font-semibold bg-amber-600 bg-opacity-30 text-white placeholder-amber-200 border border-amber-400 rounded px-2 py-1 text-lg hidden focus:outline-none focus:ring-2 focus:ring-amber-300" placeholder="Nombre de la organización"> <button id="organization-save" class="hidden text-amber-200 hover:text-white ml-1" title="Guardar">✓</button> <button id="organization-cancel" class="hidden text-amber-200 hover:text-white ml-1" title="Cancelar">✗</button>
+      </div><span class="text-amber-200">|</span>
+      <div class="flex items-center gap-2"><span>Modelo Objetivo:</span> <span id="target-model-display" class="font-semibold cursor-pointer hover:bg-amber-600 hover:bg-opacity-30 px-2 py-1 rounded transition-colors" title="Click para editar">CMMI Level 3</span> <input type="text" id="target-model-edit" class="font-semibold bg-amber-600 bg-opacity-30 text-white placeholder-amber-200 border border-amber-400 rounded px-2 py-1 text-lg hidden focus:outline-none focus:ring-2 focus:ring-amber-300" placeholder="Modelo objetivo"> <button id="target-model-save" class="hidden text-amber-200 hover:text-white ml-1" title="Guardar">✓</button> <button id="target-model-cancel" class="hidden text-amber-200 hover:text-white ml-1" title="Cancelar">✗</button>
+      </div>
+     </div>
+     <p class="text-amber-100 max-w-4xl mx-auto text-lg leading-relaxed"><strong>Herramienta de diagnóstico estratégico</strong> para evaluar brechas entre prácticas actuales y requisitos de modelos de calidad. Compare su estado actual contra estándares de la industria.</p>
+    </div>
+   </div>
+  </header>
+  <main class="container mx-auto px-6 pb-12"><!-- Gap Analysis Templates -->
+   <section class="mb-8">
+    <div class="border-b border-amber-300 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-amber-800 flex items-center gap-3"><span class="text-3xl">📋</span> Plantillas de Gap Analysis por Modelo</h2>
+     <p class="text-amber-700 mt-2 text-lg">Seleccione una plantilla predefinida para comenzar el diagnóstico rápidamente</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+     <div class="template-card bg-white rounded-lg p-6 cursor-pointer" data-template="cmmi-level-2">
+      <div class="flex items-start gap-4">
+       <div class="text-4xl">
+        🎯
        </div>
-       <div>
-        <h1 id="tool-title" class="text-3xl font-bold">Análisis de Brechas (Gap Analysis)</h1>
-        <p class="mt-1 text-slate-300 text-lg"><span id="company-name">Empresa</span> • <span id="model-name">Modelo de Calidad</span></p>
-        <p id="current-user-info" class="mt-2 text-sm text-blue-200 hidden flex items-center">
-         <svg class="w-4 h-4 mr-1" fill="currentColor" viewbox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-         </svg><span id="display-student-name"></span> (<span id="display-user-id"></span>)</p>
+       <div class="flex-1">
+        <h3 class="text-xl font-bold text-blue-800 mb-2">CMMI Level 2</h3>
+        <p class="text-blue-600 mb-3">Procesos Gestionados</p>
+        <div class="text-sm text-gray-600 mb-4">
+         <div class="mb-1">
+          • REQM: Gestión de Requisitos
+         </div>
+         <div class="mb-1">
+          • PMC: Monitoreo y Control
+         </div>
+         <div class="mb-1">
+          • 12 prácticas específicas
+         </div>
+        </div>
+        <div class="text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full inline-block">
+         Enfoque: Disciplina de Proyecto
+        </div>
        </div>
       </div>
-      <div class="flex items-center space-x-4 no-print">
-       <div class="text-right">
-        <div class="text-sm text-slate-300">
-         Total de Elementos
+     </div>
+     <div class="template-card bg-white rounded-lg p-6 cursor-pointer" data-template="cmmi-level-3">
+      <div class="flex items-start gap-4">
+       <div class="text-4xl">
+        🏆
+       </div>
+       <div class="flex-1">
+        <h3 class="text-xl font-bold text-purple-800 mb-2">CMMI Level 3</h3>
+        <p class="text-purple-600 mb-3">Procesos Definidos</p>
+        <div class="text-sm text-gray-600 mb-4">
+         <div class="mb-1">
+          • OSSP + Procesos de Ingeniería
+         </div>
+         <div class="mb-1">
+          • RD, TS, PI, VER, VAL
+         </div>
+         <div class="mb-1">
+          • 18 prácticas organizacionales
+         </div>
         </div>
-        <div class="text-2xl font-bold text-white">
-         <span id="total-items">0</span>
+        <div class="text-xs bg-purple-50 text-purple-700 px-3 py-1 rounded-full inline-block">
+         Enfoque: Estandarización Organizacional
         </div>
        </div>
-       <div class="flex space-x-3"><button id="export-pdf-btn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2">
-         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-         </svg><span>Exportar PDF</span> </button> <button id="add-gap-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2">
-         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-         </svg><span>Nueva Brecha</span> </button>
+      </div>
+     </div>
+     <div class="template-card bg-white rounded-lg p-6 cursor-pointer" data-template="iso-9001">
+      <div class="flex items-start gap-4">
+       <div class="text-4xl">
+        📋
+       </div>
+       <div class="flex-1">
+        <h3 class="text-xl font-bold text-green-800 mb-2">ISO 9001:2015</h3>
+        <p class="text-green-600 mb-3">Sistema de Gestión de Calidad</p>
+        <div class="text-sm text-gray-600 mb-4">
+         <div class="mb-1">
+          • Contexto Organizacional
+         </div>
+         <div class="mb-1">
+          • Liderazgo y Compromiso
+         </div>
+         <div class="mb-1">
+          • 15 requisitos clave
+         </div>
+        </div>
+        <div class="text-xs bg-green-50 text-green-700 px-3 py-1 rounded-full inline-block">
+         Enfoque: Sistema de Gestión
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="template-card bg-white rounded-lg p-6 cursor-pointer" data-template="agile-maturity">
+      <div class="flex items-start gap-4">
+       <div class="text-4xl">
+        🚀
+       </div>
+       <div class="flex-1">
+        <h3 class="text-xl font-bold text-orange-800 mb-2">Madurez Ágil</h3>
+        <p class="text-orange-600 mb-3">Scrum + DevOps</p>
+        <div class="text-sm text-gray-600 mb-4">
+         <div class="mb-1">
+          • Framework Scrum Completo
+         </div>
+         <div class="mb-1">
+          • Prácticas DevOps
+         </div>
+         <div class="mb-1">
+          • 14 prácticas ágiles
+         </div>
+        </div>
+        <div class="text-xs bg-orange-50 text-orange-700 px-3 py-1 rounded-full inline-block">
+         Enfoque: Agilidad y Entrega Continua
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="template-card bg-white rounded-lg p-6 cursor-pointer" data-template="security-compliance">
+      <div class="flex items-start gap-4">
+       <div class="text-4xl">
+        🔒
+       </div>
+       <div class="flex-1">
+        <h3 class="text-xl font-bold text-red-800 mb-2">Seguridad</h3>
+        <p class="text-red-600 mb-3">ISO 27001 + GDPR</p>
+        <div class="text-sm text-gray-600 mb-4">
+         <div class="mb-1">
+          • Controles de Seguridad
+         </div>
+         <div class="mb-1">
+          • Protección de Datos
+         </div>
+         <div class="mb-1">
+          • 16 controles clave
+         </div>
+        </div>
+        <div class="text-xs bg-red-50 text-red-700 px-3 py-1 rounded-full inline-block">
+         Enfoque: Seguridad y Compliance
+        </div>
+       </div>
+      </div>
+     </div>
+     <div class="template-card bg-white rounded-lg p-6 cursor-pointer" data-template="digital-maturity">
+      <div class="flex items-start gap-4">
+       <div class="text-4xl">
+        💻
+       </div>
+       <div class="flex-1">
+        <h3 class="text-xl font-bold text-indigo-800 mb-2">Madurez Digital</h3>
+        <p class="text-indigo-600 mb-3">Cloud + AI + DevOps</p>
+        <div class="text-sm text-gray-600 mb-4">
+         <div class="mb-1">
+          • Transformación Digital
+         </div>
+         <div class="mb-1">
+          • Tecnologías Emergentes
+         </div>
+         <div class="mb-1">
+          • 20 capacidades digitales
+         </div>
+        </div>
+        <div class="text-xs bg-indigo-50 text-indigo-700 px-3 py-1 rounded-full inline-block">
+         Enfoque: Innovación Tecnológica
+        </div>
        </div>
       </div>
      </div>
     </div>
-   </header><!-- Main Content -->
-   <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><!-- Project Information Card -->
-    <div class="bg-white rounded-xl shadow-lg border border-slate-200 mb-8">
-     <div class="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-b border-slate-200 rounded-t-xl">
-      <h2 class="text-xl font-bold text-slate-900 flex items-center">
-       <svg class="w-6 h-6 mr-2 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-       </svg> Información del Proyecto</h2>
+   </section><!-- Gap Analysis Form -->
+   <section class="bg-white rounded-lg p-8 mb-8 border border-amber-200">
+    <div class="border-b border-amber-200 pb-4 mb-6">
+     <h2 class="text-2xl font-semibold text-amber-800 flex items-center gap-3"><span class="text-3xl">✏️</span> Crear Nueva Entrada de Gap Analysis</h2>
+     <p class="text-amber-700 mt-2">Documente una brecha específica entre su práctica actual y el requisito del modelo</p>
+    </div>
+    <form id="gap-form" class="space-y-6">
+     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div><label for="gap-practice" class="block text-sm font-semibold text-amber-700 mb-2"> Práctica/Requisito del Modelo * </label> <input type="text" id="gap-practice" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Ej. CMMI REQM 1.1: Gestionar los requisitos" required>
+       <p class="text-xs text-amber-600 mt-1">Sea específico con el área de proceso y práctica</p>
+      </div>
+      <div><label for="gap-status" class="block text-sm font-semibold text-amber-700 mb-2"> Estado de Cumplimiento * </label> <select id="gap-status" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" required> <option value="">Seleccionar estado</option> <option value="cumplido">✅ Cumplido - Práctica implementada correctamente</option> <option value="parcial">⚠️ Parcialmente Cumplido - Implementación incompleta</option> <option value="no-cumplido">❌ No Cumplido - Práctica no implementada</option> </select>
+      </div>
      </div>
-     <div class="p-6"><!-- Student Identification -->
-      <div id="student-form" class="mb-6">
-       <h3 class="text-lg font-semibold text-slate-900 mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewbox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-        </svg> Identificación del Analista</h3>
-       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div><label for="student-name" class="block text-sm font-semibold text-slate-700 mb-2"> Nombre Completo del Analista * </label> <input type="text" id="student-name" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50" placeholder="Ingresa tu nombre completo">
-        </div>
-        <div><label for="user-id" class="block text-sm font-semibold text-slate-700 mb-2"> ID de Usuario / Matrícula * </label> <input type="text" id="user-id" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-slate-50" placeholder="Ej. EST001, 2024001, etc.">
-        </div>
+     <div><label for="gap-current-practice" class="block text-sm font-semibold text-amber-700 mb-2"> Evidencia/Práctica Actual * </label> <textarea id="gap-current-practice" rows="4" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Describa específicamente qué hacen hoy. Sea realista y detallado.
+
+Ejemplo: 'Los cambios de requisitos se solicitan por WhatsApp o correo informal. No hay proceso de evaluación de impacto ni aprobación formal. La trazabilidad se mantiene en Excel desactualizado.'" required></textarea>
+      <p class="text-xs text-amber-600 mt-1">Sea honesto y específico sobre la situación actual</p>
+     </div>
+     <div><label for="gap-recommended-action" class="block text-sm font-semibold text-amber-700 mb-2"> Acciones Recomendadas * </label> <textarea id="gap-recommended-action" rows="4" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Defina acciones específicas y medibles para cerrar la brecha.
+
+Ejemplo: 'Diseñar e implementar Formulario de Control de Cambios formal con flujo de aprobación electrónico. Capacitar a analistas en proceso. Implementar herramienta de trazabilidad automática.'" required></textarea>
+      <p class="text-xs text-amber-600 mt-1">Proponga soluciones concretas y realizables</p>
+     </div>
+     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div><label for="gap-priority" class="block text-sm font-semibold text-amber-700 mb-2"> Prioridad de Implementación </label> <select id="gap-priority" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none"> <option value="alta">🔴 Alta - Crítico para certificación</option> <option value="media" selected>🟡 Media - Importante pero no bloqueante</option> <option value="baja">🟢 Baja - Mejora deseable</option> </select>
+      </div>
+      <div><label for="gap-effort" class="block text-sm font-semibold text-amber-700 mb-2"> Esfuerzo Estimado </label> <select id="gap-effort" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none"> <option value="bajo">🟢 Bajo - 1-2 semanas</option> <option value="medio" selected>🟡 Medio - 1-2 meses</option> <option value="alto">🔴 Alto - 3+ meses</option> </select>
+      </div>
+      <div><label for="gap-impact" class="block text-sm font-semibold text-amber-700 mb-2"> Impacto en Certificación </label> <select id="gap-impact" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none"> <option value="critico">🔴 Crítico - Bloquea certificación</option> <option value="importante" selected>🟡 Importante - Afecta rating</option> <option value="menor">🟢 Menor - Oportunidad de mejora</option> </select>
+      </div>
+     </div>
+     <div class="flex justify-end"><button type="submit" id="create-gap-btn" class="executive-button bg-amber-700 hover:bg-amber-800 text-white px-8 py-3 rounded-md flex items-center gap-3"> <span>Agregar al Gap Analysis</span>
+       <div id="gap-loading" class="loading-spinner hidden"></div></button>
+     </div>
+    </form>
+   </section><!-- Gap Analysis Results -->
+   <section id="gap-analysis-container">
+    <div class="border-b border-amber-300 pb-4 mb-6">
+     <div class="flex justify-between items-center">
+      <div>
+       <h2 class="text-2xl font-semibold text-amber-800 flex items-center gap-3"><span class="text-3xl">📊</span> Resultados del Gap Analysis</h2>
+       <p class="text-amber-700 mt-1">Diagnóstico completo de brechas identificadas</p>
+      </div>
+      <div class="flex gap-4 text-sm">
+       <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-green-500 rounded"></div><span>Cumplido</span>
        </div>
-       <div class="mt-6 flex items-center justify-between"><button type="button" id="save-identity-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"> Confirmar Identidad </button>
-        <p class="text-sm text-slate-600 max-w-md">
-         <svg class="w-4 h-4 inline mr-1 text-amber-500" fill="currentColor" viewbox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-         </svg> Esta información se asociará permanentemente con todos tus análisis de brechas.</p>
+       <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-yellow-500 rounded"></div><span>Parcial</span>
        </div>
-      </div><!-- Project Details -->
-      <div class="border-t border-slate-200 pt-6">
-       <h3 class="text-lg font-semibold text-slate-900 mb-4 flex items-center">
-        <svg class="w-5 h-5 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0V6a2 2 0 012 2v6a2 2 0 01-2 2H8a2 2 0 01-2-2V8a2 2 0 012-2V6"></path>
-        </svg> Detalles del Análisis</h3>
-       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-         <div class="text-sm font-medium text-slate-600 mb-1">
-          Organización
-         </div>
-         <div id="company-display" class="text-lg font-semibold text-slate-900">
-          Empresa
-         </div>
-        </div>
-        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-         <div class="text-sm font-medium text-slate-600 mb-1">
-          Marco de Referencia
-         </div>
-         <div id="model-display" class="text-lg font-semibold text-slate-900">
-          Modelo de Calidad
-         </div>
-        </div>
-        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
-         <div class="text-sm font-medium text-slate-600 mb-1">
-          Fecha de Análisis
-         </div>
-         <div id="analysis-date" class="text-lg font-semibold text-slate-900">
-          -
-         </div>
-        </div>
+       <div class="flex items-center gap-2">
+        <div class="w-3 h-3 bg-red-500 rounded"></div><span>No Cumplido</span>
        </div>
       </div>
      </div>
-    </div><!-- Executive Summary Dashboard -->
-    <div class="bg-white rounded-xl shadow-lg border border-slate-200 mb-8">
-     <div class="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-b border-slate-200 rounded-t-xl">
-      <h2 class="text-xl font-bold text-slate-900 flex items-center">
-       <svg class="w-6 h-6 mr-2 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-       </svg> Resumen Ejecutivo</h2>
-     </div>
-     <div class="p-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"><!-- Critical Non-Compliance -->
-       <div class="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 border border-red-200 shadow-sm">
-        <div class="flex items-center justify-between mb-4">
-         <div class="p-3 bg-red-500 rounded-lg shadow-lg">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-          </svg>
-         </div>
-         <div class="text-right">
-          <div id="not-compliant-count" class="text-3xl font-bold text-red-700">
-           0
-          </div>
-          <div class="text-sm font-medium text-red-600">
-           Elementos
-          </div>
-         </div>
-        </div>
-        <div class="text-sm font-semibold text-red-800">
-         No Cumplido
-        </div>
-        <div class="text-xs text-red-600 mt-1">
-         Requiere acción inmediata
-        </div>
-       </div><!-- Partial Compliance -->
-       <div class="bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl p-6 border border-amber-200 shadow-sm">
-        <div class="flex items-center justify-between mb-4">
-         <div class="p-3 bg-amber-500 rounded-lg shadow-lg">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-         </div>
-         <div class="text-right">
-          <div id="partial-count" class="text-3xl font-bold text-amber-700">
-           0
-          </div>
-          <div class="text-sm font-medium text-amber-600">
-           Elementos
-          </div>
-         </div>
-        </div>
-        <div class="text-sm font-semibold text-amber-800">
-         Parcialmente Cumplido
-        </div>
-        <div class="text-xs text-amber-600 mt-1">
-         En proceso de mejora
-        </div>
-       </div><!-- Full Compliance -->
-       <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-xl p-6 border border-emerald-200 shadow-sm">
-        <div class="flex items-center justify-between mb-4">
-         <div class="p-3 bg-emerald-500 rounded-lg shadow-lg">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-         </div>
-         <div class="text-right">
-          <div id="compliant-count" class="text-3xl font-bold text-emerald-700">
-           0
-          </div>
-          <div class="text-sm font-medium text-emerald-600">
-           Elementos
-          </div>
-         </div>
-        </div>
-        <div class="text-sm font-semibold text-emerald-800">
-         Cumplido
-        </div>
-        <div class="text-xs text-emerald-600 mt-1">
-         Conforme a estándares
-        </div>
-       </div><!-- High Priority Items -->
-       <div class="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-6 border border-purple-200 shadow-sm">
-        <div class="flex items-center justify-between mb-4">
-         <div class="p-3 bg-purple-500 rounded-lg shadow-lg">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-          </svg>
-         </div>
-         <div class="text-right">
-          <div id="high-priority-count" class="text-3xl font-bold text-purple-700">
-           0
-          </div>
-          <div class="text-sm font-medium text-purple-600">
-           Elementos
-          </div>
-         </div>
-        </div>
-        <div class="text-sm font-semibold text-purple-800">
-         Alta Prioridad
-        </div>
-        <div class="text-xs text-purple-600 mt-1">
-         Atención prioritaria
-        </div>
-       </div>
-      </div><!-- Compliance Progress Bar -->
-      <div class="mt-8 p-4 bg-slate-50 rounded-lg border border-slate-200">
-       <div class="flex items-center justify-between mb-2"><span class="text-sm font-semibold text-slate-700">Nivel de Cumplimiento General</span> <span id="compliance-percentage" class="text-sm font-bold text-slate-900">0%</span>
-       </div>
-       <div class="w-full bg-slate-200 rounded-full h-3">
-        <div id="compliance-bar" class="bg-gradient-to-r from-emerald-500 to-emerald-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
-       </div>
-       <div class="flex justify-between text-xs text-slate-500 mt-1"><span>0% Cumplimiento</span> <span>100% Cumplimiento</span>
-       </div>
+    </div><!-- Gap Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+     <div class="bg-white rounded-lg p-6 border border-amber-200 text-center shadow-sm">
+      <div class="text-3xl font-bold text-amber-700 mb-2" id="total-gaps">
+       0
+      </div>
+      <div class="text-sm text-amber-600">
+       Total Evaluado
+      </div>
+      <div class="text-xs text-gray-500 mt-1">
+       Prácticas analizadas
       </div>
      </div>
-    </div><!-- Gap Analysis Form -->
-    <div id="gap-form" class="bg-white rounded-xl shadow-lg border border-slate-200 mb-8 hidden no-print">
-     <div class="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 border-b border-slate-200 rounded-t-xl">
-      <h3 class="text-xl font-bold text-slate-900 flex items-center">
-       <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
-       </svg><span id="form-title">Nuevo Análisis de Brecha</span></h3>
+     <div class="bg-white rounded-lg p-6 border border-green-200 text-center shadow-sm">
+      <div class="text-3xl font-bold text-green-700 mb-2" id="compliant-gaps">
+       0
+      </div>
+      <div class="text-sm text-green-600">
+       Cumplido
+      </div>
+      <div class="text-xs text-gray-500 mt-1" id="compliant-percentage">
+       0% del total
+      </div>
      </div>
-     <div class="p-6">
-      <form id="gap-analysis-form" class="space-y-6"><!-- Section 1: Requirements and Evidence -->
-       <div class="bg-slate-50 rounded-lg p-6 border border-slate-200">
-        <h4 class="text-lg font-semibold text-slate-900 mb-4 flex items-center">
-         <svg class="w-5 h-5 mr-2 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-         </svg> Requisitos y Evidencia</h4>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-         <div><label for="practice-requirement" class="block text-sm font-semibold text-slate-700 mb-2"> Práctica/Requisito del Marco de Referencia * </label> <textarea id="practice-requirement" rows="4" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm" placeholder="Ej. CMMI REQM 1.1: Gestionar los requisitos del proyecto y sus cambios de manera sistemática"></textarea>
-          <div class="text-xs text-slate-500 mt-1">
-           Describe el requisito específico del modelo de calidad
-          </div>
-         </div>
-         <div><label for="current-evidence" class="block text-sm font-semibold text-slate-700 mb-2"> Evidencia/Práctica Actual en la Organización * </label> <textarea id="current-evidence" rows="4" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm" placeholder="Ej. Los cambios de requisitos se comunican informalmente por WhatsApp sin documentación formal ni proceso de aprobación"></textarea>
-          <div class="text-xs text-slate-500 mt-1">
-           Describe la situación actual observada en la organización
-          </div>
-         </div>
-        </div>
-       </div><!-- Section 2: Assessment and Priority -->
-       <div class="bg-slate-50 rounded-lg p-6 border border-slate-200">
-        <h4 class="text-lg font-semibold text-slate-900 mb-4 flex items-center">
-         <svg class="w-5 h-5 mr-2 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-         </svg> Evaluación y Priorización</h4>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-         <div><label for="gap-status" class="block text-sm font-semibold text-slate-700 mb-2"> Estado de Cumplimiento * </label> <select id="gap-status" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm"> <option value="">Seleccionar nivel de cumplimiento</option> <option value="No Cumplido">🔴 No Cumplido - Ausencia total del requisito</option> <option value="Parcialmente Cumplido">🟡 Parcialmente Cumplido - Implementación incompleta</option> <option value="Cumplido">🟢 Cumplido - Conforme al estándar</option> </select>
-         </div>
-         <div><label for="priority" class="block text-sm font-semibold text-slate-700 mb-2"> Nivel de Prioridad * </label> <select id="priority" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm"> <option value="">Seleccionar prioridad de atención</option> <option value="Alta">🔥 Alta - Requiere atención inmediata</option> <option value="Media">⚡ Media - Importante para el proceso</option> <option value="Baja">📋 Baja - Mejora recomendada</option> </select>
-         </div>
-        </div>
-       </div><!-- Section 3: Recommendations -->
-       <div class="bg-slate-50 rounded-lg p-6 border border-slate-200">
-        <h4 class="text-lg font-semibold text-slate-900 mb-4 flex items-center">
-         <svg class="w-5 h-5 mr-2 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-         </svg> Plan de Acción Recomendado</h4>
-        <div><label for="recommended-actions" class="block text-sm font-semibold text-slate-700 mb-2"> Acciones Correctivas y de Mejora * </label> <textarea id="recommended-actions" rows="4" class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-sm" placeholder="Ej. 1) Diseñar e implementar un Formulario de Control de Cambios formal, 2) Establecer flujo de aprobación con roles definidos, 3) Capacitar al equipo en el nuevo proceso, 4) Implementar herramienta de seguimiento"></textarea>
-         <div class="text-xs text-slate-500 mt-1">
-          Detalla las acciones específicas necesarias para cerrar la brecha identificada
-         </div>
-        </div>
-       </div><!-- Form Actions -->
-       <div class="flex items-center justify-between pt-6 border-t border-slate-200"><button type="button" id="cancel-btn" class="px-6 py-3 text-slate-600 hover:text-slate-800 font-semibold transition-colors"> Cancelar </button> <button type="submit" id="save-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2">
-         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-         </svg><span>Guardar Análisis</span> </button>
-       </div>
-      </form>
+     <div class="bg-white rounded-lg p-6 border border-yellow-200 text-center shadow-sm">
+      <div class="text-3xl font-bold text-yellow-700 mb-2" id="partial-gaps">
+       0
+      </div>
+      <div class="text-sm text-yellow-600">
+       Parcial
+      </div>
+      <div class="text-xs text-gray-500 mt-1" id="partial-percentage">
+       0% del total
+      </div>
+     </div>
+     <div class="bg-white rounded-lg p-6 border border-red-200 text-center shadow-sm">
+      <div class="text-3xl font-bold text-red-700 mb-2" id="non-compliant-gaps">
+       0
+      </div>
+      <div class="text-sm text-red-600">
+       No Cumplido
+      </div>
+      <div class="text-xs text-gray-500 mt-1" id="non-compliant-percentage">
+       0% del total
+      </div>
      </div>
     </div><!-- Gap Analysis Table -->
-    <div class="bg-white rounded-xl shadow-lg border border-slate-200">
-     <div class="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-b border-slate-200 rounded-t-xl">
-      <h3 class="text-xl font-bold text-slate-900 flex items-center">
-       <svg class="w-6 h-6 mr-2 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-       </svg> Registro Detallado de Brechas</h3>
-     </div>
-     <div id="gaps-container" class="divide-y divide-slate-200">
-      <div id="empty-state" class="p-16 text-center">
-       <div class="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full flex items-center justify-center shadow-inner">
-        <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-        </svg>
-       </div>
-       <h3 class="text-xl font-semibold text-slate-900 mb-3">Registro de Análisis Vacío</h3>
-       <p class="text-slate-600 mb-6 max-w-md mx-auto">Para comenzar tu análisis de brechas, primero identifícate como analista y luego agrega tu primera evaluación de cumplimiento.</p>
-       <div class="space-y-3"><button id="empty-add-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2 mx-auto">
-         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-         </svg><span>Iniciar Primer Análisis</span> </button>
-        <p class="text-xs text-slate-500">Los datos se guardarán automáticamente en tu Canva Sheet</p>
-       </div>
-      </div>
+    <div class="bg-white rounded-lg border border-amber-200 overflow-hidden shadow-sm">
+     <div class="overflow-x-auto">
+      <table class="w-full">
+       <thead class="bg-amber-100 border-b border-amber-200">
+        <tr>
+         <th class="text-left p-4 font-semibold text-amber-800">Práctica/Requisito</th>
+         <th class="text-left p-4 font-semibold text-amber-800">Estado</th>
+         <th class="text-left p-4 font-semibold text-amber-800">Práctica Actual</th>
+         <th class="text-left p-4 font-semibold text-amber-800">Acción Recomendada</th>
+         <th class="text-left p-4 font-semibold text-amber-800">Prioridad</th>
+         <th class="text-center p-4 font-semibold text-amber-800">Acciones</th>
+        </tr>
+       </thead>
+       <tbody id="gap-analysis-table"><!-- Gap entries will be rendered here -->
+       </tbody>
+      </table>
      </div>
     </div>
-   </main>
-  </div><!-- Loading Overlay -->
-  <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
-   <div class="bg-white rounded-lg p-6 flex items-center space-x-3">
-    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div><span class="text-slate-700">Procesando...</span>
-   </div>
-  </div>
+    <div id="no-gaps-message" class="text-center py-16 text-amber-600">
+     <div class="text-6xl mb-4 text-amber-400">
+      🔍
+     </div>
+     <h3 class="text-2xl font-medium text-amber-700 mb-3">No hay Gap Analysis Definido</h3>
+     <p class="text-amber-600 text-lg mb-4">Use las plantillas predefinidas o cree entradas personalizadas para comenzar el diagnóstico</p>
+     <p class="text-sm text-gray-500">Seleccione una plantilla arriba para cargar un conjunto completo de prácticas a evaluar</p>
+    </div>
+   </section><!-- Actions -->
+   <section class="mt-8 flex justify-center gap-4"><button id="export-gap-analysis" class="executive-button bg-amber-700 hover:bg-amber-800 text-white px-6 py-3 rounded-md flex items-center gap-2"> <span class="text-lg">📊</span> Exportar Gap Analysis </button> <button id="clear-gap-analysis" class="executive-button bg-gray-700 hover:bg-gray-800 text-white px-6 py-3 rounded-md flex items-center gap-2"> <span class="text-lg">🗑️</span> Limpiar Gap Analysis </button>
+   </section>
+  </main>
   <script>
-        // Configuration
+        // Configuration and state
         const defaultConfig = {
-            tool_title: "Análisis de Brechas (Gap Analysis)",
-            company_name: "Empresa",
-            model_name: "Modelo de Calidad"
+            organization_name: "Mi Organización",
+            target_model: "CMMI Level 3"
         };
 
-        let currentGaps = [];
-        let allGaps = [];
-        let isLoading = false;
-        let editingGap = null;
-        let currentUser = {
-            student_name: '',
-            user_id: ''
+        let gapAnalysisEntries = [];
+        let isInitialized = false;
+
+        // Gap Analysis Templates - Each template is strategically different
+        const gapTemplates = {
+            "cmmi-level-2": [
+                {
+                    practice: "CMMI REQM 1.1: Gestionar los requisitos",
+                    current_practice: "Los cambios de requisitos se piden por WhatsApp o correo informal sin seguimiento",
+                    status: "no-cumplido",
+                    recommended_action: "Diseñar e implementar un Formulario de Control de Cambios formal con flujo de aprobación",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "CMMI Level 2"
+                },
+                {
+                    practice: "CMMI REQM 1.2: Obtener compromiso con los requisitos",
+                    current_practice: "Los stakeholders aprueban requisitos verbalmente en reuniones sin documentación",
+                    status: "parcial",
+                    recommended_action: "Crear matriz de aprobación formal con firmas digitales de stakeholders",
+                    priority: "alta",
+                    effort: "bajo",
+                    impact: "importante",
+                    model_type: "CMMI Level 2"
+                },
+                {
+                    practice: "CMMI REQM 1.3: Gestionar cambios a los requisitos",
+                    current_practice: "No existe proceso formal para evaluar impacto de cambios en cronograma y presupuesto",
+                    status: "no-cumplido",
+                    recommended_action: "Implementar análisis de impacto automático con herramienta de gestión de requisitos",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "CMMI Level 2"
+                },
+                {
+                    practice: "CMMI REQM 1.4: Mantener trazabilidad bidireccional",
+                    current_practice: "La trazabilidad se mantiene en hojas Excel desactualizadas y manuales",
+                    status: "parcial",
+                    recommended_action: "Implementar herramienta de trazabilidad automática (DOORS, Jira, Azure DevOps)",
+                    priority: "media",
+                    effort: "alto",
+                    impact: "importante",
+                    model_type: "CMMI Level 2"
+                },
+                {
+                    practice: "CMMI REQM 1.5: Identificar inconsistencias entre requisitos y productos",
+                    current_practice: "Las inconsistencias se detectan en testing tardío, generando retrabajo",
+                    status: "no-cumplido",
+                    recommended_action: "Establecer revisiones formales de consistencia en cada milestone del proyecto",
+                    priority: "media",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "CMMI Level 2"
+                },
+                {
+                    practice: "CMMI PMC 1.1: Monitorear parámetros de planificación del proyecto",
+                    current_practice: "El seguimiento se hace en reuniones semanales sin métricas objetivas",
+                    status: "parcial",
+                    recommended_action: "Implementar dashboard de proyecto con métricas automatizadas (EVM, burndown)",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "CMMI Level 2"
+                },
+                {
+                    practice: "CMMI PMC 1.2: Monitorear compromisos",
+                    current_practice: "Los compromisos se registran en actas de reunión sin seguimiento sistemático",
+                    status: "parcial",
+                    recommended_action: "Crear registro formal de compromisos con alertas automáticas de vencimiento",
+                    priority: "media",
+                    effort: "bajo",
+                    impact: "importante",
+                    model_type: "CMMI Level 2"
+                },
+                {
+                    practice: "CMMI PMC 1.3: Monitorear riesgos del proyecto",
+                    current_practice: "Los riesgos se identifican reactivamente cuando ya se materializaron",
+                    status: "no-cumplido",
+                    recommended_action: "Implementar registro de riesgos proactivo con evaluación quincenal",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "CMMI Level 2"
+                },
+                {
+                    practice: "CMMI PMC 1.4: Monitorear gestión de datos del proyecto",
+                    current_practice: "Los datos están dispersos en múltiples herramientas sin consolidación",
+                    status: "no-cumplido",
+                    recommended_action: "Centralizar datos de proyecto en repositorio único con acceso controlado",
+                    priority: "media",
+                    effort: "alto",
+                    impact: "importante",
+                    model_type: "CMMI Level 2"
+                },
+                {
+                    practice: "CMMI PMC 1.5: Monitorear involucramiento de stakeholders",
+                    current_practice: "La participación de stakeholders es irregular y no se mide",
+                    status: "parcial",
+                    recommended_action: "Crear matriz de involucramiento con métricas de participación",
+                    priority: "baja",
+                    effort: "bajo",
+                    impact: "menor",
+                    model_type: "CMMI Level 2"
+                },
+                {
+                    practice: "CMMI PMC 1.6: Realizar revisiones de progreso",
+                    current_practice: "Las revisiones son informales sin criterios objetivos de evaluación",
+                    status: "parcial",
+                    recommended_action: "Establecer gate reviews formales con criterios de entrada y salida",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "CMMI Level 2"
+                },
+                {
+                    practice: "CMMI PMC 1.7: Realizar revisiones de hitos",
+                    current_practice: "Los hitos se evalúan subjetivamente sin evidencia documentada",
+                    status: "no-cumplido",
+                    recommended_action: "Definir criterios objetivos de aceptación para cada hito con evidencia requerida",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "CMMI Level 2"
+                }
+            ],
+            "cmmi-level-3": [
+                {
+                    practice: "CMMI OPF 1.1: Establecer necesidades de mejora organizacional",
+                    current_practice: "Las mejoras se implementan reactivamente sin análisis sistemático de necesidades",
+                    status: "no-cumplido",
+                    recommended_action: "Crear proceso formal de identificación de oportunidades de mejora con métricas",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI OPD 1.1: Establecer conjunto estándar de procesos organizacionales",
+                    current_practice: "Cada proyecto define sus propios procesos sin estandarización organizacional",
+                    status: "no-cumplido",
+                    recommended_action: "Desarrollar OSSP (Organization's Set of Standard Processes) completo",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI OPD 1.2: Establecer descripciones de modelos de ciclo de vida",
+                    current_practice: "Los ciclos de vida varían por proyecto sin modelos organizacionales definidos",
+                    status: "parcial",
+                    recommended_action: "Definir modelos estándar de ciclo de vida (Waterfall, Ágil, Híbrido)",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI OPD 1.3: Establecer criterios de tailoring",
+                    current_practice: "La adaptación de procesos se hace ad-hoc sin criterios organizacionales",
+                    status: "no-cumplido",
+                    recommended_action: "Crear guías de tailoring con criterios objetivos por tipo de proyecto",
+                    priority: "media",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI OT 1.1: Establecer necesidades de capacitación organizacional",
+                    current_practice: "La capacitación se planifica reactivamente sin análisis de competencias",
+                    status: "parcial",
+                    recommended_action: "Implementar matriz de competencias con plan de capacitación estratégico",
+                    priority: "media",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI RD 1.1: Desarrollar requisitos del cliente",
+                    current_practice: "Los requisitos se capturan informalmente sin técnicas de elicitación",
+                    status: "parcial",
+                    recommended_action: "Implementar técnicas formales de elicitación (workshops, prototipos, casos de uso)",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI RD 1.2: Desarrollar requisitos del producto",
+                    current_practice: "Los requisitos técnicos se derivan informalmente de requisitos de negocio",
+                    status: "parcial",
+                    recommended_action: "Establecer proceso formal de derivación con trazabilidad automática",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI TS 1.1: Desarrollar diseño del producto",
+                    current_practice: "El diseño se documenta parcialmente sin estándares arquitectónicos",
+                    status: "parcial",
+                    recommended_action: "Crear estándares de documentación arquitectónica con revisiones formales",
+                    priority: "media",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI TS 1.2: Establecer paquete técnico de datos",
+                    current_practice: "La documentación técnica está dispersa sin paquete integrado",
+                    status: "no-cumplido",
+                    recommended_action: "Definir estructura estándar de paquete técnico con templates",
+                    priority: "media",
+                    effort: "bajo",
+                    impact: "menor",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI PI 1.1: Preparar integración del producto",
+                    current_practice: "La integración se planifica durante desarrollo sin estrategia previa",
+                    status: "no-cumplido",
+                    recommended_action: "Crear estrategia de integración temprana con ambiente de CI/CD",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI VER 1.1: Preparar verificación",
+                    current_practice: "Las pruebas se planifican tardíamente sin criterios de verificación",
+                    status: "parcial",
+                    recommended_action: "Implementar estrategia de verificación temprana con test-driven development",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI VER 1.2: Realizar revisiones peer",
+                    current_practice: "Las revisiones son informales sin criterios objetivos de calidad",
+                    status: "parcial",
+                    recommended_action: "Establecer proceso formal de peer review con checklists y métricas",
+                    priority: "media",
+                    effort: "bajo",
+                    impact: "importante",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI VAL 1.1: Preparar validación",
+                    current_practice: "La validación con usuario final se hace al final sin preparación",
+                    status: "no-cumplido",
+                    recommended_action: "Implementar validación continua con prototipos y feedback temprano",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI VAL 1.2: Validar producto o componente",
+                    current_practice: "La validación se limita a testing técnico sin validación de negocio",
+                    status: "parcial",
+                    recommended_action: "Crear proceso de validación integral incluyendo aceptación de usuario",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI IPM 1.1: Establecer proceso definido del proyecto",
+                    current_practice: "Los proyectos usan procesos ad-hoc sin tailoring del OSSP",
+                    status: "no-cumplido",
+                    recommended_action: "Implementar tailoring sistemático del OSSP para cada proyecto",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI IPM 1.2: Usar activos de proceso organizacional",
+                    current_practice: "Los activos organizacionales no se reutilizan sistemáticamente",
+                    status: "parcial",
+                    recommended_action: "Crear biblioteca de activos con proceso de reutilización obligatorio",
+                    priority: "media",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI IPM 1.3: Integrar planes",
+                    current_practice: "Los planes de proyecto no están integrados con planes organizacionales",
+                    status: "no-cumplido",
+                    recommended_action: "Establecer proceso de integración de planes con revisión organizacional",
+                    priority: "media",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "CMMI Level 3"
+                },
+                {
+                    practice: "CMMI IPM 1.4: Gestionar involucramiento de stakeholders",
+                    current_practice: "El involucramiento es reactivo sin plan sistemático de engagement",
+                    status: "parcial",
+                    recommended_action: "Crear plan formal de gestión de stakeholders con matriz de comunicación",
+                    priority: "baja",
+                    effort: "bajo",
+                    impact: "menor",
+                    model_type: "CMMI Level 3"
+                }
+            ],
+            "iso-9001": [
+                {
+                    practice: "ISO 9001 4.1: Comprensión de la organización y su contexto",
+                    current_practice: "No existe análisis formal del contexto organizacional ni factores externos",
+                    status: "no-cumplido",
+                    recommended_action: "Realizar análisis PESTLE y matriz de stakeholders para definir contexto",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "ISO 9001:2015"
+                },
+                {
+                    practice: "ISO 9001 4.2: Comprensión de las necesidades y expectativas de las partes interesadas",
+                    current_practice: "Las expectativas de clientes se capturan informalmente sin sistematización",
+                    status: "parcial",
+                    recommended_action: "Crear matriz de partes interesadas con expectativas documentadas",
+                    priority: "alta",
+                    effort: "bajo",
+                    impact: "importante",
+                    model_type: "ISO 9001:2015"
+                },
+                {
+                    practice: "ISO 9001 4.3: Determinación del alcance del SGC",
+                    current_practice: "El alcance del sistema de calidad no está claramente definido",
+                    status: "no-cumplido",
+                    recommended_action: "Definir alcance formal del SGC con exclusiones justificadas",
+                    priority: "alta",
+                    effort: "bajo",
+                    impact: "critico",
+                    model_type: "ISO 9001:2015"
+                },
+                {
+                    practice: "ISO 9001 4.4: Sistema de gestión de la calidad y sus procesos",
+                    current_practice: "Los procesos no están mapeados ni documentados sistemáticamente",
+                    status: "no-cumplido",
+                    recommended_action: "Crear mapa de procesos completo con interacciones documentadas",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "ISO 9001:2015"
+                },
+                {
+                    practice: "ISO 9001 5.1: Liderazgo y compromiso",
+                    current_practice: "El compromiso de la dirección con calidad es informal y no visible",
+                    status: "parcial",
+                    recommended_action: "Establecer política de calidad formal con comunicación sistemática",
+                    priority: "alta",
+                    effort: "bajo",
+                    impact: "critico",
+                    model_type: "ISO 9001:2015"
+                },
+                {
+                    practice: "ISO 9001 5.2: Política de la calidad",
+                    current_practice: "No existe política de calidad formal documentada y comunicada",
+                    status: "no-cumplido",
+                    recommended_action: "Desarrollar política de calidad alineada con estrategia organizacional",
+                    priority: "alta",
+                    effort: "bajo",
+                    impact: "critico",
+                    model_type: "ISO 9001:2015"
+                },
+                {
+                    practice: "ISO 9001 6.1: Acciones para abordar riesgos y oportunidades",
+                    current_practice: "La gestión de riesgos es reactiva sin identificación sistemática",
+                    status: "no-cumplido",
+                    recommended_action: "Implementar proceso formal de gestión de riesgos y oportunidades",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "ISO 9001:2015"
+                },
+                {
+                    practice: "ISO 9001 6.2: Objetivos de la calidad y planificación",
+                    current_practice: "Los objetivos de calidad no están definidos ni son medibles",
+                    status: "no-cumplido",
+                    recommended_action: "Establecer objetivos SMART de calidad con planes de acción",
+                    priority: "media",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "ISO 9001:2015"
+                },
+                {
+                    practice: "ISO 9001 7.1: Recursos",
+                    current_practice: "Los recursos para el SGC no están identificados ni asignados",
+                    status: "parcial",
+                    recommended_action: "Identificar y asignar recursos específicos para el SGC",
+                    priority: "media",
+                    effort: "bajo",
+                    impact: "importante",
+                    model_type: "ISO 9001:2015"
+                },
+                {
+                    practice: "ISO 9001 7.2: Competencia",
+                    current_practice: "Las competencias requeridas no están definidas ni evaluadas",
+                    status: "no-cumplido",
+                    recommended_action: "Crear matriz de competencias con evaluación y plan de desarrollo",
+                    priority: "media",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "ISO 9001:2015"
+                },
+                {
+                    practice: "ISO 9001 8.1: Planificación y control operacional",
+                    current_practice: "Los procesos operacionales no tienen controles sistemáticos",
+                    status: "parcial",
+                    recommended_action: "Implementar controles operacionales con procedimientos documentados",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "ISO 9001:2015"
+                },
+                {
+                    practice: "ISO 9001 8.2: Requisitos para productos y servicios",
+                    current_practice: "Los requisitos se gestionan informalmente sin revisión sistemática",
+                    status: "parcial",
+                    recommended_action: "Establecer proceso formal de revisión de requisitos con cliente",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "ISO 9001:2015"
+                },
+                {
+                    practice: "ISO 9001 9.1: Seguimiento, medición, análisis y evaluación",
+                    current_practice: "Las métricas de calidad son limitadas y no se analizan sistemáticamente",
+                    status: "parcial",
+                    recommended_action: "Implementar sistema integral de métricas con análisis regular",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "ISO 9001:2015"
+                },
+                {
+                    practice: "ISO 9001 9.2: Auditoría interna",
+                    current_practice: "No existen auditorías internas del sistema de calidad",
+                    status: "no-cumplido",
+                    recommended_action: "Establecer programa de auditorías internas con auditores capacitados",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "ISO 9001:2015"
+                },
+                {
+                    practice: "ISO 9001 10.1: No conformidad y acción correctiva",
+                    current_practice: "Las no conformidades se manejan reactivamente sin análisis de causa raíz",
+                    status: "parcial",
+                    recommended_action: "Implementar proceso sistemático de no conformidades con análisis de causa",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "ISO 9001:2015"
+                }
+            ],
+            "agile-maturity": [
+                {
+                    practice: "Scrum Framework: Roles definidos y funcionando",
+                    current_practice: "Los roles de Scrum Master y Product Owner no están claramente definidos",
+                    status: "parcial",
+                    recommended_action: "Capacitar y certificar Scrum Masters y Product Owners dedicados",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "Madurez Ágil"
+                },
+                {
+                    practice: "Sprint Planning: Planificación efectiva de sprints",
+                    current_practice: "La planificación de sprints es informal sin estimación ni compromiso claro",
+                    status: "parcial",
+                    recommended_action: "Implementar planning poker y definición de done clara",
+                    priority: "alta",
+                    effort: "bajo",
+                    impact: "importante",
+                    model_type: "Madurez Ágil"
+                },
+                {
+                    practice: "Daily Standups: Sincronización diaria efectiva",
+                    current_practice: "Las reuniones diarias son reportes de estado sin colaboración",
+                    status: "parcial",
+                    recommended_action: "Entrenar equipos en standups efectivos enfocados en impedimentos",
+                    priority: "media",
+                    effort: "bajo",
+                    impact: "importante",
+                    model_type: "Madurez Ágil"
+                },
+                {
+                    practice: "Sprint Review: Demostración y feedback",
+                    current_practice: "Las demos son informales sin participación de stakeholders",
+                    status: "parcial",
+                    recommended_action: "Establecer demos formales con stakeholders y feedback estructurado",
+                    priority: "media",
+                    effort: "bajo",
+                    impact: "importante",
+                    model_type: "Madurez Ágil"
+                },
+                {
+                    practice: "Sprint Retrospective: Mejora continua",
+                    current_practice: "Las retrospectivas son irregulares sin seguimiento de acciones",
+                    status: "parcial",
+                    recommended_action: "Implementar retrospectivas sistemáticas con tracking de mejoras",
+                    priority: "alta",
+                    effort: "bajo",
+                    impact: "importante",
+                    model_type: "Madurez Ágil"
+                },
+                {
+                    practice: "Product Backlog: Gestión efectiva de requisitos",
+                    current_practice: "El backlog no está priorizado ni refinado regularmente",
+                    status: "no-cumplido",
+                    recommended_action: "Implementar backlog refinement regular con criterios de priorización",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "Madurez Ágil"
+                },
+                {
+                    practice: "Definition of Done: Criterios de calidad claros",
+                    current_practice: "No existe definición clara de cuándo una historia está completa",
+                    status: "no-cumplido",
+                    recommended_action: "Crear definition of done específica por tipo de trabajo",
+                    priority: "alta",
+                    effort: "bajo",
+                    impact: "critico",
+                    model_type: "Madurez Ágil"
+                },
+                {
+                    practice: "Velocity Tracking: Métricas de productividad",
+                    current_practice: "No se mide la velocidad ni se usa para planificación",
+                    status: "no-cumplido",
+                    recommended_action: "Implementar tracking de velocity con herramientas ágiles",
+                    priority: "media",
+                    effort: "bajo",
+                    impact: "importante",
+                    model_type: "Madurez Ágil"
+                },
+                {
+                    practice: "Continuous Integration: Integración automática",
+                    current_practice: "La integración de código es manual y genera conflictos frecuentes",
+                    status: "no-cumplido",
+                    recommended_action: "Implementar CI/CD pipeline con Jenkins o Azure DevOps",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "Madurez Ágil"
+                },
+                {
+                    practice: "Automated Testing: Pruebas automatizadas",
+                    current_practice: "Las pruebas son principalmente manuales y tardías",
+                    status: "parcial",
+                    recommended_action: "Implementar pirámide de testing con unit, integration y E2E tests",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "Madurez Ágil"
+                },
+                {
+                    practice: "DevOps Culture: Colaboración Dev-Ops",
+                    current_practice: "Desarrollo y operaciones trabajan en silos separados",
+                    status: "no-cumplido",
+                    recommended_action: "Formar equipos cross-funcionales con responsabilidad compartida",
+                    priority: "media",
+                    effort: "alto",
+                    impact: "importante",
+                    model_type: "Madurez Ágil"
+                },
+                {
+                    practice: "Infrastructure as Code: Infraestructura automatizada",
+                    current_practice: "La infraestructura se configura manualmente sin versionado",
+                    status: "no-cumplido",
+                    recommended_action: "Implementar IaC con Terraform o ARM templates",
+                    priority: "media",
+                    effort: "alto",
+                    impact: "importante",
+                    model_type: "Madurez Ágil"
+                },
+                {
+                    practice: "Monitoring & Observability: Visibilidad de producción",
+                    current_practice: "El monitoreo es reactivo sin métricas proactivas",
+                    status: "parcial",
+                    recommended_action: "Implementar APM con alertas proactivas y dashboards",
+                    priority: "media",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "Madurez Ágil"
+                },
+                {
+                    practice: "Agile Scaling: Coordinación entre equipos",
+                    current_practice: "Múltiples equipos trabajan sin coordinación ni dependencias gestionadas",
+                    status: "no-cumplido",
+                    recommended_action: "Implementar framework de scaling (SAFe, LeSS, o Nexus)",
+                    priority: "baja",
+                    effort: "alto",
+                    impact: "menor",
+                    model_type: "Madurez Ágil"
+                }
+            ],
+            "security-compliance": [
+                {
+                    practice: "ISO 27001 A.5.1: Políticas de seguridad de la información",
+                    current_practice: "No existen políticas formales de seguridad documentadas y comunicadas",
+                    status: "no-cumplido",
+                    recommended_action: "Desarrollar conjunto completo de políticas de seguridad con aprobación ejecutiva",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "Seguridad y Compliance"
+                },
+                {
+                    practice: "ISO 27001 A.6.1: Organización interna de seguridad",
+                    current_practice: "No hay roles y responsabilidades claras para seguridad de información",
+                    status: "no-cumplido",
+                    recommended_action: "Establecer CISO y comité de seguridad con responsabilidades definidas",
+                    priority: "alta",
+                    effort: "bajo",
+                    impact: "critico",
+                    model_type: "Seguridad y Compliance"
+                },
+                {
+                    practice: "ISO 27001 A.7.1: Selección de personal",
+                    current_practice: "No se realizan verificaciones de antecedentes para roles críticos",
+                    status: "parcial",
+                    recommended_action: "Implementar proceso de background checks para posiciones sensibles",
+                    priority: "media",
+                    effort: "bajo",
+                    impact: "importante",
+                    model_type: "Seguridad y Compliance"
+                },
+                {
+                    practice: "ISO 27001 A.8.1: Responsabilidad por los activos",
+                    current_practice: "No existe inventario completo de activos de información",
+                    status: "no-cumplido",
+                    recommended_action: "Crear inventario de activos con clasificación y propietarios asignados",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "Seguridad y Compliance"
+                },
+                {
+                    practice: "ISO 27001 A.9.1: Requisitos de negocio para control de acceso",
+                    current_practice: "Los accesos se otorgan informalmente sin proceso de aprobación",
+                    status: "no-cumplido",
+                    recommended_action: "Implementar proceso formal de gestión de accesos con aprobaciones",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "Seguridad y Compliance"
+                },
+                {
+                    practice: "ISO 27001 A.10.1: Controles criptográficos",
+                    current_practice: "El cifrado se usa inconsistentemente sin política clara",
+                    status: "parcial",
+                    recommended_action: "Establecer política de criptografía con implementación sistemática",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "Seguridad y Compliance"
+                },
+                {
+                    practice: "ISO 27001 A.11.1: Áreas seguras",
+                    current_practice: "Las áreas críticas no tienen controles de acceso físico adecuados",
+                    status: "parcial",
+                    recommended_action: "Implementar controles de acceso físico con tarjetas y monitoreo",
+                    priority: "media",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "Seguridad y Compliance"
+                },
+                {
+                    practice: "ISO 27001 A.12.1: Procedimientos operacionales seguros",
+                    current_practice: "Los procedimientos operacionales no incluyen consideraciones de seguridad",
+                    status: "parcial",
+                    recommended_action: "Revisar y actualizar procedimientos con controles de seguridad",
+                    priority: "media",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "Seguridad y Compliance"
+                },
+                {
+                    practice: "ISO 27001 A.13.1: Gestión de comunicaciones de red",
+                    current_practice: "Las redes no están segmentadas ni monitoreadas adecuadamente",
+                    status: "no-cumplido",
+                    recommended_action: "Implementar segmentación de red con monitoreo de tráfico",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "Seguridad y Compliance"
+                },
+                {
+                    practice: "ISO 27001 A.14.1: Requisitos de seguridad en sistemas",
+                    current_practice: "Los requisitos de seguridad no se incluyen en desarrollo de sistemas",
+                    status: "no-cumplido",
+                    recommended_action: "Integrar security by design en SDLC con revisiones obligatorias",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "Seguridad y Compliance"
+                },
+                {
+                    practice: "ISO 27001 A.16.1: Gestión de incidentes de seguridad",
+                    current_practice: "No existe proceso formal para gestión de incidentes de seguridad",
+                    status: "no-cumplido",
+                    recommended_action: "Establecer CSIRT con procedimientos de respuesta a incidentes",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "Seguridad y Compliance"
+                },
+                {
+                    practice: "ISO 27001 A.17.1: Continuidad de seguridad de información",
+                    current_practice: "Los planes de continuidad no incluyen aspectos de seguridad",
+                    status: "parcial",
+                    recommended_action: "Integrar seguridad en planes de continuidad y disaster recovery",
+                    priority: "media",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "Seguridad y Compliance"
+                },
+                {
+                    practice: "GDPR Art. 25: Protección de datos por diseño y por defecto",
+                    current_practice: "La privacidad no se considera en el diseño de sistemas",
+                    status: "no-cumplido",
+                    recommended_action: "Implementar privacy by design con evaluaciones de impacto (DPIA)",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "Seguridad y Compliance"
+                },
+                {
+                    practice: "GDPR Art. 30: Registro de actividades de tratamiento",
+                    current_practice: "No existe registro formal de procesamiento de datos personales",
+                    status: "no-cumplido",
+                    recommended_action: "Crear y mantener registro completo de actividades de tratamiento",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "Seguridad y Compliance"
+                },
+                {
+                    practice: "GDPR Art. 32: Seguridad del tratamiento",
+                    current_practice: "Los controles técnicos para protección de datos son insuficientes",
+                    status: "parcial",
+                    recommended_action: "Implementar controles técnicos específicos para protección de datos personales",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "Seguridad y Compliance"
+                },
+                {
+                    practice: "GDPR Art. 33-34: Notificación de violaciones",
+                    current_practice: "No existe proceso para detectar y notificar violaciones de datos",
+                    status: "no-cumplido",
+                    recommended_action: "Establecer proceso de detección y notificación de data breaches",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "critico",
+                    model_type: "Seguridad y Compliance"
+                }
+            ],
+            "digital-maturity": [
+                {
+                    practice: "Cloud Strategy: Estrategia de migración a la nube",
+                    current_practice: "La infraestructura es principalmente on-premise sin estrategia cloud",
+                    status: "no-cumplido",
+                    recommended_action: "Desarrollar estrategia cloud-first con roadmap de migración",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "Cloud Architecture: Arquitectura cloud-native",
+                    current_practice: "Las aplicaciones no están diseñadas para aprovechar capacidades cloud",
+                    status: "no-cumplido",
+                    recommended_action: "Rediseñar aplicaciones con patrones cloud-native (microservicios, containers)",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "DevOps Maturity: Prácticas DevOps avanzadas",
+                    current_practice: "CI/CD básico implementado pero sin prácticas avanzadas",
+                    status: "parcial",
+                    recommended_action: "Implementar GitOps, infrastructure as code y deployment automation",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "importante",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "Data Analytics: Capacidades de análisis de datos",
+                    current_practice: "Los datos se analizan manualmente sin herramientas avanzadas",
+                    status: "parcial",
+                    recommended_action: "Implementar plataforma de analytics con self-service BI",
+                    priority: "media",
+                    effort: "alto",
+                    impact: "importante",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "Machine Learning: Capacidades de ML/AI",
+                    current_practice: "No se utilizan técnicas de machine learning ni AI",
+                    status: "no-cumplido",
+                    recommended_action: "Desarrollar capacidades de ML con casos de uso específicos",
+                    priority: "media",
+                    effort: "alto",
+                    impact: "importante",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "API Management: Gestión de APIs empresariales",
+                    current_practice: "Las APIs se desarrollan sin governance ni gestión centralizada",
+                    status: "parcial",
+                    recommended_action: "Implementar API gateway con governance y monetización",
+                    priority: "media",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "Digital Security: Seguridad en entornos digitales",
+                    current_practice: "La seguridad no está adaptada a arquitecturas cloud y móviles",
+                    status: "parcial",
+                    recommended_action: "Implementar zero-trust security con identity management avanzado",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "Mobile-First: Estrategia mobile-first",
+                    current_practice: "Las aplicaciones no están optimizadas para dispositivos móviles",
+                    status: "parcial",
+                    recommended_action: "Adoptar estrategia mobile-first con PWAs y apps nativas",
+                    priority: "media",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "IoT Integration: Integración de Internet de las Cosas",
+                    current_practice: "No se aprovechan oportunidades de IoT para optimización",
+                    status: "no-cumplido",
+                    recommended_action: "Identificar casos de uso IoT con implementación piloto",
+                    priority: "baja",
+                    effort: "alto",
+                    impact: "menor",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "Blockchain Readiness: Preparación para blockchain",
+                    current_practice: "No se han evaluado oportunidades de blockchain",
+                    status: "no-cumplido",
+                    recommended_action: "Evaluar casos de uso blockchain para trazabilidad y smart contracts",
+                    priority: "baja",
+                    effort: "medio",
+                    impact: "menor",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "Digital Workforce: Automatización y RPA",
+                    current_practice: "Los procesos manuales no están identificados para automatización",
+                    status: "parcial",
+                    recommended_action: "Implementar RPA para procesos repetitivos con ROI claro",
+                    priority: "media",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "Customer Experience: Experiencia digital del cliente",
+                    current_practice: "La experiencia del cliente no está optimizada digitalmente",
+                    status: "parcial",
+                    recommended_action: "Implementar customer journey mapping con touchpoints digitales",
+                    priority: "alta",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "Digital Metrics: Métricas de transformación digital",
+                    current_practice: "No se miden KPIs específicos de madurez digital",
+                    status: "no-cumplido",
+                    recommended_action: "Establecer dashboard de métricas de transformación digital",
+                    priority: "media",
+                    effort: "bajo",
+                    impact: "importante",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "Innovation Culture: Cultura de innovación digital",
+                    current_practice: "La organización es resistente a adopción de nuevas tecnologías",
+                    status: "parcial",
+                    recommended_action: "Establecer programa de innovation labs con tiempo dedicado",
+                    priority: "media",
+                    effort: "medio",
+                    impact: "importante",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "Digital Skills: Competencias digitales del personal",
+                    current_practice: "El personal carece de competencias digitales avanzadas",
+                    status: "parcial",
+                    recommended_action: "Implementar programa de upskilling digital con certificaciones",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "Agile at Scale: Agilidad organizacional",
+                    current_practice: "La agilidad se limita a equipos de desarrollo sin escalamiento",
+                    status: "parcial",
+                    recommended_action: "Escalar agilidad a nivel organizacional con business agility",
+                    priority: "media",
+                    effort: "alto",
+                    impact: "importante",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "Data Governance: Gobierno de datos empresariales",
+                    current_practice: "Los datos no tienen governance formal ni calidad asegurada",
+                    status: "no-cumplido",
+                    recommended_action: "Implementar data governance con data stewards y calidad de datos",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "Digital Ecosystem: Ecosistema de partners digitales",
+                    current_practice: "La integración con partners es manual sin APIs",
+                    status: "parcial",
+                    recommended_action: "Crear ecosistema digital con marketplace de APIs",
+                    priority: "baja",
+                    effort: "alto",
+                    impact: "menor",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "Sustainability Tech: Tecnología sostenible",
+                    current_practice: "No se consideran aspectos de sostenibilidad en decisiones tecnológicas",
+                    status: "no-cumplido",
+                    recommended_action: "Integrar criterios de sostenibilidad en arquitectura y operaciones",
+                    priority: "baja",
+                    effort: "medio",
+                    impact: "menor",
+                    model_type: "Madurez Digital"
+                },
+                {
+                    practice: "Digital Resilience: Resiliencia digital",
+                    current_practice: "Los sistemas no están diseñados para alta disponibilidad y recuperación",
+                    status: "parcial",
+                    recommended_action: "Implementar arquitectura resiliente con chaos engineering",
+                    priority: "alta",
+                    effort: "alto",
+                    impact: "critico",
+                    model_type: "Madurez Digital"
+                }
+            ]
         };
 
         // Data handler for SDK
         const dataHandler = {
             onDataChanged(data) {
-                allGaps = data || [];
-                filterGapsByUser();
-                renderGapsList();
-                updateSummaryCards();
-                updateTotalCount();
+                gapAnalysisEntries = data.sort((a, b) => {
+                    const priorityOrder = { 'alta': 0, 'media': 1, 'baja': 2 };
+                    const statusOrder = { 'no-cumplido': 0, 'parcial': 1, 'cumplido': 2 };
+                    
+                    if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
+                        return priorityOrder[a.priority] - priorityOrder[b.priority];
+                    }
+                    return statusOrder[a.status] - statusOrder[b.status];
+                });
+                
+                renderGapAnalysis();
             }
+        };
+
+        // Element SDK configuration
+        const elementConfig = {
+            defaultConfig,
+            onConfigChange: async (config) => {
+                document.getElementById('organization-display').textContent = config.organization_name || defaultConfig.organization_name;
+                document.getElementById('target-model-display').textContent = config.target_model || defaultConfig.target_model;
+            },
+            mapToCapabilities: (config) => ({
+                recolorables: [],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            }),
+            mapToEditPanelValues: (config) => new Map([
+                ["organization_name", config.organization_name || defaultConfig.organization_name],
+                ["target_model", config.target_model || defaultConfig.target_model]
+            ])
         };
 
         // Initialize SDKs
         async function initializeApp() {
             try {
+                if (window.elementSdk) {
+                    await window.elementSdk.init(elementConfig);
+                }
+                
                 if (window.dataSdk) {
                     const result = await window.dataSdk.init(dataHandler);
                     if (!result.isOk) {
                         console.error("Failed to initialize data SDK");
                     }
                 }
-
-                if (window.elementSdk) {
-                    await window.elementSdk.init({
-                        defaultConfig,
-                        onConfigChange: async (config) => {
-                            document.getElementById('tool-title').textContent = config.tool_title || defaultConfig.tool_title;
-                            document.getElementById('company-name').textContent = config.company_name || defaultConfig.company_name;
-                            document.getElementById('model-name').textContent = config.model_name || defaultConfig.model_name;
-                            
-                            // Update project details display
-                            document.getElementById('company-display').textContent = config.company_name || defaultConfig.company_name;
-                            document.getElementById('model-display').textContent = config.model_name || defaultConfig.model_name;
-                            
-                            // Update analysis date
-                            document.getElementById('analysis-date').textContent = new Date().toLocaleDateString('es-ES', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                            });
-                        },
-                        mapToCapabilities: (config) => ({
-                            recolorables: [
-                                {
-                                    get: () => config.primary_color || "#3b82f6",
-                                    set: (value) => {
-                                        window.elementSdk.setConfig({ primary_color: value });
-                                        updateColors(value);
-                                    }
-                                }
-                            ],
-                            borderables: [],
-                            fontEditable: undefined,
-                            fontSizeable: undefined
-                        }),
-                        mapToEditPanelValues: (config) => new Map([
-                            ["tool_title", config.tool_title || defaultConfig.tool_title],
-                            ["company_name", config.company_name || defaultConfig.company_name],
-                            ["model_name", config.model_name || defaultConfig.model_name]
-                        ])
-                    });
-                }
-
-                // Load saved user identity
-                loadUserIdentity();
+                
+                isInitialized = true;
+                setupEventListeners();
             } catch (error) {
                 console.error("Initialization error:", error);
+                setupEventListeners();
             }
         }
 
-        function updateColors(primaryColor) {
-            const elements = document.querySelectorAll('.bg-blue-600, .hover\\:bg-blue-700, .focus\\:ring-blue-500, .focus\\:border-blue-500');
-            elements.forEach(el => {
-                el.style.backgroundColor = primaryColor;
+        // Setup event listeners
+        function setupEventListeners() {
+            // Template cards
+            document.querySelectorAll('[data-template]').forEach(card => {
+                card.addEventListener('click', handleTemplateClick);
+            });
+
+            // Gap form
+            document.getElementById('gap-form').addEventListener('submit', handleGapFormSubmit);
+
+            // Action buttons
+            document.getElementById('export-gap-analysis').addEventListener('click', handleExportGapAnalysis);
+            document.getElementById('clear-gap-analysis').addEventListener('click', handleClearGapAnalysis);
+
+            // Inline editing for organization
+            document.getElementById('organization-display').addEventListener('click', () => startInlineEdit('organization'));
+            document.getElementById('organization-save').addEventListener('click', () => saveInlineEdit('organization'));
+            document.getElementById('organization-cancel').addEventListener('click', () => cancelInlineEdit('organization'));
+            document.getElementById('organization-edit').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') saveInlineEdit('organization');
+                if (e.key === 'Escape') cancelInlineEdit('organization');
+            });
+
+            // Inline editing for target model
+            document.getElementById('target-model-display').addEventListener('click', () => startInlineEdit('target-model'));
+            document.getElementById('target-model-save').addEventListener('click', () => saveInlineEdit('target-model'));
+            document.getElementById('target-model-cancel').addEventListener('click', () => cancelInlineEdit('target-model'));
+            document.getElementById('target-model-edit').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') saveInlineEdit('target-model');
+                if (e.key === 'Escape') cancelInlineEdit('target-model');
             });
         }
 
-        // User Identity Management
-        function loadUserIdentity() {
-            const saved = localStorage.getItem('gap_analysis_user');
-            if (saved) {
-                currentUser = JSON.parse(saved);
-                document.getElementById('student-name').value = currentUser.student_name;
-                document.getElementById('user-id').value = currentUser.user_id;
-                showUserInfo();
-                filterGapsByUser();
-            }
-        }
-
-        function saveUserIdentity() {
-            const studentName = document.getElementById('student-name').value.trim();
-            const userId = document.getElementById('user-id').value.trim();
-
-            if (!studentName || !userId) {
-                showInlineMessage("Por favor completa tu nombre y ID de usuario", "error");
-                return;
-            }
-
-            currentUser = {
-                student_name: studentName,
-                user_id: userId
-            };
-
-            localStorage.setItem('gap_analysis_user', JSON.stringify(currentUser));
-            showUserInfo();
-            filterGapsByUser();
-            showInlineMessage("Identidad guardada correctamente", "success");
-        }
-
-        function showUserInfo() {
-            document.getElementById('display-student-name').textContent = currentUser.student_name;
-            document.getElementById('display-user-id').textContent = currentUser.user_id;
-            document.getElementById('current-user-info').classList.remove('hidden');
-        }
-
-        function filterGapsByUser() {
-            if (!currentUser.user_id) {
-                currentGaps = [];
-                return;
-            }
-            currentGaps = allGaps.filter(gap => gap.user_id === currentUser.user_id);
-        }
-
-        // Event listeners
-        document.getElementById('save-identity-btn').addEventListener('click', saveUserIdentity);
-        document.getElementById('add-gap-btn').addEventListener('click', showGapForm);
-        document.getElementById('empty-add-btn').addEventListener('click', showGapForm);
-        document.getElementById('cancel-btn').addEventListener('click', hideGapForm);
-        document.getElementById('gap-analysis-form').addEventListener('submit', handleFormSubmit);
-        document.getElementById('export-pdf-btn').addEventListener('click', exportToPDF);
-
-        function showGapForm() {
-            if (!currentUser.user_id) {
-                showInlineMessage("Primero debes identificarte como estudiante", "error");
-                document.getElementById('student-name').focus();
-                return;
-            }
-
-            document.getElementById('gap-form').classList.remove('hidden');
-            document.getElementById('gap-form').classList.add('fade-in');
-            document.getElementById('practice-requirement').focus();
+        // Handle template clicks
+        function handleTemplateClick(event) {
+            const templateType = event.currentTarget.dataset.template;
+            const templateGaps = gapTemplates[templateType];
             
-            if (!editingGap) {
-                document.getElementById('form-title').textContent = 'Nuevo Análisis de Brecha';
-                clearForm();
+            if (templateGaps) {
+                // Show confirmation
+                const confirmed = confirm(`¿Cargar plantilla "${templateType}" con ${templateGaps.length} entradas? Esto agregará todas las prácticas del modelo seleccionado.`);
+                
+                if (confirmed) {
+                    // Load all gaps from template
+                    templateGaps.forEach((template, index) => {
+                        setTimeout(() => {
+                            loadGapTemplate(template);
+                        }, index * 100); // Small delay between gaps
+                    });
+                    
+                    showToast(`Plantilla "${templateType}" cargada con ${templateGaps.length} entradas`, "success");
+                    
+                    // Scroll to results
+                    setTimeout(() => {
+                        document.getElementById('gap-analysis-container').scrollIntoView({ behavior: 'smooth' });
+                    }, 1000);
+                }
             }
         }
 
-        function hideGapForm() {
-            document.getElementById('gap-form').classList.add('hidden');
-            editingGap = null;
-            clearForm();
-        }
-
-        function clearForm() {
-            document.getElementById('gap-analysis-form').reset();
-        }
-
-        async function handleFormSubmit(e) {
-            e.preventDefault();
+        // Load gap template
+        async function loadGapTemplate(template) {
+            if (gapAnalysisEntries.length >= 999) {
+                showToast("Límite máximo de 999 entradas alcanzado", "error");
+                return;
+            }
             
-            if (isLoading) return;
-
-            if (!currentUser.user_id) {
-                showInlineMessage("Primero debes identificarte como estudiante", "error");
-                return;
-            }
-
-            const formData = {
-                practice_requirement: document.getElementById('practice-requirement').value.trim(),
-                current_evidence: document.getElementById('current-evidence').value.trim(),
-                gap_status: document.getElementById('gap-status').value,
-                priority: document.getElementById('priority').value,
-                recommended_actions: document.getElementById('recommended-actions').value.trim()
+            const gapData = {
+                practice: template.practice,
+                current_practice: template.current_practice,
+                status: template.status,
+                recommended_action: template.recommended_action,
+                priority: template.priority,
+                effort: template.effort,
+                impact: template.impact,
+                model_type: template.model_type,
+                created_at: new Date().toISOString()
             };
+            
+            if (window.dataSdk) {
+                const result = await window.dataSdk.create(gapData);
+                if (!result.isOk) {
+                    console.error("Error creating gap entry:", result.error);
+                }
+            } else {
+                gapAnalysisEntries.push({ ...gapData, __backendId: `gap-${Date.now()}-${Math.random()}` });
+                renderGapAnalysis();
+            }
+        }
 
-            // Validation
-            if (!formData.practice_requirement || !formData.current_evidence || 
-                !formData.gap_status || !formData.priority || !formData.recommended_actions) {
-                showInlineMessage("Por favor completa todos los campos requeridos", "error");
+        // Handle gap form submission
+        async function handleGapFormSubmit(event) {
+            event.preventDefault();
+            
+            if (gapAnalysisEntries.length >= 999) {
+                showToast("Límite máximo de 999 entradas alcanzado", "error");
                 return;
             }
-
-            if (allGaps.length >= 999) {
-                showInlineMessage("Se ha alcanzado el límite máximo de 999 elementos. Por favor elimina algunos elementos primero.", "error");
-                return;
-            }
-
-            setLoading(true);
-
+            
+            const gapData = {
+                practice: document.getElementById('gap-practice').value,
+                current_practice: document.getElementById('gap-current-practice').value,
+                status: document.getElementById('gap-status').value,
+                recommended_action: document.getElementById('gap-recommended-action').value,
+                priority: document.getElementById('gap-priority').value,
+                effort: document.getElementById('gap-effort').value,
+                impact: document.getElementById('gap-impact').value,
+                model_type: "Personalizado",
+                created_at: new Date().toISOString()
+            };
+            
+            const createButton = document.getElementById('create-gap-btn');
+            const loading = document.getElementById('gap-loading');
+            
+            createButton.disabled = true;
+            loading.classList.remove('hidden');
+            
             try {
-                const gapData = {
-                    id: editingGap ? editingGap.id : generateId(),
-                    user_id: currentUser.user_id,
-                    student_name: currentUser.student_name,
-                    ...formData,
-                    created_at: new Date().toISOString()
-                };
-
-                let result;
-                if (editingGap) {
-                    result = await window.dataSdk.update({ ...gapData, __backendId: editingGap.__backendId });
-                } else {
-                    result = await window.dataSdk.create(gapData);
-                }
-
-                if (result.isOk) {
-                    hideGapForm();
-                    showInlineMessage(editingGap ? "Brecha actualizada exitosamente" : "Brecha agregada exitosamente", "success");
-                } else {
-                    showInlineMessage("Error al guardar la brecha. Por favor intenta nuevamente.", "error");
-                }
-            } catch (error) {
-                showInlineMessage("Error al guardar la brecha. Por favor intenta nuevamente.", "error");
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        function editGap(gap) {
-            editingGap = gap;
-            document.getElementById('practice-requirement').value = gap.practice_requirement;
-            document.getElementById('current-evidence').value = gap.current_evidence;
-            document.getElementById('gap-status').value = gap.gap_status;
-            document.getElementById('priority').value = gap.priority;
-            document.getElementById('recommended-actions').value = gap.recommended_actions;
-            
-            // Update form title
-            document.getElementById('form-title').textContent = 'Editar Análisis de Brecha';
-            
-            showGapForm();
-            document.getElementById('gap-form').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        async function deleteGap(gap) {
-            if (isLoading) return;
-
-            // Create inline confirmation
-            const gapElement = document.querySelector(`[data-gap-id="${gap.id}"]`);
-            const deleteBtn = gapElement.querySelector('.delete-btn');
-            const originalText = deleteBtn.innerHTML;
-            
-            deleteBtn.innerHTML = '¿Confirmar?';
-            deleteBtn.classList.add('bg-red-600', 'hover:bg-red-700', 'text-white', 'px-2', 'py-1', 'rounded');
-            
-            // Add cancel option
-            const cancelBtn = document.createElement('button');
-            cancelBtn.innerHTML = 'Cancelar';
-            cancelBtn.className = 'ml-2 px-3 py-1 text-sm text-slate-600 hover:text-slate-800';
-            cancelBtn.onclick = () => {
-                deleteBtn.innerHTML = originalText;
-                deleteBtn.classList.remove('bg-red-600', 'hover:bg-red-700', 'text-white', 'px-2', 'py-1', 'rounded');
-                cancelBtn.remove();
-            };
-            deleteBtn.parentNode.insertBefore(cancelBtn, deleteBtn.nextSibling);
-            
-            deleteBtn.onclick = async () => {
-                setLoading(true);
-                try {
-                    const result = await window.dataSdk.delete(gap);
+                if (window.dataSdk) {
+                    const result = await window.dataSdk.create(gapData);
                     if (result.isOk) {
-                        showInlineMessage("Brecha eliminada exitosamente", "success");
+                        showToast("Entrada de Gap Analysis creada exitosamente", "success");
+                        document.getElementById('gap-form').reset();
+                        document.getElementById('gap-priority').value = 'media';
+                        document.getElementById('gap-effort').value = 'medio';
+                        document.getElementById('gap-impact').value = 'importante';
                     } else {
-                        showInlineMessage("Error al eliminar la brecha", "error");
+                        showToast("Error al crear la entrada de gap analysis", "error");
                     }
-                } catch (error) {
-                    showInlineMessage("Error al eliminar la brecha", "error");
-                } finally {
-                    setLoading(false);
-                }
-            };
-        }
-
-        // PDF Export Function
-        async function exportToPDF() {
-            if (!currentUser.user_id) {
-                showInlineMessage("Primero debes identificarte como estudiante", "error");
-                return;
-            }
-
-            if (currentGaps.length === 0) {
-                showInlineMessage("No hay análisis de brechas para exportar", "error");
-                return;
-            }
-
-            setLoading(true);
-
-            try {
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                
-                // Header
-                doc.setFontSize(20);
-                doc.text('Análisis de Brechas (Gap Analysis)', 20, 30);
-                
-                doc.setFontSize(12);
-                doc.text(`Estudiante: ${currentUser.student_name}`, 20, 45);
-                doc.text(`ID: ${currentUser.user_id}`, 20, 55);
-                doc.text(`Empresa: ${document.getElementById('company-name').textContent}`, 20, 65);
-                doc.text(`Modelo: ${document.getElementById('model-name').textContent}`, 20, 75);
-                doc.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`, 20, 85);
-                
-                // Summary
-                doc.setFontSize(14);
-                doc.text('Resumen:', 20, 105);
-                doc.setFontSize(10);
-                doc.text(`Total de elementos: ${currentGaps.length}`, 20, 115);
-                doc.text(`No Cumplido: ${currentGaps.filter(g => g.gap_status === 'No Cumplido').length}`, 20, 125);
-                doc.text(`Parcialmente Cumplido: ${currentGaps.filter(g => g.gap_status === 'Parcialmente Cumplido').length}`, 20, 135);
-                doc.text(`Cumplido: ${currentGaps.filter(g => g.gap_status === 'Cumplido').length}`, 20, 145);
-                doc.text(`Alta Prioridad: ${currentGaps.filter(g => g.priority === 'Alta').length}`, 20, 155);
-                
-                let yPosition = 175;
-                
-                // Gaps details
-                currentGaps.forEach((gap, index) => {
-                    if (yPosition > 250) {
-                        doc.addPage();
-                        yPosition = 30;
-                    }
-                    
-                    doc.setFontSize(12);
-                    doc.text(`${index + 1}. ${gap.practice_requirement}`, 20, yPosition);
-                    yPosition += 10;
-                    
-                    doc.setFontSize(10);
-                    doc.text(`Estado: ${gap.gap_status} | Prioridad: ${gap.priority}`, 20, yPosition);
-                    yPosition += 8;
-                    
-                    const evidenceLines = doc.splitTextToSize(`Evidencia: ${gap.current_evidence}`, 170);
-                    doc.text(evidenceLines, 20, yPosition);
-                    yPosition += evidenceLines.length * 5 + 3;
-                    
-                    const actionsLines = doc.splitTextToSize(`Acciones: ${gap.recommended_actions}`, 170);
-                    doc.text(actionsLines, 20, yPosition);
-                    yPosition += actionsLines.length * 5 + 10;
-                });
-                
-                // Generate PDF as blob and open in new tab
-                const pdfBlob = doc.output('blob');
-                const fileName = `Gap_Analysis_${currentUser.user_id}_${new Date().toISOString().split('T')[0]}.pdf`;
-                
-                // Create object URL and open in new tab
-                const url = URL.createObjectURL(pdfBlob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                link.download = fileName;
-                
-                // Trigger download by opening in new tab
-                window.open(url, '_blank', 'noopener,noreferrer');
-                
-                // Clean up object URL after a delay
-                setTimeout(() => {
-                    URL.revokeObjectURL(url);
-                }, 1000);
-                
-                showInlineMessage("PDF generado y abierto en nueva pestaña", "success");
-            } catch (error) {
-                showInlineMessage("Error al generar PDF", "error");
-                console.error("PDF export error:", error);
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        function renderGapsList() {
-            const container = document.getElementById('gaps-container');
-            const emptyState = document.getElementById('empty-state');
-            
-            if (currentGaps.length === 0) {
-                emptyState.classList.remove('hidden');
-                return;
-            }
-            
-            emptyState.classList.add('hidden');
-            
-            // Clear existing gaps (except empty state)
-            const existingGaps = container.querySelectorAll('.gap-item');
-            existingGaps.forEach(item => item.remove());
-            
-            currentGaps.forEach(gap => {
-                const gapElement = createGapElement(gap);
-                container.appendChild(gapElement);
-            });
-        }
-
-        function createGapElement(gap) {
-            const div = document.createElement('div');
-            div.className = `gap-item p-8 hover:bg-slate-50 transition-all duration-200 priority-${gap.priority.toLowerCase()} border-l-4`;
-            div.setAttribute('data-gap-id', gap.id);
-            
-            const statusColor = getStatusColor(gap.gap_status);
-            const priorityColor = getPriorityColor(gap.priority);
-            const statusIcon = getStatusIcon(gap.gap_status);
-            const priorityIcon = getPriorityIcon(gap.priority);
-            
-            // Set border color based on priority
-            if (gap.priority === 'Alta') {
-                div.classList.add('border-l-red-500');
-            } else if (gap.priority === 'Media') {
-                div.classList.add('border-l-amber-500');
-            } else {
-                div.classList.add('border-l-emerald-500');
-            }
-            
-            div.innerHTML = `
-                <div class="flex items-start justify-between">
-                    <div class="flex-1">
-                        <!-- Header with Status and Priority -->
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex items-center space-x-3">
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${statusColor}">
-                                    ${statusIcon} ${gap.gap_status}
-                                </span>
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-semibold ${priorityColor}">
-                                    ${priorityIcon} ${gap.priority}
-                                </span>
-                            </div>
-                            <div class="text-xs text-slate-500">
-                                ${new Date(gap.created_at).toLocaleDateString('es-ES')}
-                            </div>
-                        </div>
-                        
-                        <!-- Requirement Title -->
-                        <div class="mb-6">
-                            <h4 class="text-xl font-bold text-slate-900 mb-2 leading-tight">
-                                ${escapeHtml(gap.practice_requirement)}
-                            </h4>
-                        </div>
-                        
-                        <!-- Evidence and Actions Grid -->
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <!-- Current Evidence -->
-                            <div class="bg-slate-50 rounded-lg p-6 border border-slate-200">
-                                <div class="flex items-center mb-3">
-                                    <svg class="w-5 h-5 mr-2 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                    </svg>
-                                    <h5 class="text-sm font-bold text-slate-700 uppercase tracking-wide">Situación Actual</h5>
-                                </div>
-                                <p class="text-sm text-slate-700 leading-relaxed">${escapeHtml(gap.current_evidence)}</p>
-                            </div>
-                            
-                            <!-- Recommended Actions -->
-                            <div class="bg-blue-50 rounded-lg p-6 border border-blue-200">
-                                <div class="flex items-center mb-3">
-                                    <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
-                                    </svg>
-                                    <h5 class="text-sm font-bold text-blue-700 uppercase tracking-wide">Plan de Acción</h5>
-                                </div>
-                                <p class="text-sm text-blue-700 leading-relaxed">${escapeHtml(gap.recommended_actions)}</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Action Buttons -->
-                    <div class="flex flex-col space-y-2 ml-6 no-print">
-                        <button onclick="editGap(${JSON.stringify(gap).replace(/"/g, '&quot;')})" 
-                            class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center space-x-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                            </svg>
-                            <span>Editar</span>
-                        </button>
-                        <button onclick="deleteGap(${JSON.stringify(gap).replace(/"/g, '&quot;')})" 
-                            class="delete-btn bg-red-100 hover:bg-red-200 text-red-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center space-x-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
-                            <span>Eliminar</span>
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            return div;
-        }
-
-        function getStatusIcon(status) {
-            switch (status) {
-                case 'Cumplido': return '✅';
-                case 'Parcialmente Cumplido': return '⚠️';
-                case 'No Cumplido': return '❌';
-                default: return '❓';
-            }
-        }
-
-        function getPriorityIcon(priority) {
-            switch (priority) {
-                case 'Alta': return '🔥';
-                case 'Media': return '⚡';
-                case 'Baja': return '📋';
-                default: return '📌';
-            }
-        }
-
-        function getStatusColor(status) {
-            switch (status) {
-                case 'Cumplido': return 'bg-green-100 text-green-800';
-                case 'Parcialmente Cumplido': return 'bg-yellow-100 text-yellow-800';
-                case 'No Cumplido': return 'bg-red-100 text-red-800';
-                default: return 'bg-slate-100 text-slate-800';
-            }
-        }
-
-        function getPriorityColor(priority) {
-            switch (priority) {
-                case 'Alta': return 'bg-red-100 text-red-800';
-                case 'Media': return 'bg-yellow-100 text-yellow-800';
-                case 'Baja': return 'bg-green-100 text-green-800';
-                default: return 'bg-slate-100 text-slate-800';
-            }
-        }
-
-        function updateSummaryCards() {
-            const compliant = currentGaps.filter(g => g.gap_status === 'Cumplido').length;
-            const partial = currentGaps.filter(g => g.gap_status === 'Parcialmente Cumplido').length;
-            const notCompliant = currentGaps.filter(g => g.gap_status === 'No Cumplido').length;
-            const highPriority = currentGaps.filter(g => g.priority === 'Alta').length;
-            
-            document.getElementById('compliant-count').textContent = compliant;
-            document.getElementById('partial-count').textContent = partial;
-            document.getElementById('not-compliant-count').textContent = notCompliant;
-            document.getElementById('high-priority-count').textContent = highPriority;
-
-            // Update compliance percentage and progress bar
-            const total = currentGaps.length;
-            if (total > 0) {
-                const complianceScore = ((compliant * 100) + (partial * 50)) / total;
-                const percentage = Math.round(complianceScore);
-                document.getElementById('compliance-percentage').textContent = `${percentage}%`;
-                document.getElementById('compliance-bar').style.width = `${percentage}%`;
-                
-                // Update bar color based on compliance level
-                const bar = document.getElementById('compliance-bar');
-                if (percentage >= 80) {
-                    bar.className = 'bg-gradient-to-r from-emerald-500 to-emerald-600 h-3 rounded-full transition-all duration-500';
-                } else if (percentage >= 60) {
-                    bar.className = 'bg-gradient-to-r from-amber-500 to-amber-600 h-3 rounded-full transition-all duration-500';
                 } else {
-                    bar.className = 'bg-gradient-to-r from-red-500 to-red-600 h-3 rounded-full transition-all duration-500';
+                    gapAnalysisEntries.push({ ...gapData, __backendId: `gap-${Date.now()}-${Math.random()}` });
+                    renderGapAnalysis();
+                    showToast("Entrada de Gap Analysis creada exitosamente", "success");
+                    document.getElementById('gap-form').reset();
                 }
-            } else {
-                document.getElementById('compliance-percentage').textContent = '0%';
-                document.getElementById('compliance-bar').style.width = '0%';
+            } catch (error) {
+                console.error("Error creating gap entry:", error);
+                showToast("Error al crear la entrada de gap analysis", "error");
+            } finally {
+                createButton.disabled = false;
+                loading.classList.add('hidden');
             }
         }
 
-        function updateTotalCount() {
-            document.getElementById('total-items').textContent = currentGaps.length;
-        }
-
-        function setLoading(loading) {
-            isLoading = loading;
-            const overlay = document.getElementById('loading-overlay');
-            const saveBtn = document.getElementById('save-btn');
+        // Render Gap Analysis
+        function renderGapAnalysis() {
+            const tableBody = document.getElementById('gap-analysis-table');
+            const noMessage = document.getElementById('no-gaps-message');
             
-            if (loading) {
-                overlay.classList.remove('hidden');
-                if (saveBtn) {
-                    saveBtn.disabled = true;
-                    saveBtn.textContent = 'Guardando...';
-                }
-            } else {
-                overlay.classList.add('hidden');
-                if (saveBtn) {
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = 'Guardar';
+            if (gapAnalysisEntries.length === 0) {
+                tableBody.innerHTML = '';
+                noMessage.style.display = 'block';
+                updateGapSummary();
+                return;
+            }
+            
+            noMessage.style.display = 'none';
+            
+            tableBody.innerHTML = gapAnalysisEntries.map(gap => `
+                <tr class="border-b border-amber-100 hover:bg-amber-50">
+                    <td class="p-4">
+                        <div class="font-medium text-amber-800 mb-1">${gap.practice}</div>
+                        <div class="text-xs text-gray-500">${gap.model_type}</div>
+                    </td>
+                    <td class="p-4">
+                        <span class="status-badge gap-status-${gap.status}">
+                            ${gap.status === 'cumplido' ? '✅ Cumplido' : 
+                              gap.status === 'parcial' ? '⚠️ Parcial' : '❌ No Cumplido'}
+                        </span>
+                    </td>
+                    <td class="p-4">
+                        <div class="text-sm text-gray-700 max-w-xs">${gap.current_practice}</div>
+                    </td>
+                    <td class="p-4">
+                        <div class="text-sm text-gray-700 max-w-xs">${gap.recommended_action}</div>
+                    </td>
+                    <td class="p-4">
+                        <span class="status-badge priority-${gap.priority}">
+                            ${gap.priority === 'alta' ? '🔴 Alta' : 
+                              gap.priority === 'media' ? '🟡 Media' : '🟢 Baja'}
+                        </span>
+                    </td>
+                    <td class="p-4 text-center">
+                        <button class="delete-gap text-gray-600 hover:text-gray-800 hover:bg-gray-50 p-2 rounded-md transition-colors" data-gap-id="${gap.__backendId}">
+                            🗑️
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            // Add event listeners
+            tableBody.querySelectorAll('.delete-gap').forEach(button => {
+                button.addEventListener('click', handleDeleteGap);
+            });
+            
+            updateGapSummary();
+        }
+
+        // Update Gap Summary
+        function updateGapSummary() {
+            const totalGaps = gapAnalysisEntries.length;
+            const compliantGaps = gapAnalysisEntries.filter(g => g.status === 'cumplido').length;
+            const partialGaps = gapAnalysisEntries.filter(g => g.status === 'parcial').length;
+            const nonCompliantGaps = gapAnalysisEntries.filter(g => g.status === 'no-cumplido').length;
+            
+            document.getElementById('total-gaps').textContent = totalGaps;
+            document.getElementById('compliant-gaps').textContent = compliantGaps;
+            document.getElementById('partial-gaps').textContent = partialGaps;
+            document.getElementById('non-compliant-gaps').textContent = nonCompliantGaps;
+            
+            // Update percentages
+            const compliantPercentage = totalGaps > 0 ? Math.round((compliantGaps / totalGaps) * 100) : 0;
+            const partialPercentage = totalGaps > 0 ? Math.round((partialGaps / totalGaps) * 100) : 0;
+            const nonCompliantPercentage = totalGaps > 0 ? Math.round((nonCompliantGaps / totalGaps) * 100) : 0;
+            
+            document.getElementById('compliant-percentage').textContent = `${compliantPercentage}% del total`;
+            document.getElementById('partial-percentage').textContent = `${partialPercentage}% del total`;
+            document.getElementById('non-compliant-percentage').textContent = `${nonCompliantPercentage}% del total`;
+        }
+
+        // Handle delete gap
+        async function handleDeleteGap(event) {
+            const gapId = event.currentTarget.dataset.gapId;
+            const gap = gapAnalysisEntries.find(g => g.__backendId === gapId);
+            
+            if (gap) {
+                const confirmed = confirm(`¿Eliminar la entrada "${gap.practice}"?`);
+                
+                if (confirmed) {
+                    if (window.dataSdk) {
+                        const result = await window.dataSdk.delete(gap);
+                        if (result.isOk) {
+                            showToast("Entrada eliminada exitosamente", "success");
+                        } else {
+                            showToast("Error al eliminar la entrada", "error");
+                        }
+                    } else {
+                        gapAnalysisEntries = gapAnalysisEntries.filter(g => g.__backendId !== gapId);
+                        renderGapAnalysis();
+                        showToast("Entrada eliminada exitosamente", "success");
+                    }
                 }
             }
         }
 
-        function showInlineMessage(message, type) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `fixed top-4 right-4 px-4 py-3 rounded-lg shadow-lg z-50 ${
-                type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' : 
-                'bg-red-100 text-red-800 border border-red-200'
+        // Handle export gap analysis
+        function handleExportGapAnalysis() {
+            if (gapAnalysisEntries.length === 0) {
+                showToast("No hay datos para exportar", "error");
+                return;
+            }
+            
+            const csvContent = generateGapAnalysisCSV();
+            downloadCSV(csvContent, 'gap-analysis.csv');
+            showToast("Gap Analysis exportado exitosamente", "success");
+        }
+
+        // Generate CSV content
+        function generateGapAnalysisCSV() {
+            const headers = [
+                'Práctica/Requisito',
+                'Modelo',
+                'Estado',
+                'Práctica Actual',
+                'Acción Recomendada',
+                'Prioridad',
+                'Esfuerzo',
+                'Impacto',
+                'Fecha Creación'
+            ];
+            
+            const rows = gapAnalysisEntries.map(gap => [
+                gap.practice,
+                gap.model_type,
+                gap.status,
+                gap.current_practice,
+                gap.recommended_action,
+                gap.priority,
+                gap.effort,
+                gap.impact,
+                new Date(gap.created_at).toLocaleDateString()
+            ]);
+            
+            return [headers, ...rows]
+                .map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(','))
+                .join('\n');
+        }
+
+        // Download CSV
+        function downloadCSV(content, filename) {
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Handle clear gap analysis
+        async function handleClearGapAnalysis() {
+            if (gapAnalysisEntries.length === 0) {
+                showToast("No hay datos para limpiar", "error");
+                return;
+            }
+            
+            const confirmed = confirm(`¿Eliminar todas las ${gapAnalysisEntries.length} entradas del Gap Analysis? Esta acción no se puede deshacer.`);
+            
+            if (confirmed) {
+                if (window.dataSdk) {
+                    // Delete all entries
+                    for (const gap of gapAnalysisEntries) {
+                        await window.dataSdk.delete(gap);
+                    }
+                    showToast("Gap Analysis limpiado exitosamente", "success");
+                } else {
+                    gapAnalysisEntries = [];
+                    renderGapAnalysis();
+                    showToast("Gap Analysis limpiado exitosamente", "success");
+                }
+            }
+        }
+
+        // Inline editing functions
+        function startInlineEdit(field) {
+            const display = document.getElementById(`${field}-display`);
+            const input = document.getElementById(`${field}-edit`);
+            const saveBtn = document.getElementById(`${field}-save`);
+            const cancelBtn = document.getElementById(`${field}-cancel`);
+            
+            // Set input value to current display value
+            input.value = display.textContent;
+            
+            // Hide display, show input and buttons
+            display.classList.add('hidden');
+            input.classList.remove('hidden');
+            saveBtn.classList.remove('hidden');
+            cancelBtn.classList.remove('hidden');
+            
+            // Focus input and select text
+            input.focus();
+            input.select();
+        }
+
+        async function saveInlineEdit(field) {
+            const display = document.getElementById(`${field}-display`);
+            const input = document.getElementById(`${field}-edit`);
+            const saveBtn = document.getElementById(`${field}-save`);
+            const cancelBtn = document.getElementById(`${field}-cancel`);
+            
+            const newValue = input.value.trim();
+            
+            if (newValue === '') {
+                showToast("El valor no puede estar vacío", "error");
+                return;
+            }
+            
+            // Update config
+            const configKey = field === 'organization' ? 'organization_name' : 'target_model';
+            const updateConfig = { [configKey]: newValue };
+            
+            try {
+                if (window.elementSdk) {
+                    await window.elementSdk.setConfig(updateConfig);
+                }
+                
+                // Update display
+                display.textContent = newValue;
+                
+                showToast(`${field === 'organization' ? 'Organización' : 'Modelo objetivo'} actualizado exitosamente`, "success");
+            } catch (error) {
+                console.error("Error updating config:", error);
+                showToast("Error al actualizar la configuración", "error");
+            }
+            
+            // Hide input and buttons, show display
+            cancelInlineEdit(field);
+        }
+
+        function cancelInlineEdit(field) {
+            const display = document.getElementById(`${field}-display`);
+            const input = document.getElementById(`${field}-edit`);
+            const saveBtn = document.getElementById(`${field}-save`);
+            const cancelBtn = document.getElementById(`${field}-cancel`);
+            
+            // Hide input and buttons, show display
+            display.classList.remove('hidden');
+            input.classList.add('hidden');
+            saveBtn.classList.add('hidden');
+            cancelBtn.classList.add('hidden');
+        }
+
+        // Show toast message
+        function showToast(message, type = "info") {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-medium z-50 ${
+                type === 'success' ? 'bg-green-600' : 
+                type === 'error' ? 'bg-red-600' : 'bg-blue-600'
             }`;
-            messageDiv.textContent = message;
+            toast.textContent = message;
             
-            document.body.appendChild(messageDiv);
+            document.body.appendChild(toast);
             
             setTimeout(() => {
-                messageDiv.remove();
-            }, 4000);
+                toast.remove();
+            }, 3000);
         }
 
-        function generateId() {
-            return 'gap_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-        }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Initialize app
-        initializeApp();
+        // Initialize app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initializeApp);
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99643d0956e4b589',t:'MTc2MTc1NzMyMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99656f2283d508a6',t:'MTc2MTc2OTg2MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
