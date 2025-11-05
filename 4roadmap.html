@@ -3,2437 +3,470 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plan de Implementación SQA - Roadmap Estratégico</title>
+  <title>Roadmap del Proyecto</title>
   <script src="/_sdk/data_sdk.js"></script>
   <script src="/_sdk/element_sdk.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
         body {
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        .executive-header {
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
-            border-bottom: 4px solid #1e40af;
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: white !important;
+            }
+            .print-page-break {
+                page-break-after: always;
+            }
         }
-        .roadmap-timeline {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            border: 2px solid #cbd5e1;
-        }
-        .phase-card {
-            transition: all 0.3s ease;
-            border-left: 6px solid #e5e7eb;
+        
+        .timeline-line {
             position: relative;
         }
-        .phase-card.planning {
-            border-left-color: #3b82f6;
+        
+        .timeline-line::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
         }
-        .phase-card.in-progress {
-            border-left-color: #f59e0b;
-        }
-        .phase-card.completed {
-            border-left-color: #10b981;
-        }
-        .phase-card.delayed {
-            border-left-color: #ef4444;
-        }
-        .phase-card:hover {
-            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-            transform: translateY(-2px);
-        }
-        .executive-summary {
-            background: linear-gradient(135deg, #fef7cd 0%, #fef3c7 100%);
-            border: 3px solid #f59e0b;
-        }
-        .strategic-section {
-            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-            border: 2px solid #0ea5e9;
-        }
-        .change-management {
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-            border: 2px solid #22c55e;
-        }
-        .risk-mitigation {
-            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-            border: 2px solid #ef4444;
-        }
-        .loading-spinner {
-            border: 2px solid #f3f4f6;
-            border-top: 2px solid #1e40af;
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        
         .status-badge {
-            font-size: 11px;
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
             font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            padding: 4px 8px;
-            border-radius: 4px;
         }
-        .status-planning {
-            background: #dbeafe;
+        
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-progress {
+            background-color: #dbeafe;
             color: #1e40af;
         }
-        .status-in-progress {
-            background: #fef3c7;
-            color: #d97706;
-        }
+        
         .status-completed {
-            background: #d1fae5;
+            background-color: #d1fae5;
             color: #065f46;
         }
+        
         .status-delayed {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-        .progress-bar {
-            height: 8px;
-            background: #e5e7eb;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #10b981, #34d399);
-            transition: width 0.3s ease;
-        }
-        .timeline-connector {
-            position: absolute;
-            left: -3px;
-            top: 50%;
-            width: 6px;
-            height: 40px;
-            background: #cbd5e1;
-            transform: translateY(-50%);
-        }
-        .milestone-marker {
-            position: absolute;
-            left: -8px;
-            top: 20px;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #3b82f6;
-            border: 3px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .gantt-chart {
-            background: white;
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            overflow-x: auto;
-        }
-        .gantt-header {
-            background: #f8fafc;
-            border-bottom: 2px solid #e5e7eb;
-            padding: 12px;
-            font-weight: 600;
-            text-align: center;
-        }
-        .gantt-row {
-            display: flex;
-            align-items: center;
-            padding: 8px 12px;
-            border-bottom: 1px solid #f1f5f9;
-            min-height: 50px;
-        }
-        .gantt-phase-name {
-            width: 200px;
-            font-weight: 500;
-            flex-shrink: 0;
-        }
-        .gantt-timeline {
-            flex: 1;
-            display: flex;
-            position: relative;
-            height: 30px;
-        }
-        .gantt-bar {
-            height: 20px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 11px;
-            font-weight: 600;
-            margin: 5px 2px;
-        }
-        .template-section {
-            background: #f0f9ff;
-            border: 1px solid #93c5fd;
-        }
-        .kpi-dashboard {
-            background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
-            border: 2px solid #8b5cf6;
-        }
-        .executive-button {
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 13px;
-            border: 2px solid transparent;
-            transition: all 0.2s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .formal-input {
-            border: 1px solid #d1d5db;
-            font-size: 14px;
-            transition: border-color 0.2s ease;
-        }
-        .formal-input:focus {
-            border-color: #1e40af;
-            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+            background-color: #fee2e2;
+            color: #991b1b;
         }
     </style>
   <style>@view-transition { navigation: auto; }</style>
  </head>
- <body class="min-h-full bg-gray-50"><!-- Executive Header -->
-  <header class="executive-header text-white py-8 mb-8">
-   <div class="container mx-auto px-6">
-    <div class="text-center">
-     <div class="flex justify-center items-center gap-3 mb-2"><span class="text-4xl">🗺️</span>
-      <h1 class="text-4xl font-bold">Plan de Implementación SQA</h1>
+ <body class="bg-gradient-to-br from-blue-50 to-indigo-50 min-h-full p-8">
+  <div class="max-w-5xl mx-auto bg-white rounded-lg shadow-2xl overflow-hidden"><!-- Header -->
+   <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-8">
+    <div class="flex items-center justify-between mb-4">
+     <div class="flex items-center space-x-3">
+      <svg class="w-10 h-10" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+      </svg>
+      <h1 id="document-title" class="text-3xl font-bold">ROADMAP DEL PROYECTO</h1>
      </div>
-     <div class="flex justify-center items-center gap-6 text-lg mb-4 opacity-90"><span>Organización: <span id="organization-name-display" class="font-semibold cursor-pointer hover:bg-blue-600 px-2 py-1 rounded transition-colors" title="Click para editar">Organización</span> <input type="text" id="organization-name-input" class="font-semibold bg-blue-600 border border-blue-400 rounded px-2 py-1 text-white placeholder-blue-200 hidden" placeholder="Nombre de la Organización"> </span> <span class="text-blue-200">|</span> <span>Objetivo: <span id="target-maturity-display" class="font-semibold cursor-pointer hover:bg-blue-600 px-2 py-1 rounded transition-colors" title="Click para editar">CMMI Level 3</span> <input type="text" id="target-maturity-input" class="font-semibold bg-blue-600 border border-blue-400 rounded px-2 py-1 text-white placeholder-blue-200 hidden" placeholder="CMMI Level 3"> </span>
-     </div>
-     <div class="text-blue-100 mb-4"><span>Sponsor Ejecutivo: <span id="executive-sponsor-display" class="font-medium cursor-pointer hover:bg-blue-600 px-2 py-1 rounded transition-colors" title="Click para editar">Director General</span> <input type="text" id="executive-sponsor-input" class="font-medium bg-blue-600 border border-blue-400 rounded px-2 py-1 text-white placeholder-blue-200 hidden" placeholder="Director General"> </span> • <span>Fecha: <span id="current-date"></span></span>
-     </div>
-     <p class="text-blue-100 max-w-4xl mx-auto text-lg leading-relaxed"><strong>Roadmap Estratégico</strong> para la transformación organizacional hacia la madurez en procesos de software. El mapa que guía a la dirección ejecutiva hacia el éxito auditable.</p>
-    </div>
-   </div>
-  </header>
-  <main class="container mx-auto px-6 pb-12"><!-- Executive Summary -->
-   <section class="executive-summary rounded-lg p-8 mb-8">
-    <div class="flex items-start gap-4">
-     <div class="text-5xl">
-      📊
-     </div>
-     <div class="flex-1">
-      <h2 class="text-3xl font-bold text-amber-800 mb-4">Resumen Ejecutivo</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-       <div class="bg-white rounded-lg p-4 border border-amber-200 text-center">
-        <div class="text-2xl font-bold text-amber-700" id="total-phases">
-         0
-        </div>
-        <div class="text-sm text-amber-600">
-         Fases Totales
-        </div>
-       </div>
-       <div class="bg-white rounded-lg p-4 border border-amber-200 text-center">
-        <div class="text-2xl font-bold text-green-700" id="completed-phases">
-         0
-        </div>
-        <div class="text-sm text-green-600">
-         Fases Completadas
-        </div>
-       </div>
-       <div class="bg-white rounded-lg p-4 border border-amber-200 text-center">
-        <div class="text-2xl font-bold text-blue-700" id="total-duration">
-         0
-        </div>
-        <div class="text-sm text-blue-600">
-         Meses Totales
-        </div>
-       </div>
-       <div class="bg-white rounded-lg p-4 border border-amber-200 text-center">
-        <div class="text-2xl font-bold text-purple-700" id="overall-progress">
-         0%
-        </div>
-        <div class="text-sm text-purple-600">
-         Progreso General
-        </div>
-       </div>
-      </div>
-      <div class="bg-white rounded-lg p-6 border border-amber-200">
-       <h3 class="text-lg font-semibold text-amber-800 mb-3">Progreso General del Roadmap</h3>
-       <div class="progress-bar mb-2">
-        <div class="progress-fill" id="overall-progress-bar" style="width: 0%"></div>
-       </div>
-       <div class="flex justify-between text-sm text-amber-600"><span>Inicio del Proyecto</span> <span id="project-status">En Planificación</span> <span>Objetivo Alcanzado</span>
-       </div>
-      </div>
+     <div class="text-right text-sm">
+      <p id="current-date"></p>
      </div>
     </div>
-   </section><!-- Quick Templates -->
-   <section class="template-section rounded-lg p-6 mb-8">
-    <div class="border-b border-blue-200 pb-4 mb-6">
-     <h2 class="text-2xl font-semibold text-gray-800">Plantillas de Roadmap Estratégico</h2>
-     <p class="text-gray-600 mt-1">Planes predefinidos para diferentes objetivos de madurez SQA</p>
+    <div class="grid grid-cols-2 gap-4 mt-6 text-sm">
+     <div>
+      <p class="opacity-90 mb-1">Proyecto:</p>
+      <p id="project-name" class="font-semibold text-lg">Sistema de Gestión Académica</p>
+     </div>
+     <div>
+      <p class="opacity-90 mb-1">Materia:</p>
+      <p id="course-name" class="font-semibold text-lg">Calidad de Software</p>
+     </div>
+     <div>
+      <p class="opacity-90 mb-1">Equipo:</p>
+      <p id="team-name" class="font-semibold">Equipo 1</p>
+     </div>
+     <div>
+      <p class="opacity-90 mb-1">Profesor:</p>
+      <p id="professor-name" class="font-semibold">Dr. Juan Pérez</p>
+     </div>
+     <div>
+      <p class="opacity-90 mb-1">Semestre:</p>
+      <p id="semester" class="font-semibold">2024-1</p>
+     </div>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"><button class="template-btn executive-button bg-blue-700 hover:bg-blue-800 text-white p-6 rounded-lg text-left transition-colors" data-template="cmmi-level-2">
-      <div class="font-bold mb-2 text-lg">
-       🎯 CMMI Level 2
+   </div><!-- Add Milestone Form -->
+   <div class="no-print bg-gray-50 p-6 border-b border-gray-200">
+    <h2 class="text-xl font-bold text-gray-800 mb-4">Agregar Hito del Proyecto</h2>
+    <form id="milestone-form" class="space-y-4">
+     <div class="grid grid-cols-2 gap-4">
+      <div><label for="milestone-name" class="block text-sm font-medium text-gray-700 mb-1">Nombre del Hito *</label> <input type="text" id="milestone-name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ej: Análisis de Requisitos">
       </div>
-      <div class="text-sm opacity-90 mb-2">
-       Procesos Gestionados
+      <div><label for="responsible" class="block text-sm font-medium text-gray-700 mb-1">Responsable *</label> <input type="text" id="responsible" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Nombre del responsable">
       </div>
-      <div class="text-xs opacity-75">
-       4 Fases • 12-18 meses • Enfoque en REQM, PMC
-      </div></button> <button class="template-btn executive-button bg-purple-700 hover:bg-purple-800 text-white p-6 rounded-lg text-left transition-colors" data-template="cmmi-level-3">
-      <div class="font-bold mb-2 text-lg">
-       🏆 CMMI Level 3
+      <div><label for="start-date" class="block text-sm font-medium text-gray-700 mb-1">Fecha Inicio *</label> <input type="date" id="start-date" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
       </div>
-      <div class="text-sm opacity-90 mb-2">
-       Procesos Definidos
+      <div><label for="end-date" class="block text-sm font-medium text-gray-700 mb-1">Fecha Fin *</label> <input type="date" id="end-date" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
       </div>
-      <div class="text-xs opacity-75">
-       5 Fases • 18-24 meses • Procesos organizacionales
-      </div></button> <button class="template-btn executive-button bg-green-700 hover:bg-green-800 text-white p-6 rounded-lg text-left transition-colors" data-template="iso-9001">
-      <div class="font-bold mb-2 text-lg">
-       📋 ISO 9001:2015
+      <div><label for="status" class="block text-sm font-medium text-gray-700 mb-1">Estado *</label> <select id="status" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"> <option value="Pendiente">Pendiente</option> <option value="En Progreso">En Progreso</option> <option value="Completado">Completado</option> <option value="Retrasado">Retrasado</option> </select>
       </div>
-      <div class="text-sm opacity-90 mb-2">
-       Sistema de Gestión de Calidad
-      </div>
-      <div class="text-xs opacity-75">
-       4 Fases • 8-12 meses • Certificación ISO
-      </div></button> <button class="template-btn executive-button bg-orange-700 hover:bg-orange-800 text-white p-6 rounded-lg text-left transition-colors" data-template="agile-transformation">
-      <div class="font-bold mb-2 text-lg">
-       🚀 Transformación Ágil
-      </div>
-      <div class="text-sm opacity-90 mb-2">
-       Adopción de Metodologías Ágiles
-      </div>
-      <div class="text-xs opacity-75">
-       3 Fases • 6-9 meses • Scrum + DevOps
-      </div></button> <button class="template-btn executive-button bg-red-700 hover:bg-red-800 text-white p-6 rounded-lg text-left transition-colors" data-template="security-compliance">
-      <div class="font-bold mb-2 text-lg">
-       🔒 Cumplimiento de Seguridad
-      </div>
-      <div class="text-sm opacity-90 mb-2">
-       ISO 27001 + GDPR
-      </div>
-      <div class="text-xs opacity-75">
-       4 Fases • 10-15 meses • Seguridad integral
-      </div></button> <button class="template-btn executive-button bg-indigo-700 hover:bg-indigo-800 text-white p-6 rounded-lg text-left transition-colors" data-template="digital-transformation">
-      <div class="font-bold mb-2 text-lg">
-       💻 Transformación Digital
-      </div>
-      <div class="text-sm opacity-90 mb-2">
-       Modernización Tecnológica
-      </div>
-      <div class="text-xs opacity-75">
-       5 Fases • 24-36 meses • Cloud + AI
-      </div></button>
-    </div>
-   </section><!-- Phase Creation Form -->
-   <section class="strategic-section rounded-lg p-8 mb-8">
-    <div class="border-b border-blue-200 pb-4 mb-6">
-     <h2 class="text-2xl font-semibold text-blue-800">Crear Nueva Fase del Roadmap</h2>
-     <p class="text-blue-700 mt-1">Defina las fases estratégicas de implementación</p>
-    </div>
-    <form id="phase-form" class="space-y-8"><!-- Basic Phase Information -->
-     <div class="bg-blue-50 rounded-lg p-6 border border-blue-200">
-      <h3 class="text-lg font-semibold text-blue-800 mb-4 flex items-center gap-2"><span class="w-6 h-6 bg-blue-600 text-white rounded flex items-center justify-center text-xs">📋</span> Información Básica de la Fase</h3>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-       <div><label for="phase-id" class="block text-sm font-semibold text-blue-700 mb-2">ID de la Fase *</label> <input type="text" id="phase-id" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Ej. FASE-01" required>
-        <p class="text-xs text-blue-500 mt-1">Formato: FASE-[NÚMERO]</p>
-       </div>
-       <div><label for="phase-name" class="block text-sm font-semibold text-blue-700 mb-2">Nombre de la Fase *</label> <input type="text" id="phase-name" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Ej. Diagnóstico y Capacitación" required>
-       </div>
-      </div>
-      <div class="mt-6"><label for="phase-description" class="block text-sm font-semibold text-blue-700 mb-2">Descripción de la Fase *</label> <textarea id="phase-description" rows="3" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Describa el propósito y alcance de esta fase..." required></textarea>
-      </div>
-     </div><!-- Timeline and Resources -->
-     <div class="bg-gray-50 rounded-lg p-6 border border-gray-200">
-      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><span class="w-6 h-6 bg-gray-600 text-white rounded flex items-center justify-center text-xs">⏰</span> Cronograma y Recursos</h3>
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-       <div><label for="start-month" class="block text-sm font-semibold text-gray-700 mb-2">Mes de Inicio *</label> <input type="number" id="start-month" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="1" min="1" max="60" required>
-       </div>
-       <div><label for="duration-months" class="block text-sm font-semibold text-gray-700 mb-2">Duración (Meses) *</label> <input type="number" id="duration-months" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="3" min="1" max="24" required>
-       </div>
-       <div><label for="budget-allocated" class="block text-sm font-semibold text-gray-700 mb-2">Presupuesto Asignado</label> <input type="text" id="budget-allocated" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="$50,000 USD">
-       </div>
-       <div><label for="responsible-team" class="block text-sm font-semibold text-gray-700 mb-2">Equipo Responsable *</label> <select id="responsible-team" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" required> <option value="">Seleccionar equipo</option> <option value="SEPG">Equipo SEPG</option> <option value="PMO">Oficina de Gestión de Proyectos</option> <option value="Consultores">Consultores Externos</option> <option value="Líderes de Proyecto">Líderes de Proyecto</option> <option value="Equipo de Calidad">Equipo de Calidad</option> <option value="Dirección Ejecutiva">Dirección Ejecutiva</option> <option value="Equipo Mixto">Equipo Mixto</option> </select>
-       </div>
-      </div>
-     </div><!-- Objectives and Deliverables -->
-     <div class="bg-green-50 rounded-lg p-6 border border-green-200">
-      <h3 class="text-lg font-semibold text-green-800 mb-4 flex items-center gap-2"><span class="w-6 h-6 bg-green-600 text-white rounded flex items-center justify-center text-xs">🎯</span> Objetivos y Entregables</h3>
-      <div class="space-y-6">
-       <div><label for="phase-objectives" class="block text-sm font-semibold text-green-700 mb-2">Objetivos de la Fase *</label> <textarea id="phase-objectives" rows="3" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none border-green-300" placeholder="Liste los objetivos específicos que se alcanzarán en esta fase..." required></textarea>
-       </div>
-       <div><label for="key-deliverables" class="block text-sm font-semibold text-green-700 mb-2">Entregables Clave *</label> <textarea id="key-deliverables" rows="4" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none border-green-300" placeholder="• Entregable 1: Descripción
-• Entregable 2: Descripción
-• Entregable 3: Descripción" required></textarea>
-       </div>
-       <div><label for="success-criteria" class="block text-sm font-semibold text-green-700 mb-2">Criterios de Éxito *</label> <textarea id="success-criteria" rows="3" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none border-green-300" placeholder="Defina cómo se medirá el éxito de esta fase..." required></textarea>
-       </div>
-      </div>
-     </div><!-- Change Management Strategy -->
-     <div class="change-management rounded-lg p-6">
-      <h3 class="text-lg font-semibold text-green-800 mb-4 flex items-center gap-2"><span class="w-6 h-6 bg-green-600 text-white rounded flex items-center justify-center text-xs">🔄</span> Estrategia de Gestión del Cambio (Crucial)</h3>
-      <div class="bg-green-50 rounded-lg p-4 mb-6 border border-green-200">
-       <div class="flex items-start gap-3">
-        <div class="text-2xl">
-         💡
-        </div>
-        <div>
-         <h4 class="font-semibold text-green-800 mb-2">¿Por qué es crucial la Gestión del Cambio?</h4>
-         <p class="text-green-700 text-sm">La resistencia cultural es el mayor obstáculo para la implementación exitosa. Esta sección define cómo vencer la resistencia, capacitar al personal y comunicar los beneficios.</p>
-        </div>
-       </div>
-      </div>
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-       <div class="space-y-6">
-        <div><label for="change-management-strategy" class="block text-sm font-semibold text-green-700 mb-2">Estrategia de Cambio Organizacional *</label> <textarea id="change-management-strategy" rows="4" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none border-green-300" placeholder="¿Cómo van a vencer la resistencia cultural? ¿Qué estrategias de adopción usarán?" required></textarea>
-        </div>
-        <div><label for="communication-plan" class="block text-sm font-semibold text-green-700 mb-2">Plan de Comunicación *</label> <textarea id="communication-plan" rows="4" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none border-green-300" placeholder="¿Cómo van a comunicar los beneficios? ¿Qué canales usarán? ¿Con qué frecuencia?" required></textarea>
-        </div>
-       </div>
-       <div class="space-y-6">
-        <div><label for="training-requirements" class="block text-sm font-semibold text-green-700 mb-2">Requisitos de Capacitación *</label> <textarea id="training-requirements" rows="4" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none border-green-300" placeholder="¿Cómo van a capacitar al personal? ¿Qué programas de entrenamiento implementarán?" required></textarea>
-        </div>
-        <div><label for="risks-mitigation" class="block text-sm font-semibold text-green-700 mb-2">Riesgos y Mitigación</label> <textarea id="risks-mitigation" rows="4" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none border-green-300" placeholder="Identifique riesgos potenciales y estrategias de mitigación..."></textarea>
-        </div>
-       </div>
+      <div><label for="deliverables" class="block text-sm font-medium text-gray-700 mb-1">Entregables *</label> <input type="text" id="deliverables" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ej: Documento de requisitos">
       </div>
      </div>
-     <div class="flex justify-end"><button type="submit" id="create-phase-btn" class="executive-button bg-blue-700 hover:bg-blue-800 text-white px-8 py-3 rounded-md flex items-center gap-3"> <span>Crear Fase del Roadmap</span>
-       <div id="create-loading" class="loading-spinner hidden"></div></button>
+     <div class="flex justify-end"><button type="submit" id="add-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-md transition-colors duration-200 flex items-center space-x-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+       </svg><span>Agregar Hito</span> </button>
      </div>
     </form>
-   </section><!-- Roadmap Timeline -->
-   <section id="roadmap-container" class="mb-8">
-    <div class="border-b border-gray-200 pb-4 mb-8">
-     <div class="flex justify-between items-center">
-      <div>
-       <h2 class="text-2xl font-semibold text-gray-800">Cronograma del Roadmap</h2>
-       <p class="text-gray-600 mt-1">Visualización temporal de las fases de implementación</p>
-      </div>
-      <div class="flex gap-4 text-sm">
-       <div class="flex items-center gap-2">
-        <div class="w-3 h-3 bg-blue-500 rounded"></div><span>Planificación</span>
-       </div>
-       <div class="flex items-center gap-2">
-        <div class="w-3 h-3 bg-amber-500 rounded"></div><span>En Progreso</span>
-       </div>
-       <div class="flex items-center gap-2">
-        <div class="w-3 h-3 bg-green-500 rounded"></div><span>Completado</span>
-       </div>
-       <div class="flex items-center gap-2">
-        <div class="w-3 h-3 bg-red-500 rounded"></div><span>Retrasado</span>
-       </div>
-      </div>
-     </div>
-    </div><!-- Gantt Chart -->
-    <div class="gantt-chart mb-8">
-     <div class="gantt-header">
-      <div class="flex">
-       <div class="w-200 text-left">
-        Fase
-       </div>
-       <div class="flex-1 grid grid-cols-24 gap-1 text-xs">
-        <div class="col-span-2">
-         Mes 1-2
-        </div>
-        <div class="col-span-2">
-         Mes 3-4
-        </div>
-        <div class="col-span-2">
-         Mes 5-6
-        </div>
-        <div class="col-span-2">
-         Mes 7-8
-        </div>
-        <div class="col-span-2">
-         Mes 9-10
-        </div>
-        <div class="col-span-2">
-         Mes 11-12
-        </div>
-        <div class="col-span-2">
-         Mes 13-14
-        </div>
-        <div class="col-span-2">
-         Mes 15-16
-        </div>
-        <div class="col-span-2">
-         Mes 17-18
-        </div>
-        <div class="col-span-2">
-         Mes 19-20
-        </div>
-        <div class="col-span-2">
-         Mes 21-22
-        </div>
-        <div class="col-span-2">
-         Mes 23-24
-        </div>
-       </div>
-      </div>
-     </div>
-     <div id="gantt-body"><!-- Gantt rows will be rendered here -->
+    <div id="limit-warning" class="hidden mt-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-800 text-sm">
+     ⚠️ Se ha alcanzado el límite máximo de 999 hitos. Por favor, elimine algunos antes de agregar más.
+    </div>
+   </div><!-- Timeline -->
+   <div class="p-8">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+     <svg class="w-6 h-6 mr-2 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+     </svg> Cronograma de Hitos</h2>
+    <div id="milestones-container" class="timeline-line space-y-6">
+     <div class="text-center py-12 text-gray-400">
+      <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+      </svg>
+      <p class="text-lg">No hay hitos agregados aún</p>
+      <p class="text-sm mt-2">Comienza agregando el primer hito del proyecto</p>
      </div>
     </div>
-    <div id="phases-list" class="space-y-6"><!-- Phases will be rendered here -->
-    </div>
-    <div id="no-phases-message" class="strategic-section rounded-lg text-center py-16 text-gray-500">
-     <div class="text-5xl mb-4 text-gray-400">
-      🗺️
-     </div>
-     <h3 class="text-xl font-medium text-gray-700 mb-2">No hay Fases Definidas</h3>
-     <p class="text-gray-600">Use las plantillas estratégicas o cree fases personalizadas para comenzar</p>
-    </div>
-   </section><!-- KPI Dashboard -->
-   <section class="kpi-dashboard rounded-lg p-8 mb-8">
-    <div class="border-b border-purple-300 pb-4 mb-6">
-     <h2 class="text-2xl font-semibold text-purple-800">Dashboard de KPIs Ejecutivos</h2>
-     <p class="text-purple-700 mt-1">Métricas clave para el seguimiento ejecutivo</p>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-     <div class="bg-white rounded-lg p-6 border border-purple-200 shadow-sm">
-      <h3 class="text-lg font-semibold text-purple-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-purple-600 text-white rounded-lg flex items-center justify-center text-sm">📈</span> Progreso General</h3>
-      <div class="text-3xl font-bold text-purple-700 mb-2" id="kpi-progress">
-       0%
-      </div>
-      <div class="progress-bar">
-       <div class="progress-fill bg-purple-500" id="kpi-progress-bar" style="width: 0%"></div>
-      </div>
-     </div>
-     <div class="bg-white rounded-lg p-6 border border-purple-200 shadow-sm">
-      <h3 class="text-lg font-semibold text-purple-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-green-600 text-white rounded-lg flex items-center justify-center text-sm">💰</span> Presupuesto Ejecutado</h3>
-      <div class="text-2xl font-bold text-green-700 mb-2" id="kpi-budget">
-       $0
-      </div>
-      <div class="text-sm text-green-600" id="kpi-budget-percentage">
-       0% del total
-      </div>
-     </div>
-     <div class="bg-white rounded-lg p-6 border border-purple-200 shadow-sm">
-      <h3 class="text-lg font-semibold text-purple-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-blue-600 text-white rounded-lg flex items-center justify-center text-sm">⏱️</span> Tiempo Transcurrido</h3>
-      <div class="text-2xl font-bold text-blue-700 mb-2" id="kpi-time">
-       0
-      </div>
-      <div class="text-sm text-blue-600">
-       meses del proyecto
-      </div>
-     </div>
-     <div class="bg-white rounded-lg p-6 border border-purple-200 shadow-sm">
-      <h3 class="text-lg font-semibold text-purple-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-amber-600 text-white rounded-lg flex items-center justify-center text-sm">🎯</span> Hitos Alcanzados</h3>
-      <div class="text-2xl font-bold text-amber-700 mb-2" id="kpi-milestones">
-       0
-      </div>
-      <div class="text-sm text-amber-600" id="kpi-milestones-total">
-       de 0 totales
-      </div>
-     </div>
-    </div>
-   </section><!-- Executive Actions -->
-   <section class="strategic-section rounded-lg p-8">
-    <div class="border-b border-blue-200 pb-4 mb-6">
-     <h2 class="text-2xl font-semibold text-blue-800">Acciones Ejecutivas</h2>
-     <p class="text-blue-700 mt-1">Herramientas para la dirección y seguimiento estratégico</p>
-    </div>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6"><button id="export-executive-summary" class="executive-button bg-purple-700 hover:bg-purple-800 text-white px-6 py-6 rounded-lg flex flex-col items-center gap-3 border border-purple-800"> <span class="text-3xl">📊</span>
-      <div class="text-center">
-       <div class="font-bold text-lg">
-        Resumen Ejecutivo
-       </div>
-       <div class="text-sm opacity-90">
-        Para la dirección
-       </div>
-      </div></button> <button id="export-detailed-roadmap" class="executive-button bg-blue-700 hover:bg-blue-800 text-white px-6 py-6 rounded-lg flex flex-col items-center gap-3 border border-blue-800"> <span class="text-3xl">🗺️</span>
-      <div class="text-center">
-       <div class="font-bold text-lg">
-        Roadmap Detallado
-       </div>
-       <div class="text-sm opacity-90">
-        Plan completo
-       </div>
-      </div></button> <button id="export-change-management" class="executive-button bg-green-700 hover:bg-green-800 text-white px-6 py-6 rounded-lg flex flex-col items-center gap-3 border border-green-800"> <span class="text-3xl">🔄</span>
-      <div class="text-center">
-       <div class="font-bold text-lg">
-        Plan de Cambio
-       </div>
-       <div class="text-sm opacity-90">
-        Gestión organizacional
-       </div>
-      </div></button>
-    </div>
-    <div class="mt-6 flex justify-center"><button id="clear-all-phases" class="executive-button bg-gray-700 hover:bg-gray-800 text-white px-8 py-3 rounded-md border border-gray-800"> 🗑️ Limpiar Roadmap Completo </button>
-    </div>
-   </section>
-  </main>
+   </div><!-- Export Button -->
+   <div class="no-print bg-gray-50 p-6 border-t border-gray-200 flex justify-center space-x-4"><button id="export-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3 rounded-md transition-colors duration-200 flex items-center space-x-2 shadow-lg">
+     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+     </svg><span>Generar PDF</span> </button> <button id="preview-btn" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold px-8 py-3 rounded-md transition-colors duration-200 flex items-center space-x-2 shadow-lg">
+     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+     </svg><span>Vista Previa</span> </button>
+   </div><!-- Footer -->
+   <div class="bg-gray-100 p-4 text-center text-sm text-gray-600">
+    <p>Documento generado para el proyecto final de Calidad de Software</p>
+   </div>
+  </div>
   <script>
-        // Configuration and state
         const defaultConfig = {
-            organization_name: "Organización",
-            roadmap_title: "Plan de Implementación CMMI",
-            executive_sponsor: "Director General",
-            target_maturity: "CMMI Level 3"
+            document_title: "ROADMAP DEL PROYECTO",
+            project_name: "Sistema de Gestión Académica",
+            course_name: "Calidad de Software",
+            team_name: "Equipo 1",
+            professor_name: "Dr. Juan Pérez",
+            semester: "2024-1",
+            background_color: "#eff6ff",
+            header_color: "#2563eb",
+            text_color: "#1f2937",
+            accent_color: "#3b82f6",
+            button_color: "#4f46e5"
         };
 
-        let roadmapPhases = [];
+        let milestones = [];
         let isInitialized = false;
 
-        // Template definitions - Each template is strategically different
-        const templates = {
-            "cmmi-level-2": [
-                {
-                    phase_id: "REQM-01",
-                    phase_name: "Assessment y Baseline CMMI Level 2",
-                    phase_description: "Evaluación formal SCAMPI C enfocada en áreas de proceso REQM y PMC. Establecimiento de línea base organizacional para procesos gestionados.",
-                    phase_objectives: "• Ejecutar SCAMPI C formal con Lead Appraiser certificado\n• Mapear procesos actuales vs. REQM y PMC\n• Cuantificar brechas específicas de Level 2\n• Establecer SEPG con roles definidos\n• Crear baseline de métricas de proyecto",
-                    start_month: 1,
-                    duration_months: 3,
-                    budget_allocated: "$35,000 USD",
-                    responsible_team: "Consultores",
-                    key_deliverables: "• Reporte SCAMPI C oficial\n• Mapeo de procesos actuales\n• Gap Analysis cuantificado\n• Charter del SEPG\n• Baseline de métricas de 6 meses\n• Plan de Acción CMMI priorizado",
-                    success_criteria: "SCAMPI C completado con findings documentados. SEPG operativo con 5+ miembros capacitados. Baseline establecido con 15+ métricas de proyecto.",
-                    change_management_strategy: "Evangelización CMMI con casos de ROI. Formación de coalition de líderes pro-CMMI. Comunicación de mandato ejecutivo claro.",
-                    training_requirements: "Certificación Introduction to CMMI para 20+ personas. SEPG training intensivo de 40 horas. Lead Appraiser training para 2 personas clave.",
-                    communication_plan: "Town halls mensuales de progreso CMMI. Dashboard ejecutivo semanal. SEPG newsletter quincenal con métricas.",
-                    risks_mitigation: "Riesgo: SEPG sin dedicación. Mitigación: 50% tiempo mínimo asignado. Riesgo: Resistencia de PMs. Mitigación: Involucrar en diseño de procesos.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "REQM-02",
-                    phase_name: "Diseño e Implementación REQM",
-                    phase_description: "Diseño detallado del proceso de Requirements Management con herramientas de trazabilidad y gestión de cambios. Implementación en herramientas corporativas.",
-                    phase_objectives: "• Diseñar proceso REQM completo con sub-prácticas\n• Implementar herramienta de trazabilidad de requisitos\n• Crear templates y checklists REQM\n• Establecer métricas específicas de requisitos\n• Capacitar analistas y PMs en REQM",
-                    start_month: 4,
-                    duration_months: 4,
-                    budget_allocated: "$45,000 USD",
-                    responsible_team: "SEPG",
-                    key_deliverables: "• Proceso REQM v1.0 con procedimientos\n• Herramienta de trazabilidad configurada\n• Templates de requisitos estandarizados\n• Matriz de trazabilidad automatizada\n• 15+ analistas certificados en REQM\n• Métricas de volatilidad de requisitos",
-                    success_criteria: "Proceso REQM operativo en herramienta. 100% de proyectos nuevos usando templates. Trazabilidad bidireccional funcionando. Métricas de volatilidad < 15%.",
-                    change_management_strategy: "Co-creación con analistas senior. Demos hands-on de herramientas. Quick wins con proyectos pequeños. Champions REQM por área.",
-                    training_requirements: "Certificación REQM de 16 horas para analistas. Tool training específico de 8 horas. Workshops de trazabilidad práctica.",
-                    communication_plan: "Demos semanales de trazabilidad. Success stories de requisitos bien gestionados. Métricas de calidad de requisitos publicadas.",
-                    risks_mitigation: "Riesgo: Herramienta compleja. Mitigación: Configuración simplificada inicial. Riesgo: Analistas no adoptan. Mitigación: Incentivos por uso correcto.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "PMC-01",
-                    phase_name: "Implementación PMC y Piloto Integrado",
-                    phase_description: "Implementación del proceso Project Monitoring & Control con dashboards ejecutivos. Piloto integrado REQM+PMC en 3 proyectos estratégicos.",
-                    phase_objectives: "• Implementar proceso PMC con métricas automatizadas\n• Crear dashboards ejecutivos de proyecto\n• Ejecutar piloto REQM+PMC integrado\n• Establecer revisiones de hitos formales\n• Medir impacto en predictibilidad de proyectos",
-                    start_month: 8,
-                    duration_months: 5,
-                    budget_allocated: "$38,000 USD",
-                    responsible_team: "PMO",
-                    key_deliverables: "• Proceso PMC v1.0 implementado\n• Dashboard ejecutivo automatizado\n• 3 proyectos piloto completados\n• Métricas de performance vs. plan\n• Procedimientos de escalamiento\n• Evidencia de mejora en predictibilidad",
-                    success_criteria: "PMC operativo en 3 proyectos piloto. Dashboard actualizado semanalmente. Variación de cronograma < 10%. Satisfacción de stakeholders > 4.2/5.",
-                    change_management_strategy: "PMs como co-diseñadores de dashboards. Reconocimiento público de proyectos piloto exitosos. Testimoniales de sponsors de proyecto.",
-                    training_requirements: "Certificación PMC de 12 horas para PMs. Dashboard training para ejecutivos. Workshops de análisis de variaciones.",
-                    communication_plan: "Reportes ejecutivos semanales automatizados. Casos de éxito de proyectos piloto. Métricas de mejora en predictibilidad.",
-                    risks_mitigation: "Riesgo: Dashboards no usados por ejecutivos. Mitigación: Co-diseño con sponsors. Riesgo: Overhead percibido. Mitigación: Automatización máxima.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "SCAMPI-A2",
-                    phase_name: "Preparación y Evaluación SCAMPI A",
-                    phase_description: "Preparación intensiva para SCAMPI A Level 2. Recolección de evidencia, pre-assessment y evaluación formal con Lead Appraiser externo certificado.",
-                    phase_objectives: "• Recopilar evidencia completa REQM y PMC\n• Ejecutar pre-assessment interno\n• Corregir gaps identificados\n• Realizar SCAMPI A formal\n• Obtener rating CMMI Level 2",
-                    start_month: 13,
-                    duration_months: 4,
-                    budget_allocated: "$55,000 USD",
-                    responsible_team: "Equipo de Calidad",
-                    key_deliverables: "• Evidencia SCAMPI A completa y organizada\n• Pre-assessment report con correcciones\n• SCAMPI A Final Findings Report\n• Certificado CMMI Level 2 oficial\n• Plan de sostenibilidad post-SCAMPI\n• Comunicación organizacional de logro",
-                    success_criteria: "SCAMPI A exitoso con rating Level 2. Todas las áreas de proceso Satisfied. Evidencia robusta en 6+ proyectos. Reconocimiento SEI oficial.",
-                    change_management_strategy: "Celebración organizacional masiva del logro. Comunicación externa de certificación. Establecimiento de nueva identidad organizacional de excelencia.",
-                    training_requirements: "Preparación intensiva de entrevistados. Mock interviews con todo el equipo. Training en presentación de evidencia.",
-                    communication_plan: "Countdown comunicacional hacia SCAMPI A. Comunicación en tiempo real durante evaluación. Celebración masiva post-certificación.",
-                    risks_mitigation: "Riesgo: Evidencia insuficiente. Mitigación: Pre-assessment riguroso 2 meses antes. Riesgo: Nervios en entrevistas. Mitigación: Mock sessions intensivas.",
-                    status: "planning"
-                }
-            ],
-            "cmmi-level-3": [
-                {
-                    phase_id: "OSSP-01",
-                    phase_name: "Arquitectura OSSP y Assessment Level 3",
-                    phase_description: "Diseño de la arquitectura del Organization's Set of Standard Processes (OSSP) y assessment SCAMPI B enfocado en áreas de proceso Level 3: RD, TS, PI, VER, VAL, OPF, OPD, OT.",
-                    phase_objectives: "• Ejecutar SCAMPI B formal para Level 3\n• Diseñar arquitectura completa del OSSP\n• Establecer Process Asset Library (PAL)\n• Formar Engineering Process Group (EPG)\n• Definir estrategia de tailoring organizacional\n• Crear measurement repository organizacional",
-                    start_month: 1,
-                    duration_months: 4,
-                    budget_allocated: "$65,000 USD",
-                    responsible_team: "Consultores",
-                    key_deliverables: "• SCAMPI B Final Findings Report\n• Arquitectura OSSP v1.0 completa\n• Process Asset Library establecida\n• EPG Charter y roles definidos\n• Tailoring guidelines organizacionales\n• Measurement repository inicial\n• Roadmap Level 3 detallado",
-                    success_criteria: "SCAMPI B completado identificando gaps Level 3. OSSP arquitectura aprobada por dirección. EPG operativo con 8+ miembros dedicados. PAL funcionando con 50+ assets.",
-                    change_management_strategy: "Alineación estratégica con business goals. Comunicación de competitive advantage. Coalition building con líderes de ingeniería. Visión de organizational excellence.",
-                    training_requirements: "CMMI Level 3 intensive training para EPG (80 horas). Process definition workshop para arquitectos. Tailoring methodology training. Measurement and analysis certification.",
-                    communication_plan: "Executive briefings mensuales con métricas. Engineering all-hands con visión OSSP. EPG newsletter semanal. Process architecture roadshows departamentales.",
-                    risks_mitigation: "Riesgo: OSSP muy complejo. Mitigación: Arquitectura modular incremental. Riesgo: EPG sin autoridad. Mitigación: Executive sponsorship explícito y budget dedicado.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "FASE-02",
-                    phase_name: "Desarrollo de Procesos Organizacionales",
-                    phase_description: "Desarrollo completo del conjunto estándar de procesos organizacionales (OSSP) incluyendo procesos de ingeniería, gestión y soporte.",
-                    phase_objectives: "• Desarrollar procesos de ingeniería estándar\n• Crear procesos de gestión organizacional\n• Establecer biblioteca de activos de proceso\n• Implementar programa de medición organizacional",
-                    start_month: 4,
-                    duration_months: 6,
-                    budget_allocated: "$80,000 USD",
-                    responsible_team: "SEPG",
-                    key_deliverables: "• OSSP completo v1.0\n• Biblioteca de activos de proceso\n• Programa de medición organizacional\n• Procesos de tailoring definidos\n• Repositorio de lecciones aprendidas",
-                    success_criteria: "OSSP completo y validado. Biblioteca funcionando. Métricas organizacionales establecidas.",
-                    change_management_strategy: "Participación activa de todas las áreas. Workshops colaborativos de definición. Validación con expertos internos.",
-                    training_requirements: "Capacitación en definición de procesos. Entrenamiento en tailoring. Certificación en medición organizacional.",
-                    communication_plan: "Workshops de socialización de procesos. Feedback sessions regulares. Comunicación de beneficios esperados.",
-                    risks_mitigation: "Riesgo: Procesos no adoptados. Mitigación: Diseño participativo. Riesgo: Sobrecarga de documentación. Mitigación: Enfoque práctico.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "FASE-03",
-                    phase_name: "Capacitación y Despliegue Piloto",
-                    phase_description: "Capacitación masiva en procesos organizacionales y ejecución de proyectos piloto para validar la efectividad del OSSP.",
-                    phase_objectives: "• Capacitar a toda la organización en OSSP\n• Ejecutar proyectos piloto\n• Validar procesos de tailoring\n• Recopilar métricas de efectividad",
-                    start_month: 10,
-                    duration_months: 5,
-                    budget_allocated: "$60,000 USD",
-                    responsible_team: "Equipo Mixto",
-                    key_deliverables: "• Programa de capacitación ejecutado\n• Resultados de proyectos piloto\n• Procesos validados y ajustados\n• Métricas de adopción y efectividad\n• Plan de rollout organizacional",
-                    success_criteria: "95% del personal capacitado. Pilotos exitosos. Procesos validados y mejorados.",
-                    change_management_strategy: "Programa de champions organizacionales. Incentivos por adopción temprana. Celebración de éxitos de piloto.",
-                    training_requirements: "Capacitación masiva en OSSP. Entrenamiento especializado por roles. Certificación interna en procesos.",
-                    communication_plan: "Comunicación continua de resultados de piloto. Casos de éxito documentados. Feedback loops establecidos.",
-                    risks_mitigation: "Riesgo: Baja adopción. Mitigación: Programa de incentivos. Riesgo: Procesos inadecuados. Mitigación: Ajustes iterativos.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "FASE-04",
-                    phase_name: "Institucionalización y Mejora Continua",
-                    phase_description: "Despliegue organizacional completo, institucionalización de procesos y establecimiento de programa de mejora continua.",
-                    phase_objectives: "• Rollout organizacional completo\n• Institucionalizar procesos Level 3\n• Establecer mejora continua\n• Preparar para evaluación SCAMPI A",
-                    start_month: 15,
-                    duration_months: 4,
-                    budget_allocated: "$40,000 USD",
-                    responsible_team: "Equipo de Calidad",
-                    key_deliverables: "• Procesos institucionalizados\n• Programa de mejora continua\n• Métricas organizacionales estables\n• Preparación para SCAMPI A\n• Cultura de calidad establecida",
-                    success_criteria: "Procesos funcionando organizacionalmente. Mejora continua activa. Preparación SCAMPI A completa.",
-                    change_management_strategy: "Cultura de excelencia establecida. Reconocimiento por mejoras. Liderazgo por ejemplo de la dirección.",
-                    training_requirements: "Entrenamiento en mejora continua. Capacitación de auditores internos. Programa de mentoring sostenible.",
-                    communication_plan: "Comunicación de logros organizacionales. Preparación para comunicación externa. Eventos de reconocimiento.",
-                    risks_mitigation: "Riesgo: Pérdida de momentum. Mitigación: Métricas de seguimiento. Riesgo: Regresión en procesos. Mitigación: Auditorías internas.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "FASE-05",
-                    phase_name: "Evaluación SCAMPI A y Certificación",
-                    phase_description: "Evaluación formal SCAMPI A para obtener la certificación CMMI Level 3 y establecimiento de roadmap hacia niveles superiores.",
-                    phase_objectives: "• Ejecutar evaluación SCAMPI A\n• Obtener certificación CMMI Level 3\n• Documentar lecciones aprendidas\n• Planificar evolución futura",
-                    start_month: 19,
-                    duration_months: 5,
-                    budget_allocated: "$70,000 USD",
-                    responsible_team: "Dirección Ejecutiva",
-                    key_deliverables: "• Certificación CMMI Level 3\n• Reporte final de evaluación\n• Lecciones aprendidas documentadas\n• Plan de sostenibilidad\n• Roadmap hacia Level 4/5",
-                    success_criteria: "Certificación CMMI Level 3 obtenida. Organización transformada. Plan de futuro establecido.",
-                    change_management_strategy: "Celebración de logro organizacional. Comunicación externa de éxito. Establecimiento de nueva visión de excelencia.",
-                    training_requirements: "Capacitación en sostenibilidad de procesos. Entrenamiento para evaluaciones futuras. Desarrollo de capacidades internas.",
-                    communication_plan: "Comunicación masiva de certificación. Eventos de celebración. Comunicación externa y marketing.",
-                    risks_mitigation: "Riesgo: Falla en certificación. Mitigación: Preparación exhaustiva. Riesgo: Complacencia post-certificación. Mitigación: Nuevos desafíos.",
-                    status: "planning"
-                }
-            ],
-            "iso-9001": [
-                {
-                    phase_id: "FASE-01",
-                    phase_name: "Diagnóstico y Planificación ISO 9001",
-                    phase_description: "Evaluación del sistema de gestión de calidad actual contra los requisitos de ISO 9001:2015 y planificación de la implementación.",
-                    phase_objectives: "• Gap analysis contra ISO 9001:2015\n• Definir alcance del SGC\n• Establecer equipo de implementación\n• Crear plan de proyecto detallado",
-                    start_month: 1,
-                    duration_months: 2,
-                    budget_allocated: "$15,000 USD",
-                    responsible_team: "Consultores",
-                    key_deliverables: "• Gap analysis ISO 9001:2015\n• Alcance del SGC definido\n• Plan de implementación\n• Equipo de calidad establecido\n• Cronograma de certificación",
-                    success_criteria: "Brechas identificadas claramente. Plan aprobado por dirección. Equipo capacitado y comprometido.",
-                    change_management_strategy: "Sensibilización sobre beneficios de ISO 9001. Comunicación de compromiso de la dirección. Identificación de líderes de calidad.",
-                    training_requirements: "Capacitación básica ISO 9001:2015. Entrenamiento en sistemas de gestión. Workshop de sensibilización organizacional.",
-                    communication_plan: "Kick-off organizacional. Comunicados de progreso semanales. Reuniones de seguimiento con dirección.",
-                    risks_mitigation: "Riesgo: Falta de compromiso. Mitigación: Involucramiento de alta dirección. Riesgo: Recursos insuficientes. Mitigación: Asignación clara de recursos.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "FASE-02",
-                    phase_name: "Diseño e Implementación del SGC",
-                    phase_description: "Diseño e implementación del Sistema de Gestión de Calidad según los requisitos de ISO 9001:2015.",
-                    phase_objectives: "• Documentar procesos del SGC\n• Implementar controles de calidad\n• Establecer indicadores y métricas\n• Capacitar al personal en SGC",
-                    start_month: 3,
-                    duration_months: 4,
-                    budget_allocated: "$25,000 USD",
-                    responsible_team: "Equipo de Calidad",
-                    key_deliverables: "• Manual de calidad\n• Procedimientos documentados\n• Registros de calidad implementados\n• Programa de auditorías internas\n• Personal capacitado en SGC",
-                    success_criteria: "SGC documentado e implementado. Personal capacitado. Auditorías internas funcionando.",
-                    change_management_strategy: "Implementación gradual por procesos. Involucramiento de usuarios finales. Feedback continuo y ajustes.",
-                    training_requirements: "Capacitación masiva en SGC. Entrenamiento de auditores internos. Workshops por procesos específicos.",
-                    communication_plan: "Comunicación de avances por proceso. Newsletters de calidad. Reuniones de seguimiento departamentales.",
-                    risks_mitigation: "Riesgo: Documentación excesiva. Mitigación: Enfoque práctico. Riesgo: Resistencia al cambio. Mitigación: Beneficios tangibles.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "FASE-03",
-                    phase_name: "Auditorías y Mejora del Sistema",
-                    phase_description: "Ejecución de auditorías internas, corrección de no conformidades y mejora continua del SGC antes de la auditoría de certificación.",
-                    phase_objectives: "• Ejecutar auditorías internas completas\n• Corregir no conformidades\n• Implementar mejoras al SGC\n• Preparar auditoría de certificación",
-                    start_month: 7,
-                    duration_months: 2,
-                    budget_allocated: "$10,000 USD",
-                    responsible_team: "Equipo de Calidad",
-                    key_deliverables: "• Reportes de auditorías internas\n• No conformidades corregidas\n• SGC mejorado y estabilizado\n• Preparación para auditoría externa\n• Evidencias de mejora continua",
-                    success_criteria: "Auditorías internas exitosas. No conformidades menores únicamente. SGC funcionando efectivamente.",
-                    change_management_strategy: "Cultura de mejora continua. Reconocimiento por mejoras implementadas. Preparación mental para auditoría externa.",
-                    training_requirements: "Entrenamiento avanzado de auditores. Capacitación en manejo de no conformidades. Preparación para auditoría externa.",
-                    communication_plan: "Comunicación de resultados de auditorías. Preparación organizacional para certificación. Motivación del equipo.",
-                    risks_mitigation: "Riesgo: No conformidades mayores. Mitigación: Auditorías rigurosas previas. Riesgo: Sistema no maduro. Mitigación: Tiempo adicional de estabilización.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "FASE-04",
-                    phase_name: "Certificación ISO 9001 y Sostenibilidad",
-                    phase_description: "Auditoría de certificación ISO 9001:2015 y establecimiento de programa de sostenibilidad del SGC.",
-                    phase_objectives: "• Superar auditoría de certificación\n• Obtener certificado ISO 9001:2015\n• Establecer programa de sostenibilidad\n• Planificar auditorías de seguimiento",
-                    start_month: 9,
-                    duration_months: 4,
-                    budget_allocated: "$20,000 USD",
-                    responsible_team: "Dirección Ejecutiva",
-                    key_deliverables: "• Certificado ISO 9001:2015\n• Programa de sostenibilidad del SGC\n• Plan de auditorías de seguimiento\n• Programa de mejora continua\n• Comunicación de logro organizacional",
-                    success_criteria: "Certificación ISO 9001 obtenida. SGC sostenible establecido. Organización comprometida con calidad.",
-                    change_management_strategy: "Celebración del logro organizacional. Comunicación externa de certificación. Cultura de calidad institucionalizada.",
-                    training_requirements: "Capacitación en sostenibilidad del SGC. Entrenamiento continuo en calidad. Desarrollo de capacidades internas.",
-                    communication_plan: "Comunicación masiva de certificación. Marketing de calidad. Eventos de celebración y reconocimiento.",
-                    risks_mitigation: "Riesgo: Pérdida de certificación. Mitigación: Programa robusto de sostenibilidad. Riesgo: Complacencia. Mitigación: Objetivos de mejora continua.",
-                    status: "planning"
-                }
-            ],
-            "agile-transformation": [
-                {
-                    phase_id: "FASE-01",
-                    phase_name: "Evaluación y Preparación Ágil",
-                    phase_description: "Assessment de madurez ágil actual, definición de visión de transformación y preparación organizacional para la adopción de metodologías ágiles.",
-                    phase_objectives: "• Assessment de madurez ágil\n• Definir visión y objetivos ágiles\n• Identificar equipos piloto\n• Establecer Agile Center of Excellence",
-                    start_month: 1,
-                    duration_months: 2,
-                    budget_allocated: "$20,000 USD",
-                    responsible_team: "Consultores",
-                    key_deliverables: "• Assessment de madurez ágil\n• Visión de transformación ágil\n• Equipos piloto seleccionados\n• Agile CoE establecido\n• Roadmap de transformación",
-                    success_criteria: "Visión ágil clara y comunicada. Equipos piloto comprometidos. CoE funcionando.",
-                    change_management_strategy: "Comunicación de beneficios ágiles. Identificación de early adopters. Creación de expectativas realistas.",
-                    training_requirements: "Capacitación básica en Agile. Entrenamiento de Scrum Masters. Workshop de mindset ágil.",
-                    communication_plan: "Comunicación de visión ágil. Sessions de Q&A. Comunicación de casos de éxito externos.",
-                    risks_mitigation: "Riesgo: Resistencia cultural. Mitigación: Cambio gradual. Riesgo: Expectativas irreales. Mitigación: Comunicación clara de timeline.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "FASE-02",
-                    phase_name: "Implementación Piloto Scrum",
-                    phase_description: "Implementación de Scrum en equipos piloto seleccionados, con coaching intensivo y establecimiento de prácticas ágiles básicas.",
-                    phase_objectives: "• Implementar Scrum en equipos piloto\n• Establecer ceremonias ágiles\n• Implementar herramientas ágiles\n• Medir velocidad y productividad",
-                    start_month: 3,
-                    duration_months: 3,
-                    budget_allocated: "$30,000 USD",
-                    responsible_team: "Agile CoE",
-                    key_deliverables: "• Equipos Scrum funcionando\n• Ceremonias ágiles establecidas\n• Herramientas ágiles implementadas\n• Métricas de velocidad\n• Lecciones aprendidas del piloto",
-                    success_criteria: "Equipos piloto funcionando con Scrum. Métricas positivas de productividad. Satisfacción del equipo alta.",
-                    change_management_strategy: "Coaching intensivo de equipos. Celebración de quick wins. Ajustes basados en feedback.",
-                    training_requirements: "Capacitación intensiva en Scrum. Coaching one-on-one. Certificación de Scrum Masters.",
-                    communication_plan: "Demos regulares de equipos piloto. Comunicación de métricas de éxito. Sharing de lecciones aprendidas.",
-                    risks_mitigation: "Riesgo: Equipos no adoptan prácticas. Mitigación: Coaching intensivo. Riesgo: Herramientas inadecuadas. Mitigación: Evaluación continua.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "FASE-03",
-                    phase_name: "Escalamiento y DevOps",
-                    phase_description: "Escalamiento de prácticas ágiles a más equipos e implementación de prácticas DevOps para mejorar la entrega continua.",
-                    phase_objectives: "• Escalar Scrum a más equipos\n• Implementar prácticas DevOps\n• Establecer CI/CD pipelines\n• Crear cultura de entrega continua",
-                    start_month: 6,
-                    duration_months: 4,
-                    budget_allocated: "$40,000 USD",
-                    responsible_team: "Equipo Mixto",
-                    key_deliverables: "• Múltiples equipos Scrum funcionando\n• Pipelines CI/CD implementados\n• Prácticas DevOps establecidas\n• Métricas de entrega continua\n• Cultura ágil en expansión",
-                    success_criteria: "Escalamiento exitoso a múltiples equipos. DevOps funcionando. Tiempo de entrega reducido significativamente.",
-                    change_management_strategy: "Expansión orgánica basada en éxitos. Comunidades de práctica ágiles. Reconocimiento de adopción.",
-                    training_requirements: "Capacitación en DevOps. Entrenamiento en herramientas CI/CD. Workshops de cultura ágil.",
-                    communication_plan: "Comunicación de métricas de mejora. Casos de éxito internos. Eventos de sharing de conocimiento.",
-                    risks_mitigation: "Riesgo: Escalamiento muy rápido. Mitigación: Crecimiento controlado. Riesgo: Herramientas DevOps complejas. Mitigación: Implementación gradual.",
-                    status: "planning"
-                }
-            ],
-            "security-compliance": [
-                {
-                    phase_id: "FASE-01",
-                    phase_name: "Assessment de Seguridad y Compliance",
-                    phase_description: "Evaluación completa de la postura de seguridad actual y análisis de brechas contra ISO 27001 y GDPR.",
-                    phase_objectives: "• Security assessment completo\n• Gap analysis ISO 27001\n• Evaluación de compliance GDPR\n• Definir programa de seguridad",
-                    start_month: 1,
-                    duration_months: 3,
-                    budget_allocated: "$35,000 USD",
-                    responsible_team: "Consultores",
-                    key_deliverables: "• Reporte de security assessment\n• Gap analysis ISO 27001\n• Evaluación GDPR compliance\n• Programa de seguridad definido\n• Risk register inicial",
-                    success_criteria: "Postura de seguridad actual clara. Brechas identificadas. Programa de seguridad aprobado.",
-                    change_management_strategy: "Sensibilización sobre riesgos de seguridad. Comunicación de regulaciones. Cultura de security awareness.",
-                    training_requirements: "Capacitación en ISO 27001. Entrenamiento GDPR. Security awareness para todos.",
-                    communication_plan: "Comunicación de riesgos identificados. Updates regulares a dirección. Campañas de awareness.",
-                    risks_mitigation: "Riesgo: Brechas críticas no identificadas. Mitigación: Assessment exhaustivo. Riesgo: Resistencia a controles. Mitigación: Comunicación de beneficios.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "FASE-02",
-                    phase_name: "Implementación de Controles de Seguridad",
-                    phase_description: "Implementación de controles de seguridad técnicos y administrativos según ISO 27001 y requisitos GDPR.",
-                    phase_objectives: "• Implementar controles ISO 27001\n• Establecer controles GDPR\n• Crear políticas de seguridad\n• Implementar monitoreo de seguridad",
-                    start_month: 4,
-                    duration_months: 4,
-                    budget_allocated: "$50,000 USD",
-                    responsible_team: "Equipo de Seguridad",
-                    key_deliverables: "• Controles de seguridad implementados\n• Políticas de seguridad aprobadas\n• Sistema de monitoreo funcionando\n• Procedimientos GDPR establecidos\n• Programa de capacitación ejecutado",
-                    success_criteria: "Controles funcionando efectivamente. Políticas implementadas. Monitoreo activo de seguridad.",
-                    change_management_strategy: "Implementación gradual de controles. Training continuo. Comunicación de mejoras en seguridad.",
-                    training_requirements: "Capacitación técnica en controles. Entrenamiento en políticas. Certificación de personal clave.",
-                    communication_plan: "Comunicación de implementación de controles. Reportes de mejoras en seguridad. Updates de compliance.",
-                    risks_mitigation: "Riesgo: Controles impactan productividad. Mitigación: Balancear seguridad y usabilidad. Riesgo: Implementación incompleta. Mitigación: Verificación rigurosa.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "FASE-03",
-                    phase_name: "Auditorías y Mejora Continua",
-                    phase_description: "Ejecución de auditorías internas de seguridad, corrección de hallazgos y establecimiento de programa de mejora continua.",
-                    phase_objectives: "• Ejecutar auditorías internas\n• Corregir hallazgos de seguridad\n• Establecer mejora continua\n• Preparar auditorías externas",
-                    start_month: 8,
-                    duration_months: 3,
-                    budget_allocated: "$25,000 USD",
-                    responsible_team: "Equipo de Seguridad",
-                    key_deliverables: "• Reportes de auditorías internas\n• Hallazgos corregidos\n• Programa de mejora continua\n• Preparación para auditorías externas\n• Métricas de seguridad estables",
-                    success_criteria: "Auditorías internas exitosas. Hallazgos menores únicamente. Programa de mejora funcionando.",
-                    change_management_strategy: "Cultura de seguridad establecida. Reconocimiento por mejoras. Preparación para certificaciones.",
-                    training_requirements: "Entrenamiento de auditores internos. Capacitación en mejora continua. Preparación para auditorías externas.",
-                    communication_plan: "Comunicación de resultados de auditorías. Preparación organizacional. Motivación del equipo.",
-                    risks_mitigation: "Riesgo: Hallazgos críticos en auditoría. Mitigación: Auditorías rigurosas previas. Riesgo: Programa no sostenible. Mitigación: Recursos dedicados.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "FASE-04",
-                    phase_name: "Certificación y Sostenibilidad",
-                    phase_description: "Obtención de certificaciones ISO 27001 y validación de compliance GDPR, con establecimiento de programa de sostenibilidad.",
-                    phase_objectives: "• Obtener certificación ISO 27001\n• Validar compliance GDPR\n• Establecer sostenibilidad\n• Planificar auditorías de seguimiento",
-                    start_month: 11,
-                    duration_months: 5,
-                    budget_allocated: "$40,000 USD",
-                    responsible_team: "Dirección Ejecutiva",
-                    key_deliverables: "• Certificación ISO 27001\n• Validación GDPR compliance\n• Programa de sostenibilidad\n• Plan de auditorías de seguimiento\n• Comunicación de logros",
-                    success_criteria: "Certificaciones obtenidas. Compliance validado. Programa sostenible establecido.",
-                    change_management_strategy: "Celebración de logros de seguridad. Comunicación externa de certificaciones. Cultura de seguridad institucionalizada.",
-                    training_requirements: "Capacitación en sostenibilidad. Entrenamiento continuo en seguridad. Desarrollo de capacidades internas.",
-                    communication_plan: "Comunicación masiva de certificaciones. Marketing de seguridad. Eventos de celebración.",
-                    risks_mitigation: "Riesgo: Pérdida de certificaciones. Mitigación: Programa robusto de sostenibilidad. Riesgo: Nuevas amenazas. Mitigación: Monitoreo continuo.",
-                    status: "planning"
-                }
-            ],
-            "digital-transformation": [
-                {
-                    phase_id: "FASE-01",
-                    phase_name: "Estrategia de Transformación Digital",
-                    phase_description: "Definición de la estrategia de transformación digital, assessment tecnológico actual y planificación de la modernización.",
-                    phase_objectives: "• Definir estrategia digital\n• Assessment tecnológico actual\n• Identificar oportunidades de modernización\n• Establecer roadmap tecnológico",
-                    start_month: 1,
-                    duration_months: 4,
-                    budget_allocated: "$60,000 USD",
-                    responsible_team: "Consultores",
-                    key_deliverables: "• Estrategia de transformación digital\n• Assessment tecnológico completo\n• Roadmap de modernización\n• Business case para inversiones\n• Equipo de transformación establecido",
-                    success_criteria: "Estrategia digital clara y aprobada. Roadmap tecnológico definido. Inversiones aprobadas.",
-                    change_management_strategy: "Comunicación de visión digital. Identificación de beneficios de negocio. Preparación cultural para cambio tecnológico.",
-                    training_requirements: "Capacitación en transformación digital. Entrenamiento en nuevas tecnologías. Workshop de mindset digital.",
-                    communication_plan: "Comunicación de estrategia digital. Sessions de visión futura. Comunicación de beneficios esperados.",
-                    risks_mitigation: "Riesgo: Estrategia no alineada con negocio. Mitigación: Involucramiento de stakeholders. Riesgo: Inversiones excesivas. Mitigación: ROI claro.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "FASE-02",
-                    phase_name: "Migración a Cloud y Modernización",
-                    phase_description: "Migración de infraestructura y aplicaciones a la nube, modernización de sistemas legacy y establecimiento de arquitectura cloud-native.",
-                    phase_objectives: "• Migrar infraestructura a cloud\n• Modernizar aplicaciones legacy\n• Establecer arquitectura cloud-native\n• Implementar DevOps en cloud",
-                    start_month: 5,
-                    duration_months: 8,
-                    budget_allocated: "$150,000 USD",
-                    responsible_team: "Equipo de Infraestructura",
-                    key_deliverables: "• Infraestructura migrada a cloud\n• Aplicaciones modernizadas\n• Arquitectura cloud-native\n• Pipelines DevOps en cloud\n• Monitoreo y observabilidad",
-                    success_criteria: "Migración exitosa a cloud. Aplicaciones funcionando en nueva arquitectura. DevOps operativo.",
-                    change_management_strategy: "Migración gradual por fases. Capacitación continua en cloud. Comunicación de beneficios obtenidos.",
-                    training_requirements: "Capacitación intensiva en cloud. Entrenamiento en nuevas herramientas. Certificaciones cloud para equipo técnico.",
-                    communication_plan: "Updates regulares de migración. Comunicación de mejoras en performance. Sharing de lecciones aprendidas.",
-                    risks_mitigation: "Riesgo: Migración fallida. Mitigación: Pilotos y rollback plans. Riesgo: Costos excesivos. Mitigación: Monitoreo de costos.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "FASE-03",
-                    phase_name: "Implementación de AI y Analytics",
-                    phase_description: "Implementación de soluciones de inteligencia artificial y analytics avanzados para optimizar procesos de negocio.",
-                    phase_objectives: "• Implementar soluciones de AI\n• Establecer analytics avanzados\n• Crear dashboards ejecutivos\n• Optimizar procesos con AI",
-                    start_month: 13,
-                    duration_months: 6,
-                    budget_allocated: "$100,000 USD",
-                    responsible_team: "Equipo de Data Science",
-                    key_deliverables: "• Soluciones de AI implementadas\n• Plataforma de analytics funcionando\n• Dashboards ejecutivos operativos\n• Procesos optimizados con AI\n• Modelos de ML en producción",
-                    success_criteria: "AI funcionando en producción. Analytics generando insights. Procesos optimizados mediblemente.",
-                    change_management_strategy: "Demostración de valor de AI. Capacitación en interpretación de analytics. Cultura data-driven.",
-                    training_requirements: "Capacitación en AI y ML. Entrenamiento en analytics. Desarrollo de capacidades de data science.",
-                    communication_plan: "Demos de soluciones de AI. Comunicación de insights de analytics. Casos de éxito de optimización.",
-                    risks_mitigation: "Riesgo: AI no genera valor. Mitigación: POCs previos. Riesgo: Datos de baja calidad. Mitigación: Programa de calidad de datos.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "FASE-04",
-                    phase_name: "Automatización y Optimización",
-                    phase_description: "Automatización de procesos de negocio mediante RPA y optimización continua de la plataforma digital.",
-                    phase_objectives: "• Implementar RPA en procesos clave\n• Optimizar performance de plataforma\n• Establecer monitoreo proactivo\n• Crear centro de excelencia digital",
-                    start_month: 19,
-                    duration_months: 4,
-                    budget_allocated: "$80,000 USD",
-                    responsible_team: "Centro de Excelencia Digital",
-                    key_deliverables: "• Procesos automatizados con RPA\n• Plataforma optimizada\n• Monitoreo proactivo funcionando\n• Centro de excelencia operativo\n• Métricas de transformación digital",
-                    success_criteria: "Automatización funcionando efectivamente. Performance optimizada. Centro de excelencia establecido.",
-                    change_management_strategy: "Comunicación de beneficios de automatización. Reasignación de personal a tareas de mayor valor. Cultura de innovación continua.",
-                    training_requirements: "Capacitación en RPA. Entrenamiento en optimización. Desarrollo de capacidades de innovación.",
-                    communication_plan: "Comunicación de logros de automatización. Métricas de transformación. Eventos de innovación.",
-                    risks_mitigation: "Riesgo: Automatización elimina empleos. Mitigación: Reskilling y upskilling. Riesgo: Dependencia tecnológica. Mitigación: Diversificación de proveedores.",
-                    status: "planning"
-                },
-                {
-                    phase_id: "FASE-05",
-                    phase_name: "Sostenibilidad y Evolución Continua",
-                    phase_description: "Establecimiento de programa de sostenibilidad de la transformación digital y evolución continua hacia nuevas tecnologías.",
-                    phase_objectives: "• Establecer sostenibilidad digital\n• Crear programa de innovación continua\n• Planificar evolución futura\n• Medir ROI de transformación",
-                    start_month: 23,
-                    duration_months: 6,
-                    budget_allocated: "$70,000 USD",
-                    responsible_team: "Dirección de Tecnología",
-                    key_deliverables: "• Programa de sostenibilidad digital\n• Centro de innovación funcionando\n• Roadmap de evolución futura\n• ROI de transformación medido\n• Cultura digital institucionalizada",
-                    success_criteria: "Transformación digital sostenible. Innovación continua activa. ROI positivo demostrado.",
-                    change_management_strategy: "Cultura digital completamente adoptada. Liderazgo en innovación. Comunicación externa de éxitos.",
-                    training_requirements: "Capacitación en sostenibilidad digital. Entrenamiento en innovación continua. Desarrollo de liderazgo digital.",
-                    communication_plan: "Comunicación de logros de transformación. Marketing digital. Eventos de liderazgo en innovación.",
-                    risks_mitigation: "Riesgo: Pérdida de momentum digital. Mitigación: Innovación continua. Riesgo: Obsolescencia tecnológica. Mitigación: Monitoreo de tendencias.",
-                    status: "planning"
-                }
-            ]
-        };
-
-        // Data handler for SDK
         const dataHandler = {
             onDataChanged(data) {
-                roadmapPhases = data.sort((a, b) => {
-                    if (a.start_month !== b.start_month) {
-                        return a.start_month - b.start_month;
-                    }
-                    return a.phase_id.localeCompare(b.phase_id);
-                });
-                renderRoadmap();
-                updateExecutiveSummary();
-                updateKPIDashboard();
+                milestones = data;
+                renderMilestones();
             }
         };
 
-        // Element SDK configuration
-        const elementConfig = {
-            defaultConfig,
-            onConfigChange: async (config) => {
-                document.getElementById('organization-name-display').textContent = config.organization_name || defaultConfig.organization_name;
-                document.getElementById('organization-name-input').value = config.organization_name || defaultConfig.organization_name;
-                document.getElementById('target-maturity-display').textContent = config.target_maturity || defaultConfig.target_maturity;
-                document.getElementById('target-maturity-input').value = config.target_maturity || defaultConfig.target_maturity;
-                document.getElementById('executive-sponsor-display').textContent = config.executive_sponsor || defaultConfig.executive_sponsor;
-                document.getElementById('executive-sponsor-input').value = config.executive_sponsor || defaultConfig.executive_sponsor;
-            },
-            mapToCapabilities: (config) => ({
-                recolorables: [],
-                borderables: [],
-                fontEditable: undefined,
-                fontSizeable: undefined
-            }),
-            mapToEditPanelValues: (config) => new Map([
-                ["organization_name", config.organization_name || defaultConfig.organization_name],
-                ["roadmap_title", config.roadmap_title || defaultConfig.roadmap_title],
-                ["executive_sponsor", config.executive_sponsor || defaultConfig.executive_sponsor],
-                ["target_maturity", config.target_maturity || defaultConfig.target_maturity]
-            ])
-        };
-
-        // Initialize SDKs
-        async function initializeApp() {
-            try {
-                // Set current date
-                document.getElementById('current-date').textContent = new Date().toLocaleDateString();
-                
-                if (window.elementSdk) {
-                    await window.elementSdk.init(elementConfig);
-                }
-                
-                if (window.dataSdk) {
-                    const result = await window.dataSdk.init(dataHandler);
-                    if (!result.isOk) {
-                        console.error("Failed to initialize data SDK");
-                    }
-                }
-                
-                isInitialized = true;
-                setupEventListeners();
-            } catch (error) {
-                console.error("Initialization error:", error);
-                setupEventListeners();
-            }
+        function getStatusClass(status) {
+            const statusMap = {
+                'Pendiente': 'status-pending',
+                'En Progreso': 'status-progress',
+                'Completado': 'status-completed',
+                'Retrasado': 'status-delayed'
+            };
+            return statusMap[status] || 'status-pending';
         }
 
-        // Render roadmap phases
-        function renderRoadmap() {
-            const container = document.getElementById('phases-list');
-            const noMessage = document.getElementById('no-phases-message');
-            const ganttBody = document.getElementById('gantt-body');
-            
-            if (roadmapPhases.length === 0) {
-                container.innerHTML = '';
-                ganttBody.innerHTML = '';
-                noMessage.style.display = 'block';
-                return;
-            }
-            
-            noMessage.style.display = 'none';
-            
-            // Render Gantt Chart
-            renderGanttChart();
-            
-            // Render detailed phase cards
-            container.innerHTML = roadmapPhases.map((phase, index) => `
-                <div class="phase-card ${phase.status} bg-white rounded-lg shadow-sm border border-gray-200 p-8 relative">
-                    <div class="milestone-marker ${phase.status}"></div>
-                    ${index < roadmapPhases.length - 1 ? '<div class="timeline-connector"></div>' : ''}
-                    
-                    <div class="flex justify-between items-start mb-6">
-                        <div class="flex items-center gap-4">
-                            <div class="bg-blue-700 text-white rounded-lg w-16 h-16 flex items-center justify-center font-bold text-lg">
-                                ${phase.phase_id.split('-').pop()}
-                            </div>
-                            <div>
-                                <div class="flex items-center gap-3 mb-2">
-                                    <h3 class="text-2xl font-bold text-gray-800">${phase.phase_id}</h3>
-                                    <span class="status-badge ${phase.status === 'planning' ? 'status-planning' : phase.status === 'in-progress' ? 'status-in-progress' : phase.status === 'completed' ? 'status-completed' : 'status-delayed'}">
-                                        ${phase.status === 'planning' ? 'Planificación' : phase.status === 'in-progress' ? 'En Progreso' : phase.status === 'completed' ? 'Completado' : 'Retrasado'}
-                                    </span>
-                                </div>
-                                <p class="text-xl text-gray-700 font-semibold mb-2">${phase.phase_name}</p>
-                                <div class="flex items-center gap-4 text-sm text-gray-600">
-                                    <span>📅 Mes ${phase.start_month} - ${phase.start_month + phase.duration_months - 1}</span>
-                                    <span>⏱️ ${phase.duration_months} meses</span>
-                                    <span>💰 ${phase.budget_allocated || 'No especificado'}</span>
-                                    <span>👥 ${phase.responsible_team}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flex gap-3">
-                            <button class="update-status text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-md transition-colors" data-phase-id="${phase.__backendId}">
-                                📊
-                            </button>
-                            <button class="edit-phase text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded-md transition-colors" data-phase-id="${phase.__backendId}">
-                                ✏️
-                            </button>
-                            <button class="delete-phase text-gray-600 hover:text-gray-800 hover:bg-gray-50 p-2 rounded-md transition-colors" data-phase-id="${phase.__backendId}">
-                                🗑️
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- Progress Bar -->
-                    <div class="mb-6">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm font-medium text-gray-700">Progreso de la Fase</span>
-                            <span class="text-sm font-bold text-gray-800">${phase.completion_percentage || 0}%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${phase.completion_percentage || 0}%"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        <!-- Left Column -->
-                        <div class="space-y-6">
-                            <div class="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                                <h4 class="font-semibold text-blue-800 mb-3 flex items-center gap-2">
-                                    <span class="w-5 h-5 bg-blue-600 text-white rounded flex items-center justify-center text-xs">📋</span>
-                                    Descripción y Objetivos
-                                </h4>
-                                <p class="text-blue-700 text-sm mb-3">${phase.phase_description}</p>
-                                <div class="bg-white rounded p-3 border border-blue-200">
-                                    <strong class="text-blue-800 text-xs">OBJETIVOS:</strong>
-                                    <div class="text-blue-700 text-sm mt-1 whitespace-pre-line">${phase.phase_objectives}</div>
-                                </div>
-                            </div>
-                            
-                            <div class="bg-green-50 rounded-lg p-4 border border-green-200">
-                                <h4 class="font-semibold text-green-800 mb-3 flex items-center gap-2">
-                                    <span class="w-5 h-5 bg-green-600 text-white rounded flex items-center justify-center text-xs">🎯</span>
-                                    Entregables y Criterios de Éxito
-                                </h4>
-                                <div class="space-y-3">
-                                    <div class="bg-white rounded p-3 border border-green-200">
-                                        <strong class="text-green-800 text-xs">ENTREGABLES CLAVE:</strong>
-                                        <div class="text-green-700 text-sm mt-1 whitespace-pre-line">${phase.key_deliverables}</div>
-                                    </div>
-                                    <div class="bg-white rounded p-3 border border-green-200">
-                                        <strong class="text-green-800 text-xs">CRITERIOS DE ÉXITO:</strong>
-                                        <div class="text-green-700 text-sm mt-1">${phase.success_criteria}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Right Column -->
-                        <div class="space-y-6">
-                            <div class="change-management rounded-lg p-4 border border-green-200">
-                                <h4 class="font-semibold text-green-800 mb-3 flex items-center gap-2">
-                                    <span class="w-5 h-5 bg-green-600 text-white rounded flex items-center justify-center text-xs">🔄</span>
-                                    Gestión del Cambio Organizacional
-                                </h4>
-                                <div class="space-y-3 text-sm">
-                                    <div class="bg-white rounded p-3 border border-green-200">
-                                        <strong class="text-green-800 text-xs">ESTRATEGIA DE CAMBIO:</strong>
-                                        <div class="text-green-700 mt-1">${phase.change_management_strategy}</div>
-                                    </div>
-                                    <div class="bg-white rounded p-3 border border-green-200">
-                                        <strong class="text-green-800 text-xs">CAPACITACIÓN:</strong>
-                                        <div class="text-green-700 mt-1">${phase.training_requirements}</div>
-                                    </div>
-                                    <div class="bg-white rounded p-3 border border-green-200">
-                                        <strong class="text-green-800 text-xs">COMUNICACIÓN:</strong>
-                                        <div class="text-green-700 mt-1">${phase.communication_plan}</div>
-                                    </div>
-                                    ${phase.risks_mitigation ? `
-                                    <div class="bg-white rounded p-3 border border-green-200">
-                                        <strong class="text-green-800 text-xs">RIESGOS Y MITIGACIÓN:</strong>
-                                        <div class="text-green-700 mt-1">${phase.risks_mitigation}</div>
-                                    </div>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    ${phase.lessons_learned ? `
-                        <div class="mt-6 bg-purple-50 rounded-lg p-4 border border-purple-200">
-                            <h4 class="font-semibold text-purple-800 mb-2 flex items-center gap-2">
-                                <span class="w-5 h-5 bg-purple-600 text-white rounded flex items-center justify-center text-xs">💡</span>
-                                Lecciones Aprendidas
-                            </h4>
-                            <p class="text-purple-700 text-sm">${phase.lessons_learned}</p>
-                        </div>
-                    ` : ''}
-                </div>
-            `).join('');
-            
-            // Add event listeners
-            container.querySelectorAll('.update-status').forEach(button => {
-                button.addEventListener('click', handleUpdateStatus);
-            });
-            
-            container.querySelectorAll('.edit-phase').forEach(button => {
-                button.addEventListener('click', handleEditPhase);
-            });
-            
-            container.querySelectorAll('.delete-phase').forEach(button => {
-                button.addEventListener('click', handleDeletePhase);
-            });
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
         }
 
-        // Render Gantt Chart
-        function renderGanttChart() {
-            const ganttBody = document.getElementById('gantt-body');
-            const maxMonth = Math.max(...roadmapPhases.map(p => p.start_month + p.duration_months - 1), 24);
+        function renderMilestones() {
+            const container = document.getElementById('milestones-container');
             
-            ganttBody.innerHTML = roadmapPhases.map(phase => {
-                const startPosition = ((phase.start_month - 1) / 24) * 100;
-                const width = (phase.duration_months / 24) * 100;
-                const statusColor = phase.status === 'completed' ? '#10b981' : 
-                                  phase.status === 'in-progress' ? '#f59e0b' : 
-                                  phase.status === 'delayed' ? '#ef4444' : '#3b82f6';
-                
-                return `
-                    <div class="gantt-row">
-                        <div class="gantt-phase-name">${phase.phase_name}</div>
-                        <div class="gantt-timeline">
-                            <div class="gantt-bar" style="left: ${startPosition}%; width: ${width}%; background-color: ${statusColor};">
-                                ${phase.phase_id}
-                            </div>
-                        </div>
+            if (milestones.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 text-gray-400">
+                        <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                        <p class="text-lg">No hay hitos agregados aún</p>
+                        <p class="text-sm mt-2">Comienza agregando el primer hito del proyecto</p>
                     </div>
                 `;
-            }).join('');
-        }
-
-        // Update Executive Summary
-        function updateExecutiveSummary() {
-            const totalPhases = roadmapPhases.length;
-            const completedPhases = roadmapPhases.filter(p => p.status === 'completed').length;
-            const totalDuration = Math.max(...roadmapPhases.map(p => p.start_month + p.duration_months - 1), 0);
-            const overallProgress = totalPhases > 0 ? Math.round((completedPhases / totalPhases) * 100) : 0;
-            
-            document.getElementById('total-phases').textContent = totalPhases;
-            document.getElementById('completed-phases').textContent = completedPhases;
-            document.getElementById('total-duration').textContent = totalDuration;
-            document.getElementById('overall-progress').textContent = `${overallProgress}%`;
-            document.getElementById('overall-progress-bar').style.width = `${overallProgress}%`;
-            
-            const statusText = overallProgress === 0 ? 'En Planificación' :
-                             overallProgress < 25 ? 'Iniciando' :
-                             overallProgress < 50 ? 'En Desarrollo' :
-                             overallProgress < 75 ? 'Avanzando' :
-                             overallProgress < 100 ? 'Finalizando' : 'Completado';
-            
-            document.getElementById('project-status').textContent = statusText;
-        }
-
-        // Update KPI Dashboard
-        function updateKPIDashboard() {
-            const totalPhases = roadmapPhases.length;
-            const completedPhases = roadmapPhases.filter(p => p.status === 'completed').length;
-            const overallProgress = totalPhases > 0 ? Math.round((completedPhases / totalPhases) * 100) : 0;
-            
-            // Calculate budget
-            const totalBudget = roadmapPhases.reduce((sum, phase) => {
-                const budget = parseFloat(phase.budget_allocated?.replace(/[^0-9.]/g, '') || 0);
-                return sum + budget;
-            }, 0);
-            
-            const executedBudget = roadmapPhases
-                .filter(p => p.status === 'completed')
-                .reduce((sum, phase) => {
-                    const budget = parseFloat(phase.budget_allocated?.replace(/[^0-9.]/g, '') || 0);
-                    return sum + budget;
-                }, 0);
-            
-            const budgetPercentage = totalBudget > 0 ? Math.round((executedBudget / totalBudget) * 100) : 0;
-            
-            // Calculate time
-            const maxMonth = Math.max(...roadmapPhases.map(p => p.start_month + p.duration_months - 1), 0);
-            const currentMonth = Math.max(...roadmapPhases.filter(p => p.status === 'completed').map(p => p.start_month + p.duration_months - 1), 0);
-            
-            // Update KPI elements
-            document.getElementById('kpi-progress').textContent = `${overallProgress}%`;
-            document.getElementById('kpi-progress-bar').style.width = `${overallProgress}%`;
-            document.getElementById('kpi-budget').textContent = `$${executedBudget.toLocaleString()}`;
-            document.getElementById('kpi-budget-percentage').textContent = `${budgetPercentage}% del total`;
-            document.getElementById('kpi-time').textContent = currentMonth;
-            document.getElementById('kpi-milestones').textContent = completedPhases;
-            document.getElementById('kpi-milestones-total').textContent = `de ${totalPhases} totales`;
-        }
-
-        // Handle template button clicks
-        function handleTemplateClick(event) {
-            const templateType = event.currentTarget.dataset.template;
-            const templatePhases = templates[templateType];
-            
-            if (templatePhases) {
-                // Load all phases from template
-                templatePhases.forEach((template, index) => {
-                    setTimeout(() => {
-                        loadPhaseTemplate(template);
-                    }, index * 100); // Small delay between phases
-                });
-                
-                showToast(`Plantilla "${templateType}" cargada con ${templatePhases.length} fases`, "success");
-                
-                // Scroll to form
-                document.getElementById('phase-form').scrollIntoView({ behavior: 'smooth' });
-            }
-        }
-
-        // Load phase template
-        async function loadPhaseTemplate(template) {
-            if (roadmapPhases.length >= 999) {
-                showToast("Límite máximo de 999 fases alcanzado", "error");
                 return;
             }
-            
-            const phaseData = {
-                roadmap_id: "ROADMAP-001",
-                roadmap_title: window.elementSdk?.config?.roadmap_title || defaultConfig.roadmap_title,
-                organization: window.elementSdk?.config?.organization_name || defaultConfig.organization_name,
-                target_maturity: window.elementSdk?.config?.target_maturity || defaultConfig.target_maturity,
-                executive_sponsor: window.elementSdk?.config?.executive_sponsor || defaultConfig.executive_sponsor,
-                ...template,
-                completion_percentage: 0,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-                roadmap_type: "strategic"
-            };
-            
-            if (window.dataSdk) {
-                const result = await window.dataSdk.create(phaseData);
-                if (!result.isOk) {
-                    showToast("Error al crear la fase", "error");
-                }
-            } else {
-                roadmapPhases.push({ ...phaseData, __backendId: phaseData.phase_id });
-                renderRoadmap();
-                updateExecutiveSummary();
-                updateKPIDashboard();
-            }
-        }
 
-        // Handle form submission
-        async function handleFormSubmit(event) {
-            event.preventDefault();
-            
-            if (roadmapPhases.length >= 999) {
-                showToast("Límite máximo de 999 fases alcanzado", "error");
-                return;
-            }
-            
-            const phaseData = {
-                roadmap_id: "ROADMAP-001",
-                roadmap_title: window.elementSdk?.config?.roadmap_title || defaultConfig.roadmap_title,
-                organization: window.elementSdk?.config?.organization_name || defaultConfig.organization_name,
-                target_maturity: window.elementSdk?.config?.target_maturity || defaultConfig.target_maturity,
-                executive_sponsor: window.elementSdk?.config?.executive_sponsor || defaultConfig.executive_sponsor,
-                phase_id: document.getElementById('phase-id').value,
-                phase_name: document.getElementById('phase-name').value,
-                phase_description: document.getElementById('phase-description').value,
-                phase_objectives: document.getElementById('phase-objectives').value,
-                start_month: parseInt(document.getElementById('start-month').value),
-                duration_months: parseInt(document.getElementById('duration-months').value),
-                budget_allocated: document.getElementById('budget-allocated').value,
-                responsible_team: document.getElementById('responsible-team').value,
-                key_deliverables: document.getElementById('key-deliverables').value,
-                success_criteria: document.getElementById('success-criteria').value,
-                change_management_strategy: document.getElementById('change-management-strategy').value,
-                training_requirements: document.getElementById('training-requirements').value,
-                communication_plan: document.getElementById('communication-plan').value,
-                risks_mitigation: document.getElementById('risks-mitigation').value,
-                status: 'planning',
-                completion_percentage: 0,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-                roadmap_type: "strategic"
-            };
-            
-            const createButton = document.getElementById('create-phase-btn');
-            const loading = document.getElementById('create-loading');
-            
-            createButton.disabled = true;
-            loading.classList.remove('hidden');
-            
-            if (window.dataSdk) {
-                const result = await window.dataSdk.create(phaseData);
-                
-                if (result.isOk) {
-                    event.target.reset();
-                    showToast("Fase del roadmap creada exitosamente", "success");
-                } else {
-                    showToast("Error al crear la fase", "error");
-                }
-            } else {
-                roadmapPhases.push({ ...phaseData, __backendId: phaseData.phase_id });
-                renderRoadmap();
-                updateExecutiveSummary();
-                updateKPIDashboard();
-                event.target.reset();
-                showToast("Fase del roadmap creada exitosamente", "success");
-            }
-            
-            createButton.disabled = false;
-            loading.classList.add('hidden');
-        }
+            const sortedMilestones = [...milestones].sort((a, b) => 
+                new Date(a.start_date) - new Date(b.start_date)
+            );
 
-        // Handle update status
-        function handleUpdateStatus(event) {
-            const phaseId = event.target.dataset.phaseId;
-            const phase = roadmapPhases.find(p => p.__backendId === phaseId);
-            
-            if (phase) {
-                showStatusUpdateModal(phase);
-            }
-        }
-
-        // Show status update modal
-        function showStatusUpdateModal(phase) {
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4';
-            modal.innerHTML = `
-                <div class="bg-white rounded-lg p-8 max-w-md w-full">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Actualizar Estado: ${phase.phase_name}</h3>
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Estado de la Fase</label>
-                            <select id="phase-status" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none">
-                                <option value="planning" ${phase.status === 'planning' ? 'selected' : ''}>Planificación</option>
-                                <option value="in-progress" ${phase.status === 'in-progress' ? 'selected' : ''}>En Progreso</option>
-                                <option value="completed" ${phase.status === 'completed' ? 'selected' : ''}>Completado</option>
-                                <option value="delayed" ${phase.status === 'delayed' ? 'selected' : ''}>Retrasado</option>
-                            </select>
+            container.innerHTML = sortedMilestones.map(milestone => `
+                <div class="flex items-start space-x-4 relative pl-12">
+                    <div class="absolute left-3 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center z-10 shadow-lg">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                    </div>
+                    <div class="flex-1 bg-white border border-gray-200 rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow duration-200">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold text-gray-800">${milestone.milestone_name}</h3>
+                                <p class="text-sm text-gray-600 mt-1">
+                                    <span class="font-medium">Responsable:</span> ${milestone.responsible}
+                                </p>
+                            </div>
+                            <span class="status-badge ${getStatusClass(milestone.status)}">${milestone.status}</span>
                         </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Porcentaje de Completitud</label>
-                            <input type="range" id="completion-percentage" min="0" max="100" value="${phase.completion_percentage || 0}" class="w-full">
-                            <div class="text-center text-sm text-gray-600 mt-1">
-                                <span id="percentage-display">${phase.completion_percentage || 0}%</span>
+                        <div class="grid grid-cols-2 gap-3 text-sm mb-3">
+                            <div class="flex items-center text-gray-600">
+                                <svg class="w-4 h-4 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span><strong>Inicio:</strong> ${formatDate(milestone.start_date)}</span>
+                            </div>
+                            <div class="flex items-center text-gray-600">
+                                <svg class="w-4 h-4 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span><strong>Fin:</strong> ${formatDate(milestone.end_date)}</span>
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Lecciones Aprendidas</label>
-                            <textarea id="lessons-learned" rows="3" class="formal-input w-full px-4 py-3 rounded-md focus:outline-none" placeholder="Documentar lecciones aprendidas...">${phase.lessons_learned || ''}</textarea>
+                        <div class="bg-gray-50 rounded p-3 mb-3">
+                            <p class="text-sm text-gray-700">
+                                <span class="font-semibold text-gray-800">Entregables:</span> ${milestone.deliverables}
+                            </p>
+                        </div>
+                        <div class="flex justify-end no-print">
+                            <button onclick="deleteMilestone('${milestone.__backendId}')" class="text-red-600 hover:text-red-800 text-sm font-medium flex items-center space-x-1 transition-colors duration-200">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                </svg>
+                                <span>Eliminar</span>
+                            </button>
                         </div>
                     </div>
-                    <div class="flex justify-end gap-4 mt-6">
-                        <button id="cancel-update" class="executive-button bg-gray-600 hover:bg-gray-700 text-white px-6 py-3 rounded-md">
-                            Cancelar
-                        </button>
-                        <button id="save-update" class="executive-button bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-md" data-phase-id="${phase.__backendId}">
-                            Guardar Cambios
-                        </button>
-                    </div>
                 </div>
-            `;
-            
-            document.body.appendChild(modal);
-            
-            // Update percentage display
-            const slider = modal.querySelector('#completion-percentage');
-            const display = modal.querySelector('#percentage-display');
-            slider.addEventListener('input', () => {
-                display.textContent = `${slider.value}%`;
-            });
-            
-            // Event listeners
-            modal.querySelector('#cancel-update').addEventListener('click', () => {
-                document.body.removeChild(modal);
-            });
-            
-            modal.querySelector('#save-update').addEventListener('click', async () => {
-                const updatedPhase = {
-                    ...phase,
-                    status: modal.querySelector('#phase-status').value,
-                    completion_percentage: parseInt(modal.querySelector('#completion-percentage').value),
-                    lessons_learned: modal.querySelector('#lessons-learned').value,
-                    updated_at: new Date().toISOString()
-                };
-                
-                if (window.dataSdk) {
-                    const result = await window.dataSdk.update(updatedPhase);
-                    if (result.isOk) {
-                        showToast("Estado actualizado exitosamente", "success");
-                    } else {
-                        showToast("Error al actualizar el estado", "error");
-                    }
-                } else {
-                    const index = roadmapPhases.findIndex(p => p.__backendId === phase.__backendId);
-                    if (index !== -1) {
-                        roadmapPhases[index] = updatedPhase;
-                        renderRoadmap();
-                        updateExecutiveSummary();
-                        updateKPIDashboard();
-                    }
-                    showToast("Estado actualizado exitosamente", "success");
-                }
-                
-                document.body.removeChild(modal);
-            });
+            `).join('');
         }
 
-        // Handle edit phase
-        function handleEditPhase(event) {
-            const phaseId = event.target.dataset.phaseId;
-            const phase = roadmapPhases.find(p => p.__backendId === phaseId);
+        async function deleteMilestone(backendId) {
+            const milestone = milestones.find(m => m.__backendId === backendId);
+            if (!milestone) return;
+
+            const deleteBtn = event.target.closest('button');
+            deleteBtn.disabled = true;
+            deleteBtn.innerHTML = '<span class="text-sm">Eliminando...</span>';
+
+            const result = await window.dataSdk.delete(milestone);
             
-            if (phase) {
-                // Fill form with phase data
-                document.getElementById('phase-id').value = phase.phase_id;
-                document.getElementById('phase-name').value = phase.phase_name;
-                document.getElementById('phase-description').value = phase.phase_description;
-                document.getElementById('phase-objectives').value = phase.phase_objectives;
-                document.getElementById('start-month').value = phase.start_month;
-                document.getElementById('duration-months').value = phase.duration_months;
-                document.getElementById('budget-allocated').value = phase.budget_allocated || '';
-                document.getElementById('responsible-team').value = phase.responsible_team;
-                document.getElementById('key-deliverables').value = phase.key_deliverables;
-                document.getElementById('success-criteria').value = phase.success_criteria;
-                document.getElementById('change-management-strategy').value = phase.change_management_strategy;
-                document.getElementById('training-requirements').value = phase.training_requirements;
-                document.getElementById('communication-plan').value = phase.communication_plan;
-                document.getElementById('risks-mitigation').value = phase.risks_mitigation || '';
-                
-                document.getElementById('phase-form').scrollIntoView({ behavior: 'smooth' });
-                showToast("Fase cargada para edición", "info");
+            if (!result.isOk) {
+                deleteBtn.disabled = false;
+                deleteBtn.innerHTML = `
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                    <span>Eliminar</span>
+                `;
             }
         }
 
-        // Handle delete phase
-        async function handleDeletePhase(event) {
-            const phaseId = event.target.dataset.phaseId;
-            const phase = roadmapPhases.find(p => p.__backendId === phaseId);
+        function generatePDF() {
+            const exportBtn = document.getElementById('export-btn');
+            exportBtn.disabled = true;
+            exportBtn.innerHTML = '<span>Generando PDF...</span>';
+
+            // Crear ventana nueva con el contenido para PDF
+            const printWindow = window.open('', '_blank');
+            const printContent = document.documentElement.outerHTML;
             
-            if (phase && window.dataSdk) {
-                const button = event.target;
-                const originalText = button.innerHTML;
-                button.innerHTML = '❌';
-                button.style.backgroundColor = '#fee2e2';
-                
-                const confirmDelete = () => {
-                    button.innerHTML = '⏳';
-                    window.dataSdk.delete(phase).then(result => {
-                        if (!result.isOk) {
-                            showToast("Error al eliminar la fase", "error");
-                            button.innerHTML = originalText;
-                            button.style.backgroundColor = '';
-                        }
-                    });
-                };
-                
-                const cancelDelete = () => {
-                    button.innerHTML = originalText;
-                    button.style.backgroundColor = '';
-                };
-                
-                const timeoutId = setTimeout(confirmDelete, 2000);
-                
-                const clickHandler = (e) => {
-                    if (!button.contains(e.target)) {
-                        clearTimeout(timeoutId);
-                        cancelDelete();
-                        document.removeEventListener('click', clickHandler);
-                    }
-                };
-                
-                document.addEventListener('click', clickHandler);
-                
-                button.onclick = (e) => {
-                    e.stopPropagation();
-                    clearTimeout(timeoutId);
-                    confirmDelete();
-                    document.removeEventListener('click', clickHandler);
-                };
-            }
-        }
-
-        // Export functions
-        function exportExecutiveSummary() {
-            const summary = generateExecutiveSummary();
-            downloadText(summary, 'resumen-ejecutivo-roadmap.txt');
-        }
-
-        function exportDetailedRoadmap() {
-            const roadmap = generateDetailedRoadmap();
-            downloadText(roadmap, 'roadmap-detallado-sqa.txt');
-        }
-
-        function exportChangeManagement() {
-            const changeManagement = generateChangeManagementPlan();
-            downloadText(changeManagement, 'plan-gestion-cambio.txt');
-        }
-
-        function generateExecutiveSummary() {
-            const config = window.elementSdk?.config || defaultConfig;
-            const currentDate = new Date().toLocaleDateString();
-            const totalPhases = roadmapPhases.length;
-            const completedPhases = roadmapPhases.filter(p => p.status === 'completed').length;
-            const overallProgress = totalPhases > 0 ? Math.round((completedPhases / totalPhases) * 100) : 0;
+            printWindow.document.write(printContent);
+            printWindow.document.close();
             
-            const totalBudget = roadmapPhases.reduce((sum, phase) => {
-                const budget = parseFloat(phase.budget_allocated?.replace(/[^0-9.]/g, '') || 0);
-                return sum + budget;
-            }, 0);
+            // Configurar la ventana para impresión
+            printWindow.onload = function() {
+                printWindow.focus();
+                setTimeout(() => {
+                    printWindow.print();
+                    printWindow.close();
+                }, 500);
+            };
+
+            setTimeout(() => {
+                exportBtn.disabled = false;
+                exportBtn.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                    </svg>
+                    <span>Generar PDF</span>
+                `;
+            }, 1000);
+        }
+
+        function showPreview() {
+            const previewWindow = window.open('', '_blank', 'width=800,height=600');
+            const previewContent = document.documentElement.outerHTML;
             
-            const maxMonth = Math.max(...roadmapPhases.map(p => p.start_month + p.duration_months - 1), 0);
+            previewWindow.document.write(previewContent);
+            previewWindow.document.close();
             
-            return `
-RESUMEN EJECUTIVO - PLAN DE IMPLEMENTACIÓN SQA
-==============================================
-
-INFORMACIÓN ESTRATÉGICA:
-Organización: ${config.organization_name || defaultConfig.organization_name}
-Objetivo de Madurez: ${config.target_maturity || defaultConfig.target_maturity}
-Sponsor Ejecutivo: ${config.executive_sponsor || defaultConfig.executive_sponsor}
-Fecha de Reporte: ${currentDate}
-
-🎯 VISIÓN ESTRATÉGICA:
-${config.roadmap_title || defaultConfig.roadmap_title}
-
-Transformar la organización hacia un nivel superior de madurez en procesos de software,
-estableciendo capacidades organizacionales que generen valor sostenible y ventaja competitiva.
-
-📊 MÉTRICAS EJECUTIVAS CLAVE:
-===============================
-• Progreso General: ${overallProgress}% completado
-• Fases Totales: ${totalPhases} fases estratégicas
-• Fases Completadas: ${completedPhases} de ${totalPhases}
-• Duración Total: ${maxMonth} meses
-• Inversión Total: $${totalBudget.toLocaleString()} USD
-• ROI Esperado: Mejora del 25-40% en productividad y calidad
-
-📈 ESTADO ACTUAL DEL PROYECTO:
-=============================
-${overallProgress === 0 ? `
-🚀 FASE DE PLANIFICACIÓN:
-El proyecto se encuentra en fase de planificación estratégica. Se han definido
-las fases de implementación y se está preparando el lanzamiento oficial.
-
-PRÓXIMOS PASOS CRÍTICOS:
-• Aprobación final del presupuesto
-• Asignación de recursos dedicados
-• Comunicación organizacional del inicio
-• Establecimiento del equipo de transformación
-` : overallProgress < 50 ? `
-⚡ FASE DE IMPLEMENTACIÓN TEMPRANA:
-El proyecto ha iniciado y se encuentra en las fases iniciales de implementación.
-Se están estableciendo las bases para la transformación organizacional.
-
-LOGROS ALCANZADOS:
-• Fases completadas: ${completedPhases}
-• Momentum organizacional establecido
-• Primeros resultados visibles
-• Equipo de transformación funcionando
-
-FOCOS DE ATENCIÓN:
-• Mantener el compromiso organizacional
-• Asegurar la adopción de nuevos procesos
-• Gestionar la resistencia al cambio
-• Monitorear métricas de progreso
-` : overallProgress < 100 ? `
-🏃 FASE DE IMPLEMENTACIÓN AVANZADA:
-El proyecto muestra progreso sólido y se encuentra en fases avanzadas de
-implementación. La organización está adoptando los nuevos procesos.
-
-LOGROS SIGNIFICATIVOS:
-• Más del 50% del roadmap completado
-• Procesos funcionando en producción
-• Beneficios tangibles medibles
-• Cultura de calidad en desarrollo
-
-PREPARACIÓN PARA FINALIZACIÓN:
-• Institucionalización de procesos
-• Preparación para evaluaciones externas
-• Sostenibilidad a largo plazo
-• Planificación de evolución futura
-` : `
-🏆 PROYECTO COMPLETADO:
-El roadmap de implementación ha sido completado exitosamente. La organización
-ha alcanzado el nivel de madurez objetivo y está preparada para el futuro.
-
-LOGROS ORGANIZACIONALES:
-• Transformación completa alcanzada
-• Procesos institucionalizados
-• Cultura de excelencia establecida
-• Preparación para certificaciones
-
-BENEFICIOS REALIZADOS:
-• Mejora en calidad de productos
-• Incremento en productividad
-• Reducción de riesgos
-• Ventaja competitiva sostenible
-`}
-
-💰 ANÁLISIS FINANCIERO:
-======================
-Inversión Total Aprobada: $${totalBudget.toLocaleString()} USD
-Inversión Ejecutada: $${roadmapPhases.filter(p => p.status === 'completed').reduce((sum, phase) => {
-    const budget = parseFloat(phase.budget_allocated?.replace(/[^0-9.]/g, '') || 0);
-    return sum + budget;
-}, 0).toLocaleString()} USD
-
-DISTRIBUCIÓN DE INVERSIÓN POR ÁREA:
-${Object.entries(roadmapPhases.reduce((acc, phase) => {
-    const team = phase.responsible_team;
-    const budget = parseFloat(phase.budget_allocated?.replace(/[^0-9.]/g, '') || 0);
-    acc[team] = (acc[team] || 0) + budget;
-    return acc;
-}, {})).map(([team, budget]) => `• ${team}: $${budget.toLocaleString()} USD`).join('\n')}
-
-ROI PROYECTADO:
-• Reducción de costos operativos: 15-25%
-• Mejora en tiempo de entrega: 20-35%
-• Reducción de defectos: 30-50%
-• Incremento en satisfacción del cliente: 25-40%
-
-⚠️ RIESGOS EJECUTIVOS Y MITIGACIÓN:
-==================================
-${roadmapPhases.length > 0 ? `
-RIESGOS IDENTIFICADOS:
-${roadmapPhases.map(phase => phase.risks_mitigation).filter(risk => risk).slice(0, 3).map(risk => `• ${risk.split('.')[0]}`).join('\n')}
-
-ESTRATEGIAS DE MITIGACIÓN:
-• Comunicación continua con stakeholders
-• Monitoreo proactivo de métricas
-• Ajustes ágiles del plan según feedback
-• Gestión activa del cambio organizacional
-` : `
-• Resistencia organizacional al cambio
-• Falta de recursos dedicados
-• Pérdida de momentum ejecutivo
-• Competencia por prioridades organizacionales
-
-MITIGACIÓN RECOMENDADA:
-• Liderazgo visible de la alta dirección
-• Comunicación clara de beneficios
-• Asignación de recursos protegidos
-• Celebración de logros tempranos
-`}
-
-🎯 RECOMENDACIONES EJECUTIVAS:
-=============================
-${overallProgress < 25 ? `
-PRIORIDADES INMEDIATAS:
-1. Asegurar compromiso total de la alta dirección
-2. Comunicar la visión y beneficios a toda la organización
-3. Establecer el equipo de transformación con recursos dedicados
-4. Iniciar las primeras fases con equipos piloto
-5. Establecer métricas de seguimiento y comunicación regular
-
-DECISIONES REQUERIDAS:
-• Aprobación final del presupuesto completo
-• Asignación de personal dedicado al proyecto
-• Definición de incentivos para adopción temprana
-• Establecimiento de comité de seguimiento ejecutivo
-` : overallProgress < 75 ? `
-FOCOS DE CONTINUIDAD:
-1. Mantener el momentum y comunicación activa
-2. Asegurar la adopción efectiva de nuevos procesos
-3. Monitorear métricas de beneficios realizados
-4. Preparar para las fases finales de institucionalización
-5. Planificar la sostenibilidad a largo plazo
-
-DECISIONES REQUERIDAS:
-• Evaluación de resultados intermedios
-• Ajustes al plan basados en lecciones aprendidas
-• Preparación para evaluaciones externas
-• Planificación de comunicación de éxitos
-` : `
-CONSOLIDACIÓN Y FUTURO:
-1. Institucionalizar completamente los procesos implementados
-2. Establecer programa de mejora continua
-3. Comunicar éxitos organizacionales interna y externamente
-4. Planificar evolución hacia niveles superiores de madurez
-5. Establecer la organización como referente en la industria
-
-DECISIONES ESTRATÉGICAS:
-• Comunicación externa de logros y certificaciones
-• Planificación de roadmap hacia niveles superiores
-• Establecimiento de centro de excelencia interno
-• Estrategia de liderazgo en la industria
-`}
-
-================================================================================
-CONCLUSIÓN EJECUTIVA
-================================================================================
-
-${overallProgress < 50 ? `
-El Plan de Implementación SQA representa una inversión estratégica crítica para
-el futuro de la organización. Los beneficios proyectados justifican ampliamente
-la inversión, y el enfoque estructurado minimiza los riesgos de implementación.
-
-LLAMADA A LA ACCIÓN:
-La dirección ejecutiva debe mantener el compromiso y liderazgo visible para
-asegurar el éxito de esta transformación organizacional.
-` : `
-La implementación del Plan SQA está generando los beneficios esperados y
-posicionando a la organización como líder en madurez de procesos. La inversión
-está demostrando su valor y creando ventajas competitivas sostenibles.
-
-RECONOCIMIENTO:
-El liderazgo ejecutivo y el compromiso organizacional han sido factores clave
-en el éxito de esta transformación.
-`}
-
-Preparado para: ${config.executive_sponsor || defaultConfig.executive_sponsor}
-Fecha: ${currentDate}
-Próxima revisión: ${new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString()}
-            `.trim();
+            previewWindow.onload = function() {
+                // Ocultar elementos no-print en la vista previa
+                const noPrintElements = previewWindow.document.querySelectorAll('.no-print');
+                noPrintElements.forEach(el => el.style.display = 'none');
+                
+                // Ajustar estilos para vista previa
+                previewWindow.document.body.style.background = 'white';
+                previewWindow.document.title = 'Vista Previa - Roadmap del Proyecto';
+            };
         }
 
-        function generateDetailedRoadmap() {
-            const config = window.elementSdk?.config || defaultConfig;
-            const currentDate = new Date().toLocaleDateString();
-            
-            return `
-ROADMAP DETALLADO DE IMPLEMENTACIÓN SQA
-=======================================
+        document.getElementById('export-btn').addEventListener('click', generatePDF);
+        document.getElementById('preview-btn').addEventListener('click', showPreview);
 
-INFORMACIÓN DEL PROYECTO:
-Organización: ${config.organization_name || defaultConfig.organization_name}
-Título del Roadmap: ${config.roadmap_title || defaultConfig.roadmap_title}
-Objetivo de Madurez: ${config.target_maturity || defaultConfig.target_maturity}
-Sponsor Ejecutivo: ${config.executive_sponsor || defaultConfig.executive_sponsor}
-Fecha de Generación: ${currentDate}
+        document.getElementById('milestone-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
 
-🗺️ CRONOGRAMA ESTRATÉGICO DE ALTO NIVEL
-Este es el mapa que guía a la dirección ejecutiva hacia el éxito auditable.
-Cada fase está diseñada para construir capacidades organizacionales sostenibles.
-
-${roadmapPhases.length > 0 ? roadmapPhases.map((phase, index) => `
-================================================================================
-FASE ${index + 1}: ${phase.phase_id} - ${phase.phase_name}
-================================================================================
-
-📅 CRONOGRAMA:
-• Inicio: Mes ${phase.start_month}
-• Duración: ${phase.duration_months} meses
-• Finalización: Mes ${phase.start_month + phase.duration_months - 1}
-• Estado Actual: ${phase.status === 'planning' ? 'PLANIFICACIÓN' : 
-                  phase.status === 'in-progress' ? 'EN PROGRESO' : 
-                  phase.status === 'completed' ? 'COMPLETADO' : 'RETRASADO'}
-• Progreso: ${phase.completion_percentage || 0}%
-
-💰 RECURSOS:
-• Presupuesto Asignado: ${phase.budget_allocated || 'No especificado'}
-• Equipo Responsable: ${phase.responsible_team}
-
-📋 DESCRIPCIÓN Y ALCANCE:
-${phase.phase_description}
-
-🎯 OBJETIVOS ESPECÍFICOS:
-${phase.phase_objectives}
-
-📦 ENTREGABLES CLAVE:
-${phase.key_deliverables}
-
-✅ CRITERIOS DE ÉXITO:
-${phase.success_criteria}
-
-🔄 GESTIÓN DEL CAMBIO ORGANIZACIONAL:
-────────────────────────────────────────
-ESTRATEGIA DE CAMBIO:
-${phase.change_management_strategy}
-
-PLAN DE CAPACITACIÓN:
-${phase.training_requirements}
-
-PLAN DE COMUNICACIÓN:
-${phase.communication_plan}
-
-${phase.risks_mitigation ? `
-⚠️ GESTIÓN DE RIESGOS:
-${phase.risks_mitigation}
-` : ''}
-
-${phase.lessons_learned ? `
-💡 LECCIONES APRENDIDAS:
-${phase.lessons_learned}
-` : ''}
-
-HITOS CLAVE DE LA FASE:
-• Inicio oficial de la fase
-• Punto medio de revisión
-• Entrega de resultados principales
-• Cierre y transición a siguiente fase
-
-`).join('') : `
-🚀 ROADMAP EN CONSTRUCCIÓN:
-El roadmap detallado se está desarrollando. Use las plantillas estratégicas
-para generar un plan completo de implementación.
-
-PLANTILLAS DISPONIBLES:
-• CMMI Level 2: Procesos Gestionados (4 fases, 12-18 meses)
-• CMMI Level 3: Procesos Definidos (5 fases, 18-24 meses)
-• ISO 9001:2015: Sistema de Gestión de Calidad (4 fases, 8-12 meses)
-• Transformación Ágil: Adopción de Metodologías Ágiles (3 fases, 6-9 meses)
-• Cumplimiento de Seguridad: ISO 27001 + GDPR (4 fases, 10-15 meses)
-• Transformación Digital: Modernización Tecnológica (5 fases, 24-36 meses)
-`}
-
-================================================================================
-CRONOGRAMA VISUAL (GANTT)
-================================================================================
-
-${roadmapPhases.length > 0 ? `
-LÍNEA DE TIEMPO DEL PROYECTO:
-Mes:  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24
-     ├──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┼──┤
-
-${roadmapPhases.map(phase => {
-    const start = phase.start_month;
-    const end = phase.start_month + phase.duration_months - 1;
-    let timeline = '';
-    for (let i = 1; i <= 24; i++) {
-        if (i >= start && i <= end) {
-            timeline += phase.status === 'completed' ? '█' : 
-                       phase.status === 'in-progress' ? '▓' : 
-                       phase.status === 'delayed' ? '░' : '▒';
-        } else {
-            timeline += ' ';
-        }
-        if (i < 24) timeline += '  ';
-    }
-    return `${phase.phase_id.padEnd(12)} ${timeline}`;
-}).join('\n')}
-
-LEYENDA:
-█ = Completado    ▓ = En Progreso    ▒ = Planificado    ░ = Retrasado
-` : 'Cronograma visual se generará cuando se definan las fases del roadmap.'}
-
-================================================================================
-ANÁLISIS DE DEPENDENCIAS Y RIESGOS
-================================================================================
-
-DEPENDENCIAS CRÍTICAS ENTRE FASES:
-${roadmapPhases.length > 1 ? roadmapPhases.slice(0, -1).map((phase, index) => 
-`• ${phase.phase_name} → ${roadmapPhases[index + 1].phase_name}
-  Entregables de ${phase.phase_id} son prerequisitos para ${roadmapPhases[index + 1].phase_id}`
-).join('\n') : 'Las dependencias se establecerán cuando se definan múltiples fases.'}
-
-RUTA CRÍTICA DEL PROYECTO:
-${roadmapPhases.length > 0 ? 
-`La ruta crítica incluye todas las fases en secuencia:
-${roadmapPhases.map(p => p.phase_name).join(' → ')}
-
-Duración total de la ruta crítica: ${Math.max(...roadmapPhases.map(p => p.start_month + p.duration_months - 1), 0)} meses` :
-'La ruta crítica se definirá cuando se establezcan las fases del proyecto.'}
-
-================================================================================
-RECURSOS Y PRESUPUESTO DETALLADO
-================================================================================
-
-DISTRIBUCIÓN DE PRESUPUESTO POR FASE:
-${roadmapPhases.length > 0 ? roadmapPhases.map(phase => 
-`• ${phase.phase_id}: ${phase.budget_allocated || 'No especificado'} - ${phase.phase_name}`
-).join('\n') : 'La distribución presupuestaria se definirá con las fases del roadmap.'}
-
-ASIGNACIÓN DE EQUIPOS RESPONSABLES:
-${roadmapPhases.length > 0 ? Object.entries(roadmapPhases.reduce((acc, phase) => {
-    const team = phase.responsible_team;
-    acc[team] = (acc[team] || []).concat(phase.phase_name);
-    return acc;
-}, {})).map(([team, phases]) => 
-`• ${team}:
-  ${phases.map(p => `  - ${p}`).join('\n')}`
-).join('\n') : 'La asignación de equipos se establecerá con la definición de fases.'}
-
-================================================================================
-COMUNICACIÓN Y SEGUIMIENTO EJECUTIVO
-================================================================================
-
-ESTRUCTURA DE GOVERNANCE:
-• Sponsor Ejecutivo: ${config.executive_sponsor || defaultConfig.executive_sponsor}
-• Comité de Seguimiento: Reuniones mensuales
-• Reportes de Progreso: Quincenales
-• Revisiones de Hitos: Al completar cada fase
-
-MÉTRICAS DE SEGUIMIENTO:
-• Progreso de fases (% completitud)
-• Cumplimiento de cronograma
-• Ejecución presupuestaria
-• Calidad de entregables
-• Adopción organizacional
-• Beneficios realizados
-
-ESCALAMIENTO DE ISSUES:
-• Nivel 1: Equipo de proyecto (resolución inmediata)
-• Nivel 2: Líder de transformación (1-3 días)
-• Nivel 3: Comité de seguimiento (1 semana)
-• Nivel 4: Sponsor ejecutivo (decisión final)
-
-================================================================================
-PLAN DE SOSTENIBILIDAD POST-IMPLEMENTACIÓN
-================================================================================
-
-INSTITUCIONALIZACIÓN:
-• Procesos integrados en operaciones diarias
-• Roles y responsabilidades claramente definidos
-• Métricas de proceso establecidas y monitoreadas
-• Programa de mejora continua activo
-
-CAPACIDADES ORGANIZACIONALES DESARROLLADAS:
-• Gestión madura de procesos
-• Cultura de calidad y excelencia
-• Capacidades de medición y análisis
-• Liderazgo en mejores prácticas
-
-EVOLUCIÓN FUTURA:
-• Preparación para niveles superiores de madurez
-• Liderazgo en la industria
-• Capacidades de consultoría interna
-• Innovación continua en procesos
-
-================================================================================
-CONCLUSIÓN DEL ROADMAP
-================================================================================
-
-Este roadmap representa la hoja de ruta estratégica para transformar la
-organización hacia un nivel superior de madurez en procesos de software.
-
-FACTORES CRÍTICOS DE ÉXITO:
-• Liderazgo ejecutivo visible y comprometido
-• Recursos dedicados y protegidos
-• Comunicación clara y continua
-• Gestión proactiva del cambio organizacional
-• Enfoque en beneficios tangibles y medibles
-
-El éxito de este roadmap posicionará a ${config.organization_name || defaultConfig.organization_name} 
-como líder en madurez de procesos y generará ventajas competitivas sostenibles.
-
-Documento generado el ${currentDate}
-Próxima actualización programada: ${new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString()}
-            `.trim();
-        }
-
-        function generateChangeManagementPlan() {
-            const config = window.elementSdk?.config || defaultConfig;
-            const currentDate = new Date().toLocaleDateString();
-            
-            return `
-PLAN DE GESTIÓN DEL CAMBIO ORGANIZACIONAL
-=========================================
-
-INFORMACIÓN DEL PROYECTO:
-Organización: ${config.organization_name || defaultConfig.organization_name}
-Transformación: ${config.roadmap_title || defaultConfig.roadmap_title}
-Sponsor Ejecutivo: ${config.executive_sponsor || defaultConfig.executive_sponsor}
-Fecha: ${currentDate}
-
-🔄 ESTRATEGIA DE GESTIÓN DEL CAMBIO
-La gestión del cambio organizacional es CRUCIAL para el éxito de la implementación.
-La resistencia cultural es el mayor obstáculo - este plan define cómo vencerla.
-
-💡 ¿POR QUÉ ES CRUCIAL LA GESTIÓN DEL CAMBIO?
-============================================
-• 70% de las transformaciones fallan por resistencia cultural
-• Los procesos técnicos son solo 30% del éxito - 70% es adopción humana
-• Sin gestión del cambio, la inversión técnica se desperdicia
-• La sostenibilidad depende de la aceptación organizacional
-
-🎯 OBJETIVOS DE LA GESTIÓN DEL CAMBIO:
-====================================
-1. Vencer la resistencia cultural al cambio
-2. Generar adopción entusiasta de nuevos procesos
-3. Desarrollar capacidades organizacionales sostenibles
-4. Crear una cultura de mejora continua
-5. Asegurar la institucionalización de las mejoras
-
-${roadmapPhases.length > 0 ? `
-================================================================================
-ESTRATEGIAS DE CAMBIO POR FASE
-================================================================================
-
-${roadmapPhases.map((phase, index) => `
-FASE ${index + 1}: ${phase.phase_name}
-────────────────────────────────────────
-
-🔄 ESTRATEGIA DE CAMBIO ORGANIZACIONAL:
-${phase.change_management_strategy}
-
-📚 PLAN DE CAPACITACIÓN:
-${phase.training_requirements}
-
-📢 PLAN DE COMUNICACIÓN:
-${phase.communication_plan}
-
-ACTIVIDADES ESPECÍFICAS DE GESTIÓN DEL CAMBIO:
-• Sesiones de sensibilización con líderes
-• Workshops participativos de diseño
-• Programas de champions organizacionales
-• Comunicación continua de beneficios
-• Celebración de quick wins y éxitos
-• Feedback loops y ajustes basados en adopción
-
-MÉTRICAS DE ADOPCIÓN:
-• Nivel de participación en capacitaciones
-• Uso efectivo de nuevos procesos
-• Satisfacción del personal con cambios
-• Resistencia identificada y gestionada
-• Beneficios percibidos por los usuarios
-
-`).join('')}` : `
-================================================================================
-ESTRATEGIA GENERAL DE GESTIÓN DEL CAMBIO
-================================================================================
-
-ENFOQUE ESTRUCTURADO:
-Cuando se definan las fases del roadmap, cada una tendrá estrategias específicas
-de gestión del cambio adaptadas a sus objetivos y desafíos particulares.
-
-PRINCIPIOS FUNDAMENTALES:
-• Comunicación temprana y frecuente
-• Involucramiento de stakeholders clave
-• Capacitación práctica y relevante
-• Celebración de logros tempranos
-• Ajustes basados en feedback continuo
-`}
-
-================================================================================
-ANÁLISIS DE STAKEHOLDERS Y RESISTENCIA
-================================================================================
-
-MAPA DE STAKEHOLDERS:
-┌─────────────────┬──────────────────┬─────────────────┬──────────────────┐
-│ STAKEHOLDER     │ NIVEL DE IMPACTO │ INFLUENCIA      │ ESTRATEGIA       │
-├─────────────────┼──────────────────┼─────────────────┼──────────────────┤
-│ Alta Dirección  │ Alto             │ Muy Alta        │ Sponsor activo   │
-│ Gerentes Medios │ Alto             │ Alta            │ Champions        │
-│ Líderes Técnicos│ Alto             │ Media           │ Early adopters   │
-│ Desarrolladores │ Medio            │ Media           │ Capacitación     │
-│ QA Engineers    │ Alto             │ Media           │ Involucramiento  │
-│ Project Managers│ Alto             │ Alta            │ Co-creación      │
-│ Clientes        │ Medio            │ Baja            │ Comunicación     │
-└─────────────────┴──────────────────┴─────────────────┴──────────────────┘
-
-FUENTES DE RESISTENCIA IDENTIFICADAS:
-• "Siempre lo hemos hecho así" - Inercia organizacional
-• "No tenemos tiempo para procesos" - Presión de entrega
-• "Los procesos ralentizan el desarrollo" - Percepción errónea
-• "Es solo burocracia adicional" - Falta de comprensión de beneficios
-• "Los consultores no entienden nuestro negocio" - Desconfianza externa
-
-ESTRATEGIAS DE MITIGACIÓN DE RESISTENCIA:
-• Comunicar beneficios tangibles y medibles
-• Involucrar a los resistentes en el diseño de soluciones
-• Mostrar casos de éxito de organizaciones similares
-• Implementar cambios graduales y no disruptivos
-• Reconocer y celebrar la adopción temprana
-• Proporcionar soporte continuo durante la transición
-
-================================================================================
-PROGRAMA DE COMUNICACIÓN ORGANIZACIONAL
-================================================================================
-
-ESTRATEGIA DE COMUNICACIÓN:
-¿Cómo van a comunicar los beneficios? ¿Qué canales usarán? ¿Con qué frecuencia?
-
-CANALES DE COMUNICACIÓN:
-• Reuniones ejecutivas mensuales
-• Newsletters quincenales de progreso
-• Workshops departamentales
-• Intranet corporativa
-• Sesiones de Q&A abiertas
-• Videos de testimoniales internos
-• Eventos de celebración de hitos
-
-MENSAJES CLAVE POR AUDIENCIA:
-┌─────────────────┬──────────────────────────────────────────────────────────┐
-│ AUDIENCIA       │ MENSAJE PRINCIPAL                                        │
-├─────────────────┼──────────────────────────────────────────────────────────┤
-│ Alta Dirección  │ ROI, ventaja competitiva, cumplimiento regulatorio       │
-│ Gerentes Medios │ Eficiencia operativa, reducción de riesgos              │
-│ Equipos Técnicos│ Mejores herramientas, procesos más claros               │
-│ Clientes        │ Mayor calidad, entregas más predecibles                 │
-└─────────────────┴──────────────────────────────────────────────────────────┘
-
-CRONOGRAMA DE COMUNICACIÓN:
-• Pre-lanzamiento: Comunicación de visión y beneficios
-• Durante implementación: Progreso, éxitos y ajustes
-• Post-implementación: Logros, beneficios realizados, futuro
-
-================================================================================
-PROGRAMA DE CAPACITACIÓN Y DESARROLLO
-================================================================================
-
-ESTRATEGIA DE CAPACITACIÓN:
-¿Cómo van a capacitar al personal? ¿Qué programas de entrenamiento implementarán?
-
-NIVELES DE CAPACITACIÓN:
-1. SENSIBILIZACIÓN (Toda la organización)
-   • Duración: 2 horas
-   • Contenido: Visión, beneficios, roadmap general
-   • Modalidad: Presencial masiva + virtual
-
-2. CAPACITACIÓN BÁSICA (Usuarios directos)
-   • Duración: 8 horas
-   • Contenido: Procesos específicos, herramientas
-   • Modalidad: Workshops prácticos
-
-3. CAPACITACIÓN AVANZADA (Champions y líderes)
-   • Duración: 16 horas
-   • Contenido: Liderazgo del cambio, coaching
-   • Modalidad: Intensivos con certificación
-
-4. ESPECIALIZACIÓN (Expertos internos)
-   • Duración: 40 horas
-   • Contenido: Diseño de procesos, auditoría
-   • Modalidad: Programa de certificación externa
-
-METODOLOGÍA DE CAPACITACIÓN:
-• 70% práctica, 30% teoría
-• Casos reales de la organización
-• Simulaciones y role-playing
-• Mentoring y coaching continuo
-• Evaluación de competencias adquiridas
-
-PROGRAMA DE CHAMPIONS ORGANIZACIONALES:
-• Selección de líderes naturales en cada área
-• Capacitación intensiva en gestión del cambio
-• Rol de multiplicadores y coaches internos
-• Reconocimiento especial y desarrollo de carrera
-• Red de soporte entre champions
-
-================================================================================
-GESTIÓN DE LA RESISTENCIA AL CAMBIO
-================================================================================
-
-MODELO DE GESTIÓN DE RESISTENCIA:
-1. IDENTIFICACIÓN temprana de resistentes
-2. COMPRENSIÓN de las causas de resistencia
-3. ESTRATEGIAS específicas de mitigación
-4. MONITOREO continuo de adopción
-5. AJUSTES basados en feedback
-
-TÉCNICAS DE VENCER LA RESISTENCIA:
-• Involucramiento en el diseño de soluciones
-• Comunicación personalizada de beneficios
-• Demostración de valor con pilotos exitosos
-• Peer pressure positivo de early adopters
-• Coaching individual para casos críticos
-• Reconocimiento público de adopción
-
-PLAN DE CONTINGENCIA PARA RESISTENCIA CRÍTICA:
-• Escalamiento a sponsor ejecutivo
-• Sesiones individuales de coaching
-• Reasignación temporal de responsabilidades
-• Programa intensivo de re-capacitación
-• En casos extremos: decisiones de personal
-
-================================================================================
-MÉTRICAS DE ADOPCIÓN Y ÉXITO
-================================================================================
-
-KPIs DE GESTIÓN DEL CAMBIO:
-• Nivel de participación en capacitaciones: >95%
-• Satisfacción con el proceso de cambio: >4.0/5.0
-• Uso efectivo de nuevos procesos: >80%
-• Resistencia activa identificada: <10%
-• Champions activos funcionando: 100%
-• Beneficios percibidos por usuarios: >4.0/5.0
-
-HERRAMIENTAS DE MEDICIÓN:
-• Encuestas de adopción trimestrales
-• Focus groups con usuarios clave
-• Métricas de uso de herramientas
-• Observación directa de procesos
-• Feedback de champions organizacionales
-
-DASHBOARD DE ADOPCIÓN:
-Tablero ejecutivo con métricas en tiempo real de:
-• Progreso de capacitación por área
-• Nivel de adopción de procesos
-• Satisfacción organizacional
-• Resistencia identificada y gestionada
-• Beneficios realizados vs. esperados
-
-================================================================================
-SOSTENIBILIDAD DEL CAMBIO
-================================================================================
-
-ESTRATEGIAS DE INSTITUCIONALIZACIÓN:
-• Integración en descripciones de puesto
-• Métricas de desempeño individual
-• Procesos de inducción para nuevos empleados
-• Programa de mejora continua
-• Auditorías internas regulares
-
-CULTURA DE MEJORA CONTINUA:
-• Buzón de sugerencias de mejora
-• Comités de mejora por área
-• Reconocimiento por innovaciones en procesos
-• Tiempo dedicado a mejora (10% del tiempo)
-• Sharing de mejores prácticas entre áreas
-
-PLAN DE SOSTENIBILIDAD A 3 AÑOS:
-AÑO 1: Adopción y estabilización
-AÑO 2: Optimización y mejora
-AÑO 3: Innovación y liderazgo
-
-================================================================================
-CONCLUSIÓN DEL PLAN DE GESTIÓN DEL CAMBIO
-================================================================================
-
-La gestión del cambio organizacional es el factor crítico que determinará el
-éxito o fracaso de la implementación del roadmap SQA.
-
-FACTORES CRÍTICOS DE ÉXITO:
-• Liderazgo visible y comprometido de la alta dirección
-• Comunicación clara, frecuente y bidireccional
-• Capacitación práctica y relevante para cada rol
-• Gestión proactiva de la resistencia
-• Celebración de éxitos y reconocimiento de adopción
-• Ajustes continuos basados en feedback organizacional
-
-LLAMADA A LA ACCIÓN:
-La dirección ejecutiva debe liderar con el ejemplo, comunicar consistentemente
-los beneficios, y proporcionar los recursos necesarios para que este plan de
-gestión del cambio sea exitoso.
-
-Sin una gestión efectiva del cambio, incluso la mejor estrategia técnica fallará.
-Con ella, la organización no solo adoptará los nuevos procesos, sino que los
-mejorará continuamente y se convertirá en líder de la industria.
-
-Preparado por: Equipo de Transformación SQA
-Fecha: ${currentDate}
-Próxima revisión: ${new Date(Date.now() + 30*24*60*60*1000).toLocaleDateString()}
-            `.trim();
-        }
-
-        function downloadText(content, filename) {
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }
-
-        async function clearAllPhases() {
-            if (roadmapPhases.length === 0) {
-                showToast("No hay fases para limpiar", "info");
+            if (milestones.length >= 999) {
+                document.getElementById('limit-warning').classList.remove('hidden');
                 return;
             }
-            
-            const button = document.getElementById('clear-all-phases');
-            const originalText = button.textContent;
-            button.textContent = '⚠️ Confirmar Limpieza';
-            button.style.backgroundColor = '#dc2626';
-            
-            const confirmClear = async () => {
-                button.textContent = '⏳ Limpiando...';
-                
-                if (window.dataSdk) {
-                    for (const phase of roadmapPhases) {
-                        await window.dataSdk.delete(phase);
-                    }
-                } else {
-                    roadmapPhases = [];
-                    renderRoadmap();
-                    updateExecutiveSummary();
-                    updateKPIDashboard();
-                }
-                
-                showToast("Roadmap limpiado completamente", "success");
-                button.textContent = originalText;
-                button.style.backgroundColor = '';
+
+            const addBtn = document.getElementById('add-btn');
+            addBtn.disabled = true;
+            addBtn.innerHTML = '<span>Agregando...</span>';
+
+            const formData = {
+                id: Date.now().toString(),
+                milestone_name: document.getElementById('milestone-name').value,
+                start_date: document.getElementById('start-date').value,
+                end_date: document.getElementById('end-date').value,
+                status: document.getElementById('status').value,
+                deliverables: document.getElementById('deliverables').value,
+                responsible: document.getElementById('responsible').value,
+                created_at: new Date().toISOString()
             };
-            
-            const cancelClear = () => {
-                button.textContent = originalText;
-                button.style.backgroundColor = '';
-            };
-            
-            const timeoutId = setTimeout(confirmClear, 3000);
-            
-            const clickHandler = (e) => {
-                if (!button.contains(e.target)) {
-                    clearTimeout(timeoutId);
-                    cancelClear();
-                    document.removeEventListener('click', clickHandler);
-                }
-            };
-            
-            document.addEventListener('click', clickHandler);
-            
-            button.onclick = (e) => {
-                e.stopPropagation();
-                clearTimeout(timeoutId);
-                confirmClear();
-                document.removeEventListener('click', clickHandler);
-            };
+
+            const result = await window.dataSdk.create(formData);
+
+            if (result.isOk) {
+                document.getElementById('milestone-form').reset();
+                document.getElementById('limit-warning').classList.add('hidden');
+            }
+
+            addBtn.disabled = false;
+            addBtn.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>Agregar Hito</span>
+            `;
+        });
+
+        async function onConfigChange(config) {
+            document.getElementById('document-title').textContent = config.document_title || defaultConfig.document_title;
+            document.getElementById('project-name').textContent = config.project_name || defaultConfig.project_name;
+            document.getElementById('course-name').textContent = config.course_name || defaultConfig.course_name;
+            document.getElementById('team-name').textContent = config.team_name || defaultConfig.team_name;
+            document.getElementById('professor-name').textContent = config.professor_name || defaultConfig.professor_name;
+            document.getElementById('semester').textContent = config.semester || defaultConfig.semester;
+
+            const bgColor = config.background_color || defaultConfig.background_color;
+            const headerColor = config.header_color || defaultConfig.header_color;
+            const textColor = config.text_color || defaultConfig.text_color;
+            const accentColor = config.accent_color || defaultConfig.accent_color;
+            const buttonColor = config.button_color || defaultConfig.button_color;
+
+            document.body.style.background = `linear-gradient(to bottom right, ${bgColor}, ${accentColor}20)`;
+            document.querySelector('.bg-gradient-to-r').style.background = `linear-gradient(to right, ${headerColor}, ${buttonColor})`;
         }
 
-        function showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
-            
-            toast.className = `fixed top-4 right-4 ${bgColor} text-
-</script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'99653d57435a16df',t:'MTc2MTc2NzgyMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+        async function init() {
+            const currentDate = new Date().toLocaleDateString('es-ES', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            document.getElementById('current-date').textContent = currentDate;
+
+            if (window.dataSdk) {
+                const initResult = await window.dataSdk.init(dataHandler);
+                if (initResult.isOk) {
+                    isInitialized = true;
+                }
+            }
+
+            if (window.elementSdk) {
+                window.elementSdk.init({
+                    defaultConfig,
+                    onConfigChange,
+                    mapToCapabilities: (config) => ({
+                        recolorables: [
+                            {
+                                get: () => config.background_color || defaultConfig.background_color,
+                                set: (value) => {
+                                    config.background_color = value;
+                                    window.elementSdk.setConfig({ background_color: value });
+                                }
+                            },
+                            {
+                                get: () => config.header_color || defaultConfig.header_color,
+                                set: (value) => {
+                                    config.header_color = value;
+                                    window.elementSdk.setConfig({ header_color: value });
+                                }
+                            },
+                            {
+                                get: () => config.text_color || defaultConfig.text_color,
+                                set: (value) => {
+                                    config.text_color = value;
+                                    window.elementSdk.setConfig({ text_color: value });
+                                }
+                            },
+                            {
+                                get: () => config.accent_color || defaultConfig.accent_color,
+                                set: (value) => {
+                                    config.accent_color = value;
+                                    window.elementSdk.setConfig({ accent_color: value });
+                                }
+                            },
+                            {
+                                get: () => config.button_color || defaultConfig.button_color,
+                                set: (value) => {
+                                    config.button_color = value;
+                                    window.elementSdk.setConfig({ button_color: value });
+                                }
+                            }
+                        ],
+                        borderables: [],
+                        fontEditable: undefined,
+                        fontSizeable: undefined
+                    }),
+                    mapToEditPanelValues: (config) => new Map([
+                        ["document_title", config.document_title || defaultConfig.document_title],
+                        ["project_name", config.project_name || defaultConfig.project_name],
+                        ["course_name", config.course_name || defaultConfig.course_name],
+                        ["team_name", config.team_name || defaultConfig.team_name],
+                        ["professor_name", config.professor_name || defaultConfig.professor_name],
+                        ["semester", config.semester || defaultConfig.semester]
+                    ])
+                });
+            }
+        }
+
+        init();
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'999ef4b9034cf7c3',t:'MTc2MjM3MzAyMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
